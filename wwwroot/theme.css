@@ -51,6 +51,9 @@
   --opacity-disabled: .7;
   --opacity-dismissed-job: .68;
   --duration-spinner: .8s;
+  --duration-loading-overlay: .18s;
+  --duration-loading-progress: 1.35s;
+  --loading-backdrop-blur: 4px;
 }
 
 /* Light theme: preserves the established application appearance. */
@@ -178,10 +181,14 @@
   --color-error-border: #e1abab;
   --color-error-text: #9b2c2c;
   --color-error-background: #fff0f0;
-  --color-loading-border: #a8c9df;
-  --color-loading-text: #194f72;
-  --color-loading-background: #eaf5fc;
-  --color-loading-spinner: #9ac4df;
+  --color-loading-backdrop: rgba(18, 34, 47, .54);
+  --color-loading-surface: #ffffff;
+  --color-loading-panel-border: #b8cbd8;
+  --color-loading-text-primary: #173b55;
+  --color-loading-text-secondary: #526575;
+  --color-loading-progress-track: #dce8ef;
+  --color-loading-progress-fill: #075c99;
+  --color-loading-panel-shadow: rgba(8, 29, 44, .3);
   --color-cache-border: #d5bf7c;
   --color-cache-text: #624b0d;
   --color-cache-background: #fff8df;
@@ -324,10 +331,14 @@
   --color-error-border: #8c5559;
   --color-error-text: #f0b6ba;
   --color-error-background: #3a2427;
-  --color-loading-border: #4d748d;
-  --color-loading-text: #b9dff5;
-  --color-loading-background: #1c3443;
-  --color-loading-spinner: #5d8eac;
+  --color-loading-backdrop: rgba(3, 9, 14, .7);
+  --color-loading-surface: #17242e;
+  --color-loading-panel-border: #496171;
+  --color-loading-text-primary: #e5f1f8;
+  --color-loading-text-secondary: #b3c5d1;
+  --color-loading-progress-track: #2b3e4b;
+  --color-loading-progress-fill: #55afe8;
+  --color-loading-panel-shadow: rgba(0, 0, 0, .55);
   --color-cache-border: #82713f;
   --color-cache-text: #e5d59f;
   --color-cache-background: #37311f;

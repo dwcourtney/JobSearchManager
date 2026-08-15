@@ -137,6 +137,11 @@ public sealed record AutomaticCheckStatus(
     DateTimeOffset? NextCheckUtc,
     DateTimeOffset? LastAutomaticRefreshUtc);
 
+public sealed record RefreshProgress(
+    string Phase,
+    int Completed,
+    int? Total);
+
 public sealed record JobsSnapshot(
     IReadOnlyList<JobRecord> Jobs,
     int TotalJobs,
@@ -147,14 +152,15 @@ public sealed record JobsSnapshot(
     bool IsCached,
     IReadOnlyList<string> NewJobIds,
     WorkdayQuery Query,
-    IReadOnlyList<string> DismissedJobIds)
+    IReadOnlyList<string> DismissedJobIds,
+    RefreshProgress? RefreshProgress)
 {
     public static JobsSnapshot Empty { get; } =
         new([], 0, null, false, null, 0, false, [], new WorkdayQuery(
             FacetDefaults.CountryId,
             FacetDefaults.CountryLabel,
             FacetDefaults.LocationId,
-            FacetDefaults.LocationLabel), []);
+            FacetDefaults.LocationLabel), [], null);
 }
 
 public sealed record ViewerSettings(

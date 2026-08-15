@@ -105,7 +105,8 @@ public sealed class JobCatalog
                 true,
                 GetNewJobIds(cachedJobs),
                 query,
-                GetDismissedJobIds(cachedJobs));
+                GetDismissedJobIds(cachedJobs),
+                null);
         }
 
         _logger.LogInformation(
@@ -135,8 +136,19 @@ public sealed class JobCatalog
             var queryChanged = _currentQuery != query;
             _currentQuery = query;
             _snapshot = queryChanged
-                ? JobsSnapshot.Empty with { IsRefreshing = true, Query = query }
-                : _snapshot with { IsRefreshing = true, Error = null, Query = query };
+                ? JobsSnapshot.Empty with
+                {
+                    IsRefreshing = true,
+                    Query = query,
+                    RefreshProgress = new RefreshProgress("listings", 0, null)
+                }
+                : _snapshot with
+                {
+                    IsRefreshing = true,
+                    Error = null,
+                    Query = query,
+                    RefreshProgress = new RefreshProgress("listings", 0, null)
+                };
             _activeRefresh = RefreshCoreAsync(query);
             return _activeRefresh;
         }
@@ -339,8 +351,12 @@ public sealed class JobCatalog
                 "Refreshing the Leidos Workday job snapshot for country {Country} and location {Location}.",
                 query.CountryLabel,
                 query.LocationLabel);
-            var result = await _workdayClient.FetchAllJobsAsync(query);
+            var result = await _workdayClient.FetchAllJobsAsync(
+                query,
+                progress => ReportRefreshProgress(query, progress));
             var refreshedAt = DateTimeOffset.UtcNow;
+
+            ReportRefreshProgress(query, new RefreshProgress("saving", 0, null));
 
             await _historyGate.WaitAsync();
             try
@@ -369,7 +385,8 @@ public sealed class JobCatalog
                 false,
                 GetNewJobIds(result.Jobs),
                 query,
-                GetDismissedJobIds(result.Jobs));
+                GetDismissedJobIds(result.Jobs),
+                null);
 
             lock (_gate)
             {
@@ -390,7 +407,8 @@ public sealed class JobCatalog
                 _snapshot = _snapshot with
                 {
                     IsRefreshing = false,
-                    Error = ex.Message
+                    Error = ex.Message,
+                    RefreshProgress = null
                 };
                 return _snapshot;
             }
@@ -398,6 +416,27 @@ public sealed class JobCatalog
         finally
         {
             _workdayOperationGate.Release();
+        }
+    }
+
+    private void ReportRefreshProgress(WorkdayQuery query, RefreshProgress progress)
+    {
+        lock (_gate)
+        {
+            if (!_snapshot.IsRefreshing || _snapshot.Query != query)
+            {
+                return;
+            }
+
+            var current = _snapshot.RefreshProgress;
+            if (current is not null &&
+                string.Equals(current.Phase, progress.Phase, StringComparison.Ordinal) &&
+                progress.Completed < current.Completed)
+            {
+                return;
+            }
+
+            _snapshot = _snapshot with { RefreshProgress = progress };
         }
     }
 

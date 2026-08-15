@@ -11,7 +11,7 @@
   <script src="/app.js" defer></script>
 </head>
 <body>
-  <main class="app-shell">
+  <main id="app-shell" class="app-shell" aria-busy="true" inert>
     <header class="app-header">
       <h1>Leidos Jobs</h1>
       <nav class="app-tabs" role="tablist" aria-label="Application views">
@@ -26,10 +26,6 @@
 
     <div class="global-status">
       <div id="error-banner" class="error-banner" role="alert" hidden></div>
-      <div id="loading-banner" class="loading-banner" aria-live="polite" hidden>
-        <span class="spinner" aria-hidden="true"></span>
-        Retrieving Workday listings and exact posting dates…
-      </div>
       <div id="cache-banner" class="cache-banner" aria-live="polite" hidden></div>
     </div>
 
@@ -234,5 +230,20 @@
       </div>
     </section>
   </main>
+
+  <div id="loading-overlay" class="loading-overlay visible" role="dialog" aria-modal="true"
+       aria-labelledby="loading-title" aria-describedby="loading-phase loading-note" tabindex="-1">
+    <section class="loading-panel">
+      <span class="loading-spinner" aria-hidden="true"></span>
+      <h2 id="loading-title">Loading Leidos Jobs</h2>
+      <p id="loading-phase" class="loading-phase" aria-live="polite">
+        Connecting to the local application…
+      </p>
+      <div class="loading-progress" aria-hidden="true">
+        <span></span>
+      </div>
+      <p id="loading-note" class="loading-note">This may take a moment.</p>
+    </section>
+  </div>
 </body>
 </html>

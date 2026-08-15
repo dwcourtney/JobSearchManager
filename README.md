@@ -83,6 +83,17 @@ An older or mismatched cache is never displayed for a different country/location
 selection. Job history remains global across selections, so moving between
 scopes does not make an already-known requisition NEW again.
 
+Major foreground retrievals use a modal loading panel over a dimmed, blurred
+application. The underlying Jobs and Settings controls are inert until startup
+or refresh finishes. The panel reports real backend phases and, while details
+are being fetched, the completed and total job counts; its progress animation
+remains indeterminate rather than inventing a percentage. It appears for the
+initial load, manual refreshes, source changes, and complete refreshes started
+after an automatic check discovers a new identity. The lightweight automatic
+identity-only check remains silent. Cached or existing results can remain
+visible behind the panel, but are deliberately unavailable until the refresh
+completes.
+
 ## Automatic new-job checks
 
 While the application is running, it checks for new posting identities once an

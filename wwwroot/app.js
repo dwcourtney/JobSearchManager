@@ -2,6 +2,8 @@
 
 const HEADROOM_WARNING_THRESHOLD = 0.75;
 const SETTINGS_SAVE_DEBOUNCE_MS = 400;
+const OVERLAY_TRANSITION_MS = 180;
+const AUTOMATIC_STATUS_POLL_MS = 2000;
 const ALL_COUNTRIES_LABEL = "All countries";
 const ALL_LOCATIONS_LABEL = "All locations";
 const AGE_GROUPS = [
@@ -36,10 +38,16 @@ const state = {
   lastRefreshedUtc: null,
   isCached: false,
   isRefreshing: false,
+  isInitializing: true,
+  catalogIsRefreshing: false,
   facetsLoaded: false,
   country: { id: null, label: ALL_COUNTRIES_LABEL },
   location: { id: null, label: ALL_LOCATIONS_LABEL },
   pollTimer: null,
+  refreshProgressTimer: null,
+  overlayHideTimer: null,
+  focusBeforeLoading: null,
+  loadingTitle: "Loading Leidos Jobs",
   settingsSaveTimer: null
 };
 
@@ -74,9 +82,13 @@ const elements = {
   automaticCheckStatus: document.querySelector("#automatic-check-status"),
   themeMode: document.querySelector("#theme-mode"),
   resultCount: document.querySelector("#result-count"),
+  appShell: document.querySelector("#app-shell"),
   errorBanner: document.querySelector("#error-banner"),
-  loadingBanner: document.querySelector("#loading-banner"),
   cacheBanner: document.querySelector("#cache-banner"),
+  loadingOverlay: document.querySelector("#loading-overlay"),
+  loadingTitle: document.querySelector("#loading-title"),
+  loadingPhase: document.querySelector("#loading-phase"),
+  loadingNote: document.querySelector("#loading-note"),
   showHiddenJobs: document.querySelector("#show-hidden-jobs"),
   hiddenJobCount: document.querySelector("#hidden-job-count"),
   jobList: document.querySelector("#job-list"),
@@ -113,6 +125,11 @@ const elements = {
 document.addEventListener("DOMContentLoaded", initialize);
 
 async function initialize() {
+  setLoading(true, {
+    title: "Loading Leidos Jobs",
+    phaseText: "Loading saved settings and job data…"
+  });
+  elements.loadingOverlay.addEventListener("keydown", constrainLoadingFocus);
   wireKeywordInput("inclusions", elements.includeInput, elements.addInclusion);
   wireKeywordInput("exclusions", elements.excludeInput, elements.addExclusion);
   elements.jobsTab.addEventListener("click", () => showView("jobs"));
@@ -225,8 +242,11 @@ async function loadInitialState() {
     applySnapshot(await jobsResponse.json());
     await loadLocationFacets(state.country.id, state.location.id);
     await loadAutomaticCheckStatus();
-    window.setInterval(loadAutomaticCheckStatus, 30000);
+    state.isInitializing = false;
+    if (!state.catalogIsRefreshing) setLoading(false);
+    window.setInterval(loadAutomaticCheckStatus, AUTOMATIC_STATUS_POLL_MS);
   } catch (error) {
+    state.isInitializing = false;
     showClientError(error);
   }
 }
@@ -288,6 +308,10 @@ async function loadAutomaticCheckStatus() {
     const status = await response.json();
     renderAutomaticCheckStatus(status);
 
+    if (status.isChecking && !state.isRefreshing) {
+      await detectAutomaticFullRefresh();
+    }
+
     const automaticRefreshUtc = status.lastAutomaticRefreshUtc || null;
     if (state.lastObservedAutomaticRefreshUtc &&
         automaticRefreshUtc &&
@@ -297,6 +321,20 @@ async function loadAutomaticCheckStatus() {
     state.lastObservedAutomaticRefreshUtc = automaticRefreshUtc;
   } catch (error) {
     console.warn("Automatic-check status is temporarily unavailable.", error);
+  }
+}
+
+async function detectAutomaticFullRefresh() {
+  try {
+    const response = await fetch("/api/jobs", { cache: "no-store" });
+    if (!response.ok) return;
+    const snapshot = await response.json();
+    if (snapshot.isRefreshing) {
+      setLoading(true, { title: "Refreshing Leidos Jobs" });
+      applySnapshot(snapshot);
+    }
+  } catch (error) {
+    console.warn("Could not inspect automatic refresh progress.", error);
   }
 }
 
@@ -468,7 +506,8 @@ async function applyWorkdayLocation() {
   const country = selectedFacet(elements.countrySelect, ALL_COUNTRIES_LABEL);
   const location = selectedFacet(elements.locationSelect, ALL_LOCATIONS_LABEL);
   clearTimeout(state.pollTimer);
-  setLoading(true);
+  setLoading(true, { title: "Loading Selected Job Source" });
+  beginRefreshProgressPolling();
   elements.errorBanner.hidden = true;
   state.jobs = [];
   state.newJobIds = new Set();
@@ -513,7 +552,8 @@ async function loadSnapshot() {
 
 async function refreshJobs() {
   clearTimeout(state.pollTimer);
-  setLoading(true);
+  setLoading(true, { title: "Refreshing Leidos Jobs" });
+  beginRefreshProgressPolling();
   elements.errorBanner.hidden = true;
   try {
     const response = await fetch("/api/refresh", { method: "POST", cache: "no-store" });
@@ -549,7 +589,10 @@ function applySnapshot(snapshot) {
   }
   updateSourceSummary();
 
-  setLoading(Boolean(snapshot.isRefreshing));
+  state.catalogIsRefreshing = Boolean(snapshot.isRefreshing);
+  setLoading(state.catalogIsRefreshing || state.isInitializing, {
+    progress: snapshot.refreshProgress
+  });
   showSnapshotError(snapshot.error, snapshot.detailFailureCount || 0);
   renderResults();
   updateLastRefreshed();
@@ -564,7 +607,7 @@ function applySnapshot(snapshot) {
 
 function updateCacheBanner(snapshot) {
   const usingCache = Boolean(snapshot.isCached);
-  if (!usingCache) {
+  if (!usingCache || snapshot.isRefreshing) {
     elements.cacheBanner.hidden = true;
     elements.cacheBanner.textContent = "";
     return;
@@ -575,7 +618,7 @@ function updateCacheBanner(snapshot) {
     : "an earlier run";
   elements.cacheBanner.textContent = snapshot.error
     ? `Showing cached jobs from ${refreshed}; the live refresh failed.`
-    : `Showing cached jobs from ${refreshed} while the live refresh runs.`;
+    : `Showing cached jobs from ${refreshed}.`;
   elements.cacheBanner.hidden = false;
 }
 
@@ -1366,12 +1409,104 @@ function updateLastRefreshed() {
   elements.lastRefreshed.textContent = `Last refreshed ${refreshed.toLocaleString()}`;
 }
 
-function setLoading(isLoading) {
+function setLoading(isLoading, options = {}) {
+  const wasLoading = state.isRefreshing;
   state.isRefreshing = isLoading;
-  elements.loadingBanner.hidden = !isLoading;
   elements.refreshButton.disabled = isLoading;
   elements.refreshButton.textContent = isLoading ? "Refreshing…" : "Refresh";
+  elements.appShell.setAttribute("aria-busy", String(isLoading));
+
+  if (isLoading) {
+    clearTimeout(state.overlayHideTimer);
+    if (options.title) state.loadingTitle = options.title;
+    elements.loadingTitle.textContent = state.loadingTitle;
+    updateLoadingProgress(options.progress, options.phaseText);
+    elements.loadingNote.textContent = state.jobs.length > 0
+      ? "Existing results are visible in the background, but refresh is still in progress."
+      : "This may take a moment.";
+    if (!wasLoading && document.activeElement !== document.body) {
+      state.focusBeforeLoading = document.activeElement;
+    }
+    elements.appShell.inert = true;
+    elements.loadingOverlay.hidden = false;
+    elements.loadingOverlay.setAttribute("aria-hidden", "false");
+    requestAnimationFrame(() => {
+      elements.loadingOverlay.classList.add("visible");
+      elements.loadingOverlay.focus({ preventScroll: true });
+    });
+  } else {
+    clearTimeout(state.refreshProgressTimer);
+    elements.appShell.inert = false;
+    elements.loadingOverlay.classList.remove("visible");
+    elements.loadingOverlay.setAttribute("aria-hidden", "true");
+    state.overlayHideTimer = setTimeout(() => {
+      if (!state.isRefreshing) elements.loadingOverlay.hidden = true;
+    }, OVERLAY_TRANSITION_MS);
+    if (wasLoading && state.focusBeforeLoading?.isConnected) {
+      state.focusBeforeLoading.focus({ preventScroll: true });
+    }
+    state.focusBeforeLoading = null;
+    state.loadingTitle = "Loading Leidos Jobs";
+  }
   updateQueryControls();
+}
+
+function updateLoadingProgress(progress, explicitText) {
+  if (explicitText) {
+    elements.loadingPhase.textContent = explicitText;
+    return;
+  }
+
+  const completed = Number(progress?.completed || 0);
+  const total = Number(progress?.total || 0);
+  switch (progress?.phase) {
+    case "listings":
+      elements.loadingPhase.textContent = total > 0
+        ? `Retrieving Workday listings (${completed} of ${total} found)…`
+        : "Retrieving Workday listing pages…";
+      break;
+    case "details":
+      elements.loadingPhase.textContent = total > 0
+        ? `Fetching job details (${completed} of ${total})…`
+        : "Fetching job details…";
+      break;
+    case "finalizing":
+      elements.loadingPhase.textContent = "Analyzing and sorting jobs…";
+      break;
+    case "saving":
+      elements.loadingPhase.textContent = "Saving refreshed results…";
+      break;
+    default:
+      elements.loadingPhase.textContent = "Retrieving Workday listings and exact posting dates…";
+      break;
+  }
+}
+
+function beginRefreshProgressPolling() {
+  clearTimeout(state.refreshProgressTimer);
+  const poll = async () => {
+    if (!state.isRefreshing) return;
+    try {
+      const response = await fetch("/api/jobs", { cache: "no-store" });
+      if (response.ok) {
+        const snapshot = await response.json();
+        if (snapshot.isRefreshing) updateLoadingProgress(snapshot.refreshProgress);
+      }
+    } catch {
+      // The foreground request owns error reporting; progress polling is best effort.
+    }
+    if (state.isRefreshing) {
+      state.refreshProgressTimer = setTimeout(poll, 400);
+    }
+  };
+  state.refreshProgressTimer = setTimeout(poll, 100);
+}
+
+function constrainLoadingFocus(event) {
+  if (event.key === "Tab") {
+    event.preventDefault();
+    elements.loadingOverlay.focus({ preventScroll: true });
+  }
 }
 
 function showSnapshotError(error, detailFailureCount) {

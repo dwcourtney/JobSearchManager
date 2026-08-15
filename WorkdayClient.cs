@@ -52,11 +52,15 @@ public sealed class WorkdayClient
 
     public async Task<WorkdayFetchResult> FetchAllJobsAsync(
         WorkdayQuery query,
+        Action<RefreshProgress>? reportProgress = null,
         CancellationToken cancellationToken = default)
     {
-        var listings = await FetchListingsAsync(query, cancellationToken);
+        var listings = await FetchListingsAsync(query, reportProgress, cancellationToken);
         var jobs = new ConcurrentBag<JobRecord>();
         var detailFailureCount = 0;
+        var completedDetails = 0;
+
+        reportProgress?.Invoke(new RefreshProgress("details", 0, listings.Count));
 
         var parallelOptions = new ParallelOptions
         {
@@ -85,7 +89,14 @@ public sealed class WorkdayClient
                     listing.ExternalPath);
                 jobs.Add(Normalize(listing, null, ex.Message));
             }
+            finally
+            {
+                var completed = Interlocked.Increment(ref completedDetails);
+                reportProgress?.Invoke(new RefreshProgress("details", completed, listings.Count));
+            }
         });
+
+        reportProgress?.Invoke(new RefreshProgress("finalizing", listings.Count, listings.Count));
 
         var sorted = jobs
             .OrderByDescending(job => job.StartDate)
@@ -100,7 +111,7 @@ public sealed class WorkdayClient
         WorkdayQuery query,
         CancellationToken cancellationToken = default)
     {
-        var listings = await FetchListingsAsync(query, cancellationToken);
+        var listings = await FetchListingsAsync(query, null, cancellationToken);
         return listings.Select(listing =>
         {
             var requisitionId = listing.BulletFields.FirstOrDefault() ?? "";
@@ -154,6 +165,7 @@ public sealed class WorkdayClient
 
     private async Task<List<ListingPosting>> FetchListingsAsync(
         WorkdayQuery query,
+        Action<RefreshProgress>? reportProgress,
         CancellationToken cancellationToken)
     {
         var jobsEndpoint = new Uri(_cxsBaseUri, "jobs");
@@ -193,6 +205,11 @@ public sealed class WorkdayClient
                 offset,
                 page.JobPostings.Count,
                 listings.Count);
+
+            reportProgress?.Invoke(new RefreshProgress(
+                "listings",
+                listings.Count,
+                page.Total > 0 ? page.Total : null));
 
             // Later pages can report total=0, and unfiltered queries clamp offsets at
             // 2,000 by repeating the first page. A short page or an all-duplicate
