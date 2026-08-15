@@ -214,6 +214,9 @@
   --color-credential-required-border: #bf8a58;
   --color-credential-required-text: #6e3d17;
   --color-credential-required-background: #fff0e3;
+  --color-academic-badge-border: #79a99d;
+  --color-academic-badge-text: #22594f;
+  --color-academic-badge-background: #e8f5f1;
   --color-location-badge-border: #d5aa59;
   --color-location-badge-text: #744d0d;
   --color-location-badge-background: #fff4d8;
@@ -258,6 +261,12 @@
   --color-credential-note-heading: #253b6c;
   --color-credential-item-border: #ccd5e8;
   --color-credential-metadata-text: #52617d;
+  --color-academic-note-border: #86afa5;
+  --color-academic-note-text: #244f47;
+  --color-academic-note-background: #edf7f4;
+  --color-academic-note-heading: #20564c;
+  --color-academic-item-border: #c6ddd7;
+  --color-academic-metadata-text: #4b6d66;
 
   /* Description and highlighting */
   --color-detail-header-background: rgba(255, 255, 255, .97);
@@ -386,6 +395,9 @@
   --color-credential-required-border: #a97a4f;
   --color-credential-required-text: #f2d1b1;
   --color-credential-required-background: #493322;
+  --color-academic-badge-border: #4f8075;
+  --color-academic-badge-text: #bfe5dc;
+  --color-academic-badge-background: #203b35;
   --color-location-badge-border: #94733b;
   --color-location-badge-text: #f0d49c;
   --color-location-badge-background: #3d321e;
@@ -430,6 +442,12 @@
   --color-credential-note-heading: #d9e4ff;
   --color-credential-item-border: #445473;
   --color-credential-metadata-text: #afbddb;
+  --color-academic-note-border: #517f75;
+  --color-academic-note-text: #c9e7df;
+  --color-academic-note-background: #203832;
+  --color-academic-note-heading: #d4eee7;
+  --color-academic-item-border: #3d5f57;
+  --color-academic-metadata-text: #accdc5;
 
   /* Description and highlighting */
   --color-detail-header-background: rgba(23, 32, 41, .97);

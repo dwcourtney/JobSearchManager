@@ -103,6 +103,7 @@ const elements = {
   detailTimeType: document.querySelector("#detail-time-type"),
   detailLocation: document.querySelector("#detail-location"),
   detailAdditional: document.querySelector("#detail-additional"),
+  detailAcademicSummary: document.querySelector("#detail-academic-summary"),
   detailClearanceRow: document.querySelector("#detail-clearance-row"),
   detailClearance: document.querySelector("#detail-clearance"),
   detailClearanceStatusRow: document.querySelector("#detail-clearance-status-row"),
@@ -115,6 +116,8 @@ const elements = {
   detailHeadroomNoteText: document.querySelector("#detail-headroom-note-text"),
   detailClearanceNote: document.querySelector("#detail-clearance-note"),
   detailClearanceNoteText: document.querySelector("#detail-clearance-note-text"),
+  detailAcademic: document.querySelector("#detail-academic"),
+  detailAcademicContent: document.querySelector("#detail-academic-content"),
   detailCredentials: document.querySelector("#detail-credentials"),
   detailCredentialsList: document.querySelector("#detail-credentials-list"),
   detailWarning: document.querySelector("#detail-warning"),
@@ -899,6 +902,13 @@ function createJobListItem(job) {
     clearanceBadge.textContent = clearanceBadgeLabel(job);
     badges.append(clearanceBadge);
   }
+  const academicQualification = job.academicQualification;
+  if (academicQualification && academicQualification.requirementType !== "noDegreeSpecified") {
+    const academicBadge = document.createElement("span");
+    academicBadge.className = "academic-badge";
+    academicBadge.textContent = academicBadgeLabel(academicQualification);
+    badges.append(academicBadge);
+  }
   const credentials = Array.isArray(job.credentials) ? job.credentials : [];
   credentials.slice(0, 2).forEach(credential => {
     const credentialBadge = document.createElement("span");
@@ -1044,6 +1054,7 @@ function renderDetail(job) {
     ? `“${job.clearanceEvidence}”`
     : "";
 
+  renderAcademicQualification(job);
   renderCredentials(job);
 
   elements.detailLocationNote.hidden = !job.isRemoteLocationRestricted;
@@ -1267,6 +1278,129 @@ function clearanceBadgeLabel(job) {
     preferred: " — Preferred"
   })[job.clearanceRequirement] || "";
   return `${level}${suffix}${job.polygraphRequired ? " + Poly" : ""}`;
+}
+
+function academicLevelLabel(level, specificDegree = null) {
+  if (level === "doctorate" && specificDegree === "phD") {
+    return "Ph.D.";
+  }
+  return ({
+    highSchool: "High School/GED",
+    associate: "Associate",
+    bachelor: "Bachelor's",
+    master: "Master's",
+    doctorate: "Doctorate",
+    noneSpecified: "None specified"
+  })[level] || "Academic qualification";
+}
+
+function academicBadgeLabel(academic) {
+  const level = academicLevelLabel(academic.minimumLevel, academic.specificDegree);
+  const degreeOrExperience = academic.minimumLevel === "noneSpecified"
+    ? "Degree/Experience"
+    : `${level}/Experience`;
+  return ({
+    degreeOrExperience,
+    degreeWithExperienceSubstitution: "Degree/experience options",
+    preferredOnly: `${level} \u2014 Preferred`,
+    strictDegree: `${level} \u2014 Required`,
+    mentionedUnclear: `${level} \u2014 Mentioned`
+  })[academic.requirementType] || level;
+}
+
+function renderAcademicQualification(job) {
+  const academic = job.academicQualification;
+  const hasAcademic = academic && academic.requirementType !== "noDegreeSpecified";
+  elements.detailAcademicSummary.textContent = hasAcademic
+    ? academicBadgeLabel(academic)
+    : "None specified";
+  elements.detailAcademic.hidden = !hasAcademic;
+  elements.detailAcademicContent.replaceChildren();
+  if (!hasAcademic) {
+    return;
+  }
+
+  if (Array.isArray(academic.fields) && academic.fields.length > 0) {
+    const fields = document.createElement("p");
+    fields.className = "academic-fields";
+    const label = document.createElement("strong");
+    label.textContent = "Fields: ";
+    fields.append(label, document.createTextNode(academic.fields.join(", ")));
+    elements.detailAcademicContent.append(fields);
+  }
+
+  const paths = Array.isArray(academic.paths) ? academic.paths : [];
+  const pathFieldSignatures = new Set(paths.map(path =>
+    Array.isArray(path.fields) ? path.fields.join("\u001f") : ""));
+  const showPathFields = pathFieldSignatures.size > 1;
+  const shownEvidence = new Set();
+  paths.forEach((path, index) => {
+    const item = document.createElement("article");
+    item.className = "academic-path";
+
+    const heading = document.createElement("div");
+    heading.className = "academic-path-heading";
+    const name = document.createElement("strong");
+    const prefix = academic.requirementType === "degreeWithExperienceSubstitution"
+      ? `Option ${index + 1}: `
+      : "";
+    name.textContent = `${prefix}${academicLevelLabel(path.level, path.specificDegree)}${academicExperienceLabel(path)}`;
+    const status = document.createElement("span");
+    status.className = "academic-status";
+    status.textContent = academicRequirementLabel(path.requirement);
+    heading.append(name, status);
+    item.append(heading);
+
+    if (showPathFields && Array.isArray(path.fields) && path.fields.length > 0) {
+      const fieldLine = document.createElement("p");
+      fieldLine.className = "academic-path-fields";
+      fieldLine.textContent = path.fields.join(", ");
+      item.append(fieldLine);
+    }
+    if (path.evidence && !shownEvidence.has(path.evidence)) {
+      shownEvidence.add(path.evidence);
+      const evidence = document.createElement("p");
+      evidence.className = "academic-evidence";
+      evidence.textContent = `\u201c${path.evidence}\u201d`;
+      item.append(evidence);
+    }
+    elements.detailAcademicContent.append(item);
+  });
+
+  if (shownEvidence.size === 0 && Array.isArray(academic.evidence) && academic.evidence[0]) {
+    const evidence = document.createElement("p");
+    evidence.className = "academic-evidence";
+    evidence.textContent = `\u201c${academic.evidence[0]}\u201d`;
+    elements.detailAcademicContent.append(evidence);
+  }
+
+  if (academic.experienceSubstitutionAccepted) {
+    const alternative = document.createElement("p");
+    alternative.className = "academic-alternative";
+    alternative.textContent = "Equivalent or additional experience may satisfy the advertised education requirement.";
+    elements.detailAcademicContent.append(alternative);
+  }
+}
+
+function academicExperienceLabel(path) {
+  if (!Number.isFinite(path.minimumExperienceYears)) {
+    return "";
+  }
+  const range = Number.isFinite(path.maximumExperienceYears) &&
+    path.maximumExperienceYears !== path.minimumExperienceYears
+    ? `${path.minimumExperienceYears}\u2013${path.maximumExperienceYears}`
+    : `${path.minimumExperienceYears}+`;
+  return ` + ${range} yrs`;
+}
+
+function academicRequirementLabel(requirement) {
+  return ({
+    required: "Required",
+    minimum: "Minimum",
+    preferred: "Preferred",
+    desired: "Desired",
+    mentioned: "Mentioned; status unclear"
+  })[requirement] || "Mentioned; status unclear";
 }
 
 function renderCredentials(job) {

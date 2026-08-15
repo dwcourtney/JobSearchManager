@@ -6,6 +6,7 @@ public sealed class JobCatalog
     private readonly AppStateStore _stateStore;
     private readonly ILogger<JobCatalog> _logger;
     private readonly CredentialDetector _credentialDetector;
+    private readonly AcademicQualificationDetector _academicQualificationDetector;
     private readonly object _gate = new();
     private readonly SemaphoreSlim _historyGate = new(1, 1);
     private readonly SemaphoreSlim _workdayOperationGate = new(1, 1);
@@ -21,12 +22,14 @@ public sealed class JobCatalog
         WorkdayClient workdayClient,
         AppStateStore stateStore,
         ILogger<JobCatalog> logger,
-        CredentialDetector credentialDetector)
+        CredentialDetector credentialDetector,
+        AcademicQualificationDetector academicQualificationDetector)
     {
         _workdayClient = workdayClient;
         _stateStore = stateStore;
         _logger = logger;
         _credentialDetector = credentialDetector;
+        _academicQualificationDetector = academicQualificationDetector;
     }
 
     public JobsSnapshot Snapshot
@@ -68,11 +71,17 @@ public sealed class JobCatalog
             job.CredentialCatalogVersion != _credentialDetector.CatalogVersion ||
             job.Credentials is null ||
             job.UnrecognizedCredentialMentions is null);
+        var cacheNeedsAcademicUpgrade = cache.Jobs.Any(job =>
+            job.AcademicQualification is null ||
+            job.AcademicQualification.AnalysisVersion != _academicQualificationDetector.AnalysisVersion);
         var cachedJobs = cacheNeedsCredentialUpgrade
             ? cache.Jobs.Select(_credentialDetector.AnalyzeJob).ToArray()
             : cache.Jobs;
+        cachedJobs = cacheNeedsAcademicUpgrade
+            ? cachedJobs.Select(_academicQualificationDetector.AnalyzeJob).ToArray()
+            : cachedJobs;
 
-        if (cacheNeedsCredentialUpgrade)
+        if (cacheNeedsCredentialUpgrade || cacheNeedsAcademicUpgrade)
         {
             await _stateStore.SaveJobsCacheAsync(
                 cachedJobs,
@@ -80,8 +89,9 @@ public sealed class JobCatalog
                 cache.DetailFailureCount,
                 query);
             _logger.LogInformation(
-                "Updated cached credential analysis to catalog version {CatalogVersion}.",
-                _credentialDetector.CatalogVersion);
+                "Updated cached derived analysis (credential catalog {CredentialCatalogVersion}, academic analysis {AcademicAnalysisVersion}).",
+                _credentialDetector.CatalogVersion,
+                _academicQualificationDetector.AnalysisVersion);
         }
 
         var historyChanged = ReconcileHistory(

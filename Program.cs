@@ -25,6 +25,7 @@ builder.Services.AddHttpClient<WorkdayClient>((services, client) =>
 builder.Services.AddSingleton<JobCatalog>();
 builder.Services.AddSingleton<AppStateStore>();
 builder.Services.AddSingleton<CredentialDetector>();
+builder.Services.AddSingleton<AcademicQualificationDetector>();
 builder.Services.AddSingleton<AutomaticJobCheckService>();
 builder.Services.AddHostedService(services => services.GetRequiredService<AutomaticJobCheckService>());
 builder.Services.ConfigureHttpJsonOptions(options =>

@@ -68,7 +68,8 @@ public sealed record JobRecord(
     string ClearanceParseStatus = "not-mentioned",
     IReadOnlyList<CredentialMatch>? Credentials = null,
     IReadOnlyList<string>? UnrecognizedCredentialMentions = null,
-    int CredentialCatalogVersion = 0)
+    int CredentialCatalogVersion = 0,
+    AcademicQualificationAnalysis? AcademicQualification = null)
 {
     public string StableId => !string.IsNullOrWhiteSpace(RequisitionId)
         ? RequisitionId
@@ -87,6 +88,27 @@ public sealed record CredentialMatch(
     bool EquivalentAccepted,
     bool InProgressAccepted,
     bool PostHireAcquisitionAllowed,
+    string Evidence);
+
+public sealed record AcademicQualificationAnalysis(
+    string MinimumLevel,
+    string? SpecificDegree,
+    string RequirementType,
+    bool ExperienceSubstitutionAccepted,
+    IReadOnlyList<string> Fields,
+    IReadOnlyList<string> PreferredLevels,
+    IReadOnlyList<AcademicQualificationPath> Paths,
+    IReadOnlyList<string> Evidence,
+    string ParseStatus,
+    int AnalysisVersion);
+
+public sealed record AcademicQualificationPath(
+    string Level,
+    string? SpecificDegree,
+    string Requirement,
+    int? MinimumExperienceYears,
+    int? MaximumExperienceYears,
+    IReadOnlyList<string> Fields,
     string Evidence);
 
 internal sealed record SalaryAnalysis(

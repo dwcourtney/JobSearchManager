@@ -13,6 +13,7 @@ public sealed class WorkdayClient
     private readonly WorkdayOptions _options;
     private readonly ILogger<WorkdayClient> _logger;
     private readonly CredentialDetector _credentialDetector;
+    private readonly AcademicQualificationDetector _academicQualificationDetector;
     private readonly Uri _baseUri;
     private readonly Uri _cxsBaseUri;
     private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
@@ -21,12 +22,14 @@ public sealed class WorkdayClient
         HttpClient httpClient,
         IOptions<WorkdayOptions> options,
         ILogger<WorkdayClient> logger,
-        CredentialDetector credentialDetector)
+        CredentialDetector credentialDetector,
+        AcademicQualificationDetector academicQualificationDetector)
     {
         _httpClient = httpClient;
         _options = options.Value;
         _logger = logger;
         _credentialDetector = credentialDetector;
+        _academicQualificationDetector = academicQualificationDetector;
 
         if (!Uri.TryCreate(_options.BaseUrl, UriKind.Absolute, out var baseUri) ||
             baseUri.Scheme != Uri.UriSchemeHttps)
@@ -341,6 +344,7 @@ public sealed class WorkdayClient
             additionalLocations);
         var clearance = JobAnalysis.AnalyzeClearance(descriptionHtml);
         var credentials = _credentialDetector.Analyze(descriptionHtml);
+        var academicQualification = _academicQualificationDetector.Analyze(descriptionHtml);
 
         return new JobRecord(
             title,
@@ -368,7 +372,8 @@ public sealed class WorkdayClient
             clearance.ParseStatus,
             credentials.Credentials,
             credentials.UnrecognizedMentions,
-            credentials.CatalogVersion);
+            credentials.CatalogVersion,
+            academicQualification);
     }
 
     private static string FirstNonEmpty(params string?[] values) =>

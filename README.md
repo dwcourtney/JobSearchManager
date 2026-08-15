@@ -298,6 +298,22 @@ startup without contacting Workday. To recognize a future established credential
 verify it with its issuer, add one catalog entry and aliases, then increment the
 catalog schema version.
 
+Academic qualification analysis is a separate deterministic category. It
+normalizes High School/GED, Associate, Bachelor's, Master's, and Doctorate levels;
+tracks an explicitly named Ph.D. without treating every doctorate as a Ph.D.; and
+preserves alternative degree/experience paths instead of flattening them into
+misleading independent requirements. The analysis also records degree fields,
+preferred levels, evidence excerpts, and whether equivalent or additional
+experience may replace a degree. Short acronyms such as BA, BS, MA, and MS are
+accepted only in degree-shaped context. Result rows use one compact academic badge,
+while the selected-job pane shows the complete path structure in an **Academic
+Qualifications** section that remains separate from **Credentials**.
+
+Academic results are derived fields in `jobs-cache.json`. They are not stored in
+`settings.json` or `job-history.json`. A version mismatch reanalyzes compatible
+cached descriptions at startup without a Workday request; every successful live
+refresh also regenerates the analysis from the current description.
+
 The browser cannot call Workday directly: the CXS responses do not grant a local
 origin access through CORS, and the JSON POST preflight is not supported. The
 loopback ASP.NET Core backend is therefore the same-origin proxy and data

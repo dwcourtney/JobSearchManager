@@ -769,7 +769,8 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 }
 
 .job-card .restriction-badge, .job-card .headroom-badge,
-.job-card .clearance-badge, .job-card .credential-badge, .job-card .new-badge {
+.job-card .clearance-badge, .job-card .credential-badge,
+.job-card .academic-badge, .job-card .new-badge {
   display: inline-block;
   padding: .14rem .4rem;
   border-radius: var(--radius-badge);
@@ -816,6 +817,12 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   border-color: var(--color-credential-required-border);
   color: var(--color-credential-required-text);
   background: var(--color-credential-required-background);
+}
+
+.job-card .academic-badge {
+  border: var(--border-width-default) solid var(--color-academic-badge-border);
+  color: var(--color-academic-badge-text);
+  background: var(--color-academic-badge-background);
 }
 
 .job-card .credential-count-badge { font-weight: var(--font-weight-medium); }
@@ -954,6 +961,46 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 }
 
 .clearance-note p { margin: .35rem 0 0; line-height: var(--line-height-note); }
+
+.academic-note {
+  margin-top: .9rem;
+  padding: .7rem .8rem;
+  border: var(--border-width-default) solid var(--color-academic-note-border);
+  border-radius: var(--radius-control);
+  color: var(--color-academic-note-text);
+  background: var(--color-academic-note-background);
+}
+
+.academic-note > strong {
+  display: block;
+  font-size: var(--font-size-small);
+  letter-spacing: var(--letter-spacing-badge);
+  text-transform: var(--text-transform-section);
+}
+
+.academic-list { display: grid; gap: .65rem; margin-top: .55rem; }
+.academic-fields, .academic-alternative { margin: 0; line-height: var(--line-height-note); }
+.academic-fields > strong { color: var(--color-academic-note-heading); }
+.academic-path {
+  padding-top: .6rem;
+  border-top: var(--border-width-default) solid var(--color-academic-item-border);
+}
+.academic-path:first-of-type { padding-top: 0; border-top: 0; }
+.academic-path-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: .35rem .65rem; }
+.academic-path-heading > strong { color: var(--color-academic-note-heading); }
+.academic-status {
+  padding: .1rem .35rem;
+  border: var(--border-width-default) solid var(--color-academic-badge-border);
+  border-radius: var(--radius-badge);
+  color: var(--color-academic-badge-text);
+  background: var(--color-academic-badge-background);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+}
+.academic-path-fields, .academic-evidence { margin: .3rem 0 0; line-height: var(--line-height-note); }
+.academic-path-fields { color: var(--color-academic-metadata-text); font-size: var(--font-size-label); }
+.academic-evidence { font-style: var(--font-style-evidence); }
+.academic-alternative { font-weight: var(--font-weight-medium); }
 
 .credentials-note {
   margin-top: .9rem;
