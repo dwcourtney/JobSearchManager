@@ -24,6 +24,8 @@ builder.Services.AddHttpClient<WorkdayClient>((services, client) =>
 });
 builder.Services.AddSingleton<JobCatalog>();
 builder.Services.AddSingleton<AppStateStore>();
+builder.Services.AddSingleton<AutomaticJobCheckService>();
+builder.Services.AddHostedService(services => services.GetRequiredService<AutomaticJobCheckService>());
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
@@ -52,8 +54,17 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 
 app.MapGet("/api/jobs", (JobCatalog catalog) => Results.Ok(catalog.Snapshot));
-app.MapPost("/api/refresh", async (JobCatalog catalog) =>
-    Results.Ok(await catalog.RefreshAsync()));
+app.MapPost("/api/refresh", async (
+    JobCatalog catalog,
+    AutomaticJobCheckService automaticChecks) =>
+{
+    var snapshot = await catalog.RefreshAsync();
+    if (snapshot.Error is null)
+    {
+        automaticChecks.ResetSchedule();
+    }
+    return Results.Ok(snapshot);
+});
 app.MapGet("/api/location-facets", async (
     string? countryId,
     WorkdayClient workdayClient) =>
@@ -61,7 +72,8 @@ app.MapGet("/api/location-facets", async (
 app.MapPost("/api/query", async (
     WorkdayQuery requestedQuery,
     AppStateStore stateStore,
-    JobCatalog catalog) =>
+    JobCatalog catalog,
+    AutomaticJobCheckService automaticChecks) =>
 {
     var current = await stateStore.LoadSettingsAsync();
     var updated = AppStateStore.NormalizeSettings(current with
@@ -70,15 +82,29 @@ app.MapPost("/api/query", async (
         Location = new FacetSelection(requestedQuery.LocationId, requestedQuery.LocationLabel)
     });
     await stateStore.SaveSettingsAsync(updated);
-    return Results.Ok(await catalog.RefreshAsync(WorkdayQuery.FromSettings(updated)));
+    var snapshot = await catalog.RefreshAsync(WorkdayQuery.FromSettings(updated));
+    if (snapshot.Error is null)
+    {
+        automaticChecks.ResetSchedule();
+    }
+    return Results.Ok(snapshot);
 });
 app.MapGet("/api/settings", async (AppStateStore stateStore) =>
     Results.Ok(await stateStore.LoadSettingsAsync()));
-app.MapPut("/api/settings", async (ViewerSettings settings, AppStateStore stateStore) =>
+app.MapPut("/api/settings", async (
+    ViewerSettings settings,
+    AppStateStore stateStore,
+    AutomaticJobCheckService automaticChecks) =>
 {
-    await stateStore.SaveSettingsAsync(settings);
+    var normalized = AppStateStore.NormalizeSettings(settings);
+    await stateStore.SaveSettingsAsync(normalized);
+    automaticChecks.ApplySettings(normalized);
     return Results.NoContent();
 });
+app.MapGet("/api/automatic-check/status", (AutomaticJobCheckService automaticChecks) =>
+    Results.Ok(automaticChecks.Status));
+app.MapPost("/api/automatic-check/run", async (AutomaticJobCheckService automaticChecks) =>
+    Results.Ok(await automaticChecks.CheckNowAsync()));
 app.MapPost("/api/history/viewed", async (ViewedJobRequest request, JobCatalog catalog) =>
     await catalog.MarkViewedAsync(request.StableId)
         ? Results.NoContent()
@@ -96,6 +122,8 @@ var initialSettings = await stateStore.LoadSettingsAsync();
 await stateStore.SaveSettingsAsync(initialSettings);
 var catalog = app.Services.GetRequiredService<JobCatalog>();
 await catalog.InitializeAsync(WorkdayQuery.FromSettings(initialSettings));
+var automaticChecks = app.Services.GetRequiredService<AutomaticJobCheckService>();
+automaticChecks.ApplySettings(initialSettings);
 
 try
 {

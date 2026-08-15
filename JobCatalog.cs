@@ -7,6 +7,7 @@ public sealed class JobCatalog
     private readonly ILogger<JobCatalog> _logger;
     private readonly object _gate = new();
     private readonly SemaphoreSlim _historyGate = new(1, 1);
+    private readonly SemaphoreSlim _workdayOperationGate = new(1, 1);
     private JobsSnapshot _snapshot = JobsSnapshot.Empty;
     private JobHistoryDocument _history = JobHistoryDocument.Empty with
     {
@@ -116,6 +117,74 @@ public sealed class JobCatalog
             _activeRefresh = RefreshCoreAsync(query);
             return _activeRefresh;
         }
+    }
+
+    public async Task<AutomaticCheckResult> CheckForUnknownJobsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        lock (_gate)
+        {
+            if (_snapshot.IsRefreshing)
+            {
+                return new AutomaticCheckResult(false, true, 0, [], false);
+            }
+        }
+
+        if (!await _workdayOperationGate.WaitAsync(0, cancellationToken))
+        {
+            return new AutomaticCheckResult(false, true, 0, [], false);
+        }
+
+        WorkdayQuery query;
+        IReadOnlyList<ListingIdentity> identities;
+        try
+        {
+            lock (_gate)
+            {
+                if (_snapshot.IsRefreshing)
+                {
+                    return new AutomaticCheckResult(false, true, 0, [], false);
+                }
+                query = _currentQuery;
+            }
+
+            identities = await _workdayClient.FetchListingIdentitiesAsync(query, cancellationToken);
+        }
+        finally
+        {
+            _workdayOperationGate.Release();
+        }
+
+        string[] unknownStableIds;
+        await _historyGate.WaitAsync(cancellationToken);
+        try
+        {
+            unknownStableIds = identities
+                .Where(identity => !_history.Jobs.ContainsKey(identity.StableId) &&
+                    !_history.Jobs.Values.Any(entry =>
+                        !string.IsNullOrWhiteSpace(identity.ExternalPath) &&
+                        string.Equals(entry.ExternalPath, identity.ExternalPath, StringComparison.Ordinal)))
+                .Select(identity => identity.StableId)
+                .Distinct(StringComparer.Ordinal)
+                .ToArray();
+        }
+        finally
+        {
+            _historyGate.Release();
+        }
+
+        if (unknownStableIds.Length == 0)
+        {
+            return new AutomaticCheckResult(true, false, identities.Count, [], false);
+        }
+
+        var refreshed = await RefreshAsync(query);
+        return new AutomaticCheckResult(
+            true,
+            false,
+            identities.Count,
+            unknownStableIds,
+            refreshed.Error is null);
     }
 
     public async Task<bool> MarkViewedAsync(string stableId)
@@ -240,6 +309,7 @@ public sealed class JobCatalog
 
     private async Task<JobsSnapshot> RefreshCoreAsync(WorkdayQuery query)
     {
+        await _workdayOperationGate.WaitAsync();
         try
         {
             _logger.LogInformation(
@@ -301,6 +371,10 @@ public sealed class JobCatalog
                 };
                 return _snapshot;
             }
+        }
+        finally
+        {
+            _workdayOperationGate.Release();
         }
     }
 

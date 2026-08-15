@@ -24,6 +24,10 @@ const state = {
   highlightInclusions: true,
   collapsedAgeGroups: {},
   searchFiltersCollapsed: false,
+  automaticCheckEnabled: true,
+  automaticCheckIntervalMinutes: 60,
+  themeMode: "light",
+  lastObservedAutomaticRefreshUtc: null,
   newJobIds: new Set(),
   dismissedJobIds: new Set(),
   showDismissedJobs: false,
@@ -58,6 +62,10 @@ const elements = {
   applyLocation: document.querySelector("#apply-location"),
   facetStatus: document.querySelector("#facet-status"),
   highlightInclusions: document.querySelector("#highlight-inclusions"),
+  automaticCheckEnabled: document.querySelector("#automatic-check-enabled"),
+  automaticCheckInterval: document.querySelector("#automatic-check-interval"),
+  automaticCheckStatus: document.querySelector("#automatic-check-status"),
+  themeMode: document.querySelector("#theme-mode"),
   resultCount: document.querySelector("#result-count"),
   errorBanner: document.querySelector("#error-banner"),
   loadingBanner: document.querySelector("#loading-banner"),
@@ -138,6 +146,20 @@ async function initialize() {
     state.showDismissedJobs = elements.showHiddenJobs.checked;
     renderResults();
   });
+  elements.automaticCheckEnabled.addEventListener("change", () => {
+    state.automaticCheckEnabled = elements.automaticCheckEnabled.checked;
+    elements.automaticCheckInterval.disabled = !state.automaticCheckEnabled;
+    queueSettingsSave();
+  });
+  elements.automaticCheckInterval.addEventListener("change", () => {
+    state.automaticCheckIntervalMinutes = Number(elements.automaticCheckInterval.value);
+    queueSettingsSave();
+  });
+  elements.themeMode.addEventListener("change", () => {
+    state.themeMode = elements.themeMode.value === "dark" ? "dark" : "light";
+    applyTheme();
+    queueSettingsSave();
+  });
   elements.workdayLink.addEventListener("click", () => {
     const job = state.jobs.find(item => item.stableId === state.selectedJobId);
     if (job) {
@@ -160,6 +182,8 @@ async function loadInitialState() {
     applySettings(await settingsResponse.json());
     applySnapshot(await jobsResponse.json());
     await loadLocationFacets(state.country.id, state.location.id);
+    await loadAutomaticCheckStatus();
+    window.setInterval(loadAutomaticCheckStatus, 30000);
   } catch (error) {
     showClientError(error);
   }
@@ -176,6 +200,12 @@ function applySettings(settings) {
   state.highlightInclusions = settings.highlightIncludeKeywords !== false;
   state.collapsedAgeGroups = settings.collapsedAgeGroups || {};
   state.searchFiltersCollapsed = settings.searchFiltersCollapsed === true;
+  state.automaticCheckEnabled = settings.automaticCheckEnabled !== false;
+  state.automaticCheckIntervalMinutes = [30, 60, 120, 240, 480]
+      .includes(settings.automaticCheckIntervalMinutes)
+    ? settings.automaticCheckIntervalMinutes
+    : 60;
+  state.themeMode = settings.themeMode === "dark" ? "dark" : "light";
   state.country = normalizeFacetSelection(settings.country, ALL_COUNTRIES_LABEL);
   state.location = normalizeFacetSelection(settings.location, ALL_LOCATIONS_LABEL);
 
@@ -183,6 +213,11 @@ function applySettings(settings) {
     ? ""
     : new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(state.minimumSalary);
   elements.highlightInclusions.checked = state.highlightInclusions;
+  elements.automaticCheckEnabled.checked = state.automaticCheckEnabled;
+  elements.automaticCheckInterval.value = String(state.automaticCheckIntervalMinutes);
+  elements.automaticCheckInterval.disabled = !state.automaticCheckEnabled;
+  elements.themeMode.value = state.themeMode;
+  applyTheme();
   const scopeRadio = document.querySelector(`input[name="scope"][value="${state.scope}"]`);
   const locationRadio = document.querySelector(`input[name="location-mode"][value="${state.locationMode}"]`);
   if (scopeRadio) scopeRadio.checked = true;
@@ -190,6 +225,71 @@ function applySettings(settings) {
   renderChips("inclusions");
   renderChips("exclusions");
   updateSearchFilterUi();
+}
+
+function applyTheme() {
+  document.documentElement.dataset.theme = state.themeMode;
+  try {
+    localStorage.setItem("leidos-jobs-theme-hint", state.themeMode);
+  } catch {
+    // The persisted backend setting is authoritative; this cache is optional.
+  }
+}
+
+async function loadAutomaticCheckStatus() {
+  try {
+    const response = await fetch("/api/automatic-check/status", { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`Automatic-check status returned HTTP ${response.status}.`);
+    }
+    const status = await response.json();
+    renderAutomaticCheckStatus(status);
+
+    const automaticRefreshUtc = status.lastAutomaticRefreshUtc || null;
+    if (state.lastObservedAutomaticRefreshUtc &&
+        automaticRefreshUtc &&
+        automaticRefreshUtc !== state.lastObservedAutomaticRefreshUtc) {
+      await loadAutomaticSnapshotPreservingUi();
+    }
+    state.lastObservedAutomaticRefreshUtc = automaticRefreshUtc;
+  } catch (error) {
+    console.warn("Automatic-check status is temporarily unavailable.", error);
+  }
+}
+
+function renderAutomaticCheckStatus(status) {
+  if (!status.enabled) {
+    elements.automaticCheckStatus.textContent = "Automatic checks disabled";
+    return;
+  }
+  const lastChecked = status.lastCheckedUtc
+    ? new Date(status.lastCheckedUtc).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+    : "Never";
+  const nextCheck = status.nextCheckUtc
+    ? new Date(status.nextCheckUtc).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+    : "Scheduling…";
+  elements.automaticCheckStatus.textContent = status.isChecking
+    ? `Checking now · Last checked: ${lastChecked}`
+    : `Last checked: ${lastChecked} · Next check: ${nextCheck}`;
+}
+
+async function loadAutomaticSnapshotPreservingUi() {
+  const listScrollTop = elements.jobList.scrollTop;
+  const detailPane = document.querySelector(".detail-pane");
+  const detailScrollTop = detailPane.scrollTop;
+  try {
+    const response = await fetch("/api/jobs", { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`Local API returned HTTP ${response.status}.`);
+    }
+    applySnapshot(await response.json());
+    requestAnimationFrame(() => {
+      elements.jobList.scrollTop = listScrollTop;
+      detailPane.scrollTop = detailScrollTop;
+    });
+  } catch (error) {
+    console.warn("The automatic-refresh snapshot could not be loaded.", error);
+  }
 }
 
 function toggleSearchFilters() {
@@ -345,6 +445,7 @@ async function applyWorkdayLocation() {
     state.country = country;
     state.location = location;
     applySnapshot(await response.json());
+    await loadAutomaticCheckStatus();
   } catch (error) {
     showClientError(error);
     await loadSnapshot();
@@ -358,6 +459,7 @@ async function loadSnapshot() {
       throw new Error(`Local API returned HTTP ${response.status}.`);
     }
     applySnapshot(await response.json());
+    await loadAutomaticCheckStatus();
   } catch (error) {
     showClientError(error);
   }
@@ -373,6 +475,7 @@ async function refreshJobs() {
       throw new Error(`Refresh returned HTTP ${response.status}.`);
     }
     applySnapshot(await response.json());
+    await loadAutomaticCheckStatus();
   } catch (error) {
     showClientError(error);
     await loadSnapshot();
@@ -487,12 +590,16 @@ async function saveSettings() {
         collapsedAgeGroups: state.collapsedAgeGroups,
         country: state.country,
         location: state.location,
-        searchFiltersCollapsed: state.searchFiltersCollapsed
+        searchFiltersCollapsed: state.searchFiltersCollapsed,
+        automaticCheckEnabled: state.automaticCheckEnabled,
+        automaticCheckIntervalMinutes: state.automaticCheckIntervalMinutes,
+        themeMode: state.themeMode
       })
     });
     if (!response.ok) {
       throw new Error(`Settings save returned HTTP ${response.status}.`);
     }
+    await loadAutomaticCheckStatus();
   } catch (error) {
     elements.errorBanner.textContent = `Settings could not be saved: ${error.message || error}`;
     elements.errorBanner.hidden = false;

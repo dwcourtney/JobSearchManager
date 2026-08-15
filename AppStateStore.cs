@@ -207,6 +207,12 @@ public sealed class AppStateStore
             settings.Location,
             new FacetSelection(FacetDefaults.LocationId, FacetDefaults.LocationLabel),
             FacetDefaults.AllLocationsLabel);
+        var automaticCheckInterval = settings.AutomaticCheckIntervalMinutes is 30 or 60 or 120 or 240 or 480
+            ? settings.AutomaticCheckIntervalMinutes
+            : 60;
+        var themeMode = settings.ThemeMode is "light" or "dark"
+            ? settings.ThemeMode
+            : "light";
 
         return new ViewerSettings(
             NormalizeTerms(settings.IncludeKeywords),
@@ -218,7 +224,10 @@ public sealed class AppStateStore
             collapsed,
             country,
             location,
-            settings.SearchFiltersCollapsed);
+            settings.SearchFiltersCollapsed,
+            settings.AutomaticCheckEnabled ?? true,
+            automaticCheckInterval,
+            themeMode);
     }
 
     private static FacetSelection NormalizeFacetSelection(

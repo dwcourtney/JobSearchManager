@@ -1,0 +1,295 @@
+/*
+ * Leidos Jobs Viewer visual theme
+ *
+ * This is the single source of truth for paint, typography, radii, and other
+ * reusable visual tokens. styles.css contains layout and component structure.
+ */
+
+/* Typography */
+:root {
+  --font-family-ui: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-family-description: Arial, sans-serif;
+  --font-size-micro: .68rem;
+  --font-size-tiny: .72rem;
+  --font-size-caption: .75rem;
+  --font-size-small: .78rem;
+  --font-size-compact: .8rem;
+  --font-size-label: .82rem;
+  --font-size-metadata: .83rem;
+  --font-size-chip: .86rem;
+  --font-size-ui: .9rem;
+  --font-size-description: .98rem;
+  --font-size-icon: 1rem;
+  --font-size-chip-action: 1.1rem;
+  --font-size-description-h3: 1.08rem;
+  --font-size-description-h2: 1.2rem;
+  --font-size-detail-heading: 1.45rem;
+  --font-size-page-heading: 1.5rem;
+  --font-weight-medium: 600;
+  --font-weight-semibold: 650;
+  --font-weight-bold: 700;
+  --font-weight-emphasis: 750;
+  --line-height-icon: 1;
+  --line-height-heading: 1.2;
+  --line-height-title: 1.25;
+  --line-height-control: 1.3;
+  --line-height-metadata: 1.35;
+  --line-height-note: 1.4;
+  --line-height-description: 1.55;
+  --letter-spacing-section: .06em;
+  --letter-spacing-badge: .04em;
+
+  /* Shape and effects */
+  --radius-highlight: 2px;
+  --radius-badge: 3px;
+  --radius-control: 4px;
+  --radius-pill: 999px;
+  --radius-round: 50%;
+  --focus-ring-width: 3px;
+  --selected-job-indicator-width: 4px;
+  --opacity-disabled: .7;
+  --opacity-dismissed-job: .68;
+  --duration-spinner: .8s;
+}
+
+/* Light theme: preserves the established application appearance. */
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Core surfaces and text */
+  --color-background: #e9edf1;
+  --color-surface: #ffffff;
+  --color-surface-secondary: #f7f9fb;
+  --color-border: #cbd4dc;
+  --color-border-strong: #aebac5;
+  --color-text-primary: #1c2733;
+  --color-text-secondary: #617181;
+  --color-text-heading: #173b55;
+  --color-label: #34495b;
+
+  /* Header and accent */
+  --color-header-background: #123b5d;
+  --color-header-text: #ffffff;
+  --color-header-secondary: #d4e4f0;
+  --color-accent: #075c99;
+  --color-accent-hover: #064a7a;
+  --color-accent-soft: #e8f3fb;
+  --color-focus-ring: #efb526;
+  --color-link: #075c99;
+  --color-link-hover: #064a7a;
+
+  /* Forms and secondary actions */
+  --color-input-background: #ffffff;
+  --color-input-text: #243746;
+  --color-input-prefix: #4d5e6c;
+  --color-secondary-button-border: #7798ad;
+  --color-secondary-button-text: #21465e;
+  --color-secondary-button-background: #e7f0f5;
+  --color-secondary-button-hover: #d8e7ef;
+  --color-destructive-button: #8a3b3b;
+  --color-destructive-button-hover: #702f2f;
+
+  /* Filter and section headers */
+  --color-filter-toggle-text: #29475d;
+  --color-filter-toggle-background: #edf3f7;
+  --color-filter-toggle-hover: #e4edf3;
+  --color-pane-heading-text: #435565;
+  --color-pane-heading-background: #f3f6f8;
+  --color-age-heading-text: #29475d;
+  --color-age-heading-background: #eef3f6;
+  --color-age-heading-hover: #e3ebf0;
+  --color-age-heading-border: #d9e0e5;
+
+  /* Job results */
+  --color-job-border: #e0e5e9;
+  --color-job-hover: #f4f8fb;
+  --color-job-selected: #e8f3fb;
+  --color-job-selected-indicator: #075c99;
+  --color-job-pay: #31566f;
+  --color-hidden-job-background: #f3f5f6;
+  --color-dismiss-action: #6a7781;
+  --color-dismiss-action-hover-border: #c5a5a5;
+  --color-dismiss-action-hover-text: #7b3030;
+  --color-dismiss-action-hover-background: #fff0f0;
+  --color-restore-action-border: #9eb8c8;
+  --color-restore-action-text: #27546e;
+  --color-restore-action-background: #e9f2f7;
+
+  /* Keyword chips */
+  --color-chip-border: #9fc3da;
+  --color-chip-text: #173e59;
+  --color-chip-action: #315d79;
+  --color-chip-action-hover: #cbdfea;
+  --color-include-chip-border: #9bc8aa;
+  --color-include-chip-text: #194f30;
+  --color-include-chip-background: #eaf6ef;
+  --color-include-chip-action: #25633f;
+  --color-include-chip-action-hover: #cce5d5;
+  --color-exclude-chip-border: #d4aaaa;
+  --color-exclude-chip-text: #672929;
+  --color-exclude-chip-background: #faeeee;
+  --color-exclude-chip-action: #7a3434;
+  --color-exclude-chip-action-hover: #ead0d0;
+
+  /* Badges */
+  --color-new-badge-border: #5da879;
+  --color-new-badge-text: #174e2b;
+  --color-new-badge-background: #ddf4e5;
+  --color-clearance-badge-border: #89aec5;
+  --color-clearance-badge-text: #234e68;
+  --color-clearance-badge-background: #e8f2f7;
+  --color-location-badge-border: #d5aa59;
+  --color-location-badge-text: #744d0d;
+  --color-location-badge-background: #fff4d8;
+  --color-headroom-badge-border: #b9a7d3;
+  --color-headroom-badge-text: #543b73;
+  --color-headroom-badge-background: #f2edfa;
+  --color-hidden-badge-border: #a7afb5;
+  --color-hidden-badge-text: #4e5961;
+  --color-hidden-badge-background: #edf0f2;
+
+  /* Messages and notes */
+  --color-error-border: #e1abab;
+  --color-error-text: #9b2c2c;
+  --color-error-background: #fff0f0;
+  --color-loading-border: #a8c9df;
+  --color-loading-text: #194f72;
+  --color-loading-background: #eaf5fc;
+  --color-loading-spinner: #9ac4df;
+  --color-cache-border: #d5bf7c;
+  --color-cache-text: #624b0d;
+  --color-cache-background: #fff8df;
+  --color-location-note-border: #ddb967;
+  --color-location-note-text: #68460f;
+  --color-location-note-background: #fff6df;
+  --color-headroom-note-border: #b9a7d3;
+  --color-headroom-note-text: #4f396b;
+  --color-headroom-note-background: #f5f1fb;
+  --color-clearance-note-border: #9bb8ca;
+  --color-clearance-note-text: #294c61;
+  --color-clearance-note-background: #edf5f9;
+
+  /* Description and highlighting */
+  --color-detail-header-background: rgba(255, 255, 255, .97);
+  --color-description-text: #202c35;
+  --color-description-heading: #173b55;
+  --color-keyword-highlight-background: #ffe89a;
+  --color-keyword-highlight-underline: #d5aa28;
+}
+
+/* Dark theme: purpose-built dark surfaces with readable semantic accents. */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-background: #0f151b;
+  --color-surface: #172029;
+  --color-surface-secondary: #1b2630;
+  --color-border: #344451;
+  --color-border-strong: #526675;
+  --color-text-primary: #e5edf3;
+  --color-text-secondary: #a9bac7;
+  --color-text-heading: #d9ecf8;
+  --color-label: #c3d2dc;
+
+  --color-header-background: #0b2b42;
+  --color-header-text: #f5f9fc;
+  --color-header-secondary: #b8cedd;
+  --color-accent: #4fa9e5;
+  --color-accent-hover: #78c1ee;
+  --color-accent-soft: #203a4c;
+  --color-focus-ring: #ffd166;
+  --color-link: #71bceb;
+  --color-link-hover: #9bd3f4;
+
+  --color-input-background: #111a22;
+  --color-input-text: #e5edf3;
+  --color-input-prefix: #b4c2cc;
+  --color-secondary-button-border: #5d8097;
+  --color-secondary-button-text: #d5ebf8;
+  --color-secondary-button-background: #203746;
+  --color-secondary-button-hover: #29495d;
+  --color-destructive-button: #a34f55;
+  --color-destructive-button-hover: #bd6268;
+
+  --color-filter-toggle-text: #d2e3ee;
+  --color-filter-toggle-background: #1d2c37;
+  --color-filter-toggle-hover: #263845;
+  --color-pane-heading-text: #c0d0da;
+  --color-pane-heading-background: #1c2832;
+  --color-age-heading-text: #c8dce8;
+  --color-age-heading-background: #20303b;
+  --color-age-heading-hover: #2a3e4c;
+  --color-age-heading-border: #3a4c59;
+
+  --color-job-border: #2f3e49;
+  --color-job-hover: #1d2c37;
+  --color-job-selected: #203b4e;
+  --color-job-selected-indicator: #55afe8;
+  --color-job-pay: #a9cce2;
+  --color-hidden-job-background: #20272d;
+  --color-dismiss-action: #9eabb4;
+  --color-dismiss-action-hover-border: #865b60;
+  --color-dismiss-action-hover-text: #f0b7bc;
+  --color-dismiss-action-hover-background: #3b2528;
+  --color-restore-action-border: #567c93;
+  --color-restore-action-text: #b8def4;
+  --color-restore-action-background: #203846;
+
+  --color-chip-border: #467693;
+  --color-chip-text: #c8e6f7;
+  --color-chip-action: #afd8ee;
+  --color-chip-action-hover: #2d5369;
+  --color-include-chip-border: #477b5a;
+  --color-include-chip-text: #bce7ca;
+  --color-include-chip-background: #203b2b;
+  --color-include-chip-action: #a5d8b5;
+  --color-include-chip-action-hover: #315940;
+  --color-exclude-chip-border: #81575b;
+  --color-exclude-chip-text: #f1c0c4;
+  --color-exclude-chip-background: #3b272a;
+  --color-exclude-chip-action: #e3a7ac;
+  --color-exclude-chip-action-hover: #56363a;
+
+  --color-new-badge-border: #57966d;
+  --color-new-badge-text: #bceaca;
+  --color-new-badge-background: #21402c;
+  --color-clearance-badge-border: #56819a;
+  --color-clearance-badge-text: #b9ddf2;
+  --color-clearance-badge-background: #203846;
+  --color-location-badge-border: #94733b;
+  --color-location-badge-text: #f0d49c;
+  --color-location-badge-background: #3d321e;
+  --color-headroom-badge-border: #766494;
+  --color-headroom-badge-text: #dacaf2;
+  --color-headroom-badge-background: #332a43;
+  --color-hidden-badge-border: #68747d;
+  --color-hidden-badge-text: #c8d0d5;
+  --color-hidden-badge-background: #30383e;
+
+  --color-error-border: #8c5559;
+  --color-error-text: #f0b6ba;
+  --color-error-background: #3a2427;
+  --color-loading-border: #4d748d;
+  --color-loading-text: #b9dff5;
+  --color-loading-background: #1c3443;
+  --color-loading-spinner: #5d8eac;
+  --color-cache-border: #82713f;
+  --color-cache-text: #e5d59f;
+  --color-cache-background: #37311f;
+  --color-location-note-border: #90713d;
+  --color-location-note-text: #ecd29c;
+  --color-location-note-background: #3a311d;
+  --color-headroom-note-border: #74628f;
+  --color-headroom-note-text: #d9c9ee;
+  --color-headroom-note-background: #332a40;
+  --color-clearance-note-border: #567b91;
+  --color-clearance-note-text: #bedbea;
+  --color-clearance-note-background: #213641;
+
+  --color-detail-header-background: rgba(23, 32, 41, .97);
+  --color-description-text: #e1e8ed;
+  --color-description-heading: #d9ecf8;
+  --color-keyword-highlight-background: #735f18;
+  --color-keyword-highlight-underline: #b99a2f;
+}

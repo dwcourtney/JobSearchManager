@@ -95,6 +95,26 @@ public sealed record WorkdayFetchResult(
     int ListingCount,
     int DetailFailureCount);
 
+public sealed record ListingIdentity(
+    string StableId,
+    string RequisitionId,
+    string ExternalPath);
+
+public sealed record AutomaticCheckResult(
+    bool Performed,
+    bool SkippedBecauseBusy,
+    int ListingCount,
+    IReadOnlyList<string> UnknownStableIds,
+    bool FullRefreshTriggered);
+
+public sealed record AutomaticCheckStatus(
+    bool Enabled,
+    int IntervalMinutes,
+    bool IsChecking,
+    DateTimeOffset? LastCheckedUtc,
+    DateTimeOffset? NextCheckUtc,
+    DateTimeOffset? LastAutomaticRefreshUtc);
+
 public sealed record JobsSnapshot(
     IReadOnlyList<JobRecord> Jobs,
     int TotalJobs,
@@ -125,14 +145,20 @@ public sealed record ViewerSettings(
     IReadOnlyDictionary<string, bool> CollapsedAgeGroups,
     FacetSelection Country,
     FacetSelection Location,
-    bool SearchFiltersCollapsed)
+    bool SearchFiltersCollapsed,
+    bool? AutomaticCheckEnabled,
+    int AutomaticCheckIntervalMinutes,
+    string ThemeMode)
 {
     public static ViewerSettings Default { get; } = new(
         [], [], null, "metadata", "all", true,
         new Dictionary<string, bool>(StringComparer.Ordinal),
         new FacetSelection(FacetDefaults.CountryId, FacetDefaults.CountryLabel),
         new FacetSelection(FacetDefaults.LocationId, FacetDefaults.LocationLabel),
-        false);
+        false,
+        true,
+        60,
+        "light");
 }
 
 public sealed record ViewedJobRequest(string StableId);

@@ -93,6 +93,21 @@ public sealed class WorkdayClient
         return new WorkdayFetchResult(sorted, listings.Count, detailFailureCount);
     }
 
+    public async Task<IReadOnlyList<ListingIdentity>> FetchListingIdentitiesAsync(
+        WorkdayQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        var listings = await FetchListingsAsync(query, cancellationToken);
+        return listings.Select(listing =>
+        {
+            var requisitionId = listing.BulletFields.FirstOrDefault() ?? "";
+            var stableId = !string.IsNullOrWhiteSpace(requisitionId)
+                ? requisitionId
+                : $"path:{listing.ExternalPath}";
+            return new ListingIdentity(stableId, requisitionId, listing.ExternalPath);
+        }).ToArray();
+    }
+
     public async Task<LocationFacetOptions> FetchLocationFacetsAsync(
         string? countryId,
         CancellationToken cancellationToken = default)

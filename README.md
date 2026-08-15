@@ -15,6 +15,7 @@ an **Open in Workday** link.
 - .NET 10 / ASP.NET Core Minimal API
 - One local process bound only to `127.0.0.1:54321`
 - Vanilla HTML, CSS, and JavaScript frontend
+- Central semantic theme variables in `wwwroot/theme.css`
 - Application-local JSON persistence; no database
 - Vendored DOMPurify for description sanitization
 - No Node, React, Angular, Blazor, IIS, cloud service, or Python dependency
@@ -46,7 +47,8 @@ all state.
 
 `settings.json` contains the selected Workday country/location IDs and display
 labels, inclusion and exclusion terms, annual minimum salary, keyword scope,
-remote-location mode, inclusion-highlighting preference, and collapsed
+remote-location mode, inclusion-highlighting preference, automatic-check
+settings, selected light/dark theme, and collapsed
 posting-age groups. It also stores whether the complete **Search & Filters**
 section is collapsed. Local filter changes save automatically after a short
 debounce. `jobs-cache.json` contains the complete most recent successful
@@ -66,6 +68,45 @@ replaced by sensible defaults in memory rather than crashing the application.
 An older or mismatched cache is never displayed for a different country/location
 selection. Job history remains global across selections, so moving between
 scopes does not make an already-known requisition NEW again.
+
+## Automatic new-job checks
+
+While the application is running, it checks for new posting identities once an
+hour by default. The interval can be disabled or changed to 30 minutes, 1, 2,
+4, or 8 hours in **Search & Filters**. The setting is persisted in the local
+`data/settings.json` file. Closing the application stops the timer; this is not
+a Windows service or scheduled task.
+
+Each automatic check downloads only Workday's paginated listing metadata and
+compares requisition IDs (with external paths as fallback identities) with the
+global job history. If every identity is already known, descriptions are not
+downloaded and the current snapshot is not replaced. If at least one unknown
+identity is found, the existing complete refresh pipeline runs once so the new
+posting receives its full sanitized description and normal NEW tracking.
+
+Automatic checks never overlap a manual refresh or another automatic check.
+Completing a manual refresh resets the interval so an automatic check does not
+immediately follow it. A transient automatic-check failure is logged but does
+not replace the current snapshot or show a disruptive error banner. The UI
+shows the last-check and next-check times and notices a successful automatic
+refresh without clearing the selected job, changing filters, or deliberately
+resetting the list/detail scroll positions.
+
+## Appearance
+
+The **Theme** control offers Light and Dark modes and persists the choice in
+`data/settings.json`. Light mode preserves the original appearance. Dark mode
+uses purpose-built semantic colors for the page, controls, result states,
+badges, warnings, highlights, and formatted Workday descriptions. Workday
+inline colors and backgrounds are stripped by the existing HTML sanitizer, so
+description content inherits the selected local theme while preserving its
+headings, paragraphs, emphasis, lists, and safe links.
+
+All visual tokens are centralized in `wwwroot/theme.css`; layout remains in
+`wwwroot/styles.css`. A small value in browser local storage is used only as an
+early-paint hint to avoid a light flash before settings load. The backend JSON
+setting beside the executable remains authoritative and corrects the hint as
+soon as the page initializes.
 
 ## Workday country and location scope
 
@@ -206,6 +247,14 @@ Requires the .NET 10 SDK:
 ```powershell
 dotnet build -c Release
 ```
+
+## Source control
+
+The project directory is a local Git repository. Major changes should begin
+from a known-good commit and end with a tested checkpoint. Generated `bin`,
+`obj`, IDE, log, publish, and application-local `data` content is excluded by
+`.gitignore`; never add personal `settings.json`, cached descriptions, or job
+history merely to make a source commit.
 
 ## Run
 
