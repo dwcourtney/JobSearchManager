@@ -410,23 +410,23 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 
 .highlight-option input { accent-color: var(--color-accent); }
 
-.automatic-check-settings, .theme-settings, .education-settings {
+.automatic-check-settings, .theme-settings, .education-settings, .security-settings {
   display: flex;
   flex-direction: column;
   gap: .3rem;
 }
 
-.automatic-check-enabled, .theme-settings > label, .education-filter-toggle {
+.automatic-check-enabled, .theme-settings > label, .education-filter-toggle, .clearance-filter-toggle {
   color: var(--color-label);
   font-size: var(--font-size-label);
   font-weight: var(--font-weight-semibold);
 }
 
 .automatic-check-enabled { display: inline-flex; align-items: center; gap: .4rem; }
-.automatic-check-enabled input, .education-filter-toggle input { accent-color: var(--color-accent); }
-.education-filter-toggle { display: inline-flex; align-items: flex-start; gap: .4rem; line-height: var(--line-height-control); }
-.education-filter-toggle input { flex: 0 0 auto; margin-top: .15rem; }
-.automatic-check-settings select, .theme-settings select, .education-settings select {
+.automatic-check-enabled input, .education-filter-toggle input, .clearance-filter-toggle input { accent-color: var(--color-accent); }
+.education-filter-toggle, .clearance-filter-toggle { display: inline-flex; align-items: flex-start; gap: .4rem; line-height: var(--line-height-control); }
+.education-filter-toggle input, .clearance-filter-toggle input { flex: 0 0 auto; margin-top: .15rem; }
+.automatic-check-settings select, .theme-settings select, .education-settings select, .security-settings select {
   min-height: 2.25rem;
   padding: .48rem .6rem;
   border: var(--border-width-default) solid var(--color-border-strong);
@@ -772,7 +772,8 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 
 .job-card .restriction-badge, .job-card .headroom-badge,
 .job-card .clearance-badge, .job-card .credential-badge,
-.job-card .academic-badge, .job-card .education-mismatch-badge, .job-card .new-badge {
+.job-card .academic-badge, .job-card .education-mismatch-badge,
+.job-card .clearance-mismatch-badge, .job-card .new-badge {
   display: inline-block;
   padding: .14rem .4rem;
   border-radius: var(--radius-badge);
@@ -831,6 +832,12 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   border: var(--border-width-default) solid var(--color-education-mismatch-badge-border);
   color: var(--color-education-mismatch-badge-text);
   background: var(--color-education-mismatch-badge-background);
+}
+
+.job-card .clearance-mismatch-badge {
+  border: var(--border-width-default) solid var(--color-clearance-mismatch-badge-border);
+  color: var(--color-clearance-mismatch-badge-text);
+  background: var(--color-clearance-mismatch-badge-background);
 }
 
 .job-card .credential-count-badge { font-weight: var(--font-weight-medium); }
@@ -991,7 +998,8 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 }
 
 .flags-card .location-note, .flags-card .headroom-note,
-.flags-card .education-mismatch-note, .flags-card .detail-warning {
+.flags-card .education-mismatch-note, .flags-card .clearance-mismatch-note,
+.flags-card .detail-warning {
   margin-top: .55rem;
 }
 .flags-card > :nth-child(2) { margin-top: 0; }
@@ -1050,6 +1058,23 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 }
 .education-mismatch-note strong { display: block; font-size: var(--font-size-small); }
 .education-mismatch-note p { margin: .3rem 0 0; line-height: var(--line-height-note); }
+
+.clearance-mismatch-note {
+  padding: .7rem .8rem;
+  border: var(--border-width-default) solid var(--color-clearance-mismatch-border);
+  border-radius: var(--radius-control);
+  color: var(--color-clearance-mismatch-text);
+  background: var(--color-clearance-mismatch-background);
+}
+.clearance-mismatch-note strong { display: block; font-size: var(--font-size-small); }
+.clearance-mismatch-note p { margin: .3rem 0 0; line-height: var(--line-height-note); }
+
+.clearance-profile-status { font-weight: var(--font-weight-semibold); }
+.clearance-profile-status.meets { color: var(--color-clearance-status-meets-text); }
+.clearance-profile-status.strictMismatch { color: var(--color-clearance-status-mismatch-text); }
+.clearance-profile-status.meetsLevelPolygraphReview,
+.clearance-profile-status.uncertain,
+.clearance-profile-status.profileNotConfigured { color: var(--color-clearance-status-review-text); }
 
 .academic-note {
   margin-top: .9rem;

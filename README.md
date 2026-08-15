@@ -63,8 +63,9 @@ all state.
 labels, inclusion and exclusion terms, annual minimum salary, keyword scope,
 remote-location mode, inclusion-highlighting preference, automatic-check
 settings, selected light/dark theme, the extensible user qualification profile's
-completed-education entry, the conservative strict-education filter, and collapsed
-posting-age groups. It also stores whether the complete **Search & Filters**
+completed-education and separate security/clearance entries, the conservative
+strict-education and strict day-one-clearance filters, and collapsed posting-age
+groups. It also stores whether the complete **Search & Filters**
 section is collapsed. Local filter changes save automatically after a short
 debounce. `jobs-cache.json` contains the complete most recent successful
 normalized snapshot, including formatted descriptions and the Workday query
@@ -148,8 +149,8 @@ as part of the same control group. Its Workday source indicator is a small link 
 salary even though its editor is an application-level preference.
 
 **Settings** contains the less frequently changed Workday country/location query,
-minimum acceptable salary, completed education profile, strict-education filter,
-automatic-check enablement and interval, and theme.
+minimum acceptable salary, completed education profile, security/clearance profile,
+strict qualification filters, automatic-check enablement and interval, and theme.
 Moving between views does not alter filter values, job selection, scroll state,
 cached data, or settings. The navigation itself is presentation-only and the
 application always opens on Jobs.
@@ -288,6 +289,29 @@ shows the source excerpt. Ambiguous generic security-clearance language is kept
 as **Other / unclear level** rather than guessing. Derived clearance fields live
 in `jobs-cache.json`; they are deliberately not written to job history and are
 regenerated from each fresh Workday description.
+
+The Security / Clearance Profile persists two independent values: current
+national-security clearance (`None`, `Secret`, `Top Secret`, `TS/SCI`, or an
+uncomparable `Other / Unknown`) and current Public Trust status. Public Trust is
+not placed into the national-security hierarchy, and holding Secret or higher
+never implies a Public Trust determination. Both profile axes default to **Not
+configured**, which keeps every job visible.
+
+The optional strict-clearance filter is off by default. It can hide a posting
+only when the existing parser is confident, the requirement is explicitly
+active/current/already-held/day-one (`activeRequired` or `mustPossess`), and the
+configured profile does not satisfy it. The national-security comparison is
+`None < Secret < Top Secret < TS/SCI`; Top Secret does not satisfy TS/SCI.
+Obtain-and-maintain, obtain, eligibility, suitability, maintain, preferred, and
+ambiguous wording never hides a job. A separate result-row mismatch badge and
+the **At a Glance** Clearance card explain the comparison. The original **Full
+Posting** remains free of derived analysis.
+
+Polygraph detection remains separate from clearance level. A detected required
+polygraph is surfaced in the job badge and Clearance card, but the current
+profile does not claim a polygraph type or status. Even when the clearance level
+matches, the UI therefore says the polygraph needs separate review; polygraph
+alone does not trigger automatic hiding.
 
 Credential analysis is similarly deterministic and informational. The
 source-controlled `CredentialCatalog.json` defines each recognized credential's

@@ -222,7 +222,17 @@ public sealed class AppStateStore
             settings.UserProfile?.Education?.DoctorateType == "phD"
                 ? "phD"
                 : null;
-        var userProfile = new UserProfile(new EducationProfile(educationLevel, doctorateType));
+        var clearanceLevel = settings.UserProfile?.Security?.ClearanceLevel is
+            "notSpecified" or "none" or "secret" or "topSecret" or "topSecretSCI" or "otherUnknown"
+                ? settings.UserProfile.Security.ClearanceLevel
+                : "notSpecified";
+        var publicTrust = settings.UserProfile?.Security?.PublicTrust is
+            "notSpecified" or "none" or "current"
+                ? settings.UserProfile.Security.PublicTrust
+                : "notSpecified";
+        var userProfile = new UserProfile(
+            new EducationProfile(educationLevel, doctorateType),
+            new SecurityProfile(clearanceLevel, publicTrust));
 
         return new ViewerSettings(
             NormalizeTerms(settings.IncludeKeywords),
@@ -239,7 +249,8 @@ public sealed class AppStateStore
             automaticCheckInterval,
             themeMode,
             userProfile,
-            settings.HideStrictEducationMismatch);
+            settings.HideStrictEducationMismatch,
+            settings.HideStrictClearanceMismatch);
     }
 
     private static FacetSelection NormalizeFacetSelection(

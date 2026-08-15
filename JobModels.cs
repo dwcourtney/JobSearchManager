@@ -200,7 +200,8 @@ public sealed record ViewerSettings(
     int AutomaticCheckIntervalMinutes,
     string ThemeMode,
     UserProfile? UserProfile = null,
-    bool HideStrictEducationMismatch = false)
+    bool HideStrictEducationMismatch = false,
+    bool HideStrictClearanceMismatch = false)
 {
     public static ViewerSettings Default { get; } = new(
         [], [], null, "metadata", "all", true,
@@ -212,17 +213,23 @@ public sealed record ViewerSettings(
         60,
         "light",
         UserProfile.Default,
+        false,
         false);
 }
 
-public sealed record UserProfile(EducationProfile Education)
+public sealed record UserProfile(EducationProfile Education, SecurityProfile? Security = null)
 {
-    public static UserProfile Default { get; } = new(EducationProfile.Default);
+    public static UserProfile Default { get; } = new(EducationProfile.Default, SecurityProfile.Default);
 }
 
 public sealed record EducationProfile(string Level, string? DoctorateType)
 {
     public static EducationProfile Default { get; } = new("notSpecified", null);
+}
+
+public sealed record SecurityProfile(string ClearanceLevel, string PublicTrust)
+{
+    public static SecurityProfile Default { get; } = new("notSpecified", "notSpecified");
 }
 
 public sealed record ViewedJobRequest(string StableId);

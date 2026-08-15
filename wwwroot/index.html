@@ -148,6 +148,10 @@
                     <strong>Education mismatch</strong>
                     <p id="detail-education-mismatch-text"></p>
                   </div>
+                  <div id="detail-clearance-mismatch" class="clearance-mismatch-note" hidden>
+                    <strong>Clearance mismatch</strong>
+                    <p id="detail-clearance-mismatch-text"></p>
+                  </div>
                   <div id="detail-location-note" class="location-note" hidden>
                     <strong>Remote location restriction</strong>
                     <p id="detail-location-note-text"></p>
@@ -162,8 +166,10 @@
                          aria-labelledby="clearance-heading" hidden>
                   <h3 id="clearance-heading">Clearance</h3>
                   <dl class="compact-facts">
-                    <div id="detail-clearance-row"><dt>Level</dt><dd id="detail-clearance"></dd></div>
-                    <div id="detail-clearance-status-row"><dt>Status</dt><dd id="detail-clearance-status"></dd></div>
+                    <div id="detail-clearance-row"><dt>Required</dt><dd id="detail-clearance"></dd></div>
+                    <div id="detail-clearance-status-row"><dt>Requirement</dt><dd id="detail-clearance-status"></dd></div>
+                    <div><dt>User</dt><dd id="detail-user-clearance"></dd></div>
+                    <div><dt>Status</dt><dd id="detail-clearance-comparison"></dd></div>
                     <div id="detail-polygraph-row" hidden><dt>Polygraph</dt><dd id="detail-polygraph"></dd></div>
                   </dl>
                   <p id="detail-clearance-note-text" class="evidence-text"></p>
@@ -259,6 +265,34 @@
             Hide jobs with strict education requirements above my completed level
           </label>
           <small>Preferred, flexible, or uncertain education language never hides a job.</small>
+        </section>
+
+        <section class="settings-group" aria-labelledby="security-profile-heading">
+          <h3 id="security-profile-heading">Security / Clearance Profile</h3>
+          <div class="settings-field security-settings">
+            <label for="clearance-profile-level">Current national-security clearance</label>
+            <select id="clearance-profile-level">
+              <option value="notSpecified">Not configured</option>
+              <option value="none">None</option>
+              <option value="secret">Secret</option>
+              <option value="topSecret">Top Secret</option>
+              <option value="topSecretSCI">TS/SCI</option>
+              <option value="otherUnknown">Other / Unknown</option>
+            </select>
+          </div>
+          <div class="settings-field security-settings">
+            <label for="public-trust-profile">Public Trust</label>
+            <select id="public-trust-profile">
+              <option value="notSpecified">Not configured</option>
+              <option value="none">None</option>
+              <option value="current">Held / current</option>
+            </select>
+          </div>
+          <label class="clearance-filter-toggle">
+            <input id="hide-strict-clearance-mismatch" type="checkbox">
+            Hide jobs with unmet strict day-one clearance requirements
+          </label>
+          <small>Obtainable, preferred, and uncertain requirements always remain visible.</small>
         </section>
 
         <section class="settings-group" aria-labelledby="automatic-checking-heading">

@@ -231,6 +231,9 @@
   --color-education-mismatch-badge-border: #c38a54;
   --color-education-mismatch-badge-text: #733f16;
   --color-education-mismatch-badge-background: #fff0df;
+  --color-clearance-mismatch-badge-border: #bf795d;
+  --color-clearance-mismatch-badge-text: #73351f;
+  --color-clearance-mismatch-badge-background: #ffede7;
   --color-location-badge-border: #d5aa59;
   --color-location-badge-text: #744d0d;
   --color-location-badge-background: #fff4d8;
@@ -269,6 +272,12 @@
   --color-clearance-note-border: #9bb8ca;
   --color-clearance-note-text: #294c61;
   --color-clearance-note-background: #edf5f9;
+  --color-clearance-mismatch-border: #c88669;
+  --color-clearance-mismatch-text: #703821;
+  --color-clearance-mismatch-background: #fff0e9;
+  --color-clearance-status-meets-text: #255d39;
+  --color-clearance-status-mismatch-text: #8a3628;
+  --color-clearance-status-review-text: #655b25;
   --color-credential-note-border: #9cadd3;
   --color-credential-note-text: #293d69;
   --color-credential-note-background: #f1f4fb;
@@ -438,6 +447,9 @@
   --color-education-mismatch-badge-border: #a67448;
   --color-education-mismatch-badge-text: #f0c89f;
   --color-education-mismatch-badge-background: #46301f;
+  --color-clearance-mismatch-badge-border: #9d624d;
+  --color-clearance-mismatch-badge-text: #f2c1b0;
+  --color-clearance-mismatch-badge-background: #472b25;
   --color-location-badge-border: #94733b;
   --color-location-badge-text: #f0d49c;
   --color-location-badge-background: #3d321e;
@@ -476,6 +488,12 @@
   --color-clearance-note-border: #567b91;
   --color-clearance-note-text: #bedbea;
   --color-clearance-note-background: #213641;
+  --color-clearance-mismatch-border: #995f4a;
+  --color-clearance-mismatch-text: #f2c4b2;
+  --color-clearance-mismatch-background: #402925;
+  --color-clearance-status-meets-text: #bce5c8;
+  --color-clearance-status-mismatch-text: #f0b7a6;
+  --color-clearance-status-review-text: #e1d9a5;
   --color-credential-note-border: #5e719d;
   --color-credential-note-text: #d1dcf5;
   --color-credential-note-background: #252f46;

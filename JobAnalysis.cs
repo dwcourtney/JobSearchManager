@@ -472,7 +472,7 @@ internal static partial class JobAnalysis
     private static partial Regex OtherClearanceRegex();
 
     [GeneratedRegex(
-        @"\b(?:clearance|Public\s+Trust|suitability\s+determination|background\s+investigation|polygraph)\b",
+        @"\b(?:clearance|Public\s+Trust|TS\s*/\s*SCI|SCI\s+eligibility|suitability\s+determination|background\s+investigation|polygraph)\b",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex ClearanceContextRegex();
 
@@ -489,15 +489,17 @@ internal static partial class JobAnalysis
     private static partial Regex PreferredClearanceRegex();
 
     [GeneratedRegex(
-        @"\b(?:active|current)\b.{0,55}\b(?:clearance|Public\s+Trust)\b|" +
-        @"\b(?:clearance|Public\s+Trust)\b.{0,55}\b(?:active|current)\b|" +
-        @"\bholds?\b.{0,35}\bactive\b.{0,35}\bclearance\b",
+        @"\b(?:active|current)\b.{0,55}\b(?:clearance|Public\s+Trust)\b(?![^.!?]{0,40}\bpreferred\b)|" +
+        @"\b(?:clearance|Public\s+Trust)\b.{0,55}\b(?:active|current)\b(?![^.!?]{0,40}\bpreferred\b)|" +
+        @"\bholds?\b.{0,35}\bactive\b.{0,35}\bclearance\b(?![^.!?]{0,40}\bpreferred\b)|" +
+        @"\bmust\s+currently\s+hold\b.{0,55}\b(?:TS\s*/\s*SCI|Top\s+Secret|Secret|clearance|Public\s+Trust)\b|" +
+        @"\b(?:TS\s*/\s*SCI|Top\s+Secret|Secret|clearance|Public\s+Trust)\b.{0,45}\b(?:required\s+)?(?:on\s+day\s+one|at\s+(?:the\s+)?time\s+of\s+hire|at\s+(?:the\s+)?start\s+date)\b",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex ActiveRequiredClearanceRegex();
 
     [GeneratedRegex(
-        @"\bmust\s+(?:have|possess|hold)\b.{0,60}\b(?:clearance|Public\s+Trust)\b|" +
-        @"\b(?:possess|hold)\s+and\s+maintain\b.{0,55}\bclearance\b|" +
+        @"\bmust\s+(?:have|possess|hold)\b.{0,60}\b(?:clearance|Public\s+Trust)\b(?![^.!?]{0,40}\bpreferred\b)|" +
+        @"\b(?:possess|hold)\s+and\s+maintain\b.{0,55}\bclearance\b(?![^.!?]{0,40}\bpreferred\b)|" +
         @"\bexisting\b.{0,55}\b(?:clearance|Public\s+Trust)\b",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex MustPossessClearanceRegex();

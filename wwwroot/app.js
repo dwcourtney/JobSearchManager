@@ -33,6 +33,9 @@ const state = {
   educationLevel: "notSpecified",
   doctorateType: null,
   hideStrictEducationMismatch: false,
+  clearanceProfileLevel: "notSpecified",
+  publicTrustProfile: "notSpecified",
+  hideStrictClearanceMismatch: false,
   detailTab: "glance",
   renderedDetailJobId: null,
   lastObservedAutomaticRefreshUtc: null,
@@ -90,6 +93,9 @@ const elements = {
   doctorateTypeField: document.querySelector("#doctorate-type-field"),
   doctorateType: document.querySelector("#doctorate-type"),
   hideStrictEducationMismatch: document.querySelector("#hide-strict-education-mismatch"),
+  clearanceProfileLevel: document.querySelector("#clearance-profile-level"),
+  publicTrustProfile: document.querySelector("#public-trust-profile"),
+  hideStrictClearanceMismatch: document.querySelector("#hide-strict-clearance-mismatch"),
   resultCount: document.querySelector("#result-count"),
   appShell: document.querySelector("#app-shell"),
   errorBanner: document.querySelector("#error-banner"),
@@ -119,10 +125,14 @@ const elements = {
   detailFlags: document.querySelector("#detail-flags"),
   detailEducationMismatch: document.querySelector("#detail-education-mismatch"),
   detailEducationMismatchText: document.querySelector("#detail-education-mismatch-text"),
+  detailClearanceMismatch: document.querySelector("#detail-clearance-mismatch"),
+  detailClearanceMismatchText: document.querySelector("#detail-clearance-mismatch-text"),
   detailClearanceRow: document.querySelector("#detail-clearance-row"),
   detailClearance: document.querySelector("#detail-clearance"),
   detailClearanceStatusRow: document.querySelector("#detail-clearance-status-row"),
   detailClearanceStatus: document.querySelector("#detail-clearance-status"),
+  detailUserClearance: document.querySelector("#detail-user-clearance"),
+  detailClearanceComparison: document.querySelector("#detail-clearance-comparison"),
   detailPolygraphRow: document.querySelector("#detail-polygraph-row"),
   detailPolygraph: document.querySelector("#detail-polygraph"),
   detailLocationNote: document.querySelector("#detail-location-note"),
@@ -224,6 +234,21 @@ async function initialize() {
   });
   elements.hideStrictEducationMismatch.addEventListener("change", () => {
     state.hideStrictEducationMismatch = elements.hideStrictEducationMismatch.checked;
+    renderResults();
+    queueSettingsSave();
+  });
+  elements.clearanceProfileLevel.addEventListener("change", () => {
+    state.clearanceProfileLevel = normalizeClearanceProfileLevel(elements.clearanceProfileLevel.value);
+    renderResults();
+    queueSettingsSave();
+  });
+  elements.publicTrustProfile.addEventListener("change", () => {
+    state.publicTrustProfile = normalizePublicTrustProfile(elements.publicTrustProfile.value);
+    renderResults();
+    queueSettingsSave();
+  });
+  elements.hideStrictClearanceMismatch.addEventListener("change", () => {
+    state.hideStrictClearanceMismatch = elements.hideStrictClearanceMismatch.checked;
     renderResults();
     queueSettingsSave();
   });
@@ -344,6 +369,10 @@ function applySettings(settings) {
     ? "phD"
     : null;
   state.hideStrictEducationMismatch = settings.hideStrictEducationMismatch === true;
+  state.clearanceProfileLevel = normalizeClearanceProfileLevel(
+    settings.userProfile?.security?.clearanceLevel);
+  state.publicTrustProfile = normalizePublicTrustProfile(settings.userProfile?.security?.publicTrust);
+  state.hideStrictClearanceMismatch = settings.hideStrictClearanceMismatch === true;
   state.country = normalizeFacetSelection(settings.country, ALL_COUNTRIES_LABEL);
   state.location = normalizeFacetSelection(settings.location, ALL_LOCATIONS_LABEL);
 
@@ -358,6 +387,9 @@ function applySettings(settings) {
   elements.educationLevel.value = state.educationLevel;
   elements.doctorateType.value = state.doctorateType || "";
   elements.hideStrictEducationMismatch.checked = state.hideStrictEducationMismatch;
+  elements.clearanceProfileLevel.value = state.clearanceProfileLevel;
+  elements.publicTrustProfile.value = state.publicTrustProfile;
+  elements.hideStrictClearanceMismatch.checked = state.hideStrictClearanceMismatch;
   updateEducationSettingsUi();
   applyTheme();
   const scopeRadio = document.querySelector(`input[name="scope"][value="${state.scope}"]`);
@@ -388,6 +420,19 @@ function updateEducationSettingsUi() {
 function normalizeEducationLevel(value) {
   return ["notSpecified", "noCredential", "ged", "highSchool", "associate", "bachelor", "master", "doctorate"]
     .includes(value)
+    ? value
+    : "notSpecified";
+}
+
+function normalizeClearanceProfileLevel(value) {
+  return ["notSpecified", "none", "secret", "topSecret", "topSecretSCI", "otherUnknown"]
+    .includes(value)
+    ? value
+    : "notSpecified";
+}
+
+function normalizePublicTrustProfile(value) {
+  return ["notSpecified", "none", "current"].includes(value)
     ? value
     : "notSpecified";
 }
@@ -497,7 +542,12 @@ function buildFilterSummary() {
   if (state.hideStrictEducationMismatch) {
     summary.push(`Education: ${educationLevelLabel(state.educationLevel)}`);
   }
-  return summary.length ? summary.join(" · ") : "No active keyword, salary, remote-location, or education filters";
+  if (state.hideStrictClearanceMismatch) {
+    summary.push("Strict clearance filter");
+  }
+  return summary.length
+    ? summary.join(" · ")
+    : "No active keyword, salary, remote-location, education, or clearance filters";
 }
 
 function updateSourceSummary() {
@@ -784,9 +834,14 @@ async function saveSettings() {
           education: {
             level: state.educationLevel,
             doctorateType: state.doctorateType
+          },
+          security: {
+            clearanceLevel: state.clearanceProfileLevel,
+            publicTrust: state.publicTrustProfile
           }
         },
-        hideStrictEducationMismatch: state.hideStrictEducationMismatch
+        hideStrictEducationMismatch: state.hideStrictEducationMismatch,
+        hideStrictClearanceMismatch: state.hideStrictClearanceMismatch
       })
     });
     if (!response.ok) {
@@ -845,9 +900,163 @@ function jobsPassingGeneralFilters() {
       (state.locationMode === "only-restricted" && job.isRemoteLocationRestricted);
     const educationStatus = evaluateEducationMatch(job.academicQualification, currentEducationProfile());
     const passesEducation = !state.hideStrictEducationMismatch || !educationStatus.hide;
+    const clearanceStatus = evaluateClearanceMatch(job, currentSecurityProfile());
+    const passesClearance = !state.hideStrictClearanceMismatch || !clearanceStatus.hide;
 
-    return passesInclusion && passesExclusion && passesSalary && passesLocation && passesEducation;
+    return passesInclusion && passesExclusion && passesSalary && passesLocation &&
+      passesEducation && passesClearance;
   });
+}
+
+const CLEARANCE_LEVEL_RANK = Object.freeze({
+  none: 0,
+  secret: 1,
+  topSecret: 2,
+  topSecretSCI: 3
+});
+
+function currentSecurityProfile() {
+  return {
+    clearanceLevel: state.clearanceProfileLevel,
+    publicTrust: state.publicTrustProfile
+  };
+}
+
+function evaluateClearanceMatch(job, profile) {
+  const level = job?.clearanceLevel || "noneMentioned";
+  const requirement = job?.clearanceRequirement || "none";
+  const parseStatus = job?.clearanceParseStatus || "not-mentioned";
+  const strict = requirement === "activeRequired" || requirement === "mustPossess";
+  const user = {
+    clearanceLevel: normalizeClearanceProfileLevel(profile?.clearanceLevel),
+    publicTrust: normalizePublicTrustProfile(profile?.publicTrust)
+  };
+  const publicTrustJob = level === "publicTrust";
+  const userLabel = publicTrustJob
+    ? publicTrustProfileLabel(user.publicTrust)
+    : clearanceProfileLevelLabel(user.clearanceLevel);
+
+  if (level === "noneMentioned" || requirement === "none") {
+    return {
+      kind: "noneSpecified",
+      hide: false,
+      strict: false,
+      userLabel,
+      summary: "No clearance requirement identified",
+      explanation: "The posting does not state a recognized clearance requirement."
+    };
+  }
+
+  if (parseStatus !== "parsed" || level === "other" || requirement === "ambiguous") {
+    return {
+      kind: "uncertain",
+      hide: false,
+      strict: false,
+      userLabel,
+      summary: "Clearance wording requires review",
+      explanation: "The clearance language is uncertain, so this job remains visible."
+    };
+  }
+
+  if (!strict) {
+    const obtainable = requirement === "obtain" || requirement === "obtainAndMaintain" ||
+      requirement === "eligible" || requirement === "publicTrustSuitability";
+    return {
+      kind: requirement === "preferred" ? "preferredOnly" : "notStrict",
+      hide: false,
+      strict: false,
+      userLabel,
+      summary: requirement === "preferred"
+        ? "Clearance is preferred, not required"
+        : obtainable
+          ? "Obtainable after hire / not automatically disqualifying"
+          : "Not a strict day-one hiring blocker",
+      explanation: obtainable
+        ? "The posting allows the clearance or suitability status to be obtained or established; it is not treated as an already-held requirement."
+        : "Only explicit active/current/day-one requirements can hide a job."
+    };
+  }
+
+  if (publicTrustJob) {
+    if (user.publicTrust === "notSpecified") {
+      return {
+        kind: "profileNotConfigured",
+        hide: false,
+        strict: true,
+        userLabel,
+        summary: "Strict Public Trust requirement; profile not configured",
+        explanation: "The posting explicitly requires current Public Trust status, but your separate Public Trust profile is not configured. The job remains visible."
+      };
+    }
+    if (user.publicTrust !== "current") {
+      return {
+        kind: "strictMismatch",
+        hide: true,
+        strict: true,
+        userLabel,
+        summary: "Does not meet strict current Public Trust requirement",
+        explanation: "The posting explicitly requires current Public Trust status, which your profile says you do not hold."
+      };
+    }
+    return {
+      kind: job.polygraphRequired ? "meetsLevelPolygraphReview" : "meets",
+      hide: false,
+      strict: true,
+      userLabel,
+      summary: job.polygraphRequired
+        ? "Public Trust status meets; polygraph requires separate review"
+        : "Meets strict current Public Trust requirement",
+      explanation: job.polygraphRequired
+        ? "Your Public Trust status matches, but this posting also requires a polygraph that the profile does not track."
+        : "Your separately reported Public Trust status meets this strict requirement."
+    };
+  }
+
+  if (!(level in CLEARANCE_LEVEL_RANK)) {
+    return {
+      kind: "uncertain",
+      hide: false,
+      strict: true,
+      userLabel,
+      summary: "Strict clearance language requires review",
+      explanation: "The required clearance level could not be compared confidently, so this job remains visible."
+    };
+  }
+
+  if (user.clearanceLevel === "notSpecified" || user.clearanceLevel === "otherUnknown") {
+    return {
+      kind: "profileNotConfigured",
+      hide: false,
+      strict: true,
+      userLabel,
+      summary: "Strict clearance requirement; profile not comparable",
+      explanation: "Choose a specific current clearance level in Settings to enable strict comparison. The job remains visible."
+    };
+  }
+
+  if ((CLEARANCE_LEVEL_RANK[user.clearanceLevel] ?? -1) < CLEARANCE_LEVEL_RANK[level]) {
+    return {
+      kind: "strictMismatch",
+      hide: true,
+      strict: true,
+      userLabel,
+      summary: "Does not meet strict current-clearance requirement",
+      explanation: `The posting requires an active/current ${clearanceLevelLabel(level)}, while your profile reports ${userLabel}.`
+    };
+  }
+
+  return {
+    kind: job.polygraphRequired ? "meetsLevelPolygraphReview" : "meets",
+    hide: false,
+    strict: true,
+    userLabel,
+    summary: job.polygraphRequired
+      ? "Clearance level meets; polygraph requires separate review"
+      : "Meets strict current-clearance requirement",
+    explanation: job.polygraphRequired
+      ? `Your ${userLabel} meets the clearance level, but this posting also requires a polygraph that the profile does not track.`
+      : `Your ${userLabel} meets or exceeds the strict ${clearanceLevelLabel(level)} requirement.`
+  };
 }
 
 const EDUCATION_LEVEL_RANK = Object.freeze({
@@ -1161,6 +1370,14 @@ function createJobListItem(job) {
     clearanceBadge.textContent = clearanceBadgeLabel(job);
     badges.append(clearanceBadge);
   }
+  const clearanceStatus = evaluateClearanceMatch(job, currentSecurityProfile());
+  if (clearanceStatus.kind === "strictMismatch") {
+    const clearanceMismatchBadge = document.createElement("span");
+    clearanceMismatchBadge.className = "clearance-mismatch-badge";
+    clearanceMismatchBadge.textContent = `${clearanceLevelLabel(job.clearanceLevel)} required`;
+    clearanceMismatchBadge.title = clearanceStatus.explanation;
+    badges.append(clearanceMismatchBadge);
+  }
   const academicQualification = job.academicQualification;
   if (academicQualification && academicQualification.requirementType !== "noDegreeSpecified") {
     const academicBadge = document.createElement("span");
@@ -1317,6 +1534,7 @@ function renderDetail(job) {
     job.additionalLocations?.length ? job.additionalLocations.join("; ") : "None listed");
 
   const hasClearance = Boolean(job.clearanceLevel && job.clearanceLevel !== "noneMentioned");
+  const clearanceStatus = evaluateClearanceMatch(job, currentSecurityProfile());
   elements.detailClearanceNote.hidden = !hasClearance;
   elements.detailClearance.textContent = hasClearance
     ? clearanceLevelLabel(job.clearanceLevel)
@@ -1324,8 +1542,15 @@ function renderDetail(job) {
   elements.detailClearanceStatus.textContent = hasClearance
     ? clearanceRequirementLabel(job.clearanceRequirement)
     : "";
+  elements.detailUserClearance.textContent = hasClearance ? clearanceStatus.userLabel : "";
+  elements.detailClearanceComparison.textContent = hasClearance ? clearanceStatus.summary : "";
+  elements.detailClearanceComparison.className = hasClearance
+    ? `clearance-profile-status ${clearanceStatus.kind}`
+    : "";
   elements.detailPolygraphRow.hidden = !job.polygraphRequired;
-  elements.detailPolygraph.textContent = job.polygraphRequired ? "Required" : "";
+  elements.detailPolygraph.textContent = job.polygraphRequired
+    ? "Required; verify separately (not inferred from clearance level)"
+    : "";
   elements.detailClearanceNoteText.textContent = hasClearance && job.clearanceEvidence
     ? `“${job.clearanceEvidence}”`
     : "";
@@ -1337,6 +1562,10 @@ function renderDetail(job) {
   elements.detailEducationMismatch.hidden = educationStatus.kind !== "strictMismatch";
   elements.detailEducationMismatchText.textContent = educationStatus.kind === "strictMismatch"
     ? educationStatus.explanation
+    : "";
+  elements.detailClearanceMismatch.hidden = clearanceStatus.kind !== "strictMismatch";
+  elements.detailClearanceMismatchText.textContent = clearanceStatus.kind === "strictMismatch"
+    ? clearanceStatus.explanation
     : "";
 
   elements.detailLocationNote.hidden = !job.isRemoteLocationRestricted;
@@ -1362,6 +1591,7 @@ function renderDetail(job) {
     : "";
   elements.detailFlags.hidden = !(
     educationStatus.kind === "strictMismatch" ||
+    clearanceStatus.kind === "strictMismatch" ||
     job.isRemoteLocationRestricted ||
     headroom?.isLimited ||
     job.detailError);
@@ -1536,6 +1766,25 @@ function clearanceLevelLabel(level) {
     topSecretSCI: "TS/SCI",
     other: "Other / unclear level"
   })[level] || "Clearance mentioned";
+}
+
+function clearanceProfileLevelLabel(level) {
+  return ({
+    notSpecified: "Not configured",
+    none: "None",
+    secret: "Secret",
+    topSecret: "Top Secret",
+    topSecretSCI: "TS/SCI",
+    otherUnknown: "Other / Unknown"
+  })[level] || "Not configured";
+}
+
+function publicTrustProfileLabel(status) {
+  return ({
+    notSpecified: "Public Trust not configured",
+    none: "No current Public Trust",
+    current: "Public Trust held/current"
+  })[status] || "Public Trust not configured";
 }
 
 function clearanceRequirementLabel(requirement) {
