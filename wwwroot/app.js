@@ -39,6 +39,7 @@ const state = {
   detailTab: "glance",
   renderedDetailJobId: null,
   lastObservedAutomaticRefreshUtc: null,
+  automaticCheckRequestInFlight: false,
   newJobIds: new Set(),
   dismissedJobIds: new Set(),
   showDismissedJobs: false,
@@ -374,13 +375,17 @@ async function loadInitialState() {
       fetch("/api/jobs", { cache: "no-store" })
     ]);
     if (!companiesResponse.ok || !settingsResponse.ok || !jobsResponse.ok) {
-      throw new Error(
-        `Local API returned HTTP ${companiesResponse.status}/${settingsResponse.status}/${jobsResponse.status}.`);
+      const failed = [companiesResponse, settingsResponse, jobsResponse].find(response => !response.ok);
+      throw new Error(await apiErrorMessage(failed, "Application data could not be loaded."));
     }
     state.companies = await companiesResponse.json();
     populateCompanySelect();
     applySettings(await settingsResponse.json());
-    applySnapshot(await jobsResponse.json());
+    const initialSnapshot = await jobsResponse.json();
+    const needsInitialRefresh = !initialSnapshot.isRefreshing &&
+      !initialSnapshot.lastRefreshedUtc &&
+      (!initialSnapshot.jobs || initialSnapshot.jobs.length === 0);
+    applySnapshot(initialSnapshot);
     await loadLocationFacets(
       state.companyId,
       state.country.id,
@@ -389,7 +394,11 @@ async function loadInitialState() {
       state.includeRemote);
     await loadAutomaticCheckStatus();
     state.isInitializing = false;
-    if (!state.catalogIsRefreshing) setLoading(false);
+    if (needsInitialRefresh) {
+      await refreshJobs();
+    } else if (!state.catalogIsRefreshing) {
+      setLoading(false);
+    }
     window.setInterval(loadAutomaticCheckStatus, AUTOMATIC_STATUS_POLL_MS);
   } catch (error) {
     state.isInitializing = false;
@@ -514,8 +523,32 @@ async function loadAutomaticCheckStatus() {
       await loadAutomaticSnapshotPreservingUi();
     }
     state.lastObservedAutomaticRefreshUtc = automaticRefreshUtc;
+
+    const nextCheckUtc = status.nextCheckUtc ? new Date(status.nextCheckUtc).getTime() : null;
+    if (status.enabled && !status.isChecking && nextCheckUtc !== null &&
+        nextCheckUtc <= Date.now() && !state.automaticCheckRequestInFlight) {
+      runDueAutomaticCheck();
+    }
   } catch (error) {
     console.warn("Automatic-check status is temporarily unavailable.", error);
+  }
+}
+
+async function runDueAutomaticCheck() {
+  state.automaticCheckRequestInFlight = true;
+  try {
+    const response = await fetch("/api/automatic-check/run", {
+      method: "POST",
+      cache: "no-store"
+    });
+    if (!response.ok) {
+      throw new Error(`Automatic check returned HTTP ${response.status}.`);
+    }
+  } catch (error) {
+    console.warn("The due automatic check could not be completed.", error);
+  } finally {
+    state.automaticCheckRequestInFlight = false;
+    window.setTimeout(loadAutomaticCheckStatus, 250);
   }
 }
 
@@ -699,7 +732,7 @@ async function loadLocationFacets(
     if (countryId) parameters.set("countryId", countryId);
     const response = await fetch(`/api/location-facets?${parameters}`, { cache: "no-store" });
     if (!response.ok) {
-      throw new Error(`Location facets returned HTTP ${response.status}.`);
+      throw new Error(await apiErrorMessage(response, "Location choices could not be loaded."));
     }
     const facets = await response.json();
     populateCountrySelect(
@@ -1023,7 +1056,7 @@ async function applyWorkdayLocation(options = {}) {
       })
     });
     if (!response.ok) {
-      throw new Error(`Location refresh returned HTTP ${response.status}.`);
+      throw new Error(await apiErrorMessage(response, "The job source could not be refreshed."));
     }
     const snapshot = await response.json();
     if (snapshot.error) {
@@ -1065,7 +1098,7 @@ async function refreshJobs() {
   try {
     const response = await fetch("/api/refresh", { method: "POST", cache: "no-store" });
     if (!response.ok) {
-      throw new Error(`Refresh returned HTTP ${response.status}.`);
+      throw new Error(await apiErrorMessage(response, "Jobs could not be refreshed."));
     }
     applySnapshot(await response.json());
     await loadAutomaticCheckStatus();
@@ -1211,7 +1244,7 @@ async function saveSettings() {
       })
     });
     if (!response.ok) {
-      throw new Error(`Settings save returned HTTP ${response.status}.`);
+      throw new Error(await apiErrorMessage(response, "Settings could not be saved."));
     }
     await loadAutomaticCheckStatus();
   } catch (error) {
@@ -2639,7 +2672,20 @@ function showSnapshotError(error, detailFailureCount) {
 
 function showClientError(error) {
   console.error(error);
-  elements.errorBanner.textContent = `The local application could not be reached: ${error.message || error}`;
+  elements.errorBanner.textContent = `The application request failed: ${error.message || error}`;
   elements.errorBanner.hidden = false;
   setLoading(false);
+}
+
+async function apiErrorMessage(response, fallback) {
+  if (!response) return fallback;
+  try {
+    const payload = await response.clone().json();
+    if (typeof payload?.error === "string" && payload.error.trim()) {
+      return payload.error.trim();
+    }
+  } catch {
+    // A non-JSON server/proxy response still receives a useful status fallback.
+  }
+  return `${fallback} (HTTP ${response.status})`;
 }

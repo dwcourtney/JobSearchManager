@@ -1,19 +1,10 @@
-using System.Threading.Channels;
-
 namespace WorkdayJobManager;
 
-public sealed class AutomaticJobCheckService : BackgroundService
+public sealed class AutomaticJobCheckService
 {
     private readonly JobCatalog _catalog;
     private readonly ILogger<AutomaticJobCheckService> _logger;
     private readonly object _gate = new();
-    private readonly Channel<bool> _scheduleChanges = Channel.CreateBounded<bool>(
-        new BoundedChannelOptions(1)
-        {
-            FullMode = BoundedChannelFullMode.DropOldest,
-            SingleReader = true,
-            SingleWriter = false
-        });
 
     private bool _configured;
     private bool _enabled = true;
@@ -67,7 +58,6 @@ public sealed class AutomaticJobCheckService : BackgroundService
                 ? DateTimeOffset.UtcNow.AddMinutes(_intervalMinutes)
                 : null;
         }
-        SignalScheduleChanged();
     }
 
     public void ResetSchedule()
@@ -78,7 +68,20 @@ public sealed class AutomaticJobCheckService : BackgroundService
                 ? DateTimeOffset.UtcNow.AddMinutes(_intervalMinutes)
                 : null;
         }
-        SignalScheduleChanged();
+    }
+
+    public async Task CheckIfDueAsync(CancellationToken cancellationToken = default)
+    {
+        bool due;
+        lock (_gate)
+        {
+            due = _enabled && !_isChecking && _nextCheckUtc <= DateTimeOffset.UtcNow;
+        }
+
+        if (due)
+        {
+            await CheckNowAsync(cancellationToken);
+        }
     }
 
     public async Task<AutomaticCheckResult> CheckNowAsync(
@@ -146,52 +149,45 @@ public sealed class AutomaticJobCheckService : BackgroundService
                     ? DateTimeOffset.UtcNow.AddMinutes(_intervalMinutes)
                     : null;
             }
-            SignalScheduleChanged();
         }
+    }
+}
+
+public sealed class LocalAutomaticCheckHostedService : BackgroundService
+{
+    private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(30);
+    private readonly WorkspaceRuntimeManager _runtimes;
+    private readonly ILogger<LocalAutomaticCheckHostedService> _logger;
+
+    public LocalAutomaticCheckHostedService(
+        WorkspaceRuntimeManager runtimes,
+        ILogger<LocalAutomaticCheckHostedService> logger)
+    {
+        _runtimes = runtimes;
+        _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            DateTimeOffset? dueAt;
-            lock (_gate)
+            try
             {
-                dueAt = _enabled ? _nextCheckUtc : null;
+                var runtime = await _runtimes.GetAsync(
+                    WorkspaceContext.LocalWorkspaceId,
+                    stoppingToken);
+                await runtime.AutomaticChecks.CheckIfDueAsync(stoppingToken);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "The local automatic-check scheduler encountered an error.");
             }
 
-            if (dueAt is null)
-            {
-                await WaitForScheduleChangeAsync(stoppingToken);
-                continue;
-            }
-
-            var delay = dueAt.Value - DateTimeOffset.UtcNow;
-            if (delay > TimeSpan.Zero)
-            {
-                var delayTask = Task.Delay(delay, stoppingToken);
-                var changeTask = _scheduleChanges.Reader.WaitToReadAsync(stoppingToken).AsTask();
-                if (await Task.WhenAny(delayTask, changeTask) == changeTask)
-                {
-                    DrainScheduleChanges();
-                    continue;
-                }
-            }
-
-            await CheckNowAsync(stoppingToken);
+            await Task.Delay(PollInterval, stoppingToken);
         }
-    }
-
-    private async Task WaitForScheduleChangeAsync(CancellationToken cancellationToken)
-    {
-        await _scheduleChanges.Reader.ReadAsync(cancellationToken);
-        DrainScheduleChanges();
-    }
-
-    private void SignalScheduleChanged() => _scheduleChanges.Writer.TryWrite(true);
-
-    private void DrainScheduleChanges()
-    {
-        while (_scheduleChanges.Reader.TryRead(out _)) { }
     }
 }

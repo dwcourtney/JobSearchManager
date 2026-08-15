@@ -1,8 +1,10 @@
 # Workday Job Manager
 
-Workday Job Manager is a small, local frontend for selected public Workday job
-boards. It began as a personal viewer for Leidos' Workday careers site and was
-generalized to support multiple employers without duplicating the application.
+Workday Job Manager is a small frontend for selected public Workday job boards.
+One codebase supports a portable personal local mode and an Azure App Service
+mode with isolated anonymous browser workspaces. It began as a personal viewer
+for Leidos' Workday careers site and was generalized without duplicating the
+application.
 
 The original Workday posting remains the authoritative source. The application
 uses public Workday CXS JSON endpoints; it does not scrape rendered job pages.
@@ -16,8 +18,10 @@ selection, and salary, clearance, credential, and education analysis. It preserv
 the rich Workday description and provides a direct link back to the employer's
 posting.
 
-This is a personal, loopback-only utility. It has no authentication, cloud host,
-database, browser automation, or multi-user architecture.
+The application has no login or account system and uses no browser automation.
+Local mode remains loopback-only. Azure mode identifies an anonymous workspace
+with a protected browser cookie and stores that workspace's durable JSON state in
+a private Azure Blob container.
 
 ## Supported employers
 
@@ -33,7 +37,7 @@ primarily require adding and verifying one catalog entry.
 Workday tenants can expose different facet structures and description conventions,
 so the project does not claim universal compatibility with every Workday site.
 
-## Run
+## Local mode
 
 Requirements: Windows and the .NET 10 SDK or runtime.
 
@@ -45,14 +49,22 @@ Application URL: `http://127.0.0.1:54321`
 
 Default port: `54321`
 
+Local is the default hosting mode and requires no Azure credentials or settings.
 The application always binds only to IPv4 loopback. If port 54321 is occupied,
-startup fails clearly rather than selecting a different port.
+startup fails clearly rather than selecting a different port. It opens the
+default browser after startup.
 
 Build or publish with:
 
 ```powershell
 dotnet build WorkdayJobManager.csproj -c Release
 dotnet publish WorkdayJobManager.csproj -c Release
+```
+
+Run the dependency-free deterministic architecture/security checks with:
+
+```powershell
+dotnet run --project Tests\WorkdayJobManager.Tests.csproj -c Release
 ```
 
 The executable is `WorkdayJobManager.exe` in a Windows build or publish output.
@@ -72,7 +84,7 @@ The active query identity includes company, country, remote coverage, and a
 canonical set of location facet IDs. Location order therefore does not change cache
 identity, and cached jobs from one company cannot appear under another company.
 
-## Persistent data
+## Local persistent data
 
 All persistent state is stored beside the running application in:
 
@@ -95,6 +107,73 @@ its company-aware query identity.
 Copy or move the executable directory and its `data` directory together to retain
 state.
 
+## Azure App Service mode
+
+Azure mode uses App Service's listener configuration instead of forcing the local
+loopback port and never attempts to launch a browser on the server. Select it only
+through explicit App Service application settings:
+
+| Name | Value | Purpose |
+| --- | --- | --- |
+| `WORKDAYJOBMANAGER_HOSTING_MODE` | `Azure` | Selects Azure hosting, HTTPS behavior, anonymous workspaces, and Blob persistence. |
+| `WORKDAYJOBMANAGER_STORAGE_ACCOUNT` | `workdayjobmanagerstore` | Supplies the non-secret Azure Storage account name used to derive the Blob service endpoint. |
+| `WORKDAYJOBMANAGER_STORAGE_CONTAINER` | `userdata` | Selects the existing private workspace-state container. |
+
+All three values are required in Azure mode. Missing or invalid configuration
+fails startup clearly; Azure mode never falls back to local disk. Do not add a
+storage connection string, account key, or SAS token. `DefaultAzureCredential`
+uses the App Service's system-assigned managed identity, which needs Storage Blob
+Data Contributor access to the private `userdata` container.
+
+On a browser's first Azure visit, the server creates a cryptographically random
+256-bit workspace ID. An ASP.NET Core Data Protection payload containing that ID
+is stored in a long-lived `HttpOnly`, `Secure`, `SameSite=Lax` cookie. The cookie
+contains no settings, history, job data, storage credentials, or personally
+entered profile values. Blob access remains entirely server-side.
+
+Azure App Service's standard ASP.NET Core behavior persists Data Protection keys
+under its network-backed `%HOME%\ASP.NET\DataProtection-Keys` directory so cookies
+survive process recycle and scale-out within one deployment slot. Deployment slots
+do not share that key ring; a future slot-swap deployment would require an explicit
+shared key-ring design. See Microsoft's
+[App Service Data Protection guidance](https://learn.microsoft.com/aspnet/core/host-and-deploy/azure-apps#data-protection-key-ring-and-deployment-slots).
+
+Each workspace is isolated under:
+
+```text
+userdata (private container)
+  workspaces/{workspaceId}/
+    settings.json
+    jobs-cache.json
+    job-history.json
+```
+
+Blob names are chosen from a fixed document set, and workspace IDs are generated
+and validated server-side. ETag conditions prevent a stale request from silently
+overwriting a newer Blob version. Storage errors are reported without creating a
+different workspace or falling back to local files.
+
+Anonymous identity has an intentional limitation: clearing the workspace cookie,
+using another browser/profile, or moving to another device prevents the system
+from recognizing the previous workspace. A new workspace may be created. There
+is currently no recovery key or login mechanism.
+
+New Azure workspaces start with neutral defaults. They do not inherit the local
+user's salary, education, clearance, filters, locations, hidden jobs, or history.
+The company and credential catalogs remain shared source-controlled application
+configuration.
+
+### Automatic checks in Azure
+
+Local mode retains its background automatic-check scheduler. Azure mode does not
+assume the Free F1 process remains awake and does not run one global multi-user
+timer. While a workspace is open, the browser polls check status and asks the
+ASP.NET Core backend to perform a due check for that workspace. All Workday calls
+remain server-side and are limited to companies in `CompanyCatalog.json`.
+
+The Azure implementation is ready for review but this repository does not deploy
+or configure Azure resources automatically.
+
 ## Architecture
 
 The project intentionally remains a single small ASP.NET Core application:
@@ -107,6 +186,15 @@ The project intentionally remains a single small ASP.NET Core application:
 - `JobAnalysis.cs` and detectors — shared salary, location, clearance, credential,
   and academic analysis
 - `wwwroot/` — dependency-light HTML, JavaScript, and CSS UI
+
+The hosting and persistence split is implemented by:
+
+- `HostingConfiguration.cs` for explicit Local/Azure selection and validation
+- `WorkspaceIdentity.cs` for protected anonymous workspace cookie resolution
+- `WorkspaceRuntime.cs` for isolated catalog and automatic-check state per workspace
+- `WorkspaceDataStore.cs` for the persistence contract and portable local files
+- `AzureBlobWorkspaceDataStore.cs` for private Blob persistence with ETag-safe writes
+- `AppStateStore.cs` for storage-independent JSON normalization and migration
 
 `wwwroot/theme.css` is the single authority for application-owned colors,
 typography, spacing, borders, radii, shadows, and state styling. Workday description
@@ -130,10 +218,18 @@ Leidos facet IDs to MTM.
 
 ## Safety and scope
 
-The server listens only on `127.0.0.1`. Responses use a restrictive Content
-Security Policy, no-store API caching, content-type protection, frame denial, and
-no-referrer behavior. Job descriptions are untrusted external HTML and are
-sanitized before insertion into the page.
+Local mode listens only on `127.0.0.1`. Azure mode honors App Service hosting and
+forwarded HTTPS information. Responses use a restrictive Content Security Policy,
+no-store API caching, content-type protection, frame denial, and no-referrer
+behavior. Azure state-changing requests require a same-origin `Origin`, and
+Workday/storage mutations are rate-limited. Backend Workday requests can target
+only validated entries in the shared company catalog; browser input cannot supply
+an arbitrary host, tenant, or URL. Job descriptions are untrusted external HTML
+and are sanitized before insertion into the page.
+
+The Blob container must remain private. The browser never receives Blob URLs and
+never talks directly to Azure Storage. No storage account keys, connection strings,
+SAS tokens, passwords, or user-data payloads are committed or placed in cookies.
 
 Parser results are screening aids, not authoritative statements about eligibility,
 compensation, clearance, education, or credentials. Always review the original

@@ -2,39 +2,140 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Text.Json;
-using WorkdayJobManager;
+using System.Threading.RateLimiting;
+using Azure.Identity;
+using Azure.Storage.Blobs;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
+using WorkdayJobManager;
 
 const int ApplicationPort = 54321;
 const string ApplicationUrl = "http://127.0.0.1:54321";
 
 var builder = WebApplication.CreateBuilder(args);
+var hosting = HostingConfiguration.FromConfiguration(builder.Configuration);
 
-// Bind only the IPv4 loopback adapter. The fixed port is authoritative for
-// command-line, Visual Studio, and published-executable launches.
-builder.WebHost.ConfigureKestrel(options => options.Listen(IPAddress.Loopback, ApplicationPort));
+if (hosting.IsLocal)
+{
+    // Local mode retains its authoritative fixed loopback endpoint regardless
+    // of launchSettings.json, the current directory, or shell configuration.
+    builder.WebHost.ConfigureKestrel(options =>
+        options.Listen(IPAddress.Loopback, ApplicationPort));
+}
 
+builder.Services.AddSingleton(hosting);
 builder.Services.Configure<WorkdayOptions>(builder.Configuration.GetSection("Workday"));
 builder.Services.AddHttpClient<WorkdayClient>((services, client) =>
 {
     var options = services.GetRequiredService<IOptions<WorkdayOptions>>().Value;
     client.Timeout = TimeSpan.FromSeconds(Math.Clamp(options.RequestTimeoutSeconds, 5, 120));
     client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
-    client.DefaultRequestHeaders.UserAgent.ParseAdd("WorkdayJobManager/1.0 (personal local utility)");
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("WorkdayJobManager/1.0");
 });
 builder.Services.AddSingleton<CompanyCatalog>();
-builder.Services.AddSingleton<JobCatalog>();
-builder.Services.AddSingleton<AppStateStore>();
 builder.Services.AddSingleton<CredentialDetector>();
 builder.Services.AddSingleton<AcademicQualificationDetector>();
-builder.Services.AddSingleton<AutomaticJobCheckService>();
-builder.Services.AddHostedService(services => services.GetRequiredService<AutomaticJobCheckService>());
+builder.Services.AddDataProtection().SetApplicationName("WorkdayJobManager");
+builder.Services.AddScoped<WorkspaceContext>();
+builder.Services.AddScoped<WorkspaceRuntimeProvider>();
+
+if (hosting.IsAzure)
+{
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        options.KnownIPNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
+    builder.Services.AddSingleton(_ => new DefaultAzureCredential(
+        new DefaultAzureCredentialOptions
+        {
+            ExcludeInteractiveBrowserCredential = true
+        }));
+    builder.Services.AddSingleton(services =>
+        new BlobServiceClient(
+            hosting.GetBlobServiceUri(),
+            services.GetRequiredService<DefaultAzureCredential>()));
+    builder.Services.AddSingleton(services =>
+        services.GetRequiredService<BlobServiceClient>()
+            .GetBlobContainerClient(hosting.StorageContainer));
+    builder.Services.AddSingleton<IWorkspaceDataStoreFactory, AzureBlobWorkspaceDataStoreFactory>();
+}
+else
+{
+    builder.Services.AddSingleton<IWorkspaceDataStoreFactory, FileWorkspaceDataStoreFactory>();
+    builder.Services.AddHostedService<LocalAutomaticCheckHostedService>();
+}
+
+builder.Services.AddSingleton<WorkspaceRuntimeManager>();
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.ContentType = "application/json";
+        await context.HttpContext.Response.WriteAsJsonAsync(
+            new { error = "Too many Workday requests. Wait briefly and try again." },
+            cancellationToken);
+    };
+    options.AddPolicy("workday", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 12,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+    options.AddPolicy("state", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 60,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+});
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
 });
 
 var app = builder.Build();
+
+if (hosting.IsAzure)
+{
+    app.UseForwardedHeaders();
+    app.UseHsts();
+    app.UseHttpsRedirection();
+}
+
+app.UseExceptionHandler(errorApp => errorApp.Run(async context =>
+{
+    var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
+    var (status, message) = exception switch
+    {
+        WorkspaceConcurrencyException => (
+            StatusCodes.Status409Conflict,
+            "Workspace state changed in another request. Reload and try again."),
+        WorkspaceStorageException => (
+            StatusCodes.Status503ServiceUnavailable,
+            "Workspace storage is temporarily unavailable. Your workspace was not changed."),
+        _ => (
+            StatusCodes.Status500InternalServerError,
+            "The server could not complete the request.")
+    };
+    context.Response.StatusCode = status;
+    context.Response.ContentType = "application/json";
+    context.Response.Headers.CacheControl = "no-store";
+    await context.Response.WriteAsJsonAsync(new { error = message });
+}));
 
 app.Use(async (context, next) =>
 {
@@ -53,10 +154,36 @@ app.Use(async (context, next) =>
     await next();
 });
 
+app.UseMiddleware<WorkspaceIdentityMiddleware>();
+
+if (hosting.IsAzure)
+{
+    app.Use(async (context, next) =>
+    {
+        if (RequestSecurity.IsStateChangingApiRequest(context.Request))
+        {
+            if (!RequestSecurity.HasSameOrigin(context.Request))
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                await context.Response.WriteAsJsonAsync(new
+                {
+                    error = "The state-changing request did not originate from this application."
+                });
+                return;
+            }
+        }
+
+        await next();
+    });
+}
+
+app.UseRateLimiter();
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-app.MapGet("/api/jobs", (JobCatalog catalog) => Results.Ok(catalog.Snapshot));
+app.MapGet("/api/jobs", async (WorkspaceRuntimeProvider provider, CancellationToken token) =>
+    Results.Ok((await provider.GetAsync(token)).Catalog.Snapshot));
+
 app.MapGet("/api/companies", (CompanyCatalog companies) => Results.Ok(
     companies.Companies.Select(company => new
     {
@@ -64,34 +191,47 @@ app.MapGet("/api/companies", (CompanyCatalog companies) => Results.Ok(
         company.DisplayName,
         company.PublicSiteUrl
     })));
+
 app.MapPost("/api/refresh", async (
-    JobCatalog catalog,
-    AutomaticJobCheckService automaticChecks) =>
+    WorkspaceRuntimeProvider provider,
+    CancellationToken token) =>
 {
-    var snapshot = await catalog.RefreshAsync();
+    var runtime = await provider.GetAsync(token);
+    var snapshot = await runtime.Catalog.RefreshAsync();
     if (snapshot.Error is null)
     {
-        automaticChecks.ResetSchedule();
+        runtime.AutomaticChecks.ResetSchedule();
     }
     return Results.Ok(snapshot);
-});
-app.MapGet("/api/location-facets", async (
+}).RequireRateLimiting("workday");
+
+app.MapGet("/api/location-facets", async Task<IResult> (
     string companyId,
     string? countryId,
     WorkdayClient workdayClient,
-    CompanyCatalog companies) =>
-    Results.Ok(await workdayClient.FetchLocationFacetsAsync(
-        companies.Get(companyId), countryId)));
+    CompanyCatalog companies,
+    CancellationToken token) =>
+{
+    if (!companies.TryGet(companyId, out var company))
+    {
+        return Results.BadRequest(new { error = "Choose a supported company." });
+    }
+
+    return Results.Ok(await workdayClient.FetchLocationFacetsAsync(company, countryId, token));
+}).RequireRateLimiting("workday");
+
 app.MapGet("/api/source/{companyId}", async Task<IResult> (
     string companyId,
-    AppStateStore stateStore,
-    CompanyCatalog companies) =>
+    WorkspaceRuntimeProvider provider,
+    CompanyCatalog companies,
+    CancellationToken token) =>
 {
     if (!companies.TryGet(companyId, out var company))
     {
         return Results.NotFound();
     }
 
+    var stateStore = (await provider.GetAsync(token)).StateStore;
     var settings = await stateStore.LoadSettingsAsync();
     return Results.Ok(new
     {
@@ -100,12 +240,12 @@ app.MapGet("/api/source/{companyId}", async Task<IResult> (
         source = stateStore.GetSourceSettings(settings, company.Id)
     });
 });
+
 app.MapPost("/api/query", async Task<IResult> (
     WorkdayQuery requestedQuery,
-    AppStateStore stateStore,
-    JobCatalog catalog,
-    AutomaticJobCheckService automaticChecks,
-    CompanyCatalog companies) =>
+    WorkspaceRuntimeProvider provider,
+    CompanyCatalog companies,
+    CancellationToken token) =>
 {
     if (!companies.TryGet(requestedQuery.CompanyId, out var company))
     {
@@ -121,6 +261,8 @@ app.MapPost("/api/query", async Task<IResult> (
         });
     }
 
+    var runtime = await provider.GetAsync(token);
+    var stateStore = runtime.StateStore;
     var current = await stateStore.LoadSettingsAsync();
     var source = new CompanySourceSettings(
         new FacetSelection(query.CountryId, query.CountryLabel),
@@ -144,65 +286,82 @@ app.MapPost("/api/query", async Task<IResult> (
         CompanySources = companySources
     });
     await stateStore.SaveSettingsAsync(updated);
-    var snapshot = await catalog.RefreshAsync(WorkdayQuery.FromSettings(updated, companies));
+    var snapshot = await runtime.Catalog.RefreshAsync(WorkdayQuery.FromSettings(updated, companies));
     if (snapshot.Error is null)
     {
-        automaticChecks.ResetSchedule();
+        runtime.AutomaticChecks.ResetSchedule();
     }
     else
     {
-        // The catalog retains the previous known-good query and results when a
-        // source switch fails. Keep persistent source settings aligned with it.
         await stateStore.SaveSettingsAsync(current);
     }
     return Results.Ok(snapshot);
-});
-app.MapGet("/api/settings", async (AppStateStore stateStore) =>
-    Results.Ok(await stateStore.LoadSettingsAsync()));
+}).RequireRateLimiting("workday");
+
+app.MapGet("/api/settings", async (
+    WorkspaceRuntimeProvider provider,
+    CancellationToken token) =>
+    Results.Ok(await (await provider.GetAsync(token)).StateStore.LoadSettingsAsync()));
+
 app.MapPut("/api/settings", async (
     ViewerSettings settings,
-    AppStateStore stateStore,
-    AutomaticJobCheckService automaticChecks) =>
+    WorkspaceRuntimeProvider provider,
+    CancellationToken token) =>
 {
-    var current = await stateStore.LoadSettingsAsync();
-    var normalized = stateStore.NormalizeSettings(settings with
+    var runtime = await provider.GetAsync(token);
+    var current = await runtime.StateStore.LoadSettingsAsync();
+    var normalized = runtime.StateStore.NormalizeSettings(settings with
     {
         CompanySources = current.CompanySources
     });
-    await stateStore.SaveSettingsAsync(normalized);
-    automaticChecks.ApplySettings(normalized);
+    await runtime.StateStore.SaveSettingsAsync(normalized);
+    runtime.AutomaticChecks.ApplySettings(normalized);
     return Results.NoContent();
-});
-app.MapGet("/api/automatic-check/status", (AutomaticJobCheckService automaticChecks) =>
-    Results.Ok(automaticChecks.Status));
-app.MapPost("/api/automatic-check/run", async (AutomaticJobCheckService automaticChecks) =>
-    Results.Ok(await automaticChecks.CheckNowAsync()));
-app.MapPost("/api/history/viewed", async (ViewedJobRequest request, JobCatalog catalog) =>
-    await catalog.MarkViewedAsync(request.StableId)
-        ? Results.NoContent()
-        : Results.NotFound());
-app.MapPut("/api/history/dismissed", async (DismissedJobRequest request, JobCatalog catalog) =>
-    await catalog.SetDismissedAsync(request.StableId, request.Dismissed)
-        ? Results.NoContent()
-        : Results.NotFound());
+}).RequireRateLimiting("state");
 
-var stateStore = app.Services.GetRequiredService<AppStateStore>();
-var companies = app.Services.GetRequiredService<CompanyCatalog>();
-await stateStore.EnsureSettingsFileAsync();
-var initialSettings = await stateStore.LoadSettingsAsync();
-// Persist normalized defaults when upgrading an older settings document so the
-// selected Workday facet IDs and their display labels are explicit on disk.
-await stateStore.SaveSettingsAsync(initialSettings);
-var catalog = app.Services.GetRequiredService<JobCatalog>();
-await catalog.InitializeAsync(WorkdayQuery.FromSettings(initialSettings, companies));
-var automaticChecks = app.Services.GetRequiredService<AutomaticJobCheckService>();
-automaticChecks.ApplySettings(initialSettings);
+app.MapGet("/api/automatic-check/status", async (
+    WorkspaceRuntimeProvider provider,
+    CancellationToken token) =>
+    Results.Ok((await provider.GetAsync(token)).AutomaticChecks.Status));
+
+app.MapPost("/api/automatic-check/run", async (
+    WorkspaceRuntimeProvider provider,
+    CancellationToken token) =>
+    Results.Ok(await (await provider.GetAsync(token)).AutomaticChecks.CheckNowAsync(token)))
+    .RequireRateLimiting("workday");
+
+app.MapPost("/api/history/viewed", async (
+    ViewedJobRequest request,
+    WorkspaceRuntimeProvider provider,
+    CancellationToken token) =>
+    await (await provider.GetAsync(token)).Catalog.MarkViewedAsync(request.StableId)
+        ? Results.NoContent()
+        : Results.NotFound())
+    .RequireRateLimiting("state");
+
+app.MapPut("/api/history/dismissed", async (
+    DismissedJobRequest request,
+    WorkspaceRuntimeProvider provider,
+    CancellationToken token) =>
+    await (await provider.GetAsync(token)).Catalog.SetDismissedAsync(request.StableId, request.Dismissed)
+        ? Results.NoContent()
+        : Results.NotFound())
+    .RequireRateLimiting("state");
+
+var dataStores = app.Services.GetRequiredService<IWorkspaceDataStoreFactory>();
+await dataStores.ValidateAsync();
+WorkspaceRuntime? localRuntime = null;
+if (hosting.IsLocal)
+{
+    localRuntime = await app.Services.GetRequiredService<WorkspaceRuntimeManager>()
+        .GetAsync(WorkspaceContext.LocalWorkspaceId);
+}
 
 try
 {
     await app.StartAsync();
 }
-catch (Exception ex) when (IsAddressInUse(ex))
+catch (Exception ex) when (hosting.IsLocal && IsAddressInUse(ex))
 {
     const string message =
         "Workday Job Manager could not start because TCP port 54321 is already in use. " +
@@ -213,24 +372,37 @@ catch (Exception ex) when (IsAddressInUse(ex))
     return;
 }
 
-app.Logger.LogInformation("Workday Job Manager is available at {ApplicationUrl}", ApplicationUrl);
-
-app.Logger.LogInformation("Persistent state directory: {DataDirectory}", stateStore.DataDirectory);
-if (builder.Configuration.GetValue("Application:RefreshOnStartup", true))
+if (hosting.IsLocal)
 {
-    _ = catalog.RefreshAsync();
+    app.Logger.LogInformation("Workday Job Manager is available at {ApplicationUrl}", ApplicationUrl);
+    app.Logger.LogInformation(
+        "Persistent state directory: {DataDirectory}",
+        localRuntime!.StateStore.DataDirectory);
+    if (builder.Configuration.GetValue("Application:RefreshOnStartup", true))
+    {
+        _ = localRuntime.Catalog.RefreshAsync();
+    }
+
+    if (builder.Configuration.GetValue("Application:OpenBrowser", true))
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(ApplicationUrl) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogWarning(
+                ex,
+                "Could not open the default browser. Open {ApplicationUrl} manually.",
+                ApplicationUrl);
+        }
+    }
 }
-
-if (builder.Configuration.GetValue("Application:OpenBrowser", true))
+else
 {
-    try
-    {
-        Process.Start(new ProcessStartInfo(ApplicationUrl) { UseShellExecute = true });
-    }
-    catch (Exception ex)
-    {
-        app.Logger.LogWarning(ex, "Could not open the default browser. Open {ApplicationUrl} manually.", ApplicationUrl);
-    }
+    app.Logger.LogInformation(
+        "Workday Job Manager started in Azure mode with anonymous Blob-backed workspaces in container {ContainerName}.",
+        hosting.StorageContainer);
 }
 
 await app.WaitForShutdownAsync();
