@@ -46,14 +46,19 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Workspace middleware preserves isolation through a protected cookie", TestWorkspaceMiddlewareAsync),
     ("Azure state changes require the exact application origin", TestOriginValidationAsync),
     ("File storage round-trips beside its configured base", TestFileStoreAsync),
+    ("Workspace reset deletes only known local state documents", TestFileResetAsync),
     ("Blob namespaces are isolated and traversal-resistant", TestBlobNamespaceAsync),
     ("New workspace settings are neutral", TestNeutralDefaultsAsync),
+    ("Deloitte Ireland is a catalog-driven Workday source", TestDeloitteCatalogAsync),
+    ("Deloitte credential additions validate as established catalog entries", TestDeloitteCredentialCatalogAsync),
+    ("Academic detector recognizes advanced master's-or-higher wording", TestAdvancedDegreeAsync),
     ("Work authorization detector recognizes strict U.S. citizenship", TestUsCitizenshipAsync),
     ("Work authorization detector distinguishes citizens and permanent residents", TestCitizenOrResidentAsync),
     ("Work authorization detector recognizes employment sponsorship", TestSponsorshipAsync),
     ("Work authorization detector treats U.S.-person wording conservatively", TestUsPersonAsync),
     ("Work authorization detector ignores unrelated sponsor and resident language", TestAuthorizationFalsePositivesAsync),
-    ("Work authorization detector surfaces non-U.S. and export wording for review", TestInternationalAuthorizationAsync)
+    ("Work authorization detector surfaces non-U.S. and export wording for review", TestInternationalAuthorizationAsync),
+    ("Work authorization detector recognizes location-specific work rights", TestLocationWorkRightsAsync)
 };
 
 var failures = new List<string>();
@@ -273,6 +278,78 @@ static Task TestNeutralDefaultsAsync()
     return Task.CompletedTask;
 }
 
+static Task TestDeloitteCatalogAsync()
+{
+    using var document = JsonDocument.Parse(File.ReadAllText(
+        Path.Combine(AppContext.BaseDirectory, "CompanyCatalog.json")));
+    var company = document.RootElement.GetProperty("companies").EnumerateArray()
+        .Single(item => item.GetProperty("id").GetString() == "deloitte-ie");
+    Assert(company.GetProperty("displayName").GetString() ==
+           "Deloitte Ireland — Experienced Professionals" &&
+           company.GetProperty("workdayHost").GetString() ==
+           "deloitteie.wd3.myworkdayjobs.com" &&
+           company.GetProperty("tenant").GetString() == "deloitteie" &&
+           company.GetProperty("site").GetString() == "experienced_professionals",
+        "Deloitte Ireland was not represented solely by the verified generic catalog fields.");
+    return Task.CompletedTask;
+}
+
+static Task TestDeloitteCredentialCatalogAsync()
+{
+    var detector = new CredentialDetector(NullLogger<CredentialDetector>.Instance);
+    Assert(detector.CatalogVersion == 9, "The expanded credential catalog version was not loaded.");
+    using var document = JsonDocument.Parse(File.ReadAllText(
+        Path.Combine(AppContext.BaseDirectory, "CredentialCatalog.json")));
+    var ids = document.RootElement.GetProperty("credentials").EnumerateArray()
+        .Select(item => item.GetProperty("id").GetString())
+        .ToHashSet(StringComparer.Ordinal);
+    var expected = new[]
+    {
+        "aca-chartered-accountant", "acca-qualification", "cima-professional-qualification",
+        "cfa-charter", "iapp-cipp-e", "iapp-aigp", "iapp-cipm", "iapp-cipt",
+        "ipass-payroll-qualification", "cta-chartered-tax-adviser",
+        "oracle-certification-unspecified", "sap-certification-unspecified"
+    };
+    Assert(expected.All(ids.Contains), "One or more verified Deloitte credentials are absent.");
+    return Task.CompletedTask;
+}
+
+static Task TestAdvancedDegreeAsync()
+{
+    var analysis = new AcademicQualificationDetector().Analyze(
+        "<p>Advanced degree (Master’s or higher) in computer science or a related discipline.</p>");
+    Assert(analysis.MinimumLevel == "master" && analysis.AnalysisVersion == 2,
+        "Advanced degree (Master's or higher) was not normalized to a master's minimum.");
+    return Task.CompletedTask;
+}
+
+static async Task TestFileResetAsync()
+{
+    var directory = Path.Combine(Path.GetTempPath(), $"workday-manager-reset-test-{Guid.NewGuid():N}");
+    try
+    {
+        var store = new FileWorkspaceDataStore(
+            directory,
+            NullLogger<FileWorkspaceDataStore>.Instance);
+        foreach (var file in Enum.GetValues<WorkspaceDataFile>())
+        {
+            await store.WriteJsonAsync(file, new TestDocument(file.ToString(), 1));
+        }
+        var unrelatedPath = Path.Combine(directory, "leave-me-alone.txt");
+        await File.WriteAllTextAsync(unrelatedPath, "not application state");
+
+        var deleted = await store.DeleteAllAsync();
+        Assert(deleted == 3, $"Expected three known documents to be deleted, but deleted {deleted}.");
+        Assert(Enum.GetValues<WorkspaceDataFile>().All(file => !File.Exists(store.Describe(file))),
+            "A known workspace document survived reset.");
+        Assert(File.Exists(unrelatedPath), "Reset deleted an unrelated file from the data directory.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
 static Task TestUsCitizenshipAsync()
 {
     var detector = new WorkAuthorizationDetector();
@@ -355,6 +432,20 @@ static Task TestInternationalAuthorizationAsync()
     Assert(export.Eligibility == "exportControlled" && export.Strength == "customerDependent" &&
            export.ParseStatus == "review",
         "Conditional ITAR wording should be review-only.");
+    return Task.CompletedTask;
+}
+
+static Task TestLocationWorkRightsAsync()
+{
+    var analysis = new WorkAuthorizationDetector().Analyze(
+        "<p>Valid work rights for the role location (no sponsorship available).</p>");
+    Assert(analysis.Eligibility == "locationWorkAuthorized" &&
+           analysis.Strength == "strict" &&
+           analysis.CountryCode is null &&
+           analysis.Sponsorship == "notAvailable" &&
+           analysis.SponsorshipStrength == "strict" &&
+           analysis.ParseStatus == "parsed",
+        "Location-specific work-rights wording was not parsed conservatively.");
     return Task.CompletedTask;
 }
 

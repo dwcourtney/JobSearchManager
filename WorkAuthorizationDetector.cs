@@ -9,7 +9,7 @@ namespace WorkdayJobManager;
 /// </summary>
 public sealed class WorkAuthorizationDetector
 {
-    public const int CurrentAnalysisVersion = 1;
+    public const int CurrentAnalysisVersion = 2;
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromMilliseconds(250);
 
     private static readonly Regex CitizenOrResident = Pattern(
@@ -37,6 +37,10 @@ public sealed class WorkAuthorizationDetector
     private static readonly Regex UsWorkAuthorized = Pattern(
         @"\b(?:must\s+be|are)\s+(?:legally\s+)?authorized\s+to\s+work\s+in\s+the\s+(?:u\.?s\.?|united states)\b|" +
         @"\b(?:legal\s+)?(?:right|authorization)\s+to\s+work\s+in\s+the\s+(?:u\.?s\.?|united states)\b");
+    private static readonly Regex LocationWorkAuthorized = Pattern(
+        @"\bvalid\s+work(?:ing)?\s+rights?\s+for\s+the\s+(?:role|job)\s+location\b|" +
+        @"\b(?:must\s+(?:have|hold)|required\s+to\s+have|valid|existing|unrestricted)\b.{0,35}" +
+        @"\b(?:legal\s+)?(?:right|rights|authori[sz]ation)\s+to\s+work\s+in\s+(?:the\s+)?[A-Za-z][A-Za-z .'-]{1,40}\b");
     private static readonly Regex NoEmploymentSponsorship = Pattern(
         @"\b(?:will|does|do|can)\s+not\s+(?:provide|offer)?\s*(?:employment\s+|visa\s+|work(?:\s+authorization)?\s+)?sponsorship\b|" +
         @"\bnot\s+(?:be\s+)?require(?:d)?\s+(?:employment\s+|visa\s+|work(?:\s+authorization)?\s+)?sponsorship\b|" +
@@ -122,6 +126,12 @@ public sealed class WorkAuthorizationDetector
             else if (UsWorkAuthorized.IsMatch(segment))
             {
                 SetEligibility("usWorkAuthorized", "US", segment, UsWorkAuthorized.Match(segment).Index);
+            }
+            else if (LocationWorkAuthorized.IsMatch(segment))
+            {
+                eligibility = "locationWorkAuthorized";
+                strength = "strict";
+                evidence.Add(Evidence(segment, LocationWorkAuthorized.Match(segment).Index));
             }
             else if (PreferredUsCitizen.IsMatch(segment))
             {

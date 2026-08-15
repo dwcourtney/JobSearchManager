@@ -125,6 +125,9 @@ app.UseExceptionHandler(errorApp => errorApp.Run(async context =>
         WorkspaceConcurrencyException => (
             StatusCodes.Status409Conflict,
             "Workspace state changed in another request. Reload and try again."),
+        WorkspaceBusyException => (
+            StatusCodes.Status409Conflict,
+            "The workspace cannot be reset while a job refresh is in progress. Try again when it finishes."),
         WorkspaceStorageException => (
             StatusCodes.Status503ServiceUnavailable,
             "Workspace storage is temporarily unavailable. Your workspace was not changed."),
@@ -318,6 +321,22 @@ app.MapPut("/api/settings", async (
     await runtime.StateStore.SaveSettingsAsync(normalized);
     runtime.AutomaticChecks.ApplySettings(normalized);
     return Results.NoContent();
+}).RequireRateLimiting("state");
+
+app.MapDelete("/api/workspace", async (
+    WorkspaceContext workspace,
+    WorkspaceRuntimeManager runtimes,
+    HttpContext context,
+    CancellationToken token) =>
+{
+    var deletedDocuments = await runtimes.ResetAsync(workspace.WorkspaceId, token);
+    if (hosting.IsAzure)
+    {
+        context.Response.Cookies.Delete(
+            WorkspaceIdentity.CookieName,
+            WorkspaceIdentity.CreateCookieOptions(secure: true));
+    }
+    return Results.Ok(new { deletedDocuments });
 }).RequireRateLimiting("state");
 
 app.MapGet("/api/automatic-check/status", async (

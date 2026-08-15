@@ -201,6 +201,47 @@ public sealed class AzureBlobWorkspaceDataStore : IWorkspaceDataStore
         }
     }
 
+    public async Task<int> DeleteAllAsync(CancellationToken cancellationToken = default)
+    {
+        var files = Enum.GetValues<WorkspaceDataFile>();
+        var acquired = new List<SemaphoreSlim>(files.Length);
+        try
+        {
+            foreach (var file in files)
+            {
+                var gate = Gate(file);
+                await gate.WaitAsync(cancellationToken);
+                acquired.Add(gate);
+            }
+
+            var deleted = 0;
+            foreach (var file in files)
+            {
+                try
+                {
+                    var response = await Blob(file).DeleteIfExistsAsync(
+                        DeleteSnapshotsOption.IncludeSnapshots,
+                        cancellationToken: cancellationToken);
+                    if (response.Value) deleted++;
+                    _versions.TryRemove(file, out _);
+                }
+                catch (RequestFailedException ex)
+                {
+                    throw StorageFailure("delete", file, ex);
+                }
+            }
+
+            return deleted;
+        }
+        finally
+        {
+            for (var index = acquired.Count - 1; index >= 0; index--)
+            {
+                acquired[index].Release();
+            }
+        }
+    }
+
     private async Task<BlobVersion> GetCurrentVersionAsync(
         WorkspaceDataFile file,
         CancellationToken cancellationToken)

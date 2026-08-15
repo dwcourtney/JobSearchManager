@@ -5,7 +5,8 @@ namespace WorkdayJobManager;
 public sealed record WorkspaceRuntime(
     AppStateStore StateStore,
     JobCatalog Catalog,
-    AutomaticJobCheckService AutomaticChecks);
+    AutomaticJobCheckService AutomaticChecks,
+    IWorkspaceDataStore DataStore);
 
 public sealed class WorkspaceRuntimeManager
 {
@@ -31,6 +32,8 @@ public sealed class WorkspaceRuntimeManager
     private readonly IWorkspaceDataStoreFactory _dataStores;
     private readonly ILogger<WorkspaceRuntimeManager> _logger;
     private readonly ConcurrentDictionary<string, RuntimeEntry> _runtimes =
+        new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, SemaphoreSlim> _workspaceGates =
         new(StringComparer.Ordinal);
 
     public WorkspaceRuntimeManager(
@@ -72,6 +75,48 @@ public sealed class WorkspaceRuntimeManager
         }
     }
 
+    public async Task<int> ResetAsync(
+        string workspaceId,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateWorkspaceId(workspaceId);
+        var gate = _workspaceGates.GetOrAdd(workspaceId, _ => new SemaphoreSlim(1, 1));
+        await gate.WaitAsync(cancellationToken);
+        try
+        {
+            if (_runtimes.TryGetValue(workspaceId, out var entry) &&
+                entry.Runtime.IsValueCreated &&
+                entry.Runtime.Value.IsCompletedSuccessfully)
+            {
+                var runtime = entry.Runtime.Value.Result;
+                if (runtime.Catalog.Snapshot.IsRefreshing || runtime.AutomaticChecks.Status.IsChecking)
+                {
+                    throw new WorkspaceBusyException(
+                        "The workspace cannot be reset while a job refresh is in progress. Try again when it finishes.");
+                }
+            }
+
+            var dataStore = _runtimes.TryGetValue(workspaceId, out var activeEntry) &&
+                activeEntry.Runtime.IsValueCreated &&
+                activeEntry.Runtime.Value.IsCompletedSuccessfully
+                    ? activeEntry.Runtime.Value.Result.DataStore
+                    : _dataStores.Create(workspaceId);
+            var deleted = await dataStore.DeleteAllAsync(cancellationToken);
+            _runtimes.TryRemove(workspaceId, out _);
+            _logger.LogInformation(
+                "Reset workspace {WorkspaceReference}; deleted {DocumentCount} known state documents.",
+                workspaceId == WorkspaceContext.LocalWorkspaceId
+                    ? WorkspaceContext.LocalWorkspaceId
+                    : WorkspaceIdentity.Redact(workspaceId),
+                deleted);
+            return deleted;
+        }
+        finally
+        {
+            gate.Release();
+        }
+    }
+
     private async Task<WorkspaceRuntime> CreateAsync(string workspaceId)
     {
         var dataStore = _dataStores.Create(workspaceId);
@@ -95,7 +140,7 @@ public sealed class WorkspaceRuntimeManager
                 ? WorkspaceContext.LocalWorkspaceId
                 : WorkspaceIdentity.Redact(workspaceId),
             dataStore.Description);
-        return new WorkspaceRuntime(stateStore, catalog, automaticChecks);
+        return new WorkspaceRuntime(stateStore, catalog, automaticChecks, dataStore);
     }
 
     private void PruneIdleEntries()

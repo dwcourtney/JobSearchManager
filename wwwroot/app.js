@@ -70,6 +70,10 @@ const state = {
   sourceConfirmationOpen: false,
   sourceConfirmationHideTimer: null,
   focusBeforeSourceConfirmation: null,
+  resetConfirmationOpen: false,
+  resetConfirmationHideTimer: null,
+  focusBeforeResetConfirmation: null,
+  resetInProgress: false,
   loadingTitle: "Loading Workday jobs",
   settingsSaveTimer: null
 };
@@ -133,6 +137,11 @@ const elements = {
   sourceConfirmationPending: document.querySelector("#source-confirmation-pending"),
   sourceConfirmationStay: document.querySelector("#source-confirmation-stay"),
   sourceConfirmationApply: document.querySelector("#source-confirmation-apply"),
+  resetWorkspaceButton: document.querySelector("#reset-workspace-button"),
+  resetConfirmationOverlay: document.querySelector("#reset-confirmation-overlay"),
+  resetConfirmationCancel: document.querySelector("#reset-confirmation-cancel"),
+  resetConfirmationSubmit: document.querySelector("#reset-confirmation-submit"),
+  resetConfirmationError: document.querySelector("#reset-confirmation-error"),
   showHiddenJobs: document.querySelector("#show-hidden-jobs"),
   hiddenJobCount: document.querySelector("#hidden-job-count"),
   jobList: document.querySelector("#job-list"),
@@ -202,6 +211,10 @@ async function initialize() {
   elements.sourceConfirmationOverlay.addEventListener("keydown", constrainSourceConfirmationFocus);
   elements.sourceConfirmationStay.addEventListener("click", () => closeSourceConfirmation(true));
   elements.sourceConfirmationApply.addEventListener("click", applyPendingSourceAndGoToJobs);
+  elements.resetWorkspaceButton.addEventListener("click", showResetConfirmation);
+  elements.resetConfirmationCancel.addEventListener("click", () => closeResetConfirmation(true));
+  elements.resetConfirmationSubmit.addEventListener("click", resetCurrentWorkspace);
+  elements.resetConfirmationOverlay.addEventListener("keydown", constrainResetConfirmationFocus);
   wireKeywordInput("inclusions", elements.includeInput, elements.addInclusion);
   wireKeywordInput("exclusions", elements.excludeInput, elements.addExclusion);
   elements.jobsTab.addEventListener("click", () => showView("jobs"));
@@ -1037,7 +1050,7 @@ function closeSourceConfirmation(restoreFocus) {
   state.sourceConfirmationOpen = false;
   elements.sourceConfirmationOverlay.classList.remove("visible");
   elements.sourceConfirmationOverlay.setAttribute("aria-hidden", "true");
-  elements.appShell.inert = state.isRefreshing;
+  elements.appShell.inert = state.isRefreshing || state.resetConfirmationOpen;
   state.sourceConfirmationHideTimer = setTimeout(() => {
     if (!state.sourceConfirmationOpen) elements.sourceConfirmationOverlay.hidden = true;
   }, OVERLAY_TRANSITION_MS);
@@ -1364,6 +1377,62 @@ function jobsPassingGeneralFilters() {
     return passesInclusion && passesExclusion && passesSalary && passesLocation &&
       passesEducation && passesClearance && passesWorkAuthorization;
   });
+}
+
+function showResetConfirmation() {
+  clearTimeout(state.resetConfirmationHideTimer);
+  state.resetConfirmationOpen = true;
+  state.focusBeforeResetConfirmation = document.activeElement;
+  elements.resetConfirmationError.hidden = true;
+  elements.resetConfirmationError.textContent = "";
+  elements.appShell.inert = true;
+  elements.resetConfirmationOverlay.hidden = false;
+  elements.resetConfirmationOverlay.setAttribute("aria-hidden", "false");
+  requestAnimationFrame(() => {
+    elements.resetConfirmationOverlay.classList.add("visible");
+    elements.resetConfirmationCancel.focus({ preventScroll: true });
+  });
+}
+
+function closeResetConfirmation(restoreFocus) {
+  if (!state.resetConfirmationOpen || state.resetInProgress) return;
+  state.resetConfirmationOpen = false;
+  elements.resetConfirmationOverlay.classList.remove("visible");
+  elements.resetConfirmationOverlay.setAttribute("aria-hidden", "true");
+  elements.appShell.inert = state.isRefreshing || state.sourceConfirmationOpen;
+  state.resetConfirmationHideTimer = setTimeout(() => {
+    if (!state.resetConfirmationOpen) elements.resetConfirmationOverlay.hidden = true;
+  }, OVERLAY_TRANSITION_MS);
+  if (restoreFocus && state.focusBeforeResetConfirmation?.isConnected) {
+    state.focusBeforeResetConfirmation.focus({ preventScroll: true });
+  }
+  state.focusBeforeResetConfirmation = null;
+}
+
+async function resetCurrentWorkspace() {
+  if (state.resetInProgress) return;
+  state.resetInProgress = true;
+  clearTimeout(state.settingsSaveTimer);
+  state.settingsSaveTimer = null;
+  elements.resetConfirmationCancel.disabled = true;
+  elements.resetConfirmationSubmit.disabled = true;
+  elements.resetConfirmationSubmit.textContent = "Resetting…";
+  elements.resetConfirmationError.hidden = true;
+  try {
+    const response = await fetch("/api/workspace", { method: "DELETE" });
+    if (!response.ok) {
+      throw new Error(await apiErrorMessage(response, "The workspace could not be reset."));
+    }
+    window.location.reload();
+  } catch (error) {
+    state.resetInProgress = false;
+    elements.resetConfirmationCancel.disabled = false;
+    elements.resetConfirmationSubmit.disabled = false;
+    elements.resetConfirmationSubmit.textContent = "Reset workspace";
+    elements.resetConfirmationError.textContent = error.message || String(error);
+    elements.resetConfirmationError.hidden = false;
+    elements.resetConfirmationCancel.focus({ preventScroll: true });
+  }
 }
 
 function currentWorkAuthorizationProfile() {
@@ -2447,6 +2516,7 @@ function workAuthorizationRequirementLabel(analysis) {
     usCitizen: "U.S. citizenship required",
     usCitizenOrPermanentResident: "U.S. citizen or permanent resident required",
     usWorkAuthorized: "U.S. work authorization required",
+    locationWorkAuthorized: "Valid work rights for the job location required — review for jurisdiction",
     usPerson: "U.S.-person language — review required",
     australianCitizen: "Australian citizenship language — review required",
     exportControlled: "Export-control language — review required",
@@ -2463,6 +2533,7 @@ function workAuthorizationBadgeLabel(analysis) {
     usCitizen: "U.S. Citizen",
     usCitizenOrPermanentResident: "Citizen / Green Card",
     usWorkAuthorized: "U.S. Work Authorized",
+    locationWorkAuthorized: "Local Work Rights — Review",
     usPerson: "U.S. Person — Review",
     australianCitizen: "Australian Citizen — Review",
     exportControlled: "Export Control — Review",
@@ -2791,7 +2862,7 @@ function setLoading(isLoading, options = {}) {
     });
   } else {
     clearTimeout(state.refreshProgressTimer);
-    elements.appShell.inert = state.sourceConfirmationOpen;
+    elements.appShell.inert = state.sourceConfirmationOpen || state.resetConfirmationOpen;
     elements.loadingOverlay.classList.remove("visible");
     elements.loadingOverlay.setAttribute("aria-hidden", "true");
     state.overlayHideTimer = setTimeout(() => {
@@ -2872,6 +2943,28 @@ function constrainSourceConfirmationFocus(event) {
   }
   if (event.key !== "Tab") return;
   const focusable = [elements.sourceConfirmationStay, elements.sourceConfirmationApply];
+  const currentIndex = focusable.indexOf(document.activeElement);
+  const nextIndex = event.shiftKey
+    ? (currentIndex <= 0 ? focusable.length - 1 : currentIndex - 1)
+    : (currentIndex < 0 || currentIndex === focusable.length - 1 ? 0 : currentIndex + 1);
+  event.preventDefault();
+  focusable[nextIndex].focus({ preventScroll: true });
+}
+
+function constrainResetConfirmationFocus(event) {
+  if (event.key === "Escape" && !state.resetInProgress) {
+    event.preventDefault();
+    closeResetConfirmation(true);
+    return;
+  }
+  if (event.key !== "Tab") return;
+  const focusable = [elements.resetConfirmationCancel, elements.resetConfirmationSubmit]
+    .filter(element => !element.disabled);
+  if (focusable.length === 0) {
+    event.preventDefault();
+    elements.resetConfirmationOverlay.focus({ preventScroll: true });
+    return;
+  }
   const currentIndex = focusable.indexOf(document.activeElement);
   const nextIndex = event.shiftKey
     ? (currentIndex <= 0 ? focusable.length - 1 : currentIndex - 1)

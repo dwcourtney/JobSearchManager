@@ -611,6 +611,32 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   background: var(--color-confirmation-secondary-hover);
 }
 
+.reset-confirmation-panel {
+  border-color: var(--color-reset-panel-border);
+}
+
+.reset-confirmation-list {
+  margin: 0;
+  padding-inline-start: var(--reset-list-indent);
+  color: var(--color-confirmation-text-secondary);
+  line-height: var(--line-height-note);
+}
+
+.reset-confirmation-warning {
+  margin: 0;
+  color: var(--color-reset-warning-text);
+  font-weight: var(--font-weight-bold);
+}
+
+.reset-confirmation-error {
+  margin: 0;
+  padding: var(--reset-error-padding);
+  border: var(--border-width-default) solid var(--color-error-border);
+  border-radius: var(--radius-control);
+  color: var(--color-error-text);
+  background: var(--color-error-background);
+}
+
 @keyframes spin { to { transform: var(--transform-spinner-complete); } }
 
 @keyframes loading-progress {
@@ -1003,6 +1029,42 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   color: var(--color-clearance-mismatch-badge-text);
   background: var(--color-clearance-mismatch-badge-background);
 }
+.reset-workspace-section {
+  background: var(--color-reset-section-background);
+}
+.reset-workspace-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--reset-section-gap);
+}
+.reset-workspace-content p {
+  margin: 0;
+  color: var(--color-reset-section-text);
+  line-height: var(--line-height-note);
+}
+.reset-workspace-content small {
+  display: block;
+  margin-top: var(--reset-help-margin-top);
+  color: var(--color-reset-section-secondary);
+}
+.destructive-button {
+  flex: 0 0 auto;
+  padding: var(--reset-button-padding);
+  border: var(--border-width-default) solid var(--color-destructive-button-border);
+  border-radius: var(--radius-control);
+  color: var(--color-destructive-button-text);
+  background: var(--color-destructive-button);
+  cursor: pointer;
+  font-weight: var(--font-weight-semibold);
+}
+.destructive-button:hover:not(:disabled) {
+  background: var(--color-destructive-button-hover);
+}
+.destructive-button:disabled {
+  cursor: wait;
+  opacity: var(--opacity-disabled-control);
+}
 
 .job-card .work-authorization-badge {
   border: var(--border-width-default) solid var(--color-work-authorization-badge-border);
@@ -1370,4 +1432,6 @@ mark {
   .settings-section { padding: .78rem .82rem .88rem; }
   .settings-row { grid-template-columns: 1fr; gap: .28rem; }
   .settings-row > label, .settings-row > .settings-row-label { padding-top: 0; }
+  .reset-workspace-content { align-items: stretch; flex-direction: column; }
+  .reset-workspace-content .destructive-button { align-self: flex-start; }
 }

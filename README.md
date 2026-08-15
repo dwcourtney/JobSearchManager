@@ -29,6 +29,9 @@ a private Azure Blob container.
 - Leidos (`leidos.wd5.myworkdayjobs.com`, tenant `leidos`, site `External`)
 - MTM (`mtminc.wd1.myworkdayjobs.com`, tenant `mtminc`, site
   `MTMTransit_External`)
+- Deloitte Ireland — Experienced Professionals
+  (`deloitteie.wd3.myworkdayjobs.com`, tenant `deloitteie`, site
+  `experienced_professionals`)
 
 The source-controlled [CompanyCatalog.json](CompanyCatalog.json) is the authority
 for supported companies, hosts, tenants, sites, public URLs, default countries,
@@ -115,6 +118,11 @@ its company-aware query identity.
 Copy or move the executable directory and its `data` directory together to retain
 state.
 
+Settings also provides **Reset current workspace**. After confirmation, local mode
+deletes only the three application-owned JSON documents shown above and reloads
+first-run defaults. It does not recursively clean the `data` directory, so unrelated
+files are left untouched.
+
 ## Azure App Service mode
 
 Azure mode uses App Service's listener configuration instead of forcing the local
@@ -177,6 +185,13 @@ user's salary, education, clearance, filters, locations, hidden jobs, or history
 The company and credential catalogs remain shared source-controlled application
 configuration.
 
+In Azure mode, **Reset current workspace** deletes only the three fixed Blob names
+under the server-resolved current workspace prefix. The browser cannot supply a
+workspace ID. Only after all deletions succeed does the server expire the protected
+workspace cookie; the reload then creates a new anonymous workspace. A storage
+failure preserves the cookie and reports an error instead of pretending the reset
+succeeded.
+
 ### Automatic checks in Azure
 
 Local mode retains its background automatic-check scheduler. Azure mode does not
@@ -217,7 +232,7 @@ presentation originating in a posting is not treated as application theme stylin
 
 ## Workday behavior verified
 
-Both supported sites use:
+All supported sites use:
 
 - `POST /wday/cxs/{tenant}/{site}/jobs`
 - JSON pagination with `limit` (maximum 20) and `offset`
@@ -229,6 +244,12 @@ Leidos exposes country and configured Remote/Teleworker location facets. MTM's
 current public feed exposes location facets but no country facet and no explicit
 remote-location facet. The UI adapts to those differences instead of applying
 Leidos facet IDs to MTM.
+
+The Deloitte source is the regional Deloitte Ireland experienced-professionals
+board, not a claim to cover Deloitte globally. Its current facets expose Ireland
+and the United Kingdom, with physical locations including Dublin, Cork, Galway,
+Limerick, and Belfast. Hybrid/remote wording is primarily description metadata;
+the board does not currently expose a dedicated remote location facet.
 
 ## Safety and scope
 

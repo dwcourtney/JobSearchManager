@@ -9,7 +9,7 @@ namespace WorkdayJobManager;
 /// </summary>
 public sealed class AcademicQualificationDetector
 {
-    public const int CurrentAnalysisVersion = 1;
+    public const int CurrentAnalysisVersion = 2;
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromMilliseconds(250);
 
     public int AnalysisVersion => CurrentAnalysisVersion;
@@ -425,7 +425,8 @@ public sealed class AcademicQualificationDetector
     private static readonly Regex BachelorRegex = CreateRegex(
         @"\bbachelor(?:['’]s|s)?(?:\s+degree|\s+of\s+(?:arts|science)|(?=\s+in\b))\b|\bundergraduate\s+degree\b");
     private static readonly Regex MasterRegex = CreateRegex(
-        @"\bmaster(?:['’]s|s)?(?:\s+degree|\s+of\s+(?:arts|science))\b|\bgraduate\s+degree\b|\bMBA\s+degree\b");
+        @"\bmaster(?:['’]s|s)?(?:\s+degree|\s+of\s+(?:arts|science))\b|\bgraduate\s+degree\b|\bMBA\s+degree\b|" +
+        @"\badvanced\s+degree\s*\(\s*master(?:['’]s|s)?\s+or\s+higher\s*\)");
     private static readonly Regex DoctorateRegex = CreateRegex(
         @"\b(?:doctoral(?:-level)?\s+degree|doctorate(?:\s+degree)?)\b");
     private static readonly Regex PhDRegex = CreateRegex(

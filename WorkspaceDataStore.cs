@@ -17,6 +17,7 @@ public interface IWorkspaceDataStore
     Task<bool> ExistsAsync(WorkspaceDataFile file, CancellationToken cancellationToken = default);
     Task<T?> ReadJsonAsync<T>(WorkspaceDataFile file, CancellationToken cancellationToken = default);
     Task WriteJsonAsync<T>(WorkspaceDataFile file, T value, CancellationToken cancellationToken = default);
+    Task<int> DeleteAllAsync(CancellationToken cancellationToken = default);
 }
 
 public interface IWorkspaceDataStoreFactory
@@ -35,6 +36,11 @@ public sealed class WorkspaceConcurrencyException : WorkspaceStorageException
 {
     public WorkspaceConcurrencyException(string message, Exception innerException)
         : base(message, innerException) { }
+}
+
+public sealed class WorkspaceBusyException : Exception
+{
+    public WorkspaceBusyException(string message) : base(message) { }
 }
 
 public static class WorkspaceDataFiles
@@ -190,6 +196,45 @@ public sealed class FileWorkspaceDataStore : IWorkspaceDataStore
                 try { File.Delete(temporaryPath); } catch { }
             }
             gate.Release();
+        }
+    }
+
+    public async Task<int> DeleteAllAsync(CancellationToken cancellationToken = default)
+    {
+        var files = Enum.GetValues<WorkspaceDataFile>();
+        var acquired = new List<SemaphoreSlim>(files.Length);
+        try
+        {
+            foreach (var file in files)
+            {
+                var gate = Gate(file);
+                await gate.WaitAsync(cancellationToken);
+                acquired.Add(gate);
+            }
+
+            var deleted = 0;
+            foreach (var file in files)
+            {
+                var path = Describe(file);
+                if (!File.Exists(path)) continue;
+                File.Delete(path);
+                deleted++;
+            }
+            return deleted;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            throw new WorkspaceStorageException(
+                $"Persistent state could not be reset in the application-local data directory '{Description}'. " +
+                "The existing workspace identity and any documents not yet deleted were preserved.",
+                ex);
+        }
+        finally
+        {
+            for (var index = acquired.Count - 1; index >= 0; index--)
+            {
+                acquired[index].Release();
+            }
         }
     }
 

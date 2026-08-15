@@ -449,6 +449,19 @@
             </div>
           </div>
         </section>
+
+        <section class="settings-section reset-workspace-section" aria-labelledby="reset-workspace-heading">
+          <h3 id="reset-workspace-heading">Reset Workspace</h3>
+          <div class="reset-workspace-content">
+            <div>
+              <p>Delete all settings, history, cached jobs, and preferences for this workspace.</p>
+              <small>The application will reload with first-run defaults. This cannot be undone.</small>
+            </div>
+            <button id="reset-workspace-button" class="destructive-button" type="button">
+              Reset current workspace
+            </button>
+          </div>
+        </section>
       </div>
     </section>
   </main>
@@ -497,6 +510,36 @@
         </button>
         <button id="source-confirmation-apply" class="primary-button" type="button">
           Apply and go to Jobs
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <div id="reset-confirmation-overlay" class="loading-overlay confirmation-overlay reset-confirmation-overlay"
+       role="dialog" aria-modal="true" aria-hidden="true"
+       aria-labelledby="reset-confirmation-title"
+       aria-describedby="reset-confirmation-copy reset-confirmation-warning"
+       tabindex="-1" hidden>
+    <section class="loading-panel confirmation-panel reset-confirmation-panel">
+      <h2 id="reset-confirmation-title">Reset current workspace?</h2>
+      <p id="reset-confirmation-copy" class="confirmation-copy">
+        This will permanently delete this workspace's:
+      </p>
+      <ul class="reset-confirmation-list">
+        <li>settings and preferences</li>
+        <li>job history and hidden jobs</li>
+        <li>cached jobs and qualification profile</li>
+      </ul>
+      <p id="reset-confirmation-warning" class="reset-confirmation-warning">
+        This cannot be undone.
+      </p>
+      <p id="reset-confirmation-error" class="reset-confirmation-error" role="alert" hidden></p>
+      <div class="confirmation-actions">
+        <button id="reset-confirmation-cancel" class="confirmation-secondary-button" type="button">
+          Cancel
+        </button>
+        <button id="reset-confirmation-submit" class="destructive-button" type="button">
+          Reset workspace
         </button>
       </div>
     </section>

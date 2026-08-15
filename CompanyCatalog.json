@@ -29,6 +29,19 @@
         "label": "All countries"
       },
       "remoteLocationIds": []
+    },
+    {
+      "id": "deloitte-ie",
+      "displayName": "Deloitte Ireland — Experienced Professionals",
+      "workdayHost": "deloitteie.wd3.myworkdayjobs.com",
+      "tenant": "deloitteie",
+      "site": "experienced_professionals",
+      "publicSiteUrl": "https://deloitteie.wd3.myworkdayjobs.com/experienced_professionals",
+      "defaultCountry": {
+        "id": "04a05835925f45b3a59406a2a6b72c8a",
+        "label": "Ireland"
+      },
+      "remoteLocationIds": []
     }
   ]
 }

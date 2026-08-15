@@ -84,6 +84,11 @@
   --confirmation-actions-gap: .65rem;
   --confirmation-actions-margin-top: .3rem;
   --confirmation-button-padding: .45rem .85rem;
+  --reset-list-indent: 1.2rem;
+  --reset-error-padding: .65rem .75rem;
+  --reset-section-gap: 1rem;
+  --reset-help-margin-top: .25rem;
+  --reset-button-padding: .55rem .85rem;
   --transform-loading-panel-hidden: scale(.98) translateY(.35rem);
   --transform-loading-panel-visible: scale(1) translateY(0);
   --transform-spinner-complete: rotate(360deg);
@@ -114,6 +119,7 @@
   --color-confirmation-secondary-text: var(--color-secondary-button-text);
   --color-confirmation-secondary-background: var(--color-secondary-button-background);
   --color-confirmation-secondary-hover: var(--color-secondary-button-hover);
+  --opacity-disabled-control: .65;
   --shadow-confirmation-panel: var(--shadow-loading-panel);
 }
 
@@ -177,6 +183,13 @@
   --color-currency-field-background: transparent;
   --color-destructive-button: #8a3b3b;
   --color-destructive-button-hover: #702f2f;
+  --color-destructive-button-border: #702f2f;
+  --color-destructive-button-text: #ffffff;
+  --color-reset-section-background: #fffafa;
+  --color-reset-section-text: #4f3030;
+  --color-reset-section-secondary: #765d5d;
+  --color-reset-panel-border: #bd7777;
+  --color-reset-warning-text: #8a2f2f;
 
   /* Filter and section headers */
   --color-filter-toggle-text: #29475d;
@@ -402,6 +415,13 @@
   --color-currency-field-background: transparent;
   --color-destructive-button: #a34f55;
   --color-destructive-button-hover: #bd6268;
+  --color-destructive-button-border: #c4777d;
+  --color-destructive-button-text: #ffffff;
+  --color-reset-section-background: #21191b;
+  --color-reset-section-text: #f0d8da;
+  --color-reset-section-secondary: #c5a9ac;
+  --color-reset-panel-border: #a65d63;
+  --color-reset-warning-text: #f2b7bc;
 
   /* Filter and section headers */
   --color-filter-toggle-text: #d2e3ee;
