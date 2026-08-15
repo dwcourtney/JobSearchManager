@@ -418,5 +418,39 @@
       <p id="loading-note" class="loading-note">This may take a moment.</p>
     </section>
   </div>
+
+  <div id="source-confirmation-overlay" class="loading-overlay confirmation-overlay"
+       role="dialog" aria-modal="true" aria-hidden="true"
+       aria-labelledby="source-confirmation-title"
+       aria-describedby="source-confirmation-copy source-confirmation-question"
+       tabindex="-1" hidden>
+    <section class="loading-panel confirmation-panel">
+      <h2 id="source-confirmation-title">Unapplied job source changes</h2>
+      <p id="source-confirmation-copy" class="confirmation-copy">
+        You changed the Workday job source.
+      </p>
+      <div class="confirmation-source-comparison">
+        <div class="confirmation-source-row">
+          <span>Current</span>
+          <strong id="source-confirmation-current"></strong>
+        </div>
+        <div class="confirmation-source-row pending">
+          <span>Pending</span>
+          <strong id="source-confirmation-pending"></strong>
+        </div>
+      </div>
+      <p id="source-confirmation-question" class="confirmation-copy">
+        Apply the new source before returning to Jobs?
+      </p>
+      <div class="confirmation-actions">
+        <button id="source-confirmation-stay" class="confirmation-secondary-button" type="button">
+          Stay in Settings
+        </button>
+        <button id="source-confirmation-apply" class="primary-button" type="button">
+          Apply and go to Jobs
+        </button>
+      </div>
+    </section>
+  </div>
 </body>
 </html>

@@ -527,6 +527,90 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   line-height: var(--line-height-note);
 }
 
+.confirmation-overlay {
+  background: var(--color-confirmation-backdrop);
+}
+
+.confirmation-panel {
+  display: grid;
+  width: min(100%, var(--confirmation-panel-width));
+  padding: var(--confirmation-panel-padding);
+  gap: var(--confirmation-panel-gap);
+  border-color: var(--color-confirmation-border);
+  color: var(--color-confirmation-text-primary);
+  background: var(--color-confirmation-surface);
+  box-shadow: var(--shadow-confirmation-panel);
+  text-align: left;
+}
+
+.confirmation-panel h2 {
+  margin: 0;
+  color: var(--color-confirmation-text-primary);
+}
+
+.confirmation-copy {
+  margin: 0;
+  color: var(--color-confirmation-text-secondary);
+  line-height: var(--line-height-note);
+}
+
+.confirmation-source-comparison {
+  display: grid;
+  gap: var(--confirmation-source-gap);
+}
+
+.confirmation-source-row {
+  display: grid;
+  gap: var(--confirmation-source-label-gap);
+  padding: var(--confirmation-source-padding);
+  border: var(--border-width-default) solid var(--color-confirmation-summary-border);
+  border-radius: var(--radius-control);
+  background: var(--color-confirmation-summary-background);
+}
+
+.confirmation-source-row.pending {
+  border-left: var(--status-indicator-width) solid var(--color-confirmation-pending-border);
+}
+
+.confirmation-source-row span {
+  color: var(--color-confirmation-text-secondary);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-section);
+  text-transform: var(--text-transform-section);
+}
+
+.confirmation-source-row strong {
+  overflow-wrap: anywhere;
+  color: var(--color-confirmation-text-primary);
+  line-height: var(--line-height-note);
+}
+
+.confirmation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--confirmation-actions-gap);
+  margin-top: var(--confirmation-actions-margin-top);
+}
+
+.confirmation-actions button {
+  padding: var(--confirmation-button-padding);
+}
+
+.confirmation-secondary-button {
+  border: var(--border-width-default) solid var(--color-confirmation-secondary-border);
+  border-radius: var(--radius-control);
+  color: var(--color-confirmation-secondary-text);
+  background: var(--color-confirmation-secondary-background);
+  cursor: pointer;
+  font-weight: var(--font-weight-medium);
+}
+
+.confirmation-secondary-button:hover {
+  background: var(--color-confirmation-secondary-hover);
+}
+
 @keyframes spin { to { transform: var(--transform-spinner-complete); } }
 
 @keyframes loading-progress {

@@ -149,6 +149,12 @@ app.MapPost("/api/query", async Task<IResult> (
     {
         automaticChecks.ResetSchedule();
     }
+    else
+    {
+        // The catalog retains the previous known-good query and results when a
+        // source switch fails. Keep persistent source settings aligned with it.
+        await stateStore.SaveSettingsAsync(current);
+    }
     return Results.Ok(snapshot);
 });
 app.MapGet("/api/settings", async (AppStateStore stateStore) =>

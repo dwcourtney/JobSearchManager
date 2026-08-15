@@ -75,6 +75,15 @@
   --loading-spinner-size: 2.15rem;
   --loading-progress-height: .42rem;
   --loading-progress-fill-width: 42%;
+  --confirmation-panel-width: 34rem;
+  --confirmation-panel-padding: 1.55rem 1.7rem 1.35rem;
+  --confirmation-panel-gap: .85rem;
+  --confirmation-source-gap: .55rem;
+  --confirmation-source-padding: .7rem .8rem;
+  --confirmation-source-label-gap: .18rem;
+  --confirmation-actions-gap: .65rem;
+  --confirmation-actions-margin-top: .3rem;
+  --confirmation-button-padding: .45rem .85rem;
   --transform-loading-panel-hidden: scale(.98) translateY(.35rem);
   --transform-loading-panel-visible: scale(1) translateY(0);
   --transform-spinner-complete: rotate(360deg);
@@ -93,6 +102,19 @@
     inset var(--selected-job-indicator-width) 0 0 var(--color-job-selected-indicator);
   --shadow-keyword-highlight:
     inset 0 calc(-1 * var(--border-width-default)) 0 var(--color-keyword-highlight-underline);
+  --color-confirmation-backdrop: var(--color-loading-backdrop);
+  --color-confirmation-surface: var(--color-loading-surface);
+  --color-confirmation-border: var(--color-loading-panel-border);
+  --color-confirmation-text-primary: var(--color-loading-text-primary);
+  --color-confirmation-text-secondary: var(--color-loading-text-secondary);
+  --color-confirmation-summary-background: var(--color-surface-secondary);
+  --color-confirmation-summary-border: var(--color-border);
+  --color-confirmation-pending-border: var(--color-accent);
+  --color-confirmation-secondary-border: var(--color-secondary-button-border);
+  --color-confirmation-secondary-text: var(--color-secondary-button-text);
+  --color-confirmation-secondary-background: var(--color-secondary-button-background);
+  --color-confirmation-secondary-hover: var(--color-secondary-button-hover);
+  --shadow-confirmation-panel: var(--shadow-loading-panel);
 }
 
 /* Light theme: preserves the established application appearance. */

@@ -156,7 +156,9 @@ public sealed class JobCatalog
                     "A Workday refresh is already running. Wait for it to finish before applying another location.");
             }
 
-            var queryChanged = !_currentQuery.IsEquivalentTo(query, _companyCatalog);
+            var previousQuery = _currentQuery;
+            var previousSnapshot = _snapshot;
+            var queryChanged = !previousQuery.IsEquivalentTo(query, _companyCatalog);
             _currentQuery = query;
             _snapshot = queryChanged
                 ? JobsSnapshot.Empty with
@@ -172,7 +174,7 @@ public sealed class JobCatalog
                     Query = query,
                     RefreshProgress = new RefreshProgress("listings", 0, null)
                 };
-            _activeRefresh = RefreshCoreAsync(query);
+            _activeRefresh = RefreshCoreAsync(query, previousQuery, previousSnapshot);
             return _activeRefresh;
         }
     }
@@ -372,7 +374,10 @@ public sealed class JobCatalog
         }
     }
 
-    private async Task<JobsSnapshot> RefreshCoreAsync(WorkdayQuery query)
+    private async Task<JobsSnapshot> RefreshCoreAsync(
+        WorkdayQuery query,
+        WorkdayQuery previousQuery,
+        JobsSnapshot previousSnapshot)
     {
         await _workdayOperationGate.WaitAsync();
         try
@@ -440,7 +445,8 @@ public sealed class JobCatalog
                 _companyCatalog.Get(query.CompanyId).DisplayName);
             lock (_gate)
             {
-                _snapshot = _snapshot with
+                _currentQuery = previousQuery;
+                _snapshot = previousSnapshot with
                 {
                     IsRefreshing = false,
                     Error = ex.Message,

@@ -63,6 +63,9 @@ const state = {
   refreshProgressTimer: null,
   overlayHideTimer: null,
   focusBeforeLoading: null,
+  sourceConfirmationOpen: false,
+  sourceConfirmationHideTimer: null,
+  focusBeforeSourceConfirmation: null,
   loadingTitle: "Loading Workday jobs",
   settingsSaveTimer: null
 };
@@ -118,6 +121,11 @@ const elements = {
   loadingTitle: document.querySelector("#loading-title"),
   loadingPhase: document.querySelector("#loading-phase"),
   loadingNote: document.querySelector("#loading-note"),
+  sourceConfirmationOverlay: document.querySelector("#source-confirmation-overlay"),
+  sourceConfirmationCurrent: document.querySelector("#source-confirmation-current"),
+  sourceConfirmationPending: document.querySelector("#source-confirmation-pending"),
+  sourceConfirmationStay: document.querySelector("#source-confirmation-stay"),
+  sourceConfirmationApply: document.querySelector("#source-confirmation-apply"),
   showHiddenJobs: document.querySelector("#show-hidden-jobs"),
   hiddenJobCount: document.querySelector("#hidden-job-count"),
   jobList: document.querySelector("#job-list"),
@@ -176,6 +184,9 @@ async function initialize() {
     phaseText: "Loading saved settings and job data…"
   });
   elements.loadingOverlay.addEventListener("keydown", constrainLoadingFocus);
+  elements.sourceConfirmationOverlay.addEventListener("keydown", constrainSourceConfirmationFocus);
+  elements.sourceConfirmationStay.addEventListener("click", () => closeSourceConfirmation(true));
+  elements.sourceConfirmationApply.addEventListener("click", applyPendingSourceAndGoToJobs);
   wireKeywordInput("inclusions", elements.includeInput, elements.addInclusion);
   wireKeywordInput("exclusions", elements.excludeInput, elements.addExclusion);
   elements.jobsTab.addEventListener("click", () => showView("jobs"));
@@ -286,8 +297,15 @@ async function initialize() {
   await loadInitialState();
 }
 
-function showView(view, focusFirstControl = false) {
+function showView(view, focusFirstControl = false, options = {}) {
   const nextView = view === "settings" ? "settings" : "jobs";
+  if (nextView === "jobs" &&
+      state.activeView === "settings" &&
+      options.bypassSourceGuard !== true &&
+      querySelectionIsPending()) {
+    showSourceConfirmation();
+    return false;
+  }
   state.activeView = nextView;
   const jobsSelected = nextView === "jobs";
   elements.jobsView.hidden = !jobsSelected;
@@ -301,6 +319,7 @@ function showView(view, focusFirstControl = false) {
   if (focusFirstControl) {
     (jobsSelected ? elements.filterToggle : elements.companySelect).focus();
   }
+  return true;
 }
 
 function handleTabKeydown(event) {
@@ -311,8 +330,10 @@ function handleTabKeydown(event) {
   const targetView = event.key === "ArrowLeft" || event.key === "Home"
     ? "jobs"
     : "settings";
-  showView(targetView);
-  (targetView === "jobs" ? elements.jobsTab : elements.settingsTab).focus();
+  const changed = showView(targetView);
+  if (changed) {
+    (targetView === "jobs" ? elements.jobsTab : elements.settingsTab).focus();
+  }
 }
 
 function showDetailTab(tab, moveFocus = false) {
@@ -888,6 +909,67 @@ function querySelectionIsPending() {
     physicalIds.some((id, index) => id !== activePhysicalIds[index]);
 }
 
+function formatSourceDescription(companyName, country, includeAll, includeRemote, physicalLocations) {
+  return `${companyName || "Workday"} · ${country?.label || ALL_COUNTRIES_LABEL} · ${describeSourceLocations(
+    includeAll,
+    includeRemote,
+    physicalLocations)}`;
+}
+
+function pendingSourceDescription() {
+  const includeAllLocations = elements.includeAllLocations.checked;
+  const includeRemote = includeAllLocations && state.remoteLocations.length > 0
+    ? true
+    : elements.includeRemote.checked;
+  return formatSourceDescription(
+    companyById(elements.companySelect.value)?.displayName || elements.companySelect.value,
+    selectedFacet(elements.countrySelect, ALL_COUNTRIES_LABEL),
+    includeAllLocations,
+    includeRemote,
+    includeAllLocations ? [] : selectedPendingLocations());
+}
+
+function showSourceConfirmation() {
+  clearTimeout(state.sourceConfirmationHideTimer);
+  state.sourceConfirmationOpen = true;
+  state.focusBeforeSourceConfirmation = document.activeElement;
+  elements.sourceConfirmationCurrent.textContent = formatSourceDescription(
+    state.companyName,
+    state.country,
+    state.includeAllLocations,
+    state.includeRemote,
+    state.physicalLocations);
+  elements.sourceConfirmationPending.textContent = pendingSourceDescription();
+  elements.appShell.inert = true;
+  elements.sourceConfirmationOverlay.hidden = false;
+  elements.sourceConfirmationOverlay.setAttribute("aria-hidden", "false");
+  requestAnimationFrame(() => {
+    elements.sourceConfirmationOverlay.classList.add("visible");
+    elements.sourceConfirmationApply.focus({ preventScroll: true });
+  });
+}
+
+function closeSourceConfirmation(restoreFocus) {
+  if (!state.sourceConfirmationOpen) return;
+  state.sourceConfirmationOpen = false;
+  elements.sourceConfirmationOverlay.classList.remove("visible");
+  elements.sourceConfirmationOverlay.setAttribute("aria-hidden", "true");
+  elements.appShell.inert = state.isRefreshing;
+  state.sourceConfirmationHideTimer = setTimeout(() => {
+    if (!state.sourceConfirmationOpen) elements.sourceConfirmationOverlay.hidden = true;
+  }, OVERLAY_TRANSITION_MS);
+  if (restoreFocus && state.focusBeforeSourceConfirmation?.isConnected) {
+    state.focusBeforeSourceConfirmation.focus({ preventScroll: true });
+  }
+  state.focusBeforeSourceConfirmation = null;
+}
+
+async function applyPendingSourceAndGoToJobs() {
+  closeSourceConfirmation(false);
+  elements.companySelect.focus({ preventScroll: true });
+  await applyWorkdayLocation({ navigateToJobs: true });
+}
+
 function updateQueryControls() {
   const disabled = !state.facetsLoaded || state.isRefreshing;
   elements.companySelect.disabled = state.isRefreshing;
@@ -913,7 +995,7 @@ function updateQueryControls() {
       : `Source matches currently loaded jobs · ${context}`;
 }
 
-async function applyWorkdayLocation() {
+async function applyWorkdayLocation(options = {}) {
   const companyId = elements.companySelect.value;
   const company = companyById(companyId);
   const country = selectedFacet(elements.countrySelect, ALL_COUNTRIES_LABEL);
@@ -926,10 +1008,6 @@ async function applyWorkdayLocation() {
   setLoading(true, { title: `Loading ${company?.displayName || "Workday"} jobs` });
   beginRefreshProgressPolling();
   elements.errorBanner.hidden = true;
-  state.jobs = [];
-  state.newJobIds = new Set();
-  state.selectedJobId = null;
-  renderResults();
   try {
     const response = await fetch("/api/query", {
       method: "POST",
@@ -947,11 +1025,22 @@ async function applyWorkdayLocation() {
     if (!response.ok) {
       throw new Error(`Location refresh returned HTTP ${response.status}.`);
     }
-    applySnapshot(await response.json());
+    const snapshot = await response.json();
+    if (snapshot.error) {
+      showSnapshotError(snapshot.error, snapshot.detailFailureCount || 0);
+      setLoading(false);
+      updateQueryControls();
+      return false;
+    }
+    applySnapshot(snapshot);
     await loadAutomaticCheckStatus();
+    if (options.navigateToJobs === true) {
+      showView("jobs", true, { bypassSourceGuard: true });
+    }
+    return true;
   } catch (error) {
     showClientError(error);
-    await loadSnapshot();
+    return false;
   }
 }
 
@@ -2447,7 +2536,7 @@ function setLoading(isLoading, options = {}) {
     });
   } else {
     clearTimeout(state.refreshProgressTimer);
-    elements.appShell.inert = false;
+    elements.appShell.inert = state.sourceConfirmationOpen;
     elements.loadingOverlay.classList.remove("visible");
     elements.loadingOverlay.setAttribute("aria-hidden", "true");
     state.overlayHideTimer = setTimeout(() => {
@@ -2518,6 +2607,22 @@ function constrainLoadingFocus(event) {
     event.preventDefault();
     elements.loadingOverlay.focus({ preventScroll: true });
   }
+}
+
+function constrainSourceConfirmationFocus(event) {
+  if (event.key === "Escape") {
+    event.preventDefault();
+    closeSourceConfirmation(true);
+    return;
+  }
+  if (event.key !== "Tab") return;
+  const focusable = [elements.sourceConfirmationStay, elements.sourceConfirmationApply];
+  const currentIndex = focusable.indexOf(document.activeElement);
+  const nextIndex = event.shiftKey
+    ? (currentIndex <= 0 ? focusable.length - 1 : currentIndex - 1)
+    : (currentIndex < 0 || currentIndex === focusable.length - 1 ? 0 : currentIndex + 1);
+  event.preventDefault();
+  focusable[nextIndex].focus({ preventScroll: true });
 }
 
 function showSnapshotError(error, detailFailureCount) {
