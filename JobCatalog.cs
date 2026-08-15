@@ -1,4 +1,4 @@
-namespace LeidosJobsViewer;
+namespace WorkdayJobManager;
 
 public sealed class JobCatalog
 {
@@ -7,6 +7,7 @@ public sealed class JobCatalog
     private readonly ILogger<JobCatalog> _logger;
     private readonly CredentialDetector _credentialDetector;
     private readonly AcademicQualificationDetector _academicQualificationDetector;
+    private readonly CompanyCatalog _companyCatalog;
     private readonly object _gate = new();
     private readonly SemaphoreSlim _historyGate = new(1, 1);
     private readonly SemaphoreSlim _workdayOperationGate = new(1, 1);
@@ -23,13 +24,15 @@ public sealed class JobCatalog
         AppStateStore stateStore,
         ILogger<JobCatalog> logger,
         CredentialDetector credentialDetector,
-        AcademicQualificationDetector academicQualificationDetector)
+        AcademicQualificationDetector academicQualificationDetector,
+        CompanyCatalog companyCatalog)
     {
         _workdayClient = workdayClient;
         _stateStore = stateStore;
         _logger = logger;
         _credentialDetector = credentialDetector;
         _academicQualificationDetector = academicQualificationDetector;
+        _companyCatalog = companyCatalog;
     }
 
     public JobsSnapshot Snapshot
@@ -45,7 +48,8 @@ public sealed class JobCatalog
 
     public async Task InitializeAsync(WorkdayQuery query)
     {
-        query = query.Normalize();
+        var company = _companyCatalog.Get(query.CompanyId);
+        query = query.Normalize(company);
         var history = await _stateStore.LoadJobHistoryAsync();
         var cache = await _stateStore.LoadJobsCacheAsync();
         _history = history;
@@ -56,10 +60,11 @@ public sealed class JobCatalog
             return;
         }
 
-        var legacyRemoteCache = cache.Query is not null &&
-            FacetDefaults.IsRemoteLocation(cache.Query.LocationId);
-        var cachedQuery = cache.Query?.Normalize();
-        if (cachedQuery is null || legacyRemoteCache || !cachedQuery.IsEquivalentTo(query))
+        var cachedQuery = cache.Query?.Normalize(_companyCatalog.Get(
+            cache.Query.CompanyId));
+        if (cachedQuery is null || !cachedQuery.IsEquivalentTo(query, _companyCatalog) ||
+            cache.Jobs.Any(job => !string.Equals(
+                job.CompanyId, query.CompanyId, StringComparison.OrdinalIgnoreCase)))
         {
             _logger.LogInformation(
                 "Ignoring {CachePath} because its Workday query does not match the selected country/location.",
@@ -79,7 +84,7 @@ public sealed class JobCatalog
             job.AcademicQualification is null ||
             job.AcademicQualification.AnalysisVersion != _academicQualificationDetector.AnalysisVersion);
         var cacheNeedsQueryUpgrade = cache.Query is not null &&
-            (!string.IsNullOrWhiteSpace(cache.Query.LocationLabel) || cache.Query.SourceModelVersion < 1);
+            (!string.IsNullOrWhiteSpace(cache.Query.LocationLabel) || cache.Query.SourceModelVersion < 2);
         var cachedJobs = cacheNeedsCredentialUpgrade
             ? cache.Jobs.Select(_credentialDetector.AnalyzeJob).ToArray()
             : cache.Jobs;
@@ -136,12 +141,13 @@ public sealed class JobCatalog
 
     public Task<JobsSnapshot> RefreshAsync(WorkdayQuery query)
     {
-        query = query.Normalize();
+        var company = _companyCatalog.Get(query.CompanyId);
+        query = query.Normalize(company);
         lock (_gate)
         {
             if (_activeRefresh is { IsCompleted: false })
             {
-                if (_currentQuery.IsEquivalentTo(query))
+                if (_currentQuery.IsEquivalentTo(query, _companyCatalog))
                 {
                     return _activeRefresh;
                 }
@@ -150,7 +156,7 @@ public sealed class JobCatalog
                     "A Workday refresh is already running. Wait for it to finish before applying another location.");
             }
 
-            var queryChanged = !_currentQuery.IsEquivalentTo(query);
+            var queryChanged = !_currentQuery.IsEquivalentTo(query, _companyCatalog);
             _currentQuery = query;
             _snapshot = queryChanged
                 ? JobsSnapshot.Empty with
@@ -200,7 +206,8 @@ public sealed class JobCatalog
                 query = _currentQuery;
             }
 
-            identities = await _workdayClient.FetchListingIdentitiesAsync(query, cancellationToken);
+            identities = await _workdayClient.FetchListingIdentitiesAsync(
+                _companyCatalog.Get(query.CompanyId), query, cancellationToken);
         }
         finally
         {
@@ -215,6 +222,10 @@ public sealed class JobCatalog
                 .Where(identity => !_history.Jobs.ContainsKey(identity.StableId) &&
                     !_history.Jobs.Values.Any(entry =>
                         !string.IsNullOrWhiteSpace(identity.ExternalPath) &&
+                        string.Equals(
+                            entry.CompanyId,
+                            query.CompanyId,
+                            StringComparison.OrdinalIgnoreCase) &&
                         string.Equals(entry.ExternalPath, identity.ExternalPath, StringComparison.Ordinal)))
                 .Select(identity => identity.StableId)
                 .Distinct(StringComparer.Ordinal)
@@ -269,7 +280,8 @@ public sealed class JobCatalog
                     currentJob.ExternalPath,
                     now,
                     now,
-                    false);
+                    false,
+                    CompanyId: currentJob.CompanyId);
             }
 
             if (entry.HasBeenViewed)
@@ -328,7 +340,8 @@ public sealed class JobCatalog
                     currentJob.ExternalPath,
                     now,
                     now,
-                    false);
+                    false,
+                    CompanyId: currentJob.CompanyId);
             }
 
             if (entry.Dismissed == dismissed)
@@ -364,11 +377,14 @@ public sealed class JobCatalog
         await _workdayOperationGate.WaitAsync();
         try
         {
+            var company = _companyCatalog.Get(query.CompanyId);
             _logger.LogInformation(
-                "Refreshing the Leidos Workday job snapshot for country {Country} and locations {Locations}.",
+                "Refreshing the {Company} Workday job snapshot for country {Country} and locations {Locations}.",
+                company.DisplayName,
                 query.CountryLabel,
                 DescribeLocations(query));
             var result = await _workdayClient.FetchAllJobsAsync(
+                company,
                 query,
                 progress => ReportRefreshProgress(query, progress));
             var refreshedAt = DateTimeOffset.UtcNow;
@@ -418,7 +434,10 @@ public sealed class JobCatalog
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Could not refresh the Leidos Workday job snapshot.");
+            _logger.LogError(
+                ex,
+                "Could not refresh the {Company} Workday job snapshot.",
+                _companyCatalog.Get(query.CompanyId).DisplayName);
             lock (_gate)
             {
                 _snapshot = _snapshot with
@@ -440,7 +459,8 @@ public sealed class JobCatalog
     {
         lock (_gate)
         {
-            if (!_snapshot.IsRefreshing || !_snapshot.Query.IsEquivalentTo(query))
+            if (!_snapshot.IsRefreshing ||
+                !_snapshot.Query.IsEquivalentTo(query, _companyCatalog))
             {
                 return;
             }
@@ -457,9 +477,10 @@ public sealed class JobCatalog
         }
     }
 
-    private static string DescribeLocations(WorkdayQuery query)
+    private string DescribeLocations(WorkdayQuery query)
     {
-        query = query.Normalize();
+        var company = _companyCatalog.Get(query.CompanyId);
+        query = query.Normalize(company);
         if (query.IncludeAllLocations)
         {
             return FacetDefaults.AllLocationsLabel;
@@ -491,14 +512,16 @@ public sealed class JobCatalog
                     string.Equals(
                         pair.Value.ExternalPath,
                         job.ExternalPath,
-                        StringComparison.Ordinal));
+                        StringComparison.Ordinal) &&
+                    string.Equals(pair.Value.CompanyId, job.CompanyId, StringComparison.OrdinalIgnoreCase));
                 if (!string.IsNullOrEmpty(fallback.Key))
                 {
                     _history.Jobs.Remove(fallback.Key);
                     _history.Jobs[stableId] = fallback.Value with
                     {
                         JobReqId = job.RequisitionId,
-                        ExternalPath = job.ExternalPath
+                        ExternalPath = job.ExternalPath,
+                        CompanyId = job.CompanyId
                     };
                     changed = true;
                 }
@@ -511,7 +534,8 @@ public sealed class JobCatalog
                     job.ExternalPath,
                     seenAt,
                     seenAt,
-                    false);
+                    false,
+                    CompanyId: job.CompanyId);
                 changed = true;
             }
             else if (updateKnownLastSeen)

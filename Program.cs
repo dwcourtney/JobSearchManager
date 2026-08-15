@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Text.Json;
-using LeidosJobsViewer;
+using WorkdayJobManager;
 using Microsoft.Extensions.Options;
 
 const int ApplicationPort = 54321;
@@ -20,8 +20,9 @@ builder.Services.AddHttpClient<WorkdayClient>((services, client) =>
     var options = services.GetRequiredService<IOptions<WorkdayOptions>>().Value;
     client.Timeout = TimeSpan.FromSeconds(Math.Clamp(options.RequestTimeoutSeconds, 5, 120));
     client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
-    client.DefaultRequestHeaders.UserAgent.ParseAdd("LeidosJobsViewer/1.0 (personal local utility)");
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("WorkdayJobManager/1.0 (personal local utility)");
 });
+builder.Services.AddSingleton<CompanyCatalog>();
 builder.Services.AddSingleton<JobCatalog>();
 builder.Services.AddSingleton<AppStateStore>();
 builder.Services.AddSingleton<CredentialDetector>();
@@ -56,6 +57,13 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 
 app.MapGet("/api/jobs", (JobCatalog catalog) => Results.Ok(catalog.Snapshot));
+app.MapGet("/api/companies", (CompanyCatalog companies) => Results.Ok(
+    companies.Companies.Select(company => new
+    {
+        company.Id,
+        company.DisplayName,
+        company.PublicSiteUrl
+    })));
 app.MapPost("/api/refresh", async (
     JobCatalog catalog,
     AutomaticJobCheckService automaticChecks) =>
@@ -68,35 +76,75 @@ app.MapPost("/api/refresh", async (
     return Results.Ok(snapshot);
 });
 app.MapGet("/api/location-facets", async (
+    string companyId,
     string? countryId,
-    WorkdayClient workdayClient) =>
-    Results.Ok(await workdayClient.FetchLocationFacetsAsync(countryId)));
+    WorkdayClient workdayClient,
+    CompanyCatalog companies) =>
+    Results.Ok(await workdayClient.FetchLocationFacetsAsync(
+        companies.Get(companyId), countryId)));
+app.MapGet("/api/source/{companyId}", async Task<IResult> (
+    string companyId,
+    AppStateStore stateStore,
+    CompanyCatalog companies) =>
+{
+    if (!companies.TryGet(companyId, out var company))
+    {
+        return Results.NotFound();
+    }
+
+    var settings = await stateStore.LoadSettingsAsync();
+    return Results.Ok(new
+    {
+        company.Id,
+        company.DisplayName,
+        source = stateStore.GetSourceSettings(settings, company.Id)
+    });
+});
 app.MapPost("/api/query", async Task<IResult> (
     WorkdayQuery requestedQuery,
     AppStateStore stateStore,
     JobCatalog catalog,
-    AutomaticJobCheckService automaticChecks) =>
+    AutomaticJobCheckService automaticChecks,
+    CompanyCatalog companies) =>
 {
-    var query = requestedQuery.Normalize();
-    if (!query.IncludeAllLocations && query.EffectiveLocationIds.Count == 0)
+    if (!companies.TryGet(requestedQuery.CompanyId, out var company))
+    {
+        return Results.BadRequest(new { error = "Choose a supported company." });
+    }
+
+    var query = requestedQuery.Normalize(company);
+    if (!query.IncludeAllLocations && query.EffectiveLocationIds(company).Count == 0)
     {
         return Results.BadRequest(new
         {
-            error = "Choose at least one physical location, include Remote/Teleworker jobs, or include all locations."
+            error = "Choose at least one physical location, include remote jobs when available, or include all locations."
         });
     }
 
     var current = await stateStore.LoadSettingsAsync();
-    var updated = AppStateStore.NormalizeSettings(current with
+    var source = new CompanySourceSettings(
+        new FacetSelection(query.CountryId, query.CountryLabel),
+        query.IncludeAllLocations,
+        query.IncludeRemote,
+        query.PhysicalLocations ?? []);
+    var companySources = new Dictionary<string, CompanySourceSettings>(
+        current.CompanySources ?? new Dictionary<string, CompanySourceSettings>(),
+        StringComparer.OrdinalIgnoreCase)
     {
+        [company.Id] = source
+    };
+    var updated = stateStore.NormalizeSettings(current with
+    {
+        CompanyId = company.Id,
         Country = new FacetSelection(query.CountryId, query.CountryLabel),
         Location = null,
         IncludeAllLocations = query.IncludeAllLocations,
         IncludeRemote = query.IncludeRemote,
-        SelectedPhysicalLocations = query.PhysicalLocations
+        SelectedPhysicalLocations = query.PhysicalLocations,
+        CompanySources = companySources
     });
     await stateStore.SaveSettingsAsync(updated);
-    var snapshot = await catalog.RefreshAsync(WorkdayQuery.FromSettings(updated));
+    var snapshot = await catalog.RefreshAsync(WorkdayQuery.FromSettings(updated, companies));
     if (snapshot.Error is null)
     {
         automaticChecks.ResetSchedule();
@@ -110,7 +158,11 @@ app.MapPut("/api/settings", async (
     AppStateStore stateStore,
     AutomaticJobCheckService automaticChecks) =>
 {
-    var normalized = AppStateStore.NormalizeSettings(settings);
+    var current = await stateStore.LoadSettingsAsync();
+    var normalized = stateStore.NormalizeSettings(settings with
+    {
+        CompanySources = current.CompanySources
+    });
     await stateStore.SaveSettingsAsync(normalized);
     automaticChecks.ApplySettings(normalized);
     return Results.NoContent();
@@ -129,13 +181,14 @@ app.MapPut("/api/history/dismissed", async (DismissedJobRequest request, JobCata
         : Results.NotFound());
 
 var stateStore = app.Services.GetRequiredService<AppStateStore>();
+var companies = app.Services.GetRequiredService<CompanyCatalog>();
 await stateStore.EnsureSettingsFileAsync();
 var initialSettings = await stateStore.LoadSettingsAsync();
 // Persist normalized defaults when upgrading an older settings document so the
 // selected Workday facet IDs and their display labels are explicit on disk.
 await stateStore.SaveSettingsAsync(initialSettings);
 var catalog = app.Services.GetRequiredService<JobCatalog>();
-await catalog.InitializeAsync(WorkdayQuery.FromSettings(initialSettings));
+await catalog.InitializeAsync(WorkdayQuery.FromSettings(initialSettings, companies));
 var automaticChecks = app.Services.GetRequiredService<AutomaticJobCheckService>();
 automaticChecks.ApplySettings(initialSettings);
 
@@ -146,7 +199,7 @@ try
 catch (Exception ex) when (IsAddressInUse(ex))
 {
     const string message =
-        "Leidos Jobs Viewer could not start because TCP port 54321 is already in use. " +
+        "Workday Job Manager could not start because TCP port 54321 is already in use. " +
         "Close the other program using http://127.0.0.1:54321 and try again.";
     app.Logger.LogCritical(ex, "{StartupError}", message);
     Console.Error.WriteLine(message);
@@ -154,7 +207,7 @@ catch (Exception ex) when (IsAddressInUse(ex))
     return;
 }
 
-app.Logger.LogInformation("Leidos Jobs Viewer is available at {ApplicationUrl}", ApplicationUrl);
+app.Logger.LogInformation("Workday Job Manager is available at {ApplicationUrl}", ApplicationUrl);
 
 app.Logger.LogInformation("Persistent state directory: {DataDirectory}", stateStore.DataDirectory);
 if (builder.Configuration.GetValue("Application:RefreshOnStartup", true))

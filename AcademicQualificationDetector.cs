@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text.RegularExpressions;
 
-namespace LeidosJobsViewer;
+namespace WorkdayJobManager;
 
 /// <summary>
 /// Deterministically extracts academic qualification paths from Workday HTML.
@@ -478,7 +478,7 @@ public sealed class AcademicQualificationDetector
         @"A\.?\s*A\.?\s*S?\.?|B\.?\s*[AS]\.?|M\.?\s*[AS]\.?)\b");
     private static readonly Regex RequiredSectionRegex = CreateRegex(
         @"^(?:basic|required|minimum)\s+(?:qualifications?|requirements?|education|experience)\b|" +
-        @"^what\s+(?:does\s+)?leidos\s+need\s+from\s+me\b|^about\s+the\s+must\s+haves\b");
+        @"^what\s+(?:does\s+)?(?:[\p{L}\p{N}&.'-]+\s+){0,4}need\s+from\s+me\b|^about\s+the\s+must\s+haves\b");
     private static readonly Regex RequiredSectionMinimumRegex = CreateRegex(@"^(?:basic|minimum)\b");
     private static readonly Regex PreferredSectionRegex = CreateRegex(
         @"^(?:preferred|favorable)\s+(?:qualifications?|requirements?|education|experience)\b|" +

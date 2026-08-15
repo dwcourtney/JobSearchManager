@@ -1,5 +1,5 @@
 /*
- * Leidos Jobs Viewer visual theme
+ * Workday Job Manager visual theme
  *
  * This is the single source of truth for paint, typography, radii, and other
  * reusable visual tokens. styles.css contains layout and component structure.
@@ -25,6 +25,7 @@
   --font-size-description-h2: 1.2rem;
   --font-size-detail-heading: 1.45rem;
   --font-size-page-heading: 1.5rem;
+  --font-weight-regular: 400;
   --font-weight-medium: 600;
   --font-weight-semibold: 650;
   --font-weight-bold: 700;

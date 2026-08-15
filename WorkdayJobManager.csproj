@@ -4,8 +4,9 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>LeidosJobsViewer</RootNamespace>
-    <ApplicationIcon>assets\LeidosJobsViewer.ico</ApplicationIcon>
+    <RootNamespace>WorkdayJobManager</RootNamespace>
+    <AssemblyName>WorkdayJobManager</AssemblyName>
+    <ApplicationIcon>assets\WorkdayJobManager.ico</ApplicationIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
@@ -15,6 +16,7 @@
 
   <ItemGroup>
     <Content Update="CredentialCatalog.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Update="CompanyCatalog.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

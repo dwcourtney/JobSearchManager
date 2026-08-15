@@ -5,7 +5,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 
-namespace LeidosJobsViewer;
+namespace WorkdayJobManager;
 
 public sealed class WorkdayClient
 {
@@ -14,8 +14,6 @@ public sealed class WorkdayClient
     private readonly ILogger<WorkdayClient> _logger;
     private readonly CredentialDetector _credentialDetector;
     private readonly AcademicQualificationDetector _academicQualificationDetector;
-    private readonly Uri _baseUri;
-    private readonly Uri _cxsBaseUri;
     private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
 
     public WorkdayClient(
@@ -31,12 +29,6 @@ public sealed class WorkdayClient
         _credentialDetector = credentialDetector;
         _academicQualificationDetector = academicQualificationDetector;
 
-        if (!Uri.TryCreate(_options.BaseUrl, UriKind.Absolute, out var baseUri) ||
-            baseUri.Scheme != Uri.UriSchemeHttps)
-        {
-            throw new InvalidOperationException("Workday:BaseUrl must be an absolute HTTPS URL.");
-        }
-
         if (_options.PageSize is < 1 or > 20)
         {
             throw new InvalidOperationException("Workday:PageSize must be between 1 and 20.");
@@ -47,18 +39,15 @@ public sealed class WorkdayClient
             throw new InvalidOperationException("Workday:DetailConcurrency must be between 1 and 20.");
         }
 
-        _baseUri = new Uri(baseUri.ToString().TrimEnd('/') + "/");
-        _cxsBaseUri = new Uri(
-            _baseUri,
-            $"wday/cxs/{Uri.EscapeDataString(_options.Tenant)}/{Uri.EscapeDataString(_options.Site)}/");
     }
 
     public async Task<WorkdayFetchResult> FetchAllJobsAsync(
+        CompanyDefinition company,
         WorkdayQuery query,
         Action<RefreshProgress>? reportProgress = null,
         CancellationToken cancellationToken = default)
     {
-        var listings = await FetchListingsAsync(query, reportProgress, cancellationToken);
+        var listings = await FetchListingsAsync(company, query, reportProgress, cancellationToken);
         var jobs = new ConcurrentBag<JobRecord>();
         var detailFailureCount = 0;
         var completedDetails = 0;
@@ -75,8 +64,8 @@ public sealed class WorkdayClient
         {
             try
             {
-                var detail = await FetchDetailAsync(listing.ExternalPath, token);
-                jobs.Add(Normalize(listing, detail, null));
+                var detail = await FetchDetailAsync(company, listing.ExternalPath, token);
+                jobs.Add(Normalize(company, listing, detail, null));
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested)
             {
@@ -90,7 +79,7 @@ public sealed class WorkdayClient
                     "Could not retrieve details for {Title} ({ExternalPath}); retaining listing metadata.",
                     listing.Title,
                     listing.ExternalPath);
-                jobs.Add(Normalize(listing, null, ex.Message));
+                jobs.Add(Normalize(company, listing, null, ex.Message));
             }
             finally
             {
@@ -111,32 +100,35 @@ public sealed class WorkdayClient
     }
 
     public async Task<IReadOnlyList<ListingIdentity>> FetchListingIdentitiesAsync(
+        CompanyDefinition company,
         WorkdayQuery query,
         CancellationToken cancellationToken = default)
     {
-        var listings = await FetchListingsAsync(query, null, cancellationToken);
+        var listings = await FetchListingsAsync(company, query, null, cancellationToken);
         return listings.Select(listing =>
         {
             var requisitionId = listing.BulletFields.FirstOrDefault() ?? "";
             var stableId = !string.IsNullOrWhiteSpace(requisitionId)
-                ? requisitionId
-                : $"path:{listing.ExternalPath}";
+                ? $"{company.Id}:{requisitionId}"
+                : $"{company.Id}:path:{listing.ExternalPath}";
             return new ListingIdentity(stableId, requisitionId, listing.ExternalPath);
         }).ToArray();
     }
 
     public async Task<LocationFacetOptions> FetchLocationFacetsAsync(
+        CompanyDefinition company,
         string? countryId,
         CancellationToken cancellationToken = default)
     {
-        var jobsEndpoint = new Uri(_cxsBaseUri, "jobs");
+        var jobsEndpoint = new Uri(GetCxsBaseUri(company), "jobs");
         // Do not apply the current location here: doing so makes Workday collapse
         // the country facet to the one country containing that location. Country
         // alone returns the complete country chooser plus dependent locations.
-        var query = new WorkdayQuery(countryId, "", true, false, []);
+        var query = new WorkdayQuery(countryId, "", true, false, [], CompanyId: company.Id)
+            .Normalize(company);
         var payload = new
         {
-            appliedFacets = CreateAppliedFacets(query),
+            appliedFacets = CreateAppliedFacets(company, query),
             limit = _options.PageSize,
             offset = 0,
             searchText = ""
@@ -163,7 +155,10 @@ public sealed class WorkdayClient
         var countries = ConvertOptions(countryFacet)
             .OrderBy(option => option.Label, StringComparer.OrdinalIgnoreCase)
             .ToArray();
-        var organization = LocationFacetOrganizer.Organize(countryId, ConvertOptions(locationFacet));
+        var organization = LocationFacetOrganizer.Organize(
+            company,
+            countryId,
+            ConvertOptions(locationFacet));
 
         return new LocationFacetOptions(
             page.Total,
@@ -177,11 +172,13 @@ public sealed class WorkdayClient
     }
 
     private async Task<List<ListingPosting>> FetchListingsAsync(
+        CompanyDefinition company,
         WorkdayQuery query,
         Action<RefreshProgress>? reportProgress,
         CancellationToken cancellationToken)
     {
-        var jobsEndpoint = new Uri(_cxsBaseUri, "jobs");
+        query = query.Normalize(company);
+        var jobsEndpoint = new Uri(GetCxsBaseUri(company), "jobs");
         var listings = new List<ListingPosting>();
         var seenPaths = new HashSet<string>(StringComparer.Ordinal);
         var offset = 0;
@@ -190,7 +187,7 @@ public sealed class WorkdayClient
         {
             var payload = new
             {
-                appliedFacets = CreateAppliedFacets(query),
+                appliedFacets = CreateAppliedFacets(company, query),
                 limit = _options.PageSize,
                 offset,
                 searchText = ""
@@ -238,14 +235,16 @@ public sealed class WorkdayClient
         return listings;
     }
 
-    private static Dictionary<string, string[]> CreateAppliedFacets(WorkdayQuery query)
+    private static Dictionary<string, string[]> CreateAppliedFacets(
+        CompanyDefinition company,
+        WorkdayQuery query)
     {
         var facets = new Dictionary<string, string[]>(StringComparer.Ordinal);
         if (!string.IsNullOrWhiteSpace(query.CountryId))
         {
             facets["locationCountry"] = [query.CountryId];
         }
-        var locationIds = query.EffectiveLocationIds;
+        var locationIds = query.EffectiveLocationIds(company);
         if (!query.IncludeAllLocations && locationIds.Count > 0)
         {
             facets["locations"] = locationIds.ToArray();
@@ -254,10 +253,11 @@ public sealed class WorkdayClient
     }
 
     private async Task<DetailPosting> FetchDetailAsync(
+        CompanyDefinition company,
         string externalPath,
         CancellationToken cancellationToken)
     {
-        var detailUri = new Uri(_cxsBaseUri, externalPath.TrimStart('/'));
+        var detailUri = new Uri(GetCxsBaseUri(company), externalPath.TrimStart('/'));
         const int maximumAttempts = 5;
 
         for (var attempt = 1; ; attempt++)
@@ -319,6 +319,7 @@ public sealed class WorkdayClient
     }
 
     private JobRecord Normalize(
+        CompanyDefinition company,
         ListingPosting listing,
         DetailPosting? detail,
         string? detailError)
@@ -344,8 +345,8 @@ public sealed class WorkdayClient
         }
 
         var fallbackUrl = new Uri(
-            _baseUri,
-            $"{Uri.EscapeDataString(_options.Site)}/{listing.ExternalPath.TrimStart('/')}").ToString();
+            new Uri(company.PublicSiteUrl.TrimEnd('/') + "/"),
+            listing.ExternalPath.TrimStart('/')).ToString();
         var workdayUrl = IsSafeHttpUrl(detail?.ExternalUrl) ? detail!.ExternalUrl : fallbackUrl;
         var descriptionHtml = detail?.JobDescription ?? "";
         var salary = JobAnalysis.AnalyzeSalary(descriptionHtml);
@@ -384,8 +385,12 @@ public sealed class WorkdayClient
             credentials.Credentials,
             credentials.UnrecognizedMentions,
             credentials.CatalogVersion,
-            academicQualification);
+            academicQualification,
+            company.Id);
     }
+
+    private static Uri GetCxsBaseUri(CompanyDefinition company) => new(
+        $"{company.BaseUrl.TrimEnd('/')}/wday/cxs/{Uri.EscapeDataString(company.Tenant)}/{Uri.EscapeDataString(company.Site)}/");
 
     private static string FirstNonEmpty(params string?[] values) =>
         values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? "";

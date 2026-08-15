@@ -1,12 +1,9 @@
 using System.Text.Json.Serialization;
 
-namespace LeidosJobsViewer;
+namespace WorkdayJobManager;
 
 public sealed class WorkdayOptions
 {
-    public string BaseUrl { get; init; } = "https://leidos.wd5.myworkdayjobs.com";
-    public string Tenant { get; init; } = "leidos";
-    public string Site { get; init; } = "External";
     public int PageSize { get; init; } = 20;
     public int DetailConcurrency { get; init; } = 6;
     public int RequestTimeoutSeconds { get; init; } = 30;
@@ -14,23 +11,8 @@ public sealed class WorkdayOptions
 
 public static class FacetDefaults
 {
-    public const string CountryId = "bc33aa3152ec42d4995f4791a106ed09";
-    public const string CountryLabel = "United States of America";
-    public const string RemoteLocationId = "da70a15d3ef40104ea4e240d39cef6a2";
-    public const string RemoteLocationLabel = "6314 Remote/Teleworker US";
-    public const string AdditionalRemoteLocationId = "4d3806f19fb4100117214c80588f0000";
-    public const string AdditionalRemoteLocationLabel = "Remote, US";
     public const string AllCountriesLabel = "All countries";
     public const string AllLocationsLabel = "All locations";
-
-    public static IReadOnlyList<string> RemoteLocationIds { get; } =
-        [RemoteLocationId, AdditionalRemoteLocationId];
-
-    public static bool IsUnitedStates(string? countryId) =>
-        string.Equals(countryId, CountryId, StringComparison.Ordinal);
-
-    public static bool IsRemoteLocation(string? locationId) =>
-        RemoteLocationIds.Contains(locationId, StringComparer.Ordinal);
 }
 
 public sealed record FacetSelection(string? Id, string Label);
@@ -41,19 +23,27 @@ public sealed record WorkdayQuery(
     bool IncludeAllLocations = false,
     bool IncludeRemote = true,
     IReadOnlyList<FacetSelection>? PhysicalLocations = null,
-    int SourceModelVersion = 1,
+    int SourceModelVersion = 2,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? LocationId = null,
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? LocationLabel = null)
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? LocationLabel = null,
+    string CompanyId = CompanyCatalog.DefaultCompanyId)
 {
-    public static WorkdayQuery FromSettings(ViewerSettings settings) => new WorkdayQuery(
-        settings.Country.Id,
-        settings.Country.Label,
-        settings.IncludeAllLocations,
-        settings.IncludeRemote,
-        settings.SelectedPhysicalLocations,
-        1).Normalize();
+    public static WorkdayQuery FromSettings(ViewerSettings settings, CompanyCatalog catalog)
+    {
+        var company = catalog.Get(settings.CompanyId);
+        return new WorkdayQuery(
+            settings.Country.Id,
+            settings.Country.Label,
+            settings.IncludeAllLocations,
+            settings.IncludeRemote,
+            settings.SelectedPhysicalLocations,
+            2,
+            null,
+            null,
+            company.Id).Normalize(company);
+    }
 
-    public WorkdayQuery Normalize()
+    public WorkdayQuery Normalize(CompanyDefinition company)
     {
         var countryId = string.IsNullOrWhiteSpace(CountryId) ? null : CountryId.Trim();
         var countryLabel = string.IsNullOrWhiteSpace(CountryLabel)
@@ -75,7 +65,7 @@ public sealed record WorkdayQuery(
                 includeRemote = true;
                 physical = [];
             }
-            else if (FacetDefaults.IsRemoteLocation(LocationId))
+            else if (company.IsRemoteLocation(LocationId))
             {
                 includeAll = false;
                 includeRemote = true;
@@ -89,12 +79,12 @@ public sealed record WorkdayQuery(
             }
         }
 
-        includeRemote = FacetDefaults.IsUnitedStates(countryId) && (includeAll || includeRemote);
+        includeRemote = company.RemoteLocationIds.Count > 0 && (includeAll || includeRemote);
         var normalizedPhysical = includeAll
             ? []
             : physical
                 .Where(location => !string.IsNullOrWhiteSpace(location?.Id) &&
-                    !FacetDefaults.IsRemoteLocation(location.Id))
+                    !company.IsRemoteLocation(location.Id))
                 .Select(location => new FacetSelection(
                     location.Id!.Trim(),
                     string.IsNullOrWhiteSpace(location.Label) ? location.Id.Trim() : location.Label.Trim()))
@@ -109,42 +99,49 @@ public sealed record WorkdayQuery(
             includeAll,
             includeRemote,
             normalizedPhysical,
-            1);
+            2,
+            null,
+            null,
+            company.Id);
     }
 
-    [JsonIgnore]
-    public IReadOnlyList<string> EffectiveLocationIds
+    public IReadOnlyList<string> EffectiveLocationIds(CompanyDefinition company)
     {
-        get
+        var query = Normalize(company);
+        if (query.IncludeAllLocations)
         {
-            var query = Normalize();
-            if (query.IncludeAllLocations)
-            {
-                return [];
-            }
-
-            return (query.PhysicalLocations ?? [])
-                .Select(location => location.Id!)
-                .Concat(query.IncludeRemote ? FacetDefaults.RemoteLocationIds : [])
-                .Distinct(StringComparer.Ordinal)
-                .OrderBy(id => id, StringComparer.Ordinal)
-                .ToArray();
+            return [];
         }
+
+        return (query.PhysicalLocations ?? [])
+            .Select(location => location.Id!)
+            .Concat(query.IncludeRemote ? company.RemoteLocationIds : [])
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(id => id, StringComparer.Ordinal)
+            .ToArray();
     }
 
-    public bool IsEquivalentTo(WorkdayQuery? other)
+    public bool IsEquivalentTo(WorkdayQuery? other, CompanyCatalog catalog)
     {
         if (other is null)
         {
             return false;
         }
 
-        var left = Normalize();
-        var right = other.Normalize();
-        return string.Equals(left.CountryId, right.CountryId, StringComparison.Ordinal) &&
+        if (!string.Equals(CompanyId, other.CompanyId, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var company = catalog.Get(CompanyId);
+        var left = Normalize(company);
+        var right = other.Normalize(company);
+        return string.Equals(left.CompanyId, right.CompanyId, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(left.CountryId, right.CountryId, StringComparison.Ordinal) &&
             left.IncludeAllLocations == right.IncludeAllLocations &&
             left.IncludeRemote == right.IncludeRemote &&
-            left.EffectiveLocationIds.SequenceEqual(right.EffectiveLocationIds, StringComparer.Ordinal);
+            left.EffectiveLocationIds(company).SequenceEqual(
+                right.EffectiveLocationIds(company), StringComparer.Ordinal);
     }
 }
 
@@ -192,11 +189,12 @@ public sealed record JobRecord(
     IReadOnlyList<CredentialMatch>? Credentials = null,
     IReadOnlyList<string>? UnrecognizedCredentialMentions = null,
     int CredentialCatalogVersion = 0,
-    AcademicQualificationAnalysis? AcademicQualification = null)
+    AcademicQualificationAnalysis? AcademicQualification = null,
+    string CompanyId = CompanyCatalog.DefaultCompanyId)
 {
-    public string StableId => !string.IsNullOrWhiteSpace(RequisitionId)
+    public string StableId => $"{CompanyId}:{(!string.IsNullOrWhiteSpace(RequisitionId)
         ? RequisitionId
-        : $"path:{ExternalPath}";
+        : $"path:{ExternalPath}")}";
 }
 
 public sealed record CredentialMatch(
@@ -302,12 +300,18 @@ public sealed record JobsSnapshot(
 {
     public static JobsSnapshot Empty { get; } =
         new([], 0, null, false, null, 0, false, [], new WorkdayQuery(
-            FacetDefaults.CountryId,
-            FacetDefaults.CountryLabel,
-            false,
+            null,
+            FacetDefaults.AllCountriesLabel,
             true,
+            false,
             []), [], null);
 }
+
+public sealed record CompanySourceSettings(
+    FacetSelection Country,
+    bool IncludeAllLocations,
+    bool IncludeRemote,
+    IReadOnlyList<FacetSelection> SelectedPhysicalLocations);
 
 public sealed record ViewerSettings(
     IReadOnlyList<string> IncludeKeywords,
@@ -328,12 +332,14 @@ public sealed record ViewerSettings(
     bool HideStrictClearanceMismatch = false,
     bool IncludeAllLocations = false,
     bool IncludeRemote = true,
-    IReadOnlyList<FacetSelection>? SelectedPhysicalLocations = null)
+    IReadOnlyList<FacetSelection>? SelectedPhysicalLocations = null,
+    string CompanyId = CompanyCatalog.DefaultCompanyId,
+    IReadOnlyDictionary<string, CompanySourceSettings>? CompanySources = null)
 {
     public static ViewerSettings Default { get; } = new(
         [], [], null, "metadata", "all", true,
         new Dictionary<string, bool>(StringComparer.Ordinal),
-        new FacetSelection(FacetDefaults.CountryId, FacetDefaults.CountryLabel),
+        new FacetSelection(null, ""),
         null,
         false,
         true,
@@ -344,7 +350,9 @@ public sealed record ViewerSettings(
         false,
         false,
         true,
-        []);
+        [],
+        CompanyCatalog.DefaultCompanyId,
+        new Dictionary<string, CompanySourceSettings>(StringComparer.OrdinalIgnoreCase));
 }
 
 public sealed record UserProfile(EducationProfile Education, SecurityProfile? Security = null)
@@ -378,7 +386,7 @@ internal sealed record JobHistoryDocument(
     Dictionary<string, JobHistoryEntry> Jobs)
 {
     public static JobHistoryDocument Empty { get; } = new(
-        1, new Dictionary<string, JobHistoryEntry>(StringComparer.Ordinal));
+        2, new Dictionary<string, JobHistoryEntry>(StringComparer.Ordinal));
 }
 
 internal sealed record JobHistoryEntry(
@@ -388,7 +396,8 @@ internal sealed record JobHistoryEntry(
     DateTimeOffset LastSeenAt,
     bool HasBeenViewed,
     bool Dismissed = false,
-    DateTimeOffset? DismissedAt = null);
+    DateTimeOffset? DismissedAt = null,
+    string CompanyId = CompanyCatalog.DefaultCompanyId);
 
 internal sealed class ListingResponse
 {

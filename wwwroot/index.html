@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Leidos Jobs Viewer</title>
+  <title>Workday Job Manager</title>
   <script src="/theme-bootstrap.js"></script>
   <link rel="stylesheet" href="/theme.css">
   <link rel="stylesheet" href="/styles.css">
@@ -13,7 +13,7 @@
 <body>
   <main id="app-shell" class="app-shell" aria-busy="true" inert>
     <header class="app-header">
-      <h1>Leidos Jobs</h1>
+      <h1>Workday Job Manager</h1>
       <nav class="app-tabs" role="tablist" aria-label="Application views">
         <button id="jobs-tab" class="app-tab active" type="button" role="tab"
                 aria-selected="true" aria-controls="jobs-view">Jobs</button>
@@ -100,7 +100,7 @@
               Show hidden <span id="hidden-job-count">(0)</span>
             </label>
           </div>
-          <div id="job-list" class="job-list" aria-label="Filtered Leidos jobs"></div>
+          <div id="job-list" class="job-list" aria-label="Filtered Workday jobs"></div>
         </aside>
 
         <article class="detail-pane" aria-live="polite">
@@ -226,6 +226,14 @@
         <section class="settings-section" aria-labelledby="job-search-heading">
           <h3 id="job-search-heading">Job Search</h3>
           <div class="settings-row">
+            <label for="company-select">Company</label>
+            <div class="settings-control workday-facet-filter">
+              <select id="company-select" disabled>
+                <option>Loading companiesâ€¦</option>
+              </select>
+            </div>
+          </div>
+          <div class="settings-row">
             <label for="country-select">Country</label>
             <div class="settings-control workday-facet-filter">
               <select id="country-select" disabled>
@@ -240,13 +248,13 @@
                 <input id="include-all-locations" type="checkbox" disabled>
                 <span>
                   Include all locations in this country
-                  <small>Uses a country-wide Workday query, including remote jobs.</small>
+                  <small>Uses the broadest available Workday location query.</small>
                 </span>
               </label>
               <label id="include-remote-option" class="settings-check source-coverage-option">
                 <input id="include-remote" type="checkbox" disabled>
                 <span>
-                  Include Remote/Teleworker jobs
+                  Include remote jobs
                   <small>Can be combined with one or more physical locations.</small>
                 </span>
               </label>
@@ -400,7 +408,7 @@
        aria-labelledby="loading-title" aria-describedby="loading-phase loading-note" tabindex="-1">
     <section class="loading-panel">
       <span class="loading-spinner" aria-hidden="true"></span>
-      <h2 id="loading-title">Loading Leidos Jobs</h2>
+      <h2 id="loading-title">Loading Workday jobs</h2>
       <p id="loading-phase" class="loading-phase" aria-live="polite">
         Connecting to the local application…
       </p>

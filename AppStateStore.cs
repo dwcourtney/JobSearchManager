@@ -1,20 +1,22 @@
 using System.Text.Json;
 
-namespace LeidosJobsViewer;
+namespace WorkdayJobManager;
 
 public sealed class AppStateStore
 {
-    private const int SchemaVersion = 1;
+    private const int SchemaVersion = 2;
     private readonly ILogger<AppStateStore> _logger;
+    private readonly CompanyCatalog _companyCatalog;
     private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
     {
         WriteIndented = true
     };
     private readonly SemaphoreSlim _writeGate = new(1, 1);
 
-    public AppStateStore(ILogger<AppStateStore> logger)
+    public AppStateStore(ILogger<AppStateStore> logger, CompanyCatalog companyCatalog)
     {
         _logger = logger;
+        _companyCatalog = companyCatalog;
         DataDirectory = Path.Combine(AppContext.BaseDirectory, "data");
         SettingsPath = Path.Combine(DataDirectory, "settings.json");
         JobsCachePath = Path.Combine(DataDirectory, "jobs-cache.json");
@@ -70,10 +72,32 @@ public sealed class AppStateStore
             };
         }
 
-        return history with
+        var migrated = new Dictionary<string, JobHistoryEntry>(StringComparer.Ordinal);
+        var migrationRequired = history.SchemaVersion < SchemaVersion;
+        foreach (var pair in history.Jobs)
         {
-            Jobs = new Dictionary<string, JobHistoryEntry>(history.Jobs, StringComparer.Ordinal)
-        };
+            var companyId = _companyCatalog.TryGet(pair.Value.CompanyId, out var entryCompany)
+                ? entryCompany.Id
+                : CompanyCatalog.DefaultCompanyId;
+            var keyHasCompany = _companyCatalog.Companies.Any(company =>
+                pair.Key.StartsWith(company.Id + ":", StringComparison.OrdinalIgnoreCase));
+            var key = keyHasCompany ? pair.Key : $"{companyId}:{pair.Key}";
+            migrationRequired |= !string.Equals(key, pair.Key, StringComparison.Ordinal) ||
+                !string.Equals(pair.Value.CompanyId, companyId, StringComparison.OrdinalIgnoreCase);
+            migrated[key] = pair.Value with { CompanyId = companyId };
+        }
+
+        var migratedDocument = new JobHistoryDocument(SchemaVersion, migrated);
+        if (migrationRequired)
+        {
+            await SaveJobHistoryAsync(migratedDocument);
+            _logger.LogInformation(
+                "Migrated {HistoryPath} to company-scoped history schema {SchemaVersion}.",
+                JobHistoryPath,
+                SchemaVersion);
+        }
+
+        return migratedDocument;
     }
 
     internal Task SaveJobHistoryAsync(JobHistoryDocument history) =>
@@ -181,7 +205,7 @@ public sealed class AppStateStore
         }
     }
 
-    public static ViewerSettings NormalizeSettings(ViewerSettings settings)
+    public ViewerSettings NormalizeSettings(ViewerSettings settings)
     {
         static string[] NormalizeTerms(IReadOnlyList<string>? terms) => (terms ?? [])
             .Where(term => !string.IsNullOrWhiteSpace(term))
@@ -199,9 +223,10 @@ public sealed class AppStateStore
         var collapsed = (settings.CollapsedAgeGroups ?? new Dictionary<string, bool>())
             .Where(pair => pair.Value)
             .ToDictionary(pair => pair.Key, pair => true, StringComparer.Ordinal);
+        var company = _companyCatalog.Get(settings.CompanyId);
         var country = NormalizeFacetSelection(
             settings.Country,
-            new FacetSelection(FacetDefaults.CountryId, FacetDefaults.CountryLabel),
+            company.DefaultCountry,
             FacetDefaults.AllCountriesLabel);
         var includeAllLocations = settings.IncludeAllLocations;
         var includeRemote = settings.IncludeRemote;
@@ -219,7 +244,7 @@ public sealed class AppStateStore
                 includeRemote = true;
                 selectedPhysicalLocations = [];
             }
-            else if (FacetDefaults.IsRemoteLocation(settings.Location.Id))
+            else if (company.IsRemoteLocation(settings.Location.Id))
             {
                 includeAllLocations = false;
                 includeRemote = true;
@@ -233,13 +258,13 @@ public sealed class AppStateStore
             }
         }
 
-        includeRemote = FacetDefaults.IsUnitedStates(country.Id) &&
+        includeRemote = company.RemoteLocationIds.Count > 0 &&
             (includeAllLocations || includeRemote);
         var physicalLocations = includeAllLocations
             ? []
             : selectedPhysicalLocations
                 .Where(location => !string.IsNullOrWhiteSpace(location?.Id) &&
-                    !FacetDefaults.IsRemoteLocation(location.Id))
+                    !company.IsRemoteLocation(location.Id))
                 .Select(location => new FacetSelection(
                     location.Id!.Trim(),
                     string.IsNullOrWhiteSpace(location.Label) ? location.Id.Trim() : location.Label.Trim()))
@@ -279,6 +304,23 @@ public sealed class AppStateStore
             new EducationProfile(educationLevel, doctorateType),
             new SecurityProfile(clearanceLevel, publicTrust));
 
+        var companySources = new Dictionary<string, CompanySourceSettings>(StringComparer.OrdinalIgnoreCase);
+        foreach (var pair in settings.CompanySources ??
+            new Dictionary<string, CompanySourceSettings>(StringComparer.OrdinalIgnoreCase))
+        {
+            if (!_companyCatalog.TryGet(pair.Key, out var sourceCompany))
+            {
+                continue;
+            }
+
+            companySources[sourceCompany.Id] = NormalizeCompanySource(pair.Value, sourceCompany);
+        }
+        companySources[company.Id] = new CompanySourceSettings(
+            country,
+            includeAllLocations,
+            includeRemote,
+            physicalLocations);
+
         return new ViewerSettings(
             NormalizeTerms(settings.IncludeKeywords),
             NormalizeTerms(settings.ExcludeKeywords),
@@ -298,7 +340,51 @@ public sealed class AppStateStore
             settings.HideStrictClearanceMismatch,
             includeAllLocations,
             includeRemote,
-            physicalLocations);
+            physicalLocations,
+            company.Id,
+            companySources);
+    }
+
+    public CompanySourceSettings GetSourceSettings(ViewerSettings settings, string companyId)
+    {
+        var company = _companyCatalog.Get(companyId);
+        var normalized = NormalizeSettings(settings);
+        if (normalized.CompanySources?.TryGetValue(company.Id, out var source) == true)
+        {
+            return NormalizeCompanySource(source, company);
+        }
+
+        return new CompanySourceSettings(
+            company.DefaultCountry,
+            true,
+            company.RemoteLocationIds.Count > 0,
+            []);
+    }
+
+    private static CompanySourceSettings NormalizeCompanySource(
+        CompanySourceSettings source,
+        CompanyDefinition company)
+    {
+        var country = NormalizeFacetSelection(
+            source.Country,
+            company.DefaultCountry,
+            FacetDefaults.AllCountriesLabel);
+        var includeAll = source.IncludeAllLocations;
+        var includeRemote = company.RemoteLocationIds.Count > 0 &&
+            (includeAll || source.IncludeRemote);
+        var physical = includeAll
+            ? []
+            : (source.SelectedPhysicalLocations ?? [])
+                .Where(location => !string.IsNullOrWhiteSpace(location?.Id) &&
+                    !company.IsRemoteLocation(location.Id))
+                .Select(location => new FacetSelection(
+                    location.Id!.Trim(),
+                    string.IsNullOrWhiteSpace(location.Label) ? location.Id.Trim() : location.Label.Trim()))
+                .GroupBy(location => location.Id, StringComparer.Ordinal)
+                .Select(group => group.First())
+                .OrderBy(location => location.Id, StringComparer.Ordinal)
+                .ToArray();
+        return new CompanySourceSettings(country, includeAll, includeRemote, physical);
     }
 
     private static FacetSelection NormalizeFacetSelection(
@@ -313,6 +399,10 @@ public sealed class AppStateStore
 
         if (string.IsNullOrWhiteSpace(selection.Id))
         {
+            if (string.IsNullOrWhiteSpace(selection.Label))
+            {
+                return defaultSelection;
+            }
             return new FacetSelection(null, allLabel);
         }
 

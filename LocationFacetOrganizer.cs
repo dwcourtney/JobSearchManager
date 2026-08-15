@@ -1,8 +1,8 @@
-namespace LeidosJobsViewer;
+namespace WorkdayJobManager;
 
 internal static class LocationFacetOrganizer
 {
-    private const string OtherUnitedStatesLocations = "Other U.S. Locations";
+    private const string OtherLocations = "Other locations";
 
     private static readonly IReadOnlyDictionary<string, string> UnitedStatesNames =
         new Dictionary<string, string>(StringComparer.Ordinal)
@@ -27,36 +27,17 @@ internal static class LocationFacetOrganizer
         };
 
     public static LocationFacetOrganization Organize(
+        CompanyDefinition company,
         string? countryId,
         IReadOnlyList<FacetOption> availableLocations)
     {
-        var isUnitedStates = FacetDefaults.IsUnitedStates(countryId);
-        var remote = isUnitedStates
-            ? availableLocations
-                .Where(location => FacetDefaults.IsRemoteLocation(location.Id))
-                .OrderBy(location => location.Label, StringComparer.OrdinalIgnoreCase)
-                .ToArray()
-            : [];
-        var physical = availableLocations
-            .Where(location => !isUnitedStates || !FacetDefaults.IsRemoteLocation(location.Id))
+        var remote = availableLocations
+            .Where(location => company.IsRemoteLocation(location.Id))
+            .OrderBy(location => location.Label, StringComparer.OrdinalIgnoreCase)
             .ToArray();
-
-        if (!isUnitedStates)
-        {
-            var alphabetical = physical
-                .OrderBy(location => location.Label, StringComparer.OrdinalIgnoreCase)
-                .Select(location => location with { DisplayLabel = location.Label })
-                .ToArray();
-            var groups = alphabetical.Length == 0
-                ? []
-                : new[] { new LocationFacetGroup("physical", "Physical locations", alphabetical) };
-            return new LocationFacetOrganization(
-                alphabetical,
-                remote,
-                groups,
-                0,
-                []);
-        }
+        var physical = availableLocations
+            .Where(location => !company.IsRemoteLocation(location.Id))
+            .ToArray();
 
         var grouped = new Dictionary<string, List<FacetOption>>(StringComparer.Ordinal);
         var fallback = new List<FacetOption>();
@@ -87,8 +68,8 @@ internal static class LocationFacetOrganizer
         if (fallback.Count > 0)
         {
             groupsResult.Add(new LocationFacetGroup(
-                "other-us",
-                OtherUnitedStatesLocations,
+                "other",
+                OtherLocations,
                 fallback.OrderBy(location => location.Label, StringComparer.OrdinalIgnoreCase).ToArray()));
         }
 
@@ -108,21 +89,32 @@ internal static class LocationFacetOrganizer
         locationName = "";
         stateCode = "";
         var comma = label.LastIndexOf(',');
-        if (comma <= 0 || comma == label.Length - 1)
+        if (comma > 0 && comma < label.Length - 1)
         {
-            return false;
+            var candidateName = label[..comma].Trim();
+            var candidateState = label[(comma + 1)..].Trim();
+            if (candidateName.Length > 0 && UnitedStatesNames.ContainsKey(candidateState))
+            {
+                locationName = candidateName;
+                stateCode = candidateState;
+                return true;
+            }
         }
 
-        var candidateName = label[..comma].Trim();
-        var candidateState = label[(comma + 1)..].Trim();
-        if (candidateName.Length == 0 || !UnitedStatesNames.ContainsKey(candidateState))
+        var dash = label.IndexOf(" - ", StringComparison.Ordinal);
+        if (dash == 2)
         {
-            return false;
+            var candidateState = label[..dash].Trim();
+            var candidateName = label[(dash + 3)..].Trim();
+            if (candidateName.Length > 0 && UnitedStatesNames.ContainsKey(candidateState))
+            {
+                locationName = candidateName;
+                stateCode = candidateState;
+                return true;
+            }
         }
 
-        locationName = candidateName;
-        stateCode = candidateState;
-        return true;
+        return false;
     }
 }
 

@@ -1,6 +1,6 @@
 using System.Threading.Channels;
 
-namespace LeidosJobsViewer;
+namespace WorkdayJobManager;
 
 public sealed class AutomaticJobCheckService : BackgroundService
 {

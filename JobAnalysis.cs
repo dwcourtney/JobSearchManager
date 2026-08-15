@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Net;
 using System.Text.RegularExpressions;
 
-namespace LeidosJobsViewer;
+namespace WorkdayJobManager;
 
 internal static partial class JobAnalysis
 {
@@ -29,7 +29,7 @@ internal static partial class JobAnalysis
         var text = HtmlToPlainText(descriptionHtml);
 
         // Two current Antarctic postings contain a role-specific anticipated salary
-        // followed by Leidos' broader job-level pay band. Prefer the role-specific range.
+        // followed by a broader job-level pay band. Prefer the role-specific range.
         var specificMatch = SpecificSalaryRegex().Match(text);
         if (specificMatch.Success)
         {
@@ -40,6 +40,12 @@ internal static partial class JobAnalysis
         if (standardMatch.Success)
         {
             return CreateSalaryAnalysis(standardMatch, "standard-pay-range");
+        }
+
+        var separatedBoundsMatch = SeparatedSalaryBoundsRegex().Match(text);
+        if (separatedBoundsMatch.Success)
+        {
+            return CreateSalaryAnalysis(separatedBoundsMatch, "separate-salary-bounds");
         }
 
         if (text.Contains("Pay Range", StringComparison.OrdinalIgnoreCase) ||
@@ -378,10 +384,17 @@ internal static partial class JobAnalysis
     private static partial Regex SpecificSalaryRegex();
 
     [GeneratedRegex(
-        @"\bPay\s+Range\s*:?\s*(?:Pay\s+Range\s*)?" + AmountRangePattern +
+        @"\b(?:Pay|Salary)\s+Range\s*:?\s*(?:(?:Pay|Salary)\s+Range\s*)?" + AmountRangePattern +
         @"(?<context>.{0,100})",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex StandardPayRangeRegex();
+
+    [GeneratedRegex(
+        @"\b(?:Minimum|Min)\s+(?:Annual\s+)?Salary\s*:?\s*\$\s*(?<minimum>\d[\d,]*(?:\.\d{1,2})?)" +
+        @"(?<context>.{0,100}?)\b(?:Maximum|Max)\s+(?:Annual\s+)?Salary\s*:?\s*\$\s*" +
+        @"(?<maximum>\d[\d,]*(?:\.\d{1,2})?)(?<context>.{0,100})",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex SeparatedSalaryBoundsRegex();
 
     [GeneratedRegex(@"\b(?:hourly|per\s+hour)\b|/\s*(?:hr|hour)\b", RegexOptions.IgnoreCase)]
     private static partial Regex HourlyCueRegex();

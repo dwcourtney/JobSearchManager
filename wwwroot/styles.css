@@ -631,7 +631,7 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   line-height: var(--line-height-control);
 }
 .settings-check input { margin-top: .16rem; accent-color: var(--color-accent); }
-.settings-check small { display: block; margin-top: .18rem; font-weight: normal; }
+.settings-check small { display: block; margin-top: .18rem; font-weight: var(--font-weight-regular); }
 .settings-section .workday-query-actions { margin-top: .1rem; }
 
 .source-coverage-options { gap: .62rem; }

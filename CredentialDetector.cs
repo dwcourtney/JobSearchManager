@@ -2,7 +2,7 @@ using System.Net;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace LeidosJobsViewer;
+namespace WorkdayJobManager;
 
 public sealed class CredentialDetector
 {
@@ -317,7 +317,7 @@ public sealed class CredentialDetector
     private static readonly Regex DesiredCueRegex = CreateRegex(@"\bdesir(?:ed|able)\b");
     private static readonly Regex RequiredSectionRegex = CreateRegex(
         @"^(?:required|basic|minimum)\s+(?:experience|qualifications|skills|education)\b|" +
-        @"^what\s+(?:does\s+)?leidos\s+need\s+from\s+me\b|" +
+        @"^what\s+(?:does\s+)?(?:[\p{L}\p{N}&.'-]+\s+){0,4}need\s+from\s+me\b|" +
         @"^about\s+the\s+must\s+haves\b|^must\s+have\b.{0,80}\brequired\s+certifications?\b");
     private static readonly Regex PreferredSectionRegex = CreateRegex(
         @"^(?:preferred|favorable)\s+(?:experience|qualifications|skills|education|if\s+you\s+have)\b|" +

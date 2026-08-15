@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "companies": [
+    {
+      "id": "leidos",
+      "displayName": "Leidos",
+      "workdayHost": "leidos.wd5.myworkdayjobs.com",
+      "tenant": "leidos",
+      "site": "External",
+      "publicSiteUrl": "https://leidos.wd5.myworkdayjobs.com/en-US/External",
+      "defaultCountry": {
+        "id": "bc33aa3152ec42d4995f4791a106ed09",
+        "label": "United States of America"
+      },
+      "remoteLocationIds": [
+        "da70a15d3ef40104ea4e240d39cef6a2",
+        "4d3806f19fb4100117214c80588f0000"
+      ]
+    },
+    {
+      "id": "mtm",
+      "displayName": "MTM",
+      "workdayHost": "mtminc.wd1.myworkdayjobs.com",
+      "tenant": "mtminc",
+      "site": "MTMTransit_External",
+      "publicSiteUrl": "https://mtminc.wd1.myworkdayjobs.com/MTMTransit_External",
+      "defaultCountry": {
+        "id": null,
+        "label": "All countries"
+      },
+      "remoteLocationIds": []
+    }
+  ]
+}

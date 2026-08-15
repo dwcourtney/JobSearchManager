@@ -6,7 +6,6 @@ const OVERLAY_TRANSITION_MS = 180;
 const AUTOMATIC_STATUS_POLL_MS = 2000;
 const ALL_COUNTRIES_LABEL = "All countries";
 const ALL_LOCATIONS_LABEL = "All locations";
-const UNITED_STATES_COUNTRY_ID = "bc33aa3152ec42d4995f4791a106ed09";
 const AGE_GROUPS = [
   { id: "today", label: "Posted Today", minimumDays: 0, maximumDays: 0 },
   { id: "yesterday", label: "Posted Yesterday", minimumDays: 1, maximumDays: 1 },
@@ -50,6 +49,9 @@ const state = {
   isInitializing: true,
   catalogIsRefreshing: false,
   facetsLoaded: false,
+  companies: [],
+  companyId: "",
+  companyName: "Workday",
   country: { id: null, label: ALL_COUNTRIES_LABEL },
   includeAllLocations: false,
   includeRemote: true,
@@ -61,7 +63,7 @@ const state = {
   refreshProgressTimer: null,
   overlayHideTimer: null,
   focusBeforeLoading: null,
-  loadingTitle: "Loading Leidos Jobs",
+  loadingTitle: "Loading Workday jobs",
   settingsSaveTimer: null
 };
 
@@ -86,6 +88,7 @@ const elements = {
   addExclusion: document.querySelector("#add-exclusion"),
   exclusionChips: document.querySelector("#exclusion-chips"),
   minimumPay: document.querySelector("#minimum-pay"),
+  companySelect: document.querySelector("#company-select"),
   countrySelect: document.querySelector("#country-select"),
   includeAllLocations: document.querySelector("#include-all-locations"),
   includeRemoteOption: document.querySelector("#include-remote-option"),
@@ -169,7 +172,7 @@ document.addEventListener("DOMContentLoaded", initialize);
 
 async function initialize() {
   setLoading(true, {
-    title: "Loading Leidos Jobs",
+    title: "Loading Workday jobs",
     phaseText: "Loading saved settings and job data…"
   });
   elements.loadingOverlay.addEventListener("keydown", constrainLoadingFocus);
@@ -181,6 +184,7 @@ async function initialize() {
   document.querySelector(".app-tabs").addEventListener("keydown", handleTabKeydown);
   elements.refreshButton.addEventListener("click", refreshJobs);
   elements.filterToggle.addEventListener("click", toggleSearchFilters);
+  elements.companySelect.addEventListener("change", companySelectionChanged);
   elements.countrySelect.addEventListener("change", countrySelectionChanged);
   elements.includeAllLocations.addEventListener("change", sourceCoverageChanged);
   elements.includeRemote.addEventListener("change", sourceCoverageChanged);
@@ -295,7 +299,7 @@ function showView(view, focusFirstControl = false) {
   elements.jobsTab.tabIndex = jobsSelected ? 0 : -1;
   elements.settingsTab.tabIndex = jobsSelected ? -1 : 0;
   if (focusFirstControl) {
-    (jobsSelected ? elements.filterToggle : elements.countrySelect).focus();
+    (jobsSelected ? elements.filterToggle : elements.companySelect).focus();
   }
 }
 
@@ -343,16 +347,21 @@ function handleDetailTabKeydown(event) {
 
 async function loadInitialState() {
   try {
-    const [settingsResponse, jobsResponse] = await Promise.all([
+    const [companiesResponse, settingsResponse, jobsResponse] = await Promise.all([
+      fetch("/api/companies", { cache: "no-store" }),
       fetch("/api/settings", { cache: "no-store" }),
       fetch("/api/jobs", { cache: "no-store" })
     ]);
-    if (!settingsResponse.ok || !jobsResponse.ok) {
-      throw new Error(`Local API returned HTTP ${settingsResponse.status}/${jobsResponse.status}.`);
+    if (!companiesResponse.ok || !settingsResponse.ok || !jobsResponse.ok) {
+      throw new Error(
+        `Local API returned HTTP ${companiesResponse.status}/${settingsResponse.status}/${jobsResponse.status}.`);
     }
+    state.companies = await companiesResponse.json();
+    populateCompanySelect();
     applySettings(await settingsResponse.json());
     applySnapshot(await jobsResponse.json());
     await loadLocationFacets(
+      state.companyId,
       state.country.id,
       state.physicalLocations,
       state.includeAllLocations,
@@ -394,6 +403,11 @@ function applySettings(settings) {
     settings.userProfile?.security?.clearanceLevel);
   state.publicTrustProfile = normalizePublicTrustProfile(settings.userProfile?.security?.publicTrust);
   state.hideStrictClearanceMismatch = settings.hideStrictClearanceMismatch === true;
+  state.companyId = settings.companyId || state.companies[0]?.id || "";
+  state.companyName = companyById(state.companyId)?.displayName || state.companyId;
+  elements.companySelect.value = state.companyId;
+  state.loadingTitle = `Loading ${state.companyName} jobs`;
+  elements.loadingTitle.textContent = state.loadingTitle;
   state.country = normalizeFacetSelection(settings.country, ALL_COUNTRIES_LABEL);
   state.includeAllLocations = settings.includeAllLocations === true;
   state.includeRemote = settings.includeRemote === true;
@@ -428,7 +442,7 @@ function applySettings(settings) {
 function applyTheme() {
   document.documentElement.dataset.theme = state.themeMode;
   try {
-    localStorage.setItem("leidos-jobs-theme-hint", state.themeMode);
+    localStorage.setItem("workday-job-manager-theme-hint", state.themeMode);
   } catch {
     // The persisted backend setting is authoritative; this cache is optional.
   }
@@ -490,7 +504,7 @@ async function detectAutomaticFullRefresh() {
     if (!response.ok) return;
     const snapshot = await response.json();
     if (snapshot.isRefreshing) {
-      setLoading(true, { title: "Refreshing Leidos Jobs" });
+      setLoading(true, { title: `Refreshing ${state.companyName} jobs` });
       applySnapshot(snapshot);
     }
   } catch (error) {
@@ -574,10 +588,50 @@ function buildFilterSummary() {
 
 function updateSourceSummary() {
   const country = state.country.label || ALL_COUNTRIES_LABEL;
-  elements.sourceSummary.textContent = `${country} · ${describeSourceLocations(
+  elements.sourceSummary.textContent = `${state.companyName} · ${country} · ${describeSourceLocations(
     state.includeAllLocations,
     state.includeRemote,
     state.physicalLocations)}`;
+}
+
+function companyById(companyId) {
+  return state.companies.find(company => company.id === companyId) || null;
+}
+
+function populateCompanySelect() {
+  elements.companySelect.replaceChildren();
+  for (const company of state.companies) {
+    const option = document.createElement("option");
+    option.value = company.id;
+    option.textContent = company.displayName;
+    elements.companySelect.append(option);
+  }
+}
+
+async function companySelectionChanged() {
+  const companyId = elements.companySelect.value;
+  state.facetsLoaded = false;
+  updateQueryControls();
+  try {
+    const response = await fetch(`/api/source/${encodeURIComponent(companyId)}`, {
+      cache: "no-store"
+    });
+    if (!response.ok) {
+      throw new Error(`Company source returned HTTP ${response.status}.`);
+    }
+    const result = await response.json();
+    const source = result.source || {};
+    const country = normalizeFacetSelection(source.country, ALL_COUNTRIES_LABEL);
+    await loadLocationFacets(
+      companyId,
+      country.id,
+      source.selectedPhysicalLocations || [],
+      source.includeAllLocations === true,
+      source.includeRemote === true);
+  } catch (error) {
+    elements.errorBanner.textContent = `Company source could not be loaded: ${error.message || error}`;
+    elements.errorBanner.hidden = false;
+  }
 }
 
 function normalizeFacetSelection(selection, allLabel) {
@@ -609,6 +663,7 @@ function describeSourceLocations(includeAll, includeRemote, physicalLocations) {
 }
 
 async function loadLocationFacets(
+  companyId,
   countryId,
   selectedLocations = [],
   includeAll = false,
@@ -619,6 +674,7 @@ async function loadLocationFacets(
   elements.facetStatus.textContent = "Loading Workday location choices…";
   try {
     const parameters = new URLSearchParams();
+    parameters.set("companyId", companyId);
     if (countryId) parameters.set("countryId", countryId);
     const response = await fetch(`/api/location-facets?${parameters}`, { cache: "no-store" });
     if (!response.ok) {
@@ -676,10 +732,11 @@ function populateCountrySelect(select, options, allLabel, selectedId) {
 async function countrySelectionChanged() {
   const countryId = elements.countrySelect.value || null;
   await loadLocationFacets(
+    elements.companySelect.value,
     countryId,
     [],
     true,
-    countryId === UNITED_STATES_COUNTRY_ID);
+    true);
   updateQueryControls();
 }
 
@@ -823,7 +880,8 @@ function querySelectionIsPending() {
   const pendingRemote = elements.includeAllLocations.checked && state.remoteLocations.length > 0
     ? true
     : elements.includeRemote.checked;
-  return (elements.countrySelect.value || null) !== state.country.id ||
+  return elements.companySelect.value !== state.companyId ||
+    (elements.countrySelect.value || null) !== state.country.id ||
     elements.includeAllLocations.checked !== state.includeAllLocations ||
     pendingRemote !== state.includeRemote ||
     physicalIds.length !== activePhysicalIds.length ||
@@ -832,6 +890,7 @@ function querySelectionIsPending() {
 
 function updateQueryControls() {
   const disabled = !state.facetsLoaded || state.isRefreshing;
+  elements.companySelect.disabled = state.isRefreshing;
   elements.countrySelect.disabled = disabled;
   elements.includeAllLocations.disabled = disabled;
   const allLocations = elements.includeAllLocations.checked;
@@ -855,6 +914,8 @@ function updateQueryControls() {
 }
 
 async function applyWorkdayLocation() {
+  const companyId = elements.companySelect.value;
+  const company = companyById(companyId);
   const country = selectedFacet(elements.countrySelect, ALL_COUNTRIES_LABEL);
   const includeAllLocations = elements.includeAllLocations.checked;
   const includeRemote = includeAllLocations && state.remoteLocations.length > 0
@@ -862,7 +923,7 @@ async function applyWorkdayLocation() {
     : elements.includeRemote.checked;
   const physicalLocations = includeAllLocations ? [] : selectedPendingLocations();
   clearTimeout(state.pollTimer);
-  setLoading(true, { title: "Loading Selected Job Source" });
+  setLoading(true, { title: `Loading ${company?.displayName || "Workday"} jobs` });
   beginRefreshProgressPolling();
   elements.errorBanner.hidden = true;
   state.jobs = [];
@@ -874,12 +935,13 @@ async function applyWorkdayLocation() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        companyId,
         countryId: country.id,
         countryLabel: country.label,
         includeAllLocations,
         includeRemote,
         physicalLocations,
-        sourceModelVersion: 1
+        sourceModelVersion: 2
       })
     });
     if (!response.ok) {
@@ -908,7 +970,7 @@ async function loadSnapshot() {
 
 async function refreshJobs() {
   clearTimeout(state.pollTimer);
-  setLoading(true, { title: "Refreshing Leidos Jobs" });
+  setLoading(true, { title: `Refreshing ${state.companyName} jobs` });
   beginRefreshProgressPolling();
   elements.errorBanner.hidden = true;
   try {
@@ -934,6 +996,9 @@ function applySnapshot(snapshot) {
   state.newJobIds = new Set(snapshot.newJobIds || []);
   state.dismissedJobIds = new Set(snapshot.dismissedJobIds || []);
   if (snapshot.query) {
+    state.companyId = snapshot.query.companyId || state.companies[0]?.id || "";
+    state.companyName = companyById(state.companyId)?.displayName || state.companyId;
+    elements.companySelect.value = state.companyId;
     state.country = {
       id: snapshot.query.countryId || null,
       label: snapshot.query.countryLabel || ALL_COUNTRIES_LABEL
@@ -1033,6 +1098,7 @@ async function saveSettings() {
         locationMode: state.locationMode,
         highlightIncludeKeywords: state.highlightInclusions,
         collapsedAgeGroups: state.collapsedAgeGroups,
+        companyId: state.companyId,
         country: state.country,
         includeAllLocations: state.includeAllLocations,
         includeRemote: state.includeRemote,
@@ -1860,7 +1926,8 @@ function renderQualificationFit(job, educationStatus, clearanceStatus, headroom)
 
 function secureDescriptionLinks(container) {
   container.querySelectorAll("a").forEach(anchor => {
-    const safeUrl = safeHttpUrl(anchor.getAttribute("href"), "https://leidos.wd5.myworkdayjobs.com/");
+    const companyBaseUrl = companyById(state.companyId)?.publicSiteUrl;
+    const safeUrl = safeHttpUrl(anchor.getAttribute("href"), companyBaseUrl);
     if (!safeUrl) {
       anchor.replaceWith(document.createTextNode(anchor.textContent || ""));
       return;
@@ -2390,7 +2457,7 @@ function setLoading(isLoading, options = {}) {
       state.focusBeforeLoading.focus({ preventScroll: true });
     }
     state.focusBeforeLoading = null;
-    state.loadingTitle = "Loading Leidos Jobs";
+    state.loadingTitle = `Loading ${state.companyName} jobs`;
   }
   updateQueryControls();
 }
