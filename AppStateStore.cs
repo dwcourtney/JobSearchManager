@@ -194,9 +194,18 @@ public sealed class AppStateStore
             "notSpecified" or "unknown" => "unknown",
             _ => "unknown"
         };
+        var usWorkAuthorizationStatus = settings.UserProfile?.WorkAuthorization?.UsStatus is
+            "notSpecified" or "usCitizen" or "permanentResident" or "otherAuthorized" or "notAuthorized"
+                ? settings.UserProfile.WorkAuthorization.UsStatus
+                : "notSpecified";
+        var sponsorship = settings.UserProfile?.WorkAuthorization?.Sponsorship is
+            "unknown" or "notRequired" or "required"
+                ? settings.UserProfile.WorkAuthorization.Sponsorship
+                : "unknown";
         var userProfile = new UserProfile(
             new EducationProfile(educationLevel, doctorateType),
-            new SecurityProfile(clearanceLevel, publicTrust));
+            new SecurityProfile(clearanceLevel, publicTrust),
+            new WorkAuthorizationProfile(usWorkAuthorizationStatus, sponsorship));
 
         var companySources = new Dictionary<string, CompanySourceSettings>(StringComparer.OrdinalIgnoreCase);
         foreach (var pair in settings.CompanySources ??
@@ -236,7 +245,8 @@ public sealed class AppStateStore
             includeRemote,
             physicalLocations,
             company.Id,
-            companySources);
+            companySources,
+            settings.HideStrictWorkAuthorizationMismatch);
     }
 
     public CompanySourceSettings GetSourceSettings(ViewerSettings settings, string companyId)

@@ -14,7 +14,8 @@ uses public Workday CXS JSON endpoints; it does not scrape rendered job pages.
 The default Workday search experience makes some personal screening workflows
 awkward. This utility adds exact-date newest-first sorting, useful inclusion and
 exclusion rules, persistent NEW/viewed tracking, per-job dismissal, multi-location
-selection, and salary, clearance, credential, and education analysis. It preserves
+selection, and salary, clearance, credential, education, and work-authorization
+analysis. It preserves
 the rich Workday description and provides a direct link back to the employer's
 posting.
 
@@ -79,6 +80,13 @@ jobs until **Apply job source** is selected.
 The application remembers source choices separately for each company while keeping
 the user profile and screening preferences global. Automatic checks monitor only
 the currently applied source.
+
+Settings > My Qualifications keeps U.S. work status and employer-sponsorship need
+as separate profile facts. The optional strict work-authorization screening rule
+is off by default and excludes only confidently incompatible requirements. U.S.
+person, export-control, preferred, non-U.S., and uncertain language remains visible
+for review. These values persist through the same local or anonymous-workspace
+settings document as the other profile fields.
 
 The active query identity includes company, country, remote coverage, and a
 canonical set of location facet IDs. Location order therefore does not change cache
@@ -190,7 +198,7 @@ The project intentionally remains a single small ASP.NET Core application:
 - `JobCatalog.cs` — active snapshot, cache, history, refresh, and automatic checks
 - `AppStateStore.cs` — application-local JSON persistence and schema migration
 - `JobAnalysis.cs` and detectors — shared salary, location, clearance, credential,
-  and academic analysis
+  academic, and work-authorization analysis
 - `wwwroot/` — dependency-light HTML, JavaScript, and CSS UI
 
 The hosting and persistence split is implemented by:
@@ -238,5 +246,5 @@ never talks directly to Azure Storage. No storage account keys, connection strin
 SAS tokens, passwords, or user-data payloads are committed or placed in cookies.
 
 Parser results are screening aids, not authoritative statements about eligibility,
-compensation, clearance, education, or credentials. Always review the original
-Workday posting before acting.
+citizenship, immigration status, sponsorship, compensation, clearance, education,
+or credentials. Always review the original Workday posting before acting.

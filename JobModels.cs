@@ -190,7 +190,8 @@ public sealed record JobRecord(
     IReadOnlyList<string>? UnrecognizedCredentialMentions = null,
     int CredentialCatalogVersion = 0,
     AcademicQualificationAnalysis? AcademicQualification = null,
-    string CompanyId = CompanyCatalog.DefaultCompanyId)
+    string CompanyId = CompanyCatalog.DefaultCompanyId,
+    WorkAuthorizationAnalysis? WorkAuthorization = null)
 {
     public string StableId => $"{CompanyId}:{(!string.IsNullOrWhiteSpace(RequisitionId)
         ? RequisitionId
@@ -231,6 +232,16 @@ public sealed record AcademicQualificationPath(
     int? MaximumExperienceYears,
     IReadOnlyList<string> Fields,
     string Evidence);
+
+public sealed record WorkAuthorizationAnalysis(
+    string Eligibility,
+    string Sponsorship,
+    string Strength,
+    string SponsorshipStrength,
+    string? CountryCode,
+    IReadOnlyList<string> Evidence,
+    string ParseStatus,
+    int AnalysisVersion);
 
 internal sealed record SalaryAnalysis(
     decimal? Minimum,
@@ -334,7 +345,8 @@ public sealed record ViewerSettings(
     bool IncludeRemote = true,
     IReadOnlyList<FacetSelection>? SelectedPhysicalLocations = null,
     string CompanyId = CompanyCatalog.DefaultCompanyId,
-    IReadOnlyDictionary<string, CompanySourceSettings>? CompanySources = null)
+    IReadOnlyDictionary<string, CompanySourceSettings>? CompanySources = null,
+    bool HideStrictWorkAuthorizationMismatch = false)
 {
     public static ViewerSettings Default { get; } = new(
         [], [], null, "metadata", "all", true,
@@ -352,12 +364,19 @@ public sealed record ViewerSettings(
         true,
         [],
         CompanyCatalog.DefaultCompanyId,
-        new Dictionary<string, CompanySourceSettings>(StringComparer.OrdinalIgnoreCase));
+        new Dictionary<string, CompanySourceSettings>(StringComparer.OrdinalIgnoreCase),
+        false);
 }
 
-public sealed record UserProfile(EducationProfile Education, SecurityProfile? Security = null)
+public sealed record UserProfile(
+    EducationProfile Education,
+    SecurityProfile? Security = null,
+    WorkAuthorizationProfile? WorkAuthorization = null)
 {
-    public static UserProfile Default { get; } = new(EducationProfile.Default, SecurityProfile.Default);
+    public static UserProfile Default { get; } = new(
+        EducationProfile.Default,
+        SecurityProfile.Default,
+        WorkAuthorizationProfile.Default);
 }
 
 public sealed record EducationProfile(string Level, string? DoctorateType)
@@ -368,6 +387,11 @@ public sealed record EducationProfile(string Level, string? DoctorateType)
 public sealed record SecurityProfile(string ClearanceLevel, string PublicTrust)
 {
     public static SecurityProfile Default { get; } = new("notSpecified", "unknown");
+}
+
+public sealed record WorkAuthorizationProfile(string UsStatus, string Sponsorship)
+{
+    public static WorkAuthorizationProfile Default { get; } = new("notSpecified", "unknown");
 }
 
 public sealed record ViewedJobRequest(string StableId);

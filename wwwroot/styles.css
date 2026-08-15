@@ -936,7 +936,8 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 .job-card .restriction-badge, .job-card .headroom-badge,
 .job-card .clearance-badge, .job-card .credential-badge,
 .job-card .academic-badge, .job-card .education-mismatch-badge,
-.job-card .clearance-mismatch-badge, .job-card .new-badge {
+.job-card .clearance-mismatch-badge, .job-card .work-authorization-badge,
+.job-card .work-authorization-mismatch-badge, .job-card .new-badge {
   display: inline-block;
   padding: .14rem .4rem;
   border-radius: var(--radius-badge);
@@ -1001,6 +1002,18 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   border: var(--border-width-default) solid var(--color-clearance-mismatch-badge-border);
   color: var(--color-clearance-mismatch-badge-text);
   background: var(--color-clearance-mismatch-badge-background);
+}
+
+.job-card .work-authorization-badge {
+  border: var(--border-width-default) solid var(--color-work-authorization-badge-border);
+  color: var(--color-work-authorization-badge-text);
+  background: var(--color-work-authorization-badge-background);
+}
+
+.job-card .work-authorization-mismatch-badge {
+  border: var(--border-width-default) solid var(--color-work-authorization-mismatch-border);
+  color: var(--color-work-authorization-mismatch-text);
+  background: var(--color-work-authorization-mismatch-background);
 }
 
 .job-card .credential-count-badge { font-weight: var(--font-weight-medium); }
@@ -1187,6 +1200,14 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 .clearance-profile-status.meetsLevelPolygraphReview,
 .clearance-profile-status.uncertain,
 .clearance-profile-status.profileNotConfigured { color: var(--color-clearance-status-review-text); }
+
+.work-authorization-profile-status { font-weight: var(--font-weight-semibold); }
+.work-authorization-profile-status.meets { color: var(--color-authorization-status-meets-text); }
+.work-authorization-profile-status.strictMismatch { color: var(--color-authorization-status-mismatch-text); }
+.work-authorization-profile-status.review,
+.work-authorization-profile-status.profileNotConfigured {
+  color: var(--color-authorization-status-review-text);
+}
 
 .academic-summary { display: grid; gap: .38rem; }
 .qualification-paths { display: grid; gap: .25rem; margin: 0; padding: 0; list-style: none; }

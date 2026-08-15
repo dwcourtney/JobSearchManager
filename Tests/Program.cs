@@ -3,7 +3,38 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
+using System.Text.Json;
 using WorkdayJobManager;
+
+if (args.Length >= 2 && args[0] == "--authorization-corpus")
+{
+    var detector = new WorkAuthorizationDetector();
+    foreach (var path in args.Skip(1))
+    {
+        using var document = JsonDocument.Parse(await File.ReadAllTextAsync(path));
+        var jobs = document.RootElement.GetProperty("jobs").EnumerateArray().ToArray();
+        var analyses = jobs.Select(job => new
+        {
+            Requisition = job.TryGetProperty("requisitionId", out var requisition) ? requisition.GetString() : "",
+            Analysis = detector.Analyze(job.TryGetProperty("descriptionHtml", out var description)
+                ? description.GetString() ?? ""
+                : "")
+        }).ToArray();
+        Console.WriteLine($"CORPUS {Path.GetFileName(path)} jobs={jobs.Length}");
+        foreach (var group in analyses
+            .Where(item => item.Analysis.Eligibility != "noneSpecified" || item.Analysis.Sponsorship != "noneSpecified")
+            .GroupBy(item => new { item.Analysis.Eligibility, item.Analysis.Sponsorship, item.Analysis.Strength })
+            .OrderByDescending(group => group.Count()))
+        {
+            Console.WriteLine($"  {group.Key.Eligibility} | {group.Key.Sponsorship} | {group.Key.Strength}: {group.Count()}");
+            foreach (var sample in group.Take(3))
+            {
+                Console.WriteLine($"    {sample.Requisition}: {sample.Analysis.Evidence.FirstOrDefault()}");
+            }
+        }
+    }
+    return;
+}
 
 var tests = new (string Name, Func<Task> Run)[]
 {
@@ -16,7 +47,13 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Azure state changes require the exact application origin", TestOriginValidationAsync),
     ("File storage round-trips beside its configured base", TestFileStoreAsync),
     ("Blob namespaces are isolated and traversal-resistant", TestBlobNamespaceAsync),
-    ("New workspace settings are neutral", TestNeutralDefaultsAsync)
+    ("New workspace settings are neutral", TestNeutralDefaultsAsync),
+    ("Work authorization detector recognizes strict U.S. citizenship", TestUsCitizenshipAsync),
+    ("Work authorization detector distinguishes citizens and permanent residents", TestCitizenOrResidentAsync),
+    ("Work authorization detector recognizes employment sponsorship", TestSponsorshipAsync),
+    ("Work authorization detector treats U.S.-person wording conservatively", TestUsPersonAsync),
+    ("Work authorization detector ignores unrelated sponsor and resident language", TestAuthorizationFalsePositivesAsync),
+    ("Work authorization detector surfaces non-U.S. and export wording for review", TestInternationalAuthorizationAsync)
 };
 
 var failures = new List<string>();
@@ -228,8 +265,96 @@ static Task TestNeutralDefaultsAsync()
         "New workspaces inherited personal search preferences.");
     Assert(settings.UserProfile?.Education.Level == "notSpecified" &&
            settings.UserProfile.Security?.ClearanceLevel == "notSpecified" &&
-           settings.UserProfile.Security?.PublicTrust == "unknown",
+           settings.UserProfile.Security?.PublicTrust == "unknown" &&
+           settings.UserProfile.WorkAuthorization?.UsStatus == "notSpecified" &&
+           settings.UserProfile.WorkAuthorization?.Sponsorship == "unknown" &&
+           !settings.HideStrictWorkAuthorizationMismatch,
         "New workspaces inherited personal qualification data.");
+    return Task.CompletedTask;
+}
+
+static Task TestUsCitizenshipAsync()
+{
+    var detector = new WorkAuthorizationDetector();
+    var strict = detector.Analyze("<p>Candidate must be a U.S. citizen.</p>");
+    Assert(strict.Eligibility == "usCitizen" && strict.CountryCode == "US" &&
+           strict.Strength == "strict" && strict.ParseStatus == "parsed",
+        "Explicit U.S. citizenship was not parsed as a strict requirement.");
+    var preferred = detector.Analyze("<p>U.S. citizenship is preferred.</p>");
+    Assert(preferred.Eligibility == "usCitizen" && preferred.Strength == "preferred" &&
+           preferred.ParseStatus == "parsed",
+        "Explicitly preferred citizenship wording was not kept non-strict.");
+    return Task.CompletedTask;
+}
+
+static Task TestCitizenOrResidentAsync()
+{
+    var analysis = new WorkAuthorizationDetector().Analyze(
+        "<p>Must be either a U.S. Citizen OR a U.S. Permanent Resident/Green Card holder.</p>");
+    Assert(analysis.Eligibility == "usCitizenOrPermanentResident" && analysis.Strength == "strict",
+        $"Citizen-or-permanent-resident wording parsed as {analysis.Eligibility}/{analysis.Strength}.");
+    return Task.CompletedTask;
+}
+
+static Task TestSponsorshipAsync()
+{
+    var analysis = new WorkAuthorizationDetector().Analyze(
+        "<p>Must be authorized to work in the United States and not require work authorization sponsorship by our company now or in the future.</p>");
+    Assert(analysis.Eligibility == "usWorkAuthorized" && analysis.Sponsorship == "notAvailable" &&
+           analysis.Strength == "strict" && analysis.SponsorshipStrength == "strict",
+        "Combined U.S. authorization/no-sponsorship requirement was not parsed.");
+    var sponsorshipOnly = new WorkAuthorizationDetector().Analyze(
+        "<p>No employment sponsorship available.</p>");
+    Assert(sponsorshipOnly.Eligibility == "noneSpecified" &&
+           sponsorshipOnly.Sponsorship == "notAvailable" &&
+           sponsorshipOnly.SponsorshipStrength == "strict" &&
+           sponsorshipOnly.ParseStatus == "parsed",
+        "Standalone no-sponsorship wording was not preserved as a strict sponsorship predicate.");
+    return Task.CompletedTask;
+}
+
+static Task TestUsPersonAsync()
+{
+    var detector = new WorkAuthorizationDetector();
+    var candidate = detector.Analyze(
+        "<p>Must be a US Citizen or US Person who has lived in the United States for three years.</p>");
+    Assert(candidate.Eligibility == "usPerson" && candidate.Strength == "ambiguous" &&
+           candidate.ParseStatus == "review",
+        "U.S.-person candidate wording must remain review-only.");
+    var information = detector.Analyze(
+        "<p>Protect U.S. person information collected under FISA authorities.</p>");
+    Assert(information.Eligibility == "noneSpecified",
+        "U.S.-person information was misclassified as candidate eligibility.");
+    return Task.CompletedTask;
+}
+
+static Task TestAuthorizationFalsePositivesAsync()
+{
+    var detector = new WorkAuthorizationDetector();
+    var clearance = detector.Analyze("<p>We are not able to sponsor the clearance requirement.</p>");
+    Assert(clearance.Sponsorship == "noneSpecified",
+        "Clearance sponsorship was misclassified as employment sponsorship.");
+    var residentEngineer = detector.Analyze("<p>The resident engineer supports a permanent position.</p>");
+    Assert(residentEngineer.Eligibility == "noneSpecified",
+        "Ordinary resident/permanent wording was misclassified.");
+    var citizenDeveloper = detector.Analyze("<p>Support the citizen developer community.</p>");
+    Assert(citizenDeveloper.Eligibility == "noneSpecified",
+        "Citizen-developer wording was misclassified.");
+    return Task.CompletedTask;
+}
+
+static Task TestInternationalAuthorizationAsync()
+{
+    var detector = new WorkAuthorizationDetector();
+    var australian = detector.Analyze("<p>The successful applicant must be an Australian Citizen.</p>");
+    Assert(australian.Eligibility == "australianCitizen" && australian.CountryCode == "AU" &&
+           australian.Strength == "strict",
+        "Australian citizenship wording was not surfaced.");
+    var export = detector.Analyze(
+        "<p>Applicants may also need to meet International Traffic in Arms Regulations (ITAR) requirements.</p>");
+    Assert(export.Eligibility == "exportControlled" && export.Strength == "customerDependent" &&
+           export.ParseStatus == "review",
+        "Conditional ITAR wording should be review-only.");
     return Task.CompletedTask;
 }
 

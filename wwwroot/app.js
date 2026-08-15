@@ -36,6 +36,9 @@ const state = {
   clearanceProfileLevel: "notSpecified",
   publicTrustProfile: "unknown",
   hideStrictClearanceMismatch: false,
+  usWorkAuthorizationStatus: "notSpecified",
+  sponsorshipProfile: "unknown",
+  hideStrictWorkAuthorizationMismatch: false,
   detailTab: "glance",
   renderedDetailJobId: null,
   lastObservedAutomaticRefreshUtc: null,
@@ -114,6 +117,9 @@ const elements = {
   clearanceProfileLevel: document.querySelector("#clearance-profile-level"),
   publicTrustProfile: document.querySelector("#public-trust-profile"),
   hideStrictClearanceMismatch: document.querySelector("#hide-strict-clearance-mismatch"),
+  usWorkAuthorizationStatus: document.querySelector("#us-work-authorization-status"),
+  sponsorshipProfile: document.querySelector("#sponsorship-profile"),
+  hideStrictWorkAuthorizationMismatch: document.querySelector("#hide-strict-work-authorization-mismatch"),
   resultCount: document.querySelector("#result-count"),
   appShell: document.querySelector("#app-shell"),
   errorBanner: document.querySelector("#error-banner"),
@@ -153,6 +159,8 @@ const elements = {
   detailEducationMismatchText: document.querySelector("#detail-education-mismatch-text"),
   detailClearanceMismatch: document.querySelector("#detail-clearance-mismatch"),
   detailClearanceMismatchText: document.querySelector("#detail-clearance-mismatch-text"),
+  detailWorkAuthorizationMismatch: document.querySelector("#detail-work-authorization-mismatch"),
+  detailWorkAuthorizationMismatchText: document.querySelector("#detail-work-authorization-mismatch-text"),
   detailClearanceRow: document.querySelector("#detail-clearance-row"),
   detailClearance: document.querySelector("#detail-clearance"),
   detailClearanceStatusRow: document.querySelector("#detail-clearance-status-row"),
@@ -168,6 +176,12 @@ const elements = {
   detailClearanceNote: document.querySelector("#detail-clearance-note"),
   detailClearanceEvidence: document.querySelector("#detail-clearance-evidence"),
   detailClearanceNoteText: document.querySelector("#detail-clearance-note-text"),
+  detailWorkAuthorization: document.querySelector("#detail-work-authorization"),
+  detailWorkAuthorizationRequirement: document.querySelector("#detail-work-authorization-requirement"),
+  detailUserWorkAuthorization: document.querySelector("#detail-user-work-authorization"),
+  detailWorkAuthorizationComparison: document.querySelector("#detail-work-authorization-comparison"),
+  detailWorkAuthorizationEvidence: document.querySelector("#detail-work-authorization-evidence"),
+  detailWorkAuthorizationEvidenceText: document.querySelector("#detail-work-authorization-evidence-text"),
   detailAcademic: document.querySelector("#detail-academic"),
   detailAcademicContent: document.querySelector("#detail-academic-content"),
   detailCredentials: document.querySelector("#detail-credentials"),
@@ -282,6 +296,21 @@ async function initialize() {
   });
   elements.hideStrictClearanceMismatch.addEventListener("change", () => {
     state.hideStrictClearanceMismatch = elements.hideStrictClearanceMismatch.checked;
+    renderResults();
+    queueSettingsSave();
+  });
+  elements.usWorkAuthorizationStatus.addEventListener("change", () => {
+    state.usWorkAuthorizationStatus = normalizeUsWorkAuthorizationStatus(elements.usWorkAuthorizationStatus.value);
+    renderResults();
+    queueSettingsSave();
+  });
+  elements.sponsorshipProfile.addEventListener("change", () => {
+    state.sponsorshipProfile = normalizeSponsorshipProfile(elements.sponsorshipProfile.value);
+    renderResults();
+    queueSettingsSave();
+  });
+  elements.hideStrictWorkAuthorizationMismatch.addEventListener("change", () => {
+    state.hideStrictWorkAuthorizationMismatch = elements.hideStrictWorkAuthorizationMismatch.checked;
     renderResults();
     queueSettingsSave();
   });
@@ -433,6 +462,11 @@ function applySettings(settings) {
     settings.userProfile?.security?.clearanceLevel);
   state.publicTrustProfile = normalizePublicTrustProfile(settings.userProfile?.security?.publicTrust);
   state.hideStrictClearanceMismatch = settings.hideStrictClearanceMismatch === true;
+  state.usWorkAuthorizationStatus = normalizeUsWorkAuthorizationStatus(
+    settings.userProfile?.workAuthorization?.usStatus);
+  state.sponsorshipProfile = normalizeSponsorshipProfile(
+    settings.userProfile?.workAuthorization?.sponsorship);
+  state.hideStrictWorkAuthorizationMismatch = settings.hideStrictWorkAuthorizationMismatch === true;
   state.companyId = settings.companyId || state.companies[0]?.id || "";
   state.companyName = companyById(state.companyId)?.displayName || state.companyId;
   elements.companySelect.value = state.companyId;
@@ -457,6 +491,9 @@ function applySettings(settings) {
   elements.clearanceProfileLevel.value = state.clearanceProfileLevel;
   elements.publicTrustProfile.value = state.publicTrustProfile;
   elements.hideStrictClearanceMismatch.checked = state.hideStrictClearanceMismatch;
+  elements.usWorkAuthorizationStatus.value = state.usWorkAuthorizationStatus;
+  elements.sponsorshipProfile.value = state.sponsorshipProfile;
+  elements.hideStrictWorkAuthorizationMismatch.checked = state.hideStrictWorkAuthorizationMismatch;
   updateEducationSettingsUi();
   applyTheme();
   const scopeRadio = document.querySelector(`input[name="scope"][value="${state.scope}"]`);
@@ -501,6 +538,15 @@ function normalizeClearanceProfileLevel(value) {
 function normalizePublicTrustProfile(value) {
   if (value === "notSpecified") return "unknown";
   return ["unknown", "none", "current"].includes(value) ? value : "unknown";
+}
+
+function normalizeUsWorkAuthorizationStatus(value) {
+  return ["notSpecified", "usCitizen", "permanentResident", "otherAuthorized", "notAuthorized"]
+    .includes(value) ? value : "notSpecified";
+}
+
+function normalizeSponsorshipProfile(value) {
+  return ["unknown", "notRequired", "required"].includes(value) ? value : "unknown";
 }
 
 async function loadAutomaticCheckStatus() {
@@ -635,9 +681,12 @@ function buildFilterSummary() {
   if (state.hideStrictClearanceMismatch) {
     summary.push("Strict clearance filter");
   }
+  if (state.hideStrictWorkAuthorizationMismatch) {
+    summary.push("Strict work-authorization filter");
+  }
   return summary.length
     ? summary.join(" · ")
-    : "No active keyword, salary, remote-location, education, or clearance filters";
+    : "No active keyword, salary, remote-location, education, clearance, or work-authorization filters";
 }
 
 function updateSourceSummary() {
@@ -1238,10 +1287,15 @@ async function saveSettings() {
           security: {
             clearanceLevel: state.clearanceProfileLevel,
             publicTrust: state.publicTrustProfile
+          },
+          workAuthorization: {
+            usStatus: state.usWorkAuthorizationStatus,
+            sponsorship: state.sponsorshipProfile
           }
         },
         hideStrictEducationMismatch: state.hideStrictEducationMismatch,
-        hideStrictClearanceMismatch: state.hideStrictClearanceMismatch
+        hideStrictClearanceMismatch: state.hideStrictClearanceMismatch,
+        hideStrictWorkAuthorizationMismatch: state.hideStrictWorkAuthorizationMismatch
       })
     });
     if (!response.ok) {
@@ -1302,10 +1356,78 @@ function jobsPassingGeneralFilters() {
     const passesEducation = !state.hideStrictEducationMismatch || !educationStatus.hide;
     const clearanceStatus = evaluateClearanceMatch(job, currentSecurityProfile());
     const passesClearance = !state.hideStrictClearanceMismatch || !clearanceStatus.hide;
+    const workAuthorizationStatus = evaluateWorkAuthorizationMatch(
+      job.workAuthorization, currentWorkAuthorizationProfile());
+    const passesWorkAuthorization = !state.hideStrictWorkAuthorizationMismatch ||
+      !workAuthorizationStatus.hide;
 
     return passesInclusion && passesExclusion && passesSalary && passesLocation &&
-      passesEducation && passesClearance;
+      passesEducation && passesClearance && passesWorkAuthorization;
   });
+}
+
+function currentWorkAuthorizationProfile() {
+  return {
+    usStatus: state.usWorkAuthorizationStatus,
+    sponsorship: state.sponsorshipProfile
+  };
+}
+
+function evaluateWorkAuthorizationMatch(analysis, profile) {
+  const eligibility = analysis?.eligibility || "noneSpecified";
+  const sponsorship = analysis?.sponsorship || "noneSpecified";
+  const strength = analysis?.strength || "none";
+  const sponsorshipStrength = analysis?.sponsorshipStrength ||
+    (sponsorship !== "noneSpecified" && strength === "strict" ? "strict" : "none");
+  const user = {
+    usStatus: normalizeUsWorkAuthorizationStatus(profile?.usStatus),
+    sponsorship: normalizeSponsorshipProfile(profile?.sponsorship)
+  };
+  const userLabel = `${usWorkAuthorizationProfileLabel(user.usStatus)}; ${sponsorshipProfileLabel(user.sponsorship)}`;
+
+  if (eligibility === "noneSpecified" && sponsorship === "noneSpecified") {
+    return { kind: "noneSpecified", hide: false, userLabel,
+      summary: "No work-authorization requirement identified",
+      explanation: "The posting does not state a recognized work-authorization or citizenship requirement." };
+  }
+  let mismatch = false;
+  let profileUnknown = false;
+  const comparableEligibility = ["usCitizen", "usCitizenOrPermanentResident", "usWorkAuthorized"]
+    .includes(eligibility);
+  if (strength === "strict" && comparableEligibility) {
+    profileUnknown = user.usStatus === "notSpecified";
+    const accepted = eligibility === "usCitizen"
+      ? ["usCitizen"]
+      : eligibility === "usCitizenOrPermanentResident"
+        ? ["usCitizen", "permanentResident"]
+        : ["usCitizen", "permanentResident", "otherAuthorized"];
+    mismatch = !profileUnknown && !accepted.includes(user.usStatus);
+  }
+  if (sponsorship === "notAvailable" && sponsorshipStrength === "strict") {
+    profileUnknown ||= user.sponsorship === "unknown";
+    mismatch ||= user.sponsorship === "required";
+  }
+  if (mismatch) {
+    return { kind: "strictMismatch", hide: true, userLabel,
+      summary: "Does not meet a strict work-authorization requirement",
+      explanation: `The posting states ${workAuthorizationRequirementLabel(analysis).toLocaleLowerCase()}, while your profile reports ${userLabel}.` };
+  }
+  if (profileUnknown) {
+    return { kind: "profileNotConfigured", hide: false, userLabel,
+      summary: "Strict requirement; profile not fully configured",
+      explanation: "Complete the work-authorization profile in Settings to enable a confident comparison. The job remains visible." };
+  }
+  const eligibilityNeedsReview = eligibility !== "noneSpecified" &&
+    (strength !== "strict" || !comparableEligibility);
+  const sponsorshipNeedsReview = sponsorship !== "noneSpecified" && sponsorshipStrength !== "strict";
+  if (eligibilityNeedsReview || sponsorshipNeedsReview) {
+    return { kind: "review", hide: false, userLabel,
+      summary: workAuthorizationRequirementLabel(analysis),
+      explanation: "This wording is preferred, conditional, export-related, non-U.S., or otherwise uncertain, so it remains review-only." };
+  }
+  return { kind: "meets", hide: false, userLabel,
+    summary: "Profile meets the detected strict requirement",
+    explanation: "Your configured work status is compatible with the posting's detected requirement." };
 }
 
 const CLEARANCE_LEVEL_RANK = Object.freeze({
@@ -1764,6 +1886,24 @@ function createJobListItem(job) {
     hiddenBadge.textContent = "Hidden";
     badges.append(hiddenBadge);
   }
+  const workAuthorizationStatus = evaluateWorkAuthorizationMatch(
+    job.workAuthorization, currentWorkAuthorizationProfile());
+  if (job.workAuthorization &&
+      (job.workAuthorization.eligibility !== "noneSpecified" ||
+       job.workAuthorization.sponsorship !== "noneSpecified")) {
+    const authorizationBadge = document.createElement("span");
+    authorizationBadge.className = "work-authorization-badge";
+    authorizationBadge.textContent = workAuthorizationBadgeLabel(job.workAuthorization);
+    authorizationBadge.title = workAuthorizationStatus.explanation;
+    badges.append(authorizationBadge);
+  }
+  if (workAuthorizationStatus.kind === "strictMismatch") {
+    const authorizationMismatchBadge = document.createElement("span");
+    authorizationMismatchBadge.className = "work-authorization-mismatch-badge";
+    authorizationMismatchBadge.textContent = "Work authorization mismatch";
+    authorizationMismatchBadge.title = workAuthorizationStatus.explanation;
+    badges.append(authorizationMismatchBadge);
+  }
   if (job.clearanceLevel && job.clearanceLevel !== "noneMentioned") {
     const clearanceBadge = document.createElement("span");
     clearanceBadge.className = "clearance-badge";
@@ -1961,6 +2101,9 @@ function renderDetail(job) {
   const educationStatus = evaluateEducationMatch(job.academicQualification, currentEducationProfile());
   renderAcademicQualification(job, educationStatus);
   renderCredentials(job);
+  const workAuthorizationStatus = evaluateWorkAuthorizationMatch(
+    job.workAuthorization, currentWorkAuthorizationProfile());
+  renderWorkAuthorization(job.workAuthorization, workAuthorizationStatus);
 
   elements.detailEducationMismatch.hidden = educationStatus.kind !== "strictMismatch";
   elements.detailEducationMismatchText.textContent = educationStatus.kind === "strictMismatch"
@@ -1970,6 +2113,9 @@ function renderDetail(job) {
   elements.detailClearanceMismatchText.textContent = clearanceStatus.kind === "strictMismatch"
     ? clearanceStatus.explanation
     : "";
+  elements.detailWorkAuthorizationMismatch.hidden = workAuthorizationStatus.kind !== "strictMismatch";
+  elements.detailWorkAuthorizationMismatchText.textContent =
+    workAuthorizationStatus.kind === "strictMismatch" ? workAuthorizationStatus.explanation : "";
 
   elements.detailLocationNote.hidden = !job.isRemoteLocationRestricted;
   elements.detailLocationNoteText.textContent = job.isRemoteLocationRestricted
@@ -1985,7 +2131,7 @@ function renderDetail(job) {
       `negotiating room may be limited.`
     : "";
 
-  renderQualificationFit(job, educationStatus, clearanceStatus, headroom);
+  renderQualificationFit(job, educationStatus, clearanceStatus, workAuthorizationStatus, headroom);
 
   elements.workdayLink.href = safeHttpUrl(job.workdayUrl) || "#";
   elements.workdayLink.hidden = !safeHttpUrl(job.workdayUrl);
@@ -1997,6 +2143,7 @@ function renderDetail(job) {
   elements.detailFlags.hidden = !(
     educationStatus.kind === "strictMismatch" ||
     clearanceStatus.kind === "strictMismatch" ||
+    workAuthorizationStatus.kind === "strictMismatch" ||
     job.isRemoteLocationRestricted ||
     headroom?.isLimited ||
     job.detailError);
@@ -2018,10 +2165,11 @@ function renderDetail(job) {
   highlightDescriptionText(elements.detailDescription);
 }
 
-function renderQualificationFit(job, educationStatus, clearanceStatus, headroom) {
+function renderQualificationFit(job, educationStatus, clearanceStatus, workAuthorizationStatus, headroom) {
   const blockers = [];
   if (clearanceStatus.kind === "strictMismatch") blockers.push("Clearance mismatch");
   if (educationStatus.kind === "strictMismatch") blockers.push("Education mismatch");
+  if (workAuthorizationStatus.kind === "strictMismatch") blockers.push("Work authorization mismatch");
 
   const notes = [];
   if (job.isRemoteLocationRestricted) notes.push("remote-location condition");
@@ -2034,6 +2182,9 @@ function renderQualificationFit(job, educationStatus, clearanceStatus, headroom)
   if (["uncertain", "specificDegreeUncertain", "profileNotConfigured"].includes(educationStatus.kind)) {
     notes.push("education review");
   }
+  if (["review", "profileNotConfigured"].includes(workAuthorizationStatus.kind)) {
+    notes.push("work-authorization review");
+  }
 
   elements.detailFitSummary.className = `fit-summary ${blockers.length ? "blocker" : notes.length ? "review" : "compatible"}`;
   elements.detailFitTitle.textContent = blockers.length
@@ -2045,6 +2196,27 @@ function renderQualificationFit(job, educationStatus, clearanceStatus, headroom)
   if (notes.length) parts.push(`${notes.length} item${notes.length === 1 ? "" : "s"} to review`);
   if (!parts.length) parts.push("Based on the configured profile and confidently parsed requirements.");
   elements.detailFitText.textContent = parts.join(" · ");
+}
+
+function renderWorkAuthorization(analysis, status) {
+  const present = analysis &&
+    (analysis.eligibility !== "noneSpecified" || analysis.sponsorship !== "noneSpecified");
+  elements.detailWorkAuthorization.hidden = !present;
+  if (!present) return;
+
+  elements.detailWorkAuthorizationRequirement.textContent = workAuthorizationRequirementLabel(analysis);
+  elements.detailUserWorkAuthorization.textContent = status.userLabel;
+  elements.detailWorkAuthorizationComparison.textContent = status.summary;
+  elements.detailWorkAuthorizationComparison.className =
+    `work-authorization-profile-status ${status.kind}`;
+  const evidence = Array.isArray(analysis.evidence) ? analysis.evidence.filter(Boolean) : [];
+  elements.detailWorkAuthorizationEvidence.hidden = evidence.length === 0;
+  elements.detailWorkAuthorizationEvidence.open = false;
+  elements.detailWorkAuthorizationEvidenceText.replaceChildren();
+  evidence.forEach((item, index) => {
+    if (index > 0) elements.detailWorkAuthorizationEvidenceText.append(document.createElement("br"));
+    elements.detailWorkAuthorizationEvidenceText.append(document.createTextNode(`“${item}”`));
+  });
 }
 
 function secureDescriptionLinks(container) {
@@ -2249,6 +2421,55 @@ function clearanceBadgeLabel(job) {
     preferred: " — Preferred"
   })[job.clearanceRequirement] || "";
   return `${level}${suffix}${job.polygraphRequired ? " + Poly" : ""}`;
+}
+
+function usWorkAuthorizationProfileLabel(status) {
+  return ({
+    notSpecified: "U.S. work status not configured",
+    usCitizen: "U.S. citizen",
+    permanentResident: "U.S. permanent resident / Green Card holder",
+    otherAuthorized: "Other U.S. work authorization",
+    notAuthorized: "Not authorized to work in the U.S."
+  })[status] || "U.S. work status not configured";
+}
+
+function sponsorshipProfileLabel(status) {
+  return ({
+    unknown: "sponsorship need unknown",
+    notRequired: "no sponsorship required",
+    required: "sponsorship required"
+  })[status] || "sponsorship need unknown";
+}
+
+function workAuthorizationRequirementLabel(analysis) {
+  const eligibility = ({
+    noneSpecified: "",
+    usCitizen: "U.S. citizenship required",
+    usCitizenOrPermanentResident: "U.S. citizen or permanent resident required",
+    usWorkAuthorized: "U.S. work authorization required",
+    usPerson: "U.S.-person language — review required",
+    australianCitizen: "Australian citizenship language — review required",
+    exportControlled: "Export-control language — review required",
+    ambiguousCitizenship: "Citizenship language — country or requirement unclear"
+  })[analysis?.eligibility] || "Work-authorization language requires review";
+  const sponsor = analysis?.sponsorship === "notAvailable" ? "No employment sponsorship" : "";
+  const requirement = [eligibility, sponsor].filter(Boolean).join("; ");
+  if (analysis?.strength === "preferred") return `${requirement} (preferred)`;
+  return requirement || "Work-authorization language requires review";
+}
+
+function workAuthorizationBadgeLabel(analysis) {
+  const eligibility = ({
+    usCitizen: "U.S. Citizen",
+    usCitizenOrPermanentResident: "Citizen / Green Card",
+    usWorkAuthorized: "U.S. Work Authorized",
+    usPerson: "U.S. Person — Review",
+    australianCitizen: "Australian Citizen — Review",
+    exportControlled: "Export Control — Review",
+    ambiguousCitizenship: "Citizenship — Review"
+  })[analysis?.eligibility] || "";
+  const sponsor = analysis?.sponsorship === "notAvailable" ? "No Sponsorship" : "";
+  return [eligibility, sponsor].filter(Boolean).join(" + ") || "Authorization — Review";
 }
 
 function academicLevelLabel(level, specificDegree = null) {

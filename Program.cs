@@ -38,6 +38,7 @@ builder.Services.AddHttpClient<WorkdayClient>((services, client) =>
 builder.Services.AddSingleton<CompanyCatalog>();
 builder.Services.AddSingleton<CredentialDetector>();
 builder.Services.AddSingleton<AcademicQualificationDetector>();
+builder.Services.AddSingleton<WorkAuthorizationDetector>();
 builder.Services.AddDataProtection().SetApplicationName("WorkdayJobManager");
 builder.Services.AddScoped<WorkspaceContext>();
 builder.Services.AddScoped<WorkspaceRuntimeProvider>();

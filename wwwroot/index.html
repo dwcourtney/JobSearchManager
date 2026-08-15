@@ -168,6 +168,20 @@
                   </details>
                 </section>
 
+                <section id="detail-work-authorization" class="summary-section"
+                         aria-labelledby="work-authorization-heading" hidden>
+                  <h3 id="work-authorization-heading">Work Authorization / Citizenship</h3>
+                  <dl class="summary-rows">
+                    <div><dt>Posting</dt><dd id="detail-work-authorization-requirement"></dd></div>
+                    <div><dt>Your status</dt><dd id="detail-user-work-authorization"></dd></div>
+                    <div><dt>Assessment</dt><dd id="detail-work-authorization-comparison"></dd></div>
+                  </dl>
+                  <details id="detail-work-authorization-evidence" class="evidence-disclosure">
+                    <summary>Show evidence</summary>
+                    <div id="detail-work-authorization-evidence-text" class="disclosure-evidence"></div>
+                  </details>
+                </section>
+
                 <section id="detail-academic" class="summary-section"
                          aria-labelledby="academic-heading">
                   <h3 id="academic-heading">Academic Qualifications</h3>
@@ -191,6 +205,10 @@
                     <div id="detail-clearance-mismatch" class="summary-note mismatch" hidden>
                       <strong>Clearance mismatch</strong>
                       <p id="detail-clearance-mismatch-text"></p>
+                    </div>
+                    <div id="detail-work-authorization-mismatch" class="summary-note mismatch" hidden>
+                      <strong>Work authorization mismatch</strong>
+                      <p id="detail-work-authorization-mismatch-text"></p>
                     </div>
                     <div id="detail-location-note" class="summary-note warning" hidden>
                       <strong>Remote location restriction</strong>
@@ -342,6 +360,29 @@
               <small id="public-trust-help">Tracked separately from national-security clearance.</small>
             </div>
           </div>
+          <div class="settings-row">
+            <label for="us-work-authorization-status">U.S. work status</label>
+            <div class="settings-control">
+              <select id="us-work-authorization-status" aria-describedby="us-work-authorization-help">
+                <option value="notSpecified">Not configured</option>
+                <option value="usCitizen">U.S. citizen</option>
+                <option value="permanentResident">U.S. permanent resident / Green Card holder</option>
+                <option value="otherAuthorized">Other U.S. work authorization</option>
+                <option value="notAuthorized">Not authorized to work in the U.S.</option>
+              </select>
+              <small id="us-work-authorization-help">Kept separate from clearance and Public Trust status.</small>
+            </div>
+          </div>
+          <div class="settings-row">
+            <label for="sponsorship-profile">Employment sponsorship</label>
+            <div class="settings-control">
+              <select id="sponsorship-profile">
+                <option value="unknown">Unknown / not configured</option>
+                <option value="notRequired">I do not require sponsorship</option>
+                <option value="required">I require sponsorship now or in the future</option>
+              </select>
+            </div>
+          </div>
         </section>
 
         <section class="settings-section" aria-labelledby="screening-heading">
@@ -359,6 +400,13 @@
               <span>
                 Hide jobs with unmet strict day-one clearance requirements
                 <small>Obtainable, preferred, and uncertain requirements always remain visible.</small>
+              </span>
+            </label>
+            <label class="settings-check">
+              <input id="hide-strict-work-authorization-mismatch" type="checkbox">
+              <span>
+                Hide jobs with confidently incompatible strict work-authorization requirements
+                <small>Preferred, export-control, U.S.-person, non-U.S., and uncertain wording never hides a job.</small>
               </span>
             </label>
           </div>

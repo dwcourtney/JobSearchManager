@@ -7,6 +7,7 @@ public sealed class JobCatalog
     private readonly ILogger<JobCatalog> _logger;
     private readonly CredentialDetector _credentialDetector;
     private readonly AcademicQualificationDetector _academicQualificationDetector;
+    private readonly WorkAuthorizationDetector _workAuthorizationDetector;
     private readonly CompanyCatalog _companyCatalog;
     private readonly object _gate = new();
     private readonly SemaphoreSlim _historyGate = new(1, 1);
@@ -25,6 +26,7 @@ public sealed class JobCatalog
         ILogger<JobCatalog> logger,
         CredentialDetector credentialDetector,
         AcademicQualificationDetector academicQualificationDetector,
+        WorkAuthorizationDetector workAuthorizationDetector,
         CompanyCatalog companyCatalog)
     {
         _workdayClient = workdayClient;
@@ -32,6 +34,7 @@ public sealed class JobCatalog
         _logger = logger;
         _credentialDetector = credentialDetector;
         _academicQualificationDetector = academicQualificationDetector;
+        _workAuthorizationDetector = workAuthorizationDetector;
         _companyCatalog = companyCatalog;
     }
 
@@ -83,6 +86,9 @@ public sealed class JobCatalog
         var cacheNeedsAcademicUpgrade = cache.Jobs.Any(job =>
             job.AcademicQualification is null ||
             job.AcademicQualification.AnalysisVersion != _academicQualificationDetector.AnalysisVersion);
+        var cacheNeedsWorkAuthorizationUpgrade = cache.Jobs.Any(job =>
+            job.WorkAuthorization is null ||
+            job.WorkAuthorization.AnalysisVersion != WorkAuthorizationDetector.CurrentAnalysisVersion);
         var cacheNeedsQueryUpgrade = cache.Query is not null &&
             (!string.IsNullOrWhiteSpace(cache.Query.LocationLabel) || cache.Query.SourceModelVersion < 2);
         var cachedJobs = cacheNeedsCredentialUpgrade
@@ -91,8 +97,12 @@ public sealed class JobCatalog
         cachedJobs = cacheNeedsAcademicUpgrade
             ? cachedJobs.Select(_academicQualificationDetector.AnalyzeJob).ToArray()
             : cachedJobs;
+        cachedJobs = cacheNeedsWorkAuthorizationUpgrade
+            ? cachedJobs.Select(_workAuthorizationDetector.AnalyzeJob).ToArray()
+            : cachedJobs;
 
-        if (cacheNeedsCredentialUpgrade || cacheNeedsAcademicUpgrade || cacheNeedsQueryUpgrade)
+        if (cacheNeedsCredentialUpgrade || cacheNeedsAcademicUpgrade ||
+            cacheNeedsWorkAuthorizationUpgrade || cacheNeedsQueryUpgrade)
         {
             await _stateStore.SaveJobsCacheAsync(
                 cachedJobs,
@@ -100,9 +110,10 @@ public sealed class JobCatalog
                 cache.DetailFailureCount,
                 query);
             _logger.LogInformation(
-                "Updated cached query/derived analysis (credential catalog {CredentialCatalogVersion}, academic analysis {AcademicAnalysisVersion}).",
+                "Updated cached query/derived analysis (credential catalog {CredentialCatalogVersion}, academic analysis {AcademicAnalysisVersion}, work-authorization analysis {WorkAuthorizationAnalysisVersion}).",
                 _credentialDetector.CatalogVersion,
-                _academicQualificationDetector.AnalysisVersion);
+                _academicQualificationDetector.AnalysisVersion,
+                WorkAuthorizationDetector.CurrentAnalysisVersion);
         }
 
         var historyChanged = ReconcileHistory(

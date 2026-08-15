@@ -14,6 +14,7 @@ public sealed class WorkdayClient
     private readonly ILogger<WorkdayClient> _logger;
     private readonly CredentialDetector _credentialDetector;
     private readonly AcademicQualificationDetector _academicQualificationDetector;
+    private readonly WorkAuthorizationDetector _workAuthorizationDetector;
     private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
 
     public WorkdayClient(
@@ -21,13 +22,15 @@ public sealed class WorkdayClient
         IOptions<WorkdayOptions> options,
         ILogger<WorkdayClient> logger,
         CredentialDetector credentialDetector,
-        AcademicQualificationDetector academicQualificationDetector)
+        AcademicQualificationDetector academicQualificationDetector,
+        WorkAuthorizationDetector workAuthorizationDetector)
     {
         _httpClient = httpClient;
         _options = options.Value;
         _logger = logger;
         _credentialDetector = credentialDetector;
         _academicQualificationDetector = academicQualificationDetector;
+        _workAuthorizationDetector = workAuthorizationDetector;
 
         if (_options.PageSize is < 1 or > 20)
         {
@@ -357,6 +360,7 @@ public sealed class WorkdayClient
         var clearance = JobAnalysis.AnalyzeClearance(descriptionHtml);
         var credentials = _credentialDetector.Analyze(descriptionHtml);
         var academicQualification = _academicQualificationDetector.Analyze(descriptionHtml);
+        var workAuthorization = _workAuthorizationDetector.Analyze(descriptionHtml);
 
         return new JobRecord(
             title,
@@ -386,7 +390,8 @@ public sealed class WorkdayClient
             credentials.UnrecognizedMentions,
             credentials.CatalogVersion,
             academicQualification,
-            company.Id);
+            company.Id,
+            workAuthorization);
     }
 
     private static Uri GetCxsBaseUri(CompanyDefinition company) => new(
