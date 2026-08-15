@@ -30,6 +30,11 @@ const state = {
   automaticCheckEnabled: true,
   automaticCheckIntervalMinutes: 60,
   themeMode: "light",
+  educationLevel: "notSpecified",
+  doctorateType: null,
+  hideStrictEducationMismatch: false,
+  detailTab: "glance",
+  renderedDetailJobId: null,
   lastObservedAutomaticRefreshUtc: null,
   newJobIds: new Set(),
   dismissedJobIds: new Set(),
@@ -81,6 +86,10 @@ const elements = {
   automaticCheckInterval: document.querySelector("#automatic-check-interval"),
   automaticCheckStatus: document.querySelector("#automatic-check-status"),
   themeMode: document.querySelector("#theme-mode"),
+  educationLevel: document.querySelector("#education-level"),
+  doctorateTypeField: document.querySelector("#doctorate-type-field"),
+  doctorateType: document.querySelector("#doctorate-type"),
+  hideStrictEducationMismatch: document.querySelector("#hide-strict-education-mismatch"),
   resultCount: document.querySelector("#result-count"),
   appShell: document.querySelector("#app-shell"),
   errorBanner: document.querySelector("#error-banner"),
@@ -103,7 +112,13 @@ const elements = {
   detailTimeType: document.querySelector("#detail-time-type"),
   detailLocation: document.querySelector("#detail-location"),
   detailAdditional: document.querySelector("#detail-additional"),
-  detailAcademicSummary: document.querySelector("#detail-academic-summary"),
+  atAGlanceTab: document.querySelector("#at-a-glance-tab"),
+  fullPostingTab: document.querySelector("#full-posting-tab"),
+  atAGlancePanel: document.querySelector("#at-a-glance-panel"),
+  fullPostingPanel: document.querySelector("#full-posting-panel"),
+  detailFlags: document.querySelector("#detail-flags"),
+  detailEducationMismatch: document.querySelector("#detail-education-mismatch"),
+  detailEducationMismatchText: document.querySelector("#detail-education-mismatch-text"),
   detailClearanceRow: document.querySelector("#detail-clearance-row"),
   detailClearance: document.querySelector("#detail-clearance"),
   detailClearanceStatusRow: document.querySelector("#detail-clearance-status-row"),
@@ -193,6 +208,28 @@ async function initialize() {
     applyTheme();
     queueSettingsSave();
   });
+  elements.educationLevel.addEventListener("change", () => {
+    state.educationLevel = normalizeEducationLevel(elements.educationLevel.value);
+    if (state.educationLevel !== "doctorate") {
+      state.doctorateType = null;
+    }
+    updateEducationSettingsUi();
+    renderResults();
+    queueSettingsSave();
+  });
+  elements.doctorateType.addEventListener("change", () => {
+    state.doctorateType = elements.doctorateType.value === "phD" ? "phD" : null;
+    renderResults();
+    queueSettingsSave();
+  });
+  elements.hideStrictEducationMismatch.addEventListener("change", () => {
+    state.hideStrictEducationMismatch = elements.hideStrictEducationMismatch.checked;
+    renderResults();
+    queueSettingsSave();
+  });
+  elements.atAGlanceTab.addEventListener("click", () => showDetailTab("glance", true));
+  elements.fullPostingTab.addEventListener("click", () => showDetailTab("posting", true));
+  document.querySelector(".detail-tabs").addEventListener("keydown", handleDetailTabKeydown);
   elements.workdayLink.addEventListener("click", () => {
     const job = state.jobs.find(item => item.stableId === state.selectedJobId);
     if (job) {
@@ -230,6 +267,36 @@ function handleTabKeydown(event) {
     : "settings";
   showView(targetView);
   (targetView === "jobs" ? elements.jobsTab : elements.settingsTab).focus();
+}
+
+function showDetailTab(tab, moveFocus = false) {
+  const nextTab = tab === "posting" ? "posting" : "glance";
+  const changed = state.detailTab !== nextTab;
+  state.detailTab = nextTab;
+  const glanceSelected = state.detailTab === "glance";
+  elements.atAGlancePanel.hidden = !glanceSelected;
+  elements.fullPostingPanel.hidden = glanceSelected;
+  elements.atAGlanceTab.classList.toggle("active", glanceSelected);
+  elements.fullPostingTab.classList.toggle("active", !glanceSelected);
+  elements.atAGlanceTab.setAttribute("aria-selected", String(glanceSelected));
+  elements.fullPostingTab.setAttribute("aria-selected", String(!glanceSelected));
+  elements.atAGlanceTab.tabIndex = glanceSelected ? 0 : -1;
+  elements.fullPostingTab.tabIndex = glanceSelected ? -1 : 0;
+  if (changed) {
+    document.querySelector(".detail-pane").scrollTop = 0;
+  }
+  if (moveFocus) {
+    (glanceSelected ? elements.atAGlanceTab : elements.fullPostingTab).focus();
+  }
+}
+
+function handleDetailTabKeydown(event) {
+  if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
+    return;
+  }
+  event.preventDefault();
+  const tab = event.key === "ArrowLeft" || event.key === "Home" ? "glance" : "posting";
+  showDetailTab(tab, true);
 }
 
 async function loadInitialState() {
@@ -271,6 +338,12 @@ function applySettings(settings) {
     ? settings.automaticCheckIntervalMinutes
     : 60;
   state.themeMode = settings.themeMode === "dark" ? "dark" : "light";
+  state.educationLevel = normalizeEducationLevel(settings.userProfile?.education?.level);
+  state.doctorateType = state.educationLevel === "doctorate" &&
+    settings.userProfile?.education?.doctorateType === "phD"
+    ? "phD"
+    : null;
+  state.hideStrictEducationMismatch = settings.hideStrictEducationMismatch === true;
   state.country = normalizeFacetSelection(settings.country, ALL_COUNTRIES_LABEL);
   state.location = normalizeFacetSelection(settings.location, ALL_LOCATIONS_LABEL);
 
@@ -282,6 +355,10 @@ function applySettings(settings) {
   elements.automaticCheckInterval.value = String(state.automaticCheckIntervalMinutes);
   elements.automaticCheckInterval.disabled = !state.automaticCheckEnabled;
   elements.themeMode.value = state.themeMode;
+  elements.educationLevel.value = state.educationLevel;
+  elements.doctorateType.value = state.doctorateType || "";
+  elements.hideStrictEducationMismatch.checked = state.hideStrictEducationMismatch;
+  updateEducationSettingsUi();
   applyTheme();
   const scopeRadio = document.querySelector(`input[name="scope"][value="${state.scope}"]`);
   const locationRadio = document.querySelector(`input[name="location-mode"][value="${state.locationMode}"]`);
@@ -300,6 +377,19 @@ function applyTheme() {
   } catch {
     // The persisted backend setting is authoritative; this cache is optional.
   }
+}
+
+function updateEducationSettingsUi() {
+  const isDoctorate = state.educationLevel === "doctorate";
+  elements.doctorateTypeField.hidden = !isDoctorate;
+  elements.doctorateType.disabled = !isDoctorate;
+}
+
+function normalizeEducationLevel(value) {
+  return ["notSpecified", "noCredential", "ged", "highSchool", "associate", "bachelor", "master", "doctorate"]
+    .includes(value)
+    ? value
+    : "notSpecified";
 }
 
 async function loadAutomaticCheckStatus() {
@@ -404,7 +494,10 @@ function buildFilterSummary() {
       ? "Restricted remote hidden"
       : "Restricted remote only");
   }
-  return summary.length ? summary.join(" · ") : "No active keyword, salary, or remote-location filters";
+  if (state.hideStrictEducationMismatch) {
+    summary.push(`Education: ${educationLevelLabel(state.educationLevel)}`);
+  }
+  return summary.length ? summary.join(" · ") : "No active keyword, salary, remote-location, or education filters";
 }
 
 function updateSourceSummary() {
@@ -686,7 +779,14 @@ async function saveSettings() {
         searchFiltersCollapsed: state.searchFiltersCollapsed,
         automaticCheckEnabled: state.automaticCheckEnabled,
         automaticCheckIntervalMinutes: state.automaticCheckIntervalMinutes,
-        themeMode: state.themeMode
+        themeMode: state.themeMode,
+        userProfile: {
+          education: {
+            level: state.educationLevel,
+            doctorateType: state.doctorateType
+          }
+        },
+        hideStrictEducationMismatch: state.hideStrictEducationMismatch
       })
     });
     if (!response.ok) {
@@ -743,9 +843,164 @@ function jobsPassingGeneralFilters() {
     const passesLocation = state.locationMode === "all" ||
       (state.locationMode === "hide-restricted" && !job.isRemoteLocationRestricted) ||
       (state.locationMode === "only-restricted" && job.isRemoteLocationRestricted);
+    const educationStatus = evaluateEducationMatch(job.academicQualification, currentEducationProfile());
+    const passesEducation = !state.hideStrictEducationMismatch || !educationStatus.hide;
 
-    return passesInclusion && passesExclusion && passesSalary && passesLocation;
+    return passesInclusion && passesExclusion && passesSalary && passesLocation && passesEducation;
   });
+}
+
+const EDUCATION_LEVEL_RANK = Object.freeze({
+  noCredential: 0,
+  ged: 1,
+  highSchool: 1,
+  associate: 2,
+  bachelor: 3,
+  master: 4,
+  doctorate: 5
+});
+
+function currentEducationProfile() {
+  return { level: state.educationLevel, doctorateType: state.doctorateType };
+}
+
+function evaluateEducationMatch(academic, profile) {
+  const user = {
+    level: normalizeEducationLevel(profile?.level),
+    doctorateType: profile?.level === "doctorate" && profile?.doctorateType === "phD"
+      ? "phD"
+      : null
+  };
+  const userLabel = educationProfileLabel(user);
+  if (user.level === "notSpecified") {
+    return {
+      kind: "profileNotConfigured",
+      hide: false,
+      userLabel,
+      summary: "Education profile not configured",
+      explanation: "Choose your highest completed education in Settings to enable personal comparison."
+    };
+  }
+  if (!academic || academic.requirementType === "noDegreeSpecified") {
+    return {
+      kind: "noneSpecified",
+      hide: false,
+      userLabel,
+      summary: "No academic requirement specified",
+      explanation: "The posting does not state a recognized academic requirement."
+    };
+  }
+
+  const requiredLabel = academicLevelLabel(academic.minimumLevel, academic.specificDegree);
+  if (academic.parseStatus !== "parsed" || academic.requirementType === "mentionedUnclear") {
+    return {
+      kind: "uncertain",
+      hide: false,
+      userLabel,
+      requiredLabel,
+      summary: "Academic wording is uncertain",
+      explanation: "The parser found academic language but will not use it to exclude this job."
+    };
+  }
+
+  if (academic.requirementType === "preferredOnly") {
+    return {
+      kind: "preferredOnly",
+      hide: false,
+      userLabel,
+      requiredLabel,
+      summary: `${requiredLabel} preferred`,
+      explanation: "This is a preference, not a strict minimum requirement."
+    };
+  }
+
+  if (academic.experienceSubstitutionAccepted ||
+      academic.requirementType === "degreeOrExperience" ||
+      academic.requirementType === "degreeWithExperienceSubstitution") {
+    return {
+      kind: "flexible",
+      hide: false,
+      userLabel,
+      requiredLabel,
+      summary: academic.requirementType === "degreeWithExperienceSubstitution"
+        ? "Alternative degree/experience paths"
+        : `${requiredLabel} or experience alternative`,
+      explanation: "The posting provides an experience or alternate education path, so no automatic mismatch is applied."
+    };
+  }
+
+  if (academic.requirementType !== "strictDegree") {
+    return {
+      kind: "uncertain",
+      hide: false,
+      userLabel,
+      requiredLabel,
+      summary: "Academic requirement is not strict",
+      explanation: "This academic language is informational and will not exclude the job."
+    };
+  }
+
+  const requiredRank = EDUCATION_LEVEL_RANK[academic.minimumLevel] ?? 0;
+  const userRank = EDUCATION_LEVEL_RANK[user.level] ?? 0;
+  if (academic.minimumLevel === "doctorate" && academic.specificDegree === "phD" &&
+      user.level === "doctorate" && user.doctorateType !== "phD") {
+    return {
+      kind: "specificDegreeUncertain",
+      hide: false,
+      userLabel,
+      requiredLabel,
+      summary: "Specific Ph.D. requirement is uncertain",
+      explanation: "You reported a doctorate without specifying Ph.D.; the application will not assume equivalence or hide this job."
+    };
+  }
+
+  if (requiredRank > userRank) {
+    return {
+      kind: "strictMismatch",
+      hide: true,
+      userLabel,
+      requiredLabel,
+      summary: `${requiredLabel} required`,
+      explanation: `The posting's strict ${requiredLabel} requirement is above your completed ${userLabel}.`
+    };
+  }
+
+  const preferredLevels = Array.isArray(academic.preferredLevels) ? academic.preferredLevels : [];
+  const unmetPreferred = preferredLevels
+    .filter(level => (EDUCATION_LEVEL_RANK[level] ?? 0) > userRank)
+    .sort((left, right) => (EDUCATION_LEVEL_RANK[left] ?? 0) - (EDUCATION_LEVEL_RANK[right] ?? 0))[0];
+  return {
+    kind: unmetPreferred ? "meetsMinimumPreferredNotMet" : "meets",
+    hide: false,
+    userLabel,
+    requiredLabel,
+    preferredLabel: unmetPreferred ? academicLevelLabel(unmetPreferred) : null,
+    summary: unmetPreferred
+      ? `Meets minimum; ${academicLevelLabel(unmetPreferred)} preferred`
+      : "Meets strict education requirement",
+    explanation: unmetPreferred
+      ? `Your ${userLabel} meets the strict ${requiredLabel} minimum; ${academicLevelLabel(unmetPreferred)} is preferred.`
+      : `Your ${userLabel} meets or exceeds the strict ${requiredLabel} requirement.`
+  };
+}
+
+function educationLevelLabel(level) {
+  return ({
+    notSpecified: "Not configured",
+    noCredential: "No high school credential",
+    ged: "GED",
+    highSchool: "High school diploma",
+    associate: "Associate degree",
+    bachelor: "Bachelor's degree",
+    master: "Master's degree",
+    doctorate: "Doctorate"
+  })[level] || "No high school credential";
+}
+
+function educationProfileLabel(profile) {
+  return profile?.level === "doctorate" && profile?.doctorateType === "phD"
+    ? "Ph.D."
+    : educationLevelLabel(profile?.level);
 }
 
 function renderResults() {
@@ -764,7 +1019,11 @@ function renderResults() {
 
   if (!jobs.some(job => job.stableId === state.selectedJobId)) {
     // Automatic selection is presentation only and deliberately does not mark NEW as viewed.
-    state.selectedJobId = jobs[0]?.stableId ?? null;
+    const nextSelectedJobId = jobs[0]?.stableId ?? null;
+    if (nextSelectedJobId !== state.selectedJobId) {
+      state.detailTab = "glance";
+    }
+    state.selectedJobId = nextSelectedJobId;
   }
 
   elements.jobList.replaceChildren();
@@ -909,6 +1168,14 @@ function createJobListItem(job) {
     academicBadge.textContent = academicBadgeLabel(academicQualification);
     badges.append(academicBadge);
   }
+  const educationStatus = evaluateEducationMatch(academicQualification, currentEducationProfile());
+  if (educationStatus.kind === "strictMismatch") {
+    const mismatchBadge = document.createElement("span");
+    mismatchBadge.className = "education-mismatch-badge";
+    mismatchBadge.textContent = "Education mismatch";
+    mismatchBadge.title = educationStatus.explanation;
+    badges.append(mismatchBadge);
+  }
   const credentials = Array.isArray(job.credentials) ? job.credentials : [];
   credentials.slice(0, 2).forEach(credential => {
     const credentialBadge = document.createElement("span");
@@ -940,6 +1207,9 @@ function createJobListItem(job) {
     button.append(badges);
   }
   button.addEventListener("click", () => {
+    if (state.selectedJobId !== job.stableId) {
+      state.detailTab = "glance";
+    }
     state.selectedJobId = job.stableId;
     markJobViewed(job);
     renderResults();
@@ -1020,9 +1290,17 @@ function renderDetail(job) {
   elements.emptyDetail.hidden = Boolean(job);
   elements.jobDetail.hidden = !job;
   if (!job) {
+    state.renderedDetailJobId = null;
     elements.detailDescription.replaceChildren();
     return;
   }
+
+  if (state.renderedDetailJobId !== job.stableId) {
+    state.renderedDetailJobId = job.stableId;
+    state.detailTab = "glance";
+    document.querySelector(".detail-pane").scrollTop = 0;
+  }
+  showDetailTab(state.detailTab);
 
   // All metadata uses textContent. Only the description fragment is inserted as HTML,
   // and only after a strict DOMPurify allowlist has removed executable content.
@@ -1039,8 +1317,7 @@ function renderDetail(job) {
     job.additionalLocations?.length ? job.additionalLocations.join("; ") : "None listed");
 
   const hasClearance = Boolean(job.clearanceLevel && job.clearanceLevel !== "noneMentioned");
-  elements.detailClearanceRow.hidden = !hasClearance;
-  elements.detailClearanceStatusRow.hidden = !hasClearance;
+  elements.detailClearanceNote.hidden = !hasClearance;
   elements.detailClearance.textContent = hasClearance
     ? clearanceLevelLabel(job.clearanceLevel)
     : "";
@@ -1049,13 +1326,18 @@ function renderDetail(job) {
     : "";
   elements.detailPolygraphRow.hidden = !job.polygraphRequired;
   elements.detailPolygraph.textContent = job.polygraphRequired ? "Required" : "";
-  elements.detailClearanceNote.hidden = !hasClearance || !job.clearanceEvidence;
   elements.detailClearanceNoteText.textContent = hasClearance && job.clearanceEvidence
     ? `“${job.clearanceEvidence}”`
     : "";
 
-  renderAcademicQualification(job);
+  const educationStatus = evaluateEducationMatch(job.academicQualification, currentEducationProfile());
+  renderAcademicQualification(job, educationStatus);
   renderCredentials(job);
+
+  elements.detailEducationMismatch.hidden = educationStatus.kind !== "strictMismatch";
+  elements.detailEducationMismatchText.textContent = educationStatus.kind === "strictMismatch"
+    ? educationStatus.explanation
+    : "";
 
   elements.detailLocationNote.hidden = !job.isRemoteLocationRestricted;
   elements.detailLocationNoteText.textContent = job.isRemoteLocationRestricted
@@ -1078,6 +1360,11 @@ function renderDetail(job) {
   elements.detailWarning.textContent = job.detailError
     ? `Full details could not be retrieved for this job: ${job.detailError}`
     : "";
+  elements.detailFlags.hidden = !(
+    educationStatus.kind === "strictMismatch" ||
+    job.isRemoteLocationRestricted ||
+    headroom?.isLimited ||
+    job.detailError);
 
   if (!job.descriptionHtml) {
     elements.detailDescription.textContent = "The formatted description is unavailable for this job.";
@@ -1308,14 +1595,22 @@ function academicBadgeLabel(academic) {
   })[academic.requirementType] || level;
 }
 
-function renderAcademicQualification(job) {
+function renderAcademicQualification(job, educationStatus) {
   const academic = job.academicQualification;
   const hasAcademic = academic && academic.requirementType !== "noDegreeSpecified";
-  elements.detailAcademicSummary.textContent = hasAcademic
-    ? academicBadgeLabel(academic)
-    : "None specified";
-  elements.detailAcademic.hidden = !hasAcademic;
   elements.detailAcademicContent.replaceChildren();
+
+  const comparison = document.createElement("div");
+  comparison.className = `academic-profile-status ${educationStatus.kind}`;
+  const summary = document.createElement("strong");
+  summary.textContent = educationStatus.summary;
+  const profile = document.createElement("span");
+  profile.textContent = `Your completed education: ${educationStatus.userLabel}`;
+  const explanation = document.createElement("p");
+  explanation.textContent = educationStatus.explanation;
+  comparison.append(summary, profile, explanation);
+  elements.detailAcademicContent.append(comparison);
+
   if (!hasAcademic) {
     return;
   }

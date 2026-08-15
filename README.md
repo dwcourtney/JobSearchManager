@@ -62,7 +62,8 @@ all state.
 `settings.json` contains the selected Workday country/location IDs and display
 labels, inclusion and exclusion terms, annual minimum salary, keyword scope,
 remote-location mode, inclusion-highlighting preference, automatic-check
-settings, selected light/dark theme, and collapsed
+settings, selected light/dark theme, the extensible user qualification profile's
+completed-education entry, the conservative strict-education filter, and collapsed
 posting-age groups. It also stores whether the complete **Search & Filters**
 section is collapsed. Local filter changes save automatically after a short
 debounce. `jobs-cache.json` contains the complete most recent successful
@@ -147,10 +148,19 @@ as part of the same control group. Its Workday source indicator is a small link 
 salary even though its editor is an application-level preference.
 
 **Settings** contains the less frequently changed Workday country/location query,
-minimum acceptable salary, automatic-check enablement and interval, and theme.
+minimum acceptable salary, completed education profile, strict-education filter,
+automatic-check enablement and interval, and theme.
 Moving between views does not alter filter values, job selection, scroll state,
 cached data, or settings. The navigation itself is presentation-only and the
 application always opens on Jobs.
+
+The selected-job pane has two local tabs. **At a Glance** is the default whenever
+a different job is selected and contains only normalized screening information:
+overview metadata, location and salary flags, clearance interpretation, academic
+qualification comparison, and professional credentials. **Full Posting** is the
+clean reading view: a small source strip and the sanitized Workday description,
+without duplicated analysis blocks above it. The shared title and authoritative
+**Open in Workday** link remain available in both views.
 
 ## Workday country and location scope
 
@@ -313,6 +323,23 @@ Academic results are derived fields in `jobs-cache.json`. They are not stored in
 `settings.json` or `job-history.json`. A version mismatch reanalyzes compatible
 cached descriptions at startup without a Workday request; every successful live
 refresh also regenerates the analysis from the current description.
+
+The Education Profile defaults to **Not configured**, which never flags or hides
+jobs. Once configured, it stores only completed education: no secondary credential,
+GED, high school diploma, Associate, Bachelor's, Master's, or Doctorate, with an
+optional Ph.D. subtype for a completed doctorate. GED and high school are kept as
+distinct profile values but compare at the same secondary-school tier for general
+requirements. A doctorate is the top hierarchy level; Ph.D. is a subtype, not a
+higher level.
+
+Education mismatch analysis is deliberately conservative. Automatic hiding can
+occur only for confidently parsed `strictDegree` requirements above the completed
+level. Preferred degrees, degree-or-experience language, multiple education and
+experience paths, uncertain parsing, and unspecified education remain visible.
+An explicit Ph.D. requirement is also left visible when the profile says only an
+unspecified doctorate. The filter is off by default, composes with every existing
+local filter, and changes the displayed result count without affecting NEW or
+dismissal history.
 
 The browser cannot call Workday directly: the CXS responses do not grant a local
 origin access through CORS, and the JSON POST preflight is not supported. The

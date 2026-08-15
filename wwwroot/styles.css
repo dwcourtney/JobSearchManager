@@ -410,21 +410,23 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 
 .highlight-option input { accent-color: var(--color-accent); }
 
-.automatic-check-settings, .theme-settings {
+.automatic-check-settings, .theme-settings, .education-settings {
   display: flex;
   flex-direction: column;
   gap: .3rem;
 }
 
-.automatic-check-enabled, .theme-settings > label {
+.automatic-check-enabled, .theme-settings > label, .education-filter-toggle {
   color: var(--color-label);
   font-size: var(--font-size-label);
   font-weight: var(--font-weight-semibold);
 }
 
 .automatic-check-enabled { display: inline-flex; align-items: center; gap: .4rem; }
-.automatic-check-enabled input { accent-color: var(--color-accent); }
-.automatic-check-settings select, .theme-settings select {
+.automatic-check-enabled input, .education-filter-toggle input { accent-color: var(--color-accent); }
+.education-filter-toggle { display: inline-flex; align-items: flex-start; gap: .4rem; line-height: var(--line-height-control); }
+.education-filter-toggle input { flex: 0 0 auto; margin-top: .15rem; }
+.automatic-check-settings select, .theme-settings select, .education-settings select {
   min-height: 2.25rem;
   padding: .48rem .6rem;
   border: var(--border-width-default) solid var(--color-border-strong);
@@ -770,7 +772,7 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 
 .job-card .restriction-badge, .job-card .headroom-badge,
 .job-card .clearance-badge, .job-card .credential-badge,
-.job-card .academic-badge, .job-card .new-badge {
+.job-card .academic-badge, .job-card .education-mismatch-badge, .job-card .new-badge {
   display: inline-block;
   padding: .14rem .4rem;
   border-radius: var(--radius-badge);
@@ -825,6 +827,12 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   background: var(--color-academic-badge-background);
 }
 
+.job-card .education-mismatch-badge {
+  border: var(--border-width-default) solid var(--color-education-mismatch-badge-border);
+  color: var(--color-education-mismatch-badge-text);
+  background: var(--color-education-mismatch-badge-background);
+}
+
 .job-card .credential-count-badge { font-weight: var(--font-weight-medium); }
 
 .new-badge {
@@ -850,6 +858,7 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 .list-empty { padding: 1rem; color: var(--color-text-secondary); }
 
 .detail-pane { overflow-y: auto; }
+.job-detail { min-height: 100%; }
 
 .empty-state {
   display: grid;
@@ -863,9 +872,73 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   position: sticky;
   z-index: 2;
   top: 0;
-  padding: 1.15rem 1.35rem 1rem;
+  padding: 1rem 1.35rem 0;
   border-bottom: var(--border-width-default) solid var(--color-border);
   background: var(--color-detail-header-background);
+}
+
+.detail-tabs {
+  display: flex;
+  gap: .25rem;
+  margin-top: .85rem;
+}
+
+.detail-tab {
+  padding: .55rem .8rem .5rem;
+  border: 0;
+  border-bottom: var(--tab-indicator-width) solid transparent;
+  color: var(--color-detail-tab-text);
+  background: var(--color-detail-tab-background);
+  cursor: pointer;
+  font-size: var(--font-size-ui);
+  font-weight: var(--font-weight-semibold);
+}
+
+.detail-tab:hover { background: var(--color-detail-tab-hover); }
+.detail-tab.active {
+  border-bottom-color: var(--color-detail-tab-active-border);
+  color: var(--color-detail-tab-active-text);
+  background: var(--color-detail-tab-active-background);
+}
+
+.detail-tab-panel { min-height: 0; }
+.at-a-glance-panel { padding: .85rem; background: var(--color-glance-background); }
+.at-a-glance-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .75rem;
+  align-items: start;
+}
+
+.glance-card {
+  min-width: 0;
+  margin: 0;
+  padding: .8rem;
+  border: var(--border-width-default) solid var(--color-glance-card-border);
+  border-radius: var(--radius-control);
+  background: var(--color-glance-card-background);
+}
+
+.glance-card > h3 {
+  margin: 0 0 .6rem;
+  color: var(--color-text-heading);
+  font-size: var(--font-size-small);
+  letter-spacing: var(--letter-spacing-badge);
+  text-transform: var(--text-transform-section);
+}
+
+.overview-card { grid-column: 1 / -1; }
+.metadata-grid .metadata-wide { grid-column: 1 / -1; }
+.compact-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem 1rem; margin: 0; }
+.compact-facts dt { color: var(--color-text-secondary); font-size: var(--font-size-caption); font-weight: var(--font-weight-semibold); text-transform: var(--text-transform-section); }
+.compact-facts dd { margin: .12rem 0 0; }
+.evidence-text { margin: .55rem 0 0; font-style: var(--font-style-evidence); line-height: var(--line-height-note); }
+.posting-source-strip {
+  padding: .55rem 1.5rem;
+  border-bottom: var(--border-width-default) solid var(--color-border);
+  color: var(--color-posting-strip-text);
+  background: var(--color-posting-strip-background);
+  font-size: var(--font-size-label);
 }
 
 .detail-title-row {
@@ -917,6 +990,12 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   background: var(--color-location-note-background);
 }
 
+.flags-card .location-note, .flags-card .headroom-note,
+.flags-card .education-mismatch-note, .flags-card .detail-warning {
+  margin-top: .55rem;
+}
+.flags-card > :nth-child(2) { margin-top: 0; }
+
 .location-note strong {
   display: block;
   font-size: var(--font-size-small);
@@ -962,6 +1041,16 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 
 .clearance-note p { margin: .35rem 0 0; line-height: var(--line-height-note); }
 
+.education-mismatch-note {
+  padding: .7rem .8rem;
+  border: var(--border-width-default) solid var(--color-education-mismatch-border);
+  border-radius: var(--radius-control);
+  color: var(--color-education-mismatch-text);
+  background: var(--color-education-mismatch-background);
+}
+.education-mismatch-note strong { display: block; font-size: var(--font-size-small); }
+.education-mismatch-note p { margin: .3rem 0 0; line-height: var(--line-height-note); }
+
 .academic-note {
   margin-top: .9rem;
   padding: .7rem .8rem;
@@ -979,6 +1068,34 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 }
 
 .academic-list { display: grid; gap: .65rem; margin-top: .55rem; }
+.academic-profile-status {
+  display: grid;
+  gap: .22rem;
+  padding: .6rem;
+  border: var(--border-width-default) solid var(--color-education-status-flexible-border);
+  border-radius: var(--radius-control);
+  color: var(--color-education-status-flexible-text);
+  background: var(--color-education-status-flexible-background);
+}
+.academic-profile-status > span { font-size: var(--font-size-label); }
+.academic-profile-status > p { margin: .1rem 0 0; line-height: var(--line-height-note); }
+.academic-profile-status.meets, .academic-profile-status.meetsMinimumPreferredNotMet {
+  border-color: var(--color-education-status-meets-border);
+  color: var(--color-education-status-meets-text);
+  background: var(--color-education-status-meets-background);
+}
+.academic-profile-status.strictMismatch {
+  border-color: var(--color-education-mismatch-border);
+  color: var(--color-education-mismatch-text);
+  background: var(--color-education-mismatch-background);
+}
+.academic-profile-status.uncertain, .academic-profile-status.specificDegreeUncertain,
+.academic-profile-status.noneSpecified, .academic-profile-status.preferredOnly,
+.academic-profile-status.profileNotConfigured {
+  border-color: var(--color-education-status-uncertain-border);
+  color: var(--color-education-status-uncertain-text);
+  background: var(--color-education-status-uncertain-background);
+}
 .academic-fields, .academic-alternative { margin: 0; line-height: var(--line-height-note); }
 .academic-fields > strong { color: var(--color-academic-note-heading); }
 .academic-path {
@@ -1119,7 +1236,12 @@ mark {
   .jobs-context-bar .results-summary { align-items: flex-start; }
   .source-link { flex-wrap: wrap; }
   .detail-title-row { flex-direction: column; }
+  .at-a-glance-grid { grid-template-columns: 1fr; }
+  .overview-card { grid-column: auto; }
   .metadata-grid { grid-template-columns: 1fr; }
+  .metadata-grid .metadata-wide { grid-column: auto; }
+  .compact-facts { grid-template-columns: 1fr; }
   .description, .detail-header { padding-left: 1rem; padding-right: 1rem; }
+  .posting-source-strip { padding-left: 1rem; padding-right: 1rem; }
   .settings-view { padding: .8rem; }
 }

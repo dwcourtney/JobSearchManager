@@ -161,6 +161,17 @@
   --color-filter-toggle-hover: #e4edf3;
   --color-pane-heading-text: #435565;
   --color-pane-heading-background: #f3f6f8;
+  --color-detail-tab-text: #496274;
+  --color-detail-tab-background: transparent;
+  --color-detail-tab-hover: #e8f3fb;
+  --color-detail-tab-active-text: #075c99;
+  --color-detail-tab-active-background: #ffffff;
+  --color-detail-tab-active-border: #075c99;
+  --color-glance-background: #f3f6f8;
+  --color-glance-card-background: #ffffff;
+  --color-glance-card-border: #cbd4dc;
+  --color-posting-strip-background: #edf3f7;
+  --color-posting-strip-text: #526575;
   --color-age-heading-text: #29475d;
   --color-age-heading-background: #eef3f6;
   --color-age-heading-hover: #e3ebf0;
@@ -217,6 +228,9 @@
   --color-academic-badge-border: #79a99d;
   --color-academic-badge-text: #22594f;
   --color-academic-badge-background: #e8f5f1;
+  --color-education-mismatch-badge-border: #c38a54;
+  --color-education-mismatch-badge-text: #733f16;
+  --color-education-mismatch-badge-background: #fff0df;
   --color-location-badge-border: #d5aa59;
   --color-location-badge-text: #744d0d;
   --color-location-badge-background: #fff4d8;
@@ -267,6 +281,18 @@
   --color-academic-note-heading: #20564c;
   --color-academic-item-border: #c6ddd7;
   --color-academic-metadata-text: #4b6d66;
+  --color-education-mismatch-border: #d19a63;
+  --color-education-mismatch-text: #6f3d18;
+  --color-education-mismatch-background: #fff3e7;
+  --color-education-status-meets-border: #79aa8b;
+  --color-education-status-meets-text: #255d39;
+  --color-education-status-meets-background: #eaf6ee;
+  --color-education-status-flexible-border: #7fa5bf;
+  --color-education-status-flexible-text: #2d5872;
+  --color-education-status-flexible-background: #eaf3f8;
+  --color-education-status-uncertain-border: #aaa06c;
+  --color-education-status-uncertain-text: #655b25;
+  --color-education-status-uncertain-background: #f8f5e7;
 
   /* Description and highlighting */
   --color-detail-header-background: rgba(255, 255, 255, .97);
@@ -342,6 +368,17 @@
   --color-filter-toggle-hover: #263845;
   --color-pane-heading-text: #c0d0da;
   --color-pane-heading-background: #1c2832;
+  --color-detail-tab-text: #adbfca;
+  --color-detail-tab-background: transparent;
+  --color-detail-tab-hover: #203746;
+  --color-detail-tab-active-text: #8dcdf2;
+  --color-detail-tab-active-background: #172029;
+  --color-detail-tab-active-border: #55afe8;
+  --color-glance-background: #111920;
+  --color-glance-card-background: #172029;
+  --color-glance-card-border: #344451;
+  --color-posting-strip-background: #1d2c37;
+  --color-posting-strip-text: #afc0cb;
   --color-age-heading-text: #c8dce8;
   --color-age-heading-background: #20303b;
   --color-age-heading-hover: #2a3e4c;
@@ -398,6 +435,9 @@
   --color-academic-badge-border: #4f8075;
   --color-academic-badge-text: #bfe5dc;
   --color-academic-badge-background: #203b35;
+  --color-education-mismatch-badge-border: #a67448;
+  --color-education-mismatch-badge-text: #f0c89f;
+  --color-education-mismatch-badge-background: #46301f;
   --color-location-badge-border: #94733b;
   --color-location-badge-text: #f0d49c;
   --color-location-badge-background: #3d321e;
@@ -448,6 +488,18 @@
   --color-academic-note-heading: #d4eee7;
   --color-academic-item-border: #3d5f57;
   --color-academic-metadata-text: #accdc5;
+  --color-education-mismatch-border: #9f7048;
+  --color-education-mismatch-text: #f0c99f;
+  --color-education-mismatch-background: #422e20;
+  --color-education-status-meets-border: #4f8461;
+  --color-education-status-meets-text: #bce5c8;
+  --color-education-status-meets-background: #203a29;
+  --color-education-status-flexible-border: #527c96;
+  --color-education-status-flexible-text: #c2dff0;
+  --color-education-status-flexible-background: #203643;
+  --color-education-status-uncertain-border: #7f7647;
+  --color-education-status-uncertain-text: #e1d9a5;
+  --color-education-status-uncertain-background: #37341f;
 
   /* Description and highlighting */
   --color-detail-header-background: rgba(23, 32, 41, .97);

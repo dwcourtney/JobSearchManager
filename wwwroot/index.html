@@ -105,9 +105,9 @@
 
         <article class="detail-pane" aria-live="polite">
           <div id="empty-detail" class="empty-state">
-            Select a job to view its description.
+            Select a job to review it.
           </div>
-          <div id="job-detail" hidden>
+          <div id="job-detail" class="job-detail" hidden>
             <header class="detail-header">
               <div class="detail-title-row">
                 <div>
@@ -122,40 +122,71 @@
                   Open in Workday
                 </a>
               </div>
-              <dl class="metadata-grid">
-                <div><dt>Posted</dt><dd id="detail-date"></dd></div>
-                <div><dt>Pay range</dt><dd id="detail-pay"></dd></div>
-                <div><dt>Time type</dt><dd id="detail-time-type"></dd></div>
-                <div><dt>Location</dt><dd id="detail-location"></dd></div>
-                <div><dt>Additional locations</dt><dd id="detail-additional"></dd></div>
-                <div><dt>Academic requirement</dt><dd id="detail-academic-summary"></dd></div>
-                <div id="detail-clearance-row" hidden><dt>Clearance</dt><dd id="detail-clearance"></dd></div>
-                <div id="detail-clearance-status-row" hidden><dt>Status</dt><dd id="detail-clearance-status"></dd></div>
-                <div id="detail-polygraph-row" hidden><dt>Polygraph</dt><dd id="detail-polygraph"></dd></div>
-              </dl>
-              <div id="detail-location-note" class="location-note" hidden>
-                <strong>⚠ Remote location note</strong>
-                <p id="detail-location-note-text"></p>
+              <div class="detail-tabs" role="tablist" aria-label="Selected job detail views">
+                <button id="at-a-glance-tab" class="detail-tab active" type="button" role="tab"
+                        aria-selected="true" aria-controls="at-a-glance-panel">At a Glance</button>
+                <button id="full-posting-tab" class="detail-tab" type="button" role="tab"
+                        aria-selected="false" aria-controls="full-posting-panel" tabindex="-1">Full Posting</button>
               </div>
-              <div id="detail-headroom-note" class="headroom-note" hidden>
-                <strong>⚠ Limited salary headroom</strong>
-                <p id="detail-headroom-note-text"></p>
-              </div>
-              <div id="detail-clearance-note" class="clearance-note" hidden>
-                <strong>Clearance note</strong>
-                <p id="detail-clearance-note-text"></p>
-              </div>
-              <section id="detail-academic" class="academic-note" hidden>
-                <strong>Academic Qualifications</strong>
-                <div id="detail-academic-content" class="academic-list"></div>
-              </section>
-              <section id="detail-credentials" class="credentials-note" hidden>
-                <strong>Credentials</strong>
-                <div id="detail-credentials-list" class="credential-list"></div>
-              </section>
-              <p id="detail-warning" class="detail-warning" hidden></p>
             </header>
-            <div id="detail-description" class="description"></div>
+            <section id="at-a-glance-panel" class="detail-tab-panel at-a-glance-panel"
+                     role="tabpanel" aria-labelledby="at-a-glance-tab">
+              <div class="at-a-glance-grid">
+                <section class="glance-card overview-card" aria-labelledby="overview-heading">
+                  <h3 id="overview-heading">Overview</h3>
+                  <dl class="metadata-grid">
+                    <div><dt>Posted</dt><dd id="detail-date"></dd></div>
+                    <div><dt>Pay range</dt><dd id="detail-pay"></dd></div>
+                    <div><dt>Time type</dt><dd id="detail-time-type"></dd></div>
+                    <div><dt>Location</dt><dd id="detail-location"></dd></div>
+                    <div class="metadata-wide"><dt>Additional locations</dt><dd id="detail-additional"></dd></div>
+                  </dl>
+                </section>
+                <section id="detail-flags" class="glance-card flags-card" aria-labelledby="flags-heading" hidden>
+                  <h3 id="flags-heading">Flags</h3>
+                  <div id="detail-education-mismatch" class="education-mismatch-note" hidden>
+                    <strong>Education mismatch</strong>
+                    <p id="detail-education-mismatch-text"></p>
+                  </div>
+                  <div id="detail-location-note" class="location-note" hidden>
+                    <strong>Remote location restriction</strong>
+                    <p id="detail-location-note-text"></p>
+                  </div>
+                  <div id="detail-headroom-note" class="headroom-note" hidden>
+                    <strong>Limited salary headroom</strong>
+                    <p id="detail-headroom-note-text"></p>
+                  </div>
+                  <p id="detail-warning" class="detail-warning" hidden></p>
+                </section>
+                <section id="detail-clearance-note" class="glance-card clearance-note"
+                         aria-labelledby="clearance-heading" hidden>
+                  <h3 id="clearance-heading">Clearance</h3>
+                  <dl class="compact-facts">
+                    <div id="detail-clearance-row"><dt>Level</dt><dd id="detail-clearance"></dd></div>
+                    <div id="detail-clearance-status-row"><dt>Status</dt><dd id="detail-clearance-status"></dd></div>
+                    <div id="detail-polygraph-row" hidden><dt>Polygraph</dt><dd id="detail-polygraph"></dd></div>
+                  </dl>
+                  <p id="detail-clearance-note-text" class="evidence-text"></p>
+                </section>
+                <section id="detail-academic" class="glance-card academic-note"
+                         aria-labelledby="academic-heading">
+                  <h3 id="academic-heading">Academic Qualifications</h3>
+                  <div id="detail-academic-content" class="academic-list"></div>
+                </section>
+                <section id="detail-credentials" class="glance-card credentials-note"
+                         aria-labelledby="credentials-heading" hidden>
+                  <h3 id="credentials-heading">Credentials</h3>
+                  <div id="detail-credentials-list" class="credential-list"></div>
+                </section>
+              </div>
+            </section>
+            <section id="full-posting-panel" class="detail-tab-panel full-posting-panel"
+                     role="tabpanel" aria-labelledby="full-posting-tab" hidden>
+              <div class="posting-source-strip">
+                Original Workday posting — sanitized for safe local display
+              </div>
+              <div id="detail-description" class="description"></div>
+            </section>
           </div>
         </article>
       </section>
@@ -199,6 +230,35 @@
             </div>
             <small id="minimum-pay-help">Unknown or non-annual pay remains visible.</small>
           </div>
+        </section>
+
+        <section class="settings-group" aria-labelledby="education-profile-heading">
+          <h3 id="education-profile-heading">Education Profile</h3>
+          <div class="settings-field education-settings">
+            <label for="education-level">Highest completed education</label>
+            <select id="education-level">
+              <option value="notSpecified">Not configured</option>
+              <option value="noCredential">No high school credential</option>
+              <option value="ged">GED</option>
+              <option value="highSchool">High school diploma</option>
+              <option value="associate">Associate degree</option>
+              <option value="bachelor">Bachelor's degree</option>
+              <option value="master">Master's degree</option>
+              <option value="doctorate">Doctorate</option>
+            </select>
+          </div>
+          <div id="doctorate-type-field" class="settings-field education-settings" hidden>
+            <label for="doctorate-type">Doctorate type</label>
+            <select id="doctorate-type">
+              <option value="">Not specified</option>
+              <option value="phD">Ph.D.</option>
+            </select>
+          </div>
+          <label class="education-filter-toggle">
+            <input id="hide-strict-education-mismatch" type="checkbox">
+            Hide jobs with strict education requirements above my completed level
+          </label>
+          <small>Preferred, flexible, or uncertain education language never hides a job.</small>
         </section>
 
         <section class="settings-group" aria-labelledby="automatic-checking-heading">

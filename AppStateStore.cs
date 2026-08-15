@@ -213,6 +213,16 @@ public sealed class AppStateStore
         var themeMode = settings.ThemeMode is "light" or "dark"
             ? settings.ThemeMode
             : "light";
+        var educationLevel = settings.UserProfile?.Education?.Level is
+            "notSpecified" or "noCredential" or "ged" or "highSchool" or "associate" or
+            "bachelor" or "master" or "doctorate"
+                ? settings.UserProfile.Education.Level
+                : "notSpecified";
+        var doctorateType = educationLevel == "doctorate" &&
+            settings.UserProfile?.Education?.DoctorateType == "phD"
+                ? "phD"
+                : null;
+        var userProfile = new UserProfile(new EducationProfile(educationLevel, doctorateType));
 
         return new ViewerSettings(
             NormalizeTerms(settings.IncludeKeywords),
@@ -227,7 +237,9 @@ public sealed class AppStateStore
             settings.SearchFiltersCollapsed,
             settings.AutomaticCheckEnabled ?? true,
             automaticCheckInterval,
-            themeMode);
+            themeMode,
+            userProfile,
+            settings.HideStrictEducationMismatch);
     }
 
     private static FacetSelection NormalizeFacetSelection(

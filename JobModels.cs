@@ -198,7 +198,9 @@ public sealed record ViewerSettings(
     bool SearchFiltersCollapsed,
     bool? AutomaticCheckEnabled,
     int AutomaticCheckIntervalMinutes,
-    string ThemeMode)
+    string ThemeMode,
+    UserProfile? UserProfile = null,
+    bool HideStrictEducationMismatch = false)
 {
     public static ViewerSettings Default { get; } = new(
         [], [], null, "metadata", "all", true,
@@ -208,7 +210,19 @@ public sealed record ViewerSettings(
         false,
         true,
         60,
-        "light");
+        "light",
+        UserProfile.Default,
+        false);
+}
+
+public sealed record UserProfile(EducationProfile Education)
+{
+    public static UserProfile Default { get; } = new(EducationProfile.Default);
+}
+
+public sealed record EducationProfile(string Level, string? DoctorateType)
+{
+    public static EducationProfile Default { get; } = new("notSpecified", null);
 }
 
 public sealed record ViewedJobRequest(string StableId);
