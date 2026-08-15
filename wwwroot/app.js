@@ -96,6 +96,8 @@ const elements = {
   detailHeadroomNoteText: document.querySelector("#detail-headroom-note-text"),
   detailClearanceNote: document.querySelector("#detail-clearance-note"),
   detailClearanceNoteText: document.querySelector("#detail-clearance-note-text"),
+  detailCredentials: document.querySelector("#detail-credentials"),
+  detailCredentialsList: document.querySelector("#detail-credentials-list"),
   detailWarning: document.querySelector("#detail-warning"),
   detailDescription: document.querySelector("#detail-description"),
   workdayLink: document.querySelector("#workday-link")
@@ -808,6 +810,20 @@ function createJobListItem(job) {
     clearanceBadge.textContent = clearanceBadgeLabel(job);
     badges.append(clearanceBadge);
   }
+  const credentials = Array.isArray(job.credentials) ? job.credentials : [];
+  credentials.slice(0, 2).forEach(credential => {
+    const credentialBadge = document.createElement("span");
+    credentialBadge.className = `credential-badge${credential.requirement === "required" ? " required" : ""}`;
+    credentialBadge.textContent = credentialBadgeLabel(credential);
+    credentialBadge.title = credential.fullName || credential.name;
+    badges.append(credentialBadge);
+  });
+  if (credentials.length > 2) {
+    const moreCredentials = document.createElement("span");
+    moreCredentials.className = "credential-badge credential-count-badge";
+    moreCredentials.textContent = `+${credentials.length - 2} credentials`;
+    badges.append(moreCredentials);
+  }
   if (job.isRemoteLocationRestricted) {
     const restriction = document.createElement("span");
     restriction.className = "restriction-badge";
@@ -938,6 +954,8 @@ function renderDetail(job) {
   elements.detailClearanceNoteText.textContent = hasClearance && job.clearanceEvidence
     ? `“${job.clearanceEvidence}”`
     : "";
+
+  renderCredentials(job);
 
   elements.detailLocationNote.hidden = !job.isRemoteLocationRestricted;
   elements.detailLocationNoteText.textContent = job.isRemoteLocationRestricted
@@ -1160,6 +1178,97 @@ function clearanceBadgeLabel(job) {
     preferred: " — Preferred"
   })[job.clearanceRequirement] || "";
   return `${level}${suffix}${job.polygraphRequired ? " + Poly" : ""}`;
+}
+
+function renderCredentials(job) {
+  const credentials = Array.isArray(job.credentials) ? job.credentials : [];
+  elements.detailCredentials.hidden = credentials.length === 0;
+  elements.detailCredentialsList.replaceChildren();
+
+  credentials.forEach(credential => {
+    const item = document.createElement("article");
+    item.className = "credential-item";
+
+    const heading = document.createElement("div");
+    heading.className = "credential-item-heading";
+    const name = document.createElement("strong");
+    name.textContent = credential.name;
+    const status = document.createElement("span");
+    status.className = `credential-status${credential.requirement === "required" ? " required" : ""}`;
+    status.textContent = credentialRequirementLabel(credential);
+    heading.append(name, status);
+
+    const identity = document.createElement("p");
+    identity.className = "credential-identity";
+    identity.textContent = [
+      credential.fullName,
+      credential.issuer,
+      credentialTypeLabel(credential.type),
+      credential.category
+    ].filter(Boolean).join(" · ");
+
+    item.append(heading, identity);
+    if (credential.evidence) {
+      const evidence = document.createElement("p");
+      evidence.className = "credential-evidence";
+      evidence.textContent = `“${credential.evidence}”`;
+      item.append(evidence);
+    }
+    elements.detailCredentialsList.append(item);
+  });
+}
+
+function credentialRequirementLabel(credential) {
+  const labels = [];
+  if (credential.postHireAcquisitionAllowed) {
+    labels.push("Required; post-hire acquisition allowed");
+  } else {
+    labels.push(({
+      required: "Required",
+      preferred: "Preferred",
+      desired: "Desired",
+      mentioned: "Mentioned; status unclear"
+    })[credential.requirement] || "Mentioned; status unclear");
+  }
+  if (credential.isAlternative) {
+    labels.push("alternative accepted");
+  }
+  if (credential.equivalentAccepted) {
+    labels.push("equivalent accepted");
+  }
+  if (credential.inProgressAccepted) {
+    labels.push("in progress accepted");
+  }
+  return labels.join(" · ");
+}
+
+function credentialBadgeLabel(credential) {
+  let status = ({
+    required: "Required",
+    preferred: "Preferred",
+    desired: "Desired"
+  })[credential.requirement] || "";
+  if (credential.postHireAcquisitionAllowed) {
+    status = "Required after hire";
+  } else if (credential.isAlternative && status) {
+    status += " alternative";
+  } else if (credential.inProgressAccepted) {
+    status = status ? `${status} / in progress` : "In progress accepted";
+  }
+  return status ? `${credential.name} — ${status}` : credential.name;
+}
+
+function credentialTypeLabel(type) {
+  return ({
+    ProfessionalLicense: "Professional license",
+    OtherProfessionalCredential: "Professional credential",
+    ProjectManagementCertification: "Project/program-management certification",
+    SecurityCertification: "Security certification",
+    NetworkingCertification: "Networking certification",
+    CloudCertification: "Cloud certification",
+    VendorCertification: "Vendor certification",
+    Certification: "Certification"
+  })[type] || "Professional credential";
 }
 
 function formatCurrency(value) {

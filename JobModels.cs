@@ -65,12 +65,29 @@ public sealed record JobRecord(
     string ClearanceRequirement = "none",
     bool PolygraphRequired = false,
     string? ClearanceEvidence = null,
-    string ClearanceParseStatus = "not-mentioned")
+    string ClearanceParseStatus = "not-mentioned",
+    IReadOnlyList<CredentialMatch>? Credentials = null,
+    IReadOnlyList<string>? UnrecognizedCredentialMentions = null,
+    int CredentialCatalogVersion = 0)
 {
     public string StableId => !string.IsNullOrWhiteSpace(RequisitionId)
         ? RequisitionId
         : $"path:{ExternalPath}";
 }
+
+public sealed record CredentialMatch(
+    string CredentialId,
+    string Name,
+    string FullName,
+    string Issuer,
+    string Type,
+    string Category,
+    string Requirement,
+    bool IsAlternative,
+    bool EquivalentAccepted,
+    bool InProgressAccepted,
+    bool PostHireAcquisitionAllowed,
+    string Evidence);
 
 internal sealed record SalaryAnalysis(
     decimal? Minimum,
@@ -89,6 +106,11 @@ internal sealed record ClearanceAnalysis(
     bool PolygraphRequired,
     string? Evidence,
     string ParseStatus);
+
+internal sealed record CredentialAnalysis(
+    IReadOnlyList<CredentialMatch> Credentials,
+    IReadOnlyList<string> UnrecognizedMentions,
+    int CatalogVersion);
 
 public sealed record WorkdayFetchResult(
     IReadOnlyList<JobRecord> Jobs,

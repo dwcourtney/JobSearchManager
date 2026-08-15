@@ -544,7 +544,7 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 }
 
 .job-card .restriction-badge, .job-card .headroom-badge,
-.job-card .clearance-badge, .job-card .new-badge {
+.job-card .clearance-badge, .job-card .credential-badge, .job-card .new-badge {
   display: inline-block;
   padding: .14rem .4rem;
   border-radius: var(--radius-badge);
@@ -580,6 +580,20 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   color: var(--color-clearance-badge-text);
   background: var(--color-clearance-badge-background);
 }
+
+.job-card .credential-badge {
+  border: 1px solid var(--color-credential-badge-border);
+  color: var(--color-credential-badge-text);
+  background: var(--color-credential-badge-background);
+}
+
+.job-card .credential-badge.required {
+  border-color: var(--color-credential-required-border);
+  color: var(--color-credential-required-text);
+  background: var(--color-credential-required-background);
+}
+
+.job-card .credential-count-badge { font-weight: var(--font-weight-medium); }
 
 .new-badge {
   display: inline-block;
@@ -715,6 +729,53 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 }
 
 .clearance-note p { margin: .35rem 0 0; line-height: var(--line-height-note); }
+
+.credentials-note {
+  margin-top: .9rem;
+  padding: .7rem .8rem;
+  border: 1px solid var(--color-credential-note-border);
+  border-radius: var(--radius-control);
+  color: var(--color-credential-note-text);
+  background: var(--color-credential-note-background);
+}
+
+.credentials-note > strong {
+  display: block;
+  font-size: var(--font-size-small);
+  letter-spacing: var(--letter-spacing-badge);
+  text-transform: uppercase;
+}
+
+.credential-list { display: grid; gap: .65rem; margin-top: .55rem; }
+
+.credential-item {
+  padding-top: .6rem;
+  border-top: 1px solid var(--color-credential-item-border);
+}
+
+.credential-item:first-child { padding-top: 0; border-top: 0; }
+.credential-item-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: .35rem .65rem; }
+.credential-item-heading > strong { color: var(--color-credential-note-heading); }
+
+.credential-status {
+  padding: .1rem .35rem;
+  border: 1px solid var(--color-credential-badge-border);
+  border-radius: var(--radius-badge);
+  color: var(--color-credential-badge-text);
+  background: var(--color-credential-badge-background);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+}
+
+.credential-status.required {
+  border-color: var(--color-credential-required-border);
+  color: var(--color-credential-required-text);
+  background: var(--color-credential-required-background);
+}
+
+.credential-identity, .credential-evidence { margin: .3rem 0 0; line-height: var(--line-height-note); }
+.credential-identity { color: var(--color-credential-metadata-text); font-size: var(--font-size-label); }
+.credential-evidence { font-style: italic; }
 
 .description {
   max-width: 80rem;

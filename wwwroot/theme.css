@@ -139,6 +139,12 @@
   --color-clearance-badge-border: #89aec5;
   --color-clearance-badge-text: #234e68;
   --color-clearance-badge-background: #e8f2f7;
+  --color-credential-badge-border: #8da5d6;
+  --color-credential-badge-text: #2f477d;
+  --color-credential-badge-background: #edf1fb;
+  --color-credential-required-border: #bf8a58;
+  --color-credential-required-text: #6e3d17;
+  --color-credential-required-background: #fff0e3;
   --color-location-badge-border: #d5aa59;
   --color-location-badge-text: #744d0d;
   --color-location-badge-background: #fff4d8;
@@ -169,6 +175,12 @@
   --color-clearance-note-border: #9bb8ca;
   --color-clearance-note-text: #294c61;
   --color-clearance-note-background: #edf5f9;
+  --color-credential-note-border: #9cadd3;
+  --color-credential-note-text: #293d69;
+  --color-credential-note-background: #f1f4fb;
+  --color-credential-note-heading: #253b6c;
+  --color-credential-item-border: #ccd5e8;
+  --color-credential-metadata-text: #52617d;
 
   /* Description and highlighting */
   --color-detail-header-background: rgba(255, 255, 255, .97);
@@ -257,6 +269,12 @@
   --color-clearance-badge-border: #56819a;
   --color-clearance-badge-text: #b9ddf2;
   --color-clearance-badge-background: #203846;
+  --color-credential-badge-border: #637cb0;
+  --color-credential-badge-text: #cad8f7;
+  --color-credential-badge-background: #293752;
+  --color-credential-required-border: #a97a4f;
+  --color-credential-required-text: #f2d1b1;
+  --color-credential-required-background: #493322;
   --color-location-badge-border: #94733b;
   --color-location-badge-text: #f0d49c;
   --color-location-badge-background: #3d321e;
@@ -286,6 +304,12 @@
   --color-clearance-note-border: #567b91;
   --color-clearance-note-text: #bedbea;
   --color-clearance-note-background: #213641;
+  --color-credential-note-border: #5e719d;
+  --color-credential-note-text: #d1dcf5;
+  --color-credential-note-background: #252f46;
+  --color-credential-note-heading: #d9e4ff;
+  --color-credential-item-border: #445473;
+  --color-credential-metadata-text: #afbddb;
 
   --color-detail-header-background: rgba(23, 32, 41, .97);
   --color-description-text: #e1e8ed;

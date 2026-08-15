@@ -5,6 +5,7 @@ public sealed class JobCatalog
     private readonly WorkdayClient _workdayClient;
     private readonly AppStateStore _stateStore;
     private readonly ILogger<JobCatalog> _logger;
+    private readonly CredentialDetector _credentialDetector;
     private readonly object _gate = new();
     private readonly SemaphoreSlim _historyGate = new(1, 1);
     private readonly SemaphoreSlim _workdayOperationGate = new(1, 1);
@@ -19,11 +20,13 @@ public sealed class JobCatalog
     public JobCatalog(
         WorkdayClient workdayClient,
         AppStateStore stateStore,
-        ILogger<JobCatalog> logger)
+        ILogger<JobCatalog> logger,
+        CredentialDetector credentialDetector)
     {
         _workdayClient = workdayClient;
         _stateStore = stateStore;
         _logger = logger;
+        _credentialDetector = credentialDetector;
     }
 
     public JobsSnapshot Snapshot
@@ -61,8 +64,28 @@ public sealed class JobCatalog
             return;
         }
 
+        var cacheNeedsCredentialUpgrade = cache.Jobs.Any(job =>
+            job.CredentialCatalogVersion != _credentialDetector.CatalogVersion ||
+            job.Credentials is null ||
+            job.UnrecognizedCredentialMentions is null);
+        var cachedJobs = cacheNeedsCredentialUpgrade
+            ? cache.Jobs.Select(_credentialDetector.AnalyzeJob).ToArray()
+            : cache.Jobs;
+
+        if (cacheNeedsCredentialUpgrade)
+        {
+            await _stateStore.SaveJobsCacheAsync(
+                cachedJobs,
+                cache.LastRefreshedUtc ?? cache.SavedAtUtc,
+                cache.DetailFailureCount,
+                query);
+            _logger.LogInformation(
+                "Updated cached credential analysis to catalog version {CatalogVersion}.",
+                _credentialDetector.CatalogVersion);
+        }
+
         var historyChanged = ReconcileHistory(
-            cache.Jobs,
+            cachedJobs,
             cache.LastRefreshedUtc ?? cache.SavedAtUtc,
             updateKnownLastSeen: false);
         if (historyChanged)
@@ -73,21 +96,21 @@ public sealed class JobCatalog
         lock (_gate)
         {
             _snapshot = new JobsSnapshot(
-                cache.Jobs,
-                cache.Jobs.Count,
+                cachedJobs,
+                cachedJobs.Count,
                 cache.LastRefreshedUtc,
                 false,
                 null,
                 cache.DetailFailureCount,
                 true,
-                GetNewJobIds(cache.Jobs),
+                GetNewJobIds(cachedJobs),
                 query,
-                GetDismissedJobIds(cache.Jobs));
+                GetDismissedJobIds(cachedJobs));
         }
 
         _logger.LogInformation(
             "Loaded {JobCount} jobs from {CachePath}.",
-            cache.Jobs.Count,
+            cachedJobs.Count,
             _stateStore.JobsCachePath);
     }
 

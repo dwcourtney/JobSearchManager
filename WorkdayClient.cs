@@ -12,6 +12,7 @@ public sealed class WorkdayClient
     private readonly HttpClient _httpClient;
     private readonly WorkdayOptions _options;
     private readonly ILogger<WorkdayClient> _logger;
+    private readonly CredentialDetector _credentialDetector;
     private readonly Uri _baseUri;
     private readonly Uri _cxsBaseUri;
     private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
@@ -19,11 +20,13 @@ public sealed class WorkdayClient
     public WorkdayClient(
         HttpClient httpClient,
         IOptions<WorkdayOptions> options,
-        ILogger<WorkdayClient> logger)
+        ILogger<WorkdayClient> logger,
+        CredentialDetector credentialDetector)
     {
         _httpClient = httpClient;
         _options = options.Value;
         _logger = logger;
+        _credentialDetector = credentialDetector;
 
         if (!Uri.TryCreate(_options.BaseUrl, UriKind.Absolute, out var baseUri) ||
             baseUri.Scheme != Uri.UriSchemeHttps)
@@ -320,6 +323,7 @@ public sealed class WorkdayClient
             primaryLocation,
             additionalLocations);
         var clearance = JobAnalysis.AnalyzeClearance(descriptionHtml);
+        var credentials = _credentialDetector.Analyze(descriptionHtml);
 
         return new JobRecord(
             title,
@@ -344,7 +348,10 @@ public sealed class WorkdayClient
             clearance.Requirement,
             clearance.PolygraphRequired,
             clearance.Evidence,
-            clearance.ParseStatus);
+            clearance.ParseStatus,
+            credentials.Credentials,
+            credentials.UnrecognizedMentions,
+            credentials.CatalogVersion);
     }
 
     private static string FirstNonEmpty(params string?[] values) =>

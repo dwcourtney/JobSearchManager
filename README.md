@@ -249,6 +249,25 @@ as **Other / unclear level** rather than guessing. Derived clearance fields live
 in `jobs-cache.json`; they are deliberately not written to job history and are
 regenerated from each fresh Workday description.
 
+Credential analysis is similarly deterministic and informational. The
+source-controlled `CredentialCatalog.json` defines each recognized credential's
+canonical name, issuer, type, category, aliases, and any context-sensitive
+matching patterns. The detector uses token-aware matching, recognizes surrounding
+required/preferred/desired language, and records alternatives, equivalent
+credentials, in-progress acceptance, post-hire acquisition, and a short evidence
+excerpt. Short or overloaded acronyms use stricter catalog patterns rather than
+plain substring matching.
+
+Result rows show at most two credential badges followed by a compact count; the
+selected-job pane shows every recognized credential and its evidence. Credentials
+are not warnings and do not affect filtering. Derived matches and conservative
+unrecognized-credential diagnostics are stored in `jobs-cache.json`, while the
+catalog itself remains application configuration beside the executable. When the
+catalog schema version changes, compatible cached descriptions are reanalyzed at
+startup without contacting Workday. To recognize a future established credential,
+verify it with its issuer, add one catalog entry and aliases, then increment the
+catalog schema version.
+
 The browser cannot call Workday directly: the CXS responses do not grant a local
 origin access through CORS, and the JSON POST preflight is not supported. The
 loopback ASP.NET Core backend is therefore the same-origin proxy and data

@@ -13,4 +13,8 @@
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Content Update="CredentialCatalog.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
