@@ -118,6 +118,9 @@ const elements = {
   detailTimeType: document.querySelector("#detail-time-type"),
   detailLocation: document.querySelector("#detail-location"),
   detailAdditional: document.querySelector("#detail-additional"),
+  detailFitSummary: document.querySelector("#detail-fit-summary"),
+  detailFitTitle: document.querySelector("#detail-fit-title"),
+  detailFitText: document.querySelector("#detail-fit-text"),
   atAGlanceTab: document.querySelector("#at-a-glance-tab"),
   fullPostingTab: document.querySelector("#full-posting-tab"),
   atAGlancePanel: document.querySelector("#at-a-glance-panel"),
@@ -140,6 +143,7 @@ const elements = {
   detailHeadroomNote: document.querySelector("#detail-headroom-note"),
   detailHeadroomNoteText: document.querySelector("#detail-headroom-note-text"),
   detailClearanceNote: document.querySelector("#detail-clearance-note"),
+  detailClearanceEvidence: document.querySelector("#detail-clearance-evidence"),
   detailClearanceNoteText: document.querySelector("#detail-clearance-note-text"),
   detailAcademic: document.querySelector("#detail-academic"),
   detailAcademicContent: document.querySelector("#detail-academic-content"),
@@ -1551,7 +1555,10 @@ function renderDetail(job) {
   elements.detailPolygraph.textContent = job.polygraphRequired
     ? "Required; verify separately (not inferred from clearance level)"
     : "";
-  elements.detailClearanceNoteText.textContent = hasClearance && job.clearanceEvidence
+  const hasClearanceEvidence = hasClearance && Boolean(job.clearanceEvidence);
+  elements.detailClearanceEvidence.hidden = !hasClearanceEvidence;
+  elements.detailClearanceEvidence.open = false;
+  elements.detailClearanceNoteText.textContent = hasClearanceEvidence
     ? `“${job.clearanceEvidence}”`
     : "";
 
@@ -1582,6 +1589,8 @@ function renderDetail(job) {
       `negotiating room may be limited.`
     : "";
 
+  renderQualificationFit(job, educationStatus, clearanceStatus, headroom);
+
   elements.workdayLink.href = safeHttpUrl(job.workdayUrl) || "#";
   elements.workdayLink.hidden = !safeHttpUrl(job.workdayUrl);
 
@@ -1611,6 +1620,35 @@ function renderDetail(job) {
   elements.detailDescription.innerHTML = cleanHtml;
   secureDescriptionLinks(elements.detailDescription);
   highlightDescriptionText(elements.detailDescription);
+}
+
+function renderQualificationFit(job, educationStatus, clearanceStatus, headroom) {
+  const blockers = [];
+  if (clearanceStatus.kind === "strictMismatch") blockers.push("Clearance mismatch");
+  if (educationStatus.kind === "strictMismatch") blockers.push("Education mismatch");
+
+  const notes = [];
+  if (job.isRemoteLocationRestricted) notes.push("remote-location condition");
+  if (headroom?.isLimited) notes.push("limited salary headroom");
+  if (job.detailError) notes.push("incomplete job details");
+  if (clearanceStatus.kind === "meetsLevelPolygraphReview") notes.push("polygraph review");
+  if (["uncertain", "profileNotConfigured"].includes(clearanceStatus.kind)) {
+    notes.push("clearance review");
+  }
+  if (["uncertain", "specificDegreeUncertain", "profileNotConfigured"].includes(educationStatus.kind)) {
+    notes.push("education review");
+  }
+
+  elements.detailFitSummary.className = `fit-summary ${blockers.length ? "blocker" : notes.length ? "review" : "compatible"}`;
+  elements.detailFitTitle.textContent = blockers.length
+    ? `${blockers.length} potential blocker${blockers.length === 1 ? "" : "s"}`
+    : "No confirmed strict blockers";
+
+  const parts = [];
+  if (blockers.length) parts.push(blockers.join(" · "));
+  if (notes.length) parts.push(`${notes.length} item${notes.length === 1 ? "" : "s"} to review`);
+  if (!parts.length) parts.push("Based on the configured profile and confidently parsed requirements.");
+  elements.detailFitText.textContent = parts.join(" · ");
 }
 
 function secureDescriptionLinks(container) {
@@ -1848,82 +1886,96 @@ function renderAcademicQualification(job, educationStatus) {
   const academic = job.academicQualification;
   const hasAcademic = academic && academic.requirementType !== "noDegreeSpecified";
   elements.detailAcademicContent.replaceChildren();
+  const rows = document.createElement("dl");
+  rows.className = "summary-rows";
 
-  const comparison = document.createElement("div");
-  comparison.className = `academic-profile-status ${educationStatus.kind}`;
-  const summary = document.createElement("strong");
-  summary.textContent = educationStatus.summary;
-  const profile = document.createElement("span");
-  profile.textContent = `Your completed education: ${educationStatus.userLabel}`;
-  const explanation = document.createElement("p");
+  const paths = hasAcademic && Array.isArray(academic.paths) ? academic.paths : [];
+  const showPathFields = new Set(paths.map(path =>
+    Array.isArray(path.fields) ? path.fields.join("\u001f") : "")).size > 1;
+  const acceptedPaths = document.createElement("div");
+  const pathsLabel = document.createElement("dt");
+  pathsLabel.textContent = hasAcademic ? "Accepted paths" : "Requirement";
+  const pathsValue = document.createElement("dd");
+  if (paths.length) {
+    const list = document.createElement("ul");
+    list.className = "qualification-paths";
+    paths.forEach(path => {
+      const item = document.createElement("li");
+      const name = document.createElement("span");
+      name.textContent = `${academicLevelLabel(path.level, path.specificDegree)}${academicExperienceLabel(path)}`;
+      const status = document.createElement("span");
+      status.className = "summary-status requirement";
+      status.textContent = academicRequirementLabel(path.requirement);
+      item.append(name, status);
+      if (showPathFields && Array.isArray(path.fields) && path.fields.length) {
+        const fields = document.createElement("small");
+        fields.textContent = path.fields.join(", ");
+        item.append(fields);
+      }
+      list.append(item);
+    });
+    pathsValue.append(list);
+  } else {
+    pathsValue.textContent = hasAcademic
+      ? academicLevelLabel(academic.minimumLevel, academic.specificDegree)
+      : "No academic requirement specified";
+  }
+  acceptedPaths.append(pathsLabel, pathsValue);
+  rows.append(acceptedPaths);
+
+  if (hasAcademic && Array.isArray(academic.fields) && academic.fields.length) {
+    rows.append(createSummaryRow("Fields", academic.fields.join(", ")));
+  }
+  rows.append(createSummaryRow("Your education", educationStatus.userLabel));
+
+  const assessment = document.createElement("div");
+  const assessmentLabel = document.createElement("dt");
+  assessmentLabel.textContent = "Assessment";
+  const assessmentValue = document.createElement("dd");
+  const assessmentStatus = document.createElement("span");
+  assessmentStatus.className = `summary-status education ${educationStatus.kind}`;
+  assessmentStatus.textContent = educationStatus.summary;
+  const explanation = document.createElement("span");
+  explanation.className = "summary-explanation";
   explanation.textContent = educationStatus.explanation;
-  comparison.append(summary, profile, explanation);
-  elements.detailAcademicContent.append(comparison);
+  assessmentValue.append(assessmentStatus, explanation);
+  assessment.append(assessmentLabel, assessmentValue);
+  rows.append(assessment);
+  elements.detailAcademicContent.append(rows);
 
-  if (!hasAcademic) {
-    return;
-  }
-
-  if (Array.isArray(academic.fields) && academic.fields.length > 0) {
-    const fields = document.createElement("p");
-    fields.className = "academic-fields";
-    const label = document.createElement("strong");
-    label.textContent = "Fields: ";
-    fields.append(label, document.createTextNode(academic.fields.join(", ")));
-    elements.detailAcademicContent.append(fields);
-  }
-
-  const paths = Array.isArray(academic.paths) ? academic.paths : [];
-  const pathFieldSignatures = new Set(paths.map(path =>
-    Array.isArray(path.fields) ? path.fields.join("\u001f") : ""));
-  const showPathFields = pathFieldSignatures.size > 1;
-  const shownEvidence = new Set();
-  paths.forEach((path, index) => {
-    const item = document.createElement("article");
-    item.className = "academic-path";
-
-    const heading = document.createElement("div");
-    heading.className = "academic-path-heading";
-    const name = document.createElement("strong");
-    const prefix = academic.requirementType === "degreeWithExperienceSubstitution"
-      ? `Option ${index + 1}: `
-      : "";
-    name.textContent = `${prefix}${academicLevelLabel(path.level, path.specificDegree)}${academicExperienceLabel(path)}`;
-    const status = document.createElement("span");
-    status.className = "academic-status";
-    status.textContent = academicRequirementLabel(path.requirement);
-    heading.append(name, status);
-    item.append(heading);
-
-    if (showPathFields && Array.isArray(path.fields) && path.fields.length > 0) {
-      const fieldLine = document.createElement("p");
-      fieldLine.className = "academic-path-fields";
-      fieldLine.textContent = path.fields.join(", ");
-      item.append(fieldLine);
+  if (hasAcademic) {
+    const evidence = [...new Set([
+      ...paths.map(path => path.evidence),
+      ...(Array.isArray(academic.evidence) ? academic.evidence : [])
+    ].filter(Boolean))];
+    if (evidence.length) {
+      elements.detailAcademicContent.append(createEvidenceDisclosure(evidence));
     }
-    if (path.evidence && !shownEvidence.has(path.evidence)) {
-      shownEvidence.add(path.evidence);
-      const evidence = document.createElement("p");
-      evidence.className = "academic-evidence";
-      evidence.textContent = `\u201c${path.evidence}\u201d`;
-      item.append(evidence);
-    }
-    elements.detailAcademicContent.append(item);
-  });
+  }
+}
 
-  if (shownEvidence.size === 0 && Array.isArray(academic.evidence) && academic.evidence[0]) {
+function createSummaryRow(labelText, valueText) {
+  const row = document.createElement("div");
+  const label = document.createElement("dt");
+  label.textContent = labelText;
+  const value = document.createElement("dd");
+  value.textContent = valueText;
+  row.append(label, value);
+  return row;
+}
+
+function createEvidenceDisclosure(excerpts) {
+  const disclosure = document.createElement("details");
+  disclosure.className = "evidence-disclosure";
+  const summary = document.createElement("summary");
+  summary.textContent = excerpts.length === 1 ? "Show evidence" : `Show evidence (${excerpts.length})`;
+  disclosure.append(summary);
+  excerpts.forEach(excerpt => {
     const evidence = document.createElement("p");
-    evidence.className = "academic-evidence";
-    evidence.textContent = `\u201c${academic.evidence[0]}\u201d`;
-    elements.detailAcademicContent.append(evidence);
-  }
-
-  if (academic.experienceSubstitutionAccepted) {
-    const alternative = document.createElement("p");
-    alternative.className = "academic-alternative";
-    alternative.textContent = "Equivalent or additional experience may satisfy the advertised education requirement.";
-    elements.detailAcademicContent.append(alternative);
-  }
+    evidence.textContent = `\u201c${excerpt}\u201d`;
+    disclosure.append(evidence);
+  });
+  return disclosure;
 }
 
 function academicExperienceLabel(path) {
@@ -1953,20 +2005,16 @@ function renderCredentials(job) {
   elements.detailCredentialsList.replaceChildren();
 
   credentials.forEach(credential => {
-    const item = document.createElement("article");
-    item.className = "credential-item";
-
-    const heading = document.createElement("div");
-    heading.className = "credential-item-heading";
+    const item = document.createElement("div");
+    item.className = "credential-row";
     const name = document.createElement("strong");
     name.textContent = credential.name;
     const status = document.createElement("span");
-    status.className = `credential-status${credential.requirement === "required" ? " required" : ""}`;
+    status.className = `summary-status credential${credential.requirement === "required" ? " required" : ""}`;
     status.textContent = credentialRequirementLabel(credential);
-    heading.append(name, status);
 
     const identity = document.createElement("p");
-    identity.className = "credential-identity";
+    identity.className = "disclosure-metadata";
     identity.textContent = [
       credential.fullName,
       credential.issuer,
@@ -1974,13 +2022,18 @@ function renderCredentials(job) {
       credential.category
     ].filter(Boolean).join(" · ");
 
-    item.append(heading, identity);
+    const details = document.createElement("details");
+    details.className = "inline-details";
+    const summary = document.createElement("summary");
+    summary.textContent = "Details";
+    details.append(summary, identity);
     if (credential.evidence) {
       const evidence = document.createElement("p");
-      evidence.className = "credential-evidence";
+      evidence.className = "disclosure-evidence";
       evidence.textContent = `“${credential.evidence}”`;
-      item.append(evidence);
+      details.append(evidence);
     }
+    item.append(name, status, details);
     elements.detailCredentialsList.append(item);
   });
 }

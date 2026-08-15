@@ -156,12 +156,15 @@ cached data, or settings. The navigation itself is presentation-only and the
 application always opens on Jobs.
 
 The selected-job pane has two local tabs. **At a Glance** is the default whenever
-a different job is selected and contains only normalized screening information:
-overview metadata, location and salary flags, clearance interpretation, academic
-qualification comparison, and professional credentials. **Full Posting** is the
-clean reading view: a small source strip and the sanitized Workday description,
-without duplicated analysis blocks above it. The shared title and authoritative
-**Open in Workday** link remain available in both views.
+a different job is selected and presents one unified qualification dossier rather
+than independent parser cards. Compact aligned sections move from job facts and a
+deterministic blocker summary through clearance, academic paths, credentials, and
+notes/warnings. Academic alternatives remain visible as concise accepted paths;
+clearance and credential evidence remains available through native disclosure
+controls without dominating the default scan view. **Full Posting** is the clean
+reading view: a small source strip and the sanitized Workday description, without
+duplicated analysis blocks above it. The shared title and authoritative **Open in
+Workday** link remain available in both views.
 
 ## Workday country and location scope
 

@@ -131,60 +131,78 @@
             </header>
             <section id="at-a-glance-panel" class="detail-tab-panel at-a-glance-panel"
                      role="tabpanel" aria-labelledby="at-a-glance-tab">
-              <div class="at-a-glance-grid">
-                <section class="glance-card overview-card" aria-labelledby="overview-heading">
-                  <h3 id="overview-heading">Overview</h3>
-                  <dl class="metadata-grid">
+              <article class="summary-dossier" aria-label="Job qualification summary">
+                <section class="summary-section" aria-labelledby="job-details-heading">
+                  <h3 id="job-details-heading">Job Details</h3>
+                  <dl class="summary-rows">
                     <div><dt>Posted</dt><dd id="detail-date"></dd></div>
-                    <div><dt>Pay range</dt><dd id="detail-pay"></dd></div>
-                    <div><dt>Time type</dt><dd id="detail-time-type"></dd></div>
+                    <div><dt>Pay</dt><dd id="detail-pay"></dd></div>
                     <div><dt>Location</dt><dd id="detail-location"></dd></div>
-                    <div class="metadata-wide"><dt>Additional locations</dt><dd id="detail-additional"></dd></div>
+                    <div><dt>Additional</dt><dd id="detail-additional"></dd></div>
+                    <div><dt>Time type</dt><dd id="detail-time-type"></dd></div>
                   </dl>
                 </section>
-                <section id="detail-flags" class="glance-card flags-card" aria-labelledby="flags-heading" hidden>
-                  <h3 id="flags-heading">Flags</h3>
-                  <div id="detail-education-mismatch" class="education-mismatch-note" hidden>
-                    <strong>Education mismatch</strong>
-                    <p id="detail-education-mismatch-text"></p>
+
+                <section class="summary-section fit-section" aria-labelledby="fit-heading">
+                  <h3 id="fit-heading">Qualification Fit</h3>
+                  <div id="detail-fit-summary" class="fit-summary">
+                    <strong id="detail-fit-title"></strong>
+                    <span id="detail-fit-text"></span>
                   </div>
-                  <div id="detail-clearance-mismatch" class="clearance-mismatch-note" hidden>
-                    <strong>Clearance mismatch</strong>
-                    <p id="detail-clearance-mismatch-text"></p>
-                  </div>
-                  <div id="detail-location-note" class="location-note" hidden>
-                    <strong>Remote location restriction</strong>
-                    <p id="detail-location-note-text"></p>
-                  </div>
-                  <div id="detail-headroom-note" class="headroom-note" hidden>
-                    <strong>Limited salary headroom</strong>
-                    <p id="detail-headroom-note-text"></p>
-                  </div>
-                  <p id="detail-warning" class="detail-warning" hidden></p>
                 </section>
-                <section id="detail-clearance-note" class="glance-card clearance-note"
+
+                <section id="detail-clearance-note" class="summary-section"
                          aria-labelledby="clearance-heading" hidden>
                   <h3 id="clearance-heading">Clearance</h3>
-                  <dl class="compact-facts">
-                    <div id="detail-clearance-row"><dt>Required</dt><dd id="detail-clearance"></dd></div>
+                  <dl class="summary-rows">
+                    <div id="detail-clearance-row"><dt>Level</dt><dd id="detail-clearance"></dd></div>
                     <div id="detail-clearance-status-row"><dt>Requirement</dt><dd id="detail-clearance-status"></dd></div>
-                    <div><dt>User</dt><dd id="detail-user-clearance"></dd></div>
-                    <div><dt>Status</dt><dd id="detail-clearance-comparison"></dd></div>
+                    <div><dt>Your status</dt><dd id="detail-user-clearance"></dd></div>
+                    <div><dt>Assessment</dt><dd id="detail-clearance-comparison"></dd></div>
                     <div id="detail-polygraph-row" hidden><dt>Polygraph</dt><dd id="detail-polygraph"></dd></div>
                   </dl>
-                  <p id="detail-clearance-note-text" class="evidence-text"></p>
+                  <details id="detail-clearance-evidence" class="evidence-disclosure">
+                    <summary>Show evidence</summary>
+                    <p id="detail-clearance-note-text"></p>
+                  </details>
                 </section>
-                <section id="detail-academic" class="glance-card academic-note"
+
+                <section id="detail-academic" class="summary-section"
                          aria-labelledby="academic-heading">
                   <h3 id="academic-heading">Academic Qualifications</h3>
-                  <div id="detail-academic-content" class="academic-list"></div>
+                  <div id="detail-academic-content" class="academic-summary"></div>
                 </section>
-                <section id="detail-credentials" class="glance-card credentials-note"
+
+                <section id="detail-credentials" class="summary-section"
                          aria-labelledby="credentials-heading" hidden>
-                  <h3 id="credentials-heading">Credentials</h3>
-                  <div id="detail-credentials-list" class="credential-list"></div>
+                  <h3 id="credentials-heading">Credentials / Licenses</h3>
+                  <div id="detail-credentials-list" class="credential-summary"></div>
                 </section>
-              </div>
+
+                <section id="detail-flags" class="summary-section notes-section"
+                         aria-labelledby="flags-heading" hidden>
+                  <h3 id="flags-heading">Notes / Warnings</h3>
+                  <div class="summary-notes">
+                    <div id="detail-education-mismatch" class="summary-note mismatch" hidden>
+                      <strong>Education mismatch</strong>
+                      <p id="detail-education-mismatch-text"></p>
+                    </div>
+                    <div id="detail-clearance-mismatch" class="summary-note mismatch" hidden>
+                      <strong>Clearance mismatch</strong>
+                      <p id="detail-clearance-mismatch-text"></p>
+                    </div>
+                    <div id="detail-location-note" class="summary-note warning" hidden>
+                      <strong>Remote location restriction</strong>
+                      <p id="detail-location-note-text"></p>
+                    </div>
+                    <div id="detail-headroom-note" class="summary-note caution" hidden>
+                      <strong>Limited salary headroom</strong>
+                      <p id="detail-headroom-note-text"></p>
+                    </div>
+                    <p id="detail-warning" class="summary-note error" hidden></p>
+                  </div>
+                </section>
+              </article>
             </section>
             <section id="full-posting-panel" class="detail-tab-panel full-posting-panel"
                      role="tabpanel" aria-labelledby="full-posting-tab" hidden>
