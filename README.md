@@ -113,6 +113,12 @@ Azure mode uses App Service's listener configuration instead of forcing the loca
 loopback port and never attempts to launch a browser on the server. Select it only
 through explicit App Service application settings:
 
+The current Azure deployment uses these existing resources:
+
+- App Service: `workday-job-manager`
+- Storage account: `workdayjobmanagerstore`
+- Private Blob container: `userdata`
+
 | Name | Value | Purpose |
 | --- | --- | --- |
 | `WORKDAYJOBMANAGER_HOSTING_MODE` | `Azure` | Selects Azure hosting, HTTPS behavior, anonymous workspaces, and Blob persistence. |
