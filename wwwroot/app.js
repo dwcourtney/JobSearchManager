@@ -770,7 +770,8 @@ function populateCountrySelect(select, options, allLabel, selectedId) {
   all.textContent = allLabel;
   select.append(all);
 
-  for (const item of options) {
+  const orderedOptions = WorkdayCountryOrdering.orderCountryFacets(options);
+  for (const item of orderedOptions) {
     const option = document.createElement("option");
     option.value = item.id;
     option.dataset.label = item.label;
@@ -778,7 +779,7 @@ function populateCountrySelect(select, options, allLabel, selectedId) {
     select.append(option);
   }
 
-  const exists = Boolean(selectedId) && options.some(option => option.id === selectedId);
+  const exists = Boolean(selectedId) && orderedOptions.some(option => option.id === selectedId);
   select.value = exists ? selectedId : "";
   return exists;
 }
