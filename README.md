@@ -7,8 +7,22 @@ presents the results in a browser-based master/detail interface. It also
 extracts the stated annual pay range and flags remote listings whose
 descriptions contain geographic or proximity conditions.
 
-The original Workday listing remains the authoritative source. Every result has
-an **Open in Workday** link.
+## Why this exists
+
+The default Workday interface did not provide the reliable filtering, sorting,
+and review workflow needed here. In particular, it did not offer a useful way
+to consume results in exact posting-date order, and its exclusion behavior was
+not dependable for practical title filtering. During development, using
+`-Substation` to exclude titles such as “Substation Engineer” did not work as
+expected; the observed results instead favored postings containing that term.
+
+This viewer adds a small, predictable local layer for include/exclude keywords,
+exact-date sorting, salary analysis, NEW tracking, dismissal, clearance and
+remote-location indicators, persistent history, automatic checks, and more
+usable grouping. It does not scrape rendered pages: it consumes Workday's public
+CXS JSON endpoints, and the original Workday posting remains authoritative.
+
+Every result has an **Open in Workday** link back to that authoritative source.
 
 ## Architecture
 
