@@ -2003,7 +2003,7 @@ function renderCredentials(job) {
   elements.detailCredentials.hidden = credentials.length === 0;
   elements.detailCredentialsList.replaceChildren();
 
-  credentials.forEach(credential => {
+  credentials.forEach((credential, index) => {
     const item = document.createElement("div");
     item.className = "credential-row";
     const name = document.createElement("strong");
@@ -2023,8 +2023,14 @@ function renderCredentials(job) {
 
     const details = document.createElement("details");
     details.className = "inline-details";
+    details.id = `credential-details-${index}`;
     const summary = document.createElement("summary");
     summary.textContent = "Details";
+    summary.setAttribute("aria-controls", details.id);
+    summary.setAttribute("aria-expanded", "false");
+    details.addEventListener("toggle", () => {
+      summary.setAttribute("aria-expanded", String(details.open));
+    });
     details.append(summary, identity);
     if (credential.evidence) {
       const evidence = document.createElement("p");

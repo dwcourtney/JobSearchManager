@@ -1076,7 +1076,7 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 .credential-summary { display: grid; gap: .32rem; }
 .credential-row {
   display: grid;
-  grid-template-columns: minmax(5.5rem, 20%) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(5.5rem, 20%) minmax(0, 1fr);
   align-items: baseline;
   gap: .3rem .7rem;
   padding: .28rem 0;
@@ -1089,14 +1089,18 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   color: var(--color-credential-required-text);
   background: var(--color-credential-required-background);
 }
+.inline-details {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
 .inline-details, .evidence-disclosure { color: var(--color-disclosure-text); font-size: var(--font-size-label); }
 .inline-details summary, .evidence-disclosure summary {
   color: var(--color-disclosure-action);
   cursor: pointer;
   font-weight: var(--font-weight-semibold);
 }
+.inline-details > summary { width: fit-content; }
 .inline-details summary:hover, .evidence-disclosure summary:hover { color: var(--color-disclosure-action-hover); }
-.inline-details[open] { grid-column: 1 / -1; }
 .evidence-disclosure { margin-top: .4rem; }
 .evidence-disclosure p, .disclosure-metadata, .disclosure-evidence {
   margin: .28rem 0 0;
@@ -1180,7 +1184,6 @@ mark {
   .summary-section { padding: .62rem .7rem; }
   .summary-rows > div { grid-template-columns: minmax(6.25rem, 32%) minmax(0, 1fr); gap: .4rem .65rem; }
   .credential-row { grid-template-columns: minmax(5rem, 1fr) auto; }
-  .credential-row .inline-details { grid-column: 1 / -1; justify-self: start; }
   .summary-note p { display: block; margin: .18rem 0 0; }
   .description, .detail-header { padding-left: 1rem; padding-right: 1rem; }
   .posting-source-strip { padding-left: 1rem; padding-right: 1rem; }
