@@ -38,22 +38,60 @@
   --line-height-description: 1.55;
   --letter-spacing-section: .06em;
   --letter-spacing-badge: .04em;
+  --letter-spacing-normal: 0;
+  --text-transform-section: uppercase;
+  --text-transform-normal: none;
+  --text-decoration-action-link: none;
+  --font-style-evidence: italic;
 
-  /* Shape and effects */
+  /* Borders, focus, shape, and effects */
+  --border-width-default: 1px;
+  --border-width-loading-spinner: 3px;
   --radius-highlight: 2px;
   --radius-badge: 3px;
   --radius-control: 4px;
+  --radius-loading-panel: calc(var(--radius-control) * 2);
   --radius-pill: 999px;
   --radius-round: 50%;
   --focus-ring-width: 3px;
+  --focus-ring-offset-default: 2px;
+  --focus-ring-offset-compact: 1px;
   --selected-job-indicator-width: 4px;
   --tab-indicator-width: 2px;
   --opacity-disabled: .7;
   --opacity-dismissed-job: .68;
+  --opacity-loading-hidden: 0;
+  --opacity-loading-visible: 1;
+
+  /* Motion and loading presentation */
   --duration-spinner: .8s;
   --duration-loading-overlay: .18s;
   --duration-loading-progress: 1.35s;
+  --easing-standard: ease;
+  --easing-linear: linear;
+  --easing-loading-progress: ease-in-out;
   --loading-backdrop-blur: 4px;
+  --loading-spinner-size: 2.15rem;
+  --loading-progress-height: .42rem;
+  --loading-progress-fill-width: 42%;
+  --transform-loading-panel-hidden: scale(.98) translateY(.35rem);
+  --transform-loading-panel-visible: scale(1) translateY(0);
+  --transform-spinner-complete: rotate(360deg);
+  --transform-loading-progress-start: translateX(-120%);
+  --transform-loading-progress-end: translateX(260%);
+  --transition-loading-overlay:
+    opacity var(--duration-loading-overlay) var(--easing-standard),
+    visibility var(--duration-loading-overlay) var(--easing-standard);
+  --transition-loading-panel:
+    transform var(--duration-loading-overlay) var(--easing-standard);
+  --animation-loading-spinner:
+    spin var(--duration-spinner) var(--easing-linear) infinite;
+  --animation-loading-progress:
+    loading-progress var(--duration-loading-progress) var(--easing-loading-progress) infinite;
+  --shadow-job-selected:
+    inset var(--selected-job-indicator-width) 0 0 var(--color-job-selected-indicator);
+  --shadow-keyword-highlight:
+    inset 0 calc(-1 * var(--border-width-default)) 0 var(--color-keyword-highlight-underline);
 }
 
 /* Light theme: preserves the established application appearance. */
@@ -71,6 +109,7 @@
   --color-text-secondary: #617181;
   --color-text-heading: #173b55;
   --color-label: #34495b;
+  --color-tap-highlight: transparent;
 
   /* Header and accent */
   --color-header-background: #123b5d;
@@ -89,6 +128,7 @@
   --color-tab-active-background: #0d527f;
   --color-tab-active-border: #efb526;
   --color-tab-inactive-border: transparent;
+  --color-tab-background: transparent;
 
   /* Navigation context and settings */
   --color-source-background: #f7f9fb;
@@ -96,6 +136,7 @@
   --color-source-action: #075c99;
   --color-source-action-hover: #064a7a;
   --color-source-hover-background: #e8f3fb;
+  --color-source-button-background: transparent;
   --color-settings-background: #e9edf1;
   --color-settings-group-background: #ffffff;
   --color-settings-group-border: #cbd4dc;
@@ -109,6 +150,8 @@
   --color-secondary-button-text: #21465e;
   --color-secondary-button-background: #e7f0f5;
   --color-secondary-button-hover: #d8e7ef;
+  --color-primary-action-border: transparent;
+  --color-currency-field-background: transparent;
   --color-destructive-button: #8a3b3b;
   --color-destructive-button-hover: #702f2f;
 
@@ -130,7 +173,10 @@
   --color-job-selected-indicator: #075c99;
   --color-job-pay: #31566f;
   --color-hidden-job-background: #f3f5f6;
+  --color-job-action-background: transparent;
   --color-dismiss-action: #6a7781;
+  --color-dismiss-action-border: transparent;
+  --color-dismiss-action-background: transparent;
   --color-dismiss-action-hover-border: #c5a5a5;
   --color-dismiss-action-hover-text: #7b3030;
   --color-dismiss-action-hover-background: #fff0f0;
@@ -143,6 +189,7 @@
   --color-chip-text: #173e59;
   --color-chip-action: #315d79;
   --color-chip-action-hover: #cbdfea;
+  --color-chip-action-background: transparent;
   --color-include-chip-border: #9bc8aa;
   --color-include-chip-text: #194f30;
   --color-include-chip-background: #eaf6ef;
@@ -177,10 +224,12 @@
   --color-hidden-badge-text: #4e5961;
   --color-hidden-badge-background: #edf0f2;
 
-  /* Messages and notes */
+  /* Error state */
   --color-error-border: #e1abab;
   --color-error-text: #9b2c2c;
   --color-error-background: #fff0f0;
+
+  /* Loading overlay and progress */
   --color-loading-backdrop: rgba(18, 34, 47, .54);
   --color-loading-surface: #ffffff;
   --color-loading-panel-border: #b8cbd8;
@@ -188,7 +237,9 @@
   --color-loading-text-secondary: #526575;
   --color-loading-progress-track: #dce8ef;
   --color-loading-progress-fill: #075c99;
-  --color-loading-panel-shadow: rgba(8, 29, 44, .3);
+  --shadow-loading-panel: 0 .8rem 2.4rem rgba(8, 29, 44, .3);
+
+  /* Cache status and analysis notes */
   --color-cache-border: #d5bf7c;
   --color-cache-text: #624b0d;
   --color-cache-background: #fff8df;
@@ -220,6 +271,7 @@
 [data-theme="dark"] {
   color-scheme: dark;
 
+  /* Core surfaces and text */
   --color-background: #0f151b;
   --color-surface: #172029;
   --color-surface-secondary: #1b2630;
@@ -229,7 +281,9 @@
   --color-text-secondary: #a9bac7;
   --color-text-heading: #d9ecf8;
   --color-label: #c3d2dc;
+  --color-tap-highlight: transparent;
 
+  /* Header and accent */
   --color-header-background: #0b2b42;
   --color-header-text: #f5f9fc;
   --color-header-secondary: #b8cedd;
@@ -246,17 +300,21 @@
   --color-tab-active-background: #214f6c;
   --color-tab-active-border: #ffd166;
   --color-tab-inactive-border: transparent;
+  --color-tab-background: transparent;
 
+  /* Navigation context and settings */
   --color-source-background: #1b2630;
   --color-source-text: #c0d0da;
   --color-source-action: #71bceb;
   --color-source-action-hover: #9bd3f4;
   --color-source-hover-background: #203a4c;
+  --color-source-button-background: transparent;
   --color-settings-background: #0f151b;
   --color-settings-group-background: #172029;
   --color-settings-group-border: #344451;
   --color-settings-heading-border: #3a4c59;
 
+  /* Forms and secondary actions */
   --color-input-background: #111a22;
   --color-input-text: #e5edf3;
   --color-input-prefix: #b4c2cc;
@@ -264,9 +322,12 @@
   --color-secondary-button-text: #d5ebf8;
   --color-secondary-button-background: #203746;
   --color-secondary-button-hover: #29495d;
+  --color-primary-action-border: transparent;
+  --color-currency-field-background: transparent;
   --color-destructive-button: #a34f55;
   --color-destructive-button-hover: #bd6268;
 
+  /* Filter and section headers */
   --color-filter-toggle-text: #d2e3ee;
   --color-filter-toggle-background: #1d2c37;
   --color-filter-toggle-hover: #263845;
@@ -277,13 +338,17 @@
   --color-age-heading-hover: #2a3e4c;
   --color-age-heading-border: #3a4c59;
 
+  /* Job results */
   --color-job-border: #2f3e49;
   --color-job-hover: #1d2c37;
   --color-job-selected: #203b4e;
   --color-job-selected-indicator: #55afe8;
   --color-job-pay: #a9cce2;
   --color-hidden-job-background: #20272d;
+  --color-job-action-background: transparent;
   --color-dismiss-action: #9eabb4;
+  --color-dismiss-action-border: transparent;
+  --color-dismiss-action-background: transparent;
   --color-dismiss-action-hover-border: #865b60;
   --color-dismiss-action-hover-text: #f0b7bc;
   --color-dismiss-action-hover-background: #3b2528;
@@ -291,10 +356,12 @@
   --color-restore-action-text: #b8def4;
   --color-restore-action-background: #203846;
 
+  /* Keyword chips */
   --color-chip-border: #467693;
   --color-chip-text: #c8e6f7;
   --color-chip-action: #afd8ee;
   --color-chip-action-hover: #2d5369;
+  --color-chip-action-background: transparent;
   --color-include-chip-border: #477b5a;
   --color-include-chip-text: #bce7ca;
   --color-include-chip-background: #203b2b;
@@ -306,6 +373,7 @@
   --color-exclude-chip-action: #e3a7ac;
   --color-exclude-chip-action-hover: #56363a;
 
+  /* Badges */
   --color-new-badge-border: #57966d;
   --color-new-badge-text: #bceaca;
   --color-new-badge-background: #21402c;
@@ -328,9 +396,12 @@
   --color-hidden-badge-text: #c8d0d5;
   --color-hidden-badge-background: #30383e;
 
+  /* Error state */
   --color-error-border: #8c5559;
   --color-error-text: #f0b6ba;
   --color-error-background: #3a2427;
+
+  /* Loading overlay and progress */
   --color-loading-backdrop: rgba(3, 9, 14, .7);
   --color-loading-surface: #17242e;
   --color-loading-panel-border: #496171;
@@ -338,7 +409,9 @@
   --color-loading-text-secondary: #b3c5d1;
   --color-loading-progress-track: #2b3e4b;
   --color-loading-progress-fill: #55afe8;
-  --color-loading-panel-shadow: rgba(0, 0, 0, .55);
+  --shadow-loading-panel: 0 .8rem 2.4rem rgba(0, 0, 0, .55);
+
+  /* Cache status and analysis notes */
   --color-cache-border: #82713f;
   --color-cache-text: #e5d59f;
   --color-cache-background: #37311f;
@@ -358,6 +431,7 @@
   --color-credential-item-border: #445473;
   --color-credential-metadata-text: #afbddb;
 
+  /* Description and highlighting */
   --color-detail-header-background: rgba(23, 32, 41, .97);
   --color-description-text: #e1e8ed;
   --color-description-heading: #d9ecf8;
