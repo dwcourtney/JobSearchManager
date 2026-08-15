@@ -71,17 +71,29 @@ app.MapGet("/api/location-facets", async (
     string? countryId,
     WorkdayClient workdayClient) =>
     Results.Ok(await workdayClient.FetchLocationFacetsAsync(countryId)));
-app.MapPost("/api/query", async (
+app.MapPost("/api/query", async Task<IResult> (
     WorkdayQuery requestedQuery,
     AppStateStore stateStore,
     JobCatalog catalog,
     AutomaticJobCheckService automaticChecks) =>
 {
+    var query = requestedQuery.Normalize();
+    if (!query.IncludeAllLocations && query.EffectiveLocationIds.Count == 0)
+    {
+        return Results.BadRequest(new
+        {
+            error = "Choose at least one physical location, include Remote/Teleworker jobs, or include all locations."
+        });
+    }
+
     var current = await stateStore.LoadSettingsAsync();
     var updated = AppStateStore.NormalizeSettings(current with
     {
-        Country = new FacetSelection(requestedQuery.CountryId, requestedQuery.CountryLabel),
-        Location = new FacetSelection(requestedQuery.LocationId, requestedQuery.LocationLabel)
+        Country = new FacetSelection(query.CountryId, query.CountryLabel),
+        Location = null,
+        IncludeAllLocations = query.IncludeAllLocations,
+        IncludeRemote = query.IncludeRemote,
+        SelectedPhysicalLocations = query.PhysicalLocations
     });
     await stateStore.SaveSettingsAsync(updated);
     var snapshot = await catalog.RefreshAsync(WorkdayQuery.FromSettings(updated));

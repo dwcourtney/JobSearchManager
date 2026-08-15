@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace LeidosJobsViewer;
 
 public sealed class WorkdayOptions
@@ -14,10 +16,21 @@ public static class FacetDefaults
 {
     public const string CountryId = "bc33aa3152ec42d4995f4791a106ed09";
     public const string CountryLabel = "United States of America";
-    public const string LocationId = "da70a15d3ef40104ea4e240d39cef6a2";
-    public const string LocationLabel = "6314 Remote/Teleworker US";
+    public const string RemoteLocationId = "da70a15d3ef40104ea4e240d39cef6a2";
+    public const string RemoteLocationLabel = "6314 Remote/Teleworker US";
+    public const string AdditionalRemoteLocationId = "4d3806f19fb4100117214c80588f0000";
+    public const string AdditionalRemoteLocationLabel = "Remote, US";
     public const string AllCountriesLabel = "All countries";
     public const string AllLocationsLabel = "All locations";
+
+    public static IReadOnlyList<string> RemoteLocationIds { get; } =
+        [RemoteLocationId, AdditionalRemoteLocationId];
+
+    public static bool IsUnitedStates(string? countryId) =>
+        string.Equals(countryId, CountryId, StringComparison.Ordinal);
+
+    public static bool IsRemoteLocation(string? locationId) =>
+        RemoteLocationIds.Contains(locationId, StringComparer.Ordinal);
 }
 
 public sealed record FacetSelection(string? Id, string Label);
@@ -25,22 +38,132 @@ public sealed record FacetSelection(string? Id, string Label);
 public sealed record WorkdayQuery(
     string? CountryId,
     string CountryLabel,
-    string? LocationId,
-    string LocationLabel)
+    bool IncludeAllLocations = false,
+    bool IncludeRemote = true,
+    IReadOnlyList<FacetSelection>? PhysicalLocations = null,
+    int SourceModelVersion = 1,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? LocationId = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? LocationLabel = null)
 {
-    public static WorkdayQuery FromSettings(ViewerSettings settings) => new(
+    public static WorkdayQuery FromSettings(ViewerSettings settings) => new WorkdayQuery(
         settings.Country.Id,
         settings.Country.Label,
-        settings.Location.Id,
-        settings.Location.Label);
+        settings.IncludeAllLocations,
+        settings.IncludeRemote,
+        settings.SelectedPhysicalLocations,
+        1).Normalize();
+
+    public WorkdayQuery Normalize()
+    {
+        var countryId = string.IsNullOrWhiteSpace(CountryId) ? null : CountryId.Trim();
+        var countryLabel = string.IsNullOrWhiteSpace(CountryLabel)
+            ? countryId ?? FacetDefaults.AllCountriesLabel
+            : CountryLabel.Trim();
+
+        var includeAll = IncludeAllLocations;
+        var includeRemote = IncludeRemote;
+        IEnumerable<FacetSelection> physical = PhysicalLocations ?? [];
+
+        // Jobs-cache documents written by the single-location model contain
+        // locationId/locationLabel. Canonicalize them through the same migration
+        // rules as settings before comparing cache identity.
+        if (!string.IsNullOrWhiteSpace(LocationLabel) || !string.IsNullOrWhiteSpace(LocationId))
+        {
+            if (string.IsNullOrWhiteSpace(LocationId))
+            {
+                includeAll = true;
+                includeRemote = true;
+                physical = [];
+            }
+            else if (FacetDefaults.IsRemoteLocation(LocationId))
+            {
+                includeAll = false;
+                includeRemote = true;
+                physical = [];
+            }
+            else
+            {
+                includeAll = false;
+                includeRemote = false;
+                physical = [new FacetSelection(LocationId.Trim(), LocationLabel?.Trim() ?? LocationId.Trim())];
+            }
+        }
+
+        includeRemote = FacetDefaults.IsUnitedStates(countryId) && (includeAll || includeRemote);
+        var normalizedPhysical = includeAll
+            ? []
+            : physical
+                .Where(location => !string.IsNullOrWhiteSpace(location?.Id) &&
+                    !FacetDefaults.IsRemoteLocation(location.Id))
+                .Select(location => new FacetSelection(
+                    location.Id!.Trim(),
+                    string.IsNullOrWhiteSpace(location.Label) ? location.Id.Trim() : location.Label.Trim()))
+                .GroupBy(location => location.Id, StringComparer.Ordinal)
+                .Select(group => group.First())
+                .OrderBy(location => location.Id, StringComparer.Ordinal)
+                .ToArray();
+
+        return new WorkdayQuery(
+            countryId,
+            countryLabel,
+            includeAll,
+            includeRemote,
+            normalizedPhysical,
+            1);
+    }
+
+    [JsonIgnore]
+    public IReadOnlyList<string> EffectiveLocationIds
+    {
+        get
+        {
+            var query = Normalize();
+            if (query.IncludeAllLocations)
+            {
+                return [];
+            }
+
+            return (query.PhysicalLocations ?? [])
+                .Select(location => location.Id!)
+                .Concat(query.IncludeRemote ? FacetDefaults.RemoteLocationIds : [])
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(id => id, StringComparer.Ordinal)
+                .ToArray();
+        }
+    }
+
+    public bool IsEquivalentTo(WorkdayQuery? other)
+    {
+        if (other is null)
+        {
+            return false;
+        }
+
+        var left = Normalize();
+        var right = other.Normalize();
+        return string.Equals(left.CountryId, right.CountryId, StringComparison.Ordinal) &&
+            left.IncludeAllLocations == right.IncludeAllLocations &&
+            left.IncludeRemote == right.IncludeRemote &&
+            left.EffectiveLocationIds.SequenceEqual(right.EffectiveLocationIds, StringComparer.Ordinal);
+    }
 }
 
-public sealed record FacetOption(string Id, string Label, int Count);
+public sealed record FacetOption(string Id, string Label, int Count, string? DisplayLabel = null);
+
+public sealed record LocationFacetGroup(
+    string Id,
+    string Label,
+    IReadOnlyList<FacetOption> Locations);
 
 public sealed record LocationFacetOptions(
     int MatchingJobs,
     IReadOnlyList<FacetOption> Countries,
-    IReadOnlyList<FacetOption> Locations);
+    IReadOnlyList<FacetOption> Locations,
+    IReadOnlyList<FacetOption> RemoteLocations,
+    IReadOnlyList<LocationFacetGroup> Groups,
+    int PhysicalLocationCount,
+    int StateMappedLocationCount,
+    IReadOnlyList<string> UnmappedLocationLabels);
 
 public sealed record JobRecord(
     string Title,
@@ -181,8 +304,9 @@ public sealed record JobsSnapshot(
         new([], 0, null, false, null, 0, false, [], new WorkdayQuery(
             FacetDefaults.CountryId,
             FacetDefaults.CountryLabel,
-            FacetDefaults.LocationId,
-            FacetDefaults.LocationLabel), [], null);
+            false,
+            true,
+            []), [], null);
 }
 
 public sealed record ViewerSettings(
@@ -194,27 +318,33 @@ public sealed record ViewerSettings(
     bool HighlightIncludeKeywords,
     IReadOnlyDictionary<string, bool> CollapsedAgeGroups,
     FacetSelection Country,
-    FacetSelection Location,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] FacetSelection? Location,
     bool SearchFiltersCollapsed,
     bool? AutomaticCheckEnabled,
     int AutomaticCheckIntervalMinutes,
     string ThemeMode,
     UserProfile? UserProfile = null,
     bool HideStrictEducationMismatch = false,
-    bool HideStrictClearanceMismatch = false)
+    bool HideStrictClearanceMismatch = false,
+    bool IncludeAllLocations = false,
+    bool IncludeRemote = true,
+    IReadOnlyList<FacetSelection>? SelectedPhysicalLocations = null)
 {
     public static ViewerSettings Default { get; } = new(
         [], [], null, "metadata", "all", true,
         new Dictionary<string, bool>(StringComparer.Ordinal),
         new FacetSelection(FacetDefaults.CountryId, FacetDefaults.CountryLabel),
-        new FacetSelection(FacetDefaults.LocationId, FacetDefaults.LocationLabel),
+        null,
         false,
         true,
         60,
         "light",
         UserProfile.Default,
         false,
-        false);
+        false,
+        false,
+        true,
+        []);
 }
 
 public sealed record UserProfile(EducationProfile Education, SecurityProfile? Security = null)

@@ -203,10 +203,50 @@ public sealed class AppStateStore
             settings.Country,
             new FacetSelection(FacetDefaults.CountryId, FacetDefaults.CountryLabel),
             FacetDefaults.AllCountriesLabel);
-        var location = NormalizeFacetSelection(
-            settings.Location,
-            new FacetSelection(FacetDefaults.LocationId, FacetDefaults.LocationLabel),
-            FacetDefaults.AllLocationsLabel);
+        var includeAllLocations = settings.IncludeAllLocations;
+        var includeRemote = settings.IncludeRemote;
+        IEnumerable<FacetSelection> selectedPhysicalLocations = settings.SelectedPhysicalLocations ?? [];
+
+        // Migrate the original single Location setting. A saved Remote/Teleworker
+        // selection becomes remote-only; an empty legacy location preserves the
+        // previous country-wide query; any other saved location becomes the sole
+        // selected physical location.
+        if (settings.Location is not null)
+        {
+            if (string.IsNullOrWhiteSpace(settings.Location.Id))
+            {
+                includeAllLocations = true;
+                includeRemote = true;
+                selectedPhysicalLocations = [];
+            }
+            else if (FacetDefaults.IsRemoteLocation(settings.Location.Id))
+            {
+                includeAllLocations = false;
+                includeRemote = true;
+                selectedPhysicalLocations = [];
+            }
+            else
+            {
+                includeAllLocations = false;
+                includeRemote = false;
+                selectedPhysicalLocations = [settings.Location];
+            }
+        }
+
+        includeRemote = FacetDefaults.IsUnitedStates(country.Id) &&
+            (includeAllLocations || includeRemote);
+        var physicalLocations = includeAllLocations
+            ? []
+            : selectedPhysicalLocations
+                .Where(location => !string.IsNullOrWhiteSpace(location?.Id) &&
+                    !FacetDefaults.IsRemoteLocation(location.Id))
+                .Select(location => new FacetSelection(
+                    location.Id!.Trim(),
+                    string.IsNullOrWhiteSpace(location.Label) ? location.Id.Trim() : location.Label.Trim()))
+                .GroupBy(location => location.Id, StringComparer.Ordinal)
+                .Select(group => group.First())
+                .OrderBy(location => location.Id, StringComparer.Ordinal)
+                .ToArray();
         var automaticCheckInterval = settings.AutomaticCheckIntervalMinutes is 30 or 60 or 120 or 240 or 480
             ? settings.AutomaticCheckIntervalMinutes
             : 60;
@@ -248,14 +288,17 @@ public sealed class AppStateStore
             settings.HighlightIncludeKeywords,
             collapsed,
             country,
-            location,
+            null,
             settings.SearchFiltersCollapsed,
             settings.AutomaticCheckEnabled ?? true,
             automaticCheckInterval,
             themeMode,
             userProfile,
             settings.HideStrictEducationMismatch,
-            settings.HideStrictClearanceMismatch);
+            settings.HideStrictClearanceMismatch,
+            includeAllLocations,
+            includeRemote,
+            physicalLocations);
     }
 
     private static FacetSelection NormalizeFacetSelection(

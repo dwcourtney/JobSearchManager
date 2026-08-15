@@ -133,7 +133,7 @@ public sealed class WorkdayClient
         // Do not apply the current location here: doing so makes Workday collapse
         // the country facet to the one country containing that location. Country
         // alone returns the complete country chooser plus dependent locations.
-        var query = new WorkdayQuery(countryId, "", null, "");
+        var query = new WorkdayQuery(countryId, "", true, false, []);
         var payload = new
         {
             appliedFacets = CreateAppliedFacets(query),
@@ -160,10 +160,20 @@ public sealed class WorkdayClient
             .Select(value => new FacetOption(value.Id, value.Descriptor, value.Count))
             .ToArray();
 
+        var countries = ConvertOptions(countryFacet)
+            .OrderBy(option => option.Label, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var organization = LocationFacetOrganizer.Organize(countryId, ConvertOptions(locationFacet));
+
         return new LocationFacetOptions(
             page.Total,
-            ConvertOptions(countryFacet),
-            ConvertOptions(locationFacet));
+            countries,
+            organization.PhysicalLocations,
+            organization.RemoteLocations,
+            organization.Groups,
+            organization.PhysicalLocations.Count,
+            organization.StateMappedLocationCount,
+            organization.UnmappedLocationLabels);
     }
 
     private async Task<List<ListingPosting>> FetchListingsAsync(
@@ -235,9 +245,10 @@ public sealed class WorkdayClient
         {
             facets["locationCountry"] = [query.CountryId];
         }
-        if (!string.IsNullOrWhiteSpace(query.LocationId))
+        var locationIds = query.EffectiveLocationIds;
+        if (!query.IncludeAllLocations && locationIds.Count > 0)
         {
-            facets["locations"] = [query.LocationId];
+            facets["locations"] = locationIds.ToArray();
         }
         return facets;
     }

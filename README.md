@@ -59,8 +59,9 @@ is not writable, startup reports a clear error and does not fall back elsewhere.
 Copy or move the executable files and their `data` directory together to retain
 all state.
 
-`settings.json` contains the selected Workday country/location IDs and display
-labels, inclusion and exclusion terms, annual minimum salary, keyword scope,
+`settings.json` contains the selected Workday country, the applied
+Remote/Teleworker choice, selected physical-location IDs/display labels, and
+country-wide coverage mode, plus inclusion and exclusion terms, annual minimum salary, keyword scope,
 remote-location mode, inclusion-highlighting preference, automatic-check
 settings, selected light/dark theme, the extensible user qualification profile's
 completed-education and separate security/clearance entries, the conservative
@@ -172,19 +173,37 @@ Workday** link remain available in both views.
 
 ## Workday country and location scope
 
-The **Workday country** and **Workday location** selectors are populated from
-the live CXS response's `locationCountry` and `locations` facets. Counts shown
-beside each choice are Workday's current counts. Changing country reloads the
-dependent location choices but does not start a job crawl. Choose **Apply
-location** to persist the selection and explicitly retrieve that scope.
+Country choices and physical locations come from the live CXS response's
+`locationCountry` and `locations` facets. Counts beside each location remain
+Workday's current counts. U.S. physical locations that confidently match
+`Location, ST` are grouped by full state name, with states and locations sorted
+alphabetically; unusual facility/customer-site labels remain available under
+**Other U.S. Locations**. Other countries use a conservative alphabetical list
+rather than inferred geographic groupings.
 
-The initial and upgrade-safe default remains **United States of America** /
-**6314 Remote/Teleworker US**. **All countries** and **All locations** are true
-unfiltered choices: the corresponding facet key is omitted from the CXS request,
-not sent as an empty or invented value. The controls are deliberately
-single-select for a small personal UI. Workday accepts multiple location IDs
-with OR semantics, so a future multi-select could use the same backend request
-shape if it becomes useful.
+The searchable checklist supports several physical locations. Search is purely
+client-side and never requests jobs while typing. **Include Remote/Teleworker
+jobs** is independent and uses Workday's actual U.S. remote facet IDs. Workday
+treats several IDs in `appliedFacets.locations` as OR selections, so Remote,
+Orlando, Tampa, and locations in different states can be combined directly.
+
+**Include all locations in this country** is the explicit unambiguous all-mode.
+It includes physical and remote jobs, disables individual location choices, and
+omits the `locations` facet rather than sending every ID. With all-mode off, at
+least one physical location or Remote/Teleworker must be selected. This supports
+remote-only, physical-only, and physical-plus-remote sources without an
+ambiguous “All locations + Orlando” combination.
+
+Country, coverage, remote, and checklist changes remain pending until **Apply job
+source** is selected. Pending changes are identified in Settings and do not
+affect jobs or automatic checks. The compact Jobs source summary shows one or two
+location names and switches to a count for larger selections.
+
+Legacy single-location settings migrate automatically: the former
+**6314 Remote/Teleworker US** value becomes remote-only, an ordinary saved
+location becomes the sole selected physical location, and a legacy unfiltered
+location becomes country-wide coverage. Query IDs are sorted before cache
+comparison, so Orlando+Tampa and Tampa+Orlando share one cache identity.
 
 Workday currently exposes at most 2,000 unique postings from an unrestricted
 query. At offset 2,000 it repeats its first page; the viewer detects the
@@ -422,8 +441,9 @@ dotnet run -c Release -- --Application:OpenBrowser=false
 ## Configuration
 
 `appsettings.json` contains the Workday host, tenant/site, page size, request
-timeout, and detail-request concurrency. The selected country/location IDs are
-user state in `data/settings.json`, not hard-coded application configuration.
+timeout, and detail-request concurrency. The applied country, remote mode, and
+physical-location IDs are user state in `data/settings.json`, not application
+configuration.
 Workday currently caps the page size at 20.
 
 Description HTML is sanitized with a strict element/attribute allowlist before

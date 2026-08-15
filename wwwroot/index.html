@@ -234,14 +234,39 @@
             </div>
           </div>
           <div class="settings-row">
-            <label for="location-select">Location</label>
-            <div class="settings-control workday-facet-filter">
-              <select id="location-select" disabled>
-                <option>Loading locations…</option>
-              </select>
+            <span class="settings-row-label">Location coverage</span>
+            <div class="settings-control source-coverage-options">
+              <label class="settings-check source-coverage-option">
+                <input id="include-all-locations" type="checkbox" disabled>
+                <span>
+                  Include all locations in this country
+                  <small>Uses a country-wide Workday query, including remote jobs.</small>
+                </span>
+              </label>
+              <label id="include-remote-option" class="settings-check source-coverage-option">
+                <input id="include-remote" type="checkbox" disabled>
+                <span>
+                  Include Remote/Teleworker jobs
+                  <small>Can be combined with one or more physical locations.</small>
+                </span>
+              </label>
+            </div>
+          </div>
+          <div class="settings-row">
+            <label for="location-search">Physical locations</label>
+            <div class="settings-control physical-location-control">
+              <input id="location-search" type="search" autocomplete="off" disabled
+                     placeholder="Search locations…" aria-describedby="physical-location-help">
+              <small id="physical-location-help">
+                Select several locations, or use country-wide coverage above.
+              </small>
+              <div id="selected-location-summary" class="selected-location-summary"
+                   aria-live="polite">No physical locations selected.</div>
+              <div id="location-groups" class="location-group-list"
+                   aria-label="Available physical locations"></div>
               <div class="workday-query-actions">
-                <button id="apply-location" type="button" disabled>Apply location</button>
-                <small id="facet-status">Loading Workday location choices…</small>
+                <button id="apply-location" type="button" disabled>Apply job source</button>
+                <small id="facet-status" aria-live="polite">Loading Workday location choices…</small>
               </div>
             </div>
           </div>

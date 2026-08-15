@@ -45,6 +45,7 @@ public sealed class JobCatalog
 
     public async Task InitializeAsync(WorkdayQuery query)
     {
+        query = query.Normalize();
         var history = await _stateStore.LoadJobHistoryAsync();
         var cache = await _stateStore.LoadJobsCacheAsync();
         _history = history;
@@ -55,7 +56,10 @@ public sealed class JobCatalog
             return;
         }
 
-        if (cache.Query is null || cache.Query != query)
+        var legacyRemoteCache = cache.Query is not null &&
+            FacetDefaults.IsRemoteLocation(cache.Query.LocationId);
+        var cachedQuery = cache.Query?.Normalize();
+        if (cachedQuery is null || legacyRemoteCache || !cachedQuery.IsEquivalentTo(query))
         {
             _logger.LogInformation(
                 "Ignoring {CachePath} because its Workday query does not match the selected country/location.",
@@ -74,6 +78,8 @@ public sealed class JobCatalog
         var cacheNeedsAcademicUpgrade = cache.Jobs.Any(job =>
             job.AcademicQualification is null ||
             job.AcademicQualification.AnalysisVersion != _academicQualificationDetector.AnalysisVersion);
+        var cacheNeedsQueryUpgrade = cache.Query is not null &&
+            (!string.IsNullOrWhiteSpace(cache.Query.LocationLabel) || cache.Query.SourceModelVersion < 1);
         var cachedJobs = cacheNeedsCredentialUpgrade
             ? cache.Jobs.Select(_credentialDetector.AnalyzeJob).ToArray()
             : cache.Jobs;
@@ -81,7 +87,7 @@ public sealed class JobCatalog
             ? cachedJobs.Select(_academicQualificationDetector.AnalyzeJob).ToArray()
             : cachedJobs;
 
-        if (cacheNeedsCredentialUpgrade || cacheNeedsAcademicUpgrade)
+        if (cacheNeedsCredentialUpgrade || cacheNeedsAcademicUpgrade || cacheNeedsQueryUpgrade)
         {
             await _stateStore.SaveJobsCacheAsync(
                 cachedJobs,
@@ -89,7 +95,7 @@ public sealed class JobCatalog
                 cache.DetailFailureCount,
                 query);
             _logger.LogInformation(
-                "Updated cached derived analysis (credential catalog {CredentialCatalogVersion}, academic analysis {AcademicAnalysisVersion}).",
+                "Updated cached query/derived analysis (credential catalog {CredentialCatalogVersion}, academic analysis {AcademicAnalysisVersion}).",
                 _credentialDetector.CatalogVersion,
                 _academicQualificationDetector.AnalysisVersion);
         }
@@ -130,11 +136,12 @@ public sealed class JobCatalog
 
     public Task<JobsSnapshot> RefreshAsync(WorkdayQuery query)
     {
+        query = query.Normalize();
         lock (_gate)
         {
             if (_activeRefresh is { IsCompleted: false })
             {
-                if (_currentQuery == query)
+                if (_currentQuery.IsEquivalentTo(query))
                 {
                     return _activeRefresh;
                 }
@@ -143,7 +150,7 @@ public sealed class JobCatalog
                     "A Workday refresh is already running. Wait for it to finish before applying another location.");
             }
 
-            var queryChanged = _currentQuery != query;
+            var queryChanged = !_currentQuery.IsEquivalentTo(query);
             _currentQuery = query;
             _snapshot = queryChanged
                 ? JobsSnapshot.Empty with
@@ -358,9 +365,9 @@ public sealed class JobCatalog
         try
         {
             _logger.LogInformation(
-                "Refreshing the Leidos Workday job snapshot for country {Country} and location {Location}.",
+                "Refreshing the Leidos Workday job snapshot for country {Country} and locations {Locations}.",
                 query.CountryLabel,
-                query.LocationLabel);
+                DescribeLocations(query));
             var result = await _workdayClient.FetchAllJobsAsync(
                 query,
                 progress => ReportRefreshProgress(query, progress));
@@ -433,7 +440,7 @@ public sealed class JobCatalog
     {
         lock (_gate)
         {
-            if (!_snapshot.IsRefreshing || _snapshot.Query != query)
+            if (!_snapshot.IsRefreshing || !_snapshot.Query.IsEquivalentTo(query))
             {
                 return;
             }
@@ -448,6 +455,24 @@ public sealed class JobCatalog
 
             _snapshot = _snapshot with { RefreshProgress = progress };
         }
+    }
+
+    private static string DescribeLocations(WorkdayQuery query)
+    {
+        query = query.Normalize();
+        if (query.IncludeAllLocations)
+        {
+            return FacetDefaults.AllLocationsLabel;
+        }
+
+        var locations = (query.PhysicalLocations ?? [])
+            .Select(location => location.Label)
+            .ToList();
+        if (query.IncludeRemote)
+        {
+            locations.Insert(0, "Remote/Teleworker");
+        }
+        return locations.Count == 0 ? "none" : string.Join(", ", locations);
     }
 
     private bool ReconcileHistory(

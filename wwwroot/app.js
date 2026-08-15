@@ -6,6 +6,7 @@ const OVERLAY_TRANSITION_MS = 180;
 const AUTOMATIC_STATUS_POLL_MS = 2000;
 const ALL_COUNTRIES_LABEL = "All countries";
 const ALL_LOCATIONS_LABEL = "All locations";
+const UNITED_STATES_COUNTRY_ID = "bc33aa3152ec42d4995f4791a106ed09";
 const AGE_GROUPS = [
   { id: "today", label: "Posted Today", minimumDays: 0, maximumDays: 0 },
   { id: "yesterday", label: "Posted Yesterday", minimumDays: 1, maximumDays: 1 },
@@ -50,7 +51,12 @@ const state = {
   catalogIsRefreshing: false,
   facetsLoaded: false,
   country: { id: null, label: ALL_COUNTRIES_LABEL },
-  location: { id: null, label: ALL_LOCATIONS_LABEL },
+  includeAllLocations: false,
+  includeRemote: true,
+  physicalLocations: [],
+  locationGroups: [],
+  remoteLocations: [],
+  facetMatchingJobs: 0,
   pollTimer: null,
   refreshProgressTimer: null,
   overlayHideTimer: null,
@@ -81,7 +87,12 @@ const elements = {
   exclusionChips: document.querySelector("#exclusion-chips"),
   minimumPay: document.querySelector("#minimum-pay"),
   countrySelect: document.querySelector("#country-select"),
-  locationSelect: document.querySelector("#location-select"),
+  includeAllLocations: document.querySelector("#include-all-locations"),
+  includeRemoteOption: document.querySelector("#include-remote-option"),
+  includeRemote: document.querySelector("#include-remote"),
+  locationSearch: document.querySelector("#location-search"),
+  selectedLocationSummary: document.querySelector("#selected-location-summary"),
+  locationGroups: document.querySelector("#location-groups"),
   applyLocation: document.querySelector("#apply-location"),
   facetStatus: document.querySelector("#facet-status"),
   highlightInclusions: document.querySelector("#highlight-inclusions"),
@@ -171,7 +182,9 @@ async function initialize() {
   elements.refreshButton.addEventListener("click", refreshJobs);
   elements.filterToggle.addEventListener("click", toggleSearchFilters);
   elements.countrySelect.addEventListener("change", countrySelectionChanged);
-  elements.locationSelect.addEventListener("change", updateQueryControls);
+  elements.includeAllLocations.addEventListener("change", sourceCoverageChanged);
+  elements.includeRemote.addEventListener("change", sourceCoverageChanged);
+  elements.locationSearch.addEventListener("input", filterLocationChoices);
   elements.applyLocation.addEventListener("click", applyWorkdayLocation);
   elements.minimumPay.addEventListener("input", () => {
     state.minimumSalary = parseCurrencyInput(elements.minimumPay.value);
@@ -339,7 +352,11 @@ async function loadInitialState() {
     }
     applySettings(await settingsResponse.json());
     applySnapshot(await jobsResponse.json());
-    await loadLocationFacets(state.country.id, state.location.id);
+    await loadLocationFacets(
+      state.country.id,
+      state.physicalLocations,
+      state.includeAllLocations,
+      state.includeRemote);
     await loadAutomaticCheckStatus();
     state.isInitializing = false;
     if (!state.catalogIsRefreshing) setLoading(false);
@@ -378,7 +395,9 @@ function applySettings(settings) {
   state.publicTrustProfile = normalizePublicTrustProfile(settings.userProfile?.security?.publicTrust);
   state.hideStrictClearanceMismatch = settings.hideStrictClearanceMismatch === true;
   state.country = normalizeFacetSelection(settings.country, ALL_COUNTRIES_LABEL);
-  state.location = normalizeFacetSelection(settings.location, ALL_LOCATIONS_LABEL);
+  state.includeAllLocations = settings.includeAllLocations === true;
+  state.includeRemote = settings.includeRemote === true;
+  state.physicalLocations = normalizeFacetSelections(settings.selectedPhysicalLocations);
 
   elements.minimumPay.value = state.minimumSalary === null
     ? ""
@@ -555,8 +574,10 @@ function buildFilterSummary() {
 
 function updateSourceSummary() {
   const country = state.country.label || ALL_COUNTRIES_LABEL;
-  const location = state.location.label || ALL_LOCATIONS_LABEL;
-  elements.sourceSummary.textContent = `${country} · ${location}`;
+  elements.sourceSummary.textContent = `${country} · ${describeSourceLocations(
+    state.includeAllLocations,
+    state.includeRemote,
+    state.physicalLocations)}`;
 }
 
 function normalizeFacetSelection(selection, allLabel) {
@@ -565,7 +586,33 @@ function normalizeFacetSelection(selection, allLabel) {
     : { id: null, label: allLabel };
 }
 
-async function loadLocationFacets(countryId, locationId = null) {
+function normalizeFacetSelections(selections) {
+  const unique = new Map();
+  for (const selection of Array.isArray(selections) ? selections : []) {
+    if (!selection?.id || unique.has(selection.id)) continue;
+    unique.set(selection.id, {
+      id: selection.id,
+      label: selection.label || selection.id
+    });
+  }
+  return [...unique.values()].sort((left, right) => left.id.localeCompare(right.id));
+}
+
+function describeSourceLocations(includeAll, includeRemote, physicalLocations) {
+  if (includeAll) return ALL_LOCATIONS_LABEL;
+  const labels = normalizeFacetSelections(physicalLocations).map(location => location.label);
+  if (includeRemote && labels.length === 0) return "Remote/Teleworker";
+  if (includeRemote && labels.length === 1) return `Remote + ${labels[0]}`;
+  if (includeRemote && labels.length > 1) return `Remote + ${labels.length} locations`;
+  if (labels.length <= 2) return labels.join(" + ") || "No locations";
+  return `${labels.length} locations`;
+}
+
+async function loadLocationFacets(
+  countryId,
+  selectedLocations = [],
+  includeAll = false,
+  includeRemote = false) {
   state.facetsLoaded = false;
   let loaded = false;
   updateQueryControls();
@@ -578,21 +625,22 @@ async function loadLocationFacets(countryId, locationId = null) {
       throw new Error(`Location facets returned HTTP ${response.status}.`);
     }
     const facets = await response.json();
-    populateFacetSelect(
+    populateCountrySelect(
       elements.countrySelect,
       facets.countries || [],
       ALL_COUNTRIES_LABEL,
       countryId);
-    const selectedLocation = populateFacetSelect(
-      elements.locationSelect,
-      facets.locations || [],
-      ALL_LOCATIONS_LABEL,
-      locationId);
-    if (!selectedLocation) {
-      elements.locationSelect.value = "";
-    }
-    elements.facetStatus.textContent =
-      `${new Intl.NumberFormat().format(facets.matchingJobs || 0)} jobs match this facet context.`;
+    state.locationGroups = Array.isArray(facets.groups) ? facets.groups : [];
+    state.remoteLocations = Array.isArray(facets.remoteLocations) ? facets.remoteLocations : [];
+    state.facetMatchingJobs = Number(facets.matchingJobs) || 0;
+    renderLocationGroups(state.locationGroups, selectedLocations);
+    elements.includeAllLocations.checked = includeAll;
+    elements.includeRemote.checked = includeAll && state.remoteLocations.length > 0
+      ? true
+      : includeRemote && state.remoteLocations.length > 0;
+    elements.includeRemoteOption.hidden = state.remoteLocations.length === 0;
+    elements.locationSearch.value = "";
+    updateSelectedLocationSummary();
     loaded = true;
   } catch (error) {
     elements.facetStatus.textContent = `Location choices unavailable: ${error.message || error}`;
@@ -604,7 +652,7 @@ async function loadLocationFacets(countryId, locationId = null) {
   }
 }
 
-function populateFacetSelect(select, options, allLabel, selectedId) {
+function populateCountrySelect(select, options, allLabel, selectedId) {
   select.replaceChildren();
   const all = document.createElement("option");
   all.value = "";
@@ -627,7 +675,11 @@ function populateFacetSelect(select, options, allLabel, selectedId) {
 
 async function countrySelectionChanged() {
   const countryId = elements.countrySelect.value || null;
-  await loadLocationFacets(countryId, null);
+  await loadLocationFacets(
+    countryId,
+    [],
+    true,
+    countryId === UNITED_STATES_COUNTRY_ID);
   updateQueryControls();
 }
 
@@ -639,21 +691,176 @@ function selectedFacet(select, allLabel) {
   };
 }
 
+function renderLocationGroups(groups, selectedLocations) {
+  const selected = new Map(normalizeFacetSelections(selectedLocations)
+    .map(location => [location.id, location]));
+  const knownIds = new Set((groups || []).flatMap(group =>
+    (group.locations || []).map(location => location.id)));
+  const missingSelected = [...selected.values()].filter(location => !knownIds.has(location.id));
+  const renderedGroups = [...(groups || [])];
+  if (missingSelected.length > 0) {
+    renderedGroups.push({
+      id: "selected-unavailable",
+      label: "Selected locations",
+      locations: missingSelected.map(location => ({
+        ...location,
+        displayLabel: location.label,
+        count: 0
+      }))
+    });
+  }
+
+  elements.locationGroups.replaceChildren();
+  if (renderedGroups.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "location-selector-empty";
+    empty.textContent = "No physical location facets are available for this country.";
+    elements.locationGroups.append(empty);
+    updateSelectedLocationSummary();
+    return;
+  }
+
+  for (const group of renderedGroups) {
+    const details = document.createElement("details");
+    details.className = "location-group";
+    details.dataset.groupSearch = group.label.toLocaleLowerCase();
+    details.open = (group.locations || []).some(location => selected.has(location.id));
+    const summary = document.createElement("summary");
+    summary.textContent = `${group.label} (${group.locations.length} ${group.locations.length === 1 ? "location" : "locations"})`;
+    summary.setAttribute("aria-expanded", String(details.open));
+    details.addEventListener("toggle", () => {
+      summary.setAttribute("aria-expanded", String(details.open));
+    });
+    const choices = document.createElement("div");
+    choices.className = "location-choice-list";
+    for (const location of group.locations || []) {
+      const label = document.createElement("label");
+      label.className = "location-choice";
+      label.dataset.locationSearch = `${group.label} ${location.label} ${location.displayLabel || ""}`
+        .toLocaleLowerCase();
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = selected.has(location.id);
+      checkbox.dataset.locationId = location.id;
+      checkbox.dataset.locationLabel = location.label;
+      checkbox.addEventListener("change", () => {
+        updateSelectedLocationSummary();
+        updateQueryControls();
+      });
+      const name = document.createElement("span");
+      name.textContent = location.displayLabel || location.label;
+      const count = document.createElement("small");
+      count.textContent = `(${new Intl.NumberFormat().format(location.count || 0)})`;
+      label.append(checkbox, name, count);
+      choices.append(label);
+    }
+    details.append(summary, choices);
+    elements.locationGroups.append(details);
+  }
+  updateSelectedLocationSummary();
+}
+
+function filterLocationChoices() {
+  const query = elements.locationSearch.value.trim().toLocaleLowerCase();
+  for (const group of elements.locationGroups.querySelectorAll(".location-group")) {
+    let visibleCount = 0;
+    const groupMatch = query && group.dataset.groupSearch.includes(query);
+    for (const choice of group.querySelectorAll(".location-choice")) {
+      const visible = !query || groupMatch || choice.dataset.locationSearch.includes(query);
+      choice.hidden = !visible;
+      if (visible) visibleCount++;
+    }
+    group.hidden = visibleCount === 0;
+    if (query && visibleCount > 0) group.open = true;
+  }
+}
+
+function selectedPendingLocations() {
+  return normalizeFacetSelections([...elements.locationGroups
+    .querySelectorAll('input[type="checkbox"][data-location-id]:checked')]
+    .map(checkbox => ({
+      id: checkbox.dataset.locationId,
+      label: checkbox.dataset.locationLabel
+    })));
+}
+
+function updateSelectedLocationSummary() {
+  const selected = selectedPendingLocations();
+  elements.selectedLocationSummary.replaceChildren();
+  if (elements.includeAllLocations.checked) {
+    elements.selectedLocationSummary.textContent = "Country-wide source; individual locations are disabled.";
+    return;
+  }
+  if (selected.length === 0) {
+    elements.selectedLocationSummary.textContent = elements.includeRemote.checked
+      ? "No physical locations selected — Remote/Teleworker only."
+      : "No physical locations selected.";
+    return;
+  }
+  const prefix = document.createElement("span");
+  prefix.textContent = `Selected (${selected.length}):`;
+  elements.selectedLocationSummary.append(prefix);
+  for (const location of selected) {
+    const chip = document.createElement("span");
+    chip.className = "selected-location-chip";
+    chip.textContent = location.label;
+    elements.selectedLocationSummary.append(chip);
+  }
+}
+
+function sourceCoverageChanged() {
+  if (elements.includeAllLocations.checked && state.remoteLocations.length > 0) {
+    elements.includeRemote.checked = true;
+  }
+  updateSelectedLocationSummary();
+  updateQueryControls();
+}
+
 function querySelectionIsPending() {
+  const physicalIds = selectedPendingLocations().map(location => location.id);
+  const activePhysicalIds = normalizeFacetSelections(state.physicalLocations)
+    .map(location => location.id);
+  const pendingRemote = elements.includeAllLocations.checked && state.remoteLocations.length > 0
+    ? true
+    : elements.includeRemote.checked;
   return (elements.countrySelect.value || null) !== state.country.id ||
-    (elements.locationSelect.value || null) !== state.location.id;
+    elements.includeAllLocations.checked !== state.includeAllLocations ||
+    pendingRemote !== state.includeRemote ||
+    physicalIds.length !== activePhysicalIds.length ||
+    physicalIds.some((id, index) => id !== activePhysicalIds[index]);
 }
 
 function updateQueryControls() {
   const disabled = !state.facetsLoaded || state.isRefreshing;
   elements.countrySelect.disabled = disabled;
-  elements.locationSelect.disabled = disabled;
-  elements.applyLocation.disabled = disabled || !querySelectionIsPending();
+  elements.includeAllLocations.disabled = disabled;
+  const allLocations = elements.includeAllLocations.checked;
+  elements.includeRemote.disabled = disabled || allLocations;
+  elements.locationSearch.disabled = disabled || allLocations;
+  for (const checkbox of elements.locationGroups.querySelectorAll('input[type="checkbox"]')) {
+    checkbox.disabled = disabled || allLocations;
+  }
+
+  const hasExplicitSource = allLocations || elements.includeRemote.checked ||
+    selectedPendingLocations().length > 0;
+  const pending = !disabled && querySelectionIsPending();
+  elements.applyLocation.disabled = disabled || !hasExplicitSource || !pending;
+  if (!state.facetsLoaded) return;
+  const context = `${new Intl.NumberFormat().format(state.facetMatchingJobs)} jobs in this country context.`;
+  elements.facetStatus.textContent = !hasExplicitSource
+    ? "Choose at least one location source before applying."
+    : pending
+      ? `Unsaved source changes · ${context}`
+      : `Source matches currently loaded jobs · ${context}`;
 }
 
 async function applyWorkdayLocation() {
   const country = selectedFacet(elements.countrySelect, ALL_COUNTRIES_LABEL);
-  const location = selectedFacet(elements.locationSelect, ALL_LOCATIONS_LABEL);
+  const includeAllLocations = elements.includeAllLocations.checked;
+  const includeRemote = includeAllLocations && state.remoteLocations.length > 0
+    ? true
+    : elements.includeRemote.checked;
+  const physicalLocations = includeAllLocations ? [] : selectedPendingLocations();
   clearTimeout(state.pollTimer);
   setLoading(true, { title: "Loading Selected Job Source" });
   beginRefreshProgressPolling();
@@ -669,15 +876,15 @@ async function applyWorkdayLocation() {
       body: JSON.stringify({
         countryId: country.id,
         countryLabel: country.label,
-        locationId: location.id,
-        locationLabel: location.label
+        includeAllLocations,
+        includeRemote,
+        physicalLocations,
+        sourceModelVersion: 1
       })
     });
     if (!response.ok) {
       throw new Error(`Location refresh returned HTTP ${response.status}.`);
     }
-    state.country = country;
-    state.location = location;
     applySnapshot(await response.json());
     await loadAutomaticCheckStatus();
   } catch (error) {
@@ -731,10 +938,9 @@ function applySnapshot(snapshot) {
       id: snapshot.query.countryId || null,
       label: snapshot.query.countryLabel || ALL_COUNTRIES_LABEL
     };
-    state.location = {
-      id: snapshot.query.locationId || null,
-      label: snapshot.query.locationLabel || ALL_LOCATIONS_LABEL
-    };
+    state.includeAllLocations = snapshot.query.includeAllLocations === true;
+    state.includeRemote = snapshot.query.includeRemote === true;
+    state.physicalLocations = normalizeFacetSelections(snapshot.query.physicalLocations);
   }
   updateSourceSummary();
 
@@ -828,7 +1034,9 @@ async function saveSettings() {
         highlightIncludeKeywords: state.highlightInclusions,
         collapsedAgeGroups: state.collapsedAgeGroups,
         country: state.country,
-        location: state.location,
+        includeAllLocations: state.includeAllLocations,
+        includeRemote: state.includeRemote,
+        selectedPhysicalLocations: state.physicalLocations,
         searchFiltersCollapsed: state.searchFiltersCollapsed,
         automaticCheckEnabled: state.automaticCheckEnabled,
         automaticCheckIntervalMinutes: state.automaticCheckIntervalMinutes,
