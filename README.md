@@ -128,16 +128,18 @@ soon as the page initializes.
 
 The compact application toolbar switches between two client-side views without
 reloading the page. **Jobs** is the default and contains only controls used while
-actively evaluating postings: include/exclude keywords, minimum salary, matching
-scope, highlighting, remote-location analysis, hidden-job visibility, result
-counts, the result list, and job details. Its Workday source indicator is a small
-link to **Settings**, and the collapsible filter summary deliberately excludes
-application-level preferences.
+actively evaluating postings: include/exclude keywords, matching scope,
+highlighting, remote-location analysis, hidden-job visibility, result counts, the
+result list, and job details. Highlighting sits directly beside the Include label
+as part of the same control group. Its Workday source indicator is a small link to
+**Settings**. The collapsible filter summary still shows the active saved minimum
+salary even though its editor is an application-level preference.
 
 **Settings** contains the less frequently changed Workday country/location query,
-automatic-check enablement and interval, and theme. Moving between views does not
-alter filter values, job selection, scroll state, cached data, or settings. The
-navigation itself is presentation-only and the application always opens on Jobs.
+minimum acceptable salary, automatic-check enablement and interval, and theme.
+Moving between views does not alter filter values, job selection, scroll state,
+cached data, or settings. The navigation itself is presentation-only and the
+application always opens on Jobs.
 
 ## Workday country and location scope
 

@@ -200,14 +200,15 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 
 .filter-panel {
   display: grid;
-  grid-template-columns: repeat(3, minmax(15rem, 1fr));
+  grid-template-columns: repeat(2, minmax(20rem, 1fr));
   gap: .65rem 1.25rem;
   align-items: start;
   padding: .8rem 1.25rem;
   background: var(--color-surface-secondary);
 }
 
-.keyword-filter > label, .salary-filter > label, .workday-facet-filter > label,
+.keyword-filter > label, .keyword-heading > label:first-child,
+.salary-filter > label, .workday-facet-filter > label,
 .scope-options legend, .location-options legend {
   display: block;
   margin-bottom: .3rem;
@@ -215,6 +216,16 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   font-size: var(--font-size-label);
   font-weight: var(--font-weight-semibold);
 }
+
+.keyword-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  margin-bottom: .3rem;
+}
+
+.keyword-heading > label:first-child { margin-bottom: 0; }
 
 .input-group {
   display: flex;
@@ -388,11 +399,15 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 .scope-options input, .location-options input { accent-color: var(--color-accent); }
 
 .highlight-option {
-  align-self: center;
-  padding-top: 1.15rem;
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  color: var(--color-label);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
 }
 
-.highlight-option label { font-size: var(--font-size-ui); font-weight: var(--font-weight-medium); }
 .highlight-option input { accent-color: var(--color-accent); }
 
 .automatic-check-settings, .theme-settings {
