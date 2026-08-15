@@ -47,6 +47,7 @@
   --radius-round: 50%;
   --focus-ring-width: 3px;
   --selected-job-indicator-width: 4px;
+  --tab-indicator-width: 2px;
   --opacity-disabled: .7;
   --opacity-dismissed-job: .68;
   --duration-spinner: .8s;
@@ -78,6 +79,24 @@
   --color-focus-ring: #efb526;
   --color-link: #075c99;
   --color-link-hover: #064a7a;
+  --color-tab-text: #d4e4f0;
+  --color-tab-hover-text: #ffffff;
+  --color-tab-hover-background: #1b4b6d;
+  --color-tab-active-text: #ffffff;
+  --color-tab-active-background: #0d527f;
+  --color-tab-active-border: #efb526;
+  --color-tab-inactive-border: transparent;
+
+  /* Navigation context and settings */
+  --color-source-background: #f7f9fb;
+  --color-source-text: #435565;
+  --color-source-action: #075c99;
+  --color-source-action-hover: #064a7a;
+  --color-source-hover-background: #e8f3fb;
+  --color-settings-background: #e9edf1;
+  --color-settings-group-background: #ffffff;
+  --color-settings-group-border: #cbd4dc;
+  --color-settings-heading-border: #d9e0e5;
 
   /* Forms and secondary actions */
   --color-input-background: #ffffff;
@@ -213,6 +232,23 @@
   --color-focus-ring: #ffd166;
   --color-link: #71bceb;
   --color-link-hover: #9bd3f4;
+  --color-tab-text: #b8cedd;
+  --color-tab-hover-text: #f5f9fc;
+  --color-tab-hover-background: #173b52;
+  --color-tab-active-text: #ffffff;
+  --color-tab-active-background: #214f6c;
+  --color-tab-active-border: #ffd166;
+  --color-tab-inactive-border: transparent;
+
+  --color-source-background: #1b2630;
+  --color-source-text: #c0d0da;
+  --color-source-action: #71bceb;
+  --color-source-action-hover: #9bd3f4;
+  --color-source-hover-background: #203a4c;
+  --color-settings-background: #0f151b;
+  --color-settings-group-background: #172029;
+  --color-settings-group-border: #344451;
+  --color-settings-heading-border: #3a4c59;
 
   --color-input-background: #111a22;
   --color-input-text: #e5edf3;

@@ -109,7 +109,9 @@ resetting the list/detail scroll positions.
 ## Appearance
 
 The **Theme** control offers Light and Dark modes and persists the choice in
-`data/settings.json`. Light mode preserves the original appearance. Dark mode
+`data/settings.json`. It is located in the dedicated **Settings** view alongside
+the Workday source and automatic-check preferences. Light mode preserves the
+original appearance. Dark mode
 uses purpose-built semantic colors for the page, controls, result states,
 badges, warnings, highlights, and formatted Workday descriptions. Workday
 inline colors and backgrounds are stripped by the existing HTML sanitizer, so
@@ -121,6 +123,21 @@ All visual tokens are centralized in `wwwroot/theme.css`; layout remains in
 early-paint hint to avoid a light flash before settings load. The backend JSON
 setting beside the executable remains authoritative and corrects the hint as
 soon as the page initializes.
+
+## Jobs and Settings views
+
+The compact application toolbar switches between two client-side views without
+reloading the page. **Jobs** is the default and contains only controls used while
+actively evaluating postings: include/exclude keywords, minimum salary, matching
+scope, highlighting, remote-location analysis, hidden-job visibility, result
+counts, the result list, and job details. Its Workday source indicator is a small
+link to **Settings**, and the collapsible filter summary deliberately excludes
+application-level preferences.
+
+**Settings** contains the less frequently changed Workday country/location query,
+automatic-check enablement and interval, and theme. Moving between views does not
+alter filter values, job selection, scroll state, cached data, or settings. The
+navigation itself is presentation-only and the application always opens on Jobs.
 
 ## Workday country and location scope
 

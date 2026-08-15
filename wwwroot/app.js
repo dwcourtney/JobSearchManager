@@ -15,6 +15,7 @@ const AGE_GROUPS = [
 ];
 
 const state = {
+  activeView: "jobs",
   jobs: [],
   inclusions: [],
   exclusions: [],
@@ -43,6 +44,12 @@ const state = {
 };
 
 const elements = {
+  jobsTab: document.querySelector("#jobs-tab"),
+  settingsTab: document.querySelector("#settings-tab"),
+  jobsView: document.querySelector("#jobs-view"),
+  settingsView: document.querySelector("#settings-view"),
+  sourceSettingsLink: document.querySelector("#source-settings-link"),
+  sourceSummary: document.querySelector("#source-summary"),
   refreshButton: document.querySelector("#refresh-button"),
   lastRefreshed: document.querySelector("#last-refreshed"),
   filterToggle: document.querySelector("#filter-toggle"),
@@ -108,6 +115,10 @@ document.addEventListener("DOMContentLoaded", initialize);
 async function initialize() {
   wireKeywordInput("inclusions", elements.includeInput, elements.addInclusion);
   wireKeywordInput("exclusions", elements.excludeInput, elements.addExclusion);
+  elements.jobsTab.addEventListener("click", () => showView("jobs"));
+  elements.settingsTab.addEventListener("click", () => showView("settings"));
+  elements.sourceSettingsLink.addEventListener("click", () => showView("settings", true));
+  document.querySelector(".app-tabs").addEventListener("keydown", handleTabKeydown);
   elements.refreshButton.addEventListener("click", refreshJobs);
   elements.filterToggle.addEventListener("click", toggleSearchFilters);
   elements.countrySelect.addEventListener("change", countrySelectionChanged);
@@ -172,6 +183,35 @@ async function initialize() {
   await loadInitialState();
 }
 
+function showView(view, focusFirstControl = false) {
+  const nextView = view === "settings" ? "settings" : "jobs";
+  state.activeView = nextView;
+  const jobsSelected = nextView === "jobs";
+  elements.jobsView.hidden = !jobsSelected;
+  elements.settingsView.hidden = jobsSelected;
+  elements.jobsTab.classList.toggle("active", jobsSelected);
+  elements.settingsTab.classList.toggle("active", !jobsSelected);
+  elements.jobsTab.setAttribute("aria-selected", String(jobsSelected));
+  elements.settingsTab.setAttribute("aria-selected", String(!jobsSelected));
+  elements.jobsTab.tabIndex = jobsSelected ? 0 : -1;
+  elements.settingsTab.tabIndex = jobsSelected ? -1 : 0;
+  if (focusFirstControl) {
+    (jobsSelected ? elements.filterToggle : elements.countrySelect).focus();
+  }
+}
+
+function handleTabKeydown(event) {
+  if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
+    return;
+  }
+  event.preventDefault();
+  const targetView = event.key === "ArrowLeft" || event.key === "Home"
+    ? "jobs"
+    : "settings";
+  showView(targetView);
+  (targetView === "jobs" ? elements.jobsTab : elements.settingsTab).focus();
+}
+
 async function loadInitialState() {
   try {
     const [settingsResponse, jobsResponse] = await Promise.all([
@@ -226,6 +266,7 @@ function applySettings(settings) {
   if (locationRadio) locationRadio.checked = true;
   renderChips("inclusions");
   renderChips("exclusions");
+  updateSourceSummary();
   updateSearchFilterUi();
 }
 
@@ -317,15 +358,18 @@ function buildFilterSummary() {
     summary.push(`Min pay: ${formatCurrency(state.minimumSalary)}`);
   }
 
-  const country = state.country.label || ALL_COUNTRIES_LABEL;
-  const location = state.location.label || ALL_LOCATIONS_LABEL;
-  summary.push(`${country} / ${location}`);
   if (state.locationMode !== "all") {
     summary.push(state.locationMode === "hide-restricted"
       ? "Restricted remote hidden"
       : "Restricted remote only");
   }
-  return summary.join(" · ");
+  return summary.length ? summary.join(" · ") : "No active keyword, salary, or remote-location filters";
+}
+
+function updateSourceSummary() {
+  const country = state.country.label || ALL_COUNTRIES_LABEL;
+  const location = state.location.label || ALL_LOCATIONS_LABEL;
+  elements.sourceSummary.textContent = `${country} · ${location}`;
 }
 
 function normalizeFacetSelection(selection, allLabel) {
@@ -503,6 +547,7 @@ function applySnapshot(snapshot) {
       label: snapshot.query.locationLabel || ALL_LOCATIONS_LABEL
     };
   }
+  updateSourceSummary();
 
   setLoading(Boolean(snapshot.isRefreshing));
   showSnapshotError(snapshot.error, snapshot.detailFailureCount || 0);
@@ -669,6 +714,7 @@ function renderResults() {
     (!state.showDismissedJobs && dismissedMatchingJobs.length
       ? ` · ${dismissedMatchingJobs.length} hidden`
       : "");
+  elements.filterSummary.textContent = buildFilterSummary();
 
   if (!jobs.some(job => job.stableId === state.selectedJobId)) {
     // Automatic selection is presentation only and deliberately does not mark NEW as viewed.
