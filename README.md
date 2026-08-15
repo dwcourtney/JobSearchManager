@@ -148,9 +148,13 @@ as part of the same control group. Its Workday source indicator is a small link 
 **Settings**. The collapsible filter summary still shows the active saved minimum
 salary even though its editor is an application-level preference.
 
-**Settings** contains the less frequently changed Workday country/location query,
-minimum acceptable salary, completed education profile, security/clearance profile,
-strict qualification filters, automatic-check enablement and interval, and theme.
+**Settings** is one unified configuration form organized by user intent: **Job
+Search** contains the Workday country/location query and minimum salary; **My
+Qualifications** contains education, national-security clearance, and separate
+Public Trust status; **Screening Rules** contains the conservative strict-mismatch
+filters; **Automatic Checking** contains scheduling; and **Appearance** contains
+the compact theme control. Sections use aligned labels and consistent control
+widths instead of an uneven dashboard of feature cards.
 Moving between views does not alter filter values, job selection, scroll state,
 cached data, or settings. The navigation itself is presentation-only and the
 application always opens on Jobs.
@@ -295,10 +299,13 @@ regenerated from each fresh Workday description.
 
 The Security / Clearance Profile persists two independent values: current
 national-security clearance (`None`, `Secret`, `Top Secret`, `TS/SCI`, or an
-uncomparable `Other / Unknown`) and current Public Trust status. Public Trust is
+uncomparable `Other / Unknown`) and current Public Trust status (`Not currently
+held`, `Currently held / active`, or `Unknown`). Public Trust is
 not placed into the national-security hierarchy, and holding Secret or higher
-never implies a Public Trust determination. Both profile axes default to **Not
-configured**, which keeps every job visible.
+never implies a Public Trust determination. The national-security profile defaults
+to **Not configured** and Public Trust defaults to **Unknown**, which keep every
+job visible. Older `notSpecified` Public Trust settings migrate to `unknown`
+without changing their conservative behavior.
 
 The optional strict-clearance filter is off by default. It can hide a posting
 only when the existing parser is confident, the requirement is explicitly
@@ -307,11 +314,11 @@ configured profile does not satisfy it. The national-security comparison is
 `None < Secret < Top Secret < TS/SCI`; Top Secret does not satisfy TS/SCI.
 Obtain-and-maintain, obtain, eligibility, suitability, maintain, preferred, and
 ambiguous wording never hides a job. A separate result-row mismatch badge and
-the **At a Glance** Clearance card explain the comparison. The original **Full
+the **At a Glance** Clearance section explain the comparison. The original **Full
 Posting** remains free of derived analysis.
 
 Polygraph detection remains separate from clearance level. A detected required
-polygraph is surfaced in the job badge and Clearance card, but the current
+polygraph is surfaced in the job badge and Clearance section, but the current
 profile does not claim a polygraph type or status. Even when the clearance level
 matches, the UI therefore says the polygraph needs separate review; polygraph
 alone does not trigger automatic hiding.

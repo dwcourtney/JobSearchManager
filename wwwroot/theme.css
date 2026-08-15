@@ -138,9 +138,9 @@
   --color-source-hover-background: #e8f3fb;
   --color-source-button-background: transparent;
   --color-settings-background: #e9edf1;
-  --color-settings-group-background: #ffffff;
-  --color-settings-group-border: #cbd4dc;
-  --color-settings-heading-border: #d9e0e5;
+  --color-settings-surface-background: #ffffff;
+  --color-settings-surface-border: #cbd4dc;
+  --color-settings-section-separator: #d9e0e5;
 
   /* Forms and secondary actions */
   --color-input-background: #ffffff;
@@ -354,9 +354,9 @@
   --color-source-hover-background: #203a4c;
   --color-source-button-background: transparent;
   --color-settings-background: #0f151b;
-  --color-settings-group-background: #172029;
-  --color-settings-group-border: #344451;
-  --color-settings-heading-border: #3a4c59;
+  --color-settings-surface-background: #172029;
+  --color-settings-surface-border: #344451;
+  --color-settings-section-separator: #3a4c59;
 
   /* Forms and secondary actions */
   --color-input-background: #111a22;

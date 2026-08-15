@@ -226,10 +226,15 @@ public sealed class AppStateStore
             "notSpecified" or "none" or "secret" or "topSecret" or "topSecretSCI" or "otherUnknown"
                 ? settings.UserProfile.Security.ClearanceLevel
                 : "notSpecified";
-        var publicTrust = settings.UserProfile?.Security?.PublicTrust is
-            "notSpecified" or "none" or "current"
-                ? settings.UserProfile.Security.PublicTrust
-                : "notSpecified";
+        var publicTrust = settings.UserProfile?.Security?.PublicTrust switch
+        {
+            "none" => "none",
+            "current" => "current",
+            // Migrate the original application-centric value without changing
+            // its conservative unknown-status behavior.
+            "notSpecified" or "unknown" => "unknown",
+            _ => "unknown"
+        };
         var userProfile = new UserProfile(
             new EducationProfile(educationLevel, doctorateType),
             new SecurityProfile(clearanceLevel, publicTrust));

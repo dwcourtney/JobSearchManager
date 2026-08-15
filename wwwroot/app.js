@@ -34,7 +34,7 @@ const state = {
   doctorateType: null,
   hideStrictEducationMismatch: false,
   clearanceProfileLevel: "notSpecified",
-  publicTrustProfile: "notSpecified",
+  publicTrustProfile: "unknown",
   hideStrictClearanceMismatch: false,
   detailTab: "glance",
   renderedDetailJobId: null,
@@ -436,9 +436,8 @@ function normalizeClearanceProfileLevel(value) {
 }
 
 function normalizePublicTrustProfile(value) {
-  return ["notSpecified", "none", "current"].includes(value)
-    ? value
-    : "notSpecified";
+  if (value === "notSpecified") return "unknown";
+  return ["unknown", "none", "current"].includes(value) ? value : "unknown";
 }
 
 async function loadAutomaticCheckStatus() {
@@ -982,14 +981,14 @@ function evaluateClearanceMatch(job, profile) {
   }
 
   if (publicTrustJob) {
-    if (user.publicTrust === "notSpecified") {
+    if (user.publicTrust === "unknown") {
       return {
         kind: "profileNotConfigured",
         hide: false,
         strict: true,
         userLabel,
-        summary: "Strict Public Trust requirement; profile not configured",
-        explanation: "The posting explicitly requires current Public Trust status, but your separate Public Trust profile is not configured. The job remains visible."
+        summary: "Strict Public Trust requirement; status unknown",
+        explanation: "The posting explicitly requires current Public Trust status, but your separate Public Trust status is unknown. The job remains visible."
       };
     }
     if (user.publicTrust !== "current") {
@@ -1819,10 +1818,10 @@ function clearanceProfileLevelLabel(level) {
 
 function publicTrustProfileLabel(status) {
   return ({
-    notSpecified: "Public Trust not configured",
-    none: "No current Public Trust",
-    current: "Public Trust held/current"
-  })[status] || "Public Trust not configured";
+    unknown: "Public Trust status unknown",
+    none: "Not currently held",
+    current: "Currently held / active"
+  })[status] || "Public Trust status unknown";
 }
 
 function clearanceRequirementLabel(requirement) {

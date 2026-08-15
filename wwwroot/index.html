@@ -222,126 +222,149 @@
         <h2>Settings</h2>
         <p>Application preferences and the Workday source used for job retrieval.</p>
       </header>
-      <div class="settings-grid">
-        <section class="settings-group" aria-labelledby="job-source-heading">
-          <h3 id="job-source-heading">Job Source</h3>
-          <div class="settings-field workday-facet-filter">
+      <div class="settings-surface">
+        <section class="settings-section" aria-labelledby="job-search-heading">
+          <h3 id="job-search-heading">Job Search</h3>
+          <div class="settings-row">
             <label for="country-select">Country</label>
-            <select id="country-select" disabled>
-              <option>Loading countries…</option>
-            </select>
-          </div>
-          <div class="settings-field workday-facet-filter">
-            <label for="location-select">Location</label>
-            <select id="location-select" disabled>
-              <option>Loading locations…</option>
-            </select>
-          </div>
-          <div class="workday-query-actions">
-            <button id="apply-location" type="button" disabled>Apply location</button>
-            <small id="facet-status">Loading Workday location choices…</small>
-          </div>
-        </section>
-
-        <section class="settings-group" aria-labelledby="job-preferences-heading">
-          <h3 id="job-preferences-heading">Job Preferences</h3>
-          <div class="settings-field salary-filter">
-            <label for="minimum-pay">Minimum acceptable annual pay</label>
-            <div class="currency-input">
-              <span aria-hidden="true">$</span>
-              <input id="minimum-pay" type="text" inputmode="numeric" autocomplete="off"
-                     placeholder="115,000" aria-describedby="minimum-pay-help">
+            <div class="settings-control workday-facet-filter">
+              <select id="country-select" disabled>
+                <option>Loading countries…</option>
+              </select>
             </div>
-            <small id="minimum-pay-help">Unknown or non-annual pay remains visible.</small>
+          </div>
+          <div class="settings-row">
+            <label for="location-select">Location</label>
+            <div class="settings-control workday-facet-filter">
+              <select id="location-select" disabled>
+                <option>Loading locations…</option>
+              </select>
+              <div class="workday-query-actions">
+                <button id="apply-location" type="button" disabled>Apply location</button>
+                <small id="facet-status">Loading Workday location choices…</small>
+              </div>
+            </div>
+          </div>
+          <div class="settings-row">
+            <label for="minimum-pay">Minimum acceptable annual pay</label>
+            <div class="settings-control salary-filter">
+              <div class="currency-input">
+                <span aria-hidden="true">$</span>
+                <input id="minimum-pay" type="text" inputmode="numeric" autocomplete="off"
+                       placeholder="115,000" aria-describedby="minimum-pay-help">
+              </div>
+              <small id="minimum-pay-help">Jobs with unknown or non-annual pay remain visible.</small>
+            </div>
           </div>
         </section>
 
-        <section class="settings-group" aria-labelledby="education-profile-heading">
-          <h3 id="education-profile-heading">Education Profile</h3>
-          <div class="settings-field education-settings">
+        <section class="settings-section" aria-labelledby="qualifications-heading">
+          <h3 id="qualifications-heading">My Qualifications</h3>
+          <div class="settings-row">
             <label for="education-level">Highest completed education</label>
-            <select id="education-level">
-              <option value="notSpecified">Not configured</option>
-              <option value="noCredential">No high school credential</option>
-              <option value="ged">GED</option>
-              <option value="highSchool">High school diploma</option>
-              <option value="associate">Associate degree</option>
-              <option value="bachelor">Bachelor's degree</option>
-              <option value="master">Master's degree</option>
-              <option value="doctorate">Doctorate</option>
-            </select>
+            <div class="settings-control">
+              <select id="education-level">
+                <option value="notSpecified">Not configured</option>
+                <option value="noCredential">No high school credential</option>
+                <option value="ged">GED</option>
+                <option value="highSchool">High school diploma</option>
+                <option value="associate">Associate degree</option>
+                <option value="bachelor">Bachelor's degree</option>
+                <option value="master">Master's degree</option>
+                <option value="doctorate">Doctorate</option>
+              </select>
+            </div>
           </div>
-          <div id="doctorate-type-field" class="settings-field education-settings" hidden>
+          <div id="doctorate-type-field" class="settings-row" hidden>
             <label for="doctorate-type">Doctorate type</label>
-            <select id="doctorate-type">
-              <option value="">Not specified</option>
-              <option value="phD">Ph.D.</option>
-            </select>
+            <div class="settings-control">
+              <select id="doctorate-type">
+                <option value="">Not specified</option>
+                <option value="phD">Ph.D.</option>
+              </select>
+            </div>
           </div>
-          <label class="education-filter-toggle">
-            <input id="hide-strict-education-mismatch" type="checkbox">
-            Hide jobs with strict education requirements above my completed level
-          </label>
-          <small>Preferred, flexible, or uncertain education language never hides a job.</small>
+          <div class="settings-row">
+            <label for="clearance-profile-level">National-security clearance</label>
+            <div class="settings-control">
+              <select id="clearance-profile-level">
+                <option value="notSpecified">Not configured</option>
+                <option value="none">None</option>
+                <option value="secret">Secret</option>
+                <option value="topSecret">Top Secret</option>
+                <option value="topSecretSCI">TS/SCI</option>
+                <option value="otherUnknown">Other / Unknown</option>
+              </select>
+            </div>
+          </div>
+          <div class="settings-row">
+            <label for="public-trust-profile">Public Trust status</label>
+            <div class="settings-control">
+              <select id="public-trust-profile" aria-describedby="public-trust-help">
+                <option value="none">Not currently held</option>
+                <option value="current">Currently held / active</option>
+                <option value="unknown">Unknown</option>
+              </select>
+              <small id="public-trust-help">Tracked separately from national-security clearance.</small>
+            </div>
+          </div>
         </section>
 
-        <section class="settings-group" aria-labelledby="security-profile-heading">
-          <h3 id="security-profile-heading">Security / Clearance Profile</h3>
-          <div class="settings-field security-settings">
-            <label for="clearance-profile-level">Current national-security clearance</label>
-            <select id="clearance-profile-level">
-              <option value="notSpecified">Not configured</option>
-              <option value="none">None</option>
-              <option value="secret">Secret</option>
-              <option value="topSecret">Top Secret</option>
-              <option value="topSecretSCI">TS/SCI</option>
-              <option value="otherUnknown">Other / Unknown</option>
-            </select>
+        <section class="settings-section" aria-labelledby="screening-heading">
+          <h3 id="screening-heading">Screening Rules</h3>
+          <div class="settings-check-list">
+            <label class="settings-check">
+              <input id="hide-strict-education-mismatch" type="checkbox">
+              <span>
+                Hide jobs with strict education requirements above my completed level
+                <small>Preferred, flexible, or uncertain education language never hides a job.</small>
+              </span>
+            </label>
+            <label class="settings-check">
+              <input id="hide-strict-clearance-mismatch" type="checkbox">
+              <span>
+                Hide jobs with unmet strict day-one clearance requirements
+                <small>Obtainable, preferred, and uncertain requirements always remain visible.</small>
+              </span>
+            </label>
           </div>
-          <div class="settings-field security-settings">
-            <label for="public-trust-profile">Public Trust</label>
-            <select id="public-trust-profile">
-              <option value="notSpecified">Not configured</option>
-              <option value="none">None</option>
-              <option value="current">Held / current</option>
-            </select>
-          </div>
-          <label class="clearance-filter-toggle">
-            <input id="hide-strict-clearance-mismatch" type="checkbox">
-            Hide jobs with unmet strict day-one clearance requirements
-          </label>
-          <small>Obtainable, preferred, and uncertain requirements always remain visible.</small>
         </section>
 
-        <section class="settings-group" aria-labelledby="automatic-checking-heading">
+        <section class="settings-section" aria-labelledby="automatic-checking-heading">
           <h3 id="automatic-checking-heading">Automatic Checking</h3>
-          <label class="automatic-check-enabled">
-            <input id="automatic-check-enabled" type="checkbox" checked>
-            Check for new jobs automatically
-          </label>
-          <div class="settings-field automatic-check-settings">
-            <label for="automatic-check-interval">Frequency</label>
-            <select id="automatic-check-interval">
-              <option value="30">Every 30 minutes</option>
-              <option value="60" selected>Every 1 hour</option>
-              <option value="120">Every 2 hours</option>
-              <option value="240">Every 4 hours</option>
-              <option value="480">Every 8 hours</option>
-            </select>
+          <div class="settings-check-list">
+            <label class="settings-check">
+              <input id="automatic-check-enabled" type="checkbox" checked>
+              <span>Check for new jobs automatically</span>
+            </label>
           </div>
-          <small id="automatic-check-status" class="settings-status">
-            Last checked: Never · Next check: Scheduling…
-          </small>
+          <div class="settings-row">
+            <label for="automatic-check-interval">Frequency</label>
+            <div class="settings-control compact-control">
+              <select id="automatic-check-interval">
+                <option value="30">Every 30 minutes</option>
+                <option value="60" selected>Every 1 hour</option>
+                <option value="120">Every 2 hours</option>
+                <option value="240">Every 4 hours</option>
+                <option value="480">Every 8 hours</option>
+              </select>
+              <small id="automatic-check-status" class="settings-status">
+                Last checked: Never · Next check: Scheduling…
+              </small>
+            </div>
+          </div>
         </section>
 
-        <section class="settings-group" aria-labelledby="appearance-heading">
+        <section class="settings-section" aria-labelledby="appearance-heading">
           <h3 id="appearance-heading">Appearance</h3>
-          <div class="settings-field theme-settings">
+          <div class="settings-row">
             <label for="theme-mode">Theme</label>
-            <select id="theme-mode">
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-            </select>
+            <div class="settings-control compact-control">
+              <select id="theme-mode">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+            </div>
           </div>
         </section>
       </div>

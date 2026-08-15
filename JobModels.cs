@@ -229,7 +229,7 @@ public sealed record EducationProfile(string Level, string? DoctorateType)
 
 public sealed record SecurityProfile(string ClearanceLevel, string PublicTrust)
 {
-    public static SecurityProfile Default { get; } = new("notSpecified", "notSpecified");
+    public static SecurityProfile Default { get; } = new("notSpecified", "unknown");
 }
 
 public sealed record ViewedJobRequest(string StableId);
