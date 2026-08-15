@@ -1,0 +1,16 @@
+# .NET / Visual Studio build output
+bin/
+obj/
+.vs/
+TestResults/
+*.user
+*.suo
+
+# Application-local runtime state
+data/
+**/data/
+
+# Published output and transient files
+publish/
+*.tmp
+*.log

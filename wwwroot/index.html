@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Leidos Jobs Viewer</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/vendor/purify.min.js" defer></script>
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="app-header">
+      <div>
+        <h1>Leidos Jobs</h1>
+        <p id="last-refreshed" class="subtle">Starting…</p>
+      </div>
+      <button id="refresh-button" class="primary-button" type="button">Refresh</button>
+    </header>
+
+    <section class="filter-section" aria-labelledby="filter-heading">
+      <button id="filter-toggle" class="filter-toggle" type="button"
+              aria-expanded="true" aria-controls="filter-content">
+        <span class="filter-toggle-title">
+          <span id="filter-chevron" class="filter-chevron" aria-hidden="true">▼</span>
+          <span id="filter-heading">Search &amp; Filters</span>
+        </span>
+        <span id="filter-summary" class="filter-summary"></span>
+        <span id="filter-toggle-action" class="filter-toggle-action">Collapse</span>
+      </button>
+      <div id="filter-content" class="filter-panel">
+      <div class="keyword-filter include-filter">
+        <label for="include-input">Include keywords</label>
+        <div class="input-group">
+          <input id="include-input" type="text" autocomplete="off"
+                 placeholder="e.g. windows, backup">
+          <button id="add-inclusion" type="button">Add</button>
+        </div>
+        <div id="inclusion-chips" class="chips" aria-live="polite"></div>
+      </div>
+      <div class="keyword-filter exclude-filter">
+        <label for="exclude-input">Exclude keywords</label>
+        <div class="input-group">
+          <input id="exclude-input" type="text" autocomplete="off"
+                 placeholder="e.g. substation, transmission line">
+          <button id="add-exclusion" type="button">Add</button>
+        </div>
+        <div id="exclusion-chips" class="chips" aria-live="polite"></div>
+      </div>
+      <div class="salary-filter">
+        <label for="minimum-pay">Minimum acceptable annual pay</label>
+        <div class="currency-input">
+          <span aria-hidden="true">$</span>
+          <input id="minimum-pay" type="text" inputmode="numeric" autocomplete="off"
+                 placeholder="115,000" aria-describedby="minimum-pay-help">
+        </div>
+        <small id="minimum-pay-help">Unknown or non-annual pay remains visible.</small>
+      </div>
+      <div class="workday-facet-filter">
+        <label for="country-select">Workday country</label>
+        <select id="country-select" disabled>
+          <option>Loading countries…</option>
+        </select>
+      </div>
+      <div class="workday-facet-filter">
+        <label for="location-select">Workday location</label>
+        <select id="location-select" disabled>
+          <option>Loading locations…</option>
+        </select>
+      </div>
+      <div class="workday-query-actions">
+        <button id="apply-location" type="button" disabled>Apply location</button>
+        <small id="facet-status">Loading Workday location choices…</small>
+      </div>
+      <fieldset class="scope-options">
+        <legend>Match keywords in</legend>
+        <label><input type="radio" name="scope" value="metadata" checked> Title and metadata</label>
+        <label><input type="radio" name="scope" value="description"> Metadata and full description</label>
+      </fieldset>
+      <div class="highlight-option">
+        <label>
+          <input id="highlight-inclusions" type="checkbox" checked>
+          Highlight include keywords
+        </label>
+      </div>
+      <fieldset class="location-options">
+        <legend>Remote location</legend>
+        <label><input type="radio" name="location-mode" value="all" checked> All jobs</label>
+        <label><input type="radio" name="location-mode" value="hide-restricted"> Hide location-restricted</label>
+        <label><input type="radio" name="location-mode" value="only-restricted"> Only location-restricted</label>
+      </fieldset>
+      <div class="results-summary">
+        <strong id="result-count">0 of 0 jobs</strong>
+        <span>Newest first</span>
+      </div>
+      <div id="error-banner" class="error-banner" role="alert" hidden></div>
+      <div id="loading-banner" class="loading-banner" aria-live="polite" hidden>
+        <span class="spinner" aria-hidden="true"></span>
+        Retrieving Workday listings and exact posting dates…
+      </div>
+      <div id="cache-banner" class="cache-banner" aria-live="polite" hidden></div>
+      </div>
+    </section>
+
+    <section class="workspace">
+      <aside class="results-pane" aria-label="Job results">
+        <div class="pane-heading">
+          <span>Job results</span>
+          <label class="show-hidden-toggle">
+            <input id="show-hidden-jobs" type="checkbox">
+            Show hidden <span id="hidden-job-count">(0)</span>
+          </label>
+        </div>
+        <div id="job-list" class="job-list" aria-label="Filtered Leidos jobs"></div>
+      </aside>
+
+      <article class="detail-pane" aria-live="polite">
+        <div id="empty-detail" class="empty-state">
+          Select a job to view its description.
+        </div>
+        <div id="job-detail" hidden>
+          <header class="detail-header">
+            <div class="detail-title-row">
+              <div>
+                <h2 id="detail-title"></h2>
+                <p class="detail-identity">
+                  <span id="detail-new-badge" class="new-badge" hidden>NEW</span>
+                  <span id="detail-hidden-badge" class="hidden-badge" hidden>Hidden</span>
+                  <span id="detail-requisition" class="requisition"></span>
+                </p>
+              </div>
+              <a id="workday-link" class="workday-button" target="_blank" rel="noopener noreferrer">
+                Open in Workday
+              </a>
+            </div>
+            <dl class="metadata-grid">
+              <div><dt>Posted</dt><dd id="detail-date"></dd></div>
+              <div><dt>Pay range</dt><dd id="detail-pay"></dd></div>
+              <div><dt>Time type</dt><dd id="detail-time-type"></dd></div>
+              <div><dt>Location</dt><dd id="detail-location"></dd></div>
+              <div><dt>Additional locations</dt><dd id="detail-additional"></dd></div>
+              <div id="detail-clearance-row" hidden><dt>Clearance</dt><dd id="detail-clearance"></dd></div>
+              <div id="detail-clearance-status-row" hidden><dt>Status</dt><dd id="detail-clearance-status"></dd></div>
+              <div id="detail-polygraph-row" hidden><dt>Polygraph</dt><dd id="detail-polygraph"></dd></div>
+            </dl>
+            <div id="detail-location-note" class="location-note" hidden>
+              <strong>⚠ Remote location note</strong>
+              <p id="detail-location-note-text"></p>
+            </div>
+            <div id="detail-headroom-note" class="headroom-note" hidden>
+              <strong>⚠ Limited salary headroom</strong>
+              <p id="detail-headroom-note-text"></p>
+            </div>
+            <div id="detail-clearance-note" class="clearance-note" hidden>
+              <strong>Clearance note</strong>
+              <p id="detail-clearance-note-text"></p>
+            </div>
+            <p id="detail-warning" class="detail-warning" hidden></p>
+          </header>
+          <div id="detail-description" class="description"></div>
+        </div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>
