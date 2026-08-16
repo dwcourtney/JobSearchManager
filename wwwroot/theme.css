@@ -47,6 +47,7 @@
   /* Borders, focus, shape, and effects */
   --border-width-default: 1px;
   --border-width-loading-spinner: 3px;
+  --stroke-width-icon: 2px;
   --radius-highlight: 2px;
   --radius-badge: 3px;
   --radius-control: 4px;

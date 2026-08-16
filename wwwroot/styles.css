@@ -953,6 +953,15 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   background: var(--color-dismiss-action-hover-background);
 }
 
+.job-dismiss-icon {
+  display: block;
+  width: var(--font-size-icon);
+  height: var(--font-size-icon);
+  margin: auto;
+  stroke-width: var(--stroke-width-icon);
+  pointer-events: none;
+}
+
 .job-save-button {
   position: absolute;
   top: .52rem;

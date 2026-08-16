@@ -2109,12 +2109,16 @@ function createJobListItem(job) {
   const dismissButton = document.createElement("button");
   dismissButton.type = "button";
   dismissButton.className = "job-dismiss-button";
-  dismissButton.textContent = isDismissed ? "Restore" : "×";
+  if (isDismissed) {
+    dismissButton.textContent = "Restore";
+  } else {
+    dismissButton.append(createTrashCanIcon());
+  }
   dismissButton.setAttribute(
     "aria-label",
     isDismissed
-      ? `Restore job ${job.requisitionId || job.stableId}`
-      : `Dismiss job ${job.requisitionId || job.stableId}`);
+      ? `Restore this job: ${job.title || job.requisitionId || job.stableId}`
+      : `Hide this job: ${job.title || job.requisitionId || job.stableId}`);
   dismissButton.title = isDismissed ? "Restore this job" : "Hide this job";
   dismissButton.addEventListener("click", () => setJobDismissed(job, !isDismissed));
 
@@ -2131,6 +2135,26 @@ function createJobListItem(job) {
 
   card.append(button, saveButton, dismissButton);
   return card;
+}
+
+function createTrashCanIcon() {
+  const svgNamespace = "http://www.w3.org/2000/svg";
+  const icon = document.createElementNS(svgNamespace, "svg");
+  icon.classList.add("job-dismiss-icon");
+  icon.setAttribute("viewBox", "0 0 24 24");
+  icon.setAttribute("aria-hidden", "true");
+  icon.setAttribute("focusable", "false");
+  icon.setAttribute("fill", "none");
+  icon.setAttribute("stroke", "currentColor");
+  icon.setAttribute("stroke-linecap", "round");
+  icon.setAttribute("stroke-linejoin", "round");
+
+  const lid = document.createElementNS(svgNamespace, "path");
+  lid.setAttribute("d", "M4 7h16M9 7V4h6v3");
+  const bin = document.createElementNS(svgNamespace, "path");
+  bin.setAttribute("d", "M6.5 7l1 13h9l1-13M10 11v5M14 11v5");
+  icon.append(lid, bin);
+  return icon;
 }
 
 async function setJobSaved(job, saved) {
