@@ -7,6 +7,9 @@ $repo = Split-Path -Parent $PSScriptRoot
 $themePath = Join-Path $repo "wwwroot\theme.css"
 $stylesPath = Join-Path $repo "wwwroot\styles.css"
 $indexPath = Join-Path $repo "wwwroot\index.html"
+$manifestPath = Join-Path $repo "wwwroot\site.webmanifest"
+$sourceIconPath = Join-Path $repo "assets\JobSearchManager.ico"
+$faviconPath = Join-Path $repo "wwwroot\favicon.ico"
 $appPath = Join-Path $repo "wwwroot\app.js"
 $countryOrderingPath = Join-Path $repo "wwwroot\country-ordering.js"
 $countryOrderingTestsPath = Join-Path $repo "Tests\country-ordering.tests.js"
@@ -58,6 +61,37 @@ $theme = Get-Content -LiteralPath $themePath -Raw
 $index = Get-Content -LiteralPath $indexPath -Raw
 $app = Get-Content -LiteralPath $appPath -Raw
 $countryOrdering = Get-Content -LiteralPath $countryOrderingPath -Raw
+
+$requiredIconLinks = @(
+    'rel="icon" href="/favicon.ico?v=1" sizes="any"',
+    'rel="icon" type="image/png" href="/icons/favicon-32.png?v=1" sizes="32x32"',
+    'rel="apple-touch-icon" href="/icons/apple-touch-icon.png?v=1" sizes="180x180"',
+    'rel="manifest" href="/site.webmanifest?v=1"'
+)
+foreach ($link in $requiredIconLinks) {
+    if (-not $index.Contains($link)) {
+        throw "index.html is missing required browser-icon metadata: $link"
+    }
+}
+if (-not (Test-Path -LiteralPath $manifestPath) -or
+    -not (Test-Path -LiteralPath $faviconPath) -or
+    (Get-FileHash -LiteralPath $sourceIconPath -Algorithm SHA256).Hash -ne
+        (Get-FileHash -LiteralPath $faviconPath -Algorithm SHA256).Hash) {
+    throw "The web favicon is missing or no longer matches the executable icon."
+}
+$manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+if ($manifest.name -ne "Job Search Manager" -or
+    @($manifest.icons).Count -ne 2 -or
+    @($manifest.icons.src) -notcontains "/icons/icon-192.png?v=1" -or
+    @($manifest.icons.src) -notcontains "/icons/icon-512.png?v=1") {
+    throw "site.webmanifest is missing the canonical application name or icon assets."
+}
+foreach ($icon in $manifest.icons) {
+    $iconFile = ($icon.src -replace '^/', '') -replace '\?v=.*$', ''
+    if (-not (Test-Path -LiteralPath (Join-Path (Join-Path $repo "wwwroot") $iconFile))) {
+        throw "site.webmanifest references a missing icon: $($icon.src)"
+    }
+}
 
 $countryOrderingScript = $index.IndexOf('src="/country-ordering.js?v=2"')
 $sourceStateScript = $index.IndexOf('src="/job-source-state.js"')
@@ -216,3 +250,4 @@ Write-Output "Inline-style audit: PASS"
 Write-Output "Theme token-reference audit: PASS ($($usedTokens.Count) tokens used)"
 Write-Output "Settings tab structure audit: PASS"
 Write-Output "HTML ID uniqueness audit: PASS"
+Write-Output "Browser icon/manifest audit: PASS"
