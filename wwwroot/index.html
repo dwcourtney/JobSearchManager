@@ -281,22 +281,21 @@
         <div class="settings-tabs" role="tablist" aria-label="Settings categories">
           <button id="job-search-settings-tab" class="detail-tab active" type="button" role="tab"
                   aria-selected="true" aria-controls="job-search-settings-panel">
-            Job Search
+            Job Source
           </button>
           <button id="qualifications-settings-tab" class="detail-tab" type="button" role="tab"
                   aria-selected="false" aria-controls="qualifications-settings-panel" tabindex="-1">
-            Qualifications
+            My Qualifications
           </button>
           <button id="preferences-settings-tab" class="detail-tab" type="button" role="tab"
                   aria-selected="false" aria-controls="preferences-settings-panel" tabindex="-1">
-            Preferences
+            My Preferences
           </button>
         </div>
 
         <div id="job-search-settings-panel" class="settings-tab-panel" role="tabpanel"
              aria-labelledby="job-search-settings-tab">
-        <section class="settings-section" aria-labelledby="job-search-heading">
-          <h3 id="job-search-heading">Job Source</h3>
+        <div class="settings-section">
           <div class="settings-row">
             <label for="company-select">Company</label>
             <div class="settings-control workday-facet-filter">
@@ -344,26 +343,37 @@
                    aria-live="polite">No physical locations selected.</div>
               <div id="location-groups" class="location-group-list"
                    aria-label="Available physical locations"></div>
-              <div class="workday-query-actions">
-                <button id="apply-location" type="button" disabled>Apply job source</button>
-                <small id="facet-status" aria-live="polite">Loading Workday location choices…</small>
-              </div>
             </div>
+          </div>
+        </div>
+
+        <section id="apply-source-section" class="settings-section apply-source-section"
+                 aria-labelledby="apply-source-heading">
+          <h3 id="apply-source-heading">Apply Job Source</h3>
+          <div class="apply-source-content">
+            <div>
+              <p>Apply the selected company and location settings to reload the job source.</p>
+              <small>Job-source changes are applied manually because reloading may take several seconds.</small>
+              <small id="facet-status" aria-live="polite">Loading Workday location choices…</small>
+            </div>
+            <button id="apply-location" class="apply-source-button" type="button" disabled>
+              Loading job source…
+            </button>
           </div>
         </section>
         </div>
 
         <div id="qualifications-settings-panel" class="settings-tab-panel" role="tabpanel"
              aria-labelledby="qualifications-settings-tab" hidden>
-        <section class="settings-section" aria-labelledby="qualifications-heading">
-          <h3 id="qualifications-heading">My Qualifications</h3>
+        <div class="settings-section">
+          <p class="settings-save-note">Changes on this tab are saved automatically.</p>
           <div class="settings-row">
             <label for="minimum-pay">Minimum acceptable annual pay</label>
             <div class="settings-control salary-filter">
               <div class="currency-input">
                 <span aria-hidden="true">$</span>
                 <input id="minimum-pay" type="text" inputmode="numeric" autocomplete="off"
-                       placeholder="115,000" aria-describedby="minimum-pay-help">
+                       placeholder="0" aria-describedby="minimum-pay-help">
               </div>
               <small id="minimum-pay-help">Jobs with unknown or non-annual pay remain visible.</small>
             </div>
@@ -439,7 +449,7 @@
               </select>
             </div>
           </div>
-        </section>
+        </div>
 
         <section class="settings-section" aria-labelledby="screening-heading">
           <h3 id="screening-heading">Screening Rules</h3>
@@ -472,6 +482,7 @@
         <div id="preferences-settings-panel" class="settings-tab-panel" role="tabpanel"
              aria-labelledby="preferences-settings-tab" hidden>
         <section class="settings-section" aria-labelledby="automatic-checking-heading">
+          <p class="settings-save-note">Changes on this tab are saved automatically.</p>
           <h3 id="automatic-checking-heading">Automatic Checking</h3>
           <div class="settings-check-list">
             <label class="settings-check">

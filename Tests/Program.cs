@@ -366,8 +366,9 @@ static Task TestBlobNamespaceAsync()
 static Task TestNeutralDefaultsAsync()
 {
     var settings = ViewerSettings.Default;
-    Assert(settings.MinimumSalary is null && settings.IncludeKeywords.Count == 0 &&
-           settings.ExcludeKeywords.Count == 0,
+    Assert(settings.MinimumSalary == 0m,
+        "New workspaces did not default minimum acceptable annual pay to zero.");
+    Assert(settings.IncludeKeywords.Count == 0 && settings.ExcludeKeywords.Count == 0,
         "New workspaces inherited personal search preferences.");
     Assert(settings.UserProfile?.Education.Level == "notSpecified" &&
            settings.UserProfile.Security?.ClearanceLevel == "notSpecified" &&

@@ -370,7 +370,7 @@ public sealed record ViewerSettings(
     bool HideStrictWorkAuthorizationMismatch = false)
 {
     public static ViewerSettings Default { get; } = new(
-        [], [], null, "metadata", "all", true,
+        [], [], 0m, "metadata", "all", true,
         new Dictionary<string, bool>(StringComparer.Ordinal),
         new FacetSelection(null, ""),
         null,

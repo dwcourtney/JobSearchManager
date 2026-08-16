@@ -117,6 +117,7 @@ const elements = {
   selectedLocationSummary: document.querySelector("#selected-location-summary"),
   locationGroups: document.querySelector("#location-groups"),
   applyLocation: document.querySelector("#apply-location"),
+  applySourceSection: document.querySelector("#apply-source-section"),
   facetStatus: document.querySelector("#facet-status"),
   highlightInclusions: document.querySelector("#highlight-inclusions"),
   automaticCheckEnabled: document.querySelector("#automatic-check-enabled"),
@@ -1200,12 +1201,20 @@ function updateQueryControls() {
     selectedPendingLocations().length > 0;
   const pending = !disabled && querySelectionIsPending();
   elements.applyLocation.disabled = disabled || !hasExplicitSource || !pending;
+  elements.applySourceSection.classList.toggle("pending", pending);
+  elements.applyLocation.textContent = disabled
+    ? "Loading job source…"
+    : !hasExplicitSource
+      ? "Choose a location source"
+      : pending
+        ? "Apply job source"
+        : "Source is current";
   if (!state.facetsLoaded) return;
   const context = `${new Intl.NumberFormat().format(state.facetMatchingJobs)} jobs in this country context.`;
   elements.facetStatus.textContent = !hasExplicitSource
     ? "Choose at least one location source before applying."
     : pending
-      ? `Unsaved source changes · ${context}`
+      ? `Pending job-source changes · ${context}`
       : `Source matches currently loaded jobs · ${context}`;
 }
 

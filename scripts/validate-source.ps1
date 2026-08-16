@@ -61,6 +61,24 @@ foreach ($tabId in $settingsTabIds) {
     }
 }
 
+$settingsTabLabels = @{
+    "job-search-settings" = "Job Source"
+    "qualifications-settings" = "My Qualifications"
+    "preferences-settings" = "My Preferences"
+}
+foreach ($tabId in $settingsTabLabels.Keys) {
+    $label = [regex]::Escape($settingsTabLabels[$tabId])
+    if (-not [regex]::IsMatch(
+        $index,
+        "(?is)<button[^>]*id=`"$tabId-tab`"[^>]*>\s*$label\s*</button>")) {
+        throw "Settings tab $tabId does not use the required visible label."
+    }
+}
+
+if ($index -match 'id="job-search-heading"' -or $index -match 'id="qualifications-heading"') {
+    throw "A redundant top-level Settings panel heading is still present."
+}
+
 $jobSearchStart = $index.IndexOf('id="job-search-settings-panel"')
 $qualificationsStart = $index.IndexOf('id="qualifications-settings-panel"')
 $preferencesStart = $index.IndexOf('id="preferences-settings-panel"')
@@ -95,6 +113,22 @@ foreach ($panelName in $requiredSettingsControls.Keys) {
             throw "$controlId is not assigned to the $panelName Settings tab."
         }
     }
+}
+
+if ($settingsPanelMarkup["Job Search"] -notmatch 'class="settings-section apply-source-section"' -or
+    $settingsPanelMarkup["Job Search"] -notmatch 'class="apply-source-content"') {
+    throw "Apply Job Source is not in its dedicated Settings section."
+}
+if ($settingsPanelMarkup["Job Search"] -match 'saved automatically') {
+    throw "Job Source incorrectly claims that source changes are saved automatically."
+}
+if ($settingsPanelMarkup["Qualifications"] -notmatch 'Changes on this tab are saved automatically\.' -or
+    $settingsPanelMarkup["Preferences"] -notmatch 'Changes on this tab are saved automatically\.') {
+    throw "The auto-save note is missing from My Qualifications or My Preferences."
+}
+if ($settingsPanelMarkup["Qualifications"] -notmatch 'id="screening-heading"' -or
+    $settingsPanelMarkup["Preferences"] -match 'id="screening-heading"') {
+    throw "Screening Rules is not contained exclusively in My Qualifications."
 }
 
 $duplicateIds = [regex]::Matches($index, '(?i)\sid="([^"]+)"') |

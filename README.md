@@ -86,7 +86,7 @@ The executable is `WorkdayJobManager.exe` in a Windows build or publish output.
 
 ## Source selection
 
-Settings > Job Search presents Company first, followed by Country, remote coverage
+Settings > Job Source presents Company first, followed by Country, remote coverage
 when that employer exposes configured remote facets, and one or more physical
 locations. Changing pending controls only refreshes facet choices. It does not crawl
 jobs until **Apply job source** is selected.
