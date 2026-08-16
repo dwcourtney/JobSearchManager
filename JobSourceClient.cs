@@ -126,6 +126,11 @@ public sealed class JobSourceClient
         string? countryId,
         CancellationToken cancellationToken = default)
     {
+        if (company.IsSmartRecruiters)
+        {
+            return await FetchSmartRecruitersLocationFacetsAsync(company, countryId, cancellationToken);
+        }
+
         var jobsEndpoint = new Uri(GetCxsBaseUri(company), "jobs");
         // Do not apply the current location here: doing so makes the provider collapse
         // the country facet to the one country containing that location. Country
@@ -148,7 +153,7 @@ public sealed class JobSourceClient
         var locationGroup = page.Facets.FirstOrDefault(facet =>
             string.Equals(facet.FacetParameter, "locationMainGroup", StringComparison.Ordinal));
         var countryFacet = locationGroup?.Values.FirstOrDefault(facet =>
-            string.Equals(facet.FacetParameter, "locationCountry", StringComparison.Ordinal));
+            string.Equals(facet.FacetParameter, company.CountryFacetParameter, StringComparison.Ordinal));
         var locationFacet = locationGroup?.Values.FirstOrDefault(facet =>
             string.Equals(facet.FacetParameter, "locations", StringComparison.Ordinal));
 
@@ -183,6 +188,12 @@ public sealed class JobSourceClient
         Action<RefreshProgress>? reportProgress,
         CancellationToken cancellationToken)
     {
+        if (company.IsSmartRecruiters)
+        {
+            return await FetchSmartRecruitersListingsAsync(
+                company, query, reportProgress, cancellationToken);
+        }
+
         query = query.Normalize(company);
         var jobsEndpoint = new Uri(GetCxsBaseUri(company), "jobs");
         var listings = new List<ListingPosting>();
@@ -248,7 +259,7 @@ public sealed class JobSourceClient
         var facets = new Dictionary<string, string[]>(StringComparer.Ordinal);
         if (!string.IsNullOrWhiteSpace(query.CountryId))
         {
-            facets["locationCountry"] = [query.CountryId];
+            facets[company.CountryFacetParameter] = [query.CountryId];
         }
         var locationIds = query.EffectiveLocationIds(company);
         if (!query.IncludeAllLocations && locationIds.Count > 0)
@@ -263,6 +274,11 @@ public sealed class JobSourceClient
         string externalPath,
         CancellationToken cancellationToken)
     {
+        if (company.IsSmartRecruiters)
+        {
+            return await FetchSmartRecruitersDetailAsync(company, externalPath, cancellationToken);
+        }
+
         var detailUri = new Uri(GetCxsBaseUri(company), externalPath.TrimStart('/'));
         const int maximumAttempts = 5;
 
@@ -402,6 +418,183 @@ public sealed class JobSourceClient
 
     private static Uri GetCxsBaseUri(CompanyDefinition company) => new(
         $"{company.BaseUrl.TrimEnd('/')}/wday/cxs/{Uri.EscapeDataString(company.Tenant)}/{Uri.EscapeDataString(company.Site)}/");
+
+    private async Task<LocationFacetOptions> FetchSmartRecruitersLocationFacetsAsync(
+        CompanyDefinition company,
+        string? countryId,
+        CancellationToken cancellationToken)
+    {
+        var postings = await FetchSmartRecruitersSummariesAsync(
+            company, null, cancellationToken);
+        var countries = postings
+            .Where(posting => !string.IsNullOrWhiteSpace(posting.Location.Country))
+            .GroupBy(posting => posting.Location.Country.Trim().ToLowerInvariant(), StringComparer.Ordinal)
+            .Select(group => new FacetOption(
+                group.Key,
+                CountryLabel(group.First().Location),
+                group.Count()))
+            .OrderBy(option => option.Label, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var relevant = string.IsNullOrWhiteSpace(countryId)
+            ? postings
+            : postings.Where(posting => string.Equals(
+                posting.Location.Country, countryId, StringComparison.OrdinalIgnoreCase)).ToArray();
+        var locations = relevant
+            .Where(posting => !string.IsNullOrWhiteSpace(posting.Location.FullLocation))
+            .GroupBy(posting => SmartRecruitersLocationId(posting.Location), StringComparer.Ordinal)
+            .Select(group => new FacetOption(
+                group.Key,
+                group.First().Location.Remote
+                    ? $"{CountryLabel(group.First().Location)} - Remote"
+                    : group.First().Location.FullLocation,
+                group.Count()))
+            .ToArray();
+        var organization = LocationFacetOrganizer.Organize(company, countryId, locations);
+
+        return new LocationFacetOptions(
+            relevant.Count,
+            countries,
+            organization.PhysicalLocations,
+            organization.RemoteLocations,
+            organization.Groups,
+            organization.PhysicalLocations.Count,
+            organization.StateMappedLocationCount,
+            organization.UnmappedLocationLabels);
+    }
+
+    private async Task<List<ListingPosting>> FetchSmartRecruitersListingsAsync(
+        CompanyDefinition company,
+        JobSourceQuery query,
+        Action<RefreshProgress>? reportProgress,
+        CancellationToken cancellationToken)
+    {
+        query = query.Normalize(company);
+        var postings = await FetchSmartRecruitersSummariesAsync(
+            company, query.CountryId, cancellationToken);
+        var allowedLocations = query.EffectiveLocationIds(company).ToHashSet(StringComparer.Ordinal);
+        var filtered = query.IncludeAllLocations
+            ? postings
+            : postings.Where(posting => allowedLocations.Contains(
+                SmartRecruitersLocationId(posting.Location))).ToArray();
+        var listings = filtered
+            .Where(posting => !string.IsNullOrWhiteSpace(posting.Id))
+            .GroupBy(posting => posting.Id, StringComparer.Ordinal)
+            .Select(group => group.First())
+            .Select(posting => new ListingPosting
+            {
+                Title = posting.Name,
+                ExternalPath = posting.Id,
+                LocationsText = posting.Location.Remote
+                    ? $"{posting.Location.FullLocation} (Remote)"
+                    : posting.Location.FullLocation,
+                PostedOn = posting.ReleasedDate,
+                BulletFields = string.IsNullOrWhiteSpace(posting.RefNumber)
+                    ? []
+                    : [posting.RefNumber]
+            })
+            .ToList();
+        reportProgress?.Invoke(new RefreshProgress("listings", listings.Count, listings.Count));
+        return listings;
+    }
+
+    private async Task<IReadOnlyList<SmartRecruitersPosting>> FetchSmartRecruitersSummariesAsync(
+        CompanyDefinition company,
+        string? countryId,
+        CancellationToken cancellationToken)
+    {
+        const int pageSize = 100;
+        var firstUri = GetSmartRecruitersPostingsUri(company, countryId, 0, pageSize);
+        using var firstResponse = await _httpClient.GetAsync(firstUri, cancellationToken);
+        var first = await ReadJsonAsync<SmartRecruitersPostingResponse>(
+            firstResponse, firstUri, cancellationToken);
+        if (first.TotalFound <= first.Content.Count)
+        {
+            return first.Content;
+        }
+
+        var offsets = Enumerable.Range(1, (first.TotalFound + pageSize - 1) / pageSize - 1)
+            .Select(page => page * pageSize);
+        var gate = new SemaphoreSlim(_options.DetailConcurrency);
+        var pages = await Task.WhenAll(offsets.Select(async offset =>
+        {
+            await gate.WaitAsync(cancellationToken);
+            try
+            {
+                var uri = GetSmartRecruitersPostingsUri(company, countryId, offset, pageSize);
+                using var response = await _httpClient.GetAsync(uri, cancellationToken);
+                return await ReadJsonAsync<SmartRecruitersPostingResponse>(response, uri, cancellationToken);
+            }
+            finally
+            {
+                gate.Release();
+            }
+        }));
+        return first.Content.Concat(pages.SelectMany(page => page.Content)).ToArray();
+    }
+
+    private async Task<DetailPosting> FetchSmartRecruitersDetailAsync(
+        CompanyDefinition company,
+        string externalPath,
+        CancellationToken cancellationToken)
+    {
+        var postingId = externalPath.Trim('/');
+        var detailUri = new Uri(
+            $"{company.BaseUrl.TrimEnd('/')}/v1/companies/{Uri.EscapeDataString(company.Tenant)}/postings/{Uri.EscapeDataString(postingId)}");
+        using var response = await _httpClient.GetAsync(detailUri, cancellationToken);
+        var detail = await ReadJsonAsync<SmartRecruitersPostingDetail>(
+            response, detailUri, cancellationToken);
+        var sections = detail.JobAd.Sections;
+        var description = string.Concat(
+            SectionHtml(sections.JobDescription),
+            SectionHtml(sections.Qualifications),
+            SectionHtml(sections.AdditionalInformation));
+        var releasedDate = detail.ReleasedDate.Length >= 10
+            ? detail.ReleasedDate[..10]
+            : detail.ReleasedDate;
+
+        return new DetailPosting
+        {
+            Title = detail.Name,
+            JobReqId = detail.RefNumber,
+            Location = detail.Location.Remote
+                ? $"{detail.Location.FullLocation} (Remote)"
+                : detail.Location.FullLocation,
+            StartDate = releasedDate,
+            PostedOn = detail.ReleasedDate,
+            TimeType = detail.TypeOfEmployment.Label,
+            JobDescription = description,
+            ExternalUrl = detail.PostingUrl
+        };
+    }
+
+    private static Uri GetSmartRecruitersPostingsUri(
+        CompanyDefinition company,
+        string? countryId,
+        int offset,
+        int limit)
+    {
+        var country = string.IsNullOrWhiteSpace(countryId)
+            ? ""
+            : $"&country={Uri.EscapeDataString(countryId.Trim().ToLowerInvariant())}";
+        return new Uri(
+            $"{company.BaseUrl.TrimEnd('/')}/v1/companies/{Uri.EscapeDataString(company.Tenant)}/postings?limit={limit}&offset={offset}{country}");
+    }
+
+    private static string SmartRecruitersLocationId(SmartRecruitersLocation location) =>
+        location.Remote
+            ? $"remote:{location.Country.Trim().ToLowerInvariant()}"
+            : $"location:{location.Country.Trim().ToLowerInvariant()}:{location.FullLocation.Trim()}";
+
+    private static string CountryLabel(SmartRecruitersLocation location)
+    {
+        var parts = location.FullLocation.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length > 0 ? parts[^1] : location.Country.ToUpperInvariant();
+    }
+
+    private static string SectionHtml(SmartRecruitersSection section) =>
+        string.IsNullOrWhiteSpace(section.Text)
+            ? ""
+            : $"<section><h2>{WebUtility.HtmlEncode(section.Title)}</h2>{section.Text}</section>";
 
     private static string FirstNonEmpty(params string?[] values) =>
         values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? "";

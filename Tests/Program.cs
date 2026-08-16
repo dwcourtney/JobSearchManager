@@ -139,6 +139,9 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Portable workspace restores after a complete reset", TestPortableWorkspaceResetRestoreAsync),
     ("Fresh catalog snapshots retain the applied source", TestFreshCatalogSourceAsync),
     ("Boeing is a catalog-driven U.S. job source", TestBoeingCatalogAsync),
+    ("Expanded company catalog contains the five selected live sources", TestExpandedCompanyCatalogAsync),
+    ("Cross-provider location labels are grouped by U.S. state", TestExpandedLocationGroupingAsync),
+    ("SmartRecruiters postings normalize through the generic source client", TestSmartRecruitersSourceAsync),
     ("Unsupported active company state migrates without source reinterpretation", TestUnsupportedCompanyMigrationAsync),
     ("Unsupported company history remains isolated", TestUnsupportedCompanyHistoryAsync),
     ("Established credential catalog entries validate", TestCredentialCatalogAsync),
@@ -163,6 +166,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Remote detector recognizes sanitized Leidos deployment language", TestLeidosRemoteFixtureAsync),
     ("Remote detector keeps a sanitized MTM-style remote role neutral", TestMtmRemoteFixtureAsync),
     ("Remote detector recognizes sanitized Boeing frequent-travel language", TestBoeingRemoteFixtureAsync),
+    ("Selected-company terminology remains covered by sanitized fixtures", TestExpandedCompanyFixturesAsync),
     ("Workflow state transitions are canonical and validated", TestWorkflowStateTransitionsAsync),
     ("Workflow state persists through a catalog restart", TestWorkflowStateRoundTripAsync),
     ("Workflow state remains workspace-isolated", TestWorkflowStateWorkspaceIsolationAsync),
@@ -872,6 +876,86 @@ static Task TestBoeingCatalogAsync()
     return Task.CompletedTask;
 }
 
+static Task TestExpandedCompanyCatalogAsync()
+{
+    var catalog = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+    var expected = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+    {
+        ["northrop-grumman"] = "Northrop Grumman",
+        ["nvidia"] = "NVIDIA",
+        ["parsons"] = "Parsons",
+        ["aecom"] = "AECOM",
+        ["rtx"] = "RTX"
+    };
+    foreach (var company in expected)
+    {
+        var definition = catalog.Get(company.Key);
+        Assert(definition.DisplayName == company.Value && definition.RemoteLocationIds.Count > 0,
+            $"The verified {company.Value} source or its remote facet configuration is missing.");
+    }
+    Assert(catalog.Get("aecom").IsSmartRecruiters &&
+           catalog.Get("aecom").IsRemoteLocation("remote:ca") &&
+           catalog.Get("aecom").RemoteLocationIdsForCountry("ca").Single() == "remote:ca" &&
+           catalog.Get("nvidia").Provider == JobSourceProviders.Workday,
+        "Provider selection was not represented by catalog data.");
+    return Task.CompletedTask;
+}
+
+static Task TestExpandedLocationGroupingAsync()
+{
+    var catalog = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+    var cases = new[]
+    {
+        ("northrop-grumman", "ng-orlando", "United States-Florida-Orlando", "Orlando"),
+        ("nvidia", "nv-santa-clara", "US, CA, Santa Clara", "Santa Clara"),
+        ("parsons", "pa-orlando", "US - FL, Orlando", "Orlando"),
+        ("aecom", "location:us:Orlando, FL, United States", "Orlando, FL, United States", "Orlando"),
+        ("rtx", "rtx-orlando", "US-FL-ORLANDO", "ORLANDO")
+    };
+    foreach (var item in cases)
+    {
+        var organization = LocationFacetOrganizer.Organize(
+            catalog.Get(item.Item1), null, [new FacetOption(item.Item2, item.Item3, 1)]);
+        Assert(organization.StateMappedLocationCount == 1 &&
+               organization.PhysicalLocations.Single().DisplayLabel == item.Item4,
+            $"The {item.Item1} location format was not mapped to its U.S. state.");
+    }
+    return Task.CompletedTask;
+}
+
+static async Task TestSmartRecruitersSourceAsync()
+{
+    const string summary = """
+        {"totalFound":1,"content":[{"id":"744000100000001","name":"Remote Project Analyst","refNumber":"J10000001","releasedDate":"2026-08-15T12:30:00Z","location":{"city":"Orlando","region":"FL","country":"us","remote":true,"hybrid":false,"fullLocation":"Orlando, FL, United States"},"typeOfEmployment":{"label":"Full-time"}}]}
+        """;
+    const string detail = """
+        {"id":"744000100000001","name":"Remote Project Analyst","refNumber":"J10000001","releasedDate":"2026-08-15T12:30:00Z","postingUrl":"https://jobs.smartrecruiters.com/AECOM2/744000100000001-remote-project-analyst","location":{"city":"Orlando","region":"FL","country":"us","remote":true,"hybrid":false,"fullLocation":"Orlando, FL, United States"},"typeOfEmployment":{"label":"Full-time"},"jobAd":{"sections":{"companyDescription":{"title":"Company Description","text":"<p>Generic company remote-location boilerplate.</p>"},"jobDescription":{"title":"Job Description","text":"<p>This position is fully remote within the United States.</p>"},"qualifications":{"title":"Qualifications","text":"<p>Bachelor's degree plus four years of experience.</p>"},"additionalInformation":{"title":"Additional Information","text":"<p>Sponsorship for US employment authorization is not available now or in the future. The salary range for this role is 90,000 USD - 120,000 USD.</p>"}}}}
+        """;
+    var handler = new StubHttpMessageHandler(request =>
+        request.RequestUri!.AbsolutePath.EndsWith("/744000100000001", StringComparison.Ordinal)
+            ? detail
+            : summary);
+    var client = CreateSourceClient(new HttpClient(handler));
+    var catalog = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+    var company = catalog.Get("aecom");
+
+    var facets = await client.FetchLocationFacetsAsync(company, "us");
+    Assert(facets.MatchingJobs == 1 && facets.RemoteLocations.Single().Id == "remote:us",
+        "SmartRecruiters remote metadata did not become a selectable source facet.");
+
+    var result = await client.FetchAllJobsAsync(
+        company,
+        new JobSourceQuery("us", "United States", false, true, [], CompanyId: "aecom"));
+    var job = result.Jobs.Single();
+    Assert(job.CompanyId == "aecom" && job.StableId == "aecom:J10000001" &&
+           job.SourceUrl.Contains("jobs.smartrecruiters.com", StringComparison.Ordinal) &&
+           job.PayMinimum == 90000m && job.PayMaximum == 120000m &&
+           job.WorkAuthorization?.Sponsorship == "notAvailable" &&
+           job.RemoteWork?.IsRemoteDesignated == true &&
+           !job.DescriptionHtml.Contains("Generic company", StringComparison.Ordinal),
+        $"SmartRecruiters normalization: company={job.CompanyId}, stable={job.StableId}, url={job.SourceUrl}, pay={job.PayMinimum}-{job.PayMaximum}/{job.PayPeriod}, sponsorship={job.WorkAuthorization?.Sponsorship}, remote={job.RemoteWork?.IsRemoteDesignated}, boilerplate={job.DescriptionHtml.Contains("Generic company", StringComparison.Ordinal)}.");
+}
+
 static async Task TestUnsupportedCompanyMigrationAsync()
 {
     var directory = Path.Combine(Path.GetTempPath(), $"job-search-manager-company-migration-{Guid.NewGuid():N}");
@@ -957,7 +1041,7 @@ static async Task TestUnsupportedCompanyHistoryAsync()
 static Task TestCredentialCatalogAsync()
 {
     var detector = new CredentialDetector(NullLogger<CredentialDetector>.Instance);
-    Assert(detector.CatalogVersion == 10, "The expanded credential catalog version was not loaded.");
+    Assert(detector.CatalogVersion == 11, "The expanded credential catalog version was not loaded.");
     using var document = JsonDocument.Parse(File.ReadAllText(
         Path.Combine(AppContext.BaseDirectory, "CredentialCatalog.json")));
     var ids = document.RootElement.GetProperty("credentials").EnumerateArray()
@@ -1262,6 +1346,59 @@ static Task TestBoeingRemoteFixtureAsync()
     return Task.CompletedTask;
 }
 
+static Task TestExpandedCompanyFixturesAsync()
+{
+    const string northrop = """
+        <p>This position is remote; candidates will need to be within a commutable distance from one of the listed company locations.</p>
+        <p>Bachelor's degree with eight years of experience or a master's degree with six years of experience.</p>
+        <p>U.S. citizen. Ability to obtain and maintain a Secret clearance. Travel up to 75%.</p>
+        """;
+    var northropRemote = RemoteAnalysis(northrop);
+    var northropAcademic = new AcademicQualificationDetector().Analyze(northrop);
+    Assert(northropRemote.ConcernLevel == "strong" &&
+           northropRemote.Signals.Any(signal => signal.Category == "commuting-area") &&
+           northropRemote.Signals.Any(signal => signal.Category == "substantial-travel") &&
+           new WorkAuthorizationDetector().Analyze(northrop).Eligibility == "usCitizen" &&
+           JobAnalysis.AnalyzeClearance(northrop).Level == "secret" &&
+           northropAcademic.MinimumLevel == "bachelor",
+        $"Northrop fixture: remote={northropRemote.ConcernLevel} [{string.Join(',', northropRemote.Signals.Select(signal => signal.Category))}], authorization={new WorkAuthorizationDetector().Analyze(northrop).Eligibility}, clearance={JobAnalysis.AnalyzeClearance(northrop).Level}, academic={northropAcademic.MinimumLevel}.");
+
+    var nvidiaSalary = JobAnalysis.AnalyzeSalary(
+        "<p>The base salary range is 184,000 USD - 287,500 USD for this level.</p>");
+    Assert(nvidiaSalary.Minimum == 184000m && nvidiaSalary.Maximum == 287500m &&
+           nvidiaSalary.Period == "annual",
+        "The sanitized NVIDIA USD salary format was not parsed.");
+
+    const string parsons = """
+        <p>Professional Registration (PE) and Project Management Professional (PMP) certification are required.</p>
+        <p>Must be a U.S. Citizen and able to pass required federal background checks. Security Clearance Requirement: None.</p>
+        """;
+    var parsonsCredentials = new CredentialDetector(NullLogger<CredentialDetector>.Instance)
+        .Analyze(parsons).Credentials;
+    Assert(parsonsCredentials.Any(item => item.CredentialId == "pe") &&
+           parsonsCredentials.Any(item => item.CredentialId == "pmp") &&
+           JobAnalysis.AnalyzeClearance(parsons).Level == "noneMentioned",
+        $"Parsons fixture credentials={string.Join(',', parsonsCredentials.Select(item => item.CredentialId))}, clearance={JobAnalysis.AnalyzeClearance(parsons).Level}/{JobAnalysis.AnalyzeClearance(parsons).Requirement}.");
+
+    const string aecom = """
+        <p>This role can work remotely within the Eastern Time Zone. Candidates must be authorized to work in the United States without current or future sponsorship.</p>
+        """;
+    Assert(new WorkAuthorizationDetector().Analyze(aecom).Sponsorship == "notAvailable" &&
+           JobAnalysis.AnalyzeRemoteLocation(aecom, "Remote", []).IsRestricted,
+        $"AECOM fixture sponsorship={new WorkAuthorizationDetector().Analyze(aecom).Sponsorship}, locationRestricted={JobAnalysis.AnalyzeRemoteLocation(aecom, "Remote", []).IsRestricted}/{JobAnalysis.AnalyzeRemoteLocation(aecom, "Remote", []).Category}.");
+
+    const string rtx = """
+        <p>This is a remote position. If you live within a reasonable commute of a company site, your manager will discuss whether there is onsite presence associated with this role.</p>
+        <p>U.S. citizenship is required, as only U.S. citizens are authorized to access program information.</p>
+        """;
+    var rtxRemote = RemoteAnalysis(rtx);
+    Assert(rtxRemote.ConcernLevel == "questionable" &&
+           rtxRemote.Signals.Any(signal => signal.Category == "commuting-area") &&
+           new WorkAuthorizationDetector().Analyze(rtx).Eligibility == "usCitizen",
+        "The sanitized RTX remote/citizenship fixture regressed.");
+    return Task.CompletedTask;
+}
+
 static async Task TestWorkflowStateTransitionsAsync()
 {
     var directory = TestDirectory("workflow-transitions");
@@ -1452,6 +1589,19 @@ static async Task TestLegacyCombinationMigrationAsync()
 static RemoteWorkAnalysis RemoteAnalysis(string html) => new RemoteWorkDetector().Analyze(
     "Software Engineer", "Remote / Teleworker US", [], html);
 
+static JobSourceClient CreateSourceClient(HttpClient httpClient)
+{
+    var credentials = new CredentialDetector(NullLogger<CredentialDetector>.Instance);
+    return new JobSourceClient(
+        httpClient,
+        Options.Create(new JobSourceOptions()),
+        NullLogger<JobSourceClient>.Instance,
+        credentials,
+        new AcademicQualificationDetector(),
+        new WorkAuthorizationDetector(),
+        new RemoteWorkDetector());
+}
+
 static string TestDirectory(string purpose) =>
     Path.Combine(Path.GetTempPath(), $"job-search-manager-{purpose}-{Guid.NewGuid():N}");
 
@@ -1530,6 +1680,25 @@ static void AssertThrows<TException>(Action action) where TException : Exception
 }
 
 internal sealed record TestDocument(string Name, int Value);
+
+internal sealed class StubHttpMessageHandler(Func<HttpRequestMessage, string> responseFactory)
+    : HttpMessageHandler
+{
+    protected override Task<HttpResponseMessage> SendAsync(
+        HttpRequestMessage request,
+        CancellationToken cancellationToken)
+    {
+        var response = new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+        {
+            RequestMessage = request,
+            Content = new StringContent(
+                responseFactory(request),
+                System.Text.Encoding.UTF8,
+                "application/json")
+        };
+        return Task.FromResult(response);
+    }
+}
 
 internal sealed class TestHostEnvironment(string contentRootPath) : Microsoft.Extensions.Hosting.IHostEnvironment
 {

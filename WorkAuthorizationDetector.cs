@@ -9,7 +9,7 @@ namespace JobSearchManager;
 /// </summary>
 public sealed class WorkAuthorizationDetector
 {
-    public const int CurrentAnalysisVersion = 3;
+    public const int CurrentAnalysisVersion = 4;
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromMilliseconds(250);
 
     private static readonly Regex CitizenOrResident = Pattern(
@@ -42,11 +42,12 @@ public sealed class WorkAuthorizationDetector
         @"\b(?:must\s+(?:have|hold)|required\s+to\s+have|valid|existing|unrestricted)\b.{0,35}" +
         @"\b(?:legal\s+)?(?:right|rights|authori[sz]ation)\s+to\s+work\s+in\s+(?:the\s+)?[A-Za-z][A-Za-z .'-]{1,40}\b");
     private static readonly Regex NoEmploymentSponsorship = Pattern(
-        @"\b(?:will|does|do|can)\s+not\s+(?:provide|offer)?\s*(?:employment\s+|visa\s+|work(?:\s+authorization)?\s+)?sponsorship\b|" +
+        @"\b(?:will|does|do|can)\s+not\s+(?:provide|offer)?\s*(?:employment\s+visa\s+|employment\s+|visa\s+|work(?:\s+authorization)?\s+)?sponsorship\b|" +
         @"\b(?:employer|company|we)\s+will\s+not\s+sponsor\s+(?:applicants?|candidates?|individuals?)\b.{0,80}\b(?:employment\s+)?visa\s+status\b|" +
         @"\bnot\s+(?:be\s+)?require(?:d)?\s+(?:employment\s+|visa\s+|work(?:\s+authorization)?\s+)?sponsorship\b|" +
         @"\bwithout\s+(?:current\s+or\s+future\s+)?(?:employment\s+|visa\s+)?sponsorship\b|" +
-        @"\bno\s+(?:employment\s+|visa\s+|work(?:\s+authorization)?\s+)?sponsorship\b");
+        @"\bno\s+(?:employment\s+|visa\s+|work(?:\s+authorization)?\s+)?sponsorship\b|" +
+        @"\bsponsorship\s+for\s+(?:u\.?s\.?\s+)?employment\s+authorization\s+is\s+not\s+available\b");
     private static readonly Regex UsPerson = Pattern(@"\b(?:u\.?s\.?|united states)\s+person\b");
     private static readonly Regex CandidateContext = Pattern(
         @"\b(?:candidate|applicant|employee|individual|personnel|must|required|requirement|eligible|qualification)\b");
@@ -143,13 +144,15 @@ public sealed class WorkAuthorizationDetector
                 SetEligibility("australianCitizen", "AU", segment,
                     PreferredAustralianCitizen.Match(segment).Index, "preferred");
             }
-            else if (sectionContext is "strict" or "preferred" && BareUsCitizen.IsMatch(segment))
+            else if (BareUsCitizen.IsMatch(segment))
             {
-                SetEligibility("usCitizen", "US", segment, 0, sectionContext);
+                SetEligibility("usCitizen", "US", segment, 0,
+                    sectionContext == "preferred" ? "preferred" : "strict");
             }
-            else if (sectionContext is "strict" or "preferred" && BareAustralianCitizen.IsMatch(segment))
+            else if (BareAustralianCitizen.IsMatch(segment))
             {
-                SetEligibility("australianCitizen", "AU", segment, 0, sectionContext);
+                SetEligibility("australianCitizen", "AU", segment, 0,
+                    sectionContext == "preferred" ? "preferred" : "strict");
             }
             else if (GenericCitizenship.IsMatch(segment))
             {

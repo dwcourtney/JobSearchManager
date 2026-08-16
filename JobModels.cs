@@ -123,7 +123,7 @@ public sealed record JobSourceQuery(
 
         return (query.PhysicalLocations ?? [])
             .Select(location => location.Id!)
-            .Concat(query.IncludeRemote ? company.RemoteLocationIds : [])
+            .Concat(query.IncludeRemote ? company.RemoteLocationIdsForCountry(query.CountryId) : [])
             .Distinct(StringComparer.Ordinal)
             .OrderBy(id => id, StringComparer.Ordinal)
             .ToArray();
@@ -544,4 +544,60 @@ internal sealed class DetailPosting
     public string TimeType { get; init; } = "";
     public string JobDescription { get; init; } = "";
     public string ExternalUrl { get; init; } = "";
+}
+
+internal sealed class SmartRecruitersPostingResponse
+{
+    public int TotalFound { get; init; }
+    public List<SmartRecruitersPosting> Content { get; init; } = [];
+}
+
+internal class SmartRecruitersPosting
+{
+    public string Id { get; init; } = "";
+    public string Name { get; init; } = "";
+    public string RefNumber { get; init; } = "";
+    public string ReleasedDate { get; init; } = "";
+    public SmartRecruitersLocation Location { get; init; } = new();
+    public SmartRecruitersLabel TypeOfEmployment { get; init; } = new();
+}
+
+internal sealed class SmartRecruitersPostingDetail : SmartRecruitersPosting
+{
+    public string PostingUrl { get; init; } = "";
+    public string ApplyUrl { get; init; } = "";
+    public SmartRecruitersJobAd JobAd { get; init; } = new();
+}
+
+internal sealed class SmartRecruitersLocation
+{
+    public string City { get; init; } = "";
+    public string Region { get; init; } = "";
+    public string Country { get; init; } = "";
+    public string FullLocation { get; init; } = "";
+    public bool Remote { get; init; }
+    public bool Hybrid { get; init; }
+}
+
+internal sealed class SmartRecruitersLabel
+{
+    public string Label { get; init; } = "";
+}
+
+internal sealed class SmartRecruitersJobAd
+{
+    public SmartRecruitersSections Sections { get; init; } = new();
+}
+
+internal sealed class SmartRecruitersSections
+{
+    public SmartRecruitersSection JobDescription { get; init; } = new();
+    public SmartRecruitersSection Qualifications { get; init; } = new();
+    public SmartRecruitersSection AdditionalInformation { get; init; } = new();
+}
+
+internal sealed class SmartRecruitersSection
+{
+    public string Title { get; init; } = "";
+    public string Text { get; init; } = "";
 }

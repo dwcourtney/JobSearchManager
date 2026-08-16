@@ -69,7 +69,9 @@ public sealed class RemoteWorkDetector
             "a commuting-distance or local-residency requirement",
             CreateRegex(@"\b(?:must|required\s+to|ideal(?:ly)?\s+candidate\s+(?:would|should)\s+be|candidates?\s+must)\b.{0,100}\b(?:within\s+(?:a\s+)?(?:reasonable\s+)?commuting\s+distance|" +
                         @"within\s+\d{1,3}\s+miles?|within\s+driving\s+distance|\d{1,2}\s*hour\s+radius|greater\s+.+?\s+area)\b|" +
-                        @"\bmust\s+live\s+within\s+driving\s+distance\b"))
+                        @"\b(?:candidates?\s+)?(?:will\s+need|need)\s+to\s+be\b.{0,70}\bcommutable\s+distance\b|" +
+                        @"\bmust\s+live\s+within\s+driving\s+distance\b|" +
+                        @"\bif\s+you\s+live\s+within\s+(?:a\s+)?reasonable\s+commute\b.{0,160}\bonsite\s+presence\b"))
     ];
 
     public RemoteWorkAnalysis Analyze(

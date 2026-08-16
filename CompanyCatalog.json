@@ -44,6 +44,145 @@
       "remoteLocationIds": [
         "89c17a590aec10245717f13510890000"
       ]
+    },
+    {
+      "id": "northrop-grumman",
+      "displayName": "Northrop Grumman",
+      "apiHost": "ngc.wd1.myworkdayjobs.com",
+      "tenant": "ngc",
+      "site": "Northrop_Grumman_External_Site",
+      "publicSiteUrl": "https://ngc.wd1.myworkdayjobs.com/Northrop_Grumman_External_Site",
+      "defaultCountry": {
+        "id": null,
+        "label": "All countries"
+      },
+      "remoteLocationIds": [
+        "00f9f9db4e341001fb6777878d4e0000"
+      ]
+    },
+    {
+      "id": "nvidia",
+      "displayName": "NVIDIA",
+      "apiHost": "nvidia.wd5.myworkdayjobs.com",
+      "tenant": "nvidia",
+      "site": "NVIDIAExternalCareerSite",
+      "publicSiteUrl": "https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite",
+      "defaultCountry": {
+        "id": "2fcb99c455831013ea52fb338f2932d8",
+        "label": "United States of America"
+      },
+      "countryFacetParameter": "locationHierarchy1",
+      "remoteLocationIds": [
+        "91336993fab910af6d7170a1a684c41f",
+        "df27165dab550120b41aa51fc701619d",
+        "91336993fab910af6d7013ca699cc2a7",
+        "91336993fab910af6d716528e9d4c406",
+        "91336993fab910af6d716c1bb8d4c415",
+        "91336993fab910af6d715e41b394c3f7",
+        "91336993fab910af6d713a0f5044c3a7",
+        "91336993fab910af6d7020bf3b14c2c5",
+        "91336993fab910af6d6fe4b908fcc23e",
+        "91336993fab910af6d7143163a04c3bb",
+        "91336993fab910af6d714794d4b4c3c5",
+        "91336993fab910af6d702d89918cc2e3",
+        "91336993fab910af6d719855647cc474",
+        "91336993fab910af6d6fe9a03534c248",
+        "91336993fab910af6d700b282d4cc293",
+        "91336993fab910af6d7006cdf31cc289",
+        "91336993fab910af6d6ffd32b89cc275",
+        "91336993fab910af6d7152b6749cc3de",
+        "91336993fab910af6d712b900a54c389",
+        "91336993fab910af6d7015dee21cc2ac",
+        "91336993fab910af6d6ff2800b0cc25c",
+        "91336993fab910af6d700d4fc83cc298",
+        "91336993fab910af6d6ff05591bcc257",
+        "91336993fab910af6d700193f3c4c27f",
+        "16fc4607fc4310011e929f7115f90000",
+        "91336993fab910af6d6ffb099324c270",
+        "91336993fab910af6d7122ef682cc375",
+        "91336993fab910af6d702939a7fcc2d9",
+        "91336993fab910af6d6fee30ae1cc252",
+        "91336993fab910af6d7159be65c4c3ed",
+        "91336993fab910af6d7169a81124c410",
+        "91336993fab910af6d701c62554cc2bb"
+      ]
+    },
+    {
+      "id": "parsons",
+      "displayName": "Parsons",
+      "apiHost": "parsons.wd5.myworkdayjobs.com",
+      "tenant": "parsons",
+      "site": "Search",
+      "publicSiteUrl": "https://parsons.wd5.myworkdayjobs.com/Search",
+      "defaultCountry": {
+        "id": "bc33aa3152ec42d4995f4791a106ed09",
+        "label": "United States of America"
+      },
+      "remoteLocationIds": [
+        "f533debe0ca801768cc16a33c74f6604"
+      ]
+    },
+    {
+      "id": "aecom",
+      "displayName": "AECOM",
+      "apiHost": "api.smartrecruiters.com",
+      "tenant": "AECOM2",
+      "site": "postings",
+      "publicSiteUrl": "https://jobs.smartrecruiters.com/AECOM2",
+      "defaultCountry": {
+        "id": "us",
+        "label": "United States"
+      },
+      "remoteLocationIds": [
+        "remote:us"
+      ],
+      "provider": "smartRecruiters"
+    },
+    {
+      "id": "rtx",
+      "displayName": "RTX",
+      "apiHost": "globalhr.wd5.myworkdayjobs.com",
+      "tenant": "globalhr",
+      "site": "REC_RTX_Ext_Gateway",
+      "publicSiteUrl": "https://globalhr.wd5.myworkdayjobs.com/REC_RTX_Ext_Gateway",
+      "defaultCountry": {
+        "id": null,
+        "label": "All countries"
+      },
+      "remoteLocationIds": [
+        "22490aebfb05103ebe0fd7a9dc600228",
+        "2fe4c628446c01c3bff4d7b56c08dfc4",
+        "58886514a677017ec21016b26c08a2b9",
+        "b25292881b9a01a0a4d845034f0613c4",
+        "b7f8e6074f3601f2b9dc69b16c08ecc7",
+        "22490aebfb05103ebe1613ef12310a8e",
+        "2fe4c628446c01acc2ba24b66c08e4c4",
+        "a300ddf414fd01bc88702db66c081cc5",
+        "2fe4c628446c013da45c36b66c08e9c4",
+        "22490aebfb05103ebe0ec4a1bde700a6",
+        "591be65c35a201b784caf8b16c0828ca",
+        "22490aebfb05103ebe0ecdab8a2a00b0",
+        "f85f28efd66f01b1c2d379a86c08fada",
+        "98201be8977201a3bdd745b26c08d9e7",
+        "22490aebfb05103ebe0f01906f0700f7",
+        "22490aebfb05103ebe0f144e06190110",
+        "a300ddf414fd0179f017c1b66c0826c5",
+        "22490aebfb05103ebe0f309239c90138",
+        "fcaf58e9ef35015984ee0fdd8d19dc9a",
+        "3fdcdf714c560106247b9cb34e062ebc",
+        "a300ddf414fd01febaededb66c082bc5",
+        "2fe4c628446c012a4eeedcb66c0802c5",
+        "22490aebfb05103ebe0f5d305d030179",
+        "22490aebfb05103ebe0f7dd35b8b01a6",
+        "22490aebfb05103ebe0f8874634601b5",
+        "d9af9b8fc2751014167212cf40420000",
+        "22490aebfb05103ebe0f9ca3472b01d3",
+        "b7f8e6074f3601db074cbbb26c08fbc7",
+        "591be65c35a201553e430db36c0832ca",
+        "3fdcdf714c56010b127e34b44e063abc",
+        "fcaf58e9ef3501b2918dc4dd8d19899b",
+        "22490aebfb05103ebe17060ad7390bce"
+      ]
     }
   ]
 }

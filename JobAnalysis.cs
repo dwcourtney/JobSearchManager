@@ -36,6 +36,12 @@ internal static partial class JobAnalysis
             return CreateSalaryAnalysis(specificMatch, "specific-role-range");
         }
 
+        var usdMatch = UsdSalaryRangeRegex().Match(text);
+        if (usdMatch.Success)
+        {
+            return CreateSalaryAnalysis(usdMatch, "usd-pay-range");
+        }
+
         var standardMatch = StandardPayRangeRegex().Match(text);
         if (standardMatch.Success)
         {
@@ -387,6 +393,13 @@ internal static partial class JobAnalysis
     private static partial Regex SpecificSalaryRegex();
 
     [GeneratedRegex(
+        @"\b(?:base\s+)?salary\s+range(?:\s+for\s+this\s+role)?\s*(?:is|:)?\s*" +
+        @"(?<minimum>\d[\d,]*(?:\.\d{1,2})?)\s*USD\s*(?:-|to)\s*" +
+        @"(?<maximum>\d[\d,]*(?:\.\d{1,2})?)\s*USD(?<context>.{0,100})",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex UsdSalaryRangeRegex();
+
+    [GeneratedRegex(
         @"\b(?:Pay|Salary)\s+Range\s*:?\s*(?:(?:Pay|Salary)\s+Range\s*)?" + AmountRangePattern +
         @"(?<context>.{0,100})",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
@@ -440,6 +453,7 @@ internal static partial class JobAnalysis
         @"\bcandidates?\s+must\s+located\s+in\b|" +
         @"\bcandidates?\s+should\s+be\s+located\s+in\b|" +
         @"\bmust\s+be\s+located\s+in\s*\(|" +
+        @"\bremote(?:ly)?\s+within\s+the\s+(?:eastern|central|mountain|pacific)\s+time\s+zone\b|" +
         @"\blocated\s+in\s+the\s+United\s+States\s+within\s+the\s+following\s+states\b",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex RequiredRegionRegex();
@@ -488,7 +502,8 @@ internal static partial class JobAnalysis
     private static partial Regex OtherClearanceRegex();
 
     [GeneratedRegex(
-        @"\b(?:security\s+clearance\s*:\s*)?(?:(?:this\s+)?(?:position|role|job)\s+does\s+not\s+require|no)\s+(?:an?\s+)?(?:u\.?s\.?\s+)?security\s+clearance(?:\s+is\s+required)?\b",
+        @"\b(?:security\s+clearance\s*:\s*)?(?:(?:this\s+)?(?:position|role|job)\s+does\s+not\s+require|no)\s+(?:an?\s+)?(?:u\.?s\.?\s+)?security\s+clearance(?:\s+is\s+required)?\b|" +
+        @"\bsecurity\s+clearance\s+requirement\s*:\s*(?:none|not\s+required)\b",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex NoClearanceRequiredRegex();
 

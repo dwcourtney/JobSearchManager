@@ -7,7 +7,8 @@ for Leidos' careers site and was generalized without duplicating the
 application.
 
 The original employer posting remains the authoritative source. The application
-uses public Workday CXS JSON endpoints; it does not scrape rendered job pages.
+uses public Workday CXS and SmartRecruiters Posting API JSON endpoints; it does
+not scrape rendered job pages.
 
 ## Why this exists
 
@@ -32,14 +33,23 @@ a private Azure Blob container.
   `MTMTransit_External`)
 - Boeing (`boeing.wd1.myworkdayjobs.com`, tenant `boeing`, site
   `EXTERNAL_CAREERS`)
+- Northrop Grumman (`ngc.wd1.myworkdayjobs.com`, tenant `ngc`, site
+  `Northrop_Grumman_External_Site`)
+- NVIDIA (`nvidia.wd5.myworkdayjobs.com`, tenant `nvidia`, site
+  `NVIDIAExternalCareerSite`)
+- Parsons (`parsons.wd5.myworkdayjobs.com`, tenant `parsons`, site `Search`)
+- AECOM (SmartRecruiters company `AECOM2`)
+- RTX (`globalhr.wd5.myworkdayjobs.com`, tenant `globalhr`, site
+  `REC_RTX_Ext_Gateway`)
 
 The source-controlled [CompanyCatalog.json](CompanyCatalog.json) is the authority
-for supported companies, hosts, tenants, sites, public URLs, default countries,
-and known remote-location facet IDs. Adding another compatible employer should
-primarily require adding and verifying one catalog entry.
+for supported companies, providers, hosts, tenants/company keys, sites, public
+URLs, default countries, provider-specific country facets, and known remote-location
+facet IDs. Adding another compatible employer should primarily require adding and
+verifying one catalog entry; a new provider requires one reusable adapter.
 
-Workday tenants can expose different facet structures and description conventions,
-so the project does not claim universal compatibility with every Workday site.
+Provider sites can expose different facet structures and description conventions,
+so the project does not claim universal compatibility with every public career site.
 
 Future company additions must be verified for both Workday compatibility and the
 intended geographic/business scope. For a multinational with multiple career
@@ -295,9 +305,10 @@ typography, spacing, borders, radii, shadows, and state styling. Job-description
 HTML is sanitized with the bundled DOMPurify library before rendering. Any inline
 presentation originating in a posting is not treated as application theme styling.
 
-## Current source protocol verified
+## Current source protocols verified
 
-All currently supported sites use the Workday CXS protocol:
+Leidos, MTM, Boeing, Northrop Grumman, NVIDIA, Parsons, and RTX use the Workday
+CXS protocol:
 
 - `POST /wday/cxs/{tenant}/{site}/jobs`
 - JSON pagination with `limit` (maximum 20) and `offset`
@@ -305,10 +316,22 @@ All currently supported sites use the Workday CXS protocol:
 - `GET /wday/cxs/{tenant}/{site}{externalPath}` for job detail
 - exact `startDate`, rich HTML `jobDescription`, and authoritative `externalUrl`
 
-Leidos and Boeing expose country and configured remote-location facets. MTM's
-current public feed exposes location facets but no country facet and no explicit
-remote-location facet. The UI adapts to those differences instead of applying one
-employer's facet IDs to another employer.
+AECOM uses the official public SmartRecruiters Posting API:
+
+- paged `GET /v1/companies/AECOM2/postings` listing metadata
+- server-side country filtering plus stable remote/hybrid and location fields
+- `GET /v1/companies/AECOM2/postings/{id}` for structured job-ad sections and
+  canonical posting/apply URLs
+
+The AECOM adapter deliberately excludes generic company-description boilerplate
+from job analysis, while retaining job description, qualifications, and additional
+information where requirements, compensation, travel, and restrictions appear.
+
+Leidos, Boeing, NVIDIA, and Parsons expose country facets. NVIDIA names its country
+hierarchy differently, which is catalog data rather than a client special case.
+MTM, Northrop Grumman, and RTX currently expose usable location facets without a
+country facet. The UI adapts to those differences instead of applying one employer's
+facet IDs to another employer.
 
 Boeing's public source defaults to the United States and supports country-wide,
 physical-location, and configured Remote location selection. Its recurring ABET

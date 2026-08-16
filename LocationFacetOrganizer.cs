@@ -88,6 +88,68 @@ internal static class LocationFacetOrganizer
     {
         locationName = "";
         stateCode = "";
+
+        var commaParts = label.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        if (commaParts.Length >= 3 &&
+            string.Equals(commaParts[0], "US", StringComparison.OrdinalIgnoreCase) &&
+            UnitedStatesNames.ContainsKey(commaParts[1]))
+        {
+            locationName = string.Join(", ", commaParts.Skip(2));
+            stateCode = commaParts[1];
+            return locationName.Length > 0;
+        }
+        if (commaParts.Length >= 3 &&
+            commaParts[^1].StartsWith("United States", StringComparison.OrdinalIgnoreCase) &&
+            UnitedStatesNames.ContainsKey(commaParts[^2]))
+        {
+            locationName = string.Join(", ", commaParts.Take(commaParts.Length - 2));
+            stateCode = commaParts[^2];
+            return locationName.Length > 0;
+        }
+
+        const string unitedStatesPrefix = "United States-";
+        if (label.StartsWith(unitedStatesPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            var remainder = label[unitedStatesPrefix.Length..];
+            foreach (var state in UnitedStatesNames)
+            {
+                var statePrefix = state.Value + "-";
+                if (remainder.StartsWith(statePrefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    locationName = remainder[statePrefix.Length..].Trim();
+                    stateCode = state.Key;
+                    return locationName.Length > 0;
+                }
+            }
+        }
+
+        if (label.StartsWith("US-", StringComparison.OrdinalIgnoreCase) && label.Length > 6)
+        {
+            var candidateState = label.Substring(3, 2).ToUpperInvariant();
+            if (label[5] == '-' && UnitedStatesNames.ContainsKey(candidateState))
+            {
+                locationName = label[6..].Trim();
+                stateCode = candidateState;
+                return locationName.Length > 0;
+            }
+        }
+
+        if (label.StartsWith("US - ", StringComparison.OrdinalIgnoreCase) && label.Length > 9)
+        {
+            var remainder = label[5..];
+            var separator = remainder.IndexOf(',');
+            if (separator == 2)
+            {
+                var candidateState = remainder[..2].ToUpperInvariant();
+                if (UnitedStatesNames.ContainsKey(candidateState))
+                {
+                    locationName = remainder[(separator + 1)..].Trim();
+                    stateCode = candidateState;
+                    return locationName.Length > 0;
+                }
+            }
+        }
+
         var comma = label.LastIndexOf(',');
         if (comma > 0 && comma < label.Length - 1)
         {
