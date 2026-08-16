@@ -96,9 +96,30 @@ const tests = [
       "settings", "jobs", true, applied,
       { ...applied, physicalLocations: [] }), "allow");
   }],
-  ["navigation outside Settings to Jobs is unaffected", () => {
+  ["clean applied workspace can enter Settings", () => {
+    assert.equal(sourceState.navigationDecision(
+      "jobs", "settings", true, applied, applied), "allow");
+  }],
+  ["first-run workspace can enter Settings", () => {
     assert.equal(sourceState.navigationDecision(
       "jobs", "settings", false, {}, {}), "allow");
+  }],
+  ["pending source does not prevent entering Settings", () => {
+    assert.equal(sourceState.navigationDecision(
+      "jobs", "settings", true, applied,
+      { ...applied, companyId: "boeing" }), "allow");
+  }],
+  ["no-source Jobs navigation is explicit rather than silent", () => {
+    assert.equal(sourceState.navigationDecision(
+      "settings", "jobs", false, {},
+      { companyId: null, countryId: "us" }), "require-source");
+  }],
+  ["only Settings to Jobs is guarded for an applied source", () => {
+    const pending = { ...applied, companyId: "boeing" };
+    assert.equal(sourceState.navigationDecision(
+      "settings", "jobs", true, applied, pending), "guard");
+    assert.equal(sourceState.navigationDecision(
+      "jobs", "jobs", true, applied, pending), "allow");
   }]
 ];
 

@@ -94,8 +94,9 @@ jobs until **Apply Job Source** is selected.
 A fresh or reset workspace starts on Settings > Job Source with no company selected,
 United States of America preselected, and no applied source. It does not infer Leidos
 or the first catalog company and does not retrieve jobs until a valid source is
-explicitly applied. The unconfigured state is distinct from an unapplied edit to an
-existing source.
+explicitly applied. Choosing Jobs explains that a job source is required and returns
+the user to Job Source; it is never a silent, disabled navigation action. The
+unconfigured state is distinct from an unapplied edit to an existing source.
 
 The application remembers source choices separately for each company while keeping
 the user profile and screening preferences global. Automatic checks monitor only
@@ -175,8 +176,8 @@ counterparts; ordinary viewed/NEW history remains intact. An imported Job Source
 staged for review and requires **Apply Job Source**, so import itself never starts a
 Workday job crawl. If the imported source is already equivalent to the applied source,
 it remains clean and needs no redundant apply. Otherwise, choosing Jobs uses the same
-unapplied-source guard as a manual edit; a fresh workspace identifies the current
-source as “No job source configured” and offers **Apply and go to Jobs**.
+unapplied-source guard as a manual edit and offers **Apply and go to Jobs** when the
+imported source is valid.
 
 Settings also provides **Reset Current Workspace**. After confirmation, local mode
 deletes only the three application-owned JSON documents shown above and reloads

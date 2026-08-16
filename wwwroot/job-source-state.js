@@ -62,11 +62,12 @@
     applied,
     editable,
     options = {}) {
-    if (activeView !== "settings" || nextView !== "jobs") return "allow";
-    if (hasAppliedSource) {
-      return areEquivalent(applied, editable, options) ? "allow" : "guard";
+    if (nextView !== "jobs") return "allow";
+    if (!hasAppliedSource) {
+      return hasValidSelection(editable, options) ? "guard" : "require-source";
     }
-    return hasValidSelection(editable, options) ? "guard" : "require-source";
+    if (activeView !== "settings") return "allow";
+    return areEquivalent(applied, editable, options) ? "allow" : "guard";
   }
 
   return {

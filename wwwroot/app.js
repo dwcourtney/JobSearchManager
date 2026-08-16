@@ -73,6 +73,7 @@ const state = {
   copyFeedbackTimer: null,
   focusBeforeLoading: null,
   sourceConfirmationOpen: false,
+  sourceConfirmationMode: null,
   sourceConfirmationHideTimer: null,
   focusBeforeSourceConfirmation: null,
   resetConfirmationOpen: false,
@@ -145,9 +146,12 @@ const elements = {
   loadingPhase: document.querySelector("#loading-phase"),
   loadingNote: document.querySelector("#loading-note"),
   sourceConfirmationOverlay: document.querySelector("#source-confirmation-overlay"),
+  sourceConfirmationTitle: document.querySelector("#source-confirmation-title"),
   sourceConfirmationCopy: document.querySelector("#source-confirmation-copy"),
+  sourceConfirmationComparison: document.querySelector("#source-confirmation-comparison"),
   sourceConfirmationCurrent: document.querySelector("#source-confirmation-current"),
   sourceConfirmationPending: document.querySelector("#source-confirmation-pending"),
+  sourceConfirmationQuestion: document.querySelector("#source-confirmation-question"),
   sourceConfirmationStay: document.querySelector("#source-confirmation-stay"),
   sourceConfirmationApply: document.querySelector("#source-confirmation-apply"),
   resetWorkspaceButton: document.querySelector("#reset-workspace-button"),
@@ -241,7 +245,7 @@ async function initialize() {
   });
   elements.loadingOverlay.addEventListener("keydown", constrainLoadingFocus);
   elements.sourceConfirmationOverlay.addEventListener("keydown", constrainSourceConfirmationFocus);
-  elements.sourceConfirmationStay.addEventListener("click", () => closeSourceConfirmation(true));
+  elements.sourceConfirmationStay.addEventListener("click", handleSourceConfirmationSecondary);
   elements.sourceConfirmationApply.addEventListener("click", applyPendingSourceAndGoToJobs);
   elements.resetWorkspaceButton.addEventListener("click", showResetConfirmation);
   elements.resetConfirmationCancel.addEventListener("click", () => closeResetConfirmation(true));
@@ -392,10 +396,7 @@ function showView(view, focusFirstControl = false, options = {}) {
     return false;
   }
   if (sourceNavigation === "require-source") {
-    if (state.activeView !== "settings") showView("settings", focusFirstControl);
-    showSettingsTab("job-search");
-    elements.facetStatus.textContent =
-      "Select a company and location source, then apply it to load jobs.";
+    showSourceRequired();
     return false;
   }
   const enteringSettings = nextView === "settings" && state.activeView !== "settings";
@@ -1212,6 +1213,10 @@ function editableSourceState() {
 }
 
 function sourceNavigationDecision(nextView) {
+  // Entering Settings must never depend on editable Job Source controls. Apart
+  // from keeping that direction unguarded, this avoids reading partially
+  // hydrated or legacy controls before Settings has been opened.
+  if (nextView !== "jobs") return "allow";
   return JobSourceState.navigationDecision(
     state.activeView,
     nextView,
@@ -1242,12 +1247,15 @@ function pendingSourceDescription() {
 }
 
 function showSourceConfirmation() {
+  state.sourceConfirmationMode = "pending";
   clearTimeout(state.sourceConfirmationHideTimer);
   state.sourceConfirmationOpen = true;
   state.focusBeforeSourceConfirmation = document.activeElement;
+  elements.sourceConfirmationTitle.textContent = "Unapplied job source changes";
   elements.sourceConfirmationCopy.textContent = state.pendingImportedSource
     ? "The imported job source has not been applied yet."
     : "You changed the Workday job source.";
+  elements.sourceConfirmationComparison.hidden = false;
   elements.sourceConfirmationCurrent.textContent = state.hasConfiguredSource
     ? formatSourceDescription(
       state.companyName,
@@ -1257,26 +1265,67 @@ function showSourceConfirmation() {
       state.physicalLocations)
     : "No job source configured";
   elements.sourceConfirmationPending.textContent = pendingSourceDescription();
+  elements.sourceConfirmationQuestion.hidden = false;
+  elements.sourceConfirmationStay.textContent = "Stay in Settings";
+  elements.sourceConfirmationApply.hidden = false;
+  openSourceConfirmation(elements.sourceConfirmationApply);
+}
+
+function showSourceRequired() {
+  state.sourceConfirmationMode = "required";
+  clearTimeout(state.sourceConfirmationHideTimer);
+  state.sourceConfirmationOpen = true;
+  state.focusBeforeSourceConfirmation = document.activeElement;
+  elements.sourceConfirmationTitle.textContent = "Job source required";
+  elements.sourceConfirmationCopy.textContent = elements.companySelect.value
+    ? "Finish configuring and apply the selected job source before viewing Jobs."
+    : "Select a company and configure a job source before viewing Jobs.";
+  elements.sourceConfirmationComparison.hidden = true;
+  elements.sourceConfirmationQuestion.hidden = true;
+  elements.sourceConfirmationStay.textContent = "Go to Job Source";
+  elements.sourceConfirmationApply.hidden = true;
+  openSourceConfirmation(elements.sourceConfirmationStay);
+}
+
+function openSourceConfirmation(initialFocus) {
   elements.appShell.inert = true;
   elements.sourceConfirmationOverlay.hidden = false;
   elements.sourceConfirmationOverlay.setAttribute("aria-hidden", "false");
   requestAnimationFrame(() => {
     elements.sourceConfirmationOverlay.classList.add("visible");
-    elements.sourceConfirmationApply.focus({ preventScroll: true });
+    initialFocus.focus({ preventScroll: true });
   });
+}
+
+function handleSourceConfirmationSecondary() {
+  if (state.sourceConfirmationMode === "required") {
+    closeSourceConfirmation(false);
+    showView("settings");
+    showSettingsTab("job-search", true);
+    elements.facetStatus.textContent = elements.companySelect.value
+      ? "Finish configuring the location source, then select Apply Job Source."
+      : "Select a company and location source, then apply it to load jobs.";
+    return;
+  }
+  closeSourceConfirmation(true);
 }
 
 function closeSourceConfirmation(restoreFocus) {
   if (!state.sourceConfirmationOpen) return;
+  const closingMode = state.sourceConfirmationMode;
   state.sourceConfirmationOpen = false;
+  state.sourceConfirmationMode = null;
   elements.sourceConfirmationOverlay.classList.remove("visible");
   elements.sourceConfirmationOverlay.setAttribute("aria-hidden", "true");
   elements.appShell.inert = state.isRefreshing || state.resetConfirmationOpen;
   state.sourceConfirmationHideTimer = setTimeout(() => {
     if (!state.sourceConfirmationOpen) elements.sourceConfirmationOverlay.hidden = true;
   }, OVERLAY_TRANSITION_MS);
-  if (restoreFocus && state.focusBeforeSourceConfirmation?.isConnected) {
-    state.focusBeforeSourceConfirmation.focus({ preventScroll: true });
+  if (restoreFocus) {
+    const focusTarget = closingMode === "required"
+      ? elements.jobsTab
+      : state.focusBeforeSourceConfirmation;
+    if (focusTarget?.isConnected) focusTarget.focus({ preventScroll: true });
   }
   state.focusBeforeSourceConfirmation = null;
 }
@@ -3483,7 +3532,8 @@ function constrainSourceConfirmationFocus(event) {
     return;
   }
   if (event.key !== "Tab") return;
-  const focusable = [elements.sourceConfirmationStay, elements.sourceConfirmationApply];
+  const focusable = [elements.sourceConfirmationStay, elements.sourceConfirmationApply]
+    .filter(control => !control.hidden && !control.disabled);
   const currentIndex = focusable.indexOf(document.activeElement);
   const nextIndex = event.shiftKey
     ? (currentIndex <= 0 ? focusable.length - 1 : currentIndex - 1)

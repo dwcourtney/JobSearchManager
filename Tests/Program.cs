@@ -129,6 +129,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Workspace reset deletes only known local state documents", TestFileResetAsync),
     ("Blob namespaces are isolated and traversal-resistant", TestBlobNamespaceAsync),
     ("New workspace settings are neutral", TestNeutralDefaultsAsync),
+    ("Legacy applied source remains configured", TestLegacyAppliedSourceMigrationAsync),
     ("Portable workspace round-trips settings and curated states", TestPortableWorkspaceRoundTripAsync),
     ("Portable source import distinguishes pending and equivalent state", TestPortableSourceImportStateAsync),
     ("Portable workspace validates company-scoped canonical job state", TestPortableWorkspaceValidationAsync),
@@ -390,6 +391,45 @@ static Task TestNeutralDefaultsAsync()
     var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
     AssertThrows<InvalidOperationException>(() => WorkdayQuery.FromSettings(settings, companies));
     return Task.CompletedTask;
+}
+
+static async Task TestLegacyAppliedSourceMigrationAsync()
+{
+    var directory = TestDirectory("legacy-applied-source");
+    try
+    {
+        var store = new FileWorkspaceDataStore(
+            directory, NullLogger<FileWorkspaceDataStore>.Instance);
+        var legacy = ViewerSettings.Default with
+        {
+            HasConfiguredSource = null,
+            CompanyId = "leidos",
+            Country = FacetDefaults.UnitedStatesCountry,
+            Location = new FacetSelection(
+                "da70a15d3ef40104ea4e240d39cef6a2",
+                "Remote/Teleworker"),
+            IncludeAllLocations = false,
+            IncludeRemote = false,
+            SelectedPhysicalLocations = []
+        };
+        await store.WriteJsonAsync(WorkspaceDataFile.Settings, legacy);
+        var state = new AppStateStore(
+            NullLogger<AppStateStore>.Instance,
+            new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory)),
+            store);
+
+        var migrated = await state.LoadSettingsAsync();
+
+        Assert(migrated.HasConfiguredSource == true && migrated.CompanyId == "leidos" &&
+               migrated.Country == FacetDefaults.UnitedStatesCountry &&
+               !migrated.IncludeAllLocations && migrated.IncludeRemote &&
+               migrated.SelectedPhysicalLocations?.Count == 0 && migrated.PendingSource is null,
+            "A legacy applied Leidos Remote source was not preserved as configured.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
 }
 
 static Task TestPortableWorkspaceRoundTripAsync()
