@@ -63,6 +63,10 @@ public sealed class JobCatalog
 
         if (cache?.Jobs is not { Count: > 0 })
         {
+            lock (_gate)
+            {
+                _snapshot = JobsSnapshot.Empty with { Query = query };
+            }
             return;
         }
 

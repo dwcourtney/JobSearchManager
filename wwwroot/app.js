@@ -373,10 +373,7 @@ async function initialize() {
 
 function showView(view, focusFirstControl = false, options = {}) {
   const nextView = view === "settings" ? "settings" : "jobs";
-  if (nextView === "jobs" &&
-      state.activeView === "settings" &&
-      options.bypassSourceGuard !== true &&
-      querySelectionIsPending()) {
+  if (options.bypassSourceGuard !== true && sourceNavigationRequiresConfirmation(nextView)) {
     showSourceConfirmation();
     return false;
   }
@@ -1110,18 +1107,38 @@ function sourceCoverageChanged() {
 }
 
 function querySelectionIsPending() {
-  const physicalIds = selectedPendingLocations().map(location => location.id);
-  const activePhysicalIds = normalizeFacetSelections(state.physicalLocations)
-    .map(location => location.id);
-  const pendingRemote = elements.includeAllLocations.checked && state.remoteLocations.length > 0
-    ? true
-    : elements.includeRemote.checked;
-  return elements.companySelect.value !== state.companyId ||
-    (elements.countrySelect.value || null) !== state.country.id ||
-    elements.includeAllLocations.checked !== state.includeAllLocations ||
-    pendingRemote !== state.includeRemote ||
-    physicalIds.length !== activePhysicalIds.length ||
-    physicalIds.some((id, index) => id !== activePhysicalIds[index]);
+  return !JobSourceState.areEquivalent(appliedSourceState(), editableSourceState(), {
+    remoteAvailable: state.remoteLocations.length > 0
+  });
+}
+
+function appliedSourceState() {
+  return {
+    companyId: state.companyId,
+    countryId: state.country.id,
+    includeAllLocations: state.includeAllLocations,
+    includeRemote: state.includeRemote,
+    physicalLocations: state.physicalLocations
+  };
+}
+
+function editableSourceState() {
+  return {
+    companyId: elements.companySelect.value,
+    countryId: elements.countrySelect.value || null,
+    includeAllLocations: elements.includeAllLocations.checked,
+    includeRemote: elements.includeRemote.checked,
+    physicalLocations: selectedPendingLocations()
+  };
+}
+
+function sourceNavigationRequiresConfirmation(nextView) {
+  return JobSourceState.shouldWarnWhenLeavingSettings(
+    state.activeView,
+    nextView,
+    appliedSourceState(),
+    editableSourceState(),
+    { remoteAvailable: state.remoteLocations.length > 0 });
 }
 
 function formatSourceDescription(companyName, country, includeAll, includeRemote, physicalLocations) {

@@ -12,13 +12,17 @@ $postingTextPath = Join-Path $repo "wwwroot\job-posting-text.js"
 $postingTextTestsPath = Join-Path $repo "Tests\job-posting-text.tests.js"
 $workflowStatePath = Join-Path $repo "wwwroot\job-workflow-state.js"
 $workflowStateTestsPath = Join-Path $repo "Tests\job-workflow-state.tests.js"
+$sourceStatePath = Join-Path $repo "wwwroot\job-source-state.js"
+$sourceStateTestsPath = Join-Path $repo "Tests\job-source-state.tests.js"
 
 foreach ($scriptPath in @(
     $appPath,
     $postingTextPath,
     $postingTextTestsPath,
     $workflowStatePath,
-    $workflowStateTestsPath)) {
+    $workflowStateTestsPath,
+    $sourceStatePath,
+    $sourceStateTestsPath)) {
     & $NodePath --check $scriptPath
     if ($LASTEXITCODE -ne 0) {
         throw "JavaScript syntax validation failed for $scriptPath."
@@ -35,9 +39,20 @@ if ($LASTEXITCODE -ne 0) {
     throw "Job-workflow state tests failed."
 }
 
+& $NodePath $sourceStateTestsPath
+if ($LASTEXITCODE -ne 0) {
+    throw "Job-source state tests failed."
+}
+
 $styles = Get-Content -LiteralPath $stylesPath -Raw
 $theme = Get-Content -LiteralPath $themePath -Raw
 $index = Get-Content -LiteralPath $indexPath -Raw
+
+$sourceStateScript = $index.IndexOf('src="/job-source-state.js"')
+$appScript = $index.IndexOf('src="/app.js"')
+if ($sourceStateScript -lt 0 -or $appScript -le $sourceStateScript) {
+    throw "job-source-state.js must load before app.js."
+}
 
 if ([regex]::IsMatch($index, '(?is)<h2[^>]*>\s*Settings\s*</h2>')) {
     throw "The redundant Settings page heading is still present."

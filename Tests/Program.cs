@@ -129,6 +129,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Workspace reset deletes only known local state documents", TestFileResetAsync),
     ("Blob namespaces are isolated and traversal-resistant", TestBlobNamespaceAsync),
     ("New workspace settings are neutral", TestNeutralDefaultsAsync),
+    ("Fresh catalog snapshots retain the applied source", TestFreshCatalogSourceAsync),
     ("Boeing is a catalog-driven U.S. Workday source", TestBoeingCatalogAsync),
     ("Unsupported active company state migrates without source reinterpretation", TestUnsupportedCompanyMigrationAsync),
     ("Unsupported company history remains isolated", TestUnsupportedCompanyHistoryAsync),
@@ -378,6 +379,56 @@ static Task TestNeutralDefaultsAsync()
            !settings.HideStrictWorkAuthorizationMismatch,
         "New workspaces inherited personal qualification data.");
     return Task.CompletedTask;
+}
+
+static async Task TestFreshCatalogSourceAsync()
+{
+    var directory = TestDirectory("fresh-catalog-source");
+    try
+    {
+        var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+        var store = new FileWorkspaceDataStore(directory, NullLogger<FileWorkspaceDataStore>.Instance);
+        var state = new AppStateStore(NullLogger<AppStateStore>.Instance, companies, store);
+        var settings = state.NormalizeSettings(ViewerSettings.Default);
+        await state.SaveSettingsAsync(settings);
+        var query = WorkdayQuery.FromSettings(settings, companies);
+        var credentials = new CredentialDetector(NullLogger<CredentialDetector>.Instance);
+        var academics = new AcademicQualificationDetector();
+        var authorization = new WorkAuthorizationDetector();
+        var remote = new RemoteWorkDetector();
+        var client = new WorkdayClient(
+            new HttpClient(),
+            Options.Create(new WorkdayOptions()),
+            NullLogger<WorkdayClient>.Instance,
+            credentials,
+            academics,
+            authorization,
+            remote);
+        var catalog = new JobCatalog(
+            client,
+            state,
+            NullLogger<JobCatalog>.Instance,
+            credentials,
+            academics,
+            authorization,
+            remote,
+            companies);
+
+        await catalog.InitializeAsync(query);
+
+        Assert(catalog.Snapshot.Jobs.Count == 0 && catalog.Snapshot.LastRefreshedUtc is null,
+            "Fresh catalog test unexpectedly loaded a jobs cache.");
+        Assert(catalog.Snapshot.Query.IsEquivalentTo(query, companies),
+            "The cacheless snapshot exposed a generic source instead of the applied source.");
+        Assert(catalog.Snapshot.Query.CountryId == settings.Country.Id &&
+               catalog.Snapshot.Query.IncludeAllLocations == settings.IncludeAllLocations &&
+               catalog.Snapshot.Query.IncludeRemote == settings.IncludeRemote,
+            "The cacheless snapshot did not retain all normalized source dimensions.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, true);
+    }
 }
 
 static Task TestBoeingCatalogAsync()
