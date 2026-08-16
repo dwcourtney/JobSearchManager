@@ -19,8 +19,8 @@ const tests = [
     assert.deepEqual(sourceState.normalize({ ...applied }), sourceState.normalize(applied));
   }],
   ["Settings to Jobs without edits does not warn", () => {
-    assert.equal(sourceState.shouldWarnWhenLeavingSettings(
-      "settings", "jobs", applied, { ...applied }), false);
+    assert.equal(sourceState.navigationDecision(
+      "settings", "jobs", true, applied, { ...applied }), "allow");
   }],
   ["changing a source field makes the source dirty", () => {
     assert.equal(sourceState.areEquivalent(applied, { ...applied, includeRemote: false }), false);
@@ -45,8 +45,9 @@ const tests = [
       { ...applied, countryId: null }, { ...applied, countryId: "" }), true);
   }],
   ["real pending changes still trigger the navigation guard", () => {
-    assert.equal(sourceState.shouldWarnWhenLeavingSettings(
-      "settings", "jobs", applied, { ...applied, companyId: "boeing" }), true);
+    assert.equal(sourceState.navigationDecision(
+      "settings", "jobs", true, applied,
+      { ...applied, companyId: "boeing" }), "guard");
   }],
   ["applying the editable source clears dirty state", () => {
     const editable = { ...applied, physicalLocationIds: ["location-2", "location-1"] };
@@ -56,8 +57,8 @@ const tests = [
   }],
   ["reload with matching persisted and applied source remains clean", () => {
     const persisted = JSON.parse(JSON.stringify(applied));
-    assert.equal(sourceState.shouldWarnWhenLeavingSettings(
-      "settings", "jobs", persisted, applied), false);
+    assert.equal(sourceState.navigationDecision(
+      "settings", "jobs", true, persisted, applied), "allow");
   }],
   ["country-wide and unavailable-remote representations normalize consistently", () => {
     const countryWide = { ...applied, includeAllLocations: true, includeRemote: false,
@@ -68,6 +69,36 @@ const tests = [
     });
     assert.equal(sourceState.areEquivalent(
       applied, { ...applied, includeRemote: false }, { remoteAvailable: false }), true);
+  }],
+  ["fresh workspace without a valid selection requires a source", () => {
+    assert.equal(sourceState.navigationDecision(
+      "settings", "jobs", false,
+      { companyId: null, countryId: "us" },
+      { companyId: null, countryId: "us" }), "require-source");
+  }],
+  ["fresh workspace with an imported pending source uses the navigation guard", () => {
+    assert.equal(sourceState.navigationDecision(
+      "settings", "jobs", false,
+      { companyId: null, countryId: "us" },
+      applied), "guard");
+  }],
+  ["clean applied source navigates directly to Jobs", () => {
+    assert.equal(sourceState.navigationDecision(
+      "settings", "jobs", true, applied, { ...applied }), "allow");
+  }],
+  ["different imported or manually edited source uses the same guard", () => {
+    assert.equal(sourceState.navigationDecision(
+      "settings", "jobs", true, applied,
+      { ...applied, companyId: "boeing" }), "guard");
+  }],
+  ["equivalent imported source does not create a false guard", () => {
+    assert.equal(sourceState.navigationDecision(
+      "settings", "jobs", true, applied,
+      { ...applied, physicalLocations: [] }), "allow");
+  }],
+  ["navigation outside Settings to Jobs is unaffected", () => {
+    assert.equal(sourceState.navigationDecision(
+      "jobs", "settings", false, {}, {}), "allow");
   }]
 ];
 

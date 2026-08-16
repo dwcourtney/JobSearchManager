@@ -173,7 +173,10 @@ preference values are rejected.
 On success, imported portable preferences and curated states replace their current
 counterparts; ordinary viewed/NEW history remains intact. An imported Job Source is
 staged for review and requires **Apply Job Source**, so import itself never starts a
-Workday job crawl.
+Workday job crawl. If the imported source is already equivalent to the applied source,
+it remains clean and needs no redundant apply. Otherwise, choosing Jobs uses the same
+unapplied-source guard as a manual edit; a fresh workspace identifies the current
+source as “No job source configured” and offers **Apply and go to Jobs**.
 
 Settings also provides **Reset Current Workspace**. After confirmation, local mode
 deletes only the three application-owned JSON documents shown above and reloads

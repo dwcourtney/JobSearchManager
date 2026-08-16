@@ -145,6 +145,7 @@ const elements = {
   loadingPhase: document.querySelector("#loading-phase"),
   loadingNote: document.querySelector("#loading-note"),
   sourceConfirmationOverlay: document.querySelector("#source-confirmation-overlay"),
+  sourceConfirmationCopy: document.querySelector("#source-confirmation-copy"),
   sourceConfirmationCurrent: document.querySelector("#source-confirmation-current"),
   sourceConfirmationPending: document.querySelector("#source-confirmation-pending"),
   sourceConfirmationStay: document.querySelector("#source-confirmation-stay"),
@@ -383,16 +384,18 @@ async function initialize() {
 
 function showView(view, focusFirstControl = false, options = {}) {
   const nextView = view === "settings" ? "settings" : "jobs";
-  if (nextView === "jobs" && !state.hasConfiguredSource) {
-    if (state.activeView !== "settings") showView("settings", focusFirstControl);
-    showSettingsTab("job-search");
-    elements.facetStatus.textContent = state.pendingImportedSource
-      ? "Apply Job Source to load jobs using the imported source."
-      : "Select a company and location source, then apply it to load jobs.";
+  const sourceNavigation = options.bypassSourceGuard === true
+    ? "allow"
+    : sourceNavigationDecision(nextView);
+  if (sourceNavigation === "guard") {
+    showSourceConfirmation();
     return false;
   }
-  if (options.bypassSourceGuard !== true && sourceNavigationRequiresConfirmation(nextView)) {
-    showSourceConfirmation();
+  if (sourceNavigation === "require-source") {
+    if (state.activeView !== "settings") showView("settings", focusFirstControl);
+    showSettingsTab("job-search");
+    elements.facetStatus.textContent =
+      "Select a company and location source, then apply it to load jobs.";
     return false;
   }
   const enteringSettings = nextView === "settings" && state.activeView !== "settings";
@@ -1208,10 +1211,11 @@ function editableSourceState() {
   };
 }
 
-function sourceNavigationRequiresConfirmation(nextView) {
-  return JobSourceState.shouldWarnWhenLeavingSettings(
+function sourceNavigationDecision(nextView) {
+  return JobSourceState.navigationDecision(
     state.activeView,
     nextView,
+    state.hasConfiguredSource,
     appliedSourceState(),
     editableSourceState(),
     { remoteAvailable: state.remoteLocations.length > 0 });
@@ -1241,12 +1245,17 @@ function showSourceConfirmation() {
   clearTimeout(state.sourceConfirmationHideTimer);
   state.sourceConfirmationOpen = true;
   state.focusBeforeSourceConfirmation = document.activeElement;
-  elements.sourceConfirmationCurrent.textContent = formatSourceDescription(
-    state.companyName,
-    state.country,
-    state.includeAllLocations,
-    state.includeRemote,
-    state.physicalLocations);
+  elements.sourceConfirmationCopy.textContent = state.pendingImportedSource
+    ? "The imported job source has not been applied yet."
+    : "You changed the Workday job source.";
+  elements.sourceConfirmationCurrent.textContent = state.hasConfiguredSource
+    ? formatSourceDescription(
+      state.companyName,
+      state.country,
+      state.includeAllLocations,
+      state.includeRemote,
+      state.physicalLocations)
+    : "No job source configured";
   elements.sourceConfirmationPending.textContent = pendingSourceDescription();
   elements.appShell.inert = true;
   elements.sourceConfirmationOverlay.hidden = false;

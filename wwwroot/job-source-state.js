@@ -48,10 +48,31 @@
         id === normalizedRight.physicalLocationIds[index]);
   }
 
-  function shouldWarnWhenLeavingSettings(activeView, nextView, applied, editable, options = {}) {
-    return activeView === "settings" && nextView === "jobs" &&
-      !areEquivalent(applied, editable, options);
+  function hasValidSelection(source, options = {}) {
+    const normalized = normalize(source, options);
+    return normalized.companyId !== null &&
+      (normalized.includeAllLocations || normalized.includeRemote ||
+        normalized.physicalLocationIds.length > 0);
   }
 
-  return { normalize, areEquivalent, shouldWarnWhenLeavingSettings };
+  function navigationDecision(
+    activeView,
+    nextView,
+    hasAppliedSource,
+    applied,
+    editable,
+    options = {}) {
+    if (activeView !== "settings" || nextView !== "jobs") return "allow";
+    if (hasAppliedSource) {
+      return areEquivalent(applied, editable, options) ? "allow" : "guard";
+    }
+    return hasValidSelection(editable, options) ? "guard" : "require-source";
+  }
+
+  return {
+    normalize,
+    areEquivalent,
+    hasValidSelection,
+    navigationDecision
+  };
 });

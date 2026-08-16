@@ -210,13 +210,15 @@ internal sealed partial class PortableWorkspaceService
                 throw new WorkspaceImportException(
                     "The workspace file contains too many physical locations.");
             }
-            pendingSource = new PendingJobSource(
-                company.Id,
-                new CompanySourceSettings(
-                    importedSource.Country,
-                    importedSource.IncludeAllLocations,
-                    importedSource.IncludeRemote,
-                    importedSource.PhysicalLocations));
+            var source = new CompanySourceSettings(
+                importedSource.Country,
+                importedSource.IncludeAllLocations,
+                importedSource.IncludeRemote,
+                importedSource.PhysicalLocations);
+            if (!MatchesAppliedSource(currentSettings, company, source))
+            {
+                pendingSource = new PendingJobSource(company.Id, source);
+            }
         }
 
         if (document.CuratedJobs.Count > 10_000)
@@ -331,6 +333,28 @@ internal sealed partial class PortableWorkspaceService
     private static PortableJobSource ToPortableSource(string companyId, CompanySourceSettings source) =>
         new(companyId, source.Country, source.IncludeAllLocations, source.IncludeRemote,
             source.SelectedPhysicalLocations);
+
+    private bool MatchesAppliedSource(
+        ViewerSettings current,
+        CompanyDefinition company,
+        CompanySourceSettings imported)
+    {
+        if (current.HasConfiguredSource != true ||
+            !string.Equals(current.CompanyId, company.Id, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var importedQuery = new WorkdayQuery(
+            imported.Country.Id,
+            imported.Country.Label,
+            imported.IncludeAllLocations,
+            imported.IncludeRemote,
+            imported.SelectedPhysicalLocations,
+            CompanyId: company.Id);
+        return WorkdayQuery.FromSettings(current, _companies)
+            .IsEquivalentTo(importedQuery, _companies);
+    }
 
     private static void ValidateTerms(IReadOnlyList<string>? terms, string name)
     {

@@ -366,8 +366,9 @@
 
         <div id="qualifications-settings-panel" class="settings-tab-panel" role="tabpanel"
              aria-labelledby="qualifications-settings-tab" hidden>
-        <div class="settings-section">
+        <section class="settings-section" aria-labelledby="compensation-heading">
           <p class="settings-save-note">Changes on this tab are saved automatically.</p>
+          <h3 id="compensation-heading">Compensation</h3>
           <div class="settings-row">
             <label for="minimum-pay">Minimum acceptable annual pay</label>
             <div class="settings-control salary-filter">
@@ -376,9 +377,13 @@
                 <input id="minimum-pay" type="text" inputmode="numeric" autocomplete="off"
                        placeholder="0" aria-describedby="minimum-pay-help">
               </div>
-              <small id="minimum-pay-help">Jobs with unknown or non-annual pay remain visible.</small>
+              <small id="minimum-pay-help">Jobs will not be hidden if no annual salary is listed or if the posting only provides non-annual pay.</small>
             </div>
           </div>
+        </section>
+
+        <section class="settings-section" aria-labelledby="education-heading">
+          <h3 id="education-heading">Education</h3>
           <div class="settings-row">
             <label for="education-level">Highest completed education</label>
             <div class="settings-control">
@@ -403,6 +408,36 @@
               </select>
             </div>
           </div>
+        </section>
+
+        <section class="settings-section" aria-labelledby="citizenship-sponsorship-heading">
+          <h3 id="citizenship-sponsorship-heading">Citizenship / Sponsorship</h3>
+          <div class="settings-row">
+            <label for="us-work-authorization-status">U.S. work status</label>
+            <div class="settings-control">
+              <select id="us-work-authorization-status">
+                <option value="notSpecified">Not configured</option>
+                <option value="usCitizen">U.S. citizen</option>
+                <option value="permanentResident">U.S. permanent resident / Green Card holder</option>
+                <option value="otherAuthorized">Other U.S. work authorization</option>
+                <option value="notAuthorized">Not authorized to work in the U.S.</option>
+              </select>
+            </div>
+          </div>
+          <div class="settings-row">
+            <label for="sponsorship-profile">Employment sponsorship</label>
+            <div class="settings-control">
+              <select id="sponsorship-profile">
+                <option value="unknown">Unknown / not configured</option>
+                <option value="notRequired">I do not require sponsorship</option>
+                <option value="required">I require sponsorship now or in the future</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section class="settings-section" aria-labelledby="security-clearance-heading">
+          <h3 id="security-clearance-heading">Security Clearance</h3>
           <div class="settings-row">
             <label for="clearance-profile-level">National-security clearance</label>
             <div class="settings-control">
@@ -419,38 +454,14 @@
           <div class="settings-row">
             <label for="public-trust-profile">Public Trust status</label>
             <div class="settings-control">
-              <select id="public-trust-profile" aria-describedby="public-trust-help">
+              <select id="public-trust-profile">
                 <option value="none">Not currently held</option>
                 <option value="current">Currently held / active</option>
                 <option value="unknown">Unknown</option>
               </select>
-              <small id="public-trust-help">Tracked separately from national-security clearance.</small>
             </div>
           </div>
-          <div class="settings-row">
-            <label for="us-work-authorization-status">U.S. work status</label>
-            <div class="settings-control">
-              <select id="us-work-authorization-status" aria-describedby="us-work-authorization-help">
-                <option value="notSpecified">Not configured</option>
-                <option value="usCitizen">U.S. citizen</option>
-                <option value="permanentResident">U.S. permanent resident / Green Card holder</option>
-                <option value="otherAuthorized">Other U.S. work authorization</option>
-                <option value="notAuthorized">Not authorized to work in the U.S.</option>
-              </select>
-              <small id="us-work-authorization-help">Kept separate from clearance and Public Trust status.</small>
-            </div>
-          </div>
-          <div class="settings-row">
-            <label for="sponsorship-profile">Employment sponsorship</label>
-            <div class="settings-control">
-              <select id="sponsorship-profile">
-                <option value="unknown">Unknown / not configured</option>
-                <option value="notRequired">I do not require sponsorship</option>
-                <option value="required">I require sponsorship now or in the future</option>
-              </select>
-            </div>
-          </div>
-        </div>
+        </section>
 
         <section class="settings-section" aria-labelledby="screening-heading">
           <h3 id="screening-heading">Screening Rules</h3>
@@ -459,21 +470,21 @@
               <input id="hide-strict-education-mismatch" type="checkbox">
               <span>
                 Hide jobs with strict education requirements above my completed level
-                <small>Preferred, flexible, or uncertain education language never hides a job.</small>
+                <small>Jobs will not be hidden if no education requirement is listed, or if the requirement is preferred, flexible, or uncertain.</small>
               </span>
             </label>
             <label class="settings-check">
               <input id="hide-strict-clearance-mismatch" type="checkbox">
               <span>
                 Hide jobs with unmet strict day-one clearance requirements
-                <small>Obtainable, preferred, and uncertain requirements always remain visible.</small>
+                <small>Jobs will not be hidden if no clearance requirement is listed, or if the clearance is obtainable, preferred, or uncertain.</small>
               </span>
             </label>
             <label class="settings-check">
               <input id="hide-strict-work-authorization-mismatch" type="checkbox">
               <span>
                 Hide jobs with confidently incompatible strict work-authorization requirements
-                <small>Preferred, export-control, U.S.-person, non-U.S., and uncertain wording never hides a job.</small>
+                <small>Jobs will not be hidden if no work-authorization requirement is listed, or if the wording is preferred, export-control, U.S.-person, non-U.S., or uncertain.</small>
               </span>
             </label>
           </div>

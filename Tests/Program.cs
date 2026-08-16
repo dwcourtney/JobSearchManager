@@ -130,6 +130,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Blob namespaces are isolated and traversal-resistant", TestBlobNamespaceAsync),
     ("New workspace settings are neutral", TestNeutralDefaultsAsync),
     ("Portable workspace round-trips settings and curated states", TestPortableWorkspaceRoundTripAsync),
+    ("Portable source import distinguishes pending and equivalent state", TestPortableSourceImportStateAsync),
     ("Portable workspace validates company-scoped canonical job state", TestPortableWorkspaceValidationAsync),
     ("Portable workspace restores after a complete reset", TestPortableWorkspaceResetRestoreAsync),
     ("Fresh catalog snapshots retain the applied source", TestFreshCatalogSourceAsync),
@@ -548,6 +549,56 @@ static Task TestPortableWorkspaceValidationAsync()
            !root.TryGetProperty("workspaceId", out _) && !root.TryGetProperty("jobs", out _) &&
            !root.TryGetProperty("cache", out _) && !root.TryGetProperty("securityToken", out _),
         "The external DTO is missing its versioned structure or exposed an internal runtime field.");
+    return Task.CompletedTask;
+}
+
+static Task TestPortableSourceImportStateAsync()
+{
+    var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+    var portable = new PortableWorkspaceService(companies);
+    var leidos = ViewerSettings.Default with
+    {
+        HasConfiguredSource = true,
+        CompanyId = "leidos",
+        Country = FacetDefaults.UnitedStatesCountry,
+        IncludeRemote = true,
+        CompanySources = new Dictionary<string, CompanySourceSettings>
+        {
+            ["leidos"] = new(FacetDefaults.UnitedStatesCountry, false, true, [])
+        }
+    };
+    var document = portable.Export(leidos, JobHistoryDocument.Empty);
+
+    var freshImport = portable.Import(document, ViewerSettings.Default, JobHistoryDocument.Empty);
+    Assert(freshImport.Settings.HasConfiguredSource == false &&
+           freshImport.Settings.PendingSource?.CompanyId == "leidos",
+        "Importing a source into a fresh workspace did not create explicit pending state.");
+
+    var equalImport = portable.Import(document, leidos, JobHistoryDocument.Empty);
+    Assert(equalImport.Settings.HasConfiguredSource == true &&
+           equalImport.Settings.CompanyId == "leidos" &&
+           equalImport.Settings.PendingSource is null,
+        "A source equivalent to the applied source created a false pending state.");
+
+    var boeing = ViewerSettings.Default with
+    {
+        HasConfiguredSource = true,
+        CompanyId = "boeing",
+        Country = FacetDefaults.UnitedStatesCountry,
+        IncludeAllLocations = true,
+        IncludeRemote = true
+    };
+    var differentImport = portable.Import(document, boeing, JobHistoryDocument.Empty);
+    Assert(differentImport.Settings.CompanyId == "boeing" &&
+           differentImport.Settings.PendingSource?.CompanyId == "leidos",
+        "A different imported source replaced the applied source instead of becoming pending.");
+
+    var noSourceDocument = portable.Export(ViewerSettings.Default, JobHistoryDocument.Empty);
+    var noSourceImport = portable.Import(
+        noSourceDocument, ViewerSettings.Default, JobHistoryDocument.Empty);
+    Assert(noSourceImport.Settings.HasConfiguredSource == false &&
+           noSourceImport.Settings.PendingSource is null,
+        "A backup without a Job Source created a conflicting source state.");
     return Task.CompletedTask;
 }
 
