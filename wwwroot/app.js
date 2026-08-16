@@ -59,7 +59,7 @@ const state = {
   hasConfiguredSource: false,
   pendingImportedSource: null,
   companyId: "",
-  companyName: "Workday",
+  companyName: "Job source",
   country: { id: null, label: ALL_COUNTRIES_LABEL },
   includeAllLocations: false,
   includeRemote: true,
@@ -80,7 +80,7 @@ const state = {
   resetConfirmationHideTimer: null,
   focusBeforeResetConfirmation: null,
   resetInProgress: false,
-  loadingTitle: "Loading Workday jobs",
+  loadingTitle: "Loading jobs",
   settingsSaveTimer: null
 };
 
@@ -233,14 +233,14 @@ const elements = {
   copyPostingButton: document.querySelector("#copy-posting-button"),
   copyPostingLabel: document.querySelector("#copy-posting-label"),
   copyPostingStatus: document.querySelector("#copy-posting-status"),
-  workdayLink: document.querySelector("#workday-link")
+  sourcePostingLink: document.querySelector("#source-posting-link")
 };
 
 document.addEventListener("DOMContentLoaded", initialize);
 
 async function initialize() {
   setLoading(true, {
-    title: "Loading Workday jobs",
+    title: "Loading jobs",
     phaseText: "Loading saved settings and job data…"
   });
   elements.loadingOverlay.addEventListener("keydown", constrainLoadingFocus);
@@ -272,7 +272,7 @@ async function initialize() {
   elements.includeAllLocations.addEventListener("change", sourceCoverageChanged);
   elements.includeRemote.addEventListener("change", sourceCoverageChanged);
   elements.locationSearch.addEventListener("input", filterLocationChoices);
-  elements.applyLocation.addEventListener("click", applyWorkdayLocation);
+  elements.applyLocation.addEventListener("click", applyJobSource);
   elements.minimumPay.addEventListener("input", () => {
     state.minimumSalary = parseCurrencyInput(elements.minimumPay.value);
     renderResults();
@@ -376,7 +376,7 @@ async function initialize() {
   elements.fullPostingTab.addEventListener("click", () => showDetailTab("posting", true));
   document.querySelector(".detail-tabs").addEventListener("keydown", handleDetailTabKeydown);
   elements.copyPostingButton.addEventListener("click", copySelectedJobPosting);
-  elements.workdayLink.addEventListener("click", () => {
+  elements.sourcePostingLink.addEventListener("click", () => {
     const job = state.jobs.find(item => item.stableId === state.selectedJobId);
     if (job) {
       markJobViewed(job);
@@ -584,7 +584,7 @@ function applySettings(settings) {
   state.hasConfiguredSource = settings.hasConfiguredSource === true;
   state.pendingImportedSource = settings.pendingSource || null;
   state.companyId = state.hasConfiguredSource ? settings.companyId || "" : "";
-  state.companyName = companyById(state.companyId)?.displayName || "Workday";
+  state.companyName = companyById(state.companyId)?.displayName || "Job source";
   elements.companySelect.value = state.companyId;
   state.loadingTitle = `Loading ${state.companyName} jobs`;
   elements.loadingTitle.textContent = state.loadingTitle;
@@ -625,7 +625,8 @@ function applySettings(settings) {
 function applyTheme() {
   document.documentElement.dataset.theme = state.themeMode;
   try {
-    localStorage.setItem("workday-job-manager-theme-hint", state.themeMode);
+    localStorage.setItem("job-search-manager-theme-hint", state.themeMode);
+    localStorage.removeItem("workday-job-manager-theme-hint");
   } catch {
     // The persisted backend setting is authoritative; this cache is optional.
   }
@@ -983,7 +984,7 @@ async function loadLocationFacets(
   state.facetsLoaded = false;
   let loaded = false;
   updateQueryControls();
-  elements.facetStatus.textContent = "Loading Workday location choices…";
+  elements.facetStatus.textContent = "Loading job-source location choices…";
   try {
     const parameters = new URLSearchParams();
     parameters.set("companyId", companyId);
@@ -1028,7 +1029,7 @@ function populateCountrySelect(select, options, allLabel, selectedId) {
   all.textContent = allLabel;
   select.append(all);
 
-  const orderedOptions = WorkdayCountryOrdering.orderCountryFacets(options);
+  const orderedOptions = JobSourceCountryOrdering.orderCountryFacets(options);
   for (const item of orderedOptions) {
     const option = document.createElement("option");
     option.value = item.id;
@@ -1227,7 +1228,7 @@ function sourceNavigationDecision(nextView) {
 }
 
 function formatSourceDescription(companyName, country, includeAll, includeRemote, physicalLocations) {
-  return `${companyName || "Workday"} · ${country?.label || ALL_COUNTRIES_LABEL} · ${describeSourceLocations(
+  return `${companyName || "Job source"} · ${country?.label || ALL_COUNTRIES_LABEL} · ${describeSourceLocations(
     includeAll,
     includeRemote,
     physicalLocations)}`;
@@ -1254,7 +1255,7 @@ function showSourceConfirmation() {
   elements.sourceConfirmationTitle.textContent = "Unapplied job source changes";
   elements.sourceConfirmationCopy.textContent = state.pendingImportedSource
     ? "The imported job source has not been applied yet."
-    : "You changed the Workday job source.";
+    : "You changed the job source.";
   elements.sourceConfirmationComparison.hidden = false;
   elements.sourceConfirmationCurrent.textContent = state.hasConfiguredSource
     ? formatSourceDescription(
@@ -1333,7 +1334,7 @@ function closeSourceConfirmation(restoreFocus) {
 async function applyPendingSourceAndGoToJobs() {
   closeSourceConfirmation(false);
   elements.companySelect.focus({ preventScroll: true });
-  await applyWorkdayLocation({ navigateToJobs: true });
+  await applyJobSource({ navigateToJobs: true });
 }
 
 function updateQueryControls() {
@@ -1369,7 +1370,7 @@ function updateQueryControls() {
       : `Source matches currently loaded jobs · ${context}`;
 }
 
-async function applyWorkdayLocation(options = {}) {
+async function applyJobSource(options = {}) {
   const companyId = elements.companySelect.value;
   const company = companyById(companyId);
   const country = selectedFacet(elements.countrySelect, ALL_COUNTRIES_LABEL);
@@ -1379,7 +1380,7 @@ async function applyWorkdayLocation(options = {}) {
     : elements.includeRemote.checked;
   const physicalLocations = includeAllLocations ? [] : selectedPendingLocations();
   clearTimeout(state.pollTimer);
-  setLoading(true, { title: `Loading ${company?.displayName || "Workday"} jobs` });
+  setLoading(true, { title: `Loading ${company?.displayName || "job-source"} jobs` });
   beginRefreshProgressPolling();
   elements.errorBanner.hidden = true;
   try {
@@ -1680,7 +1681,7 @@ async function exportWorkspace() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `workday-job-manager-workspace-${new Date().toISOString().slice(0, 10)}.json`;
+    link.download = `job-search-manager-backup-${new Date().toISOString().slice(0, 10)}.json`;
     document.body.append(link);
     link.click();
     link.remove();
@@ -2731,8 +2732,8 @@ function renderDetail(job) {
 
   renderQualificationFit(job, educationStatus, clearanceStatus, workAuthorizationStatus, headroom);
 
-  elements.workdayLink.href = safeHttpUrl(job.workdayUrl) || "#";
-  elements.workdayLink.hidden = !safeHttpUrl(job.workdayUrl);
+  elements.sourcePostingLink.href = safeHttpUrl(job.sourceUrl) || "#";
+  elements.sourcePostingLink.hidden = !safeHttpUrl(job.sourceUrl);
 
   elements.detailWarning.hidden = !job.detailError;
   elements.detailWarning.textContent = job.detailError
@@ -3478,8 +3479,8 @@ function updateLoadingProgress(progress, explicitText) {
   switch (progress?.phase) {
     case "listings":
       elements.loadingPhase.textContent = total > 0
-        ? `Retrieving Workday listings (${completed} of ${total} found)…`
-        : "Retrieving Workday listing pages…";
+        ? `Retrieving job listings (${completed} of ${total} found)…`
+        : "Retrieving job listing pages…";
       break;
     case "details":
       elements.loadingPhase.textContent = total > 0
@@ -3493,7 +3494,7 @@ function updateLoadingProgress(progress, explicitText) {
       elements.loadingPhase.textContent = "Saving refreshed results…";
       break;
     default:
-      elements.loadingPhase.textContent = "Retrieving Workday listings and exact posting dates…";
+      elements.loadingPhase.textContent = "Retrieving job listings and exact posting dates…";
       break;
   }
 }

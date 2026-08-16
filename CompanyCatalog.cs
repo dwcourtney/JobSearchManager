@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace WorkdayJobManager;
+namespace JobSearchManager;
 
 public sealed class CompanyCatalog
 {
@@ -43,7 +43,7 @@ public sealed class CompanyCatalog
         var normalized = string.IsNullOrWhiteSpace(companyId) ? DefaultCompanyId : companyId.Trim();
         return _byId.TryGetValue(normalized, out var company)
             ? company
-            : throw new ArgumentException($"Unsupported Workday company '{companyId}'.", nameof(companyId));
+            : throw new ArgumentException($"Unsupported job source company '{companyId}'.", nameof(companyId));
     }
 
     public bool TryGet(string? companyId, out CompanyDefinition company) =>
@@ -57,14 +57,14 @@ public sealed record CompanyCatalogDocument(
 public sealed record CompanyDefinition(
     string Id,
     string DisplayName,
-    string WorkdayHost,
+    string ApiHost,
     string Tenant,
     string Site,
     string PublicSiteUrl,
     FacetSelection DefaultCountry,
     IReadOnlyList<string> RemoteLocationIds)
 {
-    public string BaseUrl => $"https://{WorkdayHost}";
+    public string BaseUrl => $"https://{ApiHost}";
 
     public bool IsRemoteLocation(string? locationId) =>
         !string.IsNullOrWhiteSpace(locationId) &&
@@ -73,13 +73,13 @@ public sealed record CompanyDefinition(
     public void Validate()
     {
         if (string.IsNullOrWhiteSpace(Id) || string.IsNullOrWhiteSpace(DisplayName) ||
-            string.IsNullOrWhiteSpace(WorkdayHost) || string.IsNullOrWhiteSpace(Tenant) ||
+            string.IsNullOrWhiteSpace(ApiHost) || string.IsNullOrWhiteSpace(Tenant) ||
             string.IsNullOrWhiteSpace(Site) ||
             !Uri.TryCreate(PublicSiteUrl, UriKind.Absolute, out var publicUri) ||
             publicUri.Scheme != Uri.UriSchemeHttps ||
-            !string.Equals(publicUri.Host, WorkdayHost, StringComparison.OrdinalIgnoreCase))
+            !string.Equals(publicUri.Host, ApiHost, StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidDataException($"Invalid Workday company definition '{Id}'.");
+            throw new InvalidDataException($"Invalid job source company definition '{Id}'.");
         }
     }
 }

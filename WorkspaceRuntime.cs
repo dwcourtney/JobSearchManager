@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 
-namespace WorkdayJobManager;
+namespace JobSearchManager;
 
 public sealed record WorkspaceRuntime(
     AppStateStore StateStore,
@@ -128,7 +128,7 @@ public sealed class WorkspaceRuntimeManager
         var catalog = ActivatorUtilities.CreateInstance<JobCatalog>(_services, stateStore);
         if (settings.HasConfiguredSource == true)
         {
-            await catalog.InitializeAsync(WorkdayQuery.FromSettings(
+            await catalog.InitializeAsync(JobSourceQuery.FromSettings(
                 settings,
                 _services.GetRequiredService<CompanyCatalog>()));
         }

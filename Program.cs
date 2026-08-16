@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
-using WorkdayJobManager;
+using JobSearchManager;
 
 const int ApplicationPort = 54321;
 const string ApplicationUrl = "http://127.0.0.1:54321";
@@ -27,13 +27,19 @@ if (hosting.IsLocal)
 }
 
 builder.Services.AddSingleton(hosting);
-builder.Services.Configure<WorkdayOptions>(builder.Configuration.GetSection("Workday"));
-builder.Services.AddHttpClient<WorkdayClient>((services, client) =>
+var jobSourceConfiguration = builder.Configuration.GetSection("JobSource");
+if (!jobSourceConfiguration.Exists())
 {
-    var options = services.GetRequiredService<IOptions<WorkdayOptions>>().Value;
+    // Compatibility for deployments that supplied the pre-rebrand provider section.
+    jobSourceConfiguration = builder.Configuration.GetSection("Workday");
+}
+builder.Services.Configure<JobSourceOptions>(jobSourceConfiguration);
+builder.Services.AddHttpClient<JobSourceClient>((services, client) =>
+{
+    var options = services.GetRequiredService<IOptions<JobSourceOptions>>().Value;
     client.Timeout = TimeSpan.FromSeconds(Math.Clamp(options.RequestTimeoutSeconds, 5, 120));
     client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
-    client.DefaultRequestHeaders.UserAgent.ParseAdd("WorkdayJobManager/1.0");
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("JobSearchManager/1.0");
 });
 builder.Services.AddSingleton<CompanyCatalog>();
 builder.Services.AddSingleton<CredentialDetector>();
@@ -41,6 +47,8 @@ builder.Services.AddSingleton<AcademicQualificationDetector>();
 builder.Services.AddSingleton<WorkAuthorizationDetector>();
 builder.Services.AddSingleton<RemoteWorkDetector>();
 builder.Services.AddSingleton<PortableWorkspaceService>();
+// Preserve the established data-protection discriminator so existing Azure
+// workspace cookies can be decrypted and migrated to the new cookie name.
 builder.Services.AddDataProtection().SetApplicationName("WorkdayJobManager");
 builder.Services.AddScoped<WorkspaceContext>();
 builder.Services.AddScoped<WorkspaceRuntimeProvider>();
@@ -81,10 +89,10 @@ builder.Services.AddRateLimiter(options =>
     {
         context.HttpContext.Response.ContentType = "application/json";
         await context.HttpContext.Response.WriteAsJsonAsync(
-            new { error = "Too many Workday requests. Wait briefly and try again." },
+            new { error = "Too many job-source requests. Wait briefly and try again." },
             cancellationToken);
     };
-    options.AddPolicy("workday", httpContext =>
+    options.AddPolicy("provider", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             _ => new FixedWindowRateLimiterOptions
@@ -214,12 +222,12 @@ app.MapPost("/api/refresh", async (
         runtime.AutomaticChecks.ResetSchedule();
     }
     return Results.Ok(snapshot);
-}).RequireRateLimiting("workday");
+}).RequireRateLimiting("provider");
 
 app.MapGet("/api/location-facets", async Task<IResult> (
     string companyId,
     string? countryId,
-    WorkdayClient workdayClient,
+    JobSourceClient jobSourceClient,
     CompanyCatalog companies,
     CancellationToken token) =>
 {
@@ -228,8 +236,8 @@ app.MapGet("/api/location-facets", async Task<IResult> (
         return Results.BadRequest(new { error = "Choose a supported company." });
     }
 
-    return Results.Ok(await workdayClient.FetchLocationFacetsAsync(company, countryId, token));
-}).RequireRateLimiting("workday");
+    return Results.Ok(await jobSourceClient.FetchLocationFacetsAsync(company, countryId, token));
+}).RequireRateLimiting("provider");
 
 app.MapGet("/api/source/{companyId}", async Task<IResult> (
     string companyId,
@@ -257,7 +265,7 @@ app.MapGet("/api/source/{companyId}", async Task<IResult> (
 });
 
 app.MapPost("/api/query", async Task<IResult> (
-    WorkdayQuery requestedQuery,
+    JobSourceQuery requestedQuery,
     WorkspaceRuntimeProvider provider,
     CompanyCatalog companies,
     CancellationToken token) =>
@@ -304,7 +312,7 @@ app.MapPost("/api/query", async Task<IResult> (
     });
     await stateStore.SaveSettingsAsync(updated);
     runtime.AutomaticChecks.ApplySettings(updated);
-    var snapshot = await runtime.Catalog.RefreshAsync(WorkdayQuery.FromSettings(updated, companies));
+    var snapshot = await runtime.Catalog.RefreshAsync(JobSourceQuery.FromSettings(updated, companies));
     if (snapshot.Error is null)
     {
         runtime.AutomaticChecks.ResetSchedule();
@@ -315,7 +323,7 @@ app.MapPost("/api/query", async Task<IResult> (
         runtime.AutomaticChecks.ApplySettings(current);
     }
     return Results.Ok(snapshot);
-}).RequireRateLimiting("workday");
+}).RequireRateLimiting("provider");
 
 app.MapGet("/api/settings", async (
     WorkspaceRuntimeProvider provider,
@@ -429,7 +437,7 @@ app.MapPost("/api/automatic-check/run", async (
     WorkspaceRuntimeProvider provider,
     CancellationToken token) =>
     Results.Ok(await (await provider.GetAsync(token)).AutomaticChecks.CheckNowAsync(token)))
-    .RequireRateLimiting("workday");
+    .RequireRateLimiting("provider");
 
 app.MapPost("/api/history/viewed", async (
     ViewedJobRequest request,
@@ -465,7 +473,7 @@ try
 catch (Exception ex) when (hosting.IsLocal && IsAddressInUse(ex))
 {
     const string message =
-        "Workday Job Manager could not start because TCP port 54321 is already in use. " +
+        "Job Search Manager could not start because TCP port 54321 is already in use. " +
         "Close the other program using http://127.0.0.1:54321 and try again.";
     app.Logger.LogCritical(ex, "{StartupError}", message);
     Console.Error.WriteLine(message);
@@ -475,7 +483,7 @@ catch (Exception ex) when (hosting.IsLocal && IsAddressInUse(ex))
 
 if (hosting.IsLocal)
 {
-    app.Logger.LogInformation("Workday Job Manager is available at {ApplicationUrl}", ApplicationUrl);
+    app.Logger.LogInformation("Job Search Manager is available at {ApplicationUrl}", ApplicationUrl);
     app.Logger.LogInformation(
         "Persistent state directory: {DataDirectory}",
         localRuntime!.StateStore.DataDirectory);
@@ -503,7 +511,7 @@ if (hosting.IsLocal)
 else
 {
     app.Logger.LogInformation(
-        "Workday Job Manager started in Azure mode with anonymous Blob-backed workspaces in container {ContainerName}.",
+        "Job Search Manager started in Azure mode with anonymous Blob-backed workspaces in container {ContainerName}.",
         hosting.StorageContainer);
 }
 

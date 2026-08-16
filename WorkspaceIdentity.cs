@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.DataProtection;
 
-namespace WorkdayJobManager;
+namespace JobSearchManager;
 
 public sealed class WorkspaceContext
 {
@@ -15,7 +15,10 @@ public sealed class WorkspaceContext
 
 public static partial class WorkspaceIdentity
 {
-    public const string CookieName = "WorkdayJobManager.Workspace";
+    public const string CookieName = "JobSearchManager.Workspace";
+    internal const string LegacyCookieName = "WorkdayJobManager.Workspace";
+    internal const string ProtectorPurpose = "JobSearchManager.AnonymousWorkspace.v1";
+    internal const string LegacyProtectorPurpose = "WorkdayJobManager.AnonymousWorkspace.v1";
     private const int WorkspaceIdBytes = 32;
 
     [GeneratedRegex("^[a-f0-9]{64}$", RegexOptions.CultureInvariant)]
@@ -47,6 +50,7 @@ public sealed class WorkspaceIdentityMiddleware
     private readonly HostingConfiguration _hosting;
     private readonly ILogger<WorkspaceIdentityMiddleware> _logger;
     private readonly IDataProtector _protector;
+    private readonly IDataProtector _legacyProtector;
 
     public WorkspaceIdentityMiddleware(
         RequestDelegate next,
@@ -57,8 +61,9 @@ public sealed class WorkspaceIdentityMiddleware
         _next = next;
         _hosting = hosting;
         _logger = logger;
-        _protector = dataProtectionProvider.CreateProtector(
-            "WorkdayJobManager.AnonymousWorkspace.v1");
+        _protector = dataProtectionProvider.CreateProtector(WorkspaceIdentity.ProtectorPurpose);
+        _legacyProtector = dataProtectionProvider.CreateProtector(
+            WorkspaceIdentity.LegacyProtectorPurpose);
     }
 
     public async Task InvokeAsync(HttpContext httpContext, WorkspaceContext workspace)
@@ -72,11 +77,13 @@ public sealed class WorkspaceIdentityMiddleware
 
         var protectedWorkspace = httpContext.Request.Cookies[WorkspaceIdentity.CookieName];
         string? workspaceId = null;
+        var canonicalCookieValid = false;
         if (!string.IsNullOrWhiteSpace(protectedWorkspace))
         {
             try
             {
                 workspaceId = _protector.Unprotect(protectedWorkspace);
+                canonicalCookieValid = WorkspaceIdentity.IsValid(workspaceId);
             }
             catch (CryptographicException)
             {
@@ -84,16 +91,47 @@ public sealed class WorkspaceIdentityMiddleware
             }
         }
 
+        var legacyCookie = httpContext.Request.Cookies[WorkspaceIdentity.LegacyCookieName];
+        var migratedLegacyCookie = false;
+        if (!WorkspaceIdentity.IsValid(workspaceId) && !string.IsNullOrWhiteSpace(legacyCookie))
+        {
+            try
+            {
+                workspaceId = _legacyProtector.Unprotect(legacyCookie);
+                migratedLegacyCookie = WorkspaceIdentity.IsValid(workspaceId);
+            }
+            catch (CryptographicException)
+            {
+                _logger.LogWarning("Rejected an invalid legacy anonymous workspace cookie.");
+            }
+        }
+
         if (!WorkspaceIdentity.IsValid(workspaceId))
         {
             workspaceId = WorkspaceIdentity.Create();
+        }
+
+        if (!canonicalCookieValid || migratedLegacyCookie)
+        {
             httpContext.Response.Cookies.Append(
                 WorkspaceIdentity.CookieName,
-                _protector.Protect(workspaceId),
+                _protector.Protect(workspaceId!),
                 WorkspaceIdentity.CreateCookieOptions(secure: true));
-            _logger.LogInformation(
-                "Created anonymous workspace {WorkspaceReference}.",
-                WorkspaceIdentity.Redact(workspaceId));
+            if (migratedLegacyCookie)
+            {
+                httpContext.Response.Cookies.Delete(
+                    WorkspaceIdentity.LegacyCookieName,
+                    WorkspaceIdentity.CreateCookieOptions(secure: true));
+                _logger.LogInformation(
+                    "Migrated anonymous workspace {WorkspaceReference} to the current cookie name.",
+                    WorkspaceIdentity.Redact(workspaceId!));
+            }
+            else
+            {
+                _logger.LogInformation(
+                    "Created anonymous workspace {WorkspaceReference}.",
+                    WorkspaceIdentity.Redact(workspaceId!));
+            }
         }
 
         workspace.SetWorkspace(workspaceId!);

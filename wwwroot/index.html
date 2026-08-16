@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Workday Job Manager</title>
+  <title>Job Search Manager</title>
   <script src="/theme-bootstrap.js"></script>
   <link rel="stylesheet" href="/theme.css">
   <link rel="stylesheet" href="/styles.css">
@@ -17,7 +17,7 @@
 <body>
   <main id="app-shell" class="app-shell" aria-busy="true" inert>
     <header class="app-header">
-      <h1>Workday Job Manager</h1>
+      <h1>Job Search Manager</h1>
       <nav class="app-tabs" role="tablist" aria-label="Application views">
         <button id="jobs-tab" class="app-tab active" type="button" role="tab"
                 aria-selected="true" aria-controls="jobs-view">Jobs</button>
@@ -119,7 +119,7 @@
           </div>
           <div id="results-tab-panel" class="results-tab-panel" role="tabpanel"
                aria-labelledby="all-results-tab">
-            <div id="job-list" class="job-list" aria-label="Filtered Workday jobs"></div>
+            <div id="job-list" class="job-list" aria-label="Filtered jobs"></div>
           </div>
         </aside>
 
@@ -151,8 +151,8 @@
                     </svg>
                     <span id="copy-posting-label">Copy posting</span>
                   </button>
-                  <a id="workday-link" class="workday-button" target="_blank" rel="noopener noreferrer">
-                    Open in Workday
+                  <a id="source-posting-link" class="source-posting-button" target="_blank" rel="noopener noreferrer">
+                    Open original posting
                   </a>
                 </div>
               </div>
@@ -264,7 +264,7 @@
             <section id="full-posting-panel" class="detail-tab-panel full-posting-panel"
                      role="tabpanel" aria-labelledby="full-posting-tab" hidden>
               <div class="posting-source-strip">
-                Original Workday posting — sanitized for safe local display
+                Original job posting — sanitized for safe display
               </div>
               <div id="detail-description" class="description"></div>
             </section>
@@ -276,7 +276,7 @@
     <section id="settings-view" class="app-view settings-view" role="tabpanel"
              aria-labelledby="settings-tab" hidden>
       <header class="settings-header">
-        <p>Application preferences and the Workday source used for job retrieval.</p>
+        <p>Application preferences and the source used for job retrieval.</p>
       </header>
       <div class="settings-surface">
         <div class="settings-tabs" role="tablist" aria-label="Settings categories">
@@ -299,7 +299,7 @@
         <div class="settings-section">
           <div class="settings-row">
             <label for="company-select">Company</label>
-            <div class="settings-control workday-facet-filter">
+            <div class="settings-control source-facet-filter">
               <select id="company-select" disabled>
                 <option>Loading companiesâ€¦</option>
               </select>
@@ -307,7 +307,7 @@
           </div>
           <div class="settings-row">
             <label for="country-select">Country</label>
-            <div class="settings-control workday-facet-filter">
+            <div class="settings-control source-facet-filter">
               <select id="country-select" disabled>
                 <option>Loading countries…</option>
               </select>
@@ -320,7 +320,7 @@
                 <input id="include-all-locations" type="checkbox" disabled>
                 <span>
                   Include all locations in this country
-                  <small>Uses the broadest available Workday location query.</small>
+                  <small>Uses the broadest available location query.</small>
                 </span>
               </label>
               <label id="include-remote-option" class="settings-check source-coverage-option">
@@ -355,7 +355,7 @@
             <div>
               <p>Apply the selected company and location settings to reload the job source.</p>
               <small>Job-source changes are applied manually because reloading may take several seconds.</small>
-              <small id="facet-status" aria-live="polite">Loading Workday location choices…</small>
+              <small id="facet-status" aria-live="polite">Loading job-source location choices…</small>
             </div>
             <button id="apply-location" class="apply-source-button" type="button" disabled>
               Loading Job Source…
@@ -569,7 +569,7 @@
        aria-labelledby="loading-title" aria-describedby="loading-phase loading-note" tabindex="-1">
     <section class="loading-panel">
       <span class="loading-spinner" aria-hidden="true"></span>
-      <h2 id="loading-title">Loading Workday jobs</h2>
+      <h2 id="loading-title">Loading jobs</h2>
       <p id="loading-phase" class="loading-phase" aria-live="polite">
         Connecting to the local application…
       </p>
@@ -588,7 +588,7 @@
     <section class="loading-panel confirmation-panel">
       <h2 id="source-confirmation-title">Unapplied job source changes</h2>
       <p id="source-confirmation-copy" class="confirmation-copy">
-        You changed the Workday job source.
+        You changed the job source.
       </p>
       <div id="source-confirmation-comparison" class="confirmation-source-comparison">
         <div class="confirmation-source-row">

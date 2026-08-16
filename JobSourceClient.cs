@@ -5,23 +5,23 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 
-namespace WorkdayJobManager;
+namespace JobSearchManager;
 
-public sealed class WorkdayClient
+public sealed class JobSourceClient
 {
     private readonly HttpClient _httpClient;
-    private readonly WorkdayOptions _options;
-    private readonly ILogger<WorkdayClient> _logger;
+    private readonly JobSourceOptions _options;
+    private readonly ILogger<JobSourceClient> _logger;
     private readonly CredentialDetector _credentialDetector;
     private readonly AcademicQualificationDetector _academicQualificationDetector;
     private readonly WorkAuthorizationDetector _workAuthorizationDetector;
     private readonly RemoteWorkDetector _remoteWorkDetector;
     private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
 
-    public WorkdayClient(
+    public JobSourceClient(
         HttpClient httpClient,
-        IOptions<WorkdayOptions> options,
-        ILogger<WorkdayClient> logger,
+        IOptions<JobSourceOptions> options,
+        ILogger<JobSourceClient> logger,
         CredentialDetector credentialDetector,
         AcademicQualificationDetector academicQualificationDetector,
         WorkAuthorizationDetector workAuthorizationDetector,
@@ -37,19 +37,19 @@ public sealed class WorkdayClient
 
         if (_options.PageSize is < 1 or > 20)
         {
-            throw new InvalidOperationException("Workday:PageSize must be between 1 and 20.");
+            throw new InvalidOperationException("JobSource:PageSize must be between 1 and 20.");
         }
 
         if (_options.DetailConcurrency is < 1 or > 20)
         {
-            throw new InvalidOperationException("Workday:DetailConcurrency must be between 1 and 20.");
+            throw new InvalidOperationException("JobSource:DetailConcurrency must be between 1 and 20.");
         }
 
     }
 
-    public async Task<WorkdayFetchResult> FetchAllJobsAsync(
+    public async Task<JobSourceFetchResult> FetchAllJobsAsync(
         CompanyDefinition company,
-        WorkdayQuery query,
+        JobSourceQuery query,
         Action<RefreshProgress>? reportProgress = null,
         CancellationToken cancellationToken = default)
     {
@@ -102,12 +102,12 @@ public sealed class WorkdayClient
             .ThenBy(job => job.RequisitionId, StringComparer.Ordinal)
             .ToArray();
 
-        return new WorkdayFetchResult(sorted, listings.Count, detailFailureCount);
+        return new JobSourceFetchResult(sorted, listings.Count, detailFailureCount);
     }
 
     public async Task<IReadOnlyList<ListingIdentity>> FetchListingIdentitiesAsync(
         CompanyDefinition company,
-        WorkdayQuery query,
+        JobSourceQuery query,
         CancellationToken cancellationToken = default)
     {
         var listings = await FetchListingsAsync(company, query, null, cancellationToken);
@@ -127,10 +127,10 @@ public sealed class WorkdayClient
         CancellationToken cancellationToken = default)
     {
         var jobsEndpoint = new Uri(GetCxsBaseUri(company), "jobs");
-        // Do not apply the current location here: doing so makes Workday collapse
+        // Do not apply the current location here: doing so makes the provider collapse
         // the country facet to the one country containing that location. Country
         // alone returns the complete country chooser plus dependent locations.
-        var query = new WorkdayQuery(countryId, "", true, false, [], CompanyId: company.Id)
+        var query = new JobSourceQuery(countryId, "", true, false, [], CompanyId: company.Id)
             .Normalize(company);
         var payload = new
         {
@@ -152,7 +152,7 @@ public sealed class WorkdayClient
         var locationFacet = locationGroup?.Values.FirstOrDefault(facet =>
             string.Equals(facet.FacetParameter, "locations", StringComparison.Ordinal));
 
-        static FacetOption[] ConvertOptions(WorkdayFacetNode? facet) => (facet?.Values ?? [])
+        static FacetOption[] ConvertOptions(JobSourceFacetNode? facet) => (facet?.Values ?? [])
             .Where(value => !string.IsNullOrWhiteSpace(value.Id) &&
                 !string.IsNullOrWhiteSpace(value.Descriptor))
             .Select(value => new FacetOption(value.Id, value.Descriptor, value.Count))
@@ -179,7 +179,7 @@ public sealed class WorkdayClient
 
     private async Task<List<ListingPosting>> FetchListingsAsync(
         CompanyDefinition company,
-        WorkdayQuery query,
+        JobSourceQuery query,
         Action<RefreshProgress>? reportProgress,
         CancellationToken cancellationToken)
     {
@@ -217,7 +217,7 @@ public sealed class WorkdayClient
             }
 
             _logger.LogInformation(
-                "Retrieved Workday listing page at offset {Offset}: {Count} jobs ({UniqueCount} unique total).",
+                "Retrieved job-source listing page at offset {Offset}: {Count} jobs ({UniqueCount} unique total).",
                 offset,
                 page.JobPostings.Count,
                 listings.Count);
@@ -243,7 +243,7 @@ public sealed class WorkdayClient
 
     private static Dictionary<string, string[]> CreateAppliedFacets(
         CompanyDefinition company,
-        WorkdayQuery query)
+        JobSourceQuery query)
     {
         var facets = new Dictionary<string, string[]>(StringComparer.Ordinal);
         if (!string.IsNullOrWhiteSpace(query.CountryId))
@@ -282,7 +282,7 @@ public sealed class WorkdayClient
                     : retryDelay;
 
                 _logger.LogInformation(
-                    "Workday returned HTTP {StatusCode} for a job detail; retrying attempt {NextAttempt} of {MaximumAttempts} after {DelaySeconds:F0} seconds.",
+                    "The job source returned HTTP {StatusCode} for a job detail; retrying attempt {NextAttempt} of {MaximumAttempts} after {DelaySeconds:F0} seconds.",
                     (int)response.StatusCode,
                     attempt + 1,
                     maximumAttempts,
@@ -293,7 +293,7 @@ public sealed class WorkdayClient
 
             var detail = await ReadJsonAsync<DetailResponse>(response, detailUri, cancellationToken);
             return detail.JobPostingInfo
-                ?? throw new InvalidDataException($"Workday detail response had no jobPostingInfo: {detailUri}");
+                ?? throw new InvalidDataException($"The job-source detail response had no jobPostingInfo: {detailUri}");
         }
     }
 
@@ -307,7 +307,7 @@ public sealed class WorkdayClient
             var responseText = await response.Content.ReadAsStringAsync(cancellationToken);
             var excerpt = responseText.Length > 500 ? responseText[..500] + "…" : responseText;
             throw new HttpRequestException(
-                $"Workday returned HTTP {(int)response.StatusCode} ({response.ReasonPhrase}) for {requestUri}. " +
+                $"The job source returned HTTP {(int)response.StatusCode} ({response.ReasonPhrase}) for {requestUri}. " +
                 $"Response: {excerpt}",
                 null,
                 response.StatusCode);
@@ -316,11 +316,11 @@ public sealed class WorkdayClient
         try
         {
             return await response.Content.ReadFromJsonAsync<T>(_jsonOptions, cancellationToken)
-                ?? throw new InvalidDataException($"Workday returned an empty JSON response for {requestUri}.");
+                ?? throw new InvalidDataException($"The job source returned an empty JSON response for {requestUri}.");
         }
         catch (JsonException ex)
         {
-            throw new InvalidDataException($"Workday returned invalid JSON for {requestUri}.", ex);
+            throw new InvalidDataException($"The job source returned invalid JSON for {requestUri}.", ex);
         }
     }
 
@@ -353,7 +353,7 @@ public sealed class WorkdayClient
         var fallbackUrl = new Uri(
             new Uri(company.PublicSiteUrl.TrimEnd('/') + "/"),
             listing.ExternalPath.TrimStart('/')).ToString();
-        var workdayUrl = IsSafeHttpUrl(detail?.ExternalUrl) ? detail!.ExternalUrl : fallbackUrl;
+        var sourceUrl = IsSafeHttpUrl(detail?.ExternalUrl) ? detail!.ExternalUrl : fallbackUrl;
         var descriptionHtml = detail?.JobDescription ?? "";
         var salary = JobAnalysis.AnalyzeSalary(descriptionHtml);
         var remoteLocation = JobAnalysis.AnalyzeRemoteLocation(
@@ -375,7 +375,7 @@ public sealed class WorkdayClient
             primaryLocation,
             additionalLocations,
             detail?.TimeType ?? "",
-            workdayUrl,
+            sourceUrl,
             descriptionHtml,
             salary.Minimum,
             salary.Maximum,

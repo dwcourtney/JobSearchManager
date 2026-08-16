@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
 
-namespace WorkdayJobManager;
+namespace JobSearchManager;
 
 public enum WorkspaceDataFile
 {

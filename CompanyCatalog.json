@@ -4,7 +4,7 @@
     {
       "id": "leidos",
       "displayName": "Leidos",
-      "workdayHost": "leidos.wd5.myworkdayjobs.com",
+      "apiHost": "leidos.wd5.myworkdayjobs.com",
       "tenant": "leidos",
       "site": "External",
       "publicSiteUrl": "https://leidos.wd5.myworkdayjobs.com/en-US/External",
@@ -20,7 +20,7 @@
     {
       "id": "mtm",
       "displayName": "MTM",
-      "workdayHost": "mtminc.wd1.myworkdayjobs.com",
+      "apiHost": "mtminc.wd1.myworkdayjobs.com",
       "tenant": "mtminc",
       "site": "MTMTransit_External",
       "publicSiteUrl": "https://mtminc.wd1.myworkdayjobs.com/MTMTransit_External",
@@ -33,7 +33,7 @@
     {
       "id": "boeing",
       "displayName": "Boeing",
-      "workdayHost": "boeing.wd1.myworkdayjobs.com",
+      "apiHost": "boeing.wd1.myworkdayjobs.com",
       "tenant": "boeing",
       "site": "EXTERNAL_CAREERS",
       "publicSiteUrl": "https://boeing.wd1.myworkdayjobs.com/EXTERNAL_CAREERS",

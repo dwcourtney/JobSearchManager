@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace WorkdayJobManager;
+namespace JobSearchManager;
 
 public sealed record PortableWorkspaceDocument(
     string Format,
@@ -56,7 +56,8 @@ internal sealed class WorkspaceImportException(string message) : Exception(messa
 
 internal sealed partial class PortableWorkspaceService
 {
-    public const string FormatIdentifier = "WorkdayJobManagerWorkspace";
+    public const string FormatIdentifier = "JobSearchManagerBackup";
+    internal const string LegacyFormatIdentifier = "WorkdayJobManagerWorkspace";
     public const int CurrentVersion = 1;
     public const int MaximumImportBytes = 1_000_000;
     private readonly CompanyCatalog _companies;
@@ -141,10 +142,11 @@ internal sealed partial class PortableWorkspaceService
         ViewerSettings currentSettings,
         JobHistoryDocument currentHistory)
     {
-        if (!string.Equals(document.Format, FormatIdentifier, StringComparison.Ordinal))
+        if (!string.Equals(document.Format, FormatIdentifier, StringComparison.Ordinal) &&
+            !string.Equals(document.Format, LegacyFormatIdentifier, StringComparison.Ordinal))
         {
             throw new WorkspaceImportException(
-                "The selected file is not a Workday Job Manager workspace export.");
+                "The selected file is not a Job Search Manager workspace export.");
         }
         if (document.Version != CurrentVersion)
         {
@@ -345,14 +347,14 @@ internal sealed partial class PortableWorkspaceService
             return false;
         }
 
-        var importedQuery = new WorkdayQuery(
+        var importedQuery = new JobSourceQuery(
             imported.Country.Id,
             imported.Country.Label,
             imported.IncludeAllLocations,
             imported.IncludeRemote,
             imported.SelectedPhysicalLocations,
             CompanyId: company.Id);
-        return WorkdayQuery.FromSettings(current, _companies)
+        return JobSourceQuery.FromSettings(current, _companies)
             .IsEquivalentTo(importedQuery, _companies);
     }
 
@@ -387,14 +389,14 @@ internal sealed partial class PortableWorkspaceService
     {
         if (facet is null || string.IsNullOrWhiteSpace(facet.Label) || facet.Label.Length > 300 ||
             (!allowEmptyId && string.IsNullOrWhiteSpace(facet.Id)) ||
-            (!string.IsNullOrWhiteSpace(facet.Id) && !WorkdayIdPattern().IsMatch(facet.Id)))
+            (!string.IsNullOrWhiteSpace(facet.Id) && !ExternalFacetIdPattern().IsMatch(facet.Id)))
         {
             throw new WorkspaceImportException($"The imported {name} is invalid.");
         }
     }
 
     [GeneratedRegex("^[0-9a-fA-F]{32}$", RegexOptions.CultureInvariant)]
-    private static partial Regex WorkdayIdPattern();
+    private static partial Regex ExternalFacetIdPattern();
 
     [GeneratedRegex("^[a-z0-9][a-z0-9-]{0,99}$", RegexOptions.CultureInvariant)]
     private static partial Regex CompanyIdPattern();

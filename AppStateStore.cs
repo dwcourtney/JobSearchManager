@@ -1,4 +1,4 @@
-namespace WorkdayJobManager;
+namespace JobSearchManager;
 
 public sealed class AppStateStore
 {
@@ -37,7 +37,7 @@ public sealed class AppStateStore
         {
             await _dataStore.WriteJsonAsync(WorkspaceDataFile.Settings, normalized);
             _logger.LogInformation(
-                "Migrated unsupported Workday company state in {SettingsPath} to supported company {CompanyId}; unsupported per-company source selections were removed.",
+                "Migrated unsupported job-source company state in {SettingsPath} to supported company {CompanyId}; unsupported per-company source selections were removed.",
                 SettingsPath,
                 normalized.CompanyId);
         }
@@ -56,14 +56,51 @@ public sealed class AppStateStore
         }
     }
 
-    internal Task<JobsCacheDocument?> LoadJobsCacheAsync() =>
-        _dataStore.ReadJsonAsync<JobsCacheDocument>(WorkspaceDataFile.JobsCache);
+    internal async Task<JobsCacheDocument?> LoadJobsCacheAsync()
+    {
+        var cache = await _dataStore.ReadJsonAsync<JobsCacheDocument>(WorkspaceDataFile.JobsCache);
+        if (cache?.Jobs is null)
+        {
+            return cache;
+        }
+
+        var migrationRequired = false;
+        var jobs = cache.Jobs.Select(job =>
+        {
+            if (string.IsNullOrWhiteSpace(job.SourceUrl) &&
+                !string.IsNullOrWhiteSpace(job.LegacySourceUrl))
+            {
+                migrationRequired = true;
+                return job with { SourceUrl = job.LegacySourceUrl, LegacySourceUrl = null };
+            }
+
+            if (job.LegacySourceUrl is not null)
+            {
+                migrationRequired = true;
+                return job with { LegacySourceUrl = null };
+            }
+
+            return job;
+        }).ToArray();
+
+        if (!migrationRequired)
+        {
+            return cache;
+        }
+
+        var migrated = cache with { Jobs = jobs };
+        await _dataStore.WriteJsonAsync(WorkspaceDataFile.JobsCache, migrated);
+        _logger.LogInformation(
+            "Migrated the legacy posting-URL field in {JobsCachePath} to sourceUrl.",
+            JobsCachePath);
+        return migrated;
+    }
 
     internal Task SaveJobsCacheAsync(
         IReadOnlyList<JobRecord> jobs,
         DateTimeOffset lastRefreshedUtc,
         int detailFailureCount,
-        WorkdayQuery query) =>
+        JobSourceQuery query) =>
         _dataStore.WriteJsonAsync(
             WorkspaceDataFile.JobsCache,
             new JobsCacheDocument(

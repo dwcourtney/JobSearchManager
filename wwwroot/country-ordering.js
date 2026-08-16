@@ -1,8 +1,8 @@
 "use strict";
 
-globalThis.WorkdayCountryOrdering = (() => {
+globalThis.JobSourceCountryOrdering = (() => {
   const DEFAULT_REGION = "US";
-  const WORKDAY_COUNTRY_LABEL_BY_REGION = Object.freeze({
+  const COUNTRY_LABEL_BY_REGION = Object.freeze({
     US: "United States of America",
     GB: "United Kingdom",
     CA: "Canada",
@@ -27,7 +27,7 @@ globalThis.WorkdayCountryOrdering = (() => {
   }
 
   function countryLabelForRegion(region) {
-    const mapped = WORKDAY_COUNTRY_LABEL_BY_REGION[region];
+    const mapped = COUNTRY_LABEL_BY_REGION[region];
     if (mapped) return mapped;
     try {
       return new Intl.DisplayNames(["en"], { type: "region" }).of(region) || null;
@@ -48,7 +48,7 @@ globalThis.WorkdayCountryOrdering = (() => {
       const inferred = region ? findCountryByLabel(countries, countryLabelForRegion(region)) : null;
       if (inferred) return inferred;
     }
-    return findCountryByLabel(countries, WORKDAY_COUNTRY_LABEL_BY_REGION[DEFAULT_REGION]);
+    return findCountryByLabel(countries, COUNTRY_LABEL_BY_REGION[DEFAULT_REGION]);
   }
 
   function orderCountryFacets(countries, locales = browserLocales()) {

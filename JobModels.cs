@@ -1,8 +1,8 @@
 using System.Text.Json.Serialization;
 
-namespace WorkdayJobManager;
+namespace JobSearchManager;
 
-public sealed class WorkdayOptions
+public sealed class JobSourceOptions
 {
     public int PageSize { get; init; } = 20;
     public int DetailConcurrency { get; init; } = 6;
@@ -21,7 +21,7 @@ public static class FacetDefaults
 
 public sealed record FacetSelection(string? Id, string Label);
 
-public sealed record WorkdayQuery(
+public sealed record JobSourceQuery(
     string? CountryId,
     string CountryLabel,
     bool IncludeAllLocations = false,
@@ -32,14 +32,14 @@ public sealed record WorkdayQuery(
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? LocationLabel = null,
     string CompanyId = CompanyCatalog.DefaultCompanyId)
 {
-    public static WorkdayQuery FromSettings(ViewerSettings settings, CompanyCatalog catalog)
+    public static JobSourceQuery FromSettings(ViewerSettings settings, CompanyCatalog catalog)
     {
         if (settings.HasConfiguredSource != true)
         {
-            throw new InvalidOperationException("No Workday job source has been applied.");
+            throw new InvalidOperationException("No job source has been applied.");
         }
         var company = catalog.Get(settings.CompanyId);
-        return new WorkdayQuery(
+        return new JobSourceQuery(
             settings.Country.Id,
             settings.Country.Label,
             settings.IncludeAllLocations,
@@ -51,7 +51,7 @@ public sealed record WorkdayQuery(
             company.Id).Normalize(company);
     }
 
-    public WorkdayQuery Normalize(CompanyDefinition company)
+    public JobSourceQuery Normalize(CompanyDefinition company)
     {
         var countryId = string.IsNullOrWhiteSpace(CountryId) ? null : CountryId.Trim();
         var countryLabel = string.IsNullOrWhiteSpace(CountryLabel)
@@ -101,7 +101,7 @@ public sealed record WorkdayQuery(
                 .OrderBy(location => location.Id, StringComparer.Ordinal)
                 .ToArray();
 
-        return new WorkdayQuery(
+        return new JobSourceQuery(
             countryId,
             countryLabel,
             includeAll,
@@ -129,7 +129,7 @@ public sealed record WorkdayQuery(
             .ToArray();
     }
 
-    public bool IsEquivalentTo(WorkdayQuery? other, CompanyCatalog catalog)
+    public bool IsEquivalentTo(JobSourceQuery? other, CompanyCatalog catalog)
     {
         if (other is null)
         {
@@ -178,7 +178,7 @@ public sealed record JobRecord(
     string PrimaryLocation,
     IReadOnlyList<string> AdditionalLocations,
     string TimeType,
-    string WorkdayUrl,
+    string SourceUrl,
     string DescriptionHtml,
     decimal? PayMinimum,
     decimal? PayMaximum,
@@ -200,7 +200,11 @@ public sealed record JobRecord(
     AcademicQualificationAnalysis? AcademicQualification = null,
     string CompanyId = CompanyCatalog.DefaultCompanyId,
     WorkAuthorizationAnalysis? WorkAuthorization = null,
-    RemoteWorkAnalysis? RemoteWork = null)
+    RemoteWorkAnalysis? RemoteWork = null,
+    // Read-only compatibility input for cache documents written before the product rename.
+    [property: JsonPropertyName("workdayUrl")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? LegacySourceUrl = null)
 {
     public string StableId => $"{CompanyId}:{(!string.IsNullOrWhiteSpace(RequisitionId)
         ? RequisitionId
@@ -295,7 +299,7 @@ internal sealed record CredentialAnalysis(
     IReadOnlyList<string> UnrecognizedMentions,
     int CatalogVersion);
 
-public sealed record WorkdayFetchResult(
+public sealed record JobSourceFetchResult(
     IReadOnlyList<JobRecord> Jobs,
     int ListingCount,
     int DetailFailureCount);
@@ -334,12 +338,12 @@ public sealed record JobsSnapshot(
     int DetailFailureCount,
     bool IsCached,
     IReadOnlyList<string> NewJobIds,
-    WorkdayQuery Query,
+    JobSourceQuery Query,
     IReadOnlyDictionary<string, string> JobStates,
     RefreshProgress? RefreshProgress)
 {
     public static JobsSnapshot Empty { get; } =
-        new([], 0, null, false, null, 0, false, [], new WorkdayQuery(
+        new([], 0, null, false, null, 0, false, [], new JobSourceQuery(
             null,
             FacetDefaults.AllCountriesLabel,
             true,
@@ -438,7 +442,7 @@ internal sealed record JobsCacheDocument(
     DateTimeOffset? LastRefreshedUtc,
     int DetailFailureCount,
     IReadOnlyList<JobRecord> Jobs,
-    WorkdayQuery? Query = null);
+    JobSourceQuery? Query = null);
 
 internal sealed record JobHistoryDocument(
     int SchemaVersion,
@@ -503,16 +507,16 @@ internal sealed class ListingResponse
 {
     public int Total { get; init; }
     public List<ListingPosting> JobPostings { get; init; } = [];
-    public List<WorkdayFacetNode> Facets { get; init; } = [];
+    public List<JobSourceFacetNode> Facets { get; init; } = [];
 }
 
-internal sealed class WorkdayFacetNode
+internal sealed class JobSourceFacetNode
 {
     public string FacetParameter { get; init; } = "";
     public string Descriptor { get; init; } = "";
     public string Id { get; init; } = "";
     public int Count { get; init; }
-    public List<WorkdayFacetNode> Values { get; init; } = [];
+    public List<JobSourceFacetNode> Values { get; init; } = [];
 }
 
 internal sealed class ListingPosting

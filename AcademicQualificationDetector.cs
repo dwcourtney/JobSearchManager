@@ -1,10 +1,10 @@
 using System.Net;
 using System.Text.RegularExpressions;
 
-namespace WorkdayJobManager;
+namespace JobSearchManager;
 
 /// <summary>
-/// Deterministically extracts academic qualification paths from Workday HTML.
+/// Deterministically extracts academic qualification paths from job-posting HTML.
 /// Academic degrees intentionally remain separate from professional credentials.
 /// </summary>
 public sealed class AcademicQualificationDetector

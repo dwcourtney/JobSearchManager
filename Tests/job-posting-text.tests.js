@@ -39,7 +39,7 @@ const tests = [
   }],
   ["posting source excludes application chrome", () => {
     const app = element("main",
-      element("nav", text("At a Glance Full Posting Open in Workday")),
+      element("nav", text("At a Glance Full Posting Open original posting")),
       element("div", element("p", text("Original posting content."))));
     assert.equal(toPlainText(app.childNodes[1]), "Original posting content.");
   }],

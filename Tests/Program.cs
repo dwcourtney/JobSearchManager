@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
-using WorkdayJobManager;
+using JobSearchManager;
 
 if (args.Length >= 2 && args[0] == "--remote-corpus")
 {
@@ -120,22 +120,25 @@ var tests = new (string Name, Func<Task> Run)[]
 {
     ("Local mode is the safe default", TestLocalDefaultAsync),
     ("Azure mode requires explicit storage configuration", TestAzureValidationAsync),
+    ("Legacy Azure settings migrate without overriding canonical settings", TestLegacyAzureConfigurationAsync),
     ("Workspace identifiers are random and strictly validated", TestWorkspaceIdentityAsync),
     ("Workspace cookie has durable security settings", TestCookieOptionsAsync),
     ("Workspace cookie value is integrity-protected", TestProtectedCookieAsync),
     ("Workspace middleware preserves isolation through a protected cookie", TestWorkspaceMiddlewareAsync),
+    ("Legacy workspace cookies migrate without changing workspace identity", TestLegacyWorkspaceCookieMigrationAsync),
     ("Azure state changes require the exact application origin", TestOriginValidationAsync),
     ("File storage round-trips beside its configured base", TestFileStoreAsync),
     ("Workspace reset deletes only known local state documents", TestFileResetAsync),
     ("Blob namespaces are isolated and traversal-resistant", TestBlobNamespaceAsync),
     ("New workspace settings are neutral", TestNeutralDefaultsAsync),
     ("Legacy applied source remains configured", TestLegacyAppliedSourceMigrationAsync),
+    ("Legacy cached posting URLs migrate to the canonical field", TestLegacyCacheUrlMigrationAsync),
     ("Portable workspace round-trips settings and curated states", TestPortableWorkspaceRoundTripAsync),
     ("Portable source import distinguishes pending and equivalent state", TestPortableSourceImportStateAsync),
     ("Portable workspace validates company-scoped canonical job state", TestPortableWorkspaceValidationAsync),
     ("Portable workspace restores after a complete reset", TestPortableWorkspaceResetRestoreAsync),
     ("Fresh catalog snapshots retain the applied source", TestFreshCatalogSourceAsync),
-    ("Boeing is a catalog-driven U.S. Workday source", TestBoeingCatalogAsync),
+    ("Boeing is a catalog-driven U.S. job source", TestBoeingCatalogAsync),
     ("Unsupported active company state migrates without source reinterpretation", TestUnsupportedCompanyMigrationAsync),
     ("Unsupported company history remains isolated", TestUnsupportedCompanyHistoryAsync),
     ("Established credential catalog entries validate", TestCredentialCatalogAsync),
@@ -222,6 +225,30 @@ static Task TestAzureValidationAsync()
     return Task.CompletedTask;
 }
 
+static Task TestLegacyAzureConfigurationAsync()
+{
+    var legacy = HostingConfiguration.FromConfiguration(Configuration(
+        new Dictionary<string, string?>
+        {
+            [HostingConfiguration.LegacyModeSetting] = "Azure",
+            [HostingConfiguration.LegacyStorageAccountSetting] = "workdayjobmanagerstore",
+            [HostingConfiguration.LegacyStorageContainerSetting] = "userdata"
+        }));
+    Assert(legacy.IsAzure && legacy.StorageAccount == "workdayjobmanagerstore" &&
+           legacy.StorageContainer == "userdata",
+        "Existing Azure application settings did not migrate through the legacy aliases.");
+
+    var canonical = HostingConfiguration.FromConfiguration(Configuration(
+        new Dictionary<string, string?>
+        {
+            [HostingConfiguration.ModeSetting] = "Local",
+            [HostingConfiguration.LegacyModeSetting] = "Azure"
+        }));
+    Assert(canonical.IsLocal,
+        "A legacy Azure setting overrode the canonical hosting-mode setting.");
+    return Task.CompletedTask;
+}
+
 static Task TestWorkspaceIdentityAsync()
 {
     var first = WorkspaceIdentity.Create();
@@ -251,7 +278,7 @@ static Task TestCookieOptionsAsync()
 static Task TestProtectedCookieAsync()
 {
     var provider = new EphemeralDataProtectionProvider();
-    var protector = provider.CreateProtector("WorkdayJobManager.AnonymousWorkspace.v1");
+    var protector = provider.CreateProtector("JobSearchManager.AnonymousWorkspace.v1");
     var workspaceId = WorkspaceIdentity.Create();
     var protectedValue = protector.Protect(workspaceId);
     Assert(protectedValue != workspaceId && protector.Unprotect(protectedValue) == workspaceId,
@@ -265,7 +292,7 @@ static async Task TestWorkspaceMiddlewareAsync()
 {
     var provider = new EphemeralDataProtectionProvider();
     var hosting = new HostingConfiguration(
-        WorkdayHostingMode.Azure,
+        ApplicationHostingMode.Azure,
         "workdayjobmanagerstore",
         "userdata");
     var middleware = new WorkspaceIdentityMiddleware(
@@ -301,6 +328,31 @@ static async Task TestWorkspaceMiddlewareAsync()
         "Tampered cookie crossed into the original workspace.");
 }
 
+static async Task TestLegacyWorkspaceCookieMigrationAsync()
+{
+    var provider = new EphemeralDataProtectionProvider();
+    var workspaceId = WorkspaceIdentity.Create();
+    var legacyProtector = provider.CreateProtector(WorkspaceIdentity.LegacyProtectorPurpose);
+    var context = new DefaultHttpContext();
+    context.Request.Headers.Cookie =
+        $"{WorkspaceIdentity.LegacyCookieName}={legacyProtector.Protect(workspaceId)}";
+    var workspace = new WorkspaceContext();
+    var middleware = new WorkspaceIdentityMiddleware(
+        _ => Task.CompletedTask,
+        new HostingConfiguration(ApplicationHostingMode.Azure, "workdayjobmanagerstore", "userdata"),
+        provider,
+        NullLogger<WorkspaceIdentityMiddleware>.Instance);
+
+    await middleware.InvokeAsync(context, workspace);
+
+    var setCookies = context.Response.Headers.SetCookie.ToString();
+    Assert(workspace.WorkspaceId == workspaceId,
+        "The legacy protected cookie did not retain its workspace identity.");
+    Assert(setCookies.Contains(WorkspaceIdentity.CookieName, StringComparison.Ordinal) &&
+           setCookies.Contains(WorkspaceIdentity.LegacyCookieName, StringComparison.Ordinal),
+        "Legacy cookie migration did not issue the canonical cookie and retire the old cookie.");
+}
+
 static Task TestOriginValidationAsync()
 {
     var context = new DefaultHttpContext();
@@ -323,7 +375,7 @@ static Task TestOriginValidationAsync()
 
 static async Task TestFileStoreAsync()
 {
-    var directory = Path.Combine(Path.GetTempPath(), $"workday-manager-test-{Guid.NewGuid():N}");
+    var directory = Path.Combine(Path.GetTempPath(), $"job-search-manager-test-{Guid.NewGuid():N}");
     try
     {
         var store = new FileWorkspaceDataStore(
@@ -389,7 +441,7 @@ static Task TestNeutralDefaultsAsync()
            settings.SelectedPhysicalLocations?.Count == 0,
         "A new workspace was not an explicit unconfigured source with the United States preselected.");
     var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
-    AssertThrows<InvalidOperationException>(() => WorkdayQuery.FromSettings(settings, companies));
+    AssertThrows<InvalidOperationException>(() => JobSourceQuery.FromSettings(settings, companies));
     return Task.CompletedTask;
 }
 
@@ -425,6 +477,34 @@ static async Task TestLegacyAppliedSourceMigrationAsync()
                !migrated.IncludeAllLocations && migrated.IncludeRemote &&
                migrated.SelectedPhysicalLocations?.Count == 0 && migrated.PendingSource is null,
             "A legacy applied Leidos Remote source was not preserved as configured.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static async Task TestLegacyCacheUrlMigrationAsync()
+{
+    var directory = TestDirectory("legacy-cache-url");
+    try
+    {
+        var (_, state, job) = await CreateCatalogAsync(directory);
+        var canonicalJson = await File.ReadAllTextAsync(state.JobsCachePath);
+        Assert(canonicalJson.Contains("\"sourceUrl\"", StringComparison.Ordinal) &&
+               !canonicalJson.Contains("\"workdayUrl\"", StringComparison.Ordinal),
+            "A newly written cache did not use the canonical sourceUrl field.");
+        await File.WriteAllTextAsync(
+            state.JobsCachePath,
+            canonicalJson.Replace("\"sourceUrl\"", "\"workdayUrl\"", StringComparison.Ordinal));
+
+        var migrated = await state.LoadJobsCacheAsync();
+        var rewritten = await File.ReadAllTextAsync(state.JobsCachePath);
+        Assert(migrated?.Jobs.Single().SourceUrl == job.SourceUrl,
+            "The legacy cached posting URL was not restored.");
+        Assert(rewritten.Contains("\"sourceUrl\"", StringComparison.Ordinal) &&
+               !rewritten.Contains("\"workdayUrl\"", StringComparison.Ordinal),
+            "The migrated cache was not rewritten with the canonical field.");
     }
     finally
     {
@@ -482,6 +562,9 @@ static Task TestPortableWorkspaceRoundTripAsync()
            exported.CuratedJobs.Count == 3 &&
            exported.CuratedJobs.All(job => job.WorkflowState != JobWorkflowStates.Normal),
         "The portable file did not contain exactly the three curated workflow records.");
+    Assert(exported.Format == "JobSearchManagerBackup" &&
+           !json.Contains("WorkdayJobManager", StringComparison.OrdinalIgnoreCase),
+        "A new portable backup used a legacy product-owned identifier.");
     Assert(imported.Settings.HasConfiguredSource == false &&
            imported.Settings.PendingSource?.CompanyId == "leidos" &&
            imported.Settings.IncludeKeywords.SequenceEqual(["integration"]) &&
@@ -493,6 +576,13 @@ static Task TestPortableWorkspaceRoundTripAsync()
            imported.History.Jobs["boeing:REQ-SAME"].WorkflowState == JobWorkflowStates.Hidden &&
            !imported.History.Jobs.ContainsKey("leidos:REQ-NORMAL"),
         "Saved, Applied, Hidden, absent-catalog, or company-isolated state did not round-trip.");
+    var legacyImported = portable.Import(
+        exported with { Format = PortableWorkspaceService.LegacyFormatIdentifier },
+        ViewerSettings.Default,
+        JobHistoryDocument.Empty);
+    Assert(legacyImported.History.Jobs["leidos:REQ-SAVED"].WorkflowState == JobWorkflowStates.Saved &&
+           legacyImported.Settings.ExcludeKeywords.SequenceEqual(["substation", "power distribution"]),
+        "A backup exported under the previous product name did not import safely.");
     return Task.CompletedTask;
 }
 
@@ -723,15 +813,15 @@ static async Task TestFreshCatalogSourceAsync()
             IncludeRemote = true
         });
         await state.SaveSettingsAsync(settings);
-        var query = WorkdayQuery.FromSettings(settings, companies);
+        var query = JobSourceQuery.FromSettings(settings, companies);
         var credentials = new CredentialDetector(NullLogger<CredentialDetector>.Instance);
         var academics = new AcademicQualificationDetector();
         var authorization = new WorkAuthorizationDetector();
         var remote = new RemoteWorkDetector();
-        var client = new WorkdayClient(
+        var client = new JobSourceClient(
             new HttpClient(),
-            Options.Create(new WorkdayOptions()),
-            NullLogger<WorkdayClient>.Instance,
+            Options.Create(new JobSourceOptions()),
+            NullLogger<JobSourceClient>.Instance,
             credentials,
             academics,
             authorization,
@@ -770,7 +860,7 @@ static Task TestBoeingCatalogAsync()
     var companies = document.RootElement.GetProperty("companies").EnumerateArray().ToArray();
     var company = companies.Single(item => item.GetProperty("id").GetString() == "boeing");
     Assert(company.GetProperty("displayName").GetString() == "Boeing" &&
-           company.GetProperty("workdayHost").GetString() ==
+           company.GetProperty("apiHost").GetString() ==
            "boeing.wd1.myworkdayjobs.com" &&
            company.GetProperty("tenant").GetString() == "boeing" &&
            company.GetProperty("site").GetString() == "EXTERNAL_CAREERS" &&
@@ -784,7 +874,7 @@ static Task TestBoeingCatalogAsync()
 
 static async Task TestUnsupportedCompanyMigrationAsync()
 {
-    var directory = Path.Combine(Path.GetTempPath(), $"workday-manager-company-migration-{Guid.NewGuid():N}");
+    var directory = Path.Combine(Path.GetTempPath(), $"job-search-manager-company-migration-{Guid.NewGuid():N}");
     try
     {
         var store = new FileWorkspaceDataStore(directory, NullLogger<FileWorkspaceDataStore>.Instance);
@@ -835,7 +925,7 @@ static async Task TestUnsupportedCompanyMigrationAsync()
 
 static async Task TestUnsupportedCompanyHistoryAsync()
 {
-    var directory = Path.Combine(Path.GetTempPath(), $"workday-manager-history-migration-{Guid.NewGuid():N}");
+    var directory = Path.Combine(Path.GetTempPath(), $"job-search-manager-history-migration-{Guid.NewGuid():N}");
     try
     {
         var store = new FileWorkspaceDataStore(directory, NullLogger<FileWorkspaceDataStore>.Instance);
@@ -912,7 +1002,7 @@ static Task TestAbetAccreditationAsync()
 
 static async Task TestFileResetAsync()
 {
-    var directory = Path.Combine(Path.GetTempPath(), $"workday-manager-reset-test-{Guid.NewGuid():N}");
+    var directory = Path.Combine(Path.GetTempPath(), $"job-search-manager-reset-test-{Guid.NewGuid():N}");
     try
     {
         var store = new FileWorkspaceDataStore(
@@ -1363,7 +1453,7 @@ static RemoteWorkAnalysis RemoteAnalysis(string html) => new RemoteWorkDetector(
     "Software Engineer", "Remote / Teleworker US", [], html);
 
 static string TestDirectory(string purpose) =>
-    Path.Combine(Path.GetTempPath(), $"workday-manager-{purpose}-{Guid.NewGuid():N}");
+    Path.Combine(Path.GetTempPath(), $"job-search-manager-{purpose}-{Guid.NewGuid():N}");
 
 static async Task<(JobCatalog Catalog, AppStateStore State, JobRecord Job)> CreateCatalogAsync(
     string directory)
@@ -1391,7 +1481,7 @@ static async Task<(JobCatalog Catalog, AppStateStore State, JobRecord Job)> Crea
         null,
         "/job/REQ-SAVED",
         CompanyId: "leidos");
-    var query = new WorkdayQuery(
+    var query = new JobSourceQuery(
         "bc33aa3152ec42d4995f4791a106ed09",
         "United States of America",
         false,
@@ -1403,10 +1493,10 @@ static async Task<(JobCatalog Catalog, AppStateStore State, JobRecord Job)> Crea
     var academics = new AcademicQualificationDetector();
     var authorization = new WorkAuthorizationDetector();
     var remote = new RemoteWorkDetector();
-    var client = new WorkdayClient(
+    var client = new JobSourceClient(
         new HttpClient(),
-        Options.Create(new WorkdayOptions()),
-        NullLogger<WorkdayClient>.Instance,
+        Options.Create(new JobSourceOptions()),
+        NullLogger<JobSourceClient>.Instance,
         credentials,
         academics,
         authorization,
@@ -1444,7 +1534,7 @@ internal sealed record TestDocument(string Name, int Value);
 internal sealed class TestHostEnvironment(string contentRootPath) : Microsoft.Extensions.Hosting.IHostEnvironment
 {
     public string EnvironmentName { get; set; } = "Test";
-    public string ApplicationName { get; set; } = "WorkdayJobManager.Tests";
+    public string ApplicationName { get; set; } = "JobSearchManager.Tests";
     public string ContentRootPath { get; set; } = contentRootPath;
     public Microsoft.Extensions.FileProviders.IFileProvider ContentRootFileProvider { get; set; } =
         new Microsoft.Extensions.FileProviders.PhysicalFileProvider(contentRootPath);

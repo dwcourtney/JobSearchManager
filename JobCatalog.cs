@@ -1,8 +1,8 @@
-namespace WorkdayJobManager;
+namespace JobSearchManager;
 
 public sealed class JobCatalog
 {
-    private readonly WorkdayClient _workdayClient;
+    private readonly JobSourceClient _jobSourceClient;
     private readonly AppStateStore _stateStore;
     private readonly ILogger<JobCatalog> _logger;
     private readonly CredentialDetector _credentialDetector;
@@ -12,17 +12,17 @@ public sealed class JobCatalog
     private readonly CompanyCatalog _companyCatalog;
     private readonly object _gate = new();
     private readonly SemaphoreSlim _historyGate = new(1, 1);
-    private readonly SemaphoreSlim _workdayOperationGate = new(1, 1);
+    private readonly SemaphoreSlim _sourceOperationGate = new(1, 1);
     private JobsSnapshot _snapshot = JobsSnapshot.Empty;
     private JobHistoryDocument _history = JobHistoryDocument.Empty with
     {
         Jobs = new Dictionary<string, JobHistoryEntry>(StringComparer.Ordinal)
     };
     private Task<JobsSnapshot>? _activeRefresh;
-    private WorkdayQuery _currentQuery = JobsSnapshot.Empty.Query;
+    private JobSourceQuery _currentQuery = JobsSnapshot.Empty.Query;
 
     public JobCatalog(
-        WorkdayClient workdayClient,
+        JobSourceClient jobSourceClient,
         AppStateStore stateStore,
         ILogger<JobCatalog> logger,
         CredentialDetector credentialDetector,
@@ -31,7 +31,7 @@ public sealed class JobCatalog
         RemoteWorkDetector remoteWorkDetector,
         CompanyCatalog companyCatalog)
     {
-        _workdayClient = workdayClient;
+        _jobSourceClient = jobSourceClient;
         _stateStore = stateStore;
         _logger = logger;
         _credentialDetector = credentialDetector;
@@ -52,7 +52,7 @@ public sealed class JobCatalog
         }
     }
 
-    public async Task InitializeAsync(WorkdayQuery query)
+    public async Task InitializeAsync(JobSourceQuery query)
     {
         var company = _companyCatalog.Get(query.CompanyId);
         query = query.Normalize(company);
@@ -79,7 +79,7 @@ public sealed class JobCatalog
                 job.CompanyId, query.CompanyId, StringComparison.OrdinalIgnoreCase)))
         {
             _logger.LogInformation(
-                "Ignoring {CachePath} because its Workday query does not match the selected country/location.",
+                "Ignoring {CachePath} because its job-source query does not match the selected country/location.",
                 _stateStore.JobsCachePath);
             lock (_gate)
             {
@@ -166,7 +166,7 @@ public sealed class JobCatalog
     public Task<JobsSnapshot> RefreshAsync()
         => RefreshAsync(_currentQuery);
 
-    public Task<JobsSnapshot> RefreshAsync(WorkdayQuery query)
+    public Task<JobsSnapshot> RefreshAsync(JobSourceQuery query)
     {
         var company = _companyCatalog.Get(query.CompanyId);
         query = query.Normalize(company);
@@ -180,7 +180,7 @@ public sealed class JobCatalog
                 }
 
                 throw new InvalidOperationException(
-                    "A Workday refresh is already running. Wait for it to finish before applying another location.");
+                    "A job-source refresh is already running. Wait for it to finish before applying another location.");
             }
 
             var previousQuery = _currentQuery;
@@ -217,12 +217,12 @@ public sealed class JobCatalog
             }
         }
 
-        if (!await _workdayOperationGate.WaitAsync(0, cancellationToken))
+        if (!await _sourceOperationGate.WaitAsync(0, cancellationToken))
         {
             return new AutomaticCheckResult(false, true, 0, [], false);
         }
 
-        WorkdayQuery query;
+        JobSourceQuery query;
         IReadOnlyList<ListingIdentity> identities;
         try
         {
@@ -235,12 +235,12 @@ public sealed class JobCatalog
                 query = _currentQuery;
             }
 
-            identities = await _workdayClient.FetchListingIdentitiesAsync(
+            identities = await _jobSourceClient.FetchListingIdentitiesAsync(
                 _companyCatalog.Get(query.CompanyId), query, cancellationToken);
         }
         finally
         {
-            _workdayOperationGate.Release();
+            _sourceOperationGate.Release();
         }
 
         string[] unknownStableIds;
@@ -443,20 +443,20 @@ public sealed class JobCatalog
     }
 
     private async Task<JobsSnapshot> RefreshCoreAsync(
-        WorkdayQuery query,
-        WorkdayQuery previousQuery,
+        JobSourceQuery query,
+        JobSourceQuery previousQuery,
         JobsSnapshot previousSnapshot)
     {
-        await _workdayOperationGate.WaitAsync();
+        await _sourceOperationGate.WaitAsync();
         try
         {
             var company = _companyCatalog.Get(query.CompanyId);
             _logger.LogInformation(
-                "Refreshing the {Company} Workday job snapshot for country {Country} and locations {Locations}.",
+                "Refreshing the {Company} job snapshot for country {Country} and locations {Locations}.",
                 company.DisplayName,
                 query.CountryLabel,
                 DescribeLocations(query));
-            var result = await _workdayClient.FetchAllJobsAsync(
+            var result = await _jobSourceClient.FetchAllJobsAsync(
                 company,
                 query,
                 progress => ReportRefreshProgress(query, progress));
@@ -509,7 +509,7 @@ public sealed class JobCatalog
         {
             _logger.LogError(
                 ex,
-                "Could not refresh the {Company} Workday job snapshot.",
+                "Could not refresh the {Company} job snapshot.",
                 _companyCatalog.Get(query.CompanyId).DisplayName);
             lock (_gate)
             {
@@ -525,11 +525,11 @@ public sealed class JobCatalog
         }
         finally
         {
-            _workdayOperationGate.Release();
+            _sourceOperationGate.Release();
         }
     }
 
-    private void ReportRefreshProgress(WorkdayQuery query, RefreshProgress progress)
+    private void ReportRefreshProgress(JobSourceQuery query, RefreshProgress progress)
     {
         lock (_gate)
         {
@@ -551,7 +551,7 @@ public sealed class JobCatalog
         }
     }
 
-    private string DescribeLocations(WorkdayQuery query)
+    private string DescribeLocations(JobSourceQuery query)
     {
         var company = _companyCatalog.Get(query.CompanyId);
         query = query.Normalize(company);

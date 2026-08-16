@@ -1,4 +1,4 @@
-namespace WorkdayJobManager;
+namespace JobSearchManager;
 
 internal static class LocationFacetOrganizer
 {

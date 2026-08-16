@@ -1,4 +1,4 @@
-namespace WorkdayJobManager;
+namespace JobSearchManager;
 
 public static class RequestSecurity
 {

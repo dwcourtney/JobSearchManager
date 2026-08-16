@@ -2,7 +2,7 @@ using System.Net;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace WorkdayJobManager;
+namespace JobSearchManager;
 
 public sealed class CredentialDetector
 {

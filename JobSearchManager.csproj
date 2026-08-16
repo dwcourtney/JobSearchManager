@@ -4,9 +4,9 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>WorkdayJobManager</RootNamespace>
-    <AssemblyName>WorkdayJobManager</AssemblyName>
-    <ApplicationIcon>assets\WorkdayJobManager.ico</ApplicationIcon>
+    <RootNamespace>JobSearchManager</RootNamespace>
+    <AssemblyName>JobSearchManager</AssemblyName>
+    <ApplicationIcon>assets\JobSearchManager.ico</ApplicationIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="WorkdayJobManager.Tests" />
+    <InternalsVisibleTo Include="JobSearchManager.Tests" />
   </ItemGroup>
 
   <ItemGroup>

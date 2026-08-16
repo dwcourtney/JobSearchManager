@@ -72,7 +72,7 @@ button, a { -webkit-tap-highlight-color: var(--color-tap-highlight); }
   background: var(--color-tab-active-background);
 }
 
-.primary-button, .input-group button, .workday-button {
+.primary-button, .input-group button, .source-posting-button {
   border: var(--border-width-default) solid var(--color-primary-action-border);
   border-radius: var(--radius-control);
   color: var(--color-header-text);
@@ -85,7 +85,7 @@ button, a { -webkit-tap-highlight-color: var(--color-tap-highlight); }
   padding: .4rem .8rem;
 }
 
-.primary-button:hover, .input-group button:hover, .workday-button:hover { background: var(--color-accent-hover); }
+.primary-button:hover, .input-group button:hover, .source-posting-button:hover { background: var(--color-accent-hover); }
 
 button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
   outline: var(--focus-ring-width) solid var(--color-focus-ring);
@@ -347,7 +347,7 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   color: var(--color-text-secondary);
 }
 
-.workday-facet-filter select {
+.source-facet-filter select {
   width: 100%;
   min-height: 2.25rem;
   padding: .48rem 2rem .48rem .6rem;
@@ -358,7 +358,7 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   font: inherit;
 }
 
-.workday-facet-filter select:focus-visible {
+.source-facet-filter select:focus-visible {
   outline: var(--focus-ring-width) solid var(--color-focus-ring);
   outline-offset: var(--focus-ring-offset-compact);
 }
@@ -1399,12 +1399,12 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   gap: var(--detail-action-gap);
 }
 
-.workday-button, .copy-posting-button {
+.source-posting-button, .copy-posting-button {
   flex: 0 0 auto;
   padding: var(--detail-action-padding);
 }
 
-.workday-button {
+.source-posting-button {
   text-decoration: var(--text-decoration-action-link);
 }
 

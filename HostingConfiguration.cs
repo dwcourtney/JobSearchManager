@@ -1,21 +1,24 @@
 using System.Text.RegularExpressions;
 
-namespace WorkdayJobManager;
+namespace JobSearchManager;
 
-public enum WorkdayHostingMode
+public enum ApplicationHostingMode
 {
     Local,
     Azure
 }
 
 public sealed record HostingConfiguration(
-    WorkdayHostingMode Mode,
+    ApplicationHostingMode Mode,
     string? StorageAccount,
     string? StorageContainer)
 {
-    public const string ModeSetting = "WORKDAYJOBMANAGER_HOSTING_MODE";
-    public const string StorageAccountSetting = "WORKDAYJOBMANAGER_STORAGE_ACCOUNT";
-    public const string StorageContainerSetting = "WORKDAYJOBMANAGER_STORAGE_CONTAINER";
+    public const string ModeSetting = "JOBSEARCHMANAGER_HOSTING_MODE";
+    public const string StorageAccountSetting = "JOBSEARCHMANAGER_STORAGE_ACCOUNT";
+    public const string StorageContainerSetting = "JOBSEARCHMANAGER_STORAGE_CONTAINER";
+    internal const string LegacyModeSetting = "WORKDAYJOBMANAGER_HOSTING_MODE";
+    internal const string LegacyStorageAccountSetting = "WORKDAYJOBMANAGER_STORAGE_ACCOUNT";
+    internal const string LegacyStorageContainerSetting = "WORKDAYJOBMANAGER_STORAGE_CONTAINER";
 
     private static readonly Regex StorageAccountPattern = new(
         "^[a-z0-9]{3,24}$",
@@ -24,22 +27,24 @@ public sealed record HostingConfiguration(
         "^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])?$",
         RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
-    public bool IsAzure => Mode == WorkdayHostingMode.Azure;
-    public bool IsLocal => Mode == WorkdayHostingMode.Local;
+    public bool IsAzure => Mode == ApplicationHostingMode.Azure;
+    public bool IsLocal => Mode == ApplicationHostingMode.Local;
 
     public static HostingConfiguration FromConfiguration(IConfiguration configuration)
     {
-        var rawMode = configuration[ModeSetting];
+        var rawMode = ReadCanonicalOrLegacy(configuration, ModeSetting, LegacyModeSetting);
         var mode = string.IsNullOrWhiteSpace(rawMode) ||
             string.Equals(rawMode, "Local", StringComparison.OrdinalIgnoreCase)
-                ? WorkdayHostingMode.Local
+                ? ApplicationHostingMode.Local
                 : string.Equals(rawMode, "Azure", StringComparison.OrdinalIgnoreCase)
-                    ? WorkdayHostingMode.Azure
+                    ? ApplicationHostingMode.Azure
                     : throw new InvalidOperationException(
                         $"{ModeSetting} must be either 'Local' or 'Azure'.");
 
-        var account = NullIfWhiteSpace(configuration[StorageAccountSetting]);
-        var container = NullIfWhiteSpace(configuration[StorageContainerSetting]);
+        var account = NullIfWhiteSpace(ReadCanonicalOrLegacy(
+            configuration, StorageAccountSetting, LegacyStorageAccountSetting));
+        var container = NullIfWhiteSpace(ReadCanonicalOrLegacy(
+            configuration, StorageContainerSetting, LegacyStorageContainerSetting));
         var result = new HostingConfiguration(mode, account, container);
         result.Validate();
         return result;
@@ -73,4 +78,10 @@ public sealed record HostingConfiguration(
 
     private static string? NullIfWhiteSpace(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private static string? ReadCanonicalOrLegacy(
+        IConfiguration configuration,
+        string canonicalName,
+        string legacyName) =>
+        configuration[canonicalName] ?? configuration[legacyName];
 }

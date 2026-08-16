@@ -4,7 +4,7 @@ using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 
-namespace WorkdayJobManager;
+namespace JobSearchManager;
 
 public sealed class AzureBlobWorkspaceDataStoreFactory : IWorkspaceDataStoreFactory
 {

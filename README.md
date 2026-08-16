@@ -1,23 +1,23 @@
-# Workday Job Manager
+# Job Search Manager
 
-Workday Job Manager is a small frontend for selected public Workday job boards.
+Job Search Manager is a small frontend for selected public job boards.
 One codebase supports a portable personal local mode and an Azure App Service
 mode with isolated anonymous browser workspaces. It began as a personal viewer
-for Leidos' Workday careers site and was generalized without duplicating the
+for Leidos' careers site and was generalized without duplicating the
 application.
 
-The original Workday posting remains the authoritative source. The application
+The original employer posting remains the authoritative source. The application
 uses public Workday CXS JSON endpoints; it does not scrape rendered job pages.
 
 ## Why this exists
 
-The default Workday search experience makes some personal screening workflows
+The default job-board search experience makes some personal screening workflows
 awkward. This utility adds exact-date newest-first sorting, useful inclusion and
 exclusion rules, persistent NEW/viewed tracking, a four-state job workflow, multi-location
 selection, and salary, clearance, credential, education, and work-authorization
 analysis. Remote-designated jobs are also checked for description language that
 requires onsite, field, commuting-area, or substantial-travel work. It preserves
-the rich Workday description and provides a direct link back to the employer's
+the rich job description and provides a direct link back to the employer's
 posting.
 
 The application has no login or account system and uses no browser automation.
@@ -66,14 +66,14 @@ default browser after startup.
 Build or publish with:
 
 ```powershell
-dotnet build WorkdayJobManager.csproj -c Release
-dotnet publish WorkdayJobManager.csproj -c Release
+dotnet build JobSearchManager.csproj -c Release
+dotnet publish JobSearchManager.csproj -c Release
 ```
 
 Run the dependency-free deterministic architecture/security checks with:
 
 ```powershell
-dotnet run --project Tests\WorkdayJobManager.Tests.csproj -c Release
+dotnet run --project Tests\JobSearchManager.Tests.csproj -c Release
 ```
 
 Run JavaScript syntax and centralized-theme source checks with:
@@ -82,7 +82,7 @@ Run JavaScript syntax and centralized-theme source checks with:
 .\scripts\validate-source.ps1
 ```
 
-The executable is `WorkdayJobManager.exe` in a Windows build or publish output.
+The executable is `JobSearchManager.exe` in a Windows build or publish output.
 
 ## Source selection
 
@@ -138,7 +138,7 @@ Hidden. The results tabs show those mutually exclusive populations as All Jobs,
 Saved, Applied, and Hidden. Restoring a Hidden job returns it to Normal; it does
 not revive an earlier Saved or Applied state. State uses the same company-scoped
 history identity and workspace storage, so it returns if that company/job identity
-reappears in a later Workday snapshot.
+reappears in a later provider snapshot.
 
 State from a company removed from the supported catalog is handled conservatively:
 unsupported saved source selections and caches are not reinterpreted as another
@@ -152,17 +152,17 @@ Settings > My Preferences also provides **Export Workspace** and **Import Worksp
 The versioned JSON file is a portable workspace backup containing:
 
 - the pending or applied Job Source selection (company, country, coverage flags,
-  and selected physical Workday facet IDs/labels);
+  and selected physical provider facet IDs/labels);
 - search preferences, My Qualifications, screening choices, automatic-check
   preferences, and theme;
 - one canonical record for each Saved, Applied, or Hidden job: company ID,
   company-scoped stable ID, requisition ID when available, workflow state, and
-  Workday external path.
+  provider external path.
 
 The stable identity and external path are the minimum metadata needed to preserve
 curated work even when a job is absent from today's catalog and to reconcile its
 state if the same company/job appears again. The backup deliberately excludes the
-current job catalog, cached Workday results, full descriptions, ordinary Normal-job
+current job catalog, cached provider results, full descriptions, ordinary Normal-job
 history, workspace/cookie IDs, Blob identifiers, secrets, parser caches, and
 temporary refresh/UI state.
 
@@ -174,7 +174,7 @@ preference values are rejected.
 On success, imported portable preferences and curated states replace their current
 counterparts; ordinary viewed/NEW history remains intact. An imported Job Source is
 staged for review and requires **Apply Job Source**, so import itself never starts a
-Workday job crawl. If the imported source is already equivalent to the applied source,
+job-source crawl. If the imported source is already equivalent to the applied source,
 it remains clean and needs no redundant apply. Otherwise, choosing Jobs uses the same
 unapplied-source guard as a manual edit and offers **Apply and go to Jobs** when the
 imported source is valid.
@@ -190,7 +190,8 @@ Azure mode uses App Service's listener configuration instead of forcing the loca
 loopback port and never attempts to launch a browser on the server. Select it only
 through explicit App Service application settings:
 
-The current Azure deployment uses these existing resources:
+The current Azure deployment retains these pre-rebrand infrastructure resource
+names so the rebrand does not replace or migrate live Azure resources:
 
 - App Service: `workday-job-manager`
 - Storage account: `workdayjobmanagerstore`
@@ -198,11 +199,13 @@ The current Azure deployment uses these existing resources:
 
 | Name | Value | Purpose |
 | --- | --- | --- |
-| `WORKDAYJOBMANAGER_HOSTING_MODE` | `Azure` | Selects Azure hosting, HTTPS behavior, anonymous workspaces, and Blob persistence. |
-| `WORKDAYJOBMANAGER_STORAGE_ACCOUNT` | `workdayjobmanagerstore` | Supplies the non-secret Azure Storage account name used to derive the Blob service endpoint. |
-| `WORKDAYJOBMANAGER_STORAGE_CONTAINER` | `userdata` | Selects the existing private workspace-state container. |
+| `JOBSEARCHMANAGER_HOSTING_MODE` | `Azure` | Selects Azure hosting, HTTPS behavior, anonymous workspaces, and Blob persistence. |
+| `JOBSEARCHMANAGER_STORAGE_ACCOUNT` | `workdayjobmanagerstore` | Supplies the non-secret Azure Storage account name used to derive the Blob service endpoint. |
+| `JOBSEARCHMANAGER_STORAGE_CONTAINER` | `userdata` | Selects the existing private workspace-state container. |
 
-All three values are required in Azure mode. Missing or invalid configuration
+Deployments configured with the previous product-owned setting names remain readable
+as migration aliases; canonical settings take precedence and all new configuration
+uses the names above. All three values are required in Azure mode. Missing or invalid configuration
 fails startup clearly; Azure mode never falls back to local disk. Do not add a
 storage connection string, account key, or SAS token. `DefaultAzureCredential`
 uses the App Service's system-assigned managed identity, which needs Storage Blob
@@ -259,7 +262,7 @@ succeeded.
 Local mode retains its background automatic-check scheduler. Azure mode does not
 assume the Free F1 process remains awake and does not run one global multi-user
 timer. While a workspace is open, the browser polls check status and asks the
-ASP.NET Core backend to perform a due check for that workspace. All Workday calls
+ASP.NET Core backend to perform a due check for that workspace. All provider calls
 remain server-side and are limited to companies in `CompanyCatalog.json`.
 
 The Azure implementation is ready for review but this repository does not deploy
@@ -269,9 +272,9 @@ or configure Azure resources automatically.
 
 The project intentionally remains a single small ASP.NET Core application:
 
-- `CompanyCatalog.json` — supported Workday sites and source capabilities
+- `CompanyCatalog.json` — supported job sites and source capabilities
 - `CompanyCatalog.cs` — validated catalog loader
-- `WorkdayClient.cs` — generic company-driven CXS listing/detail client
+- `JobSourceClient.cs` — generic company-driven CXS listing/detail client
 - `JobCatalog.cs` — active snapshot, cache, history, refresh, and automatic checks
 - `AppStateStore.cs` — application-local JSON persistence and schema migration
 - `JobAnalysis.cs` and detectors — shared salary, location, clearance, credential,
@@ -288,13 +291,13 @@ The hosting and persistence split is implemented by:
 - `AppStateStore.cs` for storage-independent JSON normalization and migration
 
 `wwwroot/theme.css` is the single authority for application-owned colors,
-typography, spacing, borders, radii, shadows, and state styling. Workday description
+typography, spacing, borders, radii, shadows, and state styling. Job-description
 HTML is sanitized with the bundled DOMPurify library before rendering. Any inline
 presentation originating in a posting is not treated as application theme styling.
 
-## Workday behavior verified
+## Current source protocol verified
 
-All supported sites use:
+All currently supported sites use the Workday CXS protocol:
 
 - `POST /wday/cxs/{tenant}/{site}/jobs`
 - JSON pagination with `limit` (maximum 20) and `offset`
@@ -319,7 +322,7 @@ Local mode listens only on `127.0.0.1`. Azure mode honors App Service hosting an
 forwarded HTTPS information. Responses use a restrictive Content Security Policy,
 no-store API caching, content-type protection, frame denial, and no-referrer
 behavior. Azure state-changing requests require a same-origin `Origin`, and
-Workday/storage mutations are rate-limited. Backend Workday requests can target
+Provider/storage mutations are rate-limited. Backend provider requests can target
 only validated entries in the shared company catalog; browser input cannot supply
 an arbitrary host, tenant, or URL. Job descriptions are untrusted external HTML
 and are sanitized before insertion into the page.
@@ -330,4 +333,4 @@ SAS tokens, passwords, or user-data payloads are committed or placed in cookies.
 
 Parser results are screening aids, not authoritative statements about eligibility,
 citizenship, immigration status, sponsorship, compensation, clearance, education,
-or credentials. Always review the original Workday posting before acting.
+or credentials. Always review the original employer posting before acting.

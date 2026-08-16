@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text.RegularExpressions;
 
-namespace WorkdayJobManager;
+namespace JobSearchManager;
 
 /// <summary>
 /// Conservatively identifies candidate work-authorization and citizenship wording.

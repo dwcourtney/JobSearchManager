@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace WorkdayJobManager;
+namespace JobSearchManager;
 
 /// <summary>
 /// Conservatively checks remote-designated postings for current-job obligations
