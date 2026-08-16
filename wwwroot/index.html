@@ -358,7 +358,7 @@
               <small id="facet-status" aria-live="polite">Loading Workday location choices…</small>
             </div>
             <button id="apply-location" class="apply-source-button" type="button" disabled>
-              Loading job source…
+              Loading Job Source…
             </button>
           </div>
         </section>
@@ -521,6 +521,22 @@
           </div>
         </section>
 
+        <section class="settings-section" aria-labelledby="import-export-heading">
+          <h3 id="import-export-heading">Import / Export</h3>
+          <div class="portable-preferences-content">
+            <div>
+              <p>Back up portable settings and curated jobs to one JSON file, or restore them in another workspace.</p>
+              <small>Import replaces current portable settings and curated states. Saved, Applied, and Hidden jobs are included; the live catalog and full descriptions are excluded.</small>
+              <p id="portable-workspace-status" class="settings-status" role="status" aria-live="polite"></p>
+            </div>
+            <div class="portable-preferences-actions">
+              <button id="import-workspace-button" type="button">Import Workspace</button>
+              <button id="export-workspace-button" type="button">Export Workspace</button>
+              <input id="import-workspace-file" type="file" accept="application/json,.json" hidden>
+            </div>
+          </div>
+        </section>
+
         <section class="settings-section reset-workspace-section" aria-labelledby="reset-workspace-heading">
           <h3 id="reset-workspace-heading">Reset Workspace</h3>
           <div class="reset-workspace-content">
@@ -529,7 +545,7 @@
               <small>The application will reload with first-run defaults. This cannot be undone.</small>
             </div>
             <button id="reset-workspace-button" class="destructive-button" type="button">
-              Reset current workspace
+              Reset Current Workspace
             </button>
           </div>
         </section>
@@ -611,7 +627,7 @@
           Cancel
         </button>
         <button id="reset-confirmation-submit" class="destructive-button" type="button">
-          Reset workspace
+          Reset Current Workspace
         </button>
       </div>
     </section>

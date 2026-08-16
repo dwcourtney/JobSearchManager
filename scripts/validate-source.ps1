@@ -47,6 +47,7 @@ if ($LASTEXITCODE -ne 0) {
 $styles = Get-Content -LiteralPath $stylesPath -Raw
 $theme = Get-Content -LiteralPath $themePath -Raw
 $index = Get-Content -LiteralPath $indexPath -Raw
+$app = Get-Content -LiteralPath $appPath -Raw
 
 $sourceStateScript = $index.IndexOf('src="/job-source-state.js"')
 $appScript = $index.IndexOf('src="/app.js"')
@@ -119,7 +120,8 @@ $requiredSettingsControls = @{
     )
     "Preferences" = @(
         "automatic-check-enabled", "automatic-check-interval", "automatic-check-status",
-        "theme-mode", "reset-workspace-button"
+        "theme-mode", "import-workspace-button", "export-workspace-button",
+        "import-workspace-file", "reset-workspace-button"
     )
 }
 foreach ($panelName in $requiredSettingsControls.Keys) {
@@ -144,6 +146,18 @@ if ($settingsPanelMarkup["Qualifications"] -notmatch 'Changes on this tab are sa
 if ($settingsPanelMarkup["Qualifications"] -notmatch 'id="screening-heading"' -or
     $settingsPanelMarkup["Preferences"] -match 'id="screening-heading"') {
     throw "Screening Rules is not contained exclusively in My Qualifications."
+}
+
+if ($settingsPanelMarkup["Job Search"] -notmatch '>\s*Apply Job Source\s*<' -or
+    $settingsPanelMarkup["Preferences"] -notmatch '>\s*Import Workspace\s*<' -or
+    $settingsPanelMarkup["Preferences"] -notmatch '>\s*Export Workspace\s*<' -or
+    $settingsPanelMarkup["Preferences"] -notmatch '>\s*Reset Current Workspace\s*<') {
+    throw "A required action button is missing or does not use title case."
+}
+if ($app -notmatch '"Apply Job Source"' -or
+    $app -cmatch '"Apply job source"' -or
+    $app -notmatch '"Reset Current Workspace"') {
+    throw "Dynamic Apply/Reset action labels do not use the required title case."
 }
 
 $duplicateIds = [regex]::Matches($index, '(?i)\sid="([^"]+)"') |

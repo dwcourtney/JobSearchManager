@@ -129,6 +129,9 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Workspace reset deletes only known local state documents", TestFileResetAsync),
     ("Blob namespaces are isolated and traversal-resistant", TestBlobNamespaceAsync),
     ("New workspace settings are neutral", TestNeutralDefaultsAsync),
+    ("Portable workspace round-trips settings and curated states", TestPortableWorkspaceRoundTripAsync),
+    ("Portable workspace validates company-scoped canonical job state", TestPortableWorkspaceValidationAsync),
+    ("Portable workspace restores after a complete reset", TestPortableWorkspaceResetRestoreAsync),
     ("Fresh catalog snapshots retain the applied source", TestFreshCatalogSourceAsync),
     ("Boeing is a catalog-driven U.S. Workday source", TestBoeingCatalogAsync),
     ("Unsupported active company state migrates without source reinterpretation", TestUnsupportedCompanyMigrationAsync),
@@ -378,7 +381,240 @@ static Task TestNeutralDefaultsAsync()
            settings.UserProfile.WorkAuthorization?.Sponsorship == "unknown" &&
            !settings.HideStrictWorkAuthorizationMismatch,
         "New workspaces inherited personal qualification data.");
+    Assert(settings.HasConfiguredSource == false && settings.CompanyId == "" &&
+           settings.Country == FacetDefaults.UnitedStatesCountry &&
+           !settings.IncludeAllLocations && !settings.IncludeRemote &&
+           settings.SelectedPhysicalLocations?.Count == 0,
+        "A new workspace was not an explicit unconfigured source with the United States preselected.");
+    var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+    AssertThrows<InvalidOperationException>(() => WorkdayQuery.FromSettings(settings, companies));
     return Task.CompletedTask;
+}
+
+static Task TestPortableWorkspaceRoundTripAsync()
+{
+    var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+    var portable = new PortableWorkspaceService(companies);
+    var source = new CompanySourceSettings(
+        FacetDefaults.UnitedStatesCountry,
+        false,
+        true,
+        []);
+    var settings = ViewerSettings.Default with
+    {
+        IncludeKeywords = ["integration"],
+        ExcludeKeywords = ["substation", "power distribution"],
+        MinimumSalary = 115_000m,
+        KeywordScope = "description",
+        ThemeMode = "dark",
+        UserProfile = new UserProfile(
+            new EducationProfile("bachelor", null),
+            new SecurityProfile("secret", "current"),
+            new WorkAuthorizationProfile("usCitizen", "notRequired")),
+        HideStrictEducationMismatch = true,
+        HideStrictClearanceMismatch = true,
+        HideStrictWorkAuthorizationMismatch = true,
+        HasConfiguredSource = true,
+        CompanyId = "leidos",
+        Country = source.Country,
+        IncludeRemote = true,
+        CompanySources = new Dictionary<string, CompanySourceSettings> { ["leidos"] = source }
+    };
+    var now = new DateTimeOffset(2026, 8, 16, 12, 0, 0, TimeSpan.Zero);
+    var history = new JobHistoryDocument(4, new Dictionary<string, JobHistoryEntry>
+    {
+        ["leidos:REQ-SAVED"] = new("REQ-SAVED", "/job/saved", now, now, true,
+            JobWorkflowStates.Saved, now, CompanyId: "leidos"),
+        ["leidos:REQ-SAME"] = new("REQ-SAME", "/job/applied", now, now, true,
+            JobWorkflowStates.Applied, now, CompanyId: "leidos"),
+        ["boeing:REQ-SAME"] = new("REQ-SAME", "/job/hidden", now, now, true,
+            JobWorkflowStates.Hidden, now, CompanyId: "boeing"),
+        ["leidos:REQ-NORMAL"] = new("REQ-NORMAL", "/job/normal", now, now, true,
+            CompanyId: "leidos")
+    });
+
+    var exported = portable.Export(settings, history);
+    var json = JsonSerializer.Serialize(exported, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+    var imported = portable.ImportJson(json, ViewerSettings.Default, JobHistoryDocument.Empty);
+
+    Assert(exported.Format == PortableWorkspaceService.FormatIdentifier && exported.Version == 1 &&
+           exported.CuratedJobs.Count == 3 &&
+           exported.CuratedJobs.All(job => job.WorkflowState != JobWorkflowStates.Normal),
+        "The portable file did not contain exactly the three curated workflow records.");
+    Assert(imported.Settings.HasConfiguredSource == false &&
+           imported.Settings.PendingSource?.CompanyId == "leidos" &&
+           imported.Settings.IncludeKeywords.SequenceEqual(["integration"]) &&
+           imported.Settings.ExcludeKeywords.SequenceEqual(["substation", "power distribution"]) &&
+           imported.Settings.MinimumSalary == 115_000m && imported.Settings.ThemeMode == "dark",
+        "Portable preferences or pending source selection did not round-trip.");
+    Assert(imported.History.Jobs["leidos:REQ-SAVED"].WorkflowState == JobWorkflowStates.Saved &&
+           imported.History.Jobs["leidos:REQ-SAME"].WorkflowState == JobWorkflowStates.Applied &&
+           imported.History.Jobs["boeing:REQ-SAME"].WorkflowState == JobWorkflowStates.Hidden &&
+           !imported.History.Jobs.ContainsKey("leidos:REQ-NORMAL"),
+        "Saved, Applied, Hidden, absent-catalog, or company-isolated state did not round-trip.");
+    return Task.CompletedTask;
+}
+
+static Task TestPortableWorkspaceValidationAsync()
+{
+    var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+    var portable = new PortableWorkspaceService(companies);
+    var baseline = portable.Export(ViewerSettings.Default, JobHistoryDocument.Empty);
+    AssertThrows<WorkspaceImportException>(() => portable.ImportJson(
+        "{not valid json", ViewerSettings.Default, JobHistoryDocument.Empty));
+    AssertThrows<WorkspaceImportException>(() => portable.Import(
+        baseline with { Format = "AnotherFormat" },
+        ViewerSettings.Default,
+        JobHistoryDocument.Empty));
+    AssertThrows<WorkspaceImportException>(() => portable.Import(
+        baseline with { Version = PortableWorkspaceService.CurrentVersion + 1 },
+        ViewerSettings.Default,
+        JobHistoryDocument.Empty));
+    var unknownSource = baseline with
+    {
+        Preferences = baseline.Preferences with
+        {
+            JobSource = new PortableJobSource(
+                "unknown-source",
+                FacetDefaults.UnitedStatesCountry,
+                false,
+                true,
+                [])
+        }
+    };
+    AssertThrows<WorkspaceImportException>(() => portable.Import(
+        unknownSource, ViewerSettings.Default, JobHistoryDocument.Empty));
+    AssertThrows<WorkspaceImportException>(() => portable.Import(
+        baseline with { Preferences = baseline.Preferences with
+        {
+            Search = baseline.Preferences.Search with { KeywordScope = "executable-regex" }
+        } }, ViewerSettings.Default, JobHistoryDocument.Empty));
+    AssertThrows<WorkspaceImportException>(() => portable.Import(
+        baseline with { Preferences = baseline.Preferences with
+        {
+            Qualifications = baseline.Preferences.Qualifications with { MinimumSalary = -1m }
+        } }, ViewerSettings.Default, JobHistoryDocument.Empty));
+    AssertThrows<WorkspaceImportException>(() => portable.Import(
+        baseline with { Preferences = baseline.Preferences with
+        {
+            Application = baseline.Preferences.Application with { ThemeMode = "system-script" }
+        } }, ViewerSettings.Default, JobHistoryDocument.Empty));
+    var unsupported = baseline with
+    {
+        CuratedJobs =
+        [
+            new PortableCuratedJob(
+                "unsupported-company", "unsupported-company:REQ-1", "REQ-1",
+                JobWorkflowStates.Saved, "/job/REQ-1")
+        ]
+    };
+    var isolatedUnsupported = portable.Import(
+        unsupported, ViewerSettings.Default, JobHistoryDocument.Empty);
+    Assert(isolatedUnsupported.History.Jobs.TryGetValue(
+               "unsupported-company:REQ-1", out var unsupportedEntry) &&
+           unsupportedEntry.CompanyId == "unsupported-company" &&
+           !isolatedUnsupported.History.Jobs.ContainsKey("leidos:REQ-1"),
+        "An unsupported curated company identity was dropped or silently remapped.");
+
+    var conflictingDuplicate = baseline with
+    {
+        CuratedJobs =
+        [
+            new PortableCuratedJob("leidos", "leidos:REQ-1", "REQ-1",
+                JobWorkflowStates.Saved, "/job/REQ-1"),
+            new PortableCuratedJob("leidos", "leidos:REQ-1", "REQ-1",
+                JobWorkflowStates.Applied, "/job/REQ-1")
+        ]
+    };
+    AssertThrows<WorkspaceImportException>(() =>
+        portable.Import(conflictingDuplicate, ViewerSettings.Default, JobHistoryDocument.Empty));
+
+    var mismatchedIdentity = baseline with
+    {
+        CuratedJobs =
+        [
+            new PortableCuratedJob("leidos", "leidos:REQ-OTHER", "REQ-1",
+                JobWorkflowStates.Hidden, "/job/REQ-1")
+        ]
+    };
+    AssertThrows<WorkspaceImportException>(() =>
+        portable.Import(mismatchedIdentity, ViewerSettings.Default, JobHistoryDocument.Empty));
+
+    using var exportedJson = JsonDocument.Parse(JsonSerializer.Serialize(baseline,
+        new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+    var root = exportedJson.RootElement;
+    Assert(root.TryGetProperty("format", out _) && root.TryGetProperty("version", out _) &&
+           root.TryGetProperty("preferences", out _) && root.TryGetProperty("curatedJobs", out _) &&
+           !root.TryGetProperty("workspaceId", out _) && !root.TryGetProperty("jobs", out _) &&
+           !root.TryGetProperty("cache", out _) && !root.TryGetProperty("securityToken", out _),
+        "The external DTO is missing its versioned structure or exposed an internal runtime field.");
+    return Task.CompletedTask;
+}
+
+static async Task TestPortableWorkspaceResetRestoreAsync()
+{
+    var directory = TestDirectory("portable-reset-restore");
+    try
+    {
+        var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+        var store = new FileWorkspaceDataStore(directory, NullLogger<FileWorkspaceDataStore>.Instance);
+        var state = new AppStateStore(NullLogger<AppStateStore>.Instance, companies, store);
+        var portable = new PortableWorkspaceService(companies);
+        var configured = state.NormalizeSettings(ViewerSettings.Default with
+        {
+            IncludeKeywords = ["cloud"],
+            MinimumSalary = 125_000m,
+            HasConfiguredSource = true,
+            CompanyId = "leidos",
+            IncludeRemote = true
+        });
+        var now = DateTimeOffset.UtcNow;
+        var curated = new JobHistoryDocument(4, new Dictionary<string, JobHistoryEntry>
+        {
+            ["leidos:REQ-SAVED"] = new("REQ-SAVED", "/job/REQ-SAVED", now, now, true,
+                JobWorkflowStates.Saved, now, CompanyId: "leidos"),
+            ["leidos:REQ-A"] = new("REQ-A", "/job/a", now, now, true,
+                JobWorkflowStates.Applied, now, CompanyId: "leidos"),
+            ["leidos:REQ-H"] = new("REQ-H", "/job/h", now, now, true,
+                JobWorkflowStates.Hidden, now, CompanyId: "leidos")
+        });
+        await state.SaveSettingsAsync(configured);
+        await state.SaveJobHistoryAsync(curated);
+        var exported = portable.Export(
+            await state.LoadSettingsAsync(), await state.LoadJobHistoryAsync());
+        var json = JsonSerializer.Serialize(exported, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
+        await store.DeleteAllAsync();
+        await state.EnsureSettingsFileAsync();
+        var resetSettings = await state.LoadSettingsAsync();
+        var resetHistory = await state.LoadJobHistoryAsync();
+        Assert(resetSettings.HasConfiguredSource == false && resetHistory.Jobs.Count == 0,
+            "Reset did not return the workspace to first-run state.");
+
+        var restored = portable.ImportJson(json, resetSettings, resetHistory);
+        await state.SaveSettingsAsync(restored.Settings);
+        await state.SaveJobHistoryAsync(restored.History);
+        var loadedSettings = await state.LoadSettingsAsync();
+        var loadedHistory = await state.LoadJobHistoryAsync();
+        Assert(loadedSettings.IncludeKeywords.SequenceEqual(["cloud"]) &&
+               loadedSettings.MinimumSalary == 125_000m &&
+               loadedSettings.HasConfiguredSource == false &&
+               loadedSettings.PendingSource?.CompanyId == "leidos",
+            "Settings or explicit-apply source semantics did not survive reset and restore.");
+        Assert(loadedHistory.Jobs.Count(pair => pair.Value.WorkflowState == JobWorkflowStates.Saved) == 1 &&
+               loadedHistory.Jobs.Count(pair => pair.Value.WorkflowState == JobWorkflowStates.Applied) == 1 &&
+               loadedHistory.Jobs.Count(pair => pair.Value.WorkflowState == JobWorkflowStates.Hidden) == 1 &&
+               loadedHistory.Jobs.Values.All(entry => JobWorkflowStates.IsValid(entry.WorkflowState)),
+            "Curated workflow state did not survive the full export-reset-import round-trip.");
+        var reconciled = await CreateCatalogAsync(directory);
+        Assert(reconciled.Catalog.Snapshot.JobStates[reconciled.Job.StableId] ==
+               JobWorkflowStates.Saved,
+            "A restored curated state did not reconcile when the company/job identity reappeared.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
 }
 
 static async Task TestFreshCatalogSourceAsync()
@@ -389,7 +625,12 @@ static async Task TestFreshCatalogSourceAsync()
         var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
         var store = new FileWorkspaceDataStore(directory, NullLogger<FileWorkspaceDataStore>.Instance);
         var state = new AppStateStore(NullLogger<AppStateStore>.Instance, companies, store);
-        var settings = state.NormalizeSettings(ViewerSettings.Default);
+        var settings = state.NormalizeSettings(ViewerSettings.Default with
+        {
+            HasConfiguredSource = true,
+            CompanyId = CompanyCatalog.DefaultCompanyId,
+            IncludeRemote = true
+        });
         await state.SaveSettingsAsync(settings);
         var query = WorkdayQuery.FromSettings(settings, companies);
         var credentials = new CredentialDetector(NullLogger<CredentialDetector>.Instance);
@@ -458,6 +699,7 @@ static async Task TestUnsupportedCompanyMigrationAsync()
         var store = new FileWorkspaceDataStore(directory, NullLogger<FileWorkspaceDataStore>.Instance);
         var stale = ViewerSettings.Default with
         {
+            HasConfiguredSource = true,
             CompanyId = "deloitte-ie",
             Country = new FacetSelection("04a05835925f45b3a59406a2a6b72c8a", "Ireland"),
             IncludeAllLocations = false,

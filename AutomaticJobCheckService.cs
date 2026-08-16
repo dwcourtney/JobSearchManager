@@ -41,7 +41,8 @@ public sealed class AutomaticJobCheckService
 
     public void ApplySettings(ViewerSettings settings)
     {
-        var enabled = settings.AutomaticCheckEnabled ?? true;
+        var enabled = settings.HasConfiguredSource == true &&
+            (settings.AutomaticCheckEnabled ?? true);
         lock (_gate)
         {
             if (_configured &&

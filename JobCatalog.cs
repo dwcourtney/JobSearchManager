@@ -412,6 +412,36 @@ public sealed class JobCatalog
         }
     }
 
+    public async Task InitializeWithoutSourceAsync()
+    {
+        _history = await _stateStore.LoadJobHistoryAsync();
+        lock (_gate)
+        {
+            _snapshot = JobsSnapshot.Empty;
+        }
+    }
+
+    public async Task ReloadHistoryAsync()
+    {
+        await _historyGate.WaitAsync();
+        try
+        {
+            _history = await _stateStore.LoadJobHistoryAsync();
+            lock (_gate)
+            {
+                _snapshot = _snapshot with
+                {
+                    NewJobIds = GetNewJobIds(_snapshot.Jobs),
+                    JobStates = GetJobStates(_snapshot.Jobs)
+                };
+            }
+        }
+        finally
+        {
+            _historyGate.Release();
+        }
+    }
+
     private async Task<JobsSnapshot> RefreshCoreAsync(
         WorkdayQuery query,
         WorkdayQuery previousQuery,

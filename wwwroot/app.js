@@ -56,6 +56,8 @@ const state = {
   catalogIsRefreshing: false,
   facetsLoaded: false,
   companies: [],
+  hasConfiguredSource: false,
+  pendingImportedSource: null,
   companyId: "",
   companyName: "Workday",
   country: { id: null, label: ALL_COUNTRIES_LABEL },
@@ -152,6 +154,10 @@ const elements = {
   resetConfirmationCancel: document.querySelector("#reset-confirmation-cancel"),
   resetConfirmationSubmit: document.querySelector("#reset-confirmation-submit"),
   resetConfirmationError: document.querySelector("#reset-confirmation-error"),
+  importWorkspaceButton: document.querySelector("#import-workspace-button"),
+  exportWorkspaceButton: document.querySelector("#export-workspace-button"),
+  importWorkspaceFile: document.querySelector("#import-workspace-file"),
+  portableWorkspaceStatus: document.querySelector("#portable-workspace-status"),
   hiddenJobCount: document.querySelector("#hidden-job-count"),
   allResultsTab: document.querySelector("#all-results-tab"),
   allJobCount: document.querySelector("#all-job-count"),
@@ -239,6 +245,10 @@ async function initialize() {
   elements.resetWorkspaceButton.addEventListener("click", showResetConfirmation);
   elements.resetConfirmationCancel.addEventListener("click", () => closeResetConfirmation(true));
   elements.resetConfirmationSubmit.addEventListener("click", resetCurrentWorkspace);
+  elements.importWorkspaceButton.addEventListener("click", () =>
+    elements.importWorkspaceFile.click());
+  elements.importWorkspaceFile.addEventListener("change", importWorkspace);
+  elements.exportWorkspaceButton.addEventListener("click", exportWorkspace);
   elements.resetConfirmationOverlay.addEventListener("keydown", constrainResetConfirmationFocus);
   wireKeywordInput("inclusions", elements.includeInput, elements.addInclusion);
   wireKeywordInput("exclusions", elements.excludeInput, elements.addExclusion);
@@ -373,6 +383,14 @@ async function initialize() {
 
 function showView(view, focusFirstControl = false, options = {}) {
   const nextView = view === "settings" ? "settings" : "jobs";
+  if (nextView === "jobs" && !state.hasConfiguredSource) {
+    if (state.activeView !== "settings") showView("settings", focusFirstControl);
+    showSettingsTab("job-search");
+    elements.facetStatus.textContent = state.pendingImportedSource
+      ? "Apply Job Source to load jobs using the imported source."
+      : "Select a company and location source, then apply it to load jobs.";
+    return false;
+  }
   if (options.bypassSourceGuard !== true && sourceNavigationRequiresConfirmation(nextView)) {
     showSourceConfirmation();
     return false;
@@ -504,19 +522,18 @@ async function loadInitialState() {
     populateCompanySelect();
     applySettings(await settingsResponse.json());
     const initialSnapshot = await jobsResponse.json();
-    const needsInitialRefresh = !initialSnapshot.isRefreshing &&
+    const needsInitialRefresh = state.hasConfiguredSource && !initialSnapshot.isRefreshing &&
       !initialSnapshot.lastRefreshedUtc &&
       (!initialSnapshot.jobs || initialSnapshot.jobs.length === 0);
     applySnapshot(initialSnapshot);
-    await loadLocationFacets(
-      state.companyId,
-      state.country.id,
-      state.physicalLocations,
-      state.includeAllLocations,
-      state.includeRemote);
+    await hydrateSourceControls();
     await loadAutomaticCheckStatus();
     state.isInitializing = false;
-    if (needsInitialRefresh) {
+    if (!state.hasConfiguredSource) {
+      setLoading(false);
+      showView("settings");
+      showSettingsTab("job-search");
+    } else if (needsInitialRefresh) {
       await refreshJobs();
     } else if (!state.catalogIsRefreshing) {
       setLoading(false);
@@ -560,8 +577,10 @@ function applySettings(settings) {
   state.sponsorshipProfile = normalizeSponsorshipProfile(
     settings.userProfile?.workAuthorization?.sponsorship);
   state.hideStrictWorkAuthorizationMismatch = settings.hideStrictWorkAuthorizationMismatch === true;
-  state.companyId = settings.companyId || state.companies[0]?.id || "";
-  state.companyName = companyById(state.companyId)?.displayName || state.companyId;
+  state.hasConfiguredSource = settings.hasConfiguredSource === true;
+  state.pendingImportedSource = settings.pendingSource || null;
+  state.companyId = state.hasConfiguredSource ? settings.companyId || "" : "";
+  state.companyName = companyById(state.companyId)?.displayName || "Workday";
   elements.companySelect.value = state.companyId;
   state.loadingTitle = `Loading ${state.companyName} jobs`;
   elements.loadingTitle.textContent = state.loadingTitle;
@@ -631,6 +650,51 @@ function normalizeClearanceProfileLevel(value) {
 function normalizePublicTrustProfile(value) {
   if (value === "notSpecified") return "unknown";
   return ["unknown", "none", "current"].includes(value) ? value : "unknown";
+}
+
+async function hydrateSourceControls() {
+  if (state.pendingImportedSource?.companyId) {
+    const pending = state.pendingImportedSource;
+    elements.companySelect.value = pending.companyId;
+    await loadLocationFacets(
+      pending.companyId,
+      pending.source?.country?.id || null,
+      pending.source?.selectedPhysicalLocations || [],
+      pending.source?.includeAllLocations === true,
+      pending.source?.includeRemote === true);
+    elements.facetStatus.textContent =
+      "Workspace imported. Apply Job Source to load jobs using the imported source.";
+    return;
+  }
+  if (state.hasConfiguredSource) {
+    elements.companySelect.value = state.companyId;
+    await loadLocationFacets(
+      state.companyId,
+      state.country.id,
+      state.physicalLocations,
+      state.includeAllLocations,
+      state.includeRemote);
+    return;
+  }
+
+  elements.companySelect.value = "";
+  populateCountrySelect(elements.countrySelect, [{
+    id: "bc33aa3152ec42d4995f4791a106ed09",
+    label: "United States of America",
+    count: 0
+  }], ALL_COUNTRIES_LABEL, "bc33aa3152ec42d4995f4791a106ed09");
+  elements.includeAllLocations.checked = false;
+  elements.includeRemote.checked = false;
+  elements.includeRemoteOption.hidden = false;
+  elements.locationSearch.value = "";
+  elements.locationGroups.replaceChildren();
+  state.locationGroups = [];
+  state.remoteLocations = [];
+  state.facetsLoaded = false;
+  elements.facetStatus.textContent =
+    "Select a company to load its available country and location choices.";
+  updateSelectedLocationSummary();
+  updateQueryControls();
 }
 
 function showResultsTab(tab, moveFocus = false) {
@@ -819,6 +883,10 @@ function buildFilterSummary() {
 }
 
 function updateSourceSummary() {
+  if (!state.hasConfiguredSource) {
+    elements.sourceSummary.textContent = "Job source not configured";
+    return;
+  }
   const country = state.country.label || ALL_COUNTRIES_LABEL;
   elements.sourceSummary.textContent = `${state.companyName} · ${country} · ${describeSourceLocations(
     state.includeAllLocations,
@@ -832,6 +900,10 @@ function companyById(companyId) {
 
 function populateCompanySelect() {
   elements.companySelect.replaceChildren();
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "Select a company…";
+  elements.companySelect.append(placeholder);
   for (const company of state.companies) {
     const option = document.createElement("option");
     option.value = company.id;
@@ -842,6 +914,10 @@ function populateCompanySelect() {
 
 async function companySelectionChanged() {
   const companyId = elements.companySelect.value;
+  if (!companyId) {
+    await hydrateSourceControls();
+    return;
+  }
   state.facetsLoaded = false;
   updateQueryControls();
   try {
@@ -1220,12 +1296,12 @@ function updateQueryControls() {
   elements.applyLocation.disabled = disabled || !hasExplicitSource || !pending;
   elements.applySourceSection.classList.toggle("pending", pending);
   elements.applyLocation.textContent = disabled
-    ? "Loading job source…"
+    ? elements.companySelect.value ? "Loading Job Source…" : "Select a Company"
     : !hasExplicitSource
-      ? "Choose a location source"
+      ? "Choose a Location Source"
       : pending
-        ? "Apply job source"
-        : "Source is current";
+        ? "Apply Job Source"
+        : "Source Is Current";
   if (!state.facetsLoaded) return;
   const context = `${new Intl.NumberFormat().format(state.facetMatchingJobs)} jobs in this country context.`;
   elements.facetStatus.textContent = !hasExplicitSource
@@ -1272,6 +1348,8 @@ async function applyWorkdayLocation(options = {}) {
       updateQueryControls();
       return false;
     }
+    state.hasConfiguredSource = true;
+    state.pendingImportedSource = null;
     applySnapshot(snapshot);
     await loadAutomaticCheckStatus();
     if (options.navigateToJobs === true) {
@@ -1298,6 +1376,12 @@ async function loadSnapshot() {
 }
 
 async function refreshJobs() {
+  if (!state.hasConfiguredSource) {
+    showView("settings", true, { settingsTab: "job-search" });
+    elements.facetStatus.textContent =
+      "Choose a company and location source, then select Apply Job Source.";
+    return;
+  }
   clearTimeout(state.pollTimer);
   setLoading(true, { title: `Refreshing ${state.companyName} jobs` });
   beginRefreshProgressPolling();
@@ -1324,8 +1408,8 @@ function applySnapshot(snapshot) {
   state.isCached = Boolean(snapshot.isCached);
   state.newJobIds = new Set(snapshot.newJobIds || []);
   state.jobStates = new Map(Object.entries(snapshot.jobStates || {}));
-  if (snapshot.query) {
-    state.companyId = snapshot.query.companyId || state.companies[0]?.id || "";
+  if (state.hasConfiguredSource && snapshot.query) {
+    state.companyId = snapshot.query.companyId || "";
     state.companyName = companyById(state.companyId)?.displayName || state.companyId;
     elements.companySelect.value = state.companyId;
     state.country = {
@@ -1523,6 +1607,72 @@ function jobsPassingGeneralFilters() {
   });
 }
 
+async function exportWorkspace() {
+  elements.portableWorkspaceStatus.textContent = "Preparing workspace backup…";
+  elements.exportWorkspaceButton.disabled = true;
+  try {
+    const response = await fetch("/api/workspace/export", { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(await apiErrorMessage(response, "The workspace could not be exported."));
+    }
+    const backup = await response.json();
+    const blob = new Blob([`${JSON.stringify(backup, null, 2)}\n`], {
+      type: "application/json"
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `workday-job-manager-workspace-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    elements.portableWorkspaceStatus.textContent =
+      "Workspace backup exported. Keep the JSON file somewhere safe.";
+  } catch (error) {
+    elements.portableWorkspaceStatus.textContent = error.message || String(error);
+  } finally {
+    elements.exportWorkspaceButton.disabled = false;
+  }
+}
+
+async function importWorkspace(event) {
+  const file = event.target.files?.[0];
+  event.target.value = "";
+  if (!file) return;
+  if (!window.confirm(
+    "Import this workspace backup? Portable settings and Saved, Applied, and Hidden states will replace their current values."
+  )) return;
+
+  elements.portableWorkspaceStatus.textContent = "Validating workspace backup…";
+  elements.importWorkspaceButton.disabled = true;
+  elements.exportWorkspaceButton.disabled = true;
+  try {
+    const response = await fetch("/api/workspace/import", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: await file.text()
+    });
+    if (!response.ok) {
+      throw new Error(await apiErrorMessage(response, "The workspace could not be imported."));
+    }
+    const imported = await response.json();
+    applySettings(imported.settings);
+    applySnapshot(imported.snapshot);
+    await hydrateSourceControls();
+    elements.portableWorkspaceStatus.textContent =
+      `Workspace restored with ${new Intl.NumberFormat().format(imported.curatedJobCount || 0)} curated jobs.` +
+      (state.pendingImportedSource
+        ? " Apply Job Source to activate the imported source selection."
+        : "");
+  } catch (error) {
+    elements.portableWorkspaceStatus.textContent = error.message || String(error);
+  } finally {
+    elements.importWorkspaceButton.disabled = false;
+    elements.exportWorkspaceButton.disabled = false;
+  }
+}
+
 function showResetConfirmation() {
   clearTimeout(state.resetConfirmationHideTimer);
   state.resetConfirmationOpen = true;
@@ -1572,7 +1722,7 @@ async function resetCurrentWorkspace() {
     state.resetInProgress = false;
     elements.resetConfirmationCancel.disabled = false;
     elements.resetConfirmationSubmit.disabled = false;
-    elements.resetConfirmationSubmit.textContent = "Reset workspace";
+    elements.resetConfirmationSubmit.textContent = "Reset Current Workspace";
     elements.resetConfirmationError.textContent = error.message || String(error);
     elements.resetConfirmationError.hidden = false;
     elements.resetConfirmationCancel.focus({ preventScroll: true });

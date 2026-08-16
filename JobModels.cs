@@ -13,6 +13,10 @@ public static class FacetDefaults
 {
     public const string AllCountriesLabel = "All countries";
     public const string AllLocationsLabel = "All locations";
+    public const string UnitedStatesCountryId = "bc33aa3152ec42d4995f4791a106ed09";
+    public const string UnitedStatesCountryLabel = "United States of America";
+    public static FacetSelection UnitedStatesCountry { get; } =
+        new(UnitedStatesCountryId, UnitedStatesCountryLabel);
 }
 
 public sealed record FacetSelection(string? Id, string Label);
@@ -30,6 +34,10 @@ public sealed record WorkdayQuery(
 {
     public static WorkdayQuery FromSettings(ViewerSettings settings, CompanyCatalog catalog)
     {
+        if (settings.HasConfiguredSource != true)
+        {
+            throw new InvalidOperationException("No Workday job source has been applied.");
+        }
         var company = catalog.Get(settings.CompanyId);
         return new WorkdayQuery(
             settings.Country.Id,
@@ -345,6 +353,8 @@ public sealed record CompanySourceSettings(
     bool IncludeRemote,
     IReadOnlyList<FacetSelection> SelectedPhysicalLocations);
 
+public sealed record PendingJobSource(string CompanyId, CompanySourceSettings Source);
+
 public sealed record ViewerSettings(
     IReadOnlyList<string> IncludeKeywords,
     IReadOnlyList<string> ExcludeKeywords,
@@ -367,12 +377,14 @@ public sealed record ViewerSettings(
     IReadOnlyList<FacetSelection>? SelectedPhysicalLocations = null,
     string CompanyId = CompanyCatalog.DefaultCompanyId,
     IReadOnlyDictionary<string, CompanySourceSettings>? CompanySources = null,
-    bool HideStrictWorkAuthorizationMismatch = false)
+    bool HideStrictWorkAuthorizationMismatch = false,
+    bool? HasConfiguredSource = null,
+    PendingJobSource? PendingSource = null)
 {
     public static ViewerSettings Default { get; } = new(
         [], [], 0m, "metadata", "all", true,
         new Dictionary<string, bool>(StringComparer.Ordinal),
-        new FacetSelection(null, ""),
+        FacetDefaults.UnitedStatesCountry,
         null,
         false,
         true,
@@ -382,11 +394,13 @@ public sealed record ViewerSettings(
         false,
         false,
         false,
-        true,
+        false,
         [],
-        CompanyCatalog.DefaultCompanyId,
+        "",
         new Dictionary<string, CompanySourceSettings>(StringComparer.OrdinalIgnoreCase),
-        false);
+        false,
+        false,
+        null);
 }
 
 public sealed record UserProfile(

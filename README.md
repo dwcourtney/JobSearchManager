@@ -89,7 +89,13 @@ The executable is `WorkdayJobManager.exe` in a Windows build or publish output.
 Settings > Job Source presents Company first, followed by Country, remote coverage
 when that employer exposes configured remote facets, and one or more physical
 locations. Changing pending controls only refreshes facet choices. It does not crawl
-jobs until **Apply job source** is selected.
+jobs until **Apply Job Source** is selected.
+
+A fresh or reset workspace starts on Settings > Job Source with no company selected,
+United States of America preselected, and no applied source. It does not infer Leidos
+or the first catalog company and does not retrieve jobs until a valid source is
+explicitly applied. The unconfigured state is distinct from an unapplied edit to an
+existing source.
 
 The application remembers source choices separately for each company while keeping
 the user profile and screening preferences global. Automatic checks monitor only
@@ -141,7 +147,35 @@ company ID. The active source falls back to a safe supported default.
 Copy or move the executable directory and its `data` directory together to retain
 state.
 
-Settings also provides **Reset current workspace**. After confirmation, local mode
+Settings > My Preferences also provides **Export Workspace** and **Import Workspace**.
+The versioned JSON file is a portable workspace backup containing:
+
+- the pending or applied Job Source selection (company, country, coverage flags,
+  and selected physical Workday facet IDs/labels);
+- search preferences, My Qualifications, screening choices, automatic-check
+  preferences, and theme;
+- one canonical record for each Saved, Applied, or Hidden job: company ID,
+  company-scoped stable ID, requisition ID when available, workflow state, and
+  Workday external path.
+
+The stable identity and external path are the minimum metadata needed to preserve
+curated work even when a job is absent from today's catalog and to reconcile its
+state if the same company/job appears again. The backup deliberately excludes the
+current job catalog, cached Workday results, full descriptions, ordinary Normal-job
+history, workspace/cookie IDs, Blob identifiers, secrets, parser caches, and
+temporary refresh/UI state.
+
+Import validates the complete file before changing durable state. An unsupported
+Job Source is rejected; an otherwise valid curated record for a no-longer-supported
+company remains isolated under its exact company ID and is never remapped. Mismatched
+stable IDs, duplicate job identities, unknown workflow states, and malformed
+preference values are rejected.
+On success, imported portable preferences and curated states replace their current
+counterparts; ordinary viewed/NEW history remains intact. An imported Job Source is
+staged for review and requires **Apply Job Source**, so import itself never starts a
+Workday job crawl.
+
+Settings also provides **Reset Current Workspace**. After confirmation, local mode
 deletes only the three application-owned JSON documents shown above and reloads
 first-run defaults. It does not recursively clean the `data` directory, so unrelated
 files are left untouched.
@@ -200,15 +234,16 @@ different workspace or falling back to local files.
 
 Anonymous identity has an intentional limitation: clearing the workspace cookie,
 using another browser/profile, or moving to another device prevents the system
-from recognizing the previous workspace. A new workspace may be created. There
-is currently no recovery key or login mechanism.
+from recognizing the previous workspace. A new workspace may be created. There is
+no recovery key or login mechanism, so **Export Workspace** is the supported way to
+preserve portable settings and curated job states before losing browser storage.
 
 New Azure workspaces start with neutral defaults. They do not inherit the local
 user's salary, education, clearance, filters, locations, hidden jobs, or history.
 The company and credential catalogs remain shared source-controlled application
 configuration.
 
-In Azure mode, **Reset current workspace** deletes only the three fixed Blob names
+In Azure mode, **Reset Current Workspace** deletes only the three fixed Blob names
 under the server-resolved current workspace prefix. The browser cannot supply a
 workspace ID. Only after all deletions succeed does the server expire the protected
 workspace cookie; the reload then creates a new anonymous workspace. A storage

@@ -26,7 +26,8 @@ public sealed class AppStateStore
     {
         var stored = await _dataStore.ReadJsonAsync<ViewerSettings>(WorkspaceDataFile.Settings) ??
             ViewerSettings.Default;
-        var hadUnsupportedActiveCompany = !_companyCatalog.TryGet(stored.CompanyId, out _);
+        var hadUnsupportedActiveCompany = stored.HasConfiguredSource != false &&
+            !_companyCatalog.TryGet(stored.CompanyId, out _);
         var hadUnsupportedCompanySource = (stored.CompanySources ??
             new Dictionary<string, CompanySourceSettings>())
             .Keys.Any(companyId => !_companyCatalog.TryGet(companyId, out _));
@@ -174,14 +175,27 @@ public sealed class AppStateStore
         var collapsed = (settings.CollapsedAgeGroups ?? new Dictionary<string, bool>())
             .Where(pair => pair.Value)
             .ToDictionary(pair => pair.Key, pair => true, StringComparer.Ordinal);
-        var activeCompanyIsSupported = _companyCatalog.TryGet(settings.CompanyId, out var company);
-        company ??= _companyCatalog.Get(CompanyCatalog.DefaultCompanyId);
+        var hasConfiguredSource = settings.HasConfiguredSource ?? true;
+        CompanyDefinition? selectedCompany = null;
+        var activeCompanyIsSupported = hasConfiguredSource &&
+            _companyCatalog.TryGet(settings.CompanyId, out selectedCompany);
+        var company = selectedCompany ?? _companyCatalog.Get(CompanyCatalog.DefaultCompanyId);
 
         FacetSelection country;
         bool includeAllLocations;
         bool includeRemote;
         IEnumerable<FacetSelection> selectedPhysicalLocations;
-        if (!activeCompanyIsSupported)
+        if (!hasConfiguredSource)
+        {
+            country = NormalizeFacetSelection(
+                settings.Country,
+                FacetDefaults.UnitedStatesCountry,
+                FacetDefaults.AllCountriesLabel);
+            includeAllLocations = false;
+            includeRemote = false;
+            selectedPhysicalLocations = [];
+        }
+        else if (!activeCompanyIsSupported)
         {
             var safeSource = settings.CompanySources?.TryGetValue(company.Id, out var previousSource) == true
                 ? NormalizeCompanySource(previousSource, company)
@@ -210,7 +224,7 @@ public sealed class AppStateStore
         // selection becomes remote-only; an empty legacy location preserves the
         // previous country-wide query; any other saved location becomes the sole
         // selected physical location.
-        if (activeCompanyIsSupported && settings.Location is not null)
+        if (hasConfiguredSource && activeCompanyIsSupported && settings.Location is not null)
         {
             if (string.IsNullOrWhiteSpace(settings.Location.Id))
             {
@@ -232,7 +246,7 @@ public sealed class AppStateStore
             }
         }
 
-        includeRemote = company.RemoteLocationIds.Count > 0 &&
+        includeRemote = hasConfiguredSource && company.RemoteLocationIds.Count > 0 &&
             (includeAllLocations || includeRemote);
         var physicalLocations = includeAllLocations
             ? []
@@ -298,11 +312,23 @@ public sealed class AppStateStore
 
             companySources[sourceCompany.Id] = NormalizeCompanySource(pair.Value, sourceCompany);
         }
-        companySources[company.Id] = new CompanySourceSettings(
-            country,
-            includeAllLocations,
-            includeRemote,
-            physicalLocations);
+        if (hasConfiguredSource)
+        {
+            companySources[company.Id] = new CompanySourceSettings(
+                country,
+                includeAllLocations,
+                includeRemote,
+                physicalLocations);
+        }
+
+        PendingJobSource? pendingSource = null;
+        if (settings.PendingSource is { } pending &&
+            _companyCatalog.TryGet(pending.CompanyId, out var pendingCompany))
+        {
+            pendingSource = new PendingJobSource(
+                pendingCompany.Id,
+                NormalizeCompanySource(pending.Source, pendingCompany));
+        }
 
         return new ViewerSettings(
             NormalizeTerms(settings.IncludeKeywords),
@@ -324,9 +350,11 @@ public sealed class AppStateStore
             includeAllLocations,
             includeRemote,
             physicalLocations,
-            company.Id,
+            hasConfiguredSource ? company.Id : "",
             companySources,
-            settings.HideStrictWorkAuthorizationMismatch);
+            settings.HideStrictWorkAuthorizationMismatch,
+            hasConfiguredSource,
+            pendingSource);
     }
 
     public CompanySourceSettings GetSourceSettings(ViewerSettings settings, string companyId)

@@ -126,9 +126,16 @@ public sealed class WorkspaceRuntimeManager
         await stateStore.SaveSettingsAsync(settings);
 
         var catalog = ActivatorUtilities.CreateInstance<JobCatalog>(_services, stateStore);
-        await catalog.InitializeAsync(WorkdayQuery.FromSettings(
-            settings,
-            _services.GetRequiredService<CompanyCatalog>()));
+        if (settings.HasConfiguredSource == true)
+        {
+            await catalog.InitializeAsync(WorkdayQuery.FromSettings(
+                settings,
+                _services.GetRequiredService<CompanyCatalog>()));
+        }
+        else
+        {
+            await catalog.InitializeWithoutSourceAsync();
+        }
         var automaticChecks = ActivatorUtilities.CreateInstance<AutomaticJobCheckService>(
             _services,
             catalog);

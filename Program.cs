@@ -40,6 +40,7 @@ builder.Services.AddSingleton<CredentialDetector>();
 builder.Services.AddSingleton<AcademicQualificationDetector>();
 builder.Services.AddSingleton<WorkAuthorizationDetector>();
 builder.Services.AddSingleton<RemoteWorkDetector>();
+builder.Services.AddSingleton<PortableWorkspaceService>();
 builder.Services.AddDataProtection().SetApplicationName("WorkdayJobManager");
 builder.Services.AddScoped<WorkspaceContext>();
 builder.Services.AddScoped<WorkspaceRuntimeProvider>();
@@ -202,6 +203,11 @@ app.MapPost("/api/refresh", async (
     CancellationToken token) =>
 {
     var runtime = await provider.GetAsync(token);
+    var settings = await runtime.StateStore.LoadSettingsAsync();
+    if (settings.HasConfiguredSource != true)
+    {
+        return Results.Conflict(new { error = "Configure and apply a job source before refreshing jobs." });
+    }
     var snapshot = await runtime.Catalog.RefreshAsync();
     if (snapshot.Error is null)
     {
@@ -238,11 +244,15 @@ app.MapGet("/api/source/{companyId}", async Task<IResult> (
 
     var stateStore = (await provider.GetAsync(token)).StateStore;
     var settings = await stateStore.LoadSettingsAsync();
+    var hasSavedCompanySource = settings.CompanySources?.ContainsKey(company.Id) == true;
+    var source = settings.HasConfiguredSource != true && !hasSavedCompanySource
+        ? new CompanySourceSettings(company.DefaultCountry, false, false, [])
+        : stateStore.GetSourceSettings(settings, company.Id);
     return Results.Ok(new
     {
         company.Id,
         company.DisplayName,
-        source = stateStore.GetSourceSettings(settings, company.Id)
+        source
     });
 });
 
@@ -288,9 +298,12 @@ app.MapPost("/api/query", async Task<IResult> (
         IncludeAllLocations = query.IncludeAllLocations,
         IncludeRemote = query.IncludeRemote,
         SelectedPhysicalLocations = query.PhysicalLocations,
-        CompanySources = companySources
+        CompanySources = companySources,
+        HasConfiguredSource = true,
+        PendingSource = null
     });
     await stateStore.SaveSettingsAsync(updated);
+    runtime.AutomaticChecks.ApplySettings(updated);
     var snapshot = await runtime.Catalog.RefreshAsync(WorkdayQuery.FromSettings(updated, companies));
     if (snapshot.Error is null)
     {
@@ -299,6 +312,7 @@ app.MapPost("/api/query", async Task<IResult> (
     else
     {
         await stateStore.SaveSettingsAsync(current);
+        runtime.AutomaticChecks.ApplySettings(current);
     }
     return Results.Ok(snapshot);
 }).RequireRateLimiting("workday");
@@ -317,11 +331,77 @@ app.MapPut("/api/settings", async (
     var current = await runtime.StateStore.LoadSettingsAsync();
     var normalized = runtime.StateStore.NormalizeSettings(settings with
     {
-        CompanySources = current.CompanySources
+        CompanySources = current.CompanySources,
+        HasConfiguredSource = current.HasConfiguredSource,
+        PendingSource = current.PendingSource
     });
     await runtime.StateStore.SaveSettingsAsync(normalized);
     runtime.AutomaticChecks.ApplySettings(normalized);
     return Results.NoContent();
+}).RequireRateLimiting("state");
+
+app.MapGet("/api/workspace/export", async (
+    WorkspaceRuntimeProvider provider,
+    PortableWorkspaceService portableWorkspace,
+    CancellationToken token) =>
+{
+    var runtime = await provider.GetAsync(token);
+    var settings = await runtime.StateStore.LoadSettingsAsync();
+    var history = await runtime.StateStore.LoadJobHistoryAsync();
+    return Results.Ok(portableWorkspace.Export(settings, history));
+});
+
+app.MapPost("/api/workspace/import", async Task<IResult> (
+    HttpRequest request,
+    WorkspaceRuntimeProvider provider,
+    PortableWorkspaceService portableWorkspace,
+    CancellationToken token) =>
+{
+    if (request.ContentLength is > PortableWorkspaceService.MaximumImportBytes)
+    {
+        return Results.BadRequest(new { error = "The workspace file is too large." });
+    }
+    using var reader = new StreamReader(request.Body);
+    var json = await reader.ReadToEndAsync(token);
+    if (json.Length > PortableWorkspaceService.MaximumImportBytes)
+    {
+        return Results.BadRequest(new { error = "The workspace file is too large." });
+    }
+
+    var runtime = await provider.GetAsync(token);
+    var currentSettings = await runtime.StateStore.LoadSettingsAsync();
+    var currentHistory = await runtime.StateStore.LoadJobHistoryAsync();
+    try
+    {
+        // Validate the complete document before either durable file is changed.
+        var imported = portableWorkspace.ImportJson(json, currentSettings, currentHistory);
+        var normalized = runtime.StateStore.NormalizeSettings(imported.Settings);
+        try
+        {
+            await runtime.StateStore.SaveJobHistoryAsync(imported.History);
+            await runtime.StateStore.SaveSettingsAsync(normalized);
+        }
+        catch
+        {
+            // Restore both prior documents if a valid import cannot be persisted completely.
+            await runtime.StateStore.SaveJobHistoryAsync(currentHistory);
+            await runtime.StateStore.SaveSettingsAsync(currentSettings);
+            throw;
+        }
+        await runtime.Catalog.ReloadHistoryAsync();
+        runtime.AutomaticChecks.ApplySettings(normalized);
+        return Results.Ok(new
+        {
+            settings = normalized,
+            snapshot = runtime.Catalog.Snapshot,
+            curatedJobCount = imported.History.Jobs.Count(pair =>
+                JobWorkflowStates.Normalize(pair.Value.WorkflowState) != JobWorkflowStates.Normal)
+        });
+    }
+    catch (WorkspaceImportException ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
 }).RequireRateLimiting("state");
 
 app.MapDelete("/api/workspace", async (
@@ -399,7 +479,8 @@ if (hosting.IsLocal)
     app.Logger.LogInformation(
         "Persistent state directory: {DataDirectory}",
         localRuntime!.StateStore.DataDirectory);
-    if (builder.Configuration.GetValue("Application:RefreshOnStartup", true))
+    if (builder.Configuration.GetValue("Application:RefreshOnStartup", true) &&
+        (await localRuntime.StateStore.LoadSettingsAsync()).HasConfiguredSource == true)
     {
         _ = localRuntime.Catalog.RefreshAsync();
     }
