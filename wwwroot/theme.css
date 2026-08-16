@@ -291,6 +291,9 @@
   --color-credential-badge-border: #8da5d6;
   --color-credential-badge-text: #2f477d;
   --color-credential-badge-background: #edf1fb;
+  --color-analysis-pending-badge-border: var(--color-clearance-badge-border);
+  --color-analysis-pending-badge-text: var(--color-clearance-badge-text);
+  --color-analysis-pending-badge-background: var(--color-clearance-badge-background);
   --color-credential-required-border: #bf8a58;
   --color-credential-required-text: #6e3d17;
   --color-credential-required-background: #fff0e3;
@@ -537,6 +540,9 @@
   --color-credential-badge-border: #637cb0;
   --color-credential-badge-text: #cad8f7;
   --color-credential-badge-background: #293752;
+  --color-analysis-pending-badge-border: var(--color-clearance-badge-border);
+  --color-analysis-pending-badge-text: var(--color-clearance-badge-text);
+  --color-analysis-pending-badge-background: var(--color-clearance-badge-background);
   --color-credential-required-border: #a97a4f;
   --color-credential-required-text: #f2d1b1;
   --color-credential-required-background: #493322;

@@ -1,8 +1,12 @@
 namespace JobSearchManager;
 
+using System.IO.Compression;
+using System.Text;
+
 public sealed class AppStateStore
 {
     private const int SchemaVersion = 4;
+    private const int CacheSchemaVersion = 5;
     private readonly ILogger<AppStateStore> _logger;
     private readonly CompanyCatalog _companyCatalog;
     private readonly IWorkspaceDataStore _dataStore;
@@ -56,9 +60,22 @@ public sealed class AppStateStore
         }
     }
 
-    internal async Task<JobsCacheDocument?> LoadJobsCacheAsync()
+    internal async Task<JobsCacheDocument?> LoadJobsCacheAsync(string? companyId = null)
     {
-        var cache = await _dataStore.ReadJsonAsync<JobsCacheDocument>(WorkspaceDataFile.JobsCache);
+        var envelope = await _dataStore.ReadJsonAsync<JobsCacheEnvelope>(WorkspaceDataFile.JobsCache);
+        JobsCacheDocument? cache = null;
+        if (envelope?.Sources is { Count: > 0 })
+        {
+            cache = !string.IsNullOrWhiteSpace(companyId) &&
+                envelope.Sources.TryGetValue(companyId, out var companyCache)
+                    ? companyCache
+                    : envelope.Sources.Values.FirstOrDefault();
+        }
+        else
+        {
+            // Version 1-4 stored one source cache directly at jobs-cache.json.
+            cache = await _dataStore.ReadJsonAsync<JobsCacheDocument>(WorkspaceDataFile.JobsCache);
+        }
         if (cache?.Jobs is null)
         {
             return cache;
@@ -67,6 +84,30 @@ public sealed class AppStateStore
         var migrationRequired = false;
         var jobs = cache.Jobs.Select(job =>
         {
+            if (string.IsNullOrWhiteSpace(job.DescriptionHtml) &&
+                !string.IsNullOrWhiteSpace(job.CompressedDescriptionHtml))
+            {
+                try
+                {
+                    job = job with
+                    {
+                        DescriptionHtml = Decompress(job.CompressedDescriptionHtml),
+                        CompressedDescriptionHtml = null
+                    };
+                }
+                catch (Exception ex) when (ex is FormatException or InvalidDataException or IOException)
+                {
+                    migrationRequired = true;
+                    _logger.LogWarning(ex,
+                        "A cached compressed job description was invalid and will be retrieved again when needed.");
+                    job = job with
+                    {
+                        DescriptionHtml = "",
+                        CompressedDescriptionHtml = null,
+                        DetailError = "The cached description was invalid and must be retrieved again."
+                    };
+                }
+            }
             if (string.IsNullOrWhiteSpace(job.SourceUrl) &&
                 !string.IsNullOrWhiteSpace(job.LegacySourceUrl))
             {
@@ -85,31 +126,88 @@ public sealed class AppStateStore
 
         if (!migrationRequired)
         {
-            return cache;
+            return cache with { Jobs = jobs };
         }
 
-        var migrated = cache with { Jobs = jobs };
-        await _dataStore.WriteJsonAsync(WorkspaceDataFile.JobsCache, migrated);
+        var migrated = cache with { SchemaVersion = CacheSchemaVersion, Jobs = jobs };
+        await SaveCacheDocumentAsync(migrated);
         _logger.LogInformation(
-            "Migrated the legacy posting-URL field in {JobsCachePath} to sourceUrl.",
+            "Migrated cached job data in {JobsCachePath} to the current schema.",
             JobsCachePath);
         return migrated;
     }
 
-    internal Task SaveJobsCacheAsync(
+    internal async Task SaveJobsCacheAsync(
         IReadOnlyList<JobRecord> jobs,
         DateTimeOffset lastRefreshedUtc,
         int detailFailureCount,
-        JobSourceQuery query) =>
-        _dataStore.WriteJsonAsync(
+        JobSourceQuery query)
+    {
+        await SaveCacheDocumentAsync(new JobsCacheDocument(
+            CacheSchemaVersion,
+            DateTimeOffset.UtcNow,
+            lastRefreshedUtc,
+            detailFailureCount,
+            jobs,
+            query));
+    }
+
+    private async Task SaveCacheDocumentAsync(JobsCacheDocument cache)
+    {
+        cache = cache with
+        {
+            Jobs = cache.Jobs.Select(job => string.IsNullOrWhiteSpace(job.DescriptionHtml)
+                ? job with { CompressedDescriptionHtml = null }
+                : job with
+                {
+                    DescriptionHtml = "",
+                    CompressedDescriptionHtml = Compress(job.DescriptionHtml)
+                }).ToArray()
+        };
+        var stored = await _dataStore.ReadJsonAsync<JobsCacheEnvelope>(WorkspaceDataFile.JobsCache);
+        var sources = stored?.Sources is { Count: > 0 }
+            ? new Dictionary<string, JobsCacheDocument>(stored.Sources, StringComparer.OrdinalIgnoreCase)
+            : new Dictionary<string, JobsCacheDocument>(StringComparer.OrdinalIgnoreCase);
+
+        // Preserve a pre-envelope source when another company is saved first.
+        if (sources.Count == 0)
+        {
+            var legacy = await _dataStore.ReadJsonAsync<JobsCacheDocument>(WorkspaceDataFile.JobsCache);
+            if (legacy?.Query is not null && legacy.Jobs is not null)
+            {
+                sources[legacy.Query.CompanyId] = legacy;
+            }
+        }
+
+        if (cache.Query is null)
+        {
+            throw new InvalidOperationException("A source cache must include its normalized query.");
+        }
+        sources[cache.Query.CompanyId] = cache;
+        await _dataStore.WriteJsonAsync(
             WorkspaceDataFile.JobsCache,
-            new JobsCacheDocument(
-                SchemaVersion,
-                DateTimeOffset.UtcNow,
-                lastRefreshedUtc,
-                detailFailureCount,
-                jobs,
-                query));
+            new JobsCacheEnvelope(CacheSchemaVersion, sources));
+    }
+
+    private static string Compress(string value)
+    {
+        using var output = new MemoryStream();
+        using (var gzip = new GZipStream(output, CompressionLevel.SmallestSize, leaveOpen: true))
+        {
+            var bytes = Encoding.UTF8.GetBytes(value);
+            gzip.Write(bytes, 0, bytes.Length);
+        }
+        return Convert.ToBase64String(output.ToArray());
+    }
+
+    private static string Decompress(string value)
+    {
+        var bytes = Convert.FromBase64String(value);
+        using var input = new MemoryStream(bytes);
+        using var gzip = new GZipStream(input, CompressionMode.Decompress);
+        using var reader = new StreamReader(gzip, Encoding.UTF8);
+        return reader.ReadToEnd();
+    }
 
     internal async Task<JobHistoryDocument> LoadJobHistoryAsync()
     {

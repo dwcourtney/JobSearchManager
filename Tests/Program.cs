@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
+using System.IO.Compression;
 using JobSearchManager;
 
 if (args.Length >= 2 && args[0] == "--remote-corpus")
@@ -142,6 +143,18 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Expanded company catalog contains the five selected live sources", TestExpandedCompanyCatalogAsync),
     ("Cross-provider location labels are grouped by U.S. state", TestExpandedLocationGroupingAsync),
     ("SmartRecruiters postings normalize through the generic source client", TestSmartRecruitersSourceAsync),
+    ("Repeated refresh reuses unchanged cached job details", TestRepeatedRefreshCacheReuseAsync),
+    ("Changed listing metadata invalidates one cached detail", TestChangedListingInvalidationAsync),
+    ("Parser-version changes reclassify cached text without provider download", TestLocalReclassificationAsync),
+    ("Large source hydration obeys detail and concurrency bounds", TestBoundedLargeSourceAsync),
+    ("Removed source jobs remain cached without remaining available", TestRemovedJobCacheAsync),
+    ("Compact list responses omit full descriptions", TestCompactListPayloadAsync),
+    ("Lazy detail loading fetches a missing detail only once", TestLazyDetailCacheAsync),
+    ("Automatic checking fetches details only for new jobs", TestAutomaticCheckIncrementalAsync),
+    ("Company caches coexist without requisition collisions", TestPerCompanyCacheEnvelopeAsync),
+    ("Cached descriptions are compressed at rest and hydrate losslessly", TestCompressedCacheAsync),
+    ("Listing page safety limits surface truncation", TestListingPageLimitAsync),
+    ("Mocked Northrop-scale refresh remains bounded and compact", TestNorthropScaleMetricsAsync),
     ("Unsupported active company state migrates without source reinterpretation", TestUnsupportedCompanyMigrationAsync),
     ("Unsupported company history remains isolated", TestUnsupportedCompanyHistoryAsync),
     ("Established credential catalog entries validate", TestCredentialCatalogAsync),
@@ -956,6 +969,275 @@ static async Task TestSmartRecruitersSourceAsync()
         $"SmartRecruiters normalization: company={job.CompanyId}, stable={job.StableId}, url={job.SourceUrl}, pay={job.PayMinimum}-{job.PayMaximum}/{job.PayPeriod}, sponsorship={job.WorkAuthorization?.Sponsorship}, remote={job.RemoteWork?.IsRemoteDesignated}, boilerplate={job.DescriptionHtml.Contains("Generic company", StringComparison.Ordinal)}.");
 }
 
+static async Task TestRepeatedRefreshCacheReuseAsync()
+{
+    var handler = CreateWorkdayHandler(() => 3);
+    var client = CreateSourceClient(new HttpClient(handler));
+    var (company, query) = WorkdaySource();
+    var first = await client.FetchAllJobsAsync(company, query);
+    var firstDetailRequests = handler.DetailRequests;
+    var second = await client.FetchAllJobsAsync(company, query, cachedJobs: first.Jobs);
+
+    Assert(firstDetailRequests == 3 && handler.DetailRequests == 3,
+        "An unchanged repeated refresh downloaded cached descriptions again.");
+    Assert(second.Metrics is { DetailRequests: 0, CacheHits: 3, CacheMisses: 0 },
+        "Repeated-refresh cache metrics did not report complete reuse.");
+}
+
+static async Task TestChangedListingInvalidationAsync()
+{
+    var changed = false;
+    var handler = CreateWorkdayHandler(
+        () => 2,
+        index => changed && index == 1 ? "Changed Engineer" : $"Engineer {index}");
+    var client = CreateSourceClient(new HttpClient(handler));
+    var (company, query) = WorkdaySource();
+    var first = await client.FetchAllJobsAsync(company, query);
+    changed = true;
+    var before = handler.DetailRequests;
+    var second = await client.FetchAllJobsAsync(company, query, cachedJobs: first.Jobs);
+
+    Assert(handler.DetailRequests - before == 1 && second.Metrics?.CacheMisses == 1,
+        "A material listing change did not invalidate exactly one cached detail.");
+}
+
+static async Task TestLocalReclassificationAsync()
+{
+    var handler = CreateWorkdayHandler(() => 1);
+    var client = CreateSourceClient(new HttpClient(handler));
+    var (company, query) = WorkdaySource();
+    var first = await client.FetchAllJobsAsync(company, query);
+    var stale = first.Jobs.Select(job => job with { AnalysisVersion = 0 }).ToArray();
+    var before = handler.DetailRequests;
+    var second = await client.FetchAllJobsAsync(company, query, cachedJobs: stale);
+
+    Assert(handler.DetailRequests == before && second.Metrics?.ReclassifiedLocally == 1 &&
+           second.Jobs.Single().AnalysisVersion == JobSourceClient.CurrentAnalysisVersion,
+        "Parser invalidation did not reclassify cached text locally.");
+}
+
+static async Task TestBoundedLargeSourceAsync()
+{
+    var handler = CreateWorkdayHandler(() => 45, delayMilliseconds: 15);
+    var client = CreateSourceClient(new HttpClient(handler), new JobSourceOptions
+    {
+        DetailConcurrency = 2,
+        MaximumDetailRequestsPerRefresh = 5
+    });
+    var (company, query) = WorkdaySource();
+    var result = await client.FetchAllJobsAsync(company, query);
+
+    Assert(result.Metrics is { ListingsFetched: 45, DetailRequests: 5, DeferredDetails: 40 } &&
+           handler.DetailRequests == 5 && handler.MaximumConcurrentRequests <= 2,
+        "Large-source hydration exceeded its detail or concurrency safety bound.");
+}
+
+static async Task TestRemovedJobCacheAsync()
+{
+    var listingCount = 2;
+    var handler = CreateWorkdayHandler(() => listingCount);
+    var client = CreateSourceClient(new HttpClient(handler));
+    var (company, query) = WorkdaySource();
+    var first = await client.FetchAllJobsAsync(company, query);
+    listingCount = 1;
+    var second = await client.FetchAllJobsAsync(company, query, cachedJobs: first.Jobs);
+
+    Assert(second.Jobs.Count == 2 && second.Jobs.Count(job => job.IsSourceAvailable) == 1 &&
+           second.Metrics?.RemovedListings == 1,
+        "A removed source job was destroyed instead of retained as unavailable cache history.");
+}
+
+static Task TestCompactListPayloadAsync()
+{
+    var description = $"<p>{new string('x', 5000)} secret-description-marker</p>";
+    var job = CachedJob("leidos", "REQ-COMPACT", "/job/compact", description);
+    var query = WorkdaySource().Query;
+    var snapshot = new JobsSnapshot(
+        [job], 1, DateTimeOffset.UtcNow, false, null, 0, false, [], query,
+        new Dictionary<string, string>(), null);
+    var compactJson = JsonSerializer.Serialize(JobsListSnapshot.FromSnapshot(snapshot));
+    var fullJson = JsonSerializer.Serialize(snapshot);
+
+    Assert(!compactJson.Contains("descriptionHtml", StringComparison.OrdinalIgnoreCase) &&
+           !compactJson.Contains("secret-description-marker", StringComparison.Ordinal) &&
+           compactJson.Length < fullJson.Length / 2,
+        "The compact job-list DTO still contains the full description payload.");
+    return Task.CompletedTask;
+}
+
+static async Task TestLazyDetailCacheAsync()
+{
+    var directory = TestDirectory("lazy-detail");
+    try
+    {
+        var handler = CreateWorkdayHandler(() => 1);
+        var query = WorkdaySource().Query;
+        var summary = CachedJob("leidos", "REQ-0000", "/job/0", "") with
+        {
+            AnalysisVersion = JobSourceClient.CurrentAnalysisVersion
+        };
+        var catalog = await CreateTestCatalogAsync(directory, handler, [summary], query);
+
+        var first = await catalog.GetJobDetailAsync(summary.StableId);
+        var second = await catalog.GetJobDetailAsync(summary.StableId);
+        Assert(first?.DescriptionHtml.Length > 0 && second?.DescriptionHtml.Length > 0 &&
+               handler.DetailRequests == 1,
+            "Lazy detail loading did not persist and reuse the first provider response.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static async Task TestAutomaticCheckIncrementalAsync()
+{
+    var directory = TestDirectory("automatic-incremental");
+    try
+    {
+        var handler = CreateWorkdayHandler(() => 2);
+        var query = WorkdaySource().Query;
+        var cached = CachedJob("leidos", "REQ-0000", "/job/0", "<p>Cached detail.</p>");
+        var catalog = await CreateTestCatalogAsync(directory, handler, [cached], query);
+
+        var result = await catalog.CheckForUnknownJobsAsync();
+        Assert(result.Performed && result.UnknownStableIds.SequenceEqual(["leidos:REQ-0001"]) &&
+               handler.DetailRequests == 1,
+            "Automatic checking did not limit detail retrieval to the newly discovered job.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static async Task TestPerCompanyCacheEnvelopeAsync()
+{
+    var directory = TestDirectory("source-cache-envelope");
+    try
+    {
+        var store = new FileWorkspaceDataStore(directory, NullLogger<FileWorkspaceDataStore>.Instance);
+        var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+        var state = new AppStateStore(NullLogger<AppStateStore>.Instance, companies, store);
+        var leidosQuery = WorkdaySource().Query;
+        var boeingQuery = leidosQuery with { CompanyId = "boeing" };
+        await state.SaveJobsCacheAsync(
+            [CachedJob("leidos", "REQ-SAME", "/leidos/same", "<p>Leidos</p>")],
+            DateTimeOffset.UtcNow, 0, leidosQuery);
+        await state.SaveJobsCacheAsync(
+            [CachedJob("boeing", "REQ-SAME", "/boeing/same", "<p>Boeing</p>")],
+            DateTimeOffset.UtcNow, 0, boeingQuery);
+
+        var leidos = await state.LoadJobsCacheAsync("leidos");
+        var boeing = await state.LoadJobsCacheAsync("boeing");
+        Assert(leidos?.Jobs.Single().StableId == "leidos:REQ-SAME" &&
+               boeing?.Jobs.Single().StableId == "boeing:REQ-SAME",
+            "Independent company caches collided or replaced each other.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static async Task TestCompressedCacheAsync()
+{
+    var directory = TestDirectory("compressed-cache");
+    try
+    {
+        var store = new FileWorkspaceDataStore(directory, NullLogger<FileWorkspaceDataStore>.Instance);
+        var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+        var state = new AppStateStore(NullLogger<AppStateStore>.Instance, companies, store);
+        var description = $"<p>compression-marker {new string('z', 10000)}</p>";
+        await state.SaveJobsCacheAsync(
+            [CachedJob("leidos", "REQ-ZIP", "/job/zip", description)],
+            DateTimeOffset.UtcNow,
+            0,
+            WorkdaySource().Query);
+
+        var raw = await File.ReadAllTextAsync(Path.Combine(directory, "jobs-cache.json"));
+        var loaded = await state.LoadJobsCacheAsync("leidos");
+        Assert(!raw.Contains("compression-marker", StringComparison.Ordinal) &&
+               raw.Length < description.Length / 2 &&
+               loaded?.Jobs.Single().DescriptionHtml == description,
+            "The cache did not compress at rest and hydrate the exact description.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static async Task TestListingPageLimitAsync()
+{
+    var handler = CreateWorkdayHandler(() => 100);
+    var client = CreateSourceClient(new HttpClient(handler), new JobSourceOptions
+    {
+        MaximumListingPages = 1,
+        MaximumDetailRequestsPerRefresh = 1
+    });
+    var (company, query) = WorkdaySource();
+    var result = await client.FetchAllJobsAsync(company, query);
+    Assert(result.Metrics is { ListingsFetched: 20, ListingsTruncated: true } &&
+           handler.ListingRequests == 1,
+        "The listing-page safety limit was not enforced or surfaced.");
+}
+
+static async Task TestNorthropScaleMetricsAsync()
+{
+    const int listingCount = 2000;
+    var handler = CreateWorkdayHandler(() => listingCount);
+    var client = CreateSourceClient(new HttpClient(handler), new JobSourceOptions
+    {
+        MaximumListingPages = 200,
+        MaximumDetailRequestsPerRefresh = 200,
+        DetailConcurrency = 3
+    });
+    var (company, query) = WorkdaySource();
+    var first = await client.FetchAllJobsAsync(company, query);
+    var detailAfterFirst = handler.DetailRequests;
+    var second = await client.FetchAllJobsAsync(company, query, cachedJobs: first.Jobs);
+    var secondDetailRequests = handler.DetailRequests - detailAfterFirst;
+    var snapshot = new JobsSnapshot(
+        second.Jobs.Where(job => job.IsSourceAvailable).ToArray(),
+        listingCount,
+        DateTimeOffset.UtcNow,
+        false,
+        null,
+        0,
+        false,
+        [],
+        query,
+        new Dictionary<string, string>(),
+        null,
+        second.Metrics);
+    var compactBytes = JsonSerializer.SerializeToUtf8Bytes(
+        JobsListSnapshot.FromSnapshot(snapshot)).Length;
+    var compactWireBytes = BrotliSize(JsonSerializer.SerializeToUtf8Bytes(
+        JobsListSnapshot.FromSnapshot(snapshot)));
+    var fullBytes = JsonSerializer.SerializeToUtf8Bytes(snapshot).Length;
+
+    Console.WriteLine(
+        $"METRIC mocked-large summaries={listingCount} first-details={detailAfterFirst} " +
+        $"second-details={secondDetailRequests} second-cache-hits={second.Metrics?.CacheHits} " +
+        $"compact-bytes={compactBytes} brotli-bytes={compactWireBytes} full-cache-bytes={fullBytes} " +
+        $"first-ms={first.Metrics?.ElapsedMilliseconds} second-ms={second.Metrics?.ElapsedMilliseconds}");
+    Assert(detailAfterFirst == 200 && secondDetailRequests == 200 &&
+           second.Metrics is { ListingsFetched: listingCount } &&
+           compactBytes < fullBytes,
+        "The mocked large-source refresh exceeded its batch or compact-response boundary.");
+}
+
+static int BrotliSize(byte[] value)
+{
+    using var output = new MemoryStream();
+    using (var brotli = new BrotliStream(output, CompressionLevel.Fastest, leaveOpen: true))
+    {
+        brotli.Write(value, 0, value.Length);
+    }
+    return checked((int)output.Length);
+}
+
 static async Task TestUnsupportedCompanyMigrationAsync()
 {
     var directory = Path.Combine(Path.GetTempPath(), $"job-search-manager-company-migration-{Guid.NewGuid():N}");
@@ -1589,12 +1871,133 @@ static async Task TestLegacyCombinationMigrationAsync()
 static RemoteWorkAnalysis RemoteAnalysis(string html) => new RemoteWorkDetector().Analyze(
     "Software Engineer", "Remote / Teleworker US", [], html);
 
-static JobSourceClient CreateSourceClient(HttpClient httpClient)
+static (CompanyDefinition Company, JobSourceQuery Query) WorkdaySource()
+{
+    var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+    var company = companies.Get("leidos");
+    return (company, new JobSourceQuery(
+        FacetDefaults.UnitedStatesCountryId,
+        FacetDefaults.UnitedStatesCountryLabel,
+        true,
+        true,
+        [],
+        CompanyId: company.Id));
+}
+
+static InstrumentedHttpMessageHandler CreateWorkdayHandler(
+    Func<int> listingCount,
+    Func<int, string>? title = null,
+    int delayMilliseconds = 0) => new(async (request, cancellationToken) =>
+{
+    if (request.Method == HttpMethod.Get)
+    {
+        var idText = request.RequestUri!.AbsolutePath.Split('/').Last();
+        var index = int.TryParse(idText, out var parsed) ? parsed : 0;
+        return JsonSerializer.Serialize(new
+        {
+            jobPostingInfo = new
+            {
+                title = title?.Invoke(index) ?? $"Engineer {index}",
+                jobReqId = $"REQ-{index:D4}",
+                location = "Remote / Teleworker US",
+                additionalLocations = Array.Empty<string>(),
+                startDate = "2026-08-15",
+                postedOn = "Posted Today",
+                timeType = "Full time",
+                jobDescription = $"<p>Cached description {index}. Bachelor's degree. US citizenship required.</p>",
+                externalUrl = $"https://example.test/job/{index}"
+            }
+        });
+    }
+
+    var body = await request.Content!.ReadAsStringAsync(cancellationToken);
+    using var payload = JsonDocument.Parse(body);
+    var offset = payload.RootElement.GetProperty("offset").GetInt32();
+    var count = listingCount();
+    var postings = Enumerable.Range(offset, Math.Max(0, Math.Min(20, count - offset)))
+        .Select(index => new
+        {
+            title = title?.Invoke(index) ?? $"Engineer {index}",
+            externalPath = $"/job/{index}",
+            locationsText = "Remote / Teleworker US",
+            postedOn = "Posted Today",
+            bulletFields = new[] { $"REQ-{index:D4}" }
+        })
+        .ToArray();
+    return JsonSerializer.Serialize(new
+    {
+        total = count,
+        jobPostings = postings,
+        facets = Array.Empty<object>()
+    });
+}, delayMilliseconds);
+
+static JobRecord CachedJob(string companyId, string requisitionId, string path, string description) => new(
+    "Cached Engineer",
+    requisitionId,
+    new DateOnly(2026, 8, 15),
+    "Posted Today",
+    "Remote / Teleworker US",
+    [],
+    "Full time",
+    $"https://example.test{path}",
+    description,
+    null,
+    null,
+    "unknown",
+    "not-found",
+    false,
+    null,
+    null,
+    null,
+    path,
+    CompanyId: companyId,
+    DetailCachedAtUtc: DateTimeOffset.UtcNow,
+    AnalysisVersion: JobSourceClient.CurrentAnalysisVersion);
+
+static async Task<JobCatalog> CreateTestCatalogAsync(
+    string directory,
+    HttpMessageHandler handler,
+    IReadOnlyList<JobRecord> cachedJobs,
+    JobSourceQuery query)
+{
+    var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+    var store = new FileWorkspaceDataStore(directory, NullLogger<FileWorkspaceDataStore>.Instance);
+    var state = new AppStateStore(NullLogger<AppStateStore>.Instance, companies, store);
+    await state.SaveJobsCacheAsync(cachedJobs, DateTimeOffset.UtcNow, 0, query);
+    var credentials = new CredentialDetector(NullLogger<CredentialDetector>.Instance);
+    var academics = new AcademicQualificationDetector();
+    var authorization = new WorkAuthorizationDetector();
+    var remote = new RemoteWorkDetector();
+    var client = new JobSourceClient(
+        new HttpClient(handler),
+        Options.Create(new JobSourceOptions()),
+        NullLogger<JobSourceClient>.Instance,
+        credentials,
+        academics,
+        authorization,
+        remote);
+    var catalog = new JobCatalog(
+        client,
+        state,
+        NullLogger<JobCatalog>.Instance,
+        credentials,
+        academics,
+        authorization,
+        remote,
+        companies);
+    await catalog.InitializeAsync(query);
+    return catalog;
+}
+
+static JobSourceClient CreateSourceClient(
+    HttpClient httpClient,
+    JobSourceOptions? options = null)
 {
     var credentials = new CredentialDetector(NullLogger<CredentialDetector>.Instance);
     return new JobSourceClient(
         httpClient,
-        Options.Create(new JobSourceOptions()),
+        Options.Create(options ?? new JobSourceOptions()),
         NullLogger<JobSourceClient>.Instance,
         credentials,
         new AcademicQualificationDetector(),
@@ -1697,6 +2100,58 @@ internal sealed class StubHttpMessageHandler(Func<HttpRequestMessage, string> re
                 "application/json")
         };
         return Task.FromResult(response);
+    }
+}
+
+internal sealed class InstrumentedHttpMessageHandler(
+    Func<HttpRequestMessage, CancellationToken, Task<string>> responseFactory,
+    int delayMilliseconds = 0) : HttpMessageHandler
+{
+    private int _activeRequests;
+    private int _maximumConcurrentRequests;
+    private int _detailRequests;
+    private int _listingRequests;
+
+    public int DetailRequests => Volatile.Read(ref _detailRequests);
+    public int ListingRequests => Volatile.Read(ref _listingRequests);
+    public int MaximumConcurrentRequests => Volatile.Read(ref _maximumConcurrentRequests);
+
+    protected override async Task<HttpResponseMessage> SendAsync(
+        HttpRequestMessage request,
+        CancellationToken cancellationToken)
+    {
+        if (request.Method == HttpMethod.Get)
+        {
+            Interlocked.Increment(ref _detailRequests);
+        }
+        else
+        {
+            Interlocked.Increment(ref _listingRequests);
+        }
+        var active = Interlocked.Increment(ref _activeRequests);
+        while (true)
+        {
+            var maximum = Volatile.Read(ref _maximumConcurrentRequests);
+            if (active <= maximum || Interlocked.CompareExchange(
+                ref _maximumConcurrentRequests, active, maximum) == maximum) break;
+        }
+        try
+        {
+            if (delayMilliseconds > 0)
+            {
+                await Task.Delay(delayMilliseconds, cancellationToken);
+            }
+            var json = await responseFactory(request, cancellationToken);
+            return new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                RequestMessage = request,
+                Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json")
+            };
+        }
+        finally
+        {
+            Interlocked.Decrement(ref _activeRequests);
+        }
     }
 }
 

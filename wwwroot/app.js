@@ -49,6 +49,9 @@ const state = {
   jobStates: new Map(),
   activeResultsTab: "all",
   selectedJobId: null,
+  detailLoadingIds: new Set(),
+  descriptionMatches: new Map(),
+  descriptionMatchGeneration: 0,
   lastRefreshedUtc: null,
   isCached: false,
   isRefreshing: false,
@@ -289,6 +292,7 @@ async function initialize() {
     radio.addEventListener("change", event => {
       state.scope = event.target.value;
       renderResults();
+      refreshDescriptionMatches();
       queueSettingsSave();
     });
   });
@@ -798,12 +802,12 @@ async function runDueAutomaticCheck() {
 
 async function detectAutomaticFullRefresh() {
   try {
-    const response = await fetch("/api/jobs", { cache: "no-store" });
+    const response = await fetch("/api/jobs/status", { cache: "no-store" });
     if (!response.ok) return;
-    const snapshot = await response.json();
-    if (snapshot.isRefreshing) {
+    const status = await response.json();
+    if (status.isRefreshing) {
       setLoading(true, { title: `Refreshing ${state.companyName} jobs` });
-      applySnapshot(snapshot);
+      updateLoadingProgress(status.refreshProgress);
     }
   } catch (error) {
     console.warn("Could not inspect automatic refresh progress.", error);
@@ -1461,8 +1465,12 @@ async function refreshJobs() {
 function applySnapshot(snapshot) {
   state.jobs = (snapshot.jobs || []).map(job => ({
     ...job,
-    descriptionText: descriptionToText(job.descriptionHtml || "")
+    descriptionHtml: "",
+    descriptionText: "",
+    detailLoaded: false
   }));
+  state.detailLoadingIds.clear();
+  state.descriptionMatches = new Map();
   state.lastRefreshedUtc = snapshot.lastRefreshedUtc;
   state.isCached = Boolean(snapshot.isCached);
   state.newJobIds = new Set(snapshot.newJobIds || []);
@@ -1487,6 +1495,7 @@ function applySnapshot(snapshot) {
   });
   showSnapshotError(snapshot.error, snapshot.detailFailureCount || 0);
   renderResults();
+  refreshDescriptionMatches();
   updateLastRefreshed();
   updateCacheBanner(snapshot);
 
@@ -1539,6 +1548,7 @@ function addKeywordsFromInput(kind, input) {
   input.value = "";
   renderChips(kind);
   renderResults();
+  refreshDescriptionMatches();
   queueSettingsSave();
   input.focus();
 }
@@ -1547,6 +1557,7 @@ function removeKeyword(kind, index) {
   state[kind].splice(index, 1);
   renderChips(kind);
   renderResults();
+  refreshDescriptionMatches();
   queueSettingsSave();
 }
 
@@ -1638,13 +1649,13 @@ function jobsPassingGeneralFilters() {
       job.primaryLocation,
       ...(job.additionalLocations || [])
     ].join("\n").toLocaleLowerCase();
-    const haystack = state.scope === "description"
-      ? `${metadata}\n${job.descriptionText.toLocaleLowerCase()}`
-      : metadata;
-
-    const passesInclusion = inclusionTerms.length === 0 ||
-      inclusionTerms.some(term => haystack.includes(term));
-    const passesExclusion = !exclusionTerms.some(term => haystack.includes(term));
+    const serverDescriptionMatch = state.descriptionMatches.get(job.stableId);
+    const passesInclusion = state.scope === "description"
+      ? serverDescriptionMatch !== false
+      : inclusionTerms.length === 0 || inclusionTerms.some(term => metadata.includes(term));
+    const passesExclusion = state.scope === "description"
+      ? serverDescriptionMatch !== false
+      : !exclusionTerms.some(term => metadata.includes(term));
     const passesSalary = state.minimumSalary === null ||
       job.payPeriod !== "annual" ||
       job.payMaximum === null ||
@@ -1664,6 +1675,36 @@ function jobsPassingGeneralFilters() {
     return passesInclusion && passesExclusion && passesSalary && passesLocation &&
       passesEducation && passesClearance && passesWorkAuthorization;
   });
+}
+
+async function refreshDescriptionMatches() {
+  const generation = ++state.descriptionMatchGeneration;
+  if (state.scope !== "description") {
+    state.descriptionMatches = new Map();
+    return;
+  }
+  try {
+    const response = await fetch("/api/jobs/description-matches", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        includeKeywords: state.inclusions,
+        excludeKeywords: state.exclusions
+      })
+    });
+    if (!response.ok) {
+      throw new Error(`Description filtering returned HTTP ${response.status}.`);
+    }
+    const matches = await response.json();
+    if (generation !== state.descriptionMatchGeneration) return;
+    state.descriptionMatches = new Map(Object.entries(matches || {}));
+    renderResults();
+  } catch (error) {
+    if (generation !== state.descriptionMatchGeneration) return;
+    elements.errorBanner.textContent =
+      `Description filtering could not be updated: ${error.message || error}`;
+    elements.errorBanner.hidden = false;
+  }
 }
 
 async function exportWorkspace() {
@@ -2220,6 +2261,9 @@ function renderResults() {
 
   const selected = jobs.find(job => job.stableId === state.selectedJobId);
   renderDetail(selected || null);
+  if (selected && !selected.detailLoaded) {
+    loadJobDetail(selected);
+  }
 }
 
 function groupJobsByAge(jobs) {
@@ -2323,6 +2367,13 @@ function createJobListItem(job) {
     newBadge.className = "new-badge";
     newBadge.textContent = "NEW";
     badges.append(newBadge);
+  }
+  if (job.analysisPending) {
+    const pendingBadge = document.createElement("span");
+    pendingBadge.className = "analysis-pending-badge";
+    pendingBadge.textContent = "Analysis pending";
+    pendingBadge.title = "Full-description analysis will be completed in a bounded refresh batch or when this job is opened.";
+    badges.append(pendingBadge);
   }
   if (isSaved) {
     const savedBadge = document.createElement("span");
@@ -2620,6 +2671,46 @@ async function markJobViewed(job) {
   }
 }
 
+async function loadJobDetail(job) {
+  if (state.detailLoadingIds.has(job.stableId) || job.detailLoaded) return;
+  state.detailLoadingIds.add(job.stableId);
+  try {
+    const response = await fetch(
+      `/api/jobs/detail?stableId=${encodeURIComponent(job.stableId)}`,
+      { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`Job detail returned HTTP ${response.status}.`);
+    }
+    const detail = await response.json();
+    const index = state.jobs.findIndex(item => item.stableId === job.stableId);
+    if (index >= 0) {
+      state.jobs[index] = {
+        ...state.jobs[index],
+        ...detail,
+        descriptionText: descriptionToText(detail.descriptionHtml || ""),
+        detailLoaded: true
+      };
+    }
+    if (state.scope === "description") {
+      await refreshDescriptionMatches();
+    } else {
+      renderResults();
+    }
+  } catch (error) {
+    const index = state.jobs.findIndex(item => item.stableId === job.stableId);
+    if (index >= 0) {
+      state.jobs[index] = {
+        ...state.jobs[index],
+        detailLoaded: true,
+        detailError: error.message || String(error)
+      };
+    }
+    renderResults();
+  } finally {
+    state.detailLoadingIds.delete(job.stableId);
+  }
+}
+
 function renderDetail(job) {
   elements.emptyDetail.hidden = Boolean(job);
   elements.jobDetail.hidden = !job;
@@ -2749,7 +2840,9 @@ function renderDetail(job) {
     job.detailError);
 
   if (!job.descriptionHtml) {
-    elements.detailDescription.textContent = "The formatted description is unavailable for this job.";
+    elements.detailDescription.textContent = job.detailLoaded
+      ? "The formatted description is unavailable for this job."
+      : "Loading the full posting from the server-side cacheâ€¦";
     return;
   }
 
@@ -3504,10 +3597,10 @@ function beginRefreshProgressPolling() {
   const poll = async () => {
     if (!state.isRefreshing) return;
     try {
-      const response = await fetch("/api/jobs", { cache: "no-store" });
+      const response = await fetch("/api/jobs/status", { cache: "no-store" });
       if (response.ok) {
-        const snapshot = await response.json();
-        if (snapshot.isRefreshing) updateLoadingProgress(snapshot.refreshProgress);
+        const status = await response.json();
+        if (status.isRefreshing) updateLoadingProgress(status.refreshProgress);
       }
     } catch {
       // The foreground request owns error reporting; progress polling is best effort.

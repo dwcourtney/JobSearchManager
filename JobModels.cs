@@ -7,6 +7,11 @@ public sealed class JobSourceOptions
     public int PageSize { get; init; } = 20;
     public int DetailConcurrency { get; init; } = 6;
     public int RequestTimeoutSeconds { get; init; } = 30;
+    public int MaximumListingPages { get; init; } = 200;
+    public int MaximumDetailRequestsPerRefresh { get; init; } = 200;
+    public int MaximumAutomaticDetailRequests { get; init; } = 50;
+    public int MaximumRevalidationsPerRefresh { get; init; } = 25;
+    public int DetailReuseHours { get; init; } = 168;
 }
 
 public static class FacetDefaults
@@ -204,7 +209,13 @@ public sealed record JobRecord(
     // Read-only compatibility input for cache documents written before the product rename.
     [property: JsonPropertyName("workdayUrl")]
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    string? LegacySourceUrl = null)
+    string? LegacySourceUrl = null,
+    string? ListingFingerprint = null,
+    DateTimeOffset? DetailCachedAtUtc = null,
+    int AnalysisVersion = 0,
+    bool IsSourceAvailable = true,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? CompressedDescriptionHtml = null)
 {
     public string StableId => $"{CompanyId}:{(!string.IsNullOrWhiteSpace(RequisitionId)
         ? RequisitionId
@@ -302,7 +313,20 @@ internal sealed record CredentialAnalysis(
 public sealed record JobSourceFetchResult(
     IReadOnlyList<JobRecord> Jobs,
     int ListingCount,
-    int DetailFailureCount);
+    int DetailFailureCount,
+    RefreshMetrics? Metrics = null);
+
+public sealed record RefreshMetrics(
+    int ListingsFetched,
+    int DetailRequests,
+    int CacheHits,
+    int CacheMisses,
+    int Classified,
+    int ReclassifiedLocally,
+    int DeferredDetails,
+    int RemovedListings,
+    bool ListingsTruncated,
+    long ElapsedMilliseconds);
 
 public sealed record ListingIdentity(
     string StableId,
@@ -340,7 +364,8 @@ public sealed record JobsSnapshot(
     IReadOnlyList<string> NewJobIds,
     JobSourceQuery Query,
     IReadOnlyDictionary<string, string> JobStates,
-    RefreshProgress? RefreshProgress)
+    RefreshProgress? RefreshProgress,
+    RefreshMetrics? Metrics = null)
 {
     public static JobsSnapshot Empty { get; } =
         new([], 0, null, false, null, 0, false, [], new JobSourceQuery(
@@ -407,6 +432,123 @@ public sealed record ViewerSettings(
         null);
 }
 
+public sealed record JobListItem(
+    string StableId,
+    string CompanyId,
+    string Title,
+    string RequisitionId,
+    DateOnly? StartDate,
+    string PostedOn,
+    string PrimaryLocation,
+    IReadOnlyList<string> AdditionalLocations,
+    string TimeType,
+    string SourceUrl,
+    decimal? PayMinimum,
+    decimal? PayMaximum,
+    string PayPeriod,
+    string PayParseStatus,
+    bool IsRemoteLocationRestricted,
+    string? RemoteLocationRestrictionCategory,
+    string? RemoteLocationRestrictionSnippet,
+    string? DetailError,
+    string ClearanceLevel,
+    string ClearanceRequirement,
+    bool PolygraphRequired,
+    string? ClearanceEvidence,
+    string ClearanceParseStatus,
+    IReadOnlyList<CredentialMatch>? Credentials,
+    IReadOnlyList<string>? UnrecognizedCredentialMentions,
+    int CredentialCatalogVersion,
+    AcademicQualificationAnalysis? AcademicQualification,
+    WorkAuthorizationAnalysis? WorkAuthorization,
+    RemoteWorkAnalysis? RemoteWork,
+    bool DetailAvailable,
+    bool AnalysisPending)
+{
+    public static JobListItem FromJob(JobRecord job) => new(
+        job.StableId,
+        job.CompanyId,
+        job.Title,
+        job.RequisitionId,
+        job.StartDate,
+        job.PostedOn,
+        job.PrimaryLocation,
+        job.AdditionalLocations,
+        job.TimeType,
+        job.SourceUrl,
+        job.PayMinimum,
+        job.PayMaximum,
+        job.PayPeriod,
+        job.PayParseStatus,
+        job.IsRemoteLocationRestricted,
+        job.RemoteLocationRestrictionCategory,
+        null,
+        job.DetailError,
+        job.ClearanceLevel,
+        job.ClearanceRequirement,
+        job.PolygraphRequired,
+        null,
+        job.ClearanceParseStatus,
+        string.IsNullOrWhiteSpace(job.DescriptionHtml)
+            ? null
+            : job.Credentials?.Select(credential => credential with { Evidence = "" }).ToArray(),
+        [],
+        job.CredentialCatalogVersion,
+        string.IsNullOrWhiteSpace(job.DescriptionHtml) ? null : Compact(job.AcademicQualification),
+        string.IsNullOrWhiteSpace(job.DescriptionHtml) || job.WorkAuthorization is null
+            ? null
+            : job.WorkAuthorization with { Evidence = [] },
+        string.IsNullOrWhiteSpace(job.DescriptionHtml) || job.RemoteWork is null
+            ? null
+            : job.RemoteWork with { Signals = [] },
+        !string.IsNullOrWhiteSpace(job.DescriptionHtml),
+        string.IsNullOrWhiteSpace(job.DescriptionHtml));
+
+    private static AcademicQualificationAnalysis? Compact(
+        AcademicQualificationAnalysis? analysis) => analysis is null
+            ? null
+            : analysis with
+            {
+                Evidence = [],
+                Paths = analysis.Paths.Select(path => path with { Evidence = "" }).ToArray(),
+                Accreditations = analysis.Accreditations?
+                    .Select(accreditation => accreditation with { Evidence = "" }).ToArray()
+            };
+}
+
+public sealed record JobsListSnapshot(
+    IReadOnlyList<JobListItem> Jobs,
+    int TotalJobs,
+    DateTimeOffset? LastRefreshedUtc,
+    bool IsRefreshing,
+    string? Error,
+    int DetailFailureCount,
+    bool IsCached,
+    IReadOnlyList<string> NewJobIds,
+    JobSourceQuery Query,
+    IReadOnlyDictionary<string, string> JobStates,
+    RefreshProgress? RefreshProgress,
+    RefreshMetrics? Metrics)
+{
+    public static JobsListSnapshot FromSnapshot(JobsSnapshot snapshot) => new(
+        snapshot.Jobs.Select(JobListItem.FromJob).ToArray(),
+        snapshot.TotalJobs,
+        snapshot.LastRefreshedUtc,
+        snapshot.IsRefreshing,
+        snapshot.Error,
+        snapshot.DetailFailureCount,
+        snapshot.IsCached,
+        snapshot.NewJobIds,
+        snapshot.Query,
+        snapshot.JobStates,
+        snapshot.RefreshProgress,
+        snapshot.Metrics);
+}
+
+public sealed record DescriptionMatchRequest(
+    IReadOnlyList<string>? IncludeKeywords,
+    IReadOnlyList<string>? ExcludeKeywords);
+
 public sealed record UserProfile(
     EducationProfile Education,
     SecurityProfile? Security = null,
@@ -443,6 +585,10 @@ internal sealed record JobsCacheDocument(
     int DetailFailureCount,
     IReadOnlyList<JobRecord> Jobs,
     JobSourceQuery? Query = null);
+
+internal sealed record JobsCacheEnvelope(
+    int SchemaVersion = 5,
+    IReadOnlyDictionary<string, JobsCacheDocument>? Sources = null);
 
 internal sealed record JobHistoryDocument(
     int SchemaVersion,

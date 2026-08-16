@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Options;
 using JobSearchManager;
 
@@ -117,8 +118,15 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
 });
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(["application/json"]);
+});
 
 var app = builder.Build();
+
+app.UseResponseCompression();
 
 if (hosting.IsAzure)
 {
@@ -196,7 +204,44 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 
 app.MapGet("/api/jobs", async (WorkspaceRuntimeProvider provider, CancellationToken token) =>
-    Results.Ok((await provider.GetAsync(token)).Catalog.Snapshot));
+{
+    var compact = JobsListSnapshot.FromSnapshot((await provider.GetAsync(token)).Catalog.Snapshot);
+    app.Logger.LogInformation(
+        "Compact job-list response contains {JobCount} jobs; full descriptions are excluded.",
+        compact.Jobs.Count);
+    return Results.Ok(compact);
+});
+
+app.MapGet("/api/jobs/status", async (
+    WorkspaceRuntimeProvider provider,
+    CancellationToken token) =>
+{
+    var snapshot = (await provider.GetAsync(token)).Catalog.Snapshot;
+    return Results.Ok(new
+    {
+        snapshot.IsRefreshing,
+        snapshot.Error,
+        snapshot.RefreshProgress,
+        snapshot.LastRefreshedUtc,
+        snapshot.Metrics
+    });
+});
+
+app.MapGet("/api/jobs/detail", async Task<IResult> (
+    string stableId,
+    WorkspaceRuntimeProvider provider,
+    CancellationToken token) =>
+{
+    var detail = await (await provider.GetAsync(token)).Catalog.GetJobDetailAsync(stableId, token);
+    return detail is null ? Results.NotFound() : Results.Ok(detail);
+}).RequireRateLimiting("provider");
+
+app.MapPost("/api/jobs/description-matches", async (
+    DescriptionMatchRequest request,
+    WorkspaceRuntimeProvider provider,
+    CancellationToken token) =>
+    Results.Ok((await provider.GetAsync(token)).Catalog.GetDescriptionMatches(request)))
+    .RequireRateLimiting("state");
 
 app.MapGet("/api/companies", (CompanyCatalog companies) => Results.Ok(
     companies.Companies.Select(company => new
@@ -216,12 +261,12 @@ app.MapPost("/api/refresh", async (
     {
         return Results.Conflict(new { error = "Configure and apply a job source before refreshing jobs." });
     }
-    var snapshot = await runtime.Catalog.RefreshAsync();
+    var snapshot = await runtime.Catalog.RefreshAsync(token);
     if (snapshot.Error is null)
     {
         runtime.AutomaticChecks.ResetSchedule();
     }
-    return Results.Ok(snapshot);
+    return Results.Ok(JobsListSnapshot.FromSnapshot(snapshot));
 }).RequireRateLimiting("provider");
 
 app.MapGet("/api/location-facets", async Task<IResult> (
@@ -312,7 +357,8 @@ app.MapPost("/api/query", async Task<IResult> (
     });
     await stateStore.SaveSettingsAsync(updated);
     runtime.AutomaticChecks.ApplySettings(updated);
-    var snapshot = await runtime.Catalog.RefreshAsync(JobSourceQuery.FromSettings(updated, companies));
+    var snapshot = await runtime.Catalog.RefreshAsync(
+        JobSourceQuery.FromSettings(updated, companies), token);
     if (snapshot.Error is null)
     {
         runtime.AutomaticChecks.ResetSchedule();
@@ -322,7 +368,7 @@ app.MapPost("/api/query", async Task<IResult> (
         await stateStore.SaveSettingsAsync(current);
         runtime.AutomaticChecks.ApplySettings(current);
     }
-    return Results.Ok(snapshot);
+    return Results.Ok(JobsListSnapshot.FromSnapshot(snapshot));
 }).RequireRateLimiting("provider");
 
 app.MapGet("/api/settings", async (
@@ -401,7 +447,7 @@ app.MapPost("/api/workspace/import", async Task<IResult> (
         return Results.Ok(new
         {
             settings = normalized,
-            snapshot = runtime.Catalog.Snapshot,
+            snapshot = JobsListSnapshot.FromSnapshot(runtime.Catalog.Snapshot),
             curatedJobCount = imported.History.Jobs.Count(pair =>
                 JobWorkflowStates.Normalize(pair.Value.WorkflowState) != JobWorkflowStates.Normal)
         });

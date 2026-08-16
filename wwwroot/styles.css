@@ -1018,7 +1018,7 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 }
 
 .job-card .restriction-badge, .job-card .headroom-badge,
-.job-card .clearance-badge, .job-card .credential-badge,
+.job-card .clearance-badge, .job-card .credential-badge, .job-card .analysis-pending-badge,
 .job-card .academic-badge, .job-card .education-mismatch-badge,
 .job-card .clearance-mismatch-badge, .job-card .work-authorization-badge,
 .job-card .work-authorization-mismatch-badge, .job-card .new-badge {
@@ -1086,6 +1086,12 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   border: var(--border-width-default) solid var(--color-clearance-mismatch-badge-border);
   color: var(--color-clearance-mismatch-badge-text);
   background: var(--color-clearance-mismatch-badge-background);
+}
+
+.job-card .analysis-pending-badge {
+  border: var(--border-width-default) solid var(--color-analysis-pending-badge-border);
+  color: var(--color-analysis-pending-badge-text);
+  background: var(--color-analysis-pending-badge-background);
 }
 
 .job-card .saved-badge, .job-card .remote-work-badge {

@@ -123,6 +123,35 @@ The active query identity includes company, country, remote coverage, and a
 canonical set of location facet IDs. Location order therefore does not change cache
 identity, and cached jobs from one company cannot appear under another company.
 
+## Efficient refresh and detail caching
+
+Refresh is summary-first. The provider listing/index is retrieved before any job
+detail, and stable company-plus-job identity and a listing fingerprint are compared
+with the server-side cache. Unchanged descriptions and their derived qualification
+analysis are reused. A changed listing, a missing detail, or an explicit cache
+incompatibility schedules detail work; providers without a reliable modified marker
+are covered by a seven-day, bounded revalidation policy rather than a complete crawl.
+
+Manual refreshes retrieve at most 200 details, with at most 25 age-based
+revalidations, and automatic checks retrieve at most 50 new or materially changed
+details. Detail requests use configured bounded concurrency. Listing retrieval is
+also page-bounded and reports truncation instead of silently issuing unbounded
+requests. Deferred jobs remain visible with an Analysis pending badge and are
+hydrated in later manual batches or immediately when opened.
+
+The normal jobs API returns compact list records without full descriptions or
+large evidence collections. Selecting a job requests that one detail from the
+server-side cache, fetching it from the provider only when absent. Description-scope
+keyword matching runs against cached text on the server and returns only matching
+stable IDs. Refresh-progress polling uses a status-only endpoint and never transfers
+the complete job list every polling interval.
+
+Cached descriptions are compressed at rest. Parser-version changes re-run analysis
+against inflated cached HTML locally and do not cause provider downloads. Cache
+schema 5 stores independently keyed company source documents in the existing
+workspace cache envelope so future multi-company orchestration can retain source
+results without requisition collisions.
+
 ## Local persistent data
 
 All persistent state is stored beside the running application in:
@@ -140,8 +169,9 @@ application directory is not writable, it reports a clear startup/save error.
 
 Job history and stable job IDs are company-scoped. Existing pre-generalization
 history is migrated to the `leidos` company without resetting NEW, viewed,
-first-seen, last-seen, or hidden state. The current cache is also tagged with
-its company-aware query identity.
+first-seen, last-seen, or hidden state. Source caches coexist in a versioned,
+company-keyed envelope and retain company-aware query identity. A legacy single
+source cache is migrated without requiring workspace reset.
 
 Each job has exactly one persisted workflow state: Normal, Saved, Applied, or
 Hidden. The results tabs show those mutually exclusive populations as All Jobs,
@@ -274,6 +304,8 @@ assume the Free F1 process remains awake and does not run one global multi-user
 timer. While a workspace is open, the browser polls check status and asks the
 ASP.NET Core backend to perform a due check for that workspace. All provider calls
 remain server-side and are limited to companies in `CompanyCatalog.json`.
+The automatic path performs one listing pass, reuses unchanged cached jobs, and
+hydrates only new or materially changed jobs within its smaller detail budget.
 
 The Azure implementation is ready for review but this repository does not deploy
 or configure Azure resources automatically.

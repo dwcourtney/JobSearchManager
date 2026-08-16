@@ -1,7 +1,10 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 
@@ -9,6 +12,12 @@ namespace JobSearchManager;
 
 public sealed class JobSourceClient
 {
+    public const int CurrentAnalysisVersion = 1;
+
+    private sealed record ListingBatch(IReadOnlyList<ListingPosting> Listings, bool Truncated);
+    private sealed record SmartSummaryBatch(IReadOnlyList<SmartRecruitersPosting> Postings, bool Truncated);
+    private sealed record DetailCandidate(int Index, ListingPosting Listing, JobRecord? Cached, bool Revalidation);
+
     private readonly HttpClient _httpClient;
     private readonly JobSourceOptions _options;
     private readonly ILogger<JobSourceClient> _logger;
@@ -44,21 +53,99 @@ public sealed class JobSourceClient
         {
             throw new InvalidOperationException("JobSource:DetailConcurrency must be between 1 and 20.");
         }
-
+        if (_options.MaximumListingPages is < 1 or > 1000 ||
+            _options.MaximumDetailRequestsPerRefresh is < 1 or > 2000 ||
+            _options.MaximumAutomaticDetailRequests is < 1 or > 500 ||
+            _options.MaximumRevalidationsPerRefresh is < 0 or > 500 ||
+            _options.DetailReuseHours is < 1 or > 8760)
+        {
+            throw new InvalidOperationException("Job-source safety limits are outside their supported ranges.");
+        }
     }
 
     public async Task<JobSourceFetchResult> FetchAllJobsAsync(
         CompanyDefinition company,
         JobSourceQuery query,
         Action<RefreshProgress>? reportProgress = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        IReadOnlyList<JobRecord>? cachedJobs = null,
+        bool automaticCheck = false,
+        ViewerSettings? filterSettings = null)
     {
-        var listings = await FetchListingsAsync(company, query, reportProgress, cancellationToken);
-        var jobs = new ConcurrentBag<JobRecord>();
+        var stopwatch = Stopwatch.StartNew();
+        var batch = await FetchListingsAsync(company, query, reportProgress, cancellationToken);
+        var listings = batch.Listings;
+        cachedJobs ??= [];
+        var cachedByPath = cachedJobs
+            .Where(job => !string.IsNullOrWhiteSpace(job.ExternalPath))
+            .GroupBy(job => job.ExternalPath, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
+        var jobs = new JobRecord?[listings.Count];
+        var candidates = new List<DetailCandidate>();
         var detailFailureCount = 0;
+        var cacheHits = 0;
+        var cacheMisses = 0;
+        var reclassified = 0;
+        var classified = 0;
         var completedDetails = 0;
+        var currentPaths = new HashSet<string>(StringComparer.Ordinal);
 
-        reportProgress?.Invoke(new RefreshProgress("details", 0, listings.Count));
+        for (var index = 0; index < listings.Count; index++)
+        {
+            var listing = listings[index];
+            currentPaths.Add(listing.ExternalPath);
+            cachedByPath.TryGetValue(listing.ExternalPath, out var cached);
+            var fingerprint = ListingFingerprint(listing);
+            if (cached is not null && !string.IsNullOrWhiteSpace(cached.DescriptionHtml) &&
+                (string.IsNullOrWhiteSpace(cached.ListingFingerprint) ||
+                 string.Equals(cached.ListingFingerprint, fingerprint, StringComparison.Ordinal)))
+            {
+                var reusable = MergeListing(company, listing, cached, fingerprint);
+                if (!IsAnalysisCurrent(reusable))
+                {
+                    reusable = Reclassify(reusable);
+                    reclassified++;
+                }
+                jobs[index] = reusable;
+                cacheHits++;
+                if (!automaticCheck && ShouldRevalidate(reusable))
+                {
+                    candidates.Add(new DetailCandidate(index, listing, reusable, true));
+                }
+            }
+            else
+            {
+                cacheMisses++;
+                jobs[index] = Normalize(company, listing, null, null, fingerprint);
+                var materiallyChanged = cached?.ListingFingerprint is { Length: > 0 } previous &&
+                    !string.Equals(previous, fingerprint, StringComparison.Ordinal);
+                if (!automaticCheck || cached is null || materiallyChanged ||
+                    !string.IsNullOrWhiteSpace(cached.DetailError))
+                {
+                    // Automatic checks hydrate new/changed jobs only. A summary that
+                    // was deliberately deferred by a prior bounded manual refresh
+                    // remains deferred instead of becoming recurring background load.
+                    candidates.Add(new DetailCandidate(index, listing, cached, false));
+                }
+            }
+        }
+
+        var detailLimit = automaticCheck
+            ? _options.MaximumAutomaticDetailRequests
+            : _options.MaximumDetailRequestsPerRefresh;
+        var selectedCandidates = candidates
+            .Where(candidate => !candidate.Revalidation)
+            .OrderByDescending(candidate => IsSafePreliminaryMatch(candidate.Listing, filterSettings))
+            .Take(detailLimit)
+            .Concat(candidates
+                .Where(candidate => candidate.Revalidation)
+                .OrderBy(candidate => candidate.Cached?.DetailCachedAtUtc)
+                .Take(Math.Min(
+                    _options.MaximumRevalidationsPerRefresh,
+                    Math.Max(0, detailLimit - candidates.Count(candidate => !candidate.Revalidation)))))
+            .ToArray();
+
+        reportProgress?.Invoke(new RefreshProgress("details", 0, selectedCandidates.Length));
 
         var parallelOptions = new ParallelOptions
         {
@@ -66,12 +153,18 @@ public sealed class JobSourceClient
             CancellationToken = cancellationToken
         };
 
-        await Parallel.ForEachAsync(listings, parallelOptions, async (listing, token) =>
+        await Parallel.ForEachAsync(selectedCandidates, parallelOptions, async (candidate, token) =>
         {
             try
             {
-                var detail = await FetchDetailAsync(company, listing.ExternalPath, token);
-                jobs.Add(Normalize(company, listing, detail, null));
+                var detail = await FetchDetailAsync(company, candidate.Listing.ExternalPath, token);
+                jobs[candidate.Index] = Normalize(
+                    company,
+                    candidate.Listing,
+                    detail,
+                    null,
+                    ListingFingerprint(candidate.Listing));
+                Interlocked.Increment(ref classified);
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested)
             {
@@ -83,26 +176,69 @@ public sealed class JobSourceClient
                 _logger.LogWarning(
                     ex,
                     "Could not retrieve details for {Title} ({ExternalPath}); retaining listing metadata.",
-                    listing.Title,
-                    listing.ExternalPath);
-                jobs.Add(Normalize(company, listing, null, ex.Message));
+                    candidate.Listing.Title,
+                    candidate.Listing.ExternalPath);
+                jobs[candidate.Index] = candidate.Cached is not null &&
+                    !string.IsNullOrWhiteSpace(candidate.Cached.DescriptionHtml)
+                        ? MergeListing(
+                            company,
+                            candidate.Listing,
+                            candidate.Cached with { DetailError = ex.Message },
+                            ListingFingerprint(candidate.Listing))
+                        : Normalize(
+                            company,
+                            candidate.Listing,
+                            null,
+                            ex.Message,
+                            ListingFingerprint(candidate.Listing));
             }
             finally
             {
                 var completed = Interlocked.Increment(ref completedDetails);
-                reportProgress?.Invoke(new RefreshProgress("details", completed, listings.Count));
+                reportProgress?.Invoke(new RefreshProgress("details", completed, selectedCandidates.Length));
             }
         });
 
         reportProgress?.Invoke(new RefreshProgress("finalizing", listings.Count, listings.Count));
 
+        var removed = cachedJobs
+            .Where(job => !currentPaths.Contains(job.ExternalPath))
+            .Select(job => job with { IsSourceAvailable = false })
+            .ToArray();
+
         var sorted = jobs
-            .OrderByDescending(job => job.StartDate)
+            .Where(job => job is not null)
+            .Select(job => job!)
+            .Concat(removed)
+            .OrderByDescending(job => job.IsSourceAvailable)
+            .ThenByDescending(job => job.StartDate)
             .ThenBy(job => job.Title, StringComparer.OrdinalIgnoreCase)
             .ThenBy(job => job.RequisitionId, StringComparer.Ordinal)
             .ToArray();
+        stopwatch.Stop();
+        var metrics = new RefreshMetrics(
+            listings.Count,
+            selectedCandidates.Length,
+            cacheHits,
+            cacheMisses,
+            classified,
+            reclassified,
+            Math.Max(0, candidates.Count - selectedCandidates.Length),
+            removed.Length,
+            batch.Truncated,
+            stopwatch.ElapsedMilliseconds);
+        _logger.LogInformation(
+            "Refresh metrics: {Listings} listings, {DetailRequests} detail requests, {CacheHits} cache hits, {CacheMisses} cache misses, {Reclassified} local reclassifications, {Deferred} deferred details, {Removed} removed listings, {ElapsedMs} ms.",
+            metrics.ListingsFetched,
+            metrics.DetailRequests,
+            metrics.CacheHits,
+            metrics.CacheMisses,
+            metrics.ReclassifiedLocally,
+            metrics.DeferredDetails,
+            metrics.RemovedListings,
+            metrics.ElapsedMilliseconds);
 
-        return new JobSourceFetchResult(sorted, listings.Count, detailFailureCount);
+        return new JobSourceFetchResult(sorted, listings.Count, detailFailureCount, metrics);
     }
 
     public async Task<IReadOnlyList<ListingIdentity>> FetchListingIdentitiesAsync(
@@ -110,8 +246,8 @@ public sealed class JobSourceClient
         JobSourceQuery query,
         CancellationToken cancellationToken = default)
     {
-        var listings = await FetchListingsAsync(company, query, null, cancellationToken);
-        return listings.Select(listing =>
+        var batch = await FetchListingsAsync(company, query, null, cancellationToken);
+        return batch.Listings.Select(listing =>
         {
             var requisitionId = listing.BulletFields.FirstOrDefault() ?? "";
             var stableId = !string.IsNullOrWhiteSpace(requisitionId)
@@ -182,7 +318,7 @@ public sealed class JobSourceClient
             organization.UnmappedLocationLabels);
     }
 
-    private async Task<List<ListingPosting>> FetchListingsAsync(
+    private async Task<ListingBatch> FetchListingsAsync(
         CompanyDefinition company,
         JobSourceQuery query,
         Action<RefreshProgress>? reportProgress,
@@ -199,9 +335,20 @@ public sealed class JobSourceClient
         var listings = new List<ListingPosting>();
         var seenPaths = new HashSet<string>(StringComparer.Ordinal);
         var offset = 0;
+        var pageCount = 0;
+        var truncated = false;
 
         while (true)
         {
+            if (pageCount >= _options.MaximumListingPages)
+            {
+                truncated = true;
+                _logger.LogWarning(
+                    "Stopped listing retrieval after the configured maximum of {MaximumPages} pages.",
+                    _options.MaximumListingPages);
+                break;
+            }
+            pageCount++;
             var payload = new
             {
                 appliedFacets = CreateAppliedFacets(company, query),
@@ -249,7 +396,7 @@ public sealed class JobSourceClient
             offset += _options.PageSize;
         }
 
-        return listings;
+        return new ListingBatch(listings, truncated);
     }
 
     private static Dictionary<string, string[]> CreateAppliedFacets(
@@ -344,7 +491,8 @@ public sealed class JobSourceClient
         CompanyDefinition company,
         ListingPosting listing,
         DetailPosting? detail,
-        string? detailError)
+        string? detailError,
+        string? listingFingerprint = null)
     {
         var requisitionId = FirstNonEmpty(detail?.JobReqId, listing.BulletFields.FirstOrDefault());
         var title = FirstNonEmpty(detail?.Title, listing.Title);
@@ -413,7 +561,144 @@ public sealed class JobSourceClient
             academicQualification,
             company.Id,
             workAuthorization,
-            remoteWork);
+            remoteWork,
+            null,
+            listingFingerprint ?? ListingFingerprint(listing),
+            detail is null ? null : DateTimeOffset.UtcNow,
+            CurrentAnalysisVersion,
+            true);
+    }
+
+    public async Task<JobRecord> FetchJobDetailAsync(
+        CompanyDefinition company,
+        JobRecord cachedOrSummary,
+        CancellationToken cancellationToken = default)
+    {
+        var listing = new ListingPosting
+        {
+            Title = cachedOrSummary.Title,
+            ExternalPath = cachedOrSummary.ExternalPath,
+            LocationsText = cachedOrSummary.PrimaryLocation,
+            PostedOn = cachedOrSummary.PostedOn,
+            BulletFields = string.IsNullOrWhiteSpace(cachedOrSummary.RequisitionId)
+                ? []
+                : [cachedOrSummary.RequisitionId]
+        };
+        var detail = await FetchDetailAsync(company, listing.ExternalPath, cancellationToken);
+        return Normalize(company, listing, detail, null, ListingFingerprint(listing));
+    }
+
+    internal bool IsAnalysisCurrent(JobRecord job) =>
+        job.AnalysisVersion == CurrentAnalysisVersion &&
+        job.CredentialCatalogVersion == _credentialDetector.CatalogVersion &&
+        job.Credentials is not null &&
+        job.UnrecognizedCredentialMentions is not null &&
+        job.AcademicQualification?.AnalysisVersion == _academicQualificationDetector.AnalysisVersion &&
+        job.WorkAuthorization?.AnalysisVersion == WorkAuthorizationDetector.CurrentAnalysisVersion &&
+        job.RemoteWork?.AnalysisVersion == RemoteWorkDetector.CurrentAnalysisVersion;
+
+    internal JobRecord Reclassify(JobRecord job)
+    {
+        var description = job.DescriptionHtml ?? "";
+        var salary = JobAnalysis.AnalyzeSalary(description);
+        var remoteLocation = JobAnalysis.AnalyzeRemoteLocation(
+            description, job.PrimaryLocation, job.AdditionalLocations);
+        var clearance = JobAnalysis.AnalyzeClearance(description);
+        var credentials = _credentialDetector.Analyze(description);
+        var academic = _academicQualificationDetector.Analyze(description);
+        var authorization = _workAuthorizationDetector.Analyze(description);
+        var remoteWork = _remoteWorkDetector.Analyze(
+            job.Title, job.PrimaryLocation, job.AdditionalLocations, description);
+        return job with
+        {
+            PayMinimum = salary.Minimum,
+            PayMaximum = salary.Maximum,
+            PayPeriod = salary.Period,
+            PayParseStatus = salary.ParseStatus,
+            IsRemoteLocationRestricted = remoteLocation.IsRestricted,
+            RemoteLocationRestrictionCategory = remoteLocation.Category,
+            RemoteLocationRestrictionSnippet = remoteLocation.Snippet,
+            ClearanceLevel = clearance.Level,
+            ClearanceRequirement = clearance.Requirement,
+            PolygraphRequired = clearance.PolygraphRequired,
+            ClearanceEvidence = clearance.Evidence,
+            ClearanceParseStatus = clearance.ParseStatus,
+            Credentials = credentials.Credentials,
+            UnrecognizedCredentialMentions = credentials.UnrecognizedMentions,
+            CredentialCatalogVersion = credentials.CatalogVersion,
+            AcademicQualification = academic,
+            WorkAuthorization = authorization,
+            RemoteWork = remoteWork,
+            AnalysisVersion = CurrentAnalysisVersion
+        };
+    }
+
+    private bool ShouldRevalidate(JobRecord job) =>
+        job.DetailCachedAtUtc is { } cachedAt &&
+        cachedAt < DateTimeOffset.UtcNow.AddHours(-_options.DetailReuseHours);
+
+    private static bool IsSafePreliminaryMatch(
+        ListingPosting listing,
+        ViewerSettings? settings)
+    {
+        if (settings is null || !string.Equals(
+            settings.KeywordScope, "metadata", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var metadata = string.Join('\n',
+            listing.Title,
+            listing.ExternalPath,
+            listing.LocationsText,
+            string.Join('\n', listing.BulletFields));
+        var inclusions = settings.IncludeKeywords
+            .Where(term => !string.IsNullOrWhiteSpace(term)).ToArray();
+        var exclusions = settings.ExcludeKeywords
+            .Where(term => !string.IsNullOrWhiteSpace(term)).ToArray();
+        return (inclusions.Length == 0 || inclusions.Any(term =>
+                metadata.Contains(term, StringComparison.OrdinalIgnoreCase))) &&
+            !exclusions.Any(term => metadata.Contains(term, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private JobRecord MergeListing(
+        CompanyDefinition company,
+        ListingPosting listing,
+        JobRecord cached,
+        string fingerprint)
+    {
+        var fallbackUrl = new Uri(
+            new Uri(company.PublicSiteUrl.TrimEnd('/') + "/"),
+            listing.ExternalPath.TrimStart('/')).ToString();
+        return cached with
+        {
+            Title = string.IsNullOrWhiteSpace(cached.Title) ? listing.Title : cached.Title,
+            RequisitionId = string.IsNullOrWhiteSpace(cached.RequisitionId)
+                ? listing.BulletFields.FirstOrDefault() ?? ""
+                : cached.RequisitionId,
+            PostedOn = string.IsNullOrWhiteSpace(listing.PostedOn) ? cached.PostedOn : listing.PostedOn,
+            PrimaryLocation = string.IsNullOrWhiteSpace(cached.PrimaryLocation)
+                ? listing.LocationsText
+                : cached.PrimaryLocation,
+            SourceUrl = string.IsNullOrWhiteSpace(cached.SourceUrl) ? fallbackUrl : cached.SourceUrl,
+            ExternalPath = listing.ExternalPath,
+            CompanyId = company.Id,
+            ListingFingerprint = fingerprint,
+            DetailCachedAtUtc = cached.DetailCachedAtUtc ?? DateTimeOffset.UtcNow,
+            IsSourceAvailable = true
+        };
+    }
+
+    private static string ListingFingerprint(ListingPosting listing)
+    {
+        // Workday often returns relative PostedOn text. Excluding it prevents a
+        // harmless age-label change from invalidating every cached description.
+        var value = string.Join('\n',
+            listing.ExternalPath.Trim(),
+            listing.Title.Trim(),
+            listing.LocationsText.Trim(),
+            listing.BulletFields.FirstOrDefault()?.Trim() ?? "");
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value)));
     }
 
     private static Uri GetCxsBaseUri(CompanyDefinition company) => new(
@@ -424,8 +709,9 @@ public sealed class JobSourceClient
         string? countryId,
         CancellationToken cancellationToken)
     {
-        var postings = await FetchSmartRecruitersSummariesAsync(
+        var summaryBatch = await FetchSmartRecruitersSummariesAsync(
             company, null, cancellationToken);
+        var postings = summaryBatch.Postings;
         var countries = postings
             .Where(posting => !string.IsNullOrWhiteSpace(posting.Location.Country))
             .GroupBy(posting => posting.Location.Country.Trim().ToLowerInvariant(), StringComparer.Ordinal)
@@ -462,15 +748,16 @@ public sealed class JobSourceClient
             organization.UnmappedLocationLabels);
     }
 
-    private async Task<List<ListingPosting>> FetchSmartRecruitersListingsAsync(
+    private async Task<ListingBatch> FetchSmartRecruitersListingsAsync(
         CompanyDefinition company,
         JobSourceQuery query,
         Action<RefreshProgress>? reportProgress,
         CancellationToken cancellationToken)
     {
         query = query.Normalize(company);
-        var postings = await FetchSmartRecruitersSummariesAsync(
+        var summaryBatch = await FetchSmartRecruitersSummariesAsync(
             company, query.CountryId, cancellationToken);
+        var postings = summaryBatch.Postings;
         var allowedLocations = query.EffectiveLocationIds(company).ToHashSet(StringComparer.Ordinal);
         var filtered = query.IncludeAllLocations
             ? postings
@@ -494,10 +781,10 @@ public sealed class JobSourceClient
             })
             .ToList();
         reportProgress?.Invoke(new RefreshProgress("listings", listings.Count, listings.Count));
-        return listings;
+        return new ListingBatch(listings, summaryBatch.Truncated);
     }
 
-    private async Task<IReadOnlyList<SmartRecruitersPosting>> FetchSmartRecruitersSummariesAsync(
+    private async Task<SmartSummaryBatch> FetchSmartRecruitersSummariesAsync(
         CompanyDefinition company,
         string? countryId,
         CancellationToken cancellationToken)
@@ -509,11 +796,21 @@ public sealed class JobSourceClient
             firstResponse, firstUri, cancellationToken);
         if (first.TotalFound <= first.Content.Count)
         {
-            return first.Content;
+            return new SmartSummaryBatch(first.Content, false);
         }
 
-        var offsets = Enumerable.Range(1, (first.TotalFound + pageSize - 1) / pageSize - 1)
-            .Select(page => page * pageSize);
+        var remainingPageCount = (first.TotalFound + pageSize - 1) / pageSize - 1;
+        var allowedPageCount = Math.Max(0, _options.MaximumListingPages - 1);
+        var truncated = remainingPageCount > allowedPageCount;
+        var offsets = Enumerable.Range(1, Math.Min(remainingPageCount, allowedPageCount))
+            .Select(page => page * pageSize)
+            .ToArray();
+        if (truncated)
+        {
+            _logger.LogWarning(
+                "Stopped SmartRecruiters listing retrieval after the configured maximum of {MaximumPages} pages.",
+                _options.MaximumListingPages);
+        }
         var gate = new SemaphoreSlim(_options.DetailConcurrency);
         var pages = await Task.WhenAll(offsets.Select(async offset =>
         {
@@ -529,7 +826,9 @@ public sealed class JobSourceClient
                 gate.Release();
             }
         }));
-        return first.Content.Concat(pages.SelectMany(page => page.Content)).ToArray();
+        return new SmartSummaryBatch(
+            first.Content.Concat(pages.SelectMany(page => page.Content)).ToArray(),
+            truncated);
     }
 
     private async Task<DetailPosting> FetchSmartRecruitersDetailAsync(
