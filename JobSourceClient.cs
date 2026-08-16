@@ -116,9 +116,11 @@ public sealed class JobSourceClient
             else
             {
                 cacheMisses++;
-                jobs[index] = Normalize(company, listing, null, null, fingerprint);
                 var materiallyChanged = cached?.ListingFingerprint is { Length: > 0 } previous &&
                     !string.Equals(previous, fingerprint, StringComparison.Ordinal);
+                jobs[index] = cached is not null && !materiallyChanged
+                    ? MergeListing(company, listing, cached, fingerprint)
+                    : Normalize(company, listing, null, null, fingerprint);
                 if (!automaticCheck || cached is null || materiallyChanged ||
                     !string.IsNullOrWhiteSpace(cached.DetailError))
                 {
@@ -676,7 +678,7 @@ public sealed class JobSourceClient
             RequisitionId = string.IsNullOrWhiteSpace(cached.RequisitionId)
                 ? listing.BulletFields.FirstOrDefault() ?? ""
                 : cached.RequisitionId,
-            PostedOn = string.IsNullOrWhiteSpace(listing.PostedOn) ? cached.PostedOn : listing.PostedOn,
+            PostedOn = string.IsNullOrWhiteSpace(cached.PostedOn) ? listing.PostedOn : cached.PostedOn,
             PrimaryLocation = string.IsNullOrWhiteSpace(cached.PrimaryLocation)
                 ? listing.LocationsText
                 : cached.PrimaryLocation,

@@ -434,86 +434,111 @@ public sealed record ViewerSettings(
 
 public sealed record JobListItem(
     string StableId,
-    string CompanyId,
     string Title,
     string RequisitionId,
     DateOnly? StartDate,
     string PostedOn,
     string PrimaryLocation,
     IReadOnlyList<string> AdditionalLocations,
-    string TimeType,
-    string SourceUrl,
     decimal? PayMinimum,
     decimal? PayMaximum,
     string PayPeriod,
-    string PayParseStatus,
     bool IsRemoteLocationRestricted,
-    string? RemoteLocationRestrictionCategory,
-    string? RemoteLocationRestrictionSnippet,
-    string? DetailError,
     string ClearanceLevel,
     string ClearanceRequirement,
     bool PolygraphRequired,
-    string? ClearanceEvidence,
     string ClearanceParseStatus,
-    IReadOnlyList<CredentialMatch>? Credentials,
-    IReadOnlyList<string>? UnrecognizedCredentialMentions,
-    int CredentialCatalogVersion,
-    AcademicQualificationAnalysis? AcademicQualification,
-    WorkAuthorizationAnalysis? WorkAuthorization,
-    RemoteWorkAnalysis? RemoteWork,
-    bool DetailAvailable,
+    IReadOnlyList<JobListCredential>? Credentials,
+    JobListAcademicQualification? AcademicQualification,
+    JobListWorkAuthorization? WorkAuthorization,
+    JobListRemoteWork? RemoteWork,
     bool AnalysisPending)
 {
     public static JobListItem FromJob(JobRecord job) => new(
         job.StableId,
-        job.CompanyId,
         job.Title,
         job.RequisitionId,
         job.StartDate,
         job.PostedOn,
         job.PrimaryLocation,
         job.AdditionalLocations,
-        job.TimeType,
-        job.SourceUrl,
         job.PayMinimum,
         job.PayMaximum,
         job.PayPeriod,
-        job.PayParseStatus,
         job.IsRemoteLocationRestricted,
-        job.RemoteLocationRestrictionCategory,
-        null,
-        job.DetailError,
         job.ClearanceLevel,
         job.ClearanceRequirement,
         job.PolygraphRequired,
-        null,
         job.ClearanceParseStatus,
         string.IsNullOrWhiteSpace(job.DescriptionHtml)
             ? null
-            : job.Credentials?.Select(credential => credential with { Evidence = "" }).ToArray(),
-        [],
-        job.CredentialCatalogVersion,
-        string.IsNullOrWhiteSpace(job.DescriptionHtml) ? null : Compact(job.AcademicQualification),
+            : job.Credentials?.Select(JobListCredential.FromAnalysis).ToArray(),
+        string.IsNullOrWhiteSpace(job.DescriptionHtml)
+            ? null
+            : JobListAcademicQualification.FromAnalysis(job.AcademicQualification),
         string.IsNullOrWhiteSpace(job.DescriptionHtml) || job.WorkAuthorization is null
             ? null
-            : job.WorkAuthorization with { Evidence = [] },
+            : JobListWorkAuthorization.FromAnalysis(job.WorkAuthorization),
         string.IsNullOrWhiteSpace(job.DescriptionHtml) || job.RemoteWork is null
             ? null
-            : job.RemoteWork with { Signals = [] },
-        !string.IsNullOrWhiteSpace(job.DescriptionHtml),
+            : JobListRemoteWork.FromAnalysis(job.RemoteWork),
         string.IsNullOrWhiteSpace(job.DescriptionHtml));
+}
 
-    private static AcademicQualificationAnalysis? Compact(
+public sealed record JobListCredential(
+    string Name,
+    string FullName,
+    string Requirement,
+    bool IsAlternative,
+    bool InProgressAccepted,
+    bool PostHireAcquisitionAllowed)
+{
+    public static JobListCredential FromAnalysis(CredentialMatch credential) => new(
+        credential.Name,
+        credential.FullName,
+        credential.Requirement,
+        credential.IsAlternative,
+        credential.InProgressAccepted,
+        credential.PostHireAcquisitionAllowed);
+}
+
+public sealed record JobListAcademicQualification(
+    string MinimumLevel,
+    string? SpecificDegree,
+    string RequirementType,
+    bool ExperienceSubstitutionAccepted,
+    string ParseStatus,
+    bool HasAccreditation)
+{
+    public static JobListAcademicQualification? FromAnalysis(
         AcademicQualificationAnalysis? analysis) => analysis is null
             ? null
-            : analysis with
-            {
-                Evidence = [],
-                Paths = analysis.Paths.Select(path => path with { Evidence = "" }).ToArray(),
-                Accreditations = analysis.Accreditations?
-                    .Select(accreditation => accreditation with { Evidence = "" }).ToArray()
-            };
+            : new(
+                analysis.MinimumLevel,
+                analysis.SpecificDegree,
+                analysis.RequirementType,
+                analysis.ExperienceSubstitutionAccepted,
+                analysis.ParseStatus,
+                analysis.Accreditations is { Count: > 0 });
+}
+
+public sealed record JobListWorkAuthorization(
+    string Eligibility,
+    string Sponsorship,
+    string Strength,
+    string SponsorshipStrength)
+{
+    public static JobListWorkAuthorization FromAnalysis(WorkAuthorizationAnalysis analysis) => new(
+        analysis.Eligibility,
+        analysis.Sponsorship,
+        analysis.Strength,
+        analysis.SponsorshipStrength);
+}
+
+public sealed record JobListRemoteWork(string ConcernLevel, string? Summary)
+{
+    public static JobListRemoteWork FromAnalysis(RemoteWorkAnalysis analysis) =>
+        new(analysis.ConcernLevel, analysis.Summary);
 }
 
 public sealed record JobsListSnapshot(
@@ -589,6 +614,13 @@ internal sealed record JobsCacheDocument(
 internal sealed record JobsCacheEnvelope(
     int SchemaVersion = 5,
     IReadOnlyDictionary<string, JobsCacheDocument>? Sources = null);
+
+internal sealed record SourceStatusDocument(
+    int SchemaVersion,
+    JobSourceQuery Query,
+    DateTimeOffset LastSuccessfulRefreshUtc,
+    int DetailFailureCount,
+    bool ListingsTruncated);
 
 internal sealed record JobHistoryDocument(
     int SchemaVersion,

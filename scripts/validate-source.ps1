@@ -62,6 +62,16 @@ $index = Get-Content -LiteralPath $indexPath -Raw
 $app = Get-Content -LiteralPath $appPath -Raw
 $countryOrdering = Get-Content -LiteralPath $countryOrderingPath -Raw
 
+if ($app -match 'setInterval\s*\(' -or
+    $app -match 'setTimeout\s*\(\s*loadSnapshot' -or
+    $app -notmatch 'document\.visibilityState\s*===\s*"hidden"' -or
+    $app -notmatch 'automaticStatusRequestInFlight' -or
+    $app -notmatch 'refreshStatusRequestInFlight' -or
+    $app -notmatch '/api/automatic-check/status' -or
+    $app -notmatch 'beginRefreshProgressPolling\(true\)') {
+    throw "Refresh polling must be visibility-aware, non-overlapping, and status-only until completion."
+}
+
 $requiredIconLinks = @(
     'rel="icon" href="/favicon.ico?v=1" sizes="any"',
     'rel="icon" type="image/png" href="/icons/favicon-32.png?v=1" sizes="32x32"',
@@ -251,3 +261,4 @@ Write-Output "Theme token-reference audit: PASS ($($usedTokens.Count) tokens use
 Write-Output "Settings tab structure audit: PASS"
 Write-Output "HTML ID uniqueness audit: PASS"
 Write-Output "Browser icon/manifest audit: PASS"
+Write-Output "Bandwidth-efficient polling audit: PASS"

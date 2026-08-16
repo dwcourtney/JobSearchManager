@@ -1,15 +1,18 @@
 namespace JobSearchManager;
 
 using System.IO.Compression;
+using System.Security.Cryptography;
 using System.Text;
 
 public sealed class AppStateStore
 {
     private const int SchemaVersion = 4;
-    private const int CacheSchemaVersion = 5;
+    private const int CacheSchemaVersion = 6;
     private readonly ILogger<AppStateStore> _logger;
     private readonly CompanyCatalog _companyCatalog;
     private readonly IWorkspaceDataStore _dataStore;
+    private readonly SemaphoreSlim _cacheMigrationGate = new(1, 1);
+    private bool _cacheMigrationChecked;
 
     public AppStateStore(
         ILogger<AppStateStore> logger,
@@ -25,6 +28,7 @@ public sealed class AppStateStore
     public string SettingsPath => _dataStore.Describe(WorkspaceDataFile.Settings);
     public string JobsCachePath => _dataStore.Describe(WorkspaceDataFile.JobsCache);
     public string JobHistoryPath => _dataStore.Describe(WorkspaceDataFile.JobHistory);
+    internal WorkspaceStorageDiagnostics StorageDiagnostics => _dataStore.Diagnostics;
 
     public async Task<ViewerSettings> LoadSettingsAsync()
     {
@@ -60,30 +64,71 @@ public sealed class AppStateStore
         }
     }
 
-    internal async Task<JobsCacheDocument?> LoadJobsCacheAsync(string? companyId = null)
+    internal string QueryFingerprint(JobSourceQuery query)
     {
-        var envelope = await _dataStore.ReadJsonAsync<JobsCacheEnvelope>(WorkspaceDataFile.JobsCache);
-        JobsCacheDocument? cache = null;
-        if (envelope?.Sources is { Count: > 0 })
-        {
-            cache = !string.IsNullOrWhiteSpace(companyId) &&
-                envelope.Sources.TryGetValue(companyId, out var companyCache)
-                    ? companyCache
-                    : envelope.Sources.Values.FirstOrDefault();
-        }
-        else
-        {
-            // Version 1-4 stored one source cache directly at jobs-cache.json.
-            cache = await _dataStore.ReadJsonAsync<JobsCacheDocument>(WorkspaceDataFile.JobsCache);
-        }
+        var company = _companyCatalog.Get(query.CompanyId);
+        query = query.Normalize(company);
+        var canonical = string.Join('\n',
+            company.Id,
+            query.CountryId?.Trim() ?? "",
+            query.IncludeAllLocations ? "all" : "selected",
+            query.IncludeRemote ? "remote" : "physical",
+            string.Join('\n', (query.PhysicalLocations ?? [])
+                .Select(location => location.Id?.Trim() ?? "")
+                .Where(id => id.Length > 0)
+                .OrderBy(id => id, StringComparer.Ordinal)));
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(canonical)))
+            .ToLowerInvariant();
+    }
+
+    internal string JobsCachePathFor(JobSourceQuery query)
+    {
+        var company = _companyCatalog.Get(query.CompanyId);
+        return _dataStore.DescribeCompanyCache(company.Id, QueryFingerprint(query));
+    }
+
+    internal async Task<JobsCacheDocument?> LoadJobsCacheAsync(JobSourceQuery query)
+    {
+        var company = _companyCatalog.Get(query.CompanyId);
+        query = query.Normalize(company);
+        await EnsureSplitCacheMigrationAsync(query);
+        var fingerprint = QueryFingerprint(query);
+        var cache = await _dataStore.ReadCompanyCacheJsonAsync<JobsCacheDocument>(
+            company.Id, fingerprint);
         if (cache?.Jobs is null)
         {
             return cache;
         }
 
-        var migrationRequired = false;
-        var jobs = cache.Jobs.Select(job =>
+        var (jobs, migrationRequired) = InflateAndMigrateJobs(cache.Jobs);
+        var migrated = cache with
         {
+            SchemaVersion = CacheSchemaVersion,
+            Jobs = jobs,
+            Query = query
+        };
+        if (migrationRequired || cache.SchemaVersion != CacheSchemaVersion)
+        {
+            await SaveCacheDocumentAsync(migrated);
+            _logger.LogInformation(
+                "Migrated cached job data in {JobsCachePath} to schema {SchemaVersion}.",
+                JobsCachePathFor(query),
+                CacheSchemaVersion);
+        }
+        return migrated;
+    }
+
+    private (JobRecord[] Jobs, bool MigrationRequired) InflateAndMigrateJobs(
+        IReadOnlyList<JobRecord> cachedJobs)
+    {
+        var migrationRequired = false;
+        var jobs = cachedJobs.Select(job =>
+        {
+            if (!string.IsNullOrWhiteSpace(job.DescriptionHtml) &&
+                string.IsNullOrWhiteSpace(job.CompressedDescriptionHtml))
+            {
+                migrationRequired = true;
+            }
             if (string.IsNullOrWhiteSpace(job.DescriptionHtml) &&
                 !string.IsNullOrWhiteSpace(job.CompressedDescriptionHtml))
             {
@@ -124,17 +169,7 @@ public sealed class AppStateStore
             return job;
         }).ToArray();
 
-        if (!migrationRequired)
-        {
-            return cache with { Jobs = jobs };
-        }
-
-        var migrated = cache with { SchemaVersion = CacheSchemaVersion, Jobs = jobs };
-        await SaveCacheDocumentAsync(migrated);
-        _logger.LogInformation(
-            "Migrated cached job data in {JobsCachePath} to the current schema.",
-            JobsCachePath);
-        return migrated;
+        return (jobs, migrationRequired);
     }
 
     internal async Task SaveJobsCacheAsync(
@@ -154,39 +189,145 @@ public sealed class AppStateStore
 
     private async Task SaveCacheDocumentAsync(JobsCacheDocument cache)
     {
-        cache = cache with
-        {
-            Jobs = cache.Jobs.Select(job => string.IsNullOrWhiteSpace(job.DescriptionHtml)
-                ? job with { CompressedDescriptionHtml = null }
-                : job with
-                {
-                    DescriptionHtml = "",
-                    CompressedDescriptionHtml = Compress(job.DescriptionHtml)
-                }).ToArray()
-        };
-        var stored = await _dataStore.ReadJsonAsync<JobsCacheEnvelope>(WorkspaceDataFile.JobsCache);
-        var sources = stored?.Sources is { Count: > 0 }
-            ? new Dictionary<string, JobsCacheDocument>(stored.Sources, StringComparer.OrdinalIgnoreCase)
-            : new Dictionary<string, JobsCacheDocument>(StringComparer.OrdinalIgnoreCase);
-
-        // Preserve a pre-envelope source when another company is saved first.
-        if (sources.Count == 0)
-        {
-            var legacy = await _dataStore.ReadJsonAsync<JobsCacheDocument>(WorkspaceDataFile.JobsCache);
-            if (legacy?.Query is not null && legacy.Jobs is not null)
-            {
-                sources[legacy.Query.CompanyId] = legacy;
-            }
-        }
-
         if (cache.Query is null)
         {
             throw new InvalidOperationException("A source cache must include its normalized query.");
         }
-        sources[cache.Query.CompanyId] = cache;
-        await _dataStore.WriteJsonAsync(
-            WorkspaceDataFile.JobsCache,
-            new JobsCacheEnvelope(CacheSchemaVersion, sources));
+        var company = _companyCatalog.Get(cache.Query.CompanyId);
+        var query = cache.Query.Normalize(company);
+        cache = PrepareCacheForStorage(cache, query);
+        await _dataStore.WriteCompanyCacheJsonAsync(
+            company.Id,
+            QueryFingerprint(query),
+            cache);
+    }
+
+    private static JobsCacheDocument PrepareCacheForStorage(
+        JobsCacheDocument cache,
+        JobSourceQuery query) => cache with
+    {
+        SchemaVersion = CacheSchemaVersion,
+        Query = query,
+        Jobs = cache.Jobs.Select(job => string.IsNullOrWhiteSpace(job.DescriptionHtml)
+            ? job
+            : job with
+            {
+                DescriptionHtml = "",
+                CompressedDescriptionHtml = Compress(job.DescriptionHtml)
+            }).ToArray()
+    };
+
+    internal async Task<SourceStatusDocument?> LoadSourceStatusAsync(JobSourceQuery query)
+    {
+        var company = _companyCatalog.Get(query.CompanyId);
+        query = query.Normalize(company);
+        await EnsureSplitCacheMigrationAsync(query);
+        return await _dataStore.ReadSourceStatusJsonAsync<SourceStatusDocument>(
+            company.Id, QueryFingerprint(query));
+    }
+
+    internal async Task SaveSourceStatusAsync(
+        JobSourceQuery query,
+        DateTimeOffset lastSuccessfulRefreshUtc,
+        int detailFailureCount,
+        RefreshMetrics? metrics)
+    {
+        var company = _companyCatalog.Get(query.CompanyId);
+        query = query.Normalize(company);
+        await _dataStore.WriteSourceStatusJsonAsync(
+            company.Id,
+            QueryFingerprint(query),
+            new SourceStatusDocument(
+                1,
+                query,
+                lastSuccessfulRefreshUtc,
+                detailFailureCount,
+                metrics?.ListingsTruncated ?? false));
+    }
+
+    private async Task EnsureSplitCacheMigrationAsync(JobSourceQuery fallbackQuery)
+    {
+        if (_cacheMigrationChecked) return;
+        await _cacheMigrationGate.WaitAsync();
+        try
+        {
+            if (_cacheMigrationChecked) return;
+            if (!await _dataStore.ExistsAsync(WorkspaceDataFile.JobsCache))
+            {
+                _cacheMigrationChecked = true;
+                return;
+            }
+
+            var envelope = await _dataStore.ReadJsonAsync<JobsCacheEnvelope>(WorkspaceDataFile.JobsCache);
+            var sources = envelope?.Sources is { Count: > 0 }
+                ? envelope.Sources.ToArray()
+                : [];
+            if (sources.Length == 0)
+            {
+                var legacy = await _dataStore.ReadJsonAsync<JobsCacheDocument>(WorkspaceDataFile.JobsCache);
+                if (legacy?.Jobs is not null)
+                {
+                    var query = legacy.Query ?? fallbackQuery;
+                    sources = [new KeyValuePair<string, JobsCacheDocument>(query.CompanyId, legacy with
+                    {
+                        Query = query
+                    })];
+                }
+            }
+
+            var allMigrated = sources.Length > 0;
+            foreach (var source in sources)
+            {
+                if (!_companyCatalog.TryGet(source.Key, out var company) ||
+                    source.Value.Query is null || source.Value.Jobs is null)
+                {
+                    allMigrated = false;
+                    continue;
+                }
+                var query = (source.Value.Query with { CompanyId = company.Id }).Normalize(company);
+                var fingerprint = QueryFingerprint(query);
+                if (!await _dataStore.CompanyCacheExistsAsync(company.Id, fingerprint))
+                {
+                    await _dataStore.WriteCompanyCacheJsonAsync(
+                        company.Id,
+                        fingerprint,
+                        PrepareCacheForStorage(source.Value, query));
+                }
+                var status = await _dataStore.ReadSourceStatusJsonAsync<SourceStatusDocument>(
+                    company.Id, fingerprint);
+                if (status is null)
+                {
+                    await _dataStore.WriteSourceStatusJsonAsync(
+                        company.Id,
+                        fingerprint,
+                        new SourceStatusDocument(
+                            1,
+                            query,
+                            source.Value.LastRefreshedUtc ?? source.Value.SavedAtUtc,
+                            source.Value.DetailFailureCount,
+                            false));
+                }
+            }
+
+            if (allMigrated)
+            {
+                await _dataStore.DeleteAsync(WorkspaceDataFile.JobsCache);
+                _logger.LogInformation(
+                    "Migrated the legacy cumulative job cache into {SourceCount} isolated company/query documents and retired {LegacyCachePath}.",
+                    sources.Length,
+                    JobsCachePath);
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "The legacy cumulative job cache was retained because one or more entries could not be safely migrated.");
+            }
+            _cacheMigrationChecked = true;
+        }
+        finally
+        {
+            _cacheMigrationGate.Release();
+        }
     }
 
     private static string Compress(string value)

@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace JobSearchManager;
 
 public sealed class JobCatalog
@@ -58,7 +60,8 @@ public sealed class JobCatalog
         var company = _companyCatalog.Get(query.CompanyId);
         query = query.Normalize(company);
         var history = await _stateStore.LoadJobHistoryAsync();
-        var cache = await _stateStore.LoadJobsCacheAsync(company.Id);
+        var cache = await _stateStore.LoadJobsCacheAsync(query);
+        var sourceStatus = await _stateStore.LoadSourceStatusAsync(query);
         _history = history;
         _currentQuery = query;
 
@@ -113,9 +116,12 @@ public sealed class JobCatalog
                 RemoteWorkDetector.CurrentAnalysisVersion);
         }
 
+        var effectiveLastRefreshed = sourceStatus?.LastSuccessfulRefreshUtc ??
+            cache.LastRefreshedUtc ?? cache.SavedAtUtc;
+        var effectiveDetailFailureCount = sourceStatus?.DetailFailureCount ?? cache.DetailFailureCount;
         var historyChanged = ReconcileHistory(
             cachedJobs,
-            cache.LastRefreshedUtc ?? cache.SavedAtUtc,
+            effectiveLastRefreshed,
             updateKnownLastSeen: false);
         if (historyChanged)
         {
@@ -129,10 +135,10 @@ public sealed class JobCatalog
             _snapshot = new JobsSnapshot(
                 availableJobs,
                 availableJobs.Length,
-                cache.LastRefreshedUtc,
+                effectiveLastRefreshed,
                 false,
                 null,
-                cache.DetailFailureCount,
+                effectiveDetailFailureCount,
                 true,
                 GetNewJobIds(availableJobs),
                 query,
@@ -262,13 +268,16 @@ public sealed class JobCatalog
             }
             if (job is null) return null;
 
-            var updated = job;
+            if (!string.IsNullOrWhiteSpace(job.DescriptionHtml) &&
+                _jobSourceClient.IsAnalysisCurrent(job))
+            {
+                return job;
+            }
+
+            JobRecord updated;
             if (!string.IsNullOrWhiteSpace(job.DescriptionHtml))
             {
-                if (!_jobSourceClient.IsAnalysisCurrent(job))
-                {
-                    updated = _jobSourceClient.Reclassify(job);
-                }
+                updated = _jobSourceClient.Reclassify(job);
             }
             else
             {
@@ -527,37 +536,58 @@ public sealed class JobCatalog
                 query.CountryLabel,
                 DescribeLocations(query));
             var filterSettings = await _stateStore.LoadSettingsAsync();
+            var cachedDocument = await _stateStore.LoadJobsCacheAsync(query);
+            var cacheWasPresent = cachedDocument?.Query?.IsEquivalentTo(query, _companyCatalog) == true;
+            var cachedJobs = cacheWasPresent ? cachedDocument!.Jobs : [];
             var result = await _jobSourceClient.FetchAllJobsAsync(
                 company,
                 query,
                 progress => ReportRefreshProgress(query, progress),
                 cancellationToken,
-                cachedJobs: await CachedJobsForQueryAsync(query),
+                cachedJobs: cachedJobs,
                 automaticCheck: automaticCheck,
                 filterSettings: filterSettings);
             var refreshedAt = DateTimeOffset.UtcNow;
 
             ReportRefreshProgress(query, new RefreshProgress("saving", 0, null));
 
+            var changedJobIds = ChangedJobIds(cachedJobs, result.Jobs);
+            var cacheChanged = !cacheWasPresent || changedJobIds.Count > 0;
+            var historyChanged = false;
             await _historyGate.WaitAsync();
             try
             {
-                ReconcileHistory(
+                historyChanged = ReconcileHistory(
                     result.Jobs.Where(job => job.IsSourceAvailable).ToArray(),
                     refreshedAt,
-                    updateKnownLastSeen: true);
-                await _stateStore.SaveJobHistoryAsync(CloneHistory());
+                    updateKnownLastSeen: true,
+                    persistentlyChangedJobIds: changedJobIds);
+                if (historyChanged)
+                {
+                    await _stateStore.SaveJobHistoryAsync(CloneHistory());
+                }
             }
             finally
             {
                 _historyGate.Release();
             }
 
-            await _stateStore.SaveJobsCacheAsync(
-                result.Jobs,
-                refreshedAt,
-                result.DetailFailureCount,
-                query);
+            if (cacheChanged)
+            {
+                await _stateStore.SaveJobsCacheAsync(
+                    result.Jobs,
+                    refreshedAt,
+                    result.DetailFailureCount,
+                    query);
+            }
+            if (!automaticCheck || cacheChanged || historyChanged)
+            {
+                await _stateStore.SaveSourceStatusAsync(
+                    query,
+                    refreshedAt,
+                    result.DetailFailureCount,
+                    result.Metrics);
+            }
 
             var availableJobs = result.Jobs.Where(job => job.IsSourceAvailable).ToArray();
             var refreshed = new JobsSnapshot(
@@ -581,9 +611,11 @@ public sealed class JobCatalog
             }
 
             _logger.LogInformation(
-                "Refresh completed with {JobCount} jobs and {DetailFailureCount} detail failures.",
+                "Refresh completed with {JobCount} jobs, {DetailFailureCount} detail failures, cache write {CacheWrite}, history write {HistoryWrite}.",
                 result.Jobs.Count,
-                result.DetailFailureCount);
+                result.DetailFailureCount,
+                cacheChanged,
+                historyChanged);
             return refreshed;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -633,7 +665,7 @@ public sealed class JobCatalog
             }
         }
 
-        var cache = await _stateStore.LoadJobsCacheAsync(query.CompanyId);
+        var cache = await _stateStore.LoadJobsCacheAsync(query);
         return cache?.Query?.IsEquivalentTo(query, _companyCatalog) == true
             ? cache.Jobs
             : [];
@@ -683,7 +715,8 @@ public sealed class JobCatalog
     private bool ReconcileHistory(
         IReadOnlyList<JobRecord> jobs,
         DateTimeOffset seenAt,
-        bool updateKnownLastSeen)
+        bool updateKnownLastSeen,
+        IReadOnlySet<string>? persistentlyChangedJobIds = null)
     {
         var changed = false;
         foreach (var job in jobs)
@@ -722,7 +755,8 @@ public sealed class JobCatalog
                     CompanyId: job.CompanyId);
                 changed = true;
             }
-            else if (updateKnownLastSeen)
+            else if (updateKnownLastSeen &&
+                persistentlyChangedJobIds?.Contains(stableId) == true)
             {
                 _history.Jobs[stableId] = existing with
                 {
@@ -738,6 +772,26 @@ public sealed class JobCatalog
             }
         }
 
+        return changed;
+    }
+
+    private static HashSet<string> ChangedJobIds(
+        IReadOnlyList<JobRecord> before,
+        IReadOnlyList<JobRecord> after)
+    {
+        var beforeById = before.ToDictionary(job => job.StableId, StringComparer.Ordinal);
+        var afterById = after.ToDictionary(job => job.StableId, StringComparer.Ordinal);
+        var changed = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var id in beforeById.Keys.Concat(afterById.Keys))
+        {
+            if (!beforeById.TryGetValue(id, out var oldJob) ||
+                !afterById.TryGetValue(id, out var newJob) ||
+                !JsonSerializer.SerializeToUtf8Bytes(oldJob).AsSpan()
+                    .SequenceEqual(JsonSerializer.SerializeToUtf8Bytes(newJob)))
+            {
+                changed.Add(id);
+            }
+        }
         return changed;
     }
 

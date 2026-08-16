@@ -152,7 +152,13 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Lazy detail loading fetches a missing detail only once", TestLazyDetailCacheAsync),
     ("Automatic checking fetches details only for new jobs", TestAutomaticCheckIncrementalAsync),
     ("Company caches coexist without requisition collisions", TestPerCompanyCacheEnvelopeAsync),
+    ("Company/query cache writes remain isolated", TestCompanyCacheWriteIsolationAsync),
+    ("Legacy cumulative caches migrate safely and idempotently", TestSplitCacheMigrationAsync),
     ("Cached descriptions are compressed at rest and hydrate losslessly", TestCompressedCacheAsync),
+    ("Cached detail reads perform no persistence writes", TestCachedDetailPureReadAsync),
+    ("Unchanged refreshes avoid cache and history writes", TestUnchangedRefreshWriteSuppressionAsync),
+    ("First empty refresh persists a source baseline", TestFirstEmptyRefreshPersistsBaselineAsync),
+    ("Partial hydration advances through the final batch", TestPartialHydrationCyclesAsync),
     ("Listing page safety limits surface truncation", TestListingPageLimitAsync),
     ("Mocked Northrop-scale refresh remains bounded and compact", TestNorthropScaleMetricsAsync),
     ("Unsupported active company state migrates without source reinterpretation", TestUnsupportedCompanyMigrationAsync),
@@ -431,8 +437,16 @@ static Task TestBlobNamespaceAsync()
         $"workspaces/{firstId}/settings.json", "Actual Blob namespace is incorrect.");
     Assert(AzureBlobWorkspaceDataStore.BuildBlobName(secondId, WorkspaceDataFile.JobHistory) ==
         $"workspaces/{secondId}/job-history.json", "Second actual Blob namespace is incorrect.");
+    var fingerprint = new string('a', 64);
+    Assert(AzureBlobWorkspaceDataStore.BuildCompanyCacheBlobName(firstId, "northrop-grumman", fingerprint) ==
+        $"workspaces/{firstId}/job-caches/northrop-grumman/{fingerprint}.json",
+        "Company/query Blob namespace is incorrect.");
     AssertThrows<ArgumentException>(() => AzureBlobWorkspaceDataStore.BuildBlobName(
         "../another-workspace", WorkspaceDataFile.Settings));
+    AssertThrows<ArgumentException>(() => AzureBlobWorkspaceDataStore.BuildCompanyCacheBlobName(
+        firstId, "../another-company", fingerprint));
+    AssertThrows<ArgumentException>(() => AzureBlobWorkspaceDataStore.BuildCompanyCacheBlobName(
+        firstId, "northrop-grumman", "not-a-sha256"));
     AssertThrows<ArgumentException>(() => new AzureBlobWorkspaceDataStore(
         container, "../another-workspace", NullLogger<AzureBlobWorkspaceDataStore>.Instance));
     return Task.CompletedTask;
@@ -507,16 +521,23 @@ static async Task TestLegacyCacheUrlMigrationAsync()
     try
     {
         var (_, state, job) = await CreateCatalogAsync(directory);
-        var canonicalJson = await File.ReadAllTextAsync(state.JobsCachePath);
+        var query = new JobSourceQuery(
+            FacetDefaults.UnitedStatesCountryId,
+            FacetDefaults.UnitedStatesCountryLabel,
+            false,
+            true,
+            []);
+        var cachePath = state.JobsCachePathFor(query);
+        var canonicalJson = await File.ReadAllTextAsync(cachePath);
         Assert(canonicalJson.Contains("\"sourceUrl\"", StringComparison.Ordinal) &&
                !canonicalJson.Contains("\"workdayUrl\"", StringComparison.Ordinal),
             "A newly written cache did not use the canonical sourceUrl field.");
         await File.WriteAllTextAsync(
-            state.JobsCachePath,
+            cachePath,
             canonicalJson.Replace("\"sourceUrl\"", "\"workdayUrl\"", StringComparison.Ordinal));
 
-        var migrated = await state.LoadJobsCacheAsync();
-        var rewritten = await File.ReadAllTextAsync(state.JobsCachePath);
+        var migrated = await state.LoadJobsCacheAsync(query);
+        var rewritten = await File.ReadAllTextAsync(cachePath);
         Assert(migrated?.Jobs.Single().SourceUrl == job.SourceUrl,
             "The legacy cached posting URL was not restored.");
         Assert(rewritten.Contains("\"sourceUrl\"", StringComparison.Ordinal) &&
@@ -1076,12 +1097,13 @@ static async Task TestLazyDetailCacheAsync()
         {
             AnalysisVersion = JobSourceClient.CurrentAnalysisVersion
         };
-        var catalog = await CreateTestCatalogAsync(directory, handler, [summary], query);
+        var (catalog, store, _) = await CreateTestCatalogAsync(directory, handler, [summary], query);
 
         var first = await catalog.GetJobDetailAsync(summary.StableId);
+        store.Diagnostics.Reset();
         var second = await catalog.GetJobDetailAsync(summary.StableId);
         Assert(first?.DescriptionHtml.Length > 0 && second?.DescriptionHtml.Length > 0 &&
-               handler.DetailRequests == 1,
+               handler.DetailRequests == 1 && store.Diagnostics.Snapshot().Writes == 0,
             "Lazy detail loading did not persist and reuse the first provider response.");
     }
     finally
@@ -1098,7 +1120,7 @@ static async Task TestAutomaticCheckIncrementalAsync()
         var handler = CreateWorkdayHandler(() => 2);
         var query = WorkdaySource().Query;
         var cached = CachedJob("leidos", "REQ-0000", "/job/0", "<p>Cached detail.</p>");
-        var catalog = await CreateTestCatalogAsync(directory, handler, [cached], query);
+        var (catalog, _, _) = await CreateTestCatalogAsync(directory, handler, [cached], query);
 
         var result = await catalog.CheckForUnknownJobsAsync();
         Assert(result.Performed && result.UnknownStableIds.SequenceEqual(["leidos:REQ-0001"]) &&
@@ -1128,8 +1150,8 @@ static async Task TestPerCompanyCacheEnvelopeAsync()
             [CachedJob("boeing", "REQ-SAME", "/boeing/same", "<p>Boeing</p>")],
             DateTimeOffset.UtcNow, 0, boeingQuery);
 
-        var leidos = await state.LoadJobsCacheAsync("leidos");
-        var boeing = await state.LoadJobsCacheAsync("boeing");
+        var leidos = await state.LoadJobsCacheAsync(leidosQuery);
+        var boeing = await state.LoadJobsCacheAsync(boeingQuery);
         Assert(leidos?.Jobs.Single().StableId == "leidos:REQ-SAME" &&
                boeing?.Jobs.Single().StableId == "boeing:REQ-SAME",
             "Independent company caches collided or replaced each other.");
@@ -1138,6 +1160,214 @@ static async Task TestPerCompanyCacheEnvelopeAsync()
     {
         if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
     }
+}
+
+static async Task TestCompanyCacheWriteIsolationAsync()
+{
+    var directory = TestDirectory("source-cache-isolation");
+    try
+    {
+        var store = new FileWorkspaceDataStore(directory, NullLogger<FileWorkspaceDataStore>.Instance);
+        var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+        var state = new AppStateStore(NullLogger<AppStateStore>.Instance, companies, store);
+        var northropQuery = WorkdaySource().Query with { CompanyId = "northrop-grumman" };
+        var nvidiaQuery = WorkdaySource().Query with { CompanyId = "nvidia" };
+        await state.SaveJobsCacheAsync(
+            [CachedJob("northrop-grumman", "REQ-N", "/northrop/one", "<p>Northrop</p>")],
+            DateTimeOffset.UtcNow, 0, northropQuery);
+        var northropPath = state.JobsCachePathFor(northropQuery);
+
+        store.Diagnostics.Reset();
+        await state.SaveJobsCacheAsync(
+            [CachedJob("nvidia", "REQ-V", "/nvidia/one", "<p>NVIDIA</p>")],
+            DateTimeOffset.UtcNow, 0, nvidiaQuery);
+        var write = store.Diagnostics.Snapshot();
+        Assert(write.Writes == 1 &&
+               write.WritesByDocument.Keys.Single().Contains("job-caches/nvidia/", StringComparison.Ordinal) &&
+               File.Exists(northropPath),
+            "Writing NVIDIA touched or replaced the Northrop company cache.");
+
+        var alternateNorthrop = northropQuery with { IncludeAllLocations = false, IncludeRemote = true };
+        await state.SaveJobsCacheAsync(
+            [CachedJob("northrop-grumman", "REQ-N2", "/northrop/two", "<p>Alternate</p>")],
+            DateTimeOffset.UtcNow, 0, alternateNorthrop);
+        Assert(state.JobsCachePathFor(northropQuery) != state.JobsCachePathFor(alternateNorthrop) &&
+               (await state.LoadJobsCacheAsync(northropQuery))?.Jobs.Single().RequisitionId == "REQ-N" &&
+               (await state.LoadJobsCacheAsync(alternateNorthrop))?.Jobs.Single().RequisitionId == "REQ-N2",
+            "Independent query fingerprints collided within one company cache.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static async Task TestSplitCacheMigrationAsync()
+{
+    var directory = TestDirectory("split-cache-migration");
+    try
+    {
+        var store = new FileWorkspaceDataStore(directory, NullLogger<FileWorkspaceDataStore>.Instance);
+        var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+        var state = new AppStateStore(NullLogger<AppStateStore>.Instance, companies, store);
+        var leidosQuery = WorkdaySource().Query;
+        var boeingQuery = leidosQuery with { CompanyId = "boeing" };
+        var leidosJob = CachedJob("leidos", "REQ-L", "/leidos/legacy", "<p>Legacy description</p>") with
+        {
+            ClearanceLevel = "secret",
+            ClearanceRequirement = "activeRequired"
+        };
+        var boeingJob = CachedJob("boeing", "REQ-B", "/boeing/legacy", "<p>Boeing description</p>");
+        var now = DateTimeOffset.UtcNow;
+        await store.WriteJsonAsync(
+            WorkspaceDataFile.JobsCache,
+            new JobsCacheEnvelope(5, new Dictionary<string, JobsCacheDocument>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["leidos"] = new(5, now, now, 0, [leidosJob], leidosQuery),
+                ["boeing"] = new(5, now, now, 0, [boeingJob], boeingQuery)
+            }));
+        var history = new JobHistoryDocument(4, new Dictionary<string, JobHistoryEntry>(StringComparer.Ordinal)
+        {
+            [leidosJob.StableId] = new(
+                leidosJob.RequisitionId,
+                leidosJob.ExternalPath,
+                now,
+                now,
+                true,
+                JobWorkflowStates.Saved,
+                now,
+                CompanyId: "leidos")
+        });
+        await store.WriteJsonAsync(WorkspaceDataFile.JobHistory, history);
+
+        var migratedLeidos = await state.LoadJobsCacheAsync(leidosQuery);
+        var migratedBoeing = await state.LoadJobsCacheAsync(boeingQuery);
+        Assert(!await store.ExistsAsync(WorkspaceDataFile.JobsCache) &&
+               migratedLeidos?.Jobs.Single().DescriptionHtml.Contains("Legacy description", StringComparison.Ordinal) == true &&
+               migratedLeidos.Jobs.Single().ClearanceLevel == "secret" &&
+               migratedBoeing?.Jobs.Single().CompanyId == "boeing" &&
+               (await state.LoadJobHistoryAsync()).Jobs[leidosJob.StableId].WorkflowState == JobWorkflowStates.Saved,
+            "Cumulative-cache migration lost detail, classification, company identity, or curated history.");
+
+        store.Diagnostics.Reset();
+        var restarted = new AppStateStore(NullLogger<AppStateStore>.Instance, companies, store);
+        _ = await restarted.LoadJobsCacheAsync(leidosQuery);
+        _ = await restarted.LoadJobsCacheAsync(boeingQuery);
+        Assert(store.Diagnostics.Snapshot().Writes == 0,
+            "Split-cache migration was not idempotent on restart.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static async Task TestCachedDetailPureReadAsync()
+{
+    var directory = TestDirectory("cached-detail-pure-read");
+    try
+    {
+        var handler = CreateWorkdayHandler(() => 1);
+        var client = CreateSourceClient(new HttpClient(handler));
+        var (company, query) = WorkdaySource();
+        var hydrated = await client.FetchAllJobsAsync(company, query);
+        var providerCalls = handler.DetailRequests;
+        var (catalog, store, _) = await CreateTestCatalogAsync(
+            directory, handler, hydrated.Jobs, query);
+        store.Diagnostics.Reset();
+
+        var detail = await catalog.GetJobDetailAsync(hydrated.Jobs.Single().StableId);
+        var writes = store.Diagnostics.Snapshot();
+        Assert(detail?.DescriptionHtml.Length > 0 && handler.DetailRequests == providerCalls &&
+               writes.Writes == 0,
+            "Opening a current cached posting caused provider or persistence activity.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static async Task TestUnchangedRefreshWriteSuppressionAsync()
+{
+    var directory = TestDirectory("unchanged-write-suppression");
+    try
+    {
+        var handler = CreateWorkdayHandler(() => 3);
+        var client = CreateSourceClient(new HttpClient(handler));
+        var (company, query) = WorkdaySource();
+        var hydrated = await client.FetchAllJobsAsync(company, query);
+        var (catalog, store, _) = await CreateTestCatalogAsync(directory, handler, hydrated.Jobs, query);
+        var providerCalls = handler.DetailRequests;
+
+        store.Diagnostics.Reset();
+        await catalog.RefreshAsync();
+        var manual = store.Diagnostics.Snapshot();
+        Console.WriteLine(
+            $"METRIC unchanged-refresh manual-writes={manual.Writes} manual-bytes={manual.BytesWritten}");
+        Assert(handler.DetailRequests == providerCalls && manual.Writes == 1 &&
+               manual.WritesByDocument.Keys.Single().StartsWith("source-status/", StringComparison.Ordinal),
+            "An unchanged manual refresh rewrote cache/history instead of only its tiny source status.");
+
+        store.Diagnostics.Reset();
+        await catalog.CheckForUnknownJobsAsync();
+        Assert(handler.DetailRequests == providerCalls && store.Diagnostics.Snapshot().Writes == 0,
+            "An unchanged automatic check wrote cache, history, or source status.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static async Task TestFirstEmptyRefreshPersistsBaselineAsync()
+{
+    var directory = TestDirectory("first-empty-refresh");
+    try
+    {
+        var handler = CreateWorkdayHandler(() => 0);
+        var (_, query) = WorkdaySource();
+        var (catalog, store, state) = await CreateTestCatalogAsync(
+            directory, handler, [], query, seedCache: false);
+        store.Diagnostics.Reset();
+
+        await catalog.RefreshAsync();
+        var writes = store.Diagnostics.Snapshot();
+        Assert(writes.WritesByDocument.Keys.Any(path =>
+                   path.StartsWith("job-caches/", StringComparison.Ordinal)) &&
+               (await state.LoadJobsCacheAsync(query)) is { Jobs.Count: 0 },
+            "The first empty provider result was not persisted as a valid source baseline.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static async Task TestPartialHydrationCyclesAsync()
+{
+    var handler = CreateWorkdayHandler(() => 12);
+    var client = CreateSourceClient(new HttpClient(handler), new JobSourceOptions
+    {
+        MaximumDetailRequestsPerRefresh = 5,
+        DetailConcurrency = 2
+    });
+    var (company, query) = WorkdaySource();
+    var first = await client.FetchAllJobsAsync(company, query);
+    var afterFirst = handler.DetailRequests;
+    var second = await client.FetchAllJobsAsync(company, query, cachedJobs: first.Jobs);
+    var afterSecond = handler.DetailRequests;
+    var third = await client.FetchAllJobsAsync(company, query, cachedJobs: second.Jobs);
+    var afterThird = handler.DetailRequests;
+    var fourth = await client.FetchAllJobsAsync(company, query, cachedJobs: third.Jobs);
+
+    Assert(afterFirst == 5 && afterSecond - afterFirst == 5 && afterThird - afterSecond == 2 &&
+           handler.DetailRequests - afterThird == 0 &&
+           second.Metrics is { CacheHits: 5, DetailRequests: 5 } &&
+           third.Metrics is { CacheHits: 10, DetailRequests: 2, DeferredDetails: 0 } &&
+           fourth.Metrics is { CacheHits: 12, DetailRequests: 0, DeferredDetails: 0 } &&
+           fourth.Jobs.All(job => !string.IsNullOrWhiteSpace(job.DescriptionHtml)),
+        "Partial hydration redownloaded prior batches or mishandled the final/full cycle.");
 }
 
 static async Task TestCompressedCacheAsync()
@@ -1155,8 +1385,8 @@ static async Task TestCompressedCacheAsync()
             0,
             WorkdaySource().Query);
 
-        var raw = await File.ReadAllTextAsync(Path.Combine(directory, "jobs-cache.json"));
-        var loaded = await state.LoadJobsCacheAsync("leidos");
+        var raw = await File.ReadAllTextAsync(state.JobsCachePathFor(WorkdaySource().Query));
+        var loaded = await state.LoadJobsCacheAsync(WorkdaySource().Query);
         Assert(!raw.Contains("compression-marker", StringComparison.Ordinal) &&
                raw.Length < description.Length / 2 &&
                loaded?.Jobs.Single().DescriptionHtml == description,
@@ -1213,27 +1443,27 @@ static async Task TestNorthropScaleMetricsAsync()
         second.Metrics);
     var compactBytes = JsonSerializer.SerializeToUtf8Bytes(
         JobsListSnapshot.FromSnapshot(snapshot)).Length;
-    var compactWireBytes = BrotliSize(JsonSerializer.SerializeToUtf8Bytes(
+    var compactWireBytes = GzipSize(JsonSerializer.SerializeToUtf8Bytes(
         JobsListSnapshot.FromSnapshot(snapshot)));
     var fullBytes = JsonSerializer.SerializeToUtf8Bytes(snapshot).Length;
 
     Console.WriteLine(
         $"METRIC mocked-large summaries={listingCount} first-details={detailAfterFirst} " +
         $"second-details={secondDetailRequests} second-cache-hits={second.Metrics?.CacheHits} " +
-        $"compact-bytes={compactBytes} brotli-bytes={compactWireBytes} full-cache-bytes={fullBytes} " +
+        $"compact-bytes={compactBytes} gzip-bytes={compactWireBytes} full-cache-bytes={fullBytes} " +
         $"first-ms={first.Metrics?.ElapsedMilliseconds} second-ms={second.Metrics?.ElapsedMilliseconds}");
     Assert(detailAfterFirst == 200 && secondDetailRequests == 200 &&
            second.Metrics is { ListingsFetched: listingCount } &&
-           compactBytes < fullBytes,
+           compactBytes < fullBytes && compactWireBytes < 350_000,
         "The mocked large-source refresh exceeded its batch or compact-response boundary.");
 }
 
-static int BrotliSize(byte[] value)
+static int GzipSize(byte[] value)
 {
     using var output = new MemoryStream();
-    using (var brotli = new BrotliStream(output, CompressionLevel.Fastest, leaveOpen: true))
+    using (var gzip = new GZipStream(output, CompressionLevel.Fastest, leaveOpen: true))
     {
-        brotli.Write(value, 0, value.Length);
+        gzip.Write(value, 0, value.Length);
     }
     return checked((int)output.Length);
 }
@@ -1378,13 +1608,21 @@ static async Task TestFileResetAsync()
         {
             await store.WriteJsonAsync(file, new TestDocument(file.ToString(), 1));
         }
+        var fingerprint = new string('b', 64);
+        await store.WriteCompanyCacheJsonAsync(
+            "northrop-grumman", fingerprint, new TestDocument("cache", 1));
+        await store.WriteSourceStatusJsonAsync(
+            "northrop-grumman", fingerprint, new TestDocument("status", 1));
         var unrelatedPath = Path.Combine(directory, "leave-me-alone.txt");
         await File.WriteAllTextAsync(unrelatedPath, "not application state");
 
         var deleted = await store.DeleteAllAsync();
-        Assert(deleted == 3, $"Expected three known documents to be deleted, but deleted {deleted}.");
+        Assert(deleted == 5, $"Expected five application documents to be deleted, but deleted {deleted}.");
         Assert(Enum.GetValues<WorkspaceDataFile>().All(file => !File.Exists(store.Describe(file))),
             "A known workspace document survived reset.");
+        Assert(!File.Exists(store.DescribeCompanyCache("northrop-grumman", fingerprint)) &&
+               !File.Exists(store.DescribeSourceStatus("northrop-grumman", fingerprint)),
+            "A company cache or source-status document survived reset.");
         Assert(File.Exists(unrelatedPath), "Reset deleted an unrelated file from the data directory.");
     }
     finally
@@ -1955,16 +2193,20 @@ static JobRecord CachedJob(string companyId, string requisitionId, string path, 
     DetailCachedAtUtc: DateTimeOffset.UtcNow,
     AnalysisVersion: JobSourceClient.CurrentAnalysisVersion);
 
-static async Task<JobCatalog> CreateTestCatalogAsync(
+static async Task<(JobCatalog Catalog, FileWorkspaceDataStore Store, AppStateStore State)> CreateTestCatalogAsync(
     string directory,
     HttpMessageHandler handler,
     IReadOnlyList<JobRecord> cachedJobs,
-    JobSourceQuery query)
+    JobSourceQuery query,
+    bool seedCache = true)
 {
     var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
     var store = new FileWorkspaceDataStore(directory, NullLogger<FileWorkspaceDataStore>.Instance);
     var state = new AppStateStore(NullLogger<AppStateStore>.Instance, companies, store);
-    await state.SaveJobsCacheAsync(cachedJobs, DateTimeOffset.UtcNow, 0, query);
+    if (seedCache)
+    {
+        await state.SaveJobsCacheAsync(cachedJobs, DateTimeOffset.UtcNow, 0, query);
+    }
     var credentials = new CredentialDetector(NullLogger<CredentialDetector>.Instance);
     var academics = new AcademicQualificationDetector();
     var authorization = new WorkAuthorizationDetector();
@@ -1987,7 +2229,7 @@ static async Task<JobCatalog> CreateTestCatalogAsync(
         remote,
         companies);
     await catalog.InitializeAsync(query);
-    return catalog;
+    return (catalog, store, state);
 }
 
 static JobSourceClient CreateSourceClient(

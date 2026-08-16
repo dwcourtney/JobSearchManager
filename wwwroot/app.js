@@ -4,7 +4,9 @@ const HEADROOM_WARNING_THRESHOLD = 0.75;
 const SETTINGS_SAVE_DEBOUNCE_MS = 400;
 const OVERLAY_TRANSITION_MS = 180;
 const COPY_FEEDBACK_MS = 2000;
-const AUTOMATIC_STATUS_POLL_MS = 2000;
+const AUTOMATIC_STATUS_JOBS_POLL_MS = 30000;
+const AUTOMATIC_STATUS_SETTINGS_POLL_MS = 120000;
+const REFRESH_STATUS_POLL_MS = 1000;
 const ALL_COUNTRIES_LABEL = "All countries";
 const ALL_LOCATIONS_LABEL = "All locations";
 const AGE_GROUPS = [
@@ -70,8 +72,11 @@ const state = {
   locationGroups: [],
   remoteLocations: [],
   facetMatchingJobs: 0,
-  pollTimer: null,
+  automaticStatusTimer: null,
+  automaticStatusRequestInFlight: false,
   refreshProgressTimer: null,
+  refreshStatusRequestInFlight: false,
+  refreshPollingGeneration: 0,
   overlayHideTimer: null,
   copyFeedbackTimer: null,
   focusBeforeLoading: null,
@@ -380,6 +385,7 @@ async function initialize() {
   elements.fullPostingTab.addEventListener("click", () => showDetailTab("posting", true));
   document.querySelector(".detail-tabs").addEventListener("keydown", handleDetailTabKeydown);
   elements.copyPostingButton.addEventListener("click", copySelectedJobPosting);
+  document.addEventListener("visibilitychange", handleVisibilityChange);
   elements.sourcePostingLink.addEventListener("click", () => {
     const job = state.jobs.find(item => item.stableId === state.selectedJobId);
     if (job) {
@@ -420,6 +426,7 @@ function showView(view, focusFirstControl = false, options = {}) {
   if (focusFirstControl) {
     (jobsSelected ? elements.filterToggle : elements.companySelect).focus();
   }
+  if (!state.isInitializing) scheduleAutomaticStatusPolling();
   return true;
 }
 
@@ -546,7 +553,7 @@ async function loadInitialState() {
     } else if (!state.catalogIsRefreshing) {
       setLoading(false);
     }
-    window.setInterval(loadAutomaticCheckStatus, AUTOMATIC_STATUS_POLL_MS);
+    scheduleAutomaticStatusPolling();
   } catch (error) {
     state.isInitializing = false;
     showClientError(error);
@@ -752,6 +759,11 @@ function normalizeSponsorshipProfile(value) {
 }
 
 async function loadAutomaticCheckStatus() {
+  if (document.visibilityState === "hidden" || state.automaticStatusRequestInFlight) {
+    return;
+  }
+  clearTimeout(state.automaticStatusTimer);
+  state.automaticStatusRequestInFlight = true;
   try {
     const response = await fetch("/api/automatic-check/status", { cache: "no-store" });
     if (!response.ok) {
@@ -779,7 +791,30 @@ async function loadAutomaticCheckStatus() {
     }
   } catch (error) {
     console.warn("Automatic-check status is temporarily unavailable.", error);
+  } finally {
+    state.automaticStatusRequestInFlight = false;
+    scheduleAutomaticStatusPolling();
   }
+}
+
+function scheduleAutomaticStatusPolling(delay = null) {
+  clearTimeout(state.automaticStatusTimer);
+  state.automaticStatusTimer = null;
+  if (document.visibilityState === "hidden" || state.isInitializing) return;
+  const interval = delay ?? (state.activeView === "jobs"
+    ? AUTOMATIC_STATUS_JOBS_POLL_MS
+    : AUTOMATIC_STATUS_SETTINGS_POLL_MS);
+  state.automaticStatusTimer = setTimeout(loadAutomaticCheckStatus, interval);
+}
+
+function handleVisibilityChange() {
+  if (document.visibilityState === "hidden") {
+    clearTimeout(state.automaticStatusTimer);
+    state.automaticStatusTimer = null;
+    return;
+  }
+  scheduleAutomaticStatusPolling(250);
+  if (state.catalogIsRefreshing) beginRefreshProgressPolling(true);
 }
 
 async function runDueAutomaticCheck() {
@@ -796,7 +831,7 @@ async function runDueAutomaticCheck() {
     console.warn("The due automatic check could not be completed.", error);
   } finally {
     state.automaticCheckRequestInFlight = false;
-    window.setTimeout(loadAutomaticCheckStatus, 250);
+    scheduleAutomaticStatusPolling(1000);
   }
 }
 
@@ -1383,7 +1418,6 @@ async function applyJobSource(options = {}) {
     ? true
     : elements.includeRemote.checked;
   const physicalLocations = includeAllLocations ? [] : selectedPendingLocations();
-  clearTimeout(state.pollTimer);
   setLoading(true, { title: `Loading ${company?.displayName || "job-source"} jobs` });
   beginRefreshProgressPolling();
   elements.errorBanner.hidden = true;
@@ -1445,7 +1479,6 @@ async function refreshJobs() {
       "Choose a company and location source, then select Apply Job Source.";
     return;
   }
-  clearTimeout(state.pollTimer);
   setLoading(true, { title: `Refreshing ${state.companyName} jobs` });
   beginRefreshProgressPolling();
   elements.errorBanner.hidden = true;
@@ -1499,9 +1532,8 @@ function applySnapshot(snapshot) {
   updateLastRefreshed();
   updateCacheBanner(snapshot);
 
-  clearTimeout(state.pollTimer);
   if (snapshot.isRefreshing) {
-    state.pollTimer = setTimeout(loadSnapshot, 750);
+    beginRefreshProgressPolling(true);
   }
   updateQueryControls();
 }
@@ -3233,7 +3265,8 @@ function academicLevelLabel(level, specificDegree = null) {
 
 function academicBadgeLabel(academic) {
   if (academic.minimumLevel === "noneSpecified" &&
-      Array.isArray(academic.accreditations) && academic.accreditations.length) {
+      (academic.hasAccreditation ||
+       (Array.isArray(academic.accreditations) && academic.accreditations.length))) {
     return "Accreditation";
   }
   const level = academicLevelLabel(academic.minimumLevel, academic.specificDegree);
@@ -3592,21 +3625,38 @@ function updateLoadingProgress(progress, explicitText) {
   }
 }
 
-function beginRefreshProgressPolling() {
+function beginRefreshProgressPolling(loadSnapshotWhenComplete = false) {
   clearTimeout(state.refreshProgressTimer);
+  const generation = ++state.refreshPollingGeneration;
   const poll = async () => {
-    if (!state.isRefreshing) return;
+    if (!state.isRefreshing || generation !== state.refreshPollingGeneration) return;
+    if (document.visibilityState === "hidden") {
+      state.refreshProgressTimer = setTimeout(poll, 5000);
+      return;
+    }
+    if (state.refreshStatusRequestInFlight) {
+      state.refreshProgressTimer = setTimeout(poll, REFRESH_STATUS_POLL_MS);
+      return;
+    }
+    state.refreshStatusRequestInFlight = true;
     try {
       const response = await fetch("/api/jobs/status", { cache: "no-store" });
-      if (response.ok) {
+      if (response.ok && generation === state.refreshPollingGeneration) {
         const status = await response.json();
-        if (status.isRefreshing) updateLoadingProgress(status.refreshProgress);
+        if (status.isRefreshing) {
+          updateLoadingProgress(status.refreshProgress);
+        } else {
+          if (loadSnapshotWhenComplete) await loadSnapshot();
+          return;
+        }
       }
     } catch {
       // The foreground request owns error reporting; progress polling is best effort.
+    } finally {
+      state.refreshStatusRequestInFlight = false;
     }
-    if (state.isRefreshing) {
-      state.refreshProgressTimer = setTimeout(poll, 400);
+    if (state.isRefreshing && generation === state.refreshPollingGeneration) {
+      state.refreshProgressTimer = setTimeout(poll, REFRESH_STATUS_POLL_MS);
     }
   };
   state.refreshProgressTimer = setTimeout(poll, 100);

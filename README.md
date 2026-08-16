@@ -143,14 +143,16 @@ The normal jobs API returns compact list records without full descriptions or
 large evidence collections. Selecting a job requests that one detail from the
 server-side cache, fetching it from the provider only when absent. Description-scope
 keyword matching runs against cached text on the server and returns only matching
-stable IDs. Refresh-progress polling uses a status-only endpoint and never transfers
-the complete job list every polling interval.
+stable IDs. Refresh-progress polling uses a status-only endpoint and transfers the
+complete job list once, when a detached refresh completes. Polls do not overlap,
+slow down when the tab is hidden, and the ordinary automatic-check status cadence
+is 30 seconds while Jobs is visible and 120 seconds elsewhere.
 
 Cached descriptions are compressed at rest. Parser-version changes re-run analysis
 against inflated cached HTML locally and do not cause provider downloads. Cache
-schema 5 stores independently keyed company source documents in the existing
-workspace cache envelope so future multi-company orchestration can retain source
-results without requisition collisions.
+schema 6 stores one compact document per company and canonical query fingerprint.
+An unchanged automatic refresh writes neither cache nor history; a manual refresh
+updates only its small source-status document when job content is unchanged.
 
 ## Local persistent data
 
@@ -159,8 +161,9 @@ All persistent state is stored beside the running application in:
 ```text
 <AppContext.BaseDirectory>\data\
   settings.json
-  jobs-cache.json
   job-history.json
+  job-caches\{companyId}\{queryFingerprint}.json
+  source-status\{companyId}\{queryFingerprint}.json
 ```
 
 Nothing is stored in AppData, LocalAppData, Temp, the registry, or another hidden
@@ -169,9 +172,9 @@ application directory is not writable, it reports a clear startup/save error.
 
 Job history and stable job IDs are company-scoped. Existing pre-generalization
 history is migrated to the `leidos` company without resetting NEW, viewed,
-first-seen, last-seen, or hidden state. Source caches coexist in a versioned,
-company-keyed envelope and retain company-aware query identity. A legacy single
-source cache is migrated without requiring workspace reset.
+first-seen, last-seen, or hidden state. A legacy single-source or cumulative
+`jobs-cache.json` envelope is split into company/query documents idempotently and
+removed only after every supported entry has migrated safely.
 
 Each job has exactly one persisted workflow state: Normal, Saved, Applied, or
 Hidden. The results tabs show those mutually exclusive populations as All Jobs,
@@ -220,9 +223,8 @@ unapplied-source guard as a manual edit and offers **Apply and go to Jobs** when
 imported source is valid.
 
 Settings also provides **Reset Current Workspace**. After confirmation, local mode
-deletes only the three application-owned JSON documents shown above and reloads
-first-run defaults. It does not recursively clean the `data` directory, so unrelated
-files are left untouched.
+deletes only the application-owned JSON documents and cache/status subtrees shown
+above and reloads first-run defaults. Unrelated files are left untouched.
 
 ## Azure App Service mode
 
@@ -270,12 +272,14 @@ Each workspace is isolated under:
 userdata (private container)
   workspaces/{workspaceId}/
     settings.json
-    jobs-cache.json
     job-history.json
+    job-caches/{companyId}/{queryFingerprint}.json
+    source-status/{companyId}/{queryFingerprint}.json
 ```
 
-Blob names are chosen from a fixed document set, and workspace IDs are generated
-and validated server-side. ETag conditions prevent a stale request from silently
+Blob names are constructed from a fixed document set plus strictly validated
+company IDs and SHA-256 query fingerprints; workspace IDs are generated and
+validated server-side. ETag conditions prevent a stale request from silently
 overwriting a newer Blob version. Storage errors are reported without creating a
 different workspace or falling back to local files.
 
@@ -290,7 +294,7 @@ user's salary, education, clearance, filters, locations, hidden jobs, or history
 The company and credential catalogs remain shared source-controlled application
 configuration.
 
-In Azure mode, **Reset Current Workspace** deletes only the three fixed Blob names
+In Azure mode, **Reset Current Workspace** deletes only application-owned documents
 under the server-resolved current workspace prefix. The browser cannot supply a
 workspace ID. Only after all deletions succeed does the server expire the protected
 workspace cookie; the reload then creates a new anonymous workspace. A storage
@@ -301,8 +305,9 @@ succeeded.
 
 Local mode retains its background automatic-check scheduler. Azure mode does not
 assume the Free F1 process remains awake and does not run one global multi-user
-timer. While a workspace is open, the browser polls check status and asks the
-ASP.NET Core backend to perform a due check for that workspace. All provider calls
+timer. While a workspace is open, the browser checks the lightweight status
+endpoint and asks the ASP.NET Core backend to perform a due check for that
+workspace. Hidden tabs back off and browser requests never overlap. All provider calls
 remain server-side and are limited to companies in `CompanyCatalog.json`.
 The automatic path performs one listing pass, reuses unchanged cached jobs, and
 hydrates only new or materially changed jobs within its smaller detail budget.
