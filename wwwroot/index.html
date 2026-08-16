@@ -95,13 +95,23 @@
       <section class="workspace">
         <aside class="results-pane" aria-label="Job results">
           <div class="pane-heading">
-            <span>Job results</span>
+            <div class="results-tabs" role="tablist" aria-label="Job result views">
+              <button id="all-results-tab" class="results-tab active" type="button" role="tab"
+                      aria-selected="true" aria-controls="results-tab-panel">All Jobs</button>
+              <button id="saved-results-tab" class="results-tab" type="button" role="tab"
+                      aria-selected="false" aria-controls="results-tab-panel" tabindex="-1">
+                Saved <span id="saved-job-count">(0)</span>
+              </button>
+            </div>
             <label class="show-hidden-toggle">
               <input id="show-hidden-jobs" type="checkbox">
               Show hidden <span id="hidden-job-count">(0)</span>
             </label>
           </div>
-          <div id="job-list" class="job-list" aria-label="Filtered Workday jobs"></div>
+          <div id="results-tab-panel" class="results-tab-panel" role="tabpanel"
+               aria-labelledby="all-results-tab">
+            <div id="job-list" class="job-list" aria-label="Filtered Workday jobs"></div>
+          </div>
         </aside>
 
         <article class="detail-pane" aria-live="polite">
@@ -115,6 +125,7 @@
                   <h2 id="detail-title"></h2>
                   <p class="detail-identity">
                     <span id="detail-new-badge" class="new-badge" hidden>NEW</span>
+                    <span id="detail-saved-badge" class="saved-badge" hidden>Saved</span>
                     <span id="detail-hidden-badge" class="hidden-badge" hidden>Hidden</span>
                     <span id="detail-requisition" class="requisition"></span>
                   </p>
@@ -213,6 +224,10 @@
                     <div id="detail-location-note" class="summary-note warning" hidden>
                       <strong>Remote location restriction</strong>
                       <p id="detail-location-note-text"></p>
+                    </div>
+                    <div id="detail-remote-work-note" class="summary-note warning" hidden>
+                      <strong id="detail-remote-work-note-title">Remote work warning</strong>
+                      <p id="detail-remote-work-note-text"></p>
                     </div>
                     <div id="detail-headroom-note" class="summary-note caution" hidden>
                       <strong>Limited salary headroom</strong>

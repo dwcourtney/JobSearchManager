@@ -232,6 +232,14 @@
   --color-restore-action-border: #9eb8c8;
   --color-restore-action-text: #27546e;
   --color-restore-action-background: #e9f2f7;
+  --color-save-action: #536979;
+  --color-save-action-border: transparent;
+  --color-save-action-background: transparent;
+  --color-save-action-hover: #e8f3fb;
+  --color-save-action-active: #8a6500;
+  --color-saved-badge-border: #c2a557;
+  --color-saved-badge-text: #654b08;
+  --color-saved-badge-background: #fff6d8;
 
   /* Keyword chips */
   --color-chip-border: #9fc3da;
@@ -287,6 +295,12 @@
   --color-hidden-badge-border: #a7afb5;
   --color-hidden-badge-text: #4e5961;
   --color-hidden-badge-background: #edf0f2;
+  --color-remote-question-border: #d5aa59;
+  --color-remote-question-text: #744d0d;
+  --color-remote-question-background: #fff4d8;
+  --color-remote-strong-border: #bf795d;
+  --color-remote-strong-text: #73351f;
+  --color-remote-strong-background: #ffede7;
 
   /* Error state */
   --color-error-border: #e1abab;
@@ -464,6 +478,14 @@
   --color-restore-action-border: #567c93;
   --color-restore-action-text: #b8def4;
   --color-restore-action-background: #203846;
+  --color-save-action: #afc2cf;
+  --color-save-action-border: transparent;
+  --color-save-action-background: transparent;
+  --color-save-action-hover: #203746;
+  --color-save-action-active: #f0cf70;
+  --color-saved-badge-border: #8d7a42;
+  --color-saved-badge-text: #f0daa0;
+  --color-saved-badge-background: #3c341f;
 
   /* Keyword chips */
   --color-chip-border: #467693;
@@ -519,6 +541,12 @@
   --color-hidden-badge-border: #68747d;
   --color-hidden-badge-text: #c8d0d5;
   --color-hidden-badge-background: #30383e;
+  --color-remote-question-border: #94733b;
+  --color-remote-question-text: #f0d49c;
+  --color-remote-question-background: #3d321e;
+  --color-remote-strong-border: #9d624d;
+  --color-remote-strong-text: #f2c1b0;
+  --color-remote-strong-background: #472b25;
 
   /* Error state */
   --color-error-border: #8c5559;

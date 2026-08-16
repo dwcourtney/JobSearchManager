@@ -3,8 +3,53 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using System.Text.Json;
 using WorkdayJobManager;
+
+if (args.Length >= 2 && args[0] == "--remote-corpus")
+{
+    var detector = new RemoteWorkDetector();
+    foreach (var path in args.Skip(1))
+    {
+        using var document = JsonDocument.Parse(await File.ReadAllTextAsync(path));
+        var jobs = document.RootElement.ValueKind == JsonValueKind.Array
+            ? document.RootElement.EnumerateArray().ToArray()
+            : document.RootElement.GetProperty("jobs").EnumerateArray().ToArray();
+        var results = jobs.Select(job => new
+        {
+            Company = job.TryGetProperty("company", out var company) ? company.GetString() ?? "unknown" : "unknown",
+            Requisition = job.TryGetProperty("requisitionId", out var requisition) ? requisition.GetString() ?? "" : "",
+            Title = job.TryGetProperty("title", out var title) ? title.GetString() ?? "" : "",
+            Analysis = detector.Analyze(
+                job.TryGetProperty("title", out title) ? title.GetString() ?? "" : "",
+                job.TryGetProperty("location", out var location) ? location.GetString() ?? "" : "",
+                job.TryGetProperty("additionalLocations", out var additional) &&
+                    additional.ValueKind == JsonValueKind.Array
+                        ? additional.EnumerateArray().Select(item => item.GetString() ?? "").ToArray()
+                        : [],
+                job.TryGetProperty("descriptionHtml", out var description) ? description.GetString() ?? "" : "")
+        }).ToArray();
+
+        Console.WriteLine($"REMOTE CORPUS {Path.GetFileName(path)} jobs={jobs.Length}");
+        foreach (var company in results.GroupBy(result => result.Company).OrderBy(group => group.Key))
+        {
+            Console.WriteLine($"  {company.Key}: total={company.Count()}, " +
+                $"strong={company.Count(item => item.Analysis.ConcernLevel == "strong")}, " +
+                $"questionable={company.Count(item => item.Analysis.ConcernLevel == "questionable")}, " +
+                $"none={company.Count(item => item.Analysis.ConcernLevel == "none")}");
+            foreach (var item in company.Where(item => item.Analysis.ConcernLevel != "none"))
+            {
+                Console.WriteLine($"    {item.Analysis.ConcernLevel} {item.Requisition} {item.Title}: {item.Analysis.Summary}");
+                foreach (var signal in item.Analysis.Signals)
+                {
+                    Console.WriteLine($"      {signal.Category}: {signal.Evidence}");
+                }
+            }
+        }
+    }
+    return;
+}
 
 if (args.Length >= 2 && args[0] == "--authorization-corpus")
 {
@@ -97,7 +142,22 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Work authorization detector ignores unrelated sponsor and resident language", TestAuthorizationFalsePositivesAsync),
     ("Work authorization detector surfaces non-U.S. and export wording for review", TestInternationalAuthorizationAsync),
     ("Work authorization detector recognizes location-specific work rights", TestLocationWorkRightsAsync),
-    ("Clearance detector ignores explicit no-clearance statements", TestNoClearanceRequiredAsync)
+    ("Clearance detector ignores explicit no-clearance statements", TestNoClearanceRequiredAsync),
+    ("Remote detector finds explicit onsite duties", TestRemoteOnsiteAsync),
+    ("Remote detector finds field deployment requirements", TestRemoteFieldDeploymentAsync),
+    ("Remote detector finds commuting-distance restrictions", TestRemoteCommuteAsync),
+    ("Remote detector finds recurring onsite days", TestRemoteOnsiteDaysAsync),
+    ("Remote detector classifies substantial travel", TestRemoteTravelAsync),
+    ("Remote detector accepts ordinary true-remote wording", TestTrueRemoteAsync),
+    ("Remote detector leaves ambiguous site wording alone", TestRemoteAmbiguousAsync),
+    ("Remote detector ignores prior site experience", TestRemoteHistoricalExperienceAsync),
+    ("Remote detector recognizes sanitized Leidos deployment language", TestLeidosRemoteFixtureAsync),
+    ("Remote detector keeps a sanitized MTM-style remote role neutral", TestMtmRemoteFixtureAsync),
+    ("Remote detector recognizes sanitized Boeing frequent-travel language", TestBoeingRemoteFixtureAsync),
+    ("Saved jobs can be saved and unsaved", TestSavedJobMutationAsync),
+    ("Saved jobs persist through a catalog restart", TestSavedJobRoundTripAsync),
+    ("Saved jobs remain workspace-isolated", TestSavedJobWorkspaceIsolationAsync),
+    ("Saved identity remains company-scoped", TestSavedJobCompanyIsolationAsync)
 };
 
 var failures = new List<string>();
@@ -605,6 +665,281 @@ static Task TestLocationWorkRightsAsync()
            analysis.ParseStatus == "parsed",
         "Location-specific work-rights wording was not parsed conservatively.");
     return Task.CompletedTask;
+}
+
+static Task TestRemoteOnsiteAsync()
+{
+    var analysis = RemoteAnalysis(
+        "<p>This role will provide onsite installation support at the customer facility.</p>");
+    Assert(analysis.ConcernLevel == "strong" &&
+           analysis.Signals.Any(signal => signal.Category == "onsite-duty"),
+        "A current onsite duty was not treated as a strong remote-work conflict.");
+    return Task.CompletedTask;
+}
+
+static Task TestRemoteFieldDeploymentAsync()
+{
+    var analysis = RemoteAnalysis(
+        "<p>You will conduct field integration testing and support operational validation.</p>");
+    Assert(analysis.ConcernLevel == "strong" &&
+           analysis.Signals.Any(signal => signal.Category == "field-deployment"),
+        "Field deployment/testing was not detected.");
+    return Task.CompletedTask;
+}
+
+static Task TestRemoteCommuteAsync()
+{
+    var analysis = RemoteAnalysis(
+        "<p>Candidates must live within 50 miles of the regional office.</p>");
+    Assert(analysis.ConcernLevel == "questionable" &&
+           analysis.Signals.Any(signal => signal.Category == "commuting-area"),
+        "A commuting-radius restriction was not surfaced conservatively.");
+    return Task.CompletedTask;
+}
+
+static Task TestRemoteOnsiteDaysAsync()
+{
+    var analysis = RemoteAnalysis(
+        "<p>The employee will work three days per week in the office.</p>");
+    Assert(analysis.ConcernLevel == "strong" &&
+           analysis.Signals.Any(signal => signal.Category == "scheduled-onsite"),
+        "Recurring onsite days were not treated as a strong conflict.");
+    return Task.CompletedTask;
+}
+
+static Task TestRemoteTravelAsync()
+{
+    var questionable = RemoteAnalysis("<p>This position requires 25% travel.</p>");
+    var strong = RemoteAnalysis("<p>This position requires up to 75% travel to airport locations.</p>");
+    var trailingPercentage = RemoteAnalysis("<p>The position may require travel up to 50% of the time.</p>");
+    Assert(questionable.ConcernLevel == "questionable" && strong.ConcernLevel == "strong" &&
+           trailingPercentage.ConcernLevel == "strong",
+        $"Travel severity was incorrect: {questionable.ConcernLevel}/{strong.ConcernLevel}.");
+    return Task.CompletedTask;
+}
+
+static Task TestTrueRemoteAsync()
+{
+    var analysis = RemoteAnalysis(
+        "<p>This is a fully remote software role. Collaborate through video meetings and deliver cloud services from your home office.</p>");
+    Assert(analysis.IsRemoteDesignated && analysis.ConcernLevel == "none",
+        "Ordinary work-from-home language was incorrectly warned.");
+    return Task.CompletedTask;
+}
+
+static Task TestRemoteAmbiguousAsync()
+{
+    var analysis = RemoteAnalysis(
+        "<p>The team builds software used by customer facilities and may attend occasional team events.</p>");
+    var periodic = RemoteAnalysis(
+        "<p>Working onsite in a company or client office is a possibility; periodic travel may be required.</p>");
+    Assert(analysis.ConcernLevel == "none" && periodic.ConcernLevel == "questionable",
+        "A facility mention without a current physical-presence requirement was escalated.");
+    return Task.CompletedTask;
+}
+
+static Task TestRemoteHistoricalExperienceAsync()
+{
+    var analysis = RemoteAnalysis(
+        "<p>Prior experience working at customer sites and conducting field testing is preferred.</p>");
+    Assert(analysis.ConcernLevel == "none",
+        "Historical site experience was mistaken for a current-job obligation.");
+    return Task.CompletedTask;
+}
+
+static Task TestLeidosRemoteFixtureAsync()
+{
+    var analysis = RemoteAnalysis(
+        "<h3>Field Deployment Support</h3>" +
+        "<p>Support installation and activation of sensing systems.</p>" +
+        "<p>Assist field operations during deployment and troubleshoot equipment integration issues in the field.</p>");
+    Assert(analysis.ConcernLevel == "strong" &&
+           analysis.Signals.Any(signal => signal.Category == "physical-installation"),
+        "The sanitized Leidos sensor-integration fixture was not classified as strongly inconsistent with WFH.");
+    return Task.CompletedTask;
+}
+
+static Task TestMtmRemoteFixtureAsync()
+{
+    var analysis = RemoteAnalysis(
+        "<p>Coordinate member transportation by telephone and document service issues. " +
+        "The platform connects members with medical facilities.</p>");
+    Assert(analysis.ConcernLevel == "none",
+        "The neutral MTM-style service-coordination fixture produced a false positive.");
+    return Task.CompletedTask;
+}
+
+static Task TestBoeingRemoteFixtureAsync()
+{
+    var detector = new RemoteWorkDetector();
+    var analysis = detector.Analyze(
+        "Senior Quality Auditor (Virtual)",
+        "United States - Virtual",
+        [],
+        "<p>This position requires the ability to travel frequently to company sites, as needed.</p>" +
+        "<p>The position may require travel up to 50% of the time.</p>");
+    Assert(analysis.ConcernLevel == "strong" &&
+           analysis.Signals.Any(signal => signal.Category == "frequent-travel") &&
+           analysis.Signals.Any(signal => signal.Category == "substantial-travel"),
+        "The sanitized Boeing virtual/frequent-travel fixture was not surfaced at the supported severity.");
+    return Task.CompletedTask;
+}
+
+static async Task TestSavedJobMutationAsync()
+{
+    var directory = TestDirectory("saved-mutation");
+    try
+    {
+        var (catalog, state, job) = await CreateCatalogAsync(directory);
+        Assert(await catalog.SetSavedAsync(job.StableId, true) &&
+               catalog.Snapshot.SavedJobIds.Contains(job.StableId),
+            "Saving a current job did not update the catalog snapshot.");
+        var saved = await state.LoadJobHistoryAsync();
+        Assert(saved.Jobs[job.StableId].Saved && saved.Jobs[job.StableId].SavedAt is not null,
+            "Saved state was not written to job history.");
+        Assert(await catalog.SetSavedAsync(job.StableId, false) &&
+               !catalog.Snapshot.SavedJobIds.Contains(job.StableId),
+            "Unsaving a job did not update the catalog snapshot.");
+        var unsaved = await state.LoadJobHistoryAsync();
+        Assert(!unsaved.Jobs[job.StableId].Saved && unsaved.Jobs[job.StableId].SavedAt is null,
+            "Unsaved state was not persisted.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static async Task TestSavedJobRoundTripAsync()
+{
+    var directory = TestDirectory("saved-roundtrip");
+    try
+    {
+        var (first, _, job) = await CreateCatalogAsync(directory);
+        await first.SetSavedAsync(job.StableId, true);
+        var (restarted, _, _) = await CreateCatalogAsync(directory);
+        Assert(restarted.Snapshot.SavedJobIds.Contains(job.StableId),
+            "Saved state did not survive catalog reinitialization.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static async Task TestSavedJobWorkspaceIsolationAsync()
+{
+    var firstDirectory = TestDirectory("saved-workspace-a");
+    var secondDirectory = TestDirectory("saved-workspace-b");
+    try
+    {
+        var (first, _, job) = await CreateCatalogAsync(firstDirectory);
+        await first.SetSavedAsync(job.StableId, true);
+        var (second, _, _) = await CreateCatalogAsync(secondDirectory);
+        Assert(first.Snapshot.SavedJobIds.Contains(job.StableId) &&
+               !second.Snapshot.SavedJobIds.Contains(job.StableId),
+            "Saved state crossed workspace storage boundaries.");
+    }
+    finally
+    {
+        if (Directory.Exists(firstDirectory)) Directory.Delete(firstDirectory, recursive: true);
+        if (Directory.Exists(secondDirectory)) Directory.Delete(secondDirectory, recursive: true);
+    }
+}
+
+static async Task TestSavedJobCompanyIsolationAsync()
+{
+    var directory = TestDirectory("saved-company");
+    try
+    {
+        var store = new FileWorkspaceDataStore(directory, NullLogger<FileWorkspaceDataStore>.Instance);
+        var now = DateTimeOffset.UtcNow;
+        var history = new JobHistoryDocument(3, new Dictionary<string, JobHistoryEntry>
+        {
+            ["leidos:REQ-SAME"] = new("REQ-SAME", "/leidos/job", now, now, true,
+                CompanyId: "leidos", Saved: true, SavedAt: now),
+            ["boeing:REQ-SAME"] = new("REQ-SAME", "/boeing/job", now, now, true,
+                CompanyId: "boeing", Saved: false)
+        });
+        await store.WriteJsonAsync(WorkspaceDataFile.JobHistory, history);
+        var state = new AppStateStore(
+            NullLogger<AppStateStore>.Instance,
+            new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory)),
+            store);
+        var loaded = await state.LoadJobHistoryAsync();
+        Assert(loaded.Jobs["leidos:REQ-SAME"].Saved &&
+               !loaded.Jobs["boeing:REQ-SAME"].Saved,
+            "Same requisition text cross-mapped Saved state between companies.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static RemoteWorkAnalysis RemoteAnalysis(string html) => new RemoteWorkDetector().Analyze(
+    "Software Engineer", "Remote / Teleworker US", [], html);
+
+static string TestDirectory(string purpose) =>
+    Path.Combine(Path.GetTempPath(), $"workday-manager-{purpose}-{Guid.NewGuid():N}");
+
+static async Task<(JobCatalog Catalog, AppStateStore State, JobRecord Job)> CreateCatalogAsync(
+    string directory)
+{
+    var companyCatalog = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+    var store = new FileWorkspaceDataStore(directory, NullLogger<FileWorkspaceDataStore>.Instance);
+    var state = new AppStateStore(NullLogger<AppStateStore>.Instance, companyCatalog, store);
+    var job = new JobRecord(
+        "Test Engineer",
+        "REQ-SAVED",
+        new DateOnly(2026, 8, 15),
+        "Posted Today",
+        "Remote / Teleworker US",
+        [],
+        "Full time",
+        "https://leidos.wd5.myworkdayjobs.com/en-US/External/job/REQ-SAVED",
+        "<p>Fully remote software engineering role.</p>",
+        null,
+        null,
+        "unknown",
+        "not-found",
+        false,
+        null,
+        null,
+        null,
+        "/job/REQ-SAVED",
+        CompanyId: "leidos");
+    var query = new WorkdayQuery(
+        "bc33aa3152ec42d4995f4791a106ed09",
+        "United States of America",
+        false,
+        true,
+        []);
+    await state.SaveJobsCacheAsync([job], DateTimeOffset.UtcNow, 0, query);
+
+    var credentials = new CredentialDetector(NullLogger<CredentialDetector>.Instance);
+    var academics = new AcademicQualificationDetector();
+    var authorization = new WorkAuthorizationDetector();
+    var remote = new RemoteWorkDetector();
+    var client = new WorkdayClient(
+        new HttpClient(),
+        Options.Create(new WorkdayOptions()),
+        NullLogger<WorkdayClient>.Instance,
+        credentials,
+        academics,
+        authorization,
+        remote);
+    var catalog = new JobCatalog(
+        client,
+        state,
+        NullLogger<JobCatalog>.Instance,
+        credentials,
+        academics,
+        authorization,
+        remote,
+        companyCatalog);
+    await catalog.InitializeAsync(query);
+    return (catalog, state, job);
 }
 
 static IConfiguration Configuration(IReadOnlyDictionary<string, string?> values) =>

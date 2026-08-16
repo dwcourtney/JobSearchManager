@@ -39,6 +39,7 @@ builder.Services.AddSingleton<CompanyCatalog>();
 builder.Services.AddSingleton<CredentialDetector>();
 builder.Services.AddSingleton<AcademicQualificationDetector>();
 builder.Services.AddSingleton<WorkAuthorizationDetector>();
+builder.Services.AddSingleton<RemoteWorkDetector>();
 builder.Services.AddDataProtection().SetApplicationName("WorkdayJobManager");
 builder.Services.AddScoped<WorkspaceContext>();
 builder.Services.AddScoped<WorkspaceRuntimeProvider>();
@@ -364,6 +365,15 @@ app.MapPut("/api/history/dismissed", async (
     WorkspaceRuntimeProvider provider,
     CancellationToken token) =>
     await (await provider.GetAsync(token)).Catalog.SetDismissedAsync(request.StableId, request.Dismissed)
+        ? Results.NoContent()
+        : Results.NotFound())
+    .RequireRateLimiting("state");
+
+app.MapPut("/api/history/saved", async (
+    SavedJobRequest request,
+    WorkspaceRuntimeProvider provider,
+    CancellationToken token) =>
+    await (await provider.GetAsync(token)).Catalog.SetSavedAsync(request.StableId, request.Saved)
         ? Results.NoContent()
         : Results.NotFound())
     .RequireRateLimiting("state");

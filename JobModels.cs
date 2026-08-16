@@ -191,7 +191,8 @@ public sealed record JobRecord(
     int CredentialCatalogVersion = 0,
     AcademicQualificationAnalysis? AcademicQualification = null,
     string CompanyId = CompanyCatalog.DefaultCompanyId,
-    WorkAuthorizationAnalysis? WorkAuthorization = null)
+    WorkAuthorizationAnalysis? WorkAuthorization = null,
+    RemoteWorkAnalysis? RemoteWork = null)
 {
     public string StableId => $"{CompanyId}:{(!string.IsNullOrWhiteSpace(RequisitionId)
         ? RequisitionId
@@ -248,6 +249,20 @@ public sealed record WorkAuthorizationAnalysis(
     IReadOnlyList<string> Evidence,
     string ParseStatus,
     int AnalysisVersion);
+
+public sealed record RemoteWorkAnalysis(
+    bool IsRemoteDesignated,
+    string ConcernLevel,
+    string? Summary,
+    IReadOnlyList<RemoteWorkSignal> Signals,
+    string ParseStatus,
+    int AnalysisVersion);
+
+public sealed record RemoteWorkSignal(
+    string Category,
+    string ConcernLevel,
+    string Reason,
+    string Evidence);
 
 internal sealed record SalaryAnalysis(
     decimal? Minimum,
@@ -313,6 +328,7 @@ public sealed record JobsSnapshot(
     IReadOnlyList<string> NewJobIds,
     WorkdayQuery Query,
     IReadOnlyList<string> DismissedJobIds,
+    IReadOnlyList<string> SavedJobIds,
     RefreshProgress? RefreshProgress)
 {
     public static JobsSnapshot Empty { get; } =
@@ -321,7 +337,7 @@ public sealed record JobsSnapshot(
             FacetDefaults.AllCountriesLabel,
             true,
             false,
-            []), [], null);
+            []), [], [], null);
 }
 
 public sealed record CompanySourceSettings(
@@ -402,6 +418,7 @@ public sealed record WorkAuthorizationProfile(string UsStatus, string Sponsorshi
 
 public sealed record ViewedJobRequest(string StableId);
 public sealed record DismissedJobRequest(string StableId, bool Dismissed);
+public sealed record SavedJobRequest(string StableId, bool Saved);
 
 internal sealed record JobsCacheDocument(
     int SchemaVersion,
@@ -416,7 +433,7 @@ internal sealed record JobHistoryDocument(
     Dictionary<string, JobHistoryEntry> Jobs)
 {
     public static JobHistoryDocument Empty { get; } = new(
-        2, new Dictionary<string, JobHistoryEntry>(StringComparer.Ordinal));
+        3, new Dictionary<string, JobHistoryEntry>(StringComparer.Ordinal));
 }
 
 internal sealed record JobHistoryEntry(
@@ -427,7 +444,9 @@ internal sealed record JobHistoryEntry(
     bool HasBeenViewed,
     bool Dismissed = false,
     DateTimeOffset? DismissedAt = null,
-    string CompanyId = CompanyCatalog.DefaultCompanyId);
+    string CompanyId = CompanyCatalog.DefaultCompanyId,
+    bool Saved = false,
+    DateTimeOffset? SavedAt = null);
 
 internal sealed class ListingResponse
 {

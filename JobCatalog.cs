@@ -8,6 +8,7 @@ public sealed class JobCatalog
     private readonly CredentialDetector _credentialDetector;
     private readonly AcademicQualificationDetector _academicQualificationDetector;
     private readonly WorkAuthorizationDetector _workAuthorizationDetector;
+    private readonly RemoteWorkDetector _remoteWorkDetector;
     private readonly CompanyCatalog _companyCatalog;
     private readonly object _gate = new();
     private readonly SemaphoreSlim _historyGate = new(1, 1);
@@ -27,6 +28,7 @@ public sealed class JobCatalog
         CredentialDetector credentialDetector,
         AcademicQualificationDetector academicQualificationDetector,
         WorkAuthorizationDetector workAuthorizationDetector,
+        RemoteWorkDetector remoteWorkDetector,
         CompanyCatalog companyCatalog)
     {
         _workdayClient = workdayClient;
@@ -35,6 +37,7 @@ public sealed class JobCatalog
         _credentialDetector = credentialDetector;
         _academicQualificationDetector = academicQualificationDetector;
         _workAuthorizationDetector = workAuthorizationDetector;
+        _remoteWorkDetector = remoteWorkDetector;
         _companyCatalog = companyCatalog;
     }
 
@@ -91,6 +94,9 @@ public sealed class JobCatalog
         var cacheNeedsWorkAuthorizationUpgrade = cache.Jobs.Any(job =>
             job.WorkAuthorization is null ||
             job.WorkAuthorization.AnalysisVersion != WorkAuthorizationDetector.CurrentAnalysisVersion);
+        var cacheNeedsRemoteWorkUpgrade = cache.Jobs.Any(job =>
+            job.RemoteWork is null ||
+            job.RemoteWork.AnalysisVersion != RemoteWorkDetector.CurrentAnalysisVersion);
         var cacheNeedsQueryUpgrade = cache.Query is not null &&
             (!string.IsNullOrWhiteSpace(cache.Query.LocationLabel) || cache.Query.SourceModelVersion < 2);
         var cachedJobs = cacheNeedsCredentialUpgrade
@@ -102,9 +108,12 @@ public sealed class JobCatalog
         cachedJobs = cacheNeedsWorkAuthorizationUpgrade
             ? cachedJobs.Select(_workAuthorizationDetector.AnalyzeJob).ToArray()
             : cachedJobs;
+        cachedJobs = cacheNeedsRemoteWorkUpgrade
+            ? cachedJobs.Select(_remoteWorkDetector.AnalyzeJob).ToArray()
+            : cachedJobs;
 
         if (cacheNeedsCredentialUpgrade || cacheNeedsAcademicUpgrade ||
-            cacheNeedsWorkAuthorizationUpgrade || cacheNeedsQueryUpgrade)
+            cacheNeedsWorkAuthorizationUpgrade || cacheNeedsRemoteWorkUpgrade || cacheNeedsQueryUpgrade)
         {
             await _stateStore.SaveJobsCacheAsync(
                 cachedJobs,
@@ -112,10 +121,11 @@ public sealed class JobCatalog
                 cache.DetailFailureCount,
                 query);
             _logger.LogInformation(
-                "Updated cached query/derived analysis (credential catalog {CredentialCatalogVersion}, academic analysis {AcademicAnalysisVersion}, work-authorization analysis {WorkAuthorizationAnalysisVersion}).",
+                "Updated cached query/derived analysis (credential catalog {CredentialCatalogVersion}, academic analysis {AcademicAnalysisVersion}, work-authorization analysis {WorkAuthorizationAnalysisVersion}, remote-work analysis {RemoteWorkAnalysisVersion}).",
                 _credentialDetector.CatalogVersion,
                 _academicQualificationDetector.AnalysisVersion,
-                WorkAuthorizationDetector.CurrentAnalysisVersion);
+                WorkAuthorizationDetector.CurrentAnalysisVersion,
+                RemoteWorkDetector.CurrentAnalysisVersion);
         }
 
         var historyChanged = ReconcileHistory(
@@ -140,6 +150,7 @@ public sealed class JobCatalog
                 GetNewJobIds(cachedJobs),
                 query,
                 GetDismissedJobIds(cachedJobs),
+                GetSavedJobIds(cachedJobs),
                 null);
         }
 
@@ -387,6 +398,68 @@ public sealed class JobCatalog
         }
     }
 
+    public async Task<bool> SetSavedAsync(string stableId, bool saved)
+    {
+        if (string.IsNullOrWhiteSpace(stableId))
+        {
+            return false;
+        }
+
+        await _historyGate.WaitAsync();
+        try
+        {
+            JobRecord? currentJob;
+            lock (_gate)
+            {
+                currentJob = _snapshot.Jobs.FirstOrDefault(
+                    job => string.Equals(job.StableId, stableId, StringComparison.Ordinal));
+            }
+
+            if (currentJob is null)
+            {
+                return false;
+            }
+
+            if (!_history.Jobs.TryGetValue(stableId, out var entry))
+            {
+                var now = DateTimeOffset.UtcNow;
+                entry = new JobHistoryEntry(
+                    currentJob.RequisitionId,
+                    currentJob.ExternalPath,
+                    now,
+                    now,
+                    false,
+                    CompanyId: currentJob.CompanyId);
+            }
+
+            if (entry.Saved == saved)
+            {
+                return true;
+            }
+
+            _history.Jobs[stableId] = entry with
+            {
+                Saved = saved,
+                SavedAt = saved ? DateTimeOffset.UtcNow : null
+            };
+            await _stateStore.SaveJobHistoryAsync(CloneHistory());
+
+            lock (_gate)
+            {
+                _snapshot = _snapshot with
+                {
+                    SavedJobIds = GetSavedJobIds(_snapshot.Jobs)
+                };
+            }
+
+            return true;
+        }
+        finally
+        {
+            _historyGate.Release();
+        }
+    }
+
     private async Task<JobsSnapshot> RefreshCoreAsync(
         WorkdayQuery query,
         WorkdayQuery previousQuery,
@@ -437,6 +510,7 @@ public sealed class JobCatalog
                 GetNewJobIds(result.Jobs),
                 query,
                 GetDismissedJobIds(result.Jobs),
+                GetSavedJobIds(result.Jobs),
                 null);
 
             lock (_gate)
@@ -584,6 +658,11 @@ public sealed class JobCatalog
     private string[] GetDismissedJobIds(IReadOnlyList<JobRecord> jobs) => jobs
         .Select(job => job.StableId)
         .Where(id => _history.Jobs.TryGetValue(id, out var entry) && entry.Dismissed)
+        .ToArray();
+
+    private string[] GetSavedJobIds(IReadOnlyList<JobRecord> jobs) => jobs
+        .Select(job => job.StableId)
+        .Where(id => _history.Jobs.TryGetValue(id, out var entry) && entry.Saved)
         .ToArray();
 
     private JobHistoryDocument CloneHistory() => _history with

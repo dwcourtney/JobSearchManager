@@ -45,6 +45,8 @@ const state = {
   automaticCheckRequestInFlight: false,
   newJobIds: new Set(),
   dismissedJobIds: new Set(),
+  savedJobIds: new Set(),
+  activeResultsTab: "all",
   showDismissedJobs: false,
   selectedJobId: null,
   lastRefreshedUtc: null,
@@ -144,11 +146,16 @@ const elements = {
   resetConfirmationError: document.querySelector("#reset-confirmation-error"),
   showHiddenJobs: document.querySelector("#show-hidden-jobs"),
   hiddenJobCount: document.querySelector("#hidden-job-count"),
+  allResultsTab: document.querySelector("#all-results-tab"),
+  savedResultsTab: document.querySelector("#saved-results-tab"),
+  savedJobCount: document.querySelector("#saved-job-count"),
+  resultsTabPanel: document.querySelector("#results-tab-panel"),
   jobList: document.querySelector("#job-list"),
   emptyDetail: document.querySelector("#empty-detail"),
   jobDetail: document.querySelector("#job-detail"),
   detailTitle: document.querySelector("#detail-title"),
   detailNewBadge: document.querySelector("#detail-new-badge"),
+  detailSavedBadge: document.querySelector("#detail-saved-badge"),
   detailHiddenBadge: document.querySelector("#detail-hidden-badge"),
   detailRequisition: document.querySelector("#detail-requisition"),
   detailDate: document.querySelector("#detail-date"),
@@ -180,6 +187,9 @@ const elements = {
   detailPolygraph: document.querySelector("#detail-polygraph"),
   detailLocationNote: document.querySelector("#detail-location-note"),
   detailLocationNoteText: document.querySelector("#detail-location-note-text"),
+  detailRemoteWorkNote: document.querySelector("#detail-remote-work-note"),
+  detailRemoteWorkNoteTitle: document.querySelector("#detail-remote-work-note-title"),
+  detailRemoteWorkNoteText: document.querySelector("#detail-remote-work-note-text"),
   detailHeadroomNote: document.querySelector("#detail-headroom-note"),
   detailHeadroomNoteText: document.querySelector("#detail-headroom-note-text"),
   detailClearanceNote: document.querySelector("#detail-clearance-note"),
@@ -312,6 +322,9 @@ async function initialize() {
     renderResults();
     queueSettingsSave();
   });
+  elements.allResultsTab.addEventListener("click", () => showResultsTab("all", true));
+  elements.savedResultsTab.addEventListener("click", () => showResultsTab("saved", true));
+  document.querySelector(".results-tabs").addEventListener("keydown", handleResultsTabKeydown);
   elements.usWorkAuthorizationStatus.addEventListener("change", () => {
     state.usWorkAuthorizationStatus = normalizeUsWorkAuthorizationStatus(elements.usWorkAuthorizationStatus.value);
     renderResults();
@@ -551,6 +564,30 @@ function normalizeClearanceProfileLevel(value) {
 function normalizePublicTrustProfile(value) {
   if (value === "notSpecified") return "unknown";
   return ["unknown", "none", "current"].includes(value) ? value : "unknown";
+}
+
+function showResultsTab(tab, moveFocus = false) {
+  state.activeResultsTab = tab === "saved" ? "saved" : "all";
+  const allSelected = state.activeResultsTab === "all";
+  elements.allResultsTab.classList.toggle("active", allSelected);
+  elements.savedResultsTab.classList.toggle("active", !allSelected);
+  elements.allResultsTab.setAttribute("aria-selected", String(allSelected));
+  elements.savedResultsTab.setAttribute("aria-selected", String(!allSelected));
+  elements.allResultsTab.tabIndex = allSelected ? 0 : -1;
+  elements.savedResultsTab.tabIndex = allSelected ? -1 : 0;
+  elements.resultsTabPanel.setAttribute(
+    "aria-labelledby", allSelected ? "all-results-tab" : "saved-results-tab");
+  renderResults();
+  if (moveFocus) {
+    (allSelected ? elements.allResultsTab : elements.savedResultsTab).focus();
+  }
+}
+
+function handleResultsTabKeydown(event) {
+  if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+  event.preventDefault();
+  const next = event.key === "ArrowLeft" || event.key === "Home" ? "all" : "saved";
+  showResultsTab(next, true);
 }
 
 function normalizeUsWorkAuthorizationStatus(value) {
@@ -1180,6 +1217,7 @@ function applySnapshot(snapshot) {
   state.isCached = Boolean(snapshot.isCached);
   state.newJobIds = new Set(snapshot.newJobIds || []);
   state.dismissedJobIds = new Set(snapshot.dismissedJobIds || []);
+  state.savedJobIds = new Set(snapshot.savedJobIds || []);
   if (snapshot.query) {
     state.companyId = snapshot.query.companyId || state.companies[0]?.id || "";
     state.companyName = companyById(state.companyId)?.displayName || state.companyId;
@@ -1804,18 +1842,26 @@ function educationProfileLabel(profile) {
 }
 
 function renderResults() {
-  const matchingJobs = jobsPassingGeneralFilters();
+  const matchingJobs = state.activeResultsTab === "saved"
+    ? state.jobs.filter(job => state.savedJobIds.has(job.stableId))
+    : jobsPassingGeneralFilters();
   const dismissedMatchingJobs = matchingJobs.filter(job => state.dismissedJobIds.has(job.stableId));
   const jobs = state.showDismissedJobs
     ? matchingJobs
     : matchingJobs.filter(job => !state.dismissedJobIds.has(job.stableId));
   elements.showHiddenJobs.checked = state.showDismissedJobs;
   elements.hiddenJobCount.textContent = `(${dismissedMatchingJobs.length})`;
+  const savedAvailableCount = state.jobs.filter(job => state.savedJobIds.has(job.stableId)).length;
+  elements.savedJobCount.textContent = `(${savedAvailableCount})`;
   elements.resultCount.textContent = `Showing ${jobs.length} of ${state.jobs.length} jobs` +
     (!state.showDismissedJobs && dismissedMatchingJobs.length
       ? ` · ${dismissedMatchingJobs.length} hidden`
       : "");
   elements.filterSummary.textContent = buildFilterSummary();
+  if (state.activeResultsTab === "saved") {
+    elements.resultCount.textContent =
+      `Showing ${jobs.length} saved job${jobs.length === 1 ? "" : "s"}`;
+  }
 
   if (!jobs.some(job => job.stableId === state.selectedJobId)) {
     // Automatic selection is presentation only and deliberately does not mark NEW as viewed.
@@ -1833,6 +1879,9 @@ function renderResults() {
     empty.textContent = state.jobs.length === 0
       ? "No jobs are available."
       : "No jobs remain after applying the exclusions.";
+    if (state.activeResultsTab === "saved") {
+      empty.textContent = "No saved jobs are available in the current job source.";
+    }
     elements.jobList.append(empty);
   } else {
     const fragment = document.createDocumentFragment();
@@ -1911,6 +1960,7 @@ function createJobListItem(job) {
   const card = document.createElement("div");
   card.className = "job-card";
   const isDismissed = state.dismissedJobIds.has(job.stableId);
+  const isSaved = state.savedJobIds.has(job.stableId);
   if (isDismissed) {
     card.classList.add("dismissed");
   }
@@ -1948,6 +1998,12 @@ function createJobListItem(job) {
     newBadge.className = "new-badge";
     newBadge.textContent = "NEW";
     badges.append(newBadge);
+  }
+  if (isSaved) {
+    const savedBadge = document.createElement("span");
+    savedBadge.className = "saved-badge";
+    savedBadge.textContent = "Saved";
+    badges.append(savedBadge);
   }
   if (isDismissed) {
     const hiddenBadge = document.createElement("span");
@@ -2022,6 +2078,15 @@ function createJobListItem(job) {
     restriction.textContent = "⚠ Location restricted";
     badges.append(restriction);
   }
+  if (job.remoteWork?.concernLevel && job.remoteWork.concernLevel !== "none") {
+    const remoteWarning = document.createElement("span");
+    remoteWarning.className = `remote-work-badge ${job.remoteWork.concernLevel}`;
+    remoteWarning.textContent = job.remoteWork.concernLevel === "strong"
+      ? "\u26A0 Remote work conflict"
+      : "\u26A0 Remote work may be restricted";
+    remoteWarning.title = job.remoteWork.summary || "Review the posting's onsite or travel requirements.";
+    badges.append(remoteWarning);
+  }
   const headroom = calculateSalaryHeadroom(job);
   if (headroom?.isLimited) {
     const salaryWarning = document.createElement("span");
@@ -2053,8 +2118,49 @@ function createJobListItem(job) {
   dismissButton.title = isDismissed ? "Restore this job" : "Hide this job";
   dismissButton.addEventListener("click", () => setJobDismissed(job, !isDismissed));
 
-  card.append(button, dismissButton);
+  const saveButton = document.createElement("button");
+  saveButton.type = "button";
+  saveButton.className = `job-save-button${isSaved ? " saved" : ""}`;
+  saveButton.textContent = isSaved ? "\u2605" : "\u2606";
+  saveButton.setAttribute("aria-pressed", String(isSaved));
+  saveButton.setAttribute(
+    "aria-label",
+    `${isSaved ? "Unsave" : "Save"} job ${job.requisitionId || job.stableId}`);
+  saveButton.title = isSaved ? "Remove from Saved" : "Save this job";
+  saveButton.addEventListener("click", () => setJobSaved(job, !isSaved));
+
+  card.append(button, saveButton, dismissButton);
   return card;
+}
+
+async function setJobSaved(job, saved) {
+  if (saved) {
+    state.savedJobIds.add(job.stableId);
+  } else {
+    state.savedJobIds.delete(job.stableId);
+  }
+  renderResults();
+
+  try {
+    const response = await fetch("/api/history/saved", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ stableId: job.stableId, saved }),
+      keepalive: true
+    });
+    if (!response.ok) {
+      throw new Error(`Saved-state update returned HTTP ${response.status}.`);
+    }
+  } catch (error) {
+    if (saved) {
+      state.savedJobIds.delete(job.stableId);
+    } else {
+      state.savedJobIds.add(job.stableId);
+    }
+    renderResults();
+    elements.errorBanner.textContent = `Saved state could not be updated: ${error.message || error}`;
+    elements.errorBanner.hidden = false;
+  }
 }
 
 async function setJobDismissed(job, dismissed) {
@@ -2133,6 +2239,7 @@ function renderDetail(job) {
   replaceWithHighlightedText(elements.detailTitle, job.title);
   replaceWithHighlightedText(elements.detailRequisition, job.requisitionId);
   elements.detailNewBadge.hidden = !state.newJobIds.has(job.stableId);
+  elements.detailSavedBadge.hidden = !state.savedJobIds.has(job.stableId);
   elements.detailHiddenBadge.hidden = !state.dismissedJobIds.has(job.stableId);
   elements.detailDate.textContent = formatLongDate(job.startDate) || job.postedOn || "Unavailable";
   elements.detailPay.textContent = formatPay(job);
@@ -2191,6 +2298,17 @@ function renderDetail(job) {
     ? job.remoteLocationRestrictionSnippet || "The description contains a geographic restriction for remote work."
     : "";
 
+  const remoteWorkConcern = job.remoteWork?.concernLevel;
+  const hasRemoteWorkConcern = remoteWorkConcern === "questionable" || remoteWorkConcern === "strong";
+  elements.detailRemoteWorkNote.hidden = !hasRemoteWorkConcern;
+  elements.detailRemoteWorkNote.className = `summary-note remote-work ${remoteWorkConcern || "questionable"}`;
+  elements.detailRemoteWorkNoteTitle.textContent = remoteWorkConcern === "strong"
+    ? "Remote work conflict"
+    : "Remote work warning";
+  elements.detailRemoteWorkNoteText.textContent = hasRemoteWorkConcern
+    ? job.remoteWork.summary || "The description includes onsite, field, or travel requirements worth reviewing."
+    : "";
+
   const headroom = calculateSalaryHeadroom(job);
   elements.detailHeadroomNote.hidden = !headroom?.isLimited;
   elements.detailHeadroomNoteText.textContent = headroom?.isLimited
@@ -2214,6 +2332,7 @@ function renderDetail(job) {
     clearanceStatus.kind === "strictMismatch" ||
     workAuthorizationStatus.kind === "strictMismatch" ||
     job.isRemoteLocationRestricted ||
+    hasRemoteWorkConcern ||
     headroom?.isLimited ||
     job.detailError);
 
@@ -2242,6 +2361,9 @@ function renderQualificationFit(job, educationStatus, clearanceStatus, workAutho
 
   const notes = [];
   if (job.isRemoteLocationRestricted) notes.push("remote-location condition");
+  if (["questionable", "strong"].includes(job.remoteWork?.concernLevel)) {
+    notes.push("remote-work warning");
+  }
   if (headroom?.isLimited) notes.push("limited salary headroom");
   if (job.detailError) notes.push("incomplete job details");
   if (clearanceStatus.kind === "meetsLevelPolygraphReview") notes.push("polygraph review");

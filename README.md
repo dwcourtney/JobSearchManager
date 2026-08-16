@@ -15,7 +15,8 @@ The default Workday search experience makes some personal screening workflows
 awkward. This utility adds exact-date newest-first sorting, useful inclusion and
 exclusion rules, persistent NEW/viewed tracking, per-job dismissal, multi-location
 selection, and salary, clearance, credential, education, and work-authorization
-analysis. It preserves
+analysis. Remote-designated jobs are also checked for description language that
+requires onsite, field, commuting-area, or substantial-travel work. It preserves
 the rich Workday description and provides a direct link back to the employer's
 posting.
 
@@ -75,6 +76,12 @@ Run the dependency-free deterministic architecture/security checks with:
 dotnet run --project Tests\WorkdayJobManager.Tests.csproj -c Release
 ```
 
+Run JavaScript syntax and centralized-theme source checks with:
+
+```powershell
+.\scripts\validate-source.ps1
+```
+
 The executable is `WorkdayJobManager.exe` in a Windows build or publish output.
 
 ## Source selection
@@ -118,6 +125,12 @@ Job history and stable job IDs are company-scoped. Existing pre-generalization
 history is migrated to the `leidos` company without resetting NEW, viewed,
 first-seen, last-seen, or dismissed state. The current cache is also tagged with
 its company-aware query identity.
+
+Saved jobs use that same company-scoped history identity and workspace storage.
+The Saved tab shows saved jobs present in the currently loaded company/query;
+when a saved posting is absent from the current Workday snapshot, its saved marker
+remains in history and returns if that company/job identity appears again. Saving
+never hides a job from All Jobs, and dismissal remains independent of saved state.
 
 State from a company removed from the supported catalog is handled conservatively:
 unsupported saved source selections and caches are not reinterpreted as another
@@ -222,7 +235,7 @@ The project intentionally remains a single small ASP.NET Core application:
 - `JobCatalog.cs` — active snapshot, cache, history, refresh, and automatic checks
 - `AppStateStore.cs` — application-local JSON persistence and schema migration
 - `JobAnalysis.cs` and detectors — shared salary, location, clearance, credential,
-  academic, and work-authorization analysis
+  academic, work-authorization, and remote-work credibility analysis
 - `wwwroot/` — dependency-light HTML, JavaScript, and CSS UI
 
 The hosting and persistence split is implemented by:

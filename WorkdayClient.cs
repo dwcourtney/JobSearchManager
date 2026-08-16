@@ -15,6 +15,7 @@ public sealed class WorkdayClient
     private readonly CredentialDetector _credentialDetector;
     private readonly AcademicQualificationDetector _academicQualificationDetector;
     private readonly WorkAuthorizationDetector _workAuthorizationDetector;
+    private readonly RemoteWorkDetector _remoteWorkDetector;
     private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
 
     public WorkdayClient(
@@ -23,7 +24,8 @@ public sealed class WorkdayClient
         ILogger<WorkdayClient> logger,
         CredentialDetector credentialDetector,
         AcademicQualificationDetector academicQualificationDetector,
-        WorkAuthorizationDetector workAuthorizationDetector)
+        WorkAuthorizationDetector workAuthorizationDetector,
+        RemoteWorkDetector remoteWorkDetector)
     {
         _httpClient = httpClient;
         _options = options.Value;
@@ -31,6 +33,7 @@ public sealed class WorkdayClient
         _credentialDetector = credentialDetector;
         _academicQualificationDetector = academicQualificationDetector;
         _workAuthorizationDetector = workAuthorizationDetector;
+        _remoteWorkDetector = remoteWorkDetector;
 
         if (_options.PageSize is < 1 or > 20)
         {
@@ -361,6 +364,8 @@ public sealed class WorkdayClient
         var credentials = _credentialDetector.Analyze(descriptionHtml);
         var academicQualification = _academicQualificationDetector.Analyze(descriptionHtml);
         var workAuthorization = _workAuthorizationDetector.Analyze(descriptionHtml);
+        var remoteWork = _remoteWorkDetector.Analyze(
+            title, primaryLocation, additionalLocations, descriptionHtml);
 
         return new JobRecord(
             title,
@@ -391,7 +396,8 @@ public sealed class WorkdayClient
             credentials.CatalogVersion,
             academicQualification,
             company.Id,
-            workAuthorization);
+            workAuthorization,
+            remoteWork);
     }
 
     private static Uri GetCxsBaseUri(CompanyDefinition company) => new(

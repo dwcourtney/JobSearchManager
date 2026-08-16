@@ -841,6 +841,25 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   text-transform: var(--text-transform-section);
 }
 
+.results-tabs { display: flex; align-items: stretch; gap: .2rem; }
+.results-tab {
+  padding: .32rem .5rem;
+  border: 0;
+  border-bottom: var(--tab-indicator-width) solid transparent;
+  color: var(--color-detail-tab-text);
+  background: var(--color-detail-tab-background);
+  cursor: pointer;
+  font: inherit;
+  letter-spacing: var(--letter-spacing-normal);
+  text-transform: var(--text-transform-normal);
+}
+.results-tab:hover { background: var(--color-detail-tab-hover); }
+.results-tab.active {
+  border-bottom-color: var(--color-detail-tab-active-border);
+  color: var(--color-detail-tab-active-text);
+  background: var(--color-detail-tab-active-background);
+}
+
 .show-hidden-toggle {
   display: inline-flex;
   align-items: center;
@@ -856,7 +875,8 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 
 .show-hidden-toggle input { margin: 0; accent-color: var(--color-accent); }
 
-.job-list { overflow-y: auto; }
+.results-tab-panel { min-height: 0; overflow: hidden; }
+.job-list { height: 100%; overflow-y: auto; }
 
 .age-group { border-bottom: var(--border-width-default) solid var(--color-border); }
 
@@ -893,7 +913,7 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   grid-template-columns: 4.5rem minmax(0, 1fr);
   gap: .23rem .65rem;
   width: 100%;
-  padding: .8rem 3rem .8rem .85rem;
+  padding: .8rem 5rem .8rem .85rem;
   border: 0;
   color: inherit;
   background: var(--color-job-action-background);
@@ -932,6 +952,24 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   color: var(--color-dismiss-action-hover-text);
   background: var(--color-dismiss-action-hover-background);
 }
+
+.job-save-button {
+  position: absolute;
+  top: .52rem;
+  right: 2.55rem;
+  min-width: 1.65rem;
+  min-height: 1.65rem;
+  padding: .1rem .3rem;
+  border: var(--border-width-default) solid var(--color-save-action-border);
+  border-radius: var(--radius-badge);
+  color: var(--color-save-action);
+  background: var(--color-save-action-background);
+  cursor: pointer;
+  font-size: var(--font-size-icon);
+  line-height: var(--line-height-icon);
+}
+.job-save-button:hover { background: var(--color-save-action-hover); }
+.job-save-button.saved { color: var(--color-save-action-active); }
 
 .job-card.dismissed .job-dismiss-button {
   border-color: var(--color-restore-action-border);
@@ -1028,6 +1066,36 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   border: var(--border-width-default) solid var(--color-clearance-mismatch-badge-border);
   color: var(--color-clearance-mismatch-badge-text);
   background: var(--color-clearance-mismatch-badge-background);
+}
+
+.job-card .saved-badge, .job-card .remote-work-badge {
+  display: inline-block;
+  padding: .14rem .4rem;
+  border-radius: var(--radius-badge);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+}
+
+.saved-badge {
+  display: inline-block;
+  padding: .12rem .4rem;
+  border: var(--border-width-default) solid var(--color-saved-badge-border);
+  border-radius: var(--radius-badge);
+  color: var(--color-saved-badge-text);
+  background: var(--color-saved-badge-background);
+  font-size: var(--font-size-tiny);
+  font-weight: var(--font-weight-emphasis);
+}
+
+.job-card .remote-work-badge.questionable {
+  border: var(--border-width-default) solid var(--color-remote-question-border);
+  color: var(--color-remote-question-text);
+  background: var(--color-remote-question-background);
+}
+.job-card .remote-work-badge.strong {
+  border: var(--border-width-default) solid var(--color-remote-strong-border);
+  color: var(--color-remote-strong-text);
+  background: var(--color-remote-strong-background);
 }
 .reset-workspace-section {
   background: var(--color-reset-section-background);
@@ -1249,6 +1317,16 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   border-left-color: var(--color-summary-note-caution-border);
   color: var(--color-summary-note-caution-text);
   background: var(--color-summary-note-caution-background);
+}
+.summary-note.remote-work.questionable {
+  border-left-color: var(--color-remote-question-border);
+  color: var(--color-remote-question-text);
+  background: var(--color-remote-question-background);
+}
+.summary-note.remote-work.strong {
+  border-left-color: var(--color-remote-strong-border);
+  color: var(--color-remote-strong-text);
+  background: var(--color-remote-strong-background);
 }
 .summary-note.error {
   border-left-color: var(--color-error-border);

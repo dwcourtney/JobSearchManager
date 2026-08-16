@@ -2,7 +2,7 @@ namespace WorkdayJobManager;
 
 public sealed class AppStateStore
 {
-    private const int SchemaVersion = 2;
+    private const int SchemaVersion = 3;
     private readonly ILogger<AppStateStore> _logger;
     private readonly CompanyCatalog _companyCatalog;
     private readonly IWorkspaceDataStore _dataStore;
