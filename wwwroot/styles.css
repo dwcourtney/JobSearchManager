@@ -1301,10 +1301,46 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 
 .requisition { margin: .3rem 0 0; color: var(--color-text-secondary); font-size: var(--font-size-ui); }
 
-.workday-button {
+.detail-actions {
+  display: flex;
   flex: 0 0 auto;
-  padding: .55rem .8rem;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--detail-action-gap);
+}
+
+.workday-button, .copy-posting-button {
+  flex: 0 0 auto;
+  padding: var(--detail-action-padding);
+}
+
+.workday-button {
   text-decoration: var(--text-decoration-action-link);
+}
+
+.copy-posting-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--detail-action-content-gap);
+  border: var(--border-width-default) solid var(--color-secondary-button-border);
+  border-radius: var(--radius-control);
+  color: var(--color-secondary-button-text);
+  background: var(--color-secondary-button-background);
+  cursor: pointer;
+  font-weight: var(--font-weight-medium);
+}
+
+.copy-posting-button:hover:not(:disabled) { background: var(--color-secondary-button-hover); }
+.copy-posting-button:disabled { cursor: not-allowed; opacity: var(--opacity-disabled-control); }
+
+.detail-action-icon {
+  display: block;
+  width: var(--font-size-icon);
+  height: var(--font-size-icon);
+  stroke-width: var(--stroke-width-icon);
+  pointer-events: none;
 }
 
 .summary-notes { display: grid; gap: .38rem; }

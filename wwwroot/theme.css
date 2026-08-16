@@ -85,6 +85,9 @@
   --confirmation-actions-gap: .65rem;
   --confirmation-actions-margin-top: .3rem;
   --confirmation-button-padding: .45rem .85rem;
+  --detail-action-gap: .45rem;
+  --detail-action-content-gap: .4rem;
+  --detail-action-padding: .55rem .8rem;
   --reset-list-indent: 1.2rem;
   --reset-error-padding: .65rem .75rem;
   --reset-section-gap: 1rem;

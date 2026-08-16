@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="/styles.css">
   <script src="/vendor/purify.min.js" defer></script>
   <script src="/country-ordering.js" defer></script>
+  <script src="/job-posting-text.js" defer></script>
   <script src="/app.js" defer></script>
 </head>
 <body>
@@ -130,10 +131,23 @@
                     <span id="detail-requisition" class="requisition"></span>
                   </p>
                 </div>
-                <a id="workday-link" class="workday-button" target="_blank" rel="noopener noreferrer">
-                  Open in Workday
-                </a>
+                <div class="detail-actions">
+                  <button id="copy-posting-button" class="copy-posting-button" type="button"
+                          aria-label="Copy full job posting" title="Copy full job posting">
+                    <svg class="detail-action-icon" viewBox="0 0 24 24" aria-hidden="true"
+                         focusable="false" fill="none" stroke="currentColor"
+                         stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="8" y="8" width="11" height="11" rx="1"></rect>
+                      <path d="M16 8V5H5v11h3"></path>
+                    </svg>
+                    <span id="copy-posting-label">Copy posting</span>
+                  </button>
+                  <a id="workday-link" class="workday-button" target="_blank" rel="noopener noreferrer">
+                    Open in Workday
+                  </a>
+                </div>
               </div>
+              <span id="copy-posting-status" class="visually-hidden" role="status" aria-live="polite"></span>
               <div class="detail-tabs" role="tablist" aria-label="Selected job detail views">
                 <button id="at-a-glance-tab" class="detail-tab active" type="button" role="tab"
                         aria-selected="true" aria-controls="at-a-glance-panel">At a Glance</button>

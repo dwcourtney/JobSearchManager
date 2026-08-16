@@ -8,10 +8,19 @@ $themePath = Join-Path $repo "wwwroot\theme.css"
 $stylesPath = Join-Path $repo "wwwroot\styles.css"
 $indexPath = Join-Path $repo "wwwroot\index.html"
 $appPath = Join-Path $repo "wwwroot\app.js"
+$postingTextPath = Join-Path $repo "wwwroot\job-posting-text.js"
+$postingTextTestsPath = Join-Path $repo "Tests\job-posting-text.tests.js"
 
-& $NodePath --check $appPath
+foreach ($scriptPath in @($appPath, $postingTextPath, $postingTextTestsPath)) {
+    & $NodePath --check $scriptPath
+    if ($LASTEXITCODE -ne 0) {
+        throw "JavaScript syntax validation failed for $scriptPath."
+    }
+}
+
+& $NodePath $postingTextTestsPath
 if ($LASTEXITCODE -ne 0) {
-    throw "JavaScript syntax validation failed."
+    throw "Job-posting text normalization tests failed."
 }
 
 $styles = Get-Content -LiteralPath $stylesPath -Raw

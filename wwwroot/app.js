@@ -3,6 +3,7 @@
 const HEADROOM_WARNING_THRESHOLD = 0.75;
 const SETTINGS_SAVE_DEBOUNCE_MS = 400;
 const OVERLAY_TRANSITION_MS = 180;
+const COPY_FEEDBACK_MS = 2000;
 const AUTOMATIC_STATUS_POLL_MS = 2000;
 const ALL_COUNTRIES_LABEL = "All countries";
 const ALL_LOCATIONS_LABEL = "All locations";
@@ -68,6 +69,7 @@ const state = {
   pollTimer: null,
   refreshProgressTimer: null,
   overlayHideTimer: null,
+  copyFeedbackTimer: null,
   focusBeforeLoading: null,
   sourceConfirmationOpen: false,
   sourceConfirmationHideTimer: null,
@@ -207,6 +209,9 @@ const elements = {
   detailCredentialsList: document.querySelector("#detail-credentials-list"),
   detailWarning: document.querySelector("#detail-warning"),
   detailDescription: document.querySelector("#detail-description"),
+  copyPostingButton: document.querySelector("#copy-posting-button"),
+  copyPostingLabel: document.querySelector("#copy-posting-label"),
+  copyPostingStatus: document.querySelector("#copy-posting-status"),
   workdayLink: document.querySelector("#workday-link")
 };
 
@@ -343,6 +348,7 @@ async function initialize() {
   elements.atAGlanceTab.addEventListener("click", () => showDetailTab("glance", true));
   elements.fullPostingTab.addEventListener("click", () => showDetailTab("posting", true));
   document.querySelector(".detail-tabs").addEventListener("keydown", handleDetailTabKeydown);
+  elements.copyPostingButton.addEventListener("click", copySelectedJobPosting);
   elements.workdayLink.addEventListener("click", () => {
     const job = state.jobs.find(item => item.stableId === state.selectedJobId);
     if (job) {
@@ -2247,6 +2253,8 @@ function renderDetail(job) {
   elements.jobDetail.hidden = !job;
   if (!job) {
     state.renderedDetailJobId = null;
+    resetCopyFeedback();
+    elements.copyPostingButton.disabled = true;
     elements.detailDescription.replaceChildren();
     return;
   }
@@ -2254,6 +2262,7 @@ function renderDetail(job) {
   if (state.renderedDetailJobId !== job.stableId) {
     state.renderedDetailJobId = job.stableId;
     state.detailTab = "glance";
+    resetCopyFeedback();
     document.querySelector(".detail-pane").scrollTop = 0;
   }
   showDetailTab(state.detailTab);
@@ -2265,6 +2274,11 @@ function renderDetail(job) {
   elements.detailNewBadge.hidden = !state.newJobIds.has(job.stableId);
   elements.detailSavedBadge.hidden = !state.savedJobIds.has(job.stableId);
   elements.detailHiddenBadge.hidden = !state.dismissedJobIds.has(job.stableId);
+  elements.copyPostingButton.disabled = !job.descriptionHtml;
+  if (!job.descriptionHtml) {
+    resetCopyFeedback();
+    elements.copyPostingButton.title = "Full job posting is unavailable";
+  }
   elements.detailDate.textContent = formatLongDate(job.startDate) || job.postedOn || "Unavailable";
   elements.detailPay.textContent = formatPay(job);
   elements.detailTimeType.textContent = job.timeType || "Not specified";
@@ -2375,6 +2389,53 @@ function renderDetail(job) {
   elements.detailDescription.innerHTML = cleanHtml;
   secureDescriptionLinks(elements.detailDescription);
   highlightDescriptionText(elements.detailDescription);
+}
+
+async function copySelectedJobPosting() {
+  const job = state.jobs.find(item => item.stableId === state.selectedJobId);
+  const postingText = job?.descriptionHtml
+    ? JobPostingText.toPlainText(elements.detailDescription)
+    : "";
+  if (!postingText) {
+    showCopyFeedback(
+      "Copy failed",
+      "Full job posting is unavailable",
+      "The full job posting could not be copied because it is unavailable.");
+    return;
+  }
+
+  try {
+    if (!navigator.clipboard?.writeText) {
+      throw new Error("Clipboard API is unavailable.");
+    }
+    await navigator.clipboard.writeText(postingText);
+    showCopyFeedback("Copied", "Copied full job posting", "Full job posting copied to clipboard.");
+  } catch {
+    showCopyFeedback(
+      "Copy failed",
+      "Copy failed — try again",
+      "The full job posting could not be copied. Check browser clipboard permission and try again.");
+  }
+}
+
+function showCopyFeedback(label, title, status) {
+  if (state.copyFeedbackTimer) {
+    clearTimeout(state.copyFeedbackTimer);
+  }
+  elements.copyPostingLabel.textContent = label;
+  elements.copyPostingButton.title = title;
+  elements.copyPostingStatus.textContent = status;
+  state.copyFeedbackTimer = setTimeout(resetCopyFeedback, COPY_FEEDBACK_MS);
+}
+
+function resetCopyFeedback() {
+  if (state.copyFeedbackTimer) {
+    clearTimeout(state.copyFeedbackTimer);
+    state.copyFeedbackTimer = null;
+  }
+  elements.copyPostingLabel.textContent = "Copy posting";
+  elements.copyPostingButton.title = "Copy full job posting";
+  elements.copyPostingStatus.textContent = "";
 }
 
 function renderQualificationFit(job, educationStatus, clearanceStatus, workAuthorizationStatus, headroom) {
