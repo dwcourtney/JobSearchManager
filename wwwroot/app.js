@@ -19,6 +19,7 @@ const AGE_GROUPS = [
 
 const state = {
   activeView: "jobs",
+  activeSettingsTab: "job-search",
   jobs: [],
   inclusions: [],
   exclusions: [],
@@ -85,6 +86,12 @@ const elements = {
   settingsTab: document.querySelector("#settings-tab"),
   jobsView: document.querySelector("#jobs-view"),
   settingsView: document.querySelector("#settings-view"),
+  jobSearchSettingsTab: document.querySelector("#job-search-settings-tab"),
+  qualificationsSettingsTab: document.querySelector("#qualifications-settings-tab"),
+  preferencesSettingsTab: document.querySelector("#preferences-settings-tab"),
+  jobSearchSettingsPanel: document.querySelector("#job-search-settings-panel"),
+  qualificationsSettingsPanel: document.querySelector("#qualifications-settings-panel"),
+  preferencesSettingsPanel: document.querySelector("#preferences-settings-panel"),
   sourceSettingsLink: document.querySelector("#source-settings-link"),
   sourceSummary: document.querySelector("#source-summary"),
   refreshButton: document.querySelector("#refresh-button"),
@@ -238,6 +245,10 @@ async function initialize() {
   elements.settingsTab.addEventListener("click", () => showView("settings"));
   elements.sourceSettingsLink.addEventListener("click", () => showView("settings", true));
   document.querySelector(".app-tabs").addEventListener("keydown", handleTabKeydown);
+  elements.jobSearchSettingsTab.addEventListener("click", () => showSettingsTab("job-search", true));
+  elements.qualificationsSettingsTab.addEventListener("click", () => showSettingsTab("qualifications", true));
+  elements.preferencesSettingsTab.addEventListener("click", () => showSettingsTab("preferences", true));
+  document.querySelector(".settings-tabs").addEventListener("keydown", handleSettingsTabKeydown);
   elements.refreshButton.addEventListener("click", refreshJobs);
   elements.filterToggle.addEventListener("click", toggleSearchFilters);
   elements.companySelect.addEventListener("change", companySelectionChanged);
@@ -368,6 +379,7 @@ function showView(view, focusFirstControl = false, options = {}) {
     showSourceConfirmation();
     return false;
   }
+  const enteringSettings = nextView === "settings" && state.activeView !== "settings";
   state.activeView = nextView;
   const jobsSelected = nextView === "jobs";
   elements.jobsView.hidden = !jobsSelected;
@@ -378,10 +390,61 @@ function showView(view, focusFirstControl = false, options = {}) {
   elements.settingsTab.setAttribute("aria-selected", String(!jobsSelected));
   elements.jobsTab.tabIndex = jobsSelected ? 0 : -1;
   elements.settingsTab.tabIndex = jobsSelected ? -1 : 0;
+  if (enteringSettings) {
+    showSettingsTab("job-search");
+  }
   if (focusFirstControl) {
     (jobsSelected ? elements.filterToggle : elements.companySelect).focus();
   }
   return true;
+}
+
+function showSettingsTab(tab, moveFocus = false) {
+  state.activeSettingsTab = ["job-search", "qualifications", "preferences"].includes(tab)
+    ? tab
+    : "job-search";
+  const tabs = [
+    {
+      id: "job-search",
+      tab: elements.jobSearchSettingsTab,
+      panel: elements.jobSearchSettingsPanel
+    },
+    {
+      id: "qualifications",
+      tab: elements.qualificationsSettingsTab,
+      panel: elements.qualificationsSettingsPanel
+    },
+    {
+      id: "preferences",
+      tab: elements.preferencesSettingsTab,
+      panel: elements.preferencesSettingsPanel
+    }
+  ];
+  for (const candidate of tabs) {
+    const selected = candidate.id === state.activeSettingsTab;
+    candidate.tab.classList.toggle("active", selected);
+    candidate.tab.setAttribute("aria-selected", String(selected));
+    candidate.tab.tabIndex = selected ? 0 : -1;
+    candidate.panel.hidden = !selected;
+  }
+  if (moveFocus) {
+    tabs.find(candidate => candidate.id === state.activeSettingsTab).tab.focus();
+  }
+}
+
+function handleSettingsTabKeydown(event) {
+  if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+  event.preventDefault();
+  const tabs = ["job-search", "qualifications", "preferences"];
+  const currentIndex = tabs.indexOf(state.activeSettingsTab);
+  const nextIndex = event.key === "Home"
+    ? 0
+    : event.key === "End"
+      ? tabs.length - 1
+      : event.key === "ArrowLeft"
+        ? (currentIndex - 1 + tabs.length) % tabs.length
+        : (currentIndex + 1) % tabs.length;
+  showSettingsTab(tabs[nextIndex], true);
 }
 
 function handleTabKeydown(event) {

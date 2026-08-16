@@ -39,6 +39,72 @@ $styles = Get-Content -LiteralPath $stylesPath -Raw
 $theme = Get-Content -LiteralPath $themePath -Raw
 $index = Get-Content -LiteralPath $indexPath -Raw
 
+if ([regex]::IsMatch($index, '(?is)<h2[^>]*>\s*Settings\s*</h2>')) {
+    throw "The redundant Settings page heading is still present."
+}
+
+$settingsTabIds = @(
+    "job-search-settings",
+    "qualifications-settings",
+    "preferences-settings"
+)
+foreach ($tabId in $settingsTabIds) {
+    if (-not [regex]::IsMatch(
+        $index,
+        "(?is)<button[^>]*id=`"$tabId-tab`"[^>]*role=`"tab`"[^>]*aria-controls=`"$tabId-panel`"")) {
+        throw "Settings tab $tabId is missing its tab role or panel relationship."
+    }
+    if (-not [regex]::IsMatch(
+        $index,
+        "(?is)<div[^>]*id=`"$tabId-panel`"[^>]*role=`"tabpanel`"[^>]*aria-labelledby=`"$tabId-tab`"")) {
+        throw "Settings panel $tabId is missing its tabpanel role or tab relationship."
+    }
+}
+
+$jobSearchStart = $index.IndexOf('id="job-search-settings-panel"')
+$qualificationsStart = $index.IndexOf('id="qualifications-settings-panel"')
+$preferencesStart = $index.IndexOf('id="preferences-settings-panel"')
+$settingsEnd = $index.IndexOf('id="loading-overlay"')
+if ($jobSearchStart -lt 0 -or $qualificationsStart -le $jobSearchStart -or
+    $preferencesStart -le $qualificationsStart -or $settingsEnd -le $preferencesStart) {
+    throw "Settings tab panels are missing or out of order."
+}
+$settingsPanelMarkup = @{
+    "Job Search" = $index.Substring($jobSearchStart, $qualificationsStart - $jobSearchStart)
+    "Qualifications" = $index.Substring($qualificationsStart, $preferencesStart - $qualificationsStart)
+    "Preferences" = $index.Substring($preferencesStart, $settingsEnd - $preferencesStart)
+}
+$requiredSettingsControls = @{
+    "Job Search" = @(
+        "company-select", "country-select", "include-all-locations", "include-remote",
+        "location-search", "selected-location-summary", "location-groups", "apply-location"
+    )
+    "Qualifications" = @(
+        "minimum-pay", "education-level", "clearance-profile-level", "public-trust-profile",
+        "us-work-authorization-status", "sponsorship-profile", "hide-strict-education-mismatch",
+        "hide-strict-clearance-mismatch", "hide-strict-work-authorization-mismatch"
+    )
+    "Preferences" = @(
+        "automatic-check-enabled", "automatic-check-interval", "automatic-check-status",
+        "theme-mode", "reset-workspace-button"
+    )
+}
+foreach ($panelName in $requiredSettingsControls.Keys) {
+    foreach ($controlId in $requiredSettingsControls[$panelName]) {
+        if ($settingsPanelMarkup[$panelName] -notmatch "id=`"$controlId`"") {
+            throw "$controlId is not assigned to the $panelName Settings tab."
+        }
+    }
+}
+
+$duplicateIds = [regex]::Matches($index, '(?i)\sid="([^"]+)"') |
+    ForEach-Object { $_.Groups[1].Value } |
+    Group-Object |
+    Where-Object Count -gt 1
+if ($duplicateIds) {
+    throw "index.html contains duplicate IDs: $($duplicateIds.Name -join ', ')"
+}
+
 $rawPaint = [regex]::Matches(
     $styles,
     '(?im)(?<![\w-])(?:#[0-9a-f]{3,8}\b|(?:rgb|hsl)a?\s*\()')
@@ -65,3 +131,5 @@ Write-Output "JavaScript syntax: PASS"
 Write-Output "Theme raw-color audit: PASS"
 Write-Output "Inline-style audit: PASS"
 Write-Output "Theme token-reference audit: PASS ($($usedTokens.Count) tokens used)"
+Write-Output "Settings tab structure audit: PASS"
+Write-Output "HTML ID uniqueness audit: PASS"

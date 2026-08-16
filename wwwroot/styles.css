@@ -663,14 +663,8 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 
 .settings-header, .settings-surface { width: min(100%, 58rem); margin-inline: auto; }
 
-.settings-header h2 {
-  margin: 0;
-  color: var(--color-text-heading);
-  font-size: var(--font-size-detail-heading);
-}
-
 .settings-header p {
-  margin: .25rem 0 .9rem;
+  margin: 0 0 .65rem;
   color: var(--color-text-secondary);
 }
 
@@ -680,6 +674,16 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   border-radius: var(--radius-control);
   background: var(--color-settings-surface-background);
 }
+.settings-tabs {
+  display: flex;
+  gap: .25rem;
+  overflow-x: auto;
+  padding: 0 .7rem;
+  border-bottom: var(--border-width-default) solid var(--color-border);
+  background: var(--color-detail-header-background);
+}
+.settings-tabs .detail-tab { flex: 0 0 auto; white-space: nowrap; }
+.settings-tab-panel { min-width: 0; }
 .settings-section { padding: .9rem 1.1rem 1rem; }
 .settings-section + .settings-section { border-top: var(--border-width-default) solid var(--color-settings-section-separator); }
 .settings-section h3 {
