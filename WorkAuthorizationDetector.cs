@@ -9,7 +9,7 @@ namespace WorkdayJobManager;
 /// </summary>
 public sealed class WorkAuthorizationDetector
 {
-    public const int CurrentAnalysisVersion = 2;
+    public const int CurrentAnalysisVersion = 3;
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromMilliseconds(250);
 
     private static readonly Regex CitizenOrResident = Pattern(
@@ -43,6 +43,7 @@ public sealed class WorkAuthorizationDetector
         @"\b(?:legal\s+)?(?:right|rights|authori[sz]ation)\s+to\s+work\s+in\s+(?:the\s+)?[A-Za-z][A-Za-z .'-]{1,40}\b");
     private static readonly Regex NoEmploymentSponsorship = Pattern(
         @"\b(?:will|does|do|can)\s+not\s+(?:provide|offer)?\s*(?:employment\s+|visa\s+|work(?:\s+authorization)?\s+)?sponsorship\b|" +
+        @"\b(?:employer|company|we)\s+will\s+not\s+sponsor\s+(?:applicants?|candidates?|individuals?)\b.{0,80}\b(?:employment\s+)?visa\s+status\b|" +
         @"\bnot\s+(?:be\s+)?require(?:d)?\s+(?:employment\s+|visa\s+|work(?:\s+authorization)?\s+)?sponsorship\b|" +
         @"\bwithout\s+(?:current\s+or\s+future\s+)?(?:employment\s+|visa\s+)?sponsorship\b|" +
         @"\bno\s+(?:employment\s+|visa\s+|work(?:\s+authorization)?\s+)?sponsorship\b");

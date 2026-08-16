@@ -29,9 +29,8 @@ a private Azure Blob container.
 - Leidos (`leidos.wd5.myworkdayjobs.com`, tenant `leidos`, site `External`)
 - MTM (`mtminc.wd1.myworkdayjobs.com`, tenant `mtminc`, site
   `MTMTransit_External`)
-- Deloitte Ireland — Experienced Professionals
-  (`deloitteie.wd3.myworkdayjobs.com`, tenant `deloitteie`, site
-  `experienced_professionals`)
+- Boeing (`boeing.wd1.myworkdayjobs.com`, tenant `boeing`, site
+  `EXTERNAL_CAREERS`)
 
 The source-controlled [CompanyCatalog.json](CompanyCatalog.json) is the authority
 for supported companies, hosts, tenants, sites, public URLs, default countries,
@@ -40,6 +39,11 @@ primarily require adding and verifying one catalog entry.
 
 Workday tenants can expose different facet structures and description conventions,
 so the project does not claim universal compatibility with every Workday site.
+
+Future company additions must be verified for both Workday compatibility and the
+intended geographic/business scope. For a multinational with multiple career
+systems or regional boards, verify the U.S. or general external board first unless
+a different region is explicitly requested.
 
 ## Local mode
 
@@ -114,6 +118,11 @@ Job history and stable job IDs are company-scoped. Existing pre-generalization
 history is migrated to the `leidos` company without resetting NEW, viewed,
 first-seen, last-seen, or dismissed state. The current cache is also tagged with
 its company-aware query identity.
+
+State from a company removed from the supported catalog is handled conservatively:
+unsupported saved source selections and caches are not reinterpreted as another
+employer, while already company-scoped history remains isolated under its original
+company ID. The active source falls back to a safe supported default.
 
 Copy or move the executable directory and its `data` directory together to retain
 state.
@@ -240,16 +249,16 @@ All supported sites use:
 - `GET /wday/cxs/{tenant}/{site}{externalPath}` for job detail
 - exact `startDate`, rich HTML `jobDescription`, and authoritative `externalUrl`
 
-Leidos exposes country and configured Remote/Teleworker location facets. MTM's
+Leidos and Boeing expose country and configured remote-location facets. MTM's
 current public feed exposes location facets but no country facet and no explicit
-remote-location facet. The UI adapts to those differences instead of applying
-Leidos facet IDs to MTM.
+remote-location facet. The UI adapts to those differences instead of applying one
+employer's facet IDs to another employer.
 
-The Deloitte source is the regional Deloitte Ireland experienced-professionals
-board, not a claim to cover Deloitte globally. Its current facets expose Ireland
-and the United Kingdom, with physical locations including Dublin, Cork, Galway,
-Limerick, and Belfast. Hybrid/remote wording is primarily description metadata;
-the board does not currently expose a dedicated remote location facet.
+Boeing's public source defaults to the United States and supports country-wide,
+physical-location, and configured Remote location selection. Its recurring ABET
+language is retained as an academic accreditation attribute, separate from the
+professional credential catalog. Export-control “U.S. Person” wording remains a
+review-only authorization signal rather than being inferred as citizen-only.
 
 ## Safety and scope
 

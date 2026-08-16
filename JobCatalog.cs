@@ -63,8 +63,10 @@ public sealed class JobCatalog
             return;
         }
 
-        var cachedQuery = cache.Query?.Normalize(_companyCatalog.Get(
-            cache.Query.CompanyId));
+        var cachedQuery = cache.Query is not null &&
+            _companyCatalog.TryGet(cache.Query.CompanyId, out var cachedCompany)
+                ? cache.Query.Normalize(cachedCompany)
+                : null;
         if (cachedQuery is null || !cachedQuery.IsEquivalentTo(query, _companyCatalog) ||
             cache.Jobs.Any(job => !string.Equals(
                 job.CompanyId, query.CompanyId, StringComparison.OrdinalIgnoreCase)))

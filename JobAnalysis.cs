@@ -115,6 +115,9 @@ internal static partial class JobAnalysis
         }
 
         var text = HtmlToPlainText(descriptionHtml);
+        // Explicit negative statements are not clearance requirements. Remove only
+        // the negative clause so a separate positive requirement can still win.
+        text = NoClearanceRequiredRegex().Replace(text, " ");
         var polygraphRequired = RequiredPolygraphRegex().IsMatch(text);
 
         var (level, levelMatch) = FindClearanceLevel(text, excludePreferredSections: true);
@@ -483,6 +486,11 @@ internal static partial class JobAnalysis
         @"\b(?:active|current|required|obtain|maintain|possess|eligible|preferred)\b.{0,45}\bclearance\b",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex OtherClearanceRegex();
+
+    [GeneratedRegex(
+        @"\b(?:security\s+clearance\s*:\s*)?(?:(?:this\s+)?(?:position|role|job)\s+does\s+not\s+require|no)\s+(?:an?\s+)?(?:u\.?s\.?\s+)?security\s+clearance(?:\s+is\s+required)?\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex NoClearanceRequiredRegex();
 
     [GeneratedRegex(
         @"\b(?:clearance|Public\s+Trust|TS\s*/\s*SCI|SCI\s+eligibility|suitability\s+determination|background\s+investigation|polygraph)\b",

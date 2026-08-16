@@ -222,7 +222,13 @@ public sealed record AcademicQualificationAnalysis(
     IReadOnlyList<AcademicQualificationPath> Paths,
     IReadOnlyList<string> Evidence,
     string ParseStatus,
-    int AnalysisVersion);
+    int AnalysisVersion,
+    IReadOnlyList<AcademicAccreditation>? Accreditations = null);
+
+public sealed record AcademicAccreditation(
+    string Name,
+    string Requirement,
+    string Evidence);
 
 public sealed record AcademicQualificationPath(
     string Level,

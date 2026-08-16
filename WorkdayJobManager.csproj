@@ -25,6 +25,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="WorkdayJobManager.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Remove="Tests\**\*.cs" />
     <Content Remove="Tests\**\*" />
     <None Remove="Tests\**\*" />

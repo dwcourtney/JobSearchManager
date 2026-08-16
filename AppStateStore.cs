@@ -22,9 +22,27 @@ public sealed class AppStateStore
     public string JobsCachePath => _dataStore.Describe(WorkspaceDataFile.JobsCache);
     public string JobHistoryPath => _dataStore.Describe(WorkspaceDataFile.JobHistory);
 
-    public async Task<ViewerSettings> LoadSettingsAsync() =>
-        NormalizeSettings(await _dataStore.ReadJsonAsync<ViewerSettings>(WorkspaceDataFile.Settings) ??
-            ViewerSettings.Default);
+    public async Task<ViewerSettings> LoadSettingsAsync()
+    {
+        var stored = await _dataStore.ReadJsonAsync<ViewerSettings>(WorkspaceDataFile.Settings) ??
+            ViewerSettings.Default;
+        var hadUnsupportedActiveCompany = !_companyCatalog.TryGet(stored.CompanyId, out _);
+        var hadUnsupportedCompanySource = (stored.CompanySources ??
+            new Dictionary<string, CompanySourceSettings>())
+            .Keys.Any(companyId => !_companyCatalog.TryGet(companyId, out _));
+        var normalized = NormalizeSettings(stored);
+
+        if (hadUnsupportedActiveCompany || hadUnsupportedCompanySource)
+        {
+            await _dataStore.WriteJsonAsync(WorkspaceDataFile.Settings, normalized);
+            _logger.LogInformation(
+                "Migrated unsupported Workday company state in {SettingsPath} to supported company {CompanyId}; unsupported per-company source selections were removed.",
+                SettingsPath,
+                normalized.CompanyId);
+        }
+
+        return normalized;
+    }
 
     public Task SaveSettingsAsync(ViewerSettings settings) =>
         _dataStore.WriteJsonAsync(WorkspaceDataFile.Settings, NormalizeSettings(settings));
@@ -70,12 +88,19 @@ public sealed class AppStateStore
         var migrationRequired = history.SchemaVersion < SchemaVersion;
         foreach (var pair in history.Jobs)
         {
-            var companyId = _companyCatalog.TryGet(pair.Value.CompanyId, out var entryCompany)
+            var storedCompanyId = string.IsNullOrWhiteSpace(pair.Value.CompanyId)
+                ? CompanyCatalog.DefaultCompanyId
+                : pair.Value.CompanyId.Trim();
+            var companyId = _companyCatalog.TryGet(storedCompanyId, out var entryCompany)
                 ? entryCompany.Id
-                : CompanyCatalog.DefaultCompanyId;
-            var keyHasCompany = _companyCatalog.Companies.Any(company =>
+                : storedCompanyId;
+            var keyHasStoredCompany = pair.Key.StartsWith(
+                companyId + ":", StringComparison.OrdinalIgnoreCase);
+            var keyHasSupportedCompany = _companyCatalog.Companies.Any(company =>
                 pair.Key.StartsWith(company.Id + ":", StringComparison.OrdinalIgnoreCase));
-            var key = keyHasCompany ? pair.Key : $"{companyId}:{pair.Key}";
+            var key = keyHasStoredCompany || keyHasSupportedCompany
+                ? pair.Key
+                : $"{companyId}:{pair.Key}";
             migrationRequired |= !string.Equals(key, pair.Key, StringComparison.Ordinal) ||
                 !string.Equals(pair.Value.CompanyId, companyId, StringComparison.OrdinalIgnoreCase);
             migrated[key] = pair.Value with { CompanyId = companyId };
@@ -117,20 +142,43 @@ public sealed class AppStateStore
         var collapsed = (settings.CollapsedAgeGroups ?? new Dictionary<string, bool>())
             .Where(pair => pair.Value)
             .ToDictionary(pair => pair.Key, pair => true, StringComparer.Ordinal);
-        var company = _companyCatalog.Get(settings.CompanyId);
-        var country = NormalizeFacetSelection(
-            settings.Country,
-            company.DefaultCountry,
-            FacetDefaults.AllCountriesLabel);
-        var includeAllLocations = settings.IncludeAllLocations;
-        var includeRemote = settings.IncludeRemote;
-        IEnumerable<FacetSelection> selectedPhysicalLocations = settings.SelectedPhysicalLocations ?? [];
+        var activeCompanyIsSupported = _companyCatalog.TryGet(settings.CompanyId, out var company);
+        company ??= _companyCatalog.Get(CompanyCatalog.DefaultCompanyId);
+
+        FacetSelection country;
+        bool includeAllLocations;
+        bool includeRemote;
+        IEnumerable<FacetSelection> selectedPhysicalLocations;
+        if (!activeCompanyIsSupported)
+        {
+            var safeSource = settings.CompanySources?.TryGetValue(company.Id, out var previousSource) == true
+                ? NormalizeCompanySource(previousSource, company)
+                : new CompanySourceSettings(
+                    company.DefaultCountry,
+                    true,
+                    company.RemoteLocationIds.Count > 0,
+                    []);
+            country = safeSource.Country;
+            includeAllLocations = safeSource.IncludeAllLocations;
+            includeRemote = safeSource.IncludeRemote;
+            selectedPhysicalLocations = safeSource.SelectedPhysicalLocations;
+        }
+        else
+        {
+            country = NormalizeFacetSelection(
+                settings.Country,
+                company.DefaultCountry,
+                FacetDefaults.AllCountriesLabel);
+            includeAllLocations = settings.IncludeAllLocations;
+            includeRemote = settings.IncludeRemote;
+            selectedPhysicalLocations = settings.SelectedPhysicalLocations ?? [];
+        }
 
         // Migrate the original single Location setting. A saved Remote/Teleworker
         // selection becomes remote-only; an empty legacy location preserves the
         // previous country-wide query; any other saved location becomes the sole
         // selected physical location.
-        if (settings.Location is not null)
+        if (activeCompanyIsSupported && settings.Location is not null)
         {
             if (string.IsNullOrWhiteSpace(settings.Location.Id))
             {

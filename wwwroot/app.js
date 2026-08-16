@@ -2558,6 +2558,10 @@ function academicLevelLabel(level, specificDegree = null) {
 }
 
 function academicBadgeLabel(academic) {
+  if (academic.minimumLevel === "noneSpecified" &&
+      Array.isArray(academic.accreditations) && academic.accreditations.length) {
+    return "Accreditation";
+  }
   const level = academicLevelLabel(academic.minimumLevel, academic.specificDegree);
   const degreeOrExperience = academic.minimumLevel === "noneSpecified"
     ? "Degree/Experience"
@@ -2565,6 +2569,7 @@ function academicBadgeLabel(academic) {
   return ({
     degreeOrExperience,
     degreeWithExperienceSubstitution: "Degree/experience options",
+    accreditationOnly: "Accreditation",
     preferredOnly: `${level} \u2014 Preferred`,
     strictDegree: `${level} \u2014 Required`,
     mentionedUnclear: `${level} \u2014 Mentioned`
@@ -2614,6 +2619,11 @@ function renderAcademicQualification(job, educationStatus) {
 
   if (hasAcademic && Array.isArray(academic.fields) && academic.fields.length) {
     rows.append(createSummaryRow("Fields", academic.fields.join(", ")));
+  }
+  if (hasAcademic && Array.isArray(academic.accreditations) && academic.accreditations.length) {
+    rows.append(createSummaryRow("Accreditation", academic.accreditations
+      .map(item => `${item.name} (${academicRequirementLabel(item.requirement)})`)
+      .join(", ")));
   }
   rows.append(createSummaryRow("Your education", educationStatus.userLabel));
 

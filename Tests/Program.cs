@@ -32,6 +32,41 @@ if (args.Length >= 2 && args[0] == "--authorization-corpus")
                 Console.WriteLine($"    {sample.Requisition}: {sample.Analysis.Evidence.FirstOrDefault()}");
             }
         }
+
+        var descriptions = jobs.Select(job => job.TryGetProperty("descriptionHtml", out var description)
+            ? description.GetString() ?? ""
+            : "").ToArray();
+        var clearanceAnalyses = descriptions.Select(JobAnalysis.AnalyzeClearance).ToArray();
+        Console.WriteLine("CLEARANCE");
+        foreach (var group in clearanceAnalyses
+            .GroupBy(item => new { item.Level, item.Requirement })
+            .OrderByDescending(group => group.Count()))
+        {
+            Console.WriteLine($"  {group.Key.Level} | {group.Key.Requirement}: {group.Count()}");
+        }
+        var explicitNoClearance = descriptions
+            .Select((description, index) => new { description, analysis = clearanceAnalyses[index] })
+            .Where(item => item.description.Contains(
+                "does not require a Security Clearance", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+        Console.WriteLine($"  explicit-no-clearance={explicitNoClearance.Length}; " +
+            $"none-mentioned={explicitNoClearance.Count(item => item.analysis.Level == "noneMentioned")}");
+
+        var academicDetector = new AcademicQualificationDetector();
+        var academicAnalyses = descriptions.Select(academicDetector.Analyze).ToArray();
+        Console.WriteLine($"ACADEMIC ABET={academicAnalyses.Count(item =>
+            item.Accreditations?.Any(accreditation => accreditation.Name == "ABET") == true)}");
+
+        var credentialDetector = new CredentialDetector(NullLogger<CredentialDetector>.Instance);
+        var credentialMatches = descriptions
+            .SelectMany(description => credentialDetector.Analyze(description).Credentials)
+            .GroupBy(item => item.CredentialId)
+            .OrderByDescending(group => group.Count());
+        Console.WriteLine("CREDENTIALS");
+        foreach (var group in credentialMatches)
+        {
+            Console.WriteLine($"  {group.Key}: {group.Count()}");
+        }
     }
     return;
 }
@@ -49,16 +84,20 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Workspace reset deletes only known local state documents", TestFileResetAsync),
     ("Blob namespaces are isolated and traversal-resistant", TestBlobNamespaceAsync),
     ("New workspace settings are neutral", TestNeutralDefaultsAsync),
-    ("Deloitte Ireland is a catalog-driven Workday source", TestDeloitteCatalogAsync),
-    ("Deloitte credential additions validate as established catalog entries", TestDeloitteCredentialCatalogAsync),
+    ("Boeing is a catalog-driven U.S. Workday source", TestBoeingCatalogAsync),
+    ("Unsupported active company state migrates without source reinterpretation", TestUnsupportedCompanyMigrationAsync),
+    ("Unsupported company history remains isolated", TestUnsupportedCompanyHistoryAsync),
+    ("Established credential catalog entries validate", TestCredentialCatalogAsync),
     ("Academic detector recognizes advanced master's-or-higher wording", TestAdvancedDegreeAsync),
+    ("Academic detector treats ABET as accreditation", TestAbetAccreditationAsync),
     ("Work authorization detector recognizes strict U.S. citizenship", TestUsCitizenshipAsync),
     ("Work authorization detector distinguishes citizens and permanent residents", TestCitizenOrResidentAsync),
     ("Work authorization detector recognizes employment sponsorship", TestSponsorshipAsync),
     ("Work authorization detector treats U.S.-person wording conservatively", TestUsPersonAsync),
     ("Work authorization detector ignores unrelated sponsor and resident language", TestAuthorizationFalsePositivesAsync),
     ("Work authorization detector surfaces non-U.S. and export wording for review", TestInternationalAuthorizationAsync),
-    ("Work authorization detector recognizes location-specific work rights", TestLocationWorkRightsAsync)
+    ("Work authorization detector recognizes location-specific work rights", TestLocationWorkRightsAsync),
+    ("Clearance detector ignores explicit no-clearance statements", TestNoClearanceRequiredAsync)
 };
 
 var failures = new List<string>();
@@ -278,26 +317,110 @@ static Task TestNeutralDefaultsAsync()
     return Task.CompletedTask;
 }
 
-static Task TestDeloitteCatalogAsync()
+static Task TestBoeingCatalogAsync()
 {
     using var document = JsonDocument.Parse(File.ReadAllText(
         Path.Combine(AppContext.BaseDirectory, "CompanyCatalog.json")));
-    var company = document.RootElement.GetProperty("companies").EnumerateArray()
-        .Single(item => item.GetProperty("id").GetString() == "deloitte-ie");
-    Assert(company.GetProperty("displayName").GetString() ==
-           "Deloitte Ireland — Experienced Professionals" &&
+    var companies = document.RootElement.GetProperty("companies").EnumerateArray().ToArray();
+    var company = companies.Single(item => item.GetProperty("id").GetString() == "boeing");
+    Assert(company.GetProperty("displayName").GetString() == "Boeing" &&
            company.GetProperty("workdayHost").GetString() ==
-           "deloitteie.wd3.myworkdayjobs.com" &&
-           company.GetProperty("tenant").GetString() == "deloitteie" &&
-           company.GetProperty("site").GetString() == "experienced_professionals",
-        "Deloitte Ireland was not represented solely by the verified generic catalog fields.");
+           "boeing.wd1.myworkdayjobs.com" &&
+           company.GetProperty("tenant").GetString() == "boeing" &&
+           company.GetProperty("site").GetString() == "EXTERNAL_CAREERS" &&
+           company.GetProperty("defaultCountry").GetProperty("label").GetString() ==
+           "United States of America",
+        "Boeing was not represented solely by the verified generic catalog fields.");
+    Assert(companies.All(item => item.GetProperty("id").GetString() != "deloitte-ie"),
+        "Deloitte Ireland remains an active catalog company.");
     return Task.CompletedTask;
 }
 
-static Task TestDeloitteCredentialCatalogAsync()
+static async Task TestUnsupportedCompanyMigrationAsync()
+{
+    var directory = Path.Combine(Path.GetTempPath(), $"workday-manager-company-migration-{Guid.NewGuid():N}");
+    try
+    {
+        var store = new FileWorkspaceDataStore(directory, NullLogger<FileWorkspaceDataStore>.Instance);
+        var stale = ViewerSettings.Default with
+        {
+            CompanyId = "deloitte-ie",
+            Country = new FacetSelection("04a05835925f45b3a59406a2a6b72c8a", "Ireland"),
+            IncludeAllLocations = false,
+            IncludeRemote = false,
+            SelectedPhysicalLocations =
+            [
+                new FacetSelection("deloitte-dublin", "Dublin")
+            ],
+            CompanySources = new Dictionary<string, CompanySourceSettings>
+            {
+                ["deloitte-ie"] = new(
+                    new FacetSelection("04a05835925f45b3a59406a2a6b72c8a", "Ireland"),
+                    false,
+                    false,
+                    [new FacetSelection("deloitte-dublin", "Dublin")])
+            }
+        };
+        await store.WriteJsonAsync(WorkspaceDataFile.Settings, stale);
+        var catalog = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+        var state = new AppStateStore(NullLogger<AppStateStore>.Instance, catalog, store);
+
+        var migrated = await state.LoadSettingsAsync();
+
+        Assert(migrated.CompanyId == CompanyCatalog.DefaultCompanyId,
+            "Unsupported active company did not migrate to the safe default company.");
+        Assert(migrated.Country.Id == "bc33aa3152ec42d4995f4791a106ed09" &&
+               migrated.IncludeAllLocations && migrated.IncludeRemote &&
+               migrated.SelectedPhysicalLocations?.Count == 0,
+            "Deloitte Ireland source facets were reinterpreted as the default company's source.");
+        Assert(migrated.CompanySources is not null &&
+               !migrated.CompanySources.ContainsKey("deloitte-ie"),
+            "Unsupported per-company source state survived migration.");
+        var persisted = await store.ReadJsonAsync<ViewerSettings>(WorkspaceDataFile.Settings);
+        Assert(persisted?.CompanyId == CompanyCatalog.DefaultCompanyId,
+            "The safe company migration was not persisted.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static async Task TestUnsupportedCompanyHistoryAsync()
+{
+    var directory = Path.Combine(Path.GetTempPath(), $"workday-manager-history-migration-{Guid.NewGuid():N}");
+    try
+    {
+        var store = new FileWorkspaceDataStore(directory, NullLogger<FileWorkspaceDataStore>.Instance);
+        var now = DateTimeOffset.UtcNow;
+        var stale = new JobHistoryDocument(2, new Dictionary<string, JobHistoryEntry>
+        {
+            ["deloitte-ie:REQ-42"] = new("REQ-42", "/job/REQ-42", now, now, true,
+                CompanyId: "deloitte-ie")
+        });
+        await store.WriteJsonAsync(WorkspaceDataFile.JobHistory, stale);
+        var state = new AppStateStore(
+            NullLogger<AppStateStore>.Instance,
+            new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory)),
+            store);
+
+        var loaded = await state.LoadJobHistoryAsync();
+        Assert(loaded.Jobs.TryGetValue("deloitte-ie:REQ-42", out var entry) &&
+               entry.CompanyId == "deloitte-ie" &&
+               !loaded.Jobs.ContainsKey("boeing:REQ-42") &&
+               !loaded.Jobs.ContainsKey("leidos:REQ-42"),
+            "Unsupported Deloitte history was reassigned to an active company.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static Task TestCredentialCatalogAsync()
 {
     var detector = new CredentialDetector(NullLogger<CredentialDetector>.Instance);
-    Assert(detector.CatalogVersion == 9, "The expanded credential catalog version was not loaded.");
+    Assert(detector.CatalogVersion == 10, "The expanded credential catalog version was not loaded.");
     using var document = JsonDocument.Parse(File.ReadAllText(
         Path.Combine(AppContext.BaseDirectory, "CredentialCatalog.json")));
     var ids = document.RootElement.GetProperty("credentials").EnumerateArray()
@@ -308,9 +431,10 @@ static Task TestDeloitteCredentialCatalogAsync()
         "aca-chartered-accountant", "acca-qualification", "cima-professional-qualification",
         "cfa-charter", "iapp-cipp-e", "iapp-aigp", "iapp-cipm", "iapp-cipt",
         "ipass-payroll-qualification", "cta-chartered-tax-adviser",
-        "oracle-certification-unspecified", "sap-certification-unspecified"
+        "oracle-certification-unspecified", "sap-certification-unspecified",
+        "faa-airframe-powerplant", "epa-section-608-universal", "cpsm"
     };
-    Assert(expected.All(ids.Contains), "One or more verified Deloitte credentials are absent.");
+    Assert(expected.All(ids.Contains), "One or more verified credentials are absent.");
     return Task.CompletedTask;
 }
 
@@ -318,8 +442,24 @@ static Task TestAdvancedDegreeAsync()
 {
     var analysis = new AcademicQualificationDetector().Analyze(
         "<p>Advanced degree (Master’s or higher) in computer science or a related discipline.</p>");
-    Assert(analysis.MinimumLevel == "master" && analysis.AnalysisVersion == 2,
+    Assert(analysis.MinimumLevel == "master" &&
+           analysis.AnalysisVersion == AcademicQualificationDetector.CurrentAnalysisVersion,
         "Advanced degree (Master's or higher) was not normalized to a master's minimum.");
+    return Task.CompletedTask;
+}
+
+static Task TestAbetAccreditationAsync()
+{
+    var detector = new AcademicQualificationDetector();
+    var preferred = detector.Analyze(
+        "<h3>Basic Qualifications</h3><p>Bachelor's degree in engineering.</p>" +
+        "<p>In the USA, ABET accreditation is the preferred, although not required, accreditation standard.</p>");
+    Assert(preferred.Accreditations is [{ Name: "ABET", Requirement: "preferred" }],
+        "Boeing's standard ABET wording was not retained as a preferred academic accreditation.");
+    var required = detector.Analyze(
+        "<h3>Required Qualifications</h3><p>A bachelor's degree from an ABET-accredited program is required.</p>");
+    Assert(required.Accreditations is [{ Name: "ABET", Requirement: "required" }],
+        "An explicit ABET requirement was not classified as required.");
     return Task.CompletedTask;
 }
 
@@ -387,6 +527,24 @@ static Task TestSponsorshipAsync()
            sponsorshipOnly.SponsorshipStrength == "strict" &&
            sponsorshipOnly.ParseStatus == "parsed",
         "Standalone no-sponsorship wording was not preserved as a strict sponsorship predicate.");
+    var boeing = new WorkAuthorizationDetector().Analyze(
+        "<p>Employer will not sponsor applicants for employment visa status.</p>");
+    Assert(boeing.Sponsorship == "notAvailable" && boeing.SponsorshipStrength == "strict",
+        "The common employer-will-not-sponsor wording was not recognized.");
+    return Task.CompletedTask;
+}
+
+static Task TestNoClearanceRequiredAsync()
+{
+    var none = JobAnalysis.AnalyzeClearance(
+        "<p>This position does not require a Security Clearance.</p>");
+    Assert(none.Level == "noneMentioned" && none.Requirement == "none",
+        "An explicit no-clearance statement was treated as a clearance requirement.");
+    var positiveElsewhere = JobAnalysis.AnalyzeClearance(
+        "<p>This position does not require a Security Clearance.</p>" +
+        "<p>Candidate must obtain a U.S. Secret clearance.</p>");
+    Assert(positiveElsewhere.Level == "secret",
+        $"Removing a negative clearance statement hid a separate positive requirement: {positiveElsewhere.Level}/{positiveElsewhere.Requirement}; {positiveElsewhere.Evidence}.");
     return Task.CompletedTask;
 }
 
@@ -465,3 +623,12 @@ static void AssertThrows<TException>(Action action) where TException : Exception
 }
 
 internal sealed record TestDocument(string Name, int Value);
+
+internal sealed class TestHostEnvironment(string contentRootPath) : Microsoft.Extensions.Hosting.IHostEnvironment
+{
+    public string EnvironmentName { get; set; } = "Test";
+    public string ApplicationName { get; set; } = "WorkdayJobManager.Tests";
+    public string ContentRootPath { get; set; } = contentRootPath;
+    public Microsoft.Extensions.FileProviders.IFileProvider ContentRootFileProvider { get; set; } =
+        new Microsoft.Extensions.FileProviders.PhysicalFileProvider(contentRootPath);
+}

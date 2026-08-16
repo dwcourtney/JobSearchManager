@@ -9,7 +9,7 @@ namespace WorkdayJobManager;
 /// </summary>
 public sealed class AcademicQualificationDetector
 {
-    public const int CurrentAnalysisVersion = 2;
+    public const int CurrentAnalysisVersion = 3;
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromMilliseconds(250);
 
     public int AnalysisVersion => CurrentAnalysisVersion;
@@ -23,12 +23,21 @@ public sealed class AcademicQualificationDetector
 
         var segments = CreateSegments(descriptionHtml);
         var paths = new List<AcademicQualificationPath>();
+        var accreditations = new List<AcademicAccreditation>();
         var degreeSubstitutionEvidence = new List<string>();
         var sectionRequirement = "mentioned";
 
         foreach (var segment in segments)
         {
             sectionRequirement = UpdateSectionRequirement(segment, sectionRequirement);
+            var abetMatch = AbetRegex.Match(segment);
+            if (abetMatch.Success)
+            {
+                accreditations.Add(new AcademicAccreditation(
+                    "ABET",
+                    ClassifyAccreditationRequirement(segment, sectionRequirement),
+                    CreateEvidence(segment, abetMatch.Index)));
+            }
             var mentions = FindDegreeMentions(segment);
             if (mentions.Count == 0)
             {
@@ -59,21 +68,30 @@ public sealed class AcademicQualificationDetector
             }
         }
 
+        var mergedAccreditations = accreditations
+            .GroupBy(item => new { item.Name, item.Requirement })
+            .Select(group => group.First())
+            .ToArray();
+
         if (paths.Count == 0)
         {
-            return degreeSubstitutionEvidence.Count == 0
+            return degreeSubstitutionEvidence.Count == 0 && mergedAccreditations.Length == 0
                 ? NoneSpecified()
                 : new AcademicQualificationAnalysis(
                     "noneSpecified",
                     null,
-                    "degreeOrExperience",
-                    true,
+                    mergedAccreditations.Length > 0 ? "accreditationOnly" : "degreeOrExperience",
+                    degreeSubstitutionEvidence.Count > 0,
                     [],
                     [],
                     [],
-                    degreeSubstitutionEvidence.Distinct(StringComparer.OrdinalIgnoreCase).ToArray(),
+                    degreeSubstitutionEvidence
+                        .Concat(mergedAccreditations.Select(item => item.Evidence))
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .ToArray(),
                     "ambiguous",
-                    AnalysisVersion);
+                    AnalysisVersion,
+                    mergedAccreditations);
         }
 
         var mergedPaths = paths
@@ -110,6 +128,7 @@ public sealed class AcademicQualificationDetector
         var allEvidence = mergedPaths
             .Select(path => path.Evidence)
             .Concat(degreeSubstitutionEvidence)
+            .Concat(mergedAccreditations.Select(item => item.Evidence))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .Take(8)
             .ToArray();
@@ -134,7 +153,8 @@ public sealed class AcademicQualificationDetector
             mergedPaths,
             allEvidence,
             mergedPaths.Any(path => path.Requirement == "mentioned") ? "ambiguous" : "parsed",
-            AnalysisVersion);
+            AnalysisVersion,
+            mergedAccreditations);
     }
 
     public JobRecord AnalyzeJob(JobRecord job) => job with
@@ -152,7 +172,23 @@ public sealed class AcademicQualificationDetector
         [],
         [],
         "notFound",
-        CurrentAnalysisVersion);
+        CurrentAnalysisVersion,
+        []);
+
+    private static string ClassifyAccreditationRequirement(string segment, string sectionRequirement)
+    {
+        if (Regex.IsMatch(segment, @"\bpreferred\b|\bnot\s+required\b",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, RegexTimeout))
+        {
+            return "preferred";
+        }
+        if (Regex.IsMatch(segment, @"\b(?:required|must)\b",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, RegexTimeout))
+        {
+            return "required";
+        }
+        return sectionRequirement;
+    }
 
     private static string DetermineRequirementType(
         IReadOnlyList<string> segments,
@@ -488,6 +524,9 @@ public sealed class AcademicQualificationDetector
         @"^desired\s+(?:qualifications?|requirements?|education|experience)\b");
     private static readonly Regex SectionResetRegex = CreateRegex(
         @"^(?:responsibilities|primary\s+duties|what\s+you['’]ll\s+be\s+doing|original\s+posting|pay\s+range|job\s+description)\s*:?");
+
+    private static readonly Regex AbetRegex = CreateRegex(
+        @"\bABET(?:-accredited|\s+accredited|\s+accreditation)\b");
 
     private static Regex CreateRegex(string pattern) => new(
         pattern,

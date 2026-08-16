@@ -31,17 +31,19 @@
       "remoteLocationIds": []
     },
     {
-      "id": "deloitte-ie",
-      "displayName": "Deloitte Ireland — Experienced Professionals",
-      "workdayHost": "deloitteie.wd3.myworkdayjobs.com",
-      "tenant": "deloitteie",
-      "site": "experienced_professionals",
-      "publicSiteUrl": "https://deloitteie.wd3.myworkdayjobs.com/experienced_professionals",
+      "id": "boeing",
+      "displayName": "Boeing",
+      "workdayHost": "boeing.wd1.myworkdayjobs.com",
+      "tenant": "boeing",
+      "site": "EXTERNAL_CAREERS",
+      "publicSiteUrl": "https://boeing.wd1.myworkdayjobs.com/EXTERNAL_CAREERS",
       "defaultCountry": {
-        "id": "04a05835925f45b3a59406a2a6b72c8a",
-        "label": "Ireland"
+        "id": "bc33aa3152ec42d4995f4791a106ed09",
+        "label": "United States of America"
       },
-      "remoteLocationIds": []
+      "remoteLocationIds": [
+        "89c17a590aec10245717f13510890000"
+      ]
     }
   ]
 }
