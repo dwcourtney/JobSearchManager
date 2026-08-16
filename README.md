@@ -13,7 +13,7 @@ uses public Workday CXS JSON endpoints; it does not scrape rendered job pages.
 
 The default Workday search experience makes some personal screening workflows
 awkward. This utility adds exact-date newest-first sorting, useful inclusion and
-exclusion rules, persistent NEW/viewed tracking, per-job dismissal, multi-location
+exclusion rules, persistent NEW/viewed tracking, a four-state job workflow, multi-location
 selection, and salary, clearance, credential, education, and work-authorization
 analysis. Remote-designated jobs are also checked for description language that
 requires onsite, field, commuting-area, or substantial-travel work. It preserves
@@ -123,14 +123,15 @@ application directory is not writable, it reports a clear startup/save error.
 
 Job history and stable job IDs are company-scoped. Existing pre-generalization
 history is migrated to the `leidos` company without resetting NEW, viewed,
-first-seen, last-seen, or dismissed state. The current cache is also tagged with
+first-seen, last-seen, or hidden state. The current cache is also tagged with
 its company-aware query identity.
 
-Saved jobs use that same company-scoped history identity and workspace storage.
-The Saved tab shows saved jobs present in the currently loaded company/query;
-when a saved posting is absent from the current Workday snapshot, its saved marker
-remains in history and returns if that company/job identity appears again. Saving
-never hides a job from All Jobs, and dismissal remains independent of saved state.
+Each job has exactly one persisted workflow state: Normal, Saved, Applied, or
+Hidden. The results tabs show those mutually exclusive populations as All Jobs,
+Saved, Applied, and Hidden. Restoring a Hidden job returns it to Normal; it does
+not revive an earlier Saved or Applied state. State uses the same company-scoped
+history identity and workspace storage, so it returns if that company/job identity
+reappears in a later Workday snapshot.
 
 State from a company removed from the supported catalog is handled conservatively:
 unsupported saved source selections and caches are not reinterpreted as another

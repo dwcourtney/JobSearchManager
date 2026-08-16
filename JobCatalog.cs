@@ -149,8 +149,7 @@ public sealed class JobCatalog
                 true,
                 GetNewJobIds(cachedJobs),
                 query,
-                GetDismissedJobIds(cachedJobs),
-                GetSavedJobIds(cachedJobs),
+                GetJobStates(cachedJobs),
                 null);
         }
 
@@ -336,9 +335,9 @@ public sealed class JobCatalog
         }
     }
 
-    public async Task<bool> SetDismissedAsync(string stableId, bool dismissed)
+    public async Task<bool> SetWorkflowStateAsync(string stableId, string workflowState)
     {
-        if (string.IsNullOrWhiteSpace(stableId))
+        if (string.IsNullOrWhiteSpace(stableId) || !JobWorkflowStates.IsValid(workflowState))
         {
             return false;
         }
@@ -370,77 +369,26 @@ public sealed class JobCatalog
                     CompanyId: currentJob.CompanyId);
             }
 
-            if (entry.Dismissed == dismissed)
-            {
-                return true;
-            }
-
-            _history.Jobs[stableId] = entry with
-            {
-                Dismissed = dismissed,
-                DismissedAt = dismissed ? DateTimeOffset.UtcNow : null
-            };
-            await _stateStore.SaveJobHistoryAsync(CloneHistory());
-
-            lock (_gate)
-            {
-                _snapshot = _snapshot with
-                {
-                    DismissedJobIds = GetDismissedJobIds(_snapshot.Jobs)
-                };
-            }
-
-            return true;
-        }
-        finally
-        {
-            _historyGate.Release();
-        }
-    }
-
-    public async Task<bool> SetSavedAsync(string stableId, bool saved)
-    {
-        if (string.IsNullOrWhiteSpace(stableId))
-        {
-            return false;
-        }
-
-        await _historyGate.WaitAsync();
-        try
-        {
-            JobRecord? currentJob;
-            lock (_gate)
-            {
-                currentJob = _snapshot.Jobs.FirstOrDefault(
-                    job => string.Equals(job.StableId, stableId, StringComparison.Ordinal));
-            }
-
-            if (currentJob is null)
+            if (!JobWorkflowStates.CanTransition(entry.WorkflowState, workflowState))
             {
                 return false;
             }
 
-            if (!_history.Jobs.TryGetValue(stableId, out var entry))
-            {
-                var now = DateTimeOffset.UtcNow;
-                entry = new JobHistoryEntry(
-                    currentJob.RequisitionId,
-                    currentJob.ExternalPath,
-                    now,
-                    now,
-                    false,
-                    CompanyId: currentJob.CompanyId);
-            }
-
-            if (entry.Saved == saved)
+            if (string.Equals(entry.WorkflowState, workflowState, StringComparison.Ordinal))
             {
                 return true;
             }
 
             _history.Jobs[stableId] = entry with
             {
-                Saved = saved,
-                SavedAt = saved ? DateTimeOffset.UtcNow : null
+                WorkflowState = workflowState,
+                WorkflowStateChangedAt = DateTimeOffset.UtcNow,
+                Dismissed = false,
+                DismissedAt = null,
+                Saved = false,
+                SavedAt = null,
+                Applied = false,
+                AppliedAt = null
             };
             await _stateStore.SaveJobHistoryAsync(CloneHistory());
 
@@ -448,7 +396,7 @@ public sealed class JobCatalog
             {
                 _snapshot = _snapshot with
                 {
-                    SavedJobIds = GetSavedJobIds(_snapshot.Jobs)
+                    JobStates = GetJobStates(_snapshot.Jobs)
                 };
             }
 
@@ -509,8 +457,7 @@ public sealed class JobCatalog
                 false,
                 GetNewJobIds(result.Jobs),
                 query,
-                GetDismissedJobIds(result.Jobs),
-                GetSavedJobIds(result.Jobs),
+                GetJobStates(result.Jobs),
                 null);
 
             lock (_gate)
@@ -655,15 +602,13 @@ public sealed class JobCatalog
         .Where(id => _history.Jobs.TryGetValue(id, out var entry) && !entry.HasBeenViewed)
         .ToArray();
 
-    private string[] GetDismissedJobIds(IReadOnlyList<JobRecord> jobs) => jobs
-        .Select(job => job.StableId)
-        .Where(id => _history.Jobs.TryGetValue(id, out var entry) && entry.Dismissed)
-        .ToArray();
-
-    private string[] GetSavedJobIds(IReadOnlyList<JobRecord> jobs) => jobs
-        .Select(job => job.StableId)
-        .Where(id => _history.Jobs.TryGetValue(id, out var entry) && entry.Saved)
-        .ToArray();
+    private Dictionary<string, string> GetJobStates(IReadOnlyList<JobRecord> jobs) => jobs
+        .ToDictionary(
+            job => job.StableId,
+            job => _history.Jobs.TryGetValue(job.StableId, out var entry)
+                ? JobWorkflowStates.Normalize(entry.WorkflowState)
+                : JobWorkflowStates.Normal,
+            StringComparer.Ordinal);
 
     private JobHistoryDocument CloneHistory() => _history with
     {

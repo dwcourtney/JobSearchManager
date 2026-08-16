@@ -88,6 +88,12 @@
   --detail-action-gap: .45rem;
   --detail-action-content-gap: .4rem;
   --detail-action-padding: .55rem .8rem;
+  --job-card-actions-padding-right: 7rem;
+  --job-action-top: .52rem;
+  --job-action-edge-offset: .55rem;
+  --job-action-second-offset: 2.55rem;
+  --job-action-third-offset: 4.55rem;
+  --job-action-min-size: 1.65rem;
   --reset-list-indent: 1.2rem;
   --reset-error-padding: .65rem .75rem;
   --reset-section-gap: 1rem;
@@ -125,6 +131,19 @@
   --color-confirmation-secondary-hover: var(--color-secondary-button-hover);
   --opacity-disabled-control: .65;
   --shadow-confirmation-panel: var(--shadow-loading-panel);
+  --color-applied-action: var(--color-save-action);
+  --color-applied-action-border: var(--color-save-action-border);
+  --color-applied-action-background: var(--color-save-action-background);
+  --color-applied-action-hover: var(--color-save-action-hover);
+  --color-applied-action-active: var(--color-new-badge-text);
+  --color-applied-action-active-mark: var(--color-surface);
+  --color-applied-icon-background: transparent;
+  --color-applied-badge-border: var(--color-new-badge-border);
+  --color-applied-badge-text: var(--color-new-badge-text);
+  --color-applied-badge-background: var(--color-new-badge-background);
+  --color-restore-action-hover-border: var(--color-dismiss-action-hover-border);
+  --color-restore-action-hover-text: var(--color-dismiss-action-hover-text);
+  --color-restore-action-hover-background: var(--color-dismiss-action-hover-background);
 }
 
 /* Light theme: preserves the established application appearance. */

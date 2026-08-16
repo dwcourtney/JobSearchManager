@@ -360,22 +360,13 @@ app.MapPost("/api/history/viewed", async (
         : Results.NotFound())
     .RequireRateLimiting("state");
 
-app.MapPut("/api/history/dismissed", async (
-    DismissedJobRequest request,
+app.MapPut("/api/history/workflow-state", async (
+    JobWorkflowStateRequest request,
     WorkspaceRuntimeProvider provider,
     CancellationToken token) =>
-    await (await provider.GetAsync(token)).Catalog.SetDismissedAsync(request.StableId, request.Dismissed)
+    await (await provider.GetAsync(token)).Catalog.SetWorkflowStateAsync(request.StableId, request.State)
         ? Results.NoContent()
-        : Results.NotFound())
-    .RequireRateLimiting("state");
-
-app.MapPut("/api/history/saved", async (
-    SavedJobRequest request,
-    WorkspaceRuntimeProvider provider,
-    CancellationToken token) =>
-    await (await provider.GetAsync(token)).Catalog.SetSavedAsync(request.StableId, request.Saved)
-        ? Results.NoContent()
-        : Results.NotFound())
+        : Results.BadRequest())
     .RequireRateLimiting("state");
 
 var dataStores = app.Services.GetRequiredService<IWorkspaceDataStoreFactory>();

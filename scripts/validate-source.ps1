@@ -10,8 +10,15 @@ $indexPath = Join-Path $repo "wwwroot\index.html"
 $appPath = Join-Path $repo "wwwroot\app.js"
 $postingTextPath = Join-Path $repo "wwwroot\job-posting-text.js"
 $postingTextTestsPath = Join-Path $repo "Tests\job-posting-text.tests.js"
+$workflowStatePath = Join-Path $repo "wwwroot\job-workflow-state.js"
+$workflowStateTestsPath = Join-Path $repo "Tests\job-workflow-state.tests.js"
 
-foreach ($scriptPath in @($appPath, $postingTextPath, $postingTextTestsPath)) {
+foreach ($scriptPath in @(
+    $appPath,
+    $postingTextPath,
+    $postingTextTestsPath,
+    $workflowStatePath,
+    $workflowStateTestsPath)) {
     & $NodePath --check $scriptPath
     if ($LASTEXITCODE -ne 0) {
         throw "JavaScript syntax validation failed for $scriptPath."
@@ -21,6 +28,11 @@ foreach ($scriptPath in @($appPath, $postingTextPath, $postingTextTestsPath)) {
 & $NodePath $postingTextTestsPath
 if ($LASTEXITCODE -ne 0) {
     throw "Job-posting text normalization tests failed."
+}
+
+& $NodePath $workflowStateTestsPath
+if ($LASTEXITCODE -ne 0) {
+    throw "Job-workflow state tests failed."
 }
 
 $styles = Get-Content -LiteralPath $stylesPath -Raw

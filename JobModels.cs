@@ -327,8 +327,7 @@ public sealed record JobsSnapshot(
     bool IsCached,
     IReadOnlyList<string> NewJobIds,
     WorkdayQuery Query,
-    IReadOnlyList<string> DismissedJobIds,
-    IReadOnlyList<string> SavedJobIds,
+    IReadOnlyDictionary<string, string> JobStates,
     RefreshProgress? RefreshProgress)
 {
     public static JobsSnapshot Empty { get; } =
@@ -337,7 +336,7 @@ public sealed record JobsSnapshot(
             FacetDefaults.AllCountriesLabel,
             true,
             false,
-            []), [], [], null);
+            []), new Dictionary<string, string>(StringComparer.Ordinal), null);
 }
 
 public sealed record CompanySourceSettings(
@@ -417,8 +416,7 @@ public sealed record WorkAuthorizationProfile(string UsStatus, string Sponsorshi
 }
 
 public sealed record ViewedJobRequest(string StableId);
-public sealed record DismissedJobRequest(string StableId, bool Dismissed);
-public sealed record SavedJobRequest(string StableId, bool Saved);
+public sealed record JobWorkflowStateRequest(string StableId, string State);
 
 internal sealed record JobsCacheDocument(
     int SchemaVersion,
@@ -433,7 +431,7 @@ internal sealed record JobHistoryDocument(
     Dictionary<string, JobHistoryEntry> Jobs)
 {
     public static JobHistoryDocument Empty { get; } = new(
-        3, new Dictionary<string, JobHistoryEntry>(StringComparer.Ordinal));
+        4, new Dictionary<string, JobHistoryEntry>(StringComparer.Ordinal));
 }
 
 internal sealed record JobHistoryEntry(
@@ -442,11 +440,50 @@ internal sealed record JobHistoryEntry(
     DateTimeOffset FirstSeenAt,
     DateTimeOffset LastSeenAt,
     bool HasBeenViewed,
+    string WorkflowState = JobWorkflowStates.Normal,
+    DateTimeOffset? WorkflowStateChangedAt = null,
+    // Schema 1-3 migration inputs. Normalized schema-4 writes always clear these.
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     bool Dismissed = false,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     DateTimeOffset? DismissedAt = null,
     string CompanyId = CompanyCatalog.DefaultCompanyId,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     bool Saved = false,
-    DateTimeOffset? SavedAt = null);
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    DateTimeOffset? SavedAt = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    bool Applied = false,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    DateTimeOffset? AppliedAt = null);
+
+internal static class JobWorkflowStates
+{
+    public const string Normal = "normal";
+    public const string Saved = "saved";
+    public const string Applied = "applied";
+    public const string Hidden = "hidden";
+
+    public static bool IsValid(string? state) => state is Normal or Saved or Applied or Hidden;
+
+    public static string Normalize(string? state) => IsValid(state) ? state! : Normal;
+
+    public static bool CanTransition(string? currentState, string? nextState)
+    {
+        var current = Normalize(currentState);
+        if (!IsValid(nextState)) return false;
+        if (string.Equals(current, nextState, StringComparison.Ordinal)) return true;
+
+        return current switch
+        {
+            Normal => nextState is Saved or Applied or Hidden,
+            Saved => nextState is Normal or Applied or Hidden,
+            Applied => nextState is Normal or Hidden,
+            Hidden => nextState is Normal,
+            _ => false
+        };
+    }
+}
 
 internal sealed class ListingResponse
 {

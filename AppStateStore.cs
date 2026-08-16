@@ -2,7 +2,7 @@ namespace WorkdayJobManager;
 
 public sealed class AppStateStore
 {
-    private const int SchemaVersion = 3;
+    private const int SchemaVersion = 4;
     private readonly ILogger<AppStateStore> _logger;
     private readonly CompanyCatalog _companyCatalog;
     private readonly IWorkspaceDataStore _dataStore;
@@ -101,9 +101,41 @@ public sealed class AppStateStore
             var key = keyHasStoredCompany || keyHasSupportedCompany
                 ? pair.Key
                 : $"{companyId}:{pair.Key}";
+            var hasLegacyState = pair.Value.Dismissed || pair.Value.Saved || pair.Value.Applied;
+            var hasLegacyStateData = hasLegacyState || pair.Value.DismissedAt is not null ||
+                pair.Value.SavedAt is not null || pair.Value.AppliedAt is not null;
+            var workflowState = hasLegacyState
+                ? pair.Value.Dismissed
+                    ? JobWorkflowStates.Hidden
+                    : pair.Value.Applied
+                        ? JobWorkflowStates.Applied
+                        : JobWorkflowStates.Saved
+                : JobWorkflowStates.Normalize(pair.Value.WorkflowState);
+            var workflowStateChangedAt = hasLegacyState
+                ? workflowState switch
+                {
+                    JobWorkflowStates.Hidden => pair.Value.DismissedAt,
+                    JobWorkflowStates.Applied => pair.Value.AppliedAt,
+                    JobWorkflowStates.Saved => pair.Value.SavedAt,
+                    _ => null
+                }
+                : pair.Value.WorkflowStateChangedAt;
             migrationRequired |= !string.Equals(key, pair.Key, StringComparison.Ordinal) ||
-                !string.Equals(pair.Value.CompanyId, companyId, StringComparison.OrdinalIgnoreCase);
-            migrated[key] = pair.Value with { CompanyId = companyId };
+                !string.Equals(pair.Value.CompanyId, companyId, StringComparison.OrdinalIgnoreCase) ||
+                !JobWorkflowStates.IsValid(pair.Value.WorkflowState) ||
+                hasLegacyStateData;
+            migrated[key] = pair.Value with
+            {
+                CompanyId = companyId,
+                WorkflowState = workflowState,
+                WorkflowStateChangedAt = workflowStateChangedAt,
+                Dismissed = false,
+                DismissedAt = null,
+                Saved = false,
+                SavedAt = null,
+                Applied = false,
+                AppliedAt = null
+            };
         }
 
         var migratedDocument = new JobHistoryDocument(SchemaVersion, migrated);

@@ -45,10 +45,8 @@ const state = {
   lastObservedAutomaticRefreshUtc: null,
   automaticCheckRequestInFlight: false,
   newJobIds: new Set(),
-  dismissedJobIds: new Set(),
-  savedJobIds: new Set(),
+  jobStates: new Map(),
   activeResultsTab: "all",
-  showDismissedJobs: false,
   selectedJobId: null,
   lastRefreshedUtc: null,
   isCached: false,
@@ -146,11 +144,14 @@ const elements = {
   resetConfirmationCancel: document.querySelector("#reset-confirmation-cancel"),
   resetConfirmationSubmit: document.querySelector("#reset-confirmation-submit"),
   resetConfirmationError: document.querySelector("#reset-confirmation-error"),
-  showHiddenJobs: document.querySelector("#show-hidden-jobs"),
   hiddenJobCount: document.querySelector("#hidden-job-count"),
   allResultsTab: document.querySelector("#all-results-tab"),
+  allJobCount: document.querySelector("#all-job-count"),
   savedResultsTab: document.querySelector("#saved-results-tab"),
+  appliedResultsTab: document.querySelector("#applied-results-tab"),
+  hiddenResultsTab: document.querySelector("#hidden-results-tab"),
   savedJobCount: document.querySelector("#saved-job-count"),
+  appliedJobCount: document.querySelector("#applied-job-count"),
   resultsTabPanel: document.querySelector("#results-tab-panel"),
   jobList: document.querySelector("#job-list"),
   emptyDetail: document.querySelector("#empty-detail"),
@@ -158,6 +159,7 @@ const elements = {
   detailTitle: document.querySelector("#detail-title"),
   detailNewBadge: document.querySelector("#detail-new-badge"),
   detailSavedBadge: document.querySelector("#detail-saved-badge"),
+  detailAppliedBadge: document.querySelector("#detail-applied-badge"),
   detailHiddenBadge: document.querySelector("#detail-hidden-badge"),
   detailRequisition: document.querySelector("#detail-requisition"),
   detailDate: document.querySelector("#detail-date"),
@@ -275,10 +277,6 @@ async function initialize() {
     renderResults();
     queueSettingsSave();
   });
-  elements.showHiddenJobs.addEventListener("change", () => {
-    state.showDismissedJobs = elements.showHiddenJobs.checked;
-    renderResults();
-  });
   elements.automaticCheckEnabled.addEventListener("change", () => {
     state.automaticCheckEnabled = elements.automaticCheckEnabled.checked;
     elements.automaticCheckInterval.disabled = !state.automaticCheckEnabled;
@@ -329,6 +327,8 @@ async function initialize() {
   });
   elements.allResultsTab.addEventListener("click", () => showResultsTab("all", true));
   elements.savedResultsTab.addEventListener("click", () => showResultsTab("saved", true));
+  elements.appliedResultsTab.addEventListener("click", () => showResultsTab("applied", true));
+  elements.hiddenResultsTab.addEventListener("click", () => showResultsTab("hidden", true));
   document.querySelector(".results-tabs").addEventListener("keydown", handleResultsTabKeydown);
   elements.usWorkAuthorizationStatus.addEventListener("change", () => {
     state.usWorkAuthorizationStatus = normalizeUsWorkAuthorizationStatus(elements.usWorkAuthorizationStatus.value);
@@ -573,27 +573,39 @@ function normalizePublicTrustProfile(value) {
 }
 
 function showResultsTab(tab, moveFocus = false) {
-  state.activeResultsTab = tab === "saved" ? "saved" : "all";
-  const allSelected = state.activeResultsTab === "all";
-  elements.allResultsTab.classList.toggle("active", allSelected);
-  elements.savedResultsTab.classList.toggle("active", !allSelected);
-  elements.allResultsTab.setAttribute("aria-selected", String(allSelected));
-  elements.savedResultsTab.setAttribute("aria-selected", String(!allSelected));
-  elements.allResultsTab.tabIndex = allSelected ? 0 : -1;
-  elements.savedResultsTab.tabIndex = allSelected ? -1 : 0;
-  elements.resultsTabPanel.setAttribute(
-    "aria-labelledby", allSelected ? "all-results-tab" : "saved-results-tab");
+  state.activeResultsTab = ["all", "saved", "applied", "hidden"].includes(tab) ? tab : "all";
+  const tabs = [
+    { id: "all", element: elements.allResultsTab },
+    { id: "saved", element: elements.savedResultsTab },
+    { id: "applied", element: elements.appliedResultsTab },
+    { id: "hidden", element: elements.hiddenResultsTab }
+  ];
+  for (const candidate of tabs) {
+    const selected = candidate.id === state.activeResultsTab;
+    candidate.element.classList.toggle("active", selected);
+    candidate.element.setAttribute("aria-selected", String(selected));
+    candidate.element.tabIndex = selected ? 0 : -1;
+  }
+  elements.resultsTabPanel.setAttribute("aria-labelledby", `${state.activeResultsTab}-results-tab`);
   renderResults();
   if (moveFocus) {
-    (allSelected ? elements.allResultsTab : elements.savedResultsTab).focus();
+    tabs.find(candidate => candidate.id === state.activeResultsTab).element.focus();
   }
 }
 
 function handleResultsTabKeydown(event) {
   if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
   event.preventDefault();
-  const next = event.key === "ArrowLeft" || event.key === "Home" ? "all" : "saved";
-  showResultsTab(next, true);
+  const tabs = ["all", "saved", "applied", "hidden"];
+  const currentIndex = tabs.indexOf(state.activeResultsTab);
+  const nextIndex = event.key === "Home"
+    ? 0
+    : event.key === "End"
+      ? tabs.length - 1
+      : event.key === "ArrowLeft"
+        ? (currentIndex - 1 + tabs.length) % tabs.length
+        : (currentIndex + 1) % tabs.length;
+  showResultsTab(tabs[nextIndex], true);
 }
 
 function normalizeUsWorkAuthorizationStatus(value) {
@@ -1222,8 +1234,7 @@ function applySnapshot(snapshot) {
   state.lastRefreshedUtc = snapshot.lastRefreshedUtc;
   state.isCached = Boolean(snapshot.isCached);
   state.newJobIds = new Set(snapshot.newJobIds || []);
-  state.dismissedJobIds = new Set(snapshot.dismissedJobIds || []);
-  state.savedJobIds = new Set(snapshot.savedJobIds || []);
+  state.jobStates = new Map(Object.entries(snapshot.jobStates || {}));
   if (snapshot.query) {
     state.companyId = snapshot.query.companyId || state.companies[0]?.id || "";
     state.companyName = companyById(state.companyId)?.displayName || state.companyId;
@@ -1848,26 +1859,30 @@ function educationProfileLabel(profile) {
 }
 
 function renderResults() {
-  const matchingJobs = state.activeResultsTab === "saved"
-    ? state.jobs.filter(job => state.savedJobIds.has(job.stableId))
-    : jobsPassingGeneralFilters();
-  const dismissedMatchingJobs = matchingJobs.filter(job => state.dismissedJobIds.has(job.stableId));
-  const jobs = state.showDismissedJobs
-    ? matchingJobs
-    : matchingJobs.filter(job => !state.dismissedJobIds.has(job.stableId));
-  elements.showHiddenJobs.checked = state.showDismissedJobs;
-  elements.hiddenJobCount.textContent = `(${dismissedMatchingJobs.length})`;
-  const savedAvailableCount = state.jobs.filter(job => state.savedJobIds.has(job.stableId)).length;
-  elements.savedJobCount.textContent = `(${savedAvailableCount})`;
-  elements.resultCount.textContent = `Showing ${jobs.length} of ${state.jobs.length} jobs` +
-    (!state.showDismissedJobs && dismissedMatchingJobs.length
-      ? ` · ${dismissedMatchingJobs.length} hidden`
-      : "");
+  const filteredJobs = jobsPassingGeneralFilters();
+  const populations = {
+    all: filteredJobs.filter(job => JobWorkflowState.belongsToTab(
+      job.stableId, "normal", state.jobStates)),
+    saved: filteredJobs.filter(job => JobWorkflowState.belongsToTab(
+      job.stableId, "saved", state.jobStates)),
+    applied: filteredJobs.filter(job => JobWorkflowState.belongsToTab(
+      job.stableId, "applied", state.jobStates)),
+    hidden: filteredJobs.filter(job => JobWorkflowState.belongsToTab(
+      job.stableId, "hidden", state.jobStates))
+  };
+  const jobs = populations[state.activeResultsTab];
+  elements.allJobCount.textContent = `(${populations.all.length})`;
+  elements.savedJobCount.textContent = `(${populations.saved.length})`;
+  elements.appliedJobCount.textContent = `(${populations.applied.length})`;
+  elements.hiddenJobCount.textContent = `(${populations.hidden.length})`;
+  const tabLabel = state.activeResultsTab === "saved"
+    ? "saved"
+    : state.activeResultsTab === "applied"
+      ? "applied"
+      : state.activeResultsTab === "hidden" ? "hidden" : "available";
+  elements.resultCount.textContent =
+    `Showing ${jobs.length} ${tabLabel} job${jobs.length === 1 ? "" : "s"}`;
   elements.filterSummary.textContent = buildFilterSummary();
-  if (state.activeResultsTab === "saved") {
-    elements.resultCount.textContent =
-      `Showing ${jobs.length} saved job${jobs.length === 1 ? "" : "s"}`;
-  }
 
   if (!jobs.some(job => job.stableId === state.selectedJobId)) {
     // Automatic selection is presentation only and deliberately does not mark NEW as viewed.
@@ -1887,6 +1902,10 @@ function renderResults() {
       : "No jobs remain after applying the exclusions.";
     if (state.activeResultsTab === "saved") {
       empty.textContent = "No saved jobs are available in the current job source.";
+    } else if (state.activeResultsTab === "applied") {
+      empty.textContent = "No applied jobs are available in the current job source.";
+    } else if (state.activeResultsTab === "hidden") {
+      empty.textContent = "No hidden jobs are available in the current job source.";
     }
     elements.jobList.append(empty);
   } else {
@@ -1965,9 +1984,11 @@ function createAgeGroup(group, jobs) {
 function createJobListItem(job) {
   const card = document.createElement("div");
   card.className = "job-card";
-  const isDismissed = state.dismissedJobIds.has(job.stableId);
-  const isSaved = state.savedJobIds.has(job.stableId);
-  if (isDismissed) {
+  const workflowState = JobWorkflowState.stateForJob(job.stableId, state.jobStates);
+  const isHidden = workflowState === JobWorkflowState.STATES.hidden;
+  const isSaved = workflowState === JobWorkflowState.STATES.saved;
+  const isApplied = workflowState === JobWorkflowState.STATES.applied;
+  if (isHidden) {
     card.classList.add("dismissed");
   }
 
@@ -2011,7 +2032,13 @@ function createJobListItem(job) {
     savedBadge.textContent = "Saved";
     badges.append(savedBadge);
   }
-  if (isDismissed) {
+  if (isApplied) {
+    const appliedBadge = document.createElement("span");
+    appliedBadge.className = "applied-badge";
+    appliedBadge.textContent = "Applied";
+    badges.append(appliedBadge);
+  }
+  if (isHidden) {
     const hiddenBadge = document.createElement("span");
     hiddenBadge.className = "hidden-badge";
     hiddenBadge.textContent = "Hidden";
@@ -2114,33 +2141,78 @@ function createJobListItem(job) {
 
   const dismissButton = document.createElement("button");
   dismissButton.type = "button";
-  dismissButton.className = "job-dismiss-button";
-  if (isDismissed) {
-    dismissButton.textContent = "Restore";
+  dismissButton.className = `job-dismiss-button${isHidden ? " restore" : ""}`;
+  if (isHidden) {
+    dismissButton.append(createRestoreIcon());
   } else {
     dismissButton.append(createTrashCanIcon());
   }
   dismissButton.setAttribute(
     "aria-label",
-    isDismissed
-      ? `Restore this job: ${job.title || job.requisitionId || job.stableId}`
+    isHidden
+      ? `Restore job: ${job.title || job.requisitionId || job.stableId}`
       : `Hide this job: ${job.title || job.requisitionId || job.stableId}`);
-  dismissButton.title = isDismissed ? "Restore this job" : "Hide this job";
-  dismissButton.addEventListener("click", () => setJobDismissed(job, !isDismissed));
+  dismissButton.title = isHidden ? "Restore job" : "Hide this job";
+  dismissButton.addEventListener("click", () => setJobHidden(job, !isHidden));
 
-  const saveButton = document.createElement("button");
-  saveButton.type = "button";
-  saveButton.className = `job-save-button${isSaved ? " saved" : ""}`;
-  saveButton.textContent = isSaved ? "\u2605" : "\u2606";
-  saveButton.setAttribute("aria-pressed", String(isSaved));
-  saveButton.setAttribute(
-    "aria-label",
-    `${isSaved ? "Unsave" : "Save"} job ${job.requisitionId || job.stableId}`);
-  saveButton.title = isSaved ? "Remove from Saved" : "Save this job";
-  saveButton.addEventListener("click", () => setJobSaved(job, !isSaved));
+  let saveButton = null;
+  if (!isApplied && !isHidden) {
+    saveButton = document.createElement("button");
+    saveButton.type = "button";
+    saveButton.className = `job-save-button${isSaved ? " saved" : ""}`;
+    saveButton.textContent = isSaved ? "\u2605" : "\u2606";
+    saveButton.setAttribute("aria-pressed", String(isSaved));
+    saveButton.setAttribute(
+      "aria-label",
+      `${isSaved ? "Unsave" : "Save"} job ${job.requisitionId || job.stableId}`);
+    saveButton.title = isSaved ? "Remove from Saved" : "Save this job";
+    saveButton.addEventListener("click", () => setJobSaved(job, !isSaved));
+  }
 
-  card.append(button, saveButton, dismissButton);
+  let appliedButton = null;
+  if (!isHidden) {
+    appliedButton = document.createElement("button");
+    appliedButton.type = "button";
+    appliedButton.className = `job-applied-button${isApplied ? " applied" : ""}`;
+    appliedButton.append(createAppliedIcon());
+    appliedButton.setAttribute("aria-pressed", String(isApplied));
+    appliedButton.setAttribute(
+      "aria-label",
+      `${isApplied ? "Mark as not applied" : "Mark as applied"}: ` +
+        `${job.title || job.requisitionId || job.stableId}`);
+    appliedButton.title = isApplied ? "Mark as not applied" : "Mark as applied";
+    appliedButton.addEventListener("click", () => setJobApplied(job, !isApplied));
+  }
+
+  card.append(button);
+  if (saveButton) card.append(saveButton);
+  if (appliedButton) card.append(appliedButton);
+  card.append(dismissButton);
   return card;
+}
+
+function createAppliedIcon() {
+  const svgNamespace = "http://www.w3.org/2000/svg";
+  const icon = document.createElementNS(svgNamespace, "svg");
+  icon.classList.add("job-applied-icon");
+  icon.setAttribute("viewBox", "0 0 24 24");
+  icon.setAttribute("aria-hidden", "true");
+  icon.setAttribute("focusable", "false");
+  icon.setAttribute("fill", "none");
+  icon.setAttribute("stroke", "currentColor");
+  icon.setAttribute("stroke-linecap", "round");
+  icon.setAttribute("stroke-linejoin", "round");
+
+  const background = document.createElementNS(svgNamespace, "circle");
+  background.classList.add("job-applied-icon-background");
+  background.setAttribute("cx", "12");
+  background.setAttribute("cy", "12");
+  background.setAttribute("r", "9");
+  const check = document.createElementNS(svgNamespace, "path");
+  check.classList.add("job-applied-icon-check");
+  check.setAttribute("d", "m8 12 2.6 2.6L16.5 9");
+  icon.append(background, check);
+  return icon;
 }
 
 function createTrashCanIcon() {
@@ -2163,62 +2235,64 @@ function createTrashCanIcon() {
   return icon;
 }
 
-async function setJobSaved(job, saved) {
-  if (saved) {
-    state.savedJobIds.add(job.stableId);
-  } else {
-    state.savedJobIds.delete(job.stableId);
-  }
-  renderResults();
+function createRestoreIcon() {
+  const svgNamespace = "http://www.w3.org/2000/svg";
+  const icon = document.createElementNS(svgNamespace, "svg");
+  icon.classList.add("job-dismiss-icon");
+  icon.setAttribute("viewBox", "0 0 24 24");
+  icon.setAttribute("aria-hidden", "true");
+  icon.setAttribute("focusable", "false");
+  icon.setAttribute("fill", "none");
+  icon.setAttribute("stroke", "currentColor");
+  icon.setAttribute("stroke-linecap", "round");
+  icon.setAttribute("stroke-linejoin", "round");
 
-  try {
-    const response = await fetch("/api/history/saved", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ stableId: job.stableId, saved }),
-      keepalive: true
-    });
-    if (!response.ok) {
-      throw new Error(`Saved-state update returned HTTP ${response.status}.`);
-    }
-  } catch (error) {
-    if (saved) {
-      state.savedJobIds.delete(job.stableId);
-    } else {
-      state.savedJobIds.add(job.stableId);
-    }
-    renderResults();
-    elements.errorBanner.textContent = `Saved state could not be updated: ${error.message || error}`;
-    elements.errorBanner.hidden = false;
-  }
+  const arrow = document.createElementNS(svgNamespace, "path");
+  arrow.setAttribute("d", "M9 7H4V2M4 7a9 9 0 1 1-1 8");
+  icon.append(arrow);
+  return icon;
 }
 
-async function setJobDismissed(job, dismissed) {
-  if (dismissed) {
-    state.dismissedJobIds.add(job.stableId);
-  } else {
-    state.dismissedJobIds.delete(job.stableId);
-  }
+async function setJobSaved(job, saved) {
+  await setJobWorkflowState(
+    job,
+    saved ? JobWorkflowState.STATES.saved : JobWorkflowState.STATES.normal,
+    "Saved");
+}
+
+async function setJobApplied(job, applied) {
+  await setJobWorkflowState(
+    job,
+    applied ? JobWorkflowState.STATES.applied : JobWorkflowState.STATES.normal,
+    "Applied");
+}
+
+async function setJobHidden(job, hidden) {
+  await setJobWorkflowState(
+    job,
+    hidden ? JobWorkflowState.STATES.hidden : JobWorkflowState.STATES.normal,
+    "Hidden");
+}
+
+async function setJobWorkflowState(job, nextState, label) {
+  const previousState = JobWorkflowState.stateForJob(job.stableId, state.jobStates);
+  state.jobStates.set(job.stableId, nextState);
   renderResults();
 
   try {
-    const response = await fetch("/api/history/dismissed", {
+    const response = await fetch("/api/history/workflow-state", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ stableId: job.stableId, dismissed }),
+      body: JSON.stringify({ stableId: job.stableId, state: nextState }),
       keepalive: true
     });
     if (!response.ok) {
-      throw new Error(`Dismissed-state save returned HTTP ${response.status}.`);
+      throw new Error(`${label}-state update returned HTTP ${response.status}.`);
     }
   } catch (error) {
-    if (dismissed) {
-      state.dismissedJobIds.delete(job.stableId);
-    } else {
-      state.dismissedJobIds.add(job.stableId);
-    }
+    state.jobStates.set(job.stableId, previousState);
     renderResults();
-    elements.errorBanner.textContent = `Dismissed state could not be saved: ${error.message || error}`;
+    elements.errorBanner.textContent = `${label} state could not be updated: ${error.message || error}`;
     elements.errorBanner.hidden = false;
   }
 }
@@ -2272,8 +2346,10 @@ function renderDetail(job) {
   replaceWithHighlightedText(elements.detailTitle, job.title);
   replaceWithHighlightedText(elements.detailRequisition, job.requisitionId);
   elements.detailNewBadge.hidden = !state.newJobIds.has(job.stableId);
-  elements.detailSavedBadge.hidden = !state.savedJobIds.has(job.stableId);
-  elements.detailHiddenBadge.hidden = !state.dismissedJobIds.has(job.stableId);
+  const detailWorkflowState = JobWorkflowState.stateForJob(job.stableId, state.jobStates);
+  elements.detailSavedBadge.hidden = detailWorkflowState !== JobWorkflowState.STATES.saved;
+  elements.detailAppliedBadge.hidden = detailWorkflowState !== JobWorkflowState.STATES.applied;
+  elements.detailHiddenBadge.hidden = detailWorkflowState !== JobWorkflowState.STATES.hidden;
   elements.copyPostingButton.disabled = !job.descriptionHtml;
   if (!job.descriptionHtml) {
     resetCopyFeedback();

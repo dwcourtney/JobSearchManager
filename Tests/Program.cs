@@ -154,10 +154,12 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Remote detector recognizes sanitized Leidos deployment language", TestLeidosRemoteFixtureAsync),
     ("Remote detector keeps a sanitized MTM-style remote role neutral", TestMtmRemoteFixtureAsync),
     ("Remote detector recognizes sanitized Boeing frequent-travel language", TestBoeingRemoteFixtureAsync),
-    ("Saved jobs can be saved and unsaved", TestSavedJobMutationAsync),
-    ("Saved jobs persist through a catalog restart", TestSavedJobRoundTripAsync),
-    ("Saved jobs remain workspace-isolated", TestSavedJobWorkspaceIsolationAsync),
-    ("Saved identity remains company-scoped", TestSavedJobCompanyIsolationAsync)
+    ("Workflow state transitions are canonical and validated", TestWorkflowStateTransitionsAsync),
+    ("Workflow state persists through a catalog restart", TestWorkflowStateRoundTripAsync),
+    ("Workflow state remains workspace-isolated", TestWorkflowStateWorkspaceIsolationAsync),
+    ("Workflow identity remains company-scoped", TestWorkflowStateCompanyIsolationAsync),
+    ("Legacy Saved and history data migrate safely", TestLegacySavedHistoryMigrationAsync),
+    ("Invalid legacy combinations migrate to one state", TestLegacyCombinationMigrationAsync)
 };
 
 var failures = new List<string>();
@@ -785,24 +787,37 @@ static Task TestBoeingRemoteFixtureAsync()
     return Task.CompletedTask;
 }
 
-static async Task TestSavedJobMutationAsync()
+static async Task TestWorkflowStateTransitionsAsync()
 {
-    var directory = TestDirectory("saved-mutation");
+    var directory = TestDirectory("workflow-transitions");
     try
     {
         var (catalog, state, job) = await CreateCatalogAsync(directory);
-        Assert(await catalog.SetSavedAsync(job.StableId, true) &&
-               catalog.Snapshot.SavedJobIds.Contains(job.StableId),
-            "Saving a current job did not update the catalog snapshot.");
-        var saved = await state.LoadJobHistoryAsync();
-        Assert(saved.Jobs[job.StableId].Saved && saved.Jobs[job.StableId].SavedAt is not null,
-            "Saved state was not written to job history.");
-        Assert(await catalog.SetSavedAsync(job.StableId, false) &&
-               !catalog.Snapshot.SavedJobIds.Contains(job.StableId),
-            "Unsaving a job did not update the catalog snapshot.");
-        var unsaved = await state.LoadJobHistoryAsync();
-        Assert(!unsaved.Jobs[job.StableId].Saved && unsaved.Jobs[job.StableId].SavedAt is null,
-            "Unsaved state was not persisted.");
+        Assert(catalog.Snapshot.JobStates[job.StableId] == JobWorkflowStates.Normal,
+            "A new job did not begin in Normal state.");
+        Assert(await catalog.SetWorkflowStateAsync(job.StableId, JobWorkflowStates.Saved) &&
+               catalog.Snapshot.JobStates[job.StableId] == JobWorkflowStates.Saved,
+            "Normal -> Saved did not update the canonical state.");
+        Assert(await catalog.SetWorkflowStateAsync(job.StableId, JobWorkflowStates.Applied) &&
+               catalog.Snapshot.JobStates[job.StableId] == JobWorkflowStates.Applied,
+            "Saved -> Applied did not update the canonical state.");
+        Assert(!await catalog.SetWorkflowStateAsync(job.StableId, JobWorkflowStates.Saved) &&
+               catalog.Snapshot.JobStates[job.StableId] == JobWorkflowStates.Applied,
+            "An invalid Applied -> Saved transition was accepted.");
+        Assert(await catalog.SetWorkflowStateAsync(job.StableId, JobWorkflowStates.Hidden) &&
+               catalog.Snapshot.JobStates[job.StableId] == JobWorkflowStates.Hidden,
+            "Applied -> Hidden did not update the canonical state.");
+        Assert(!await catalog.SetWorkflowStateAsync(job.StableId, JobWorkflowStates.Applied),
+            "An invalid Hidden -> Applied transition was accepted.");
+        Assert(await catalog.SetWorkflowStateAsync(job.StableId, JobWorkflowStates.Normal) &&
+               catalog.Snapshot.JobStates[job.StableId] == JobWorkflowStates.Normal,
+            "Hidden -> Normal restore did not update the canonical state.");
+
+        var persisted = (await state.LoadJobHistoryAsync()).Jobs[job.StableId];
+        Assert(persisted.WorkflowState == JobWorkflowStates.Normal &&
+               !persisted.Dismissed && !persisted.Saved && !persisted.Applied &&
+               persisted.DismissedAt is null && persisted.SavedAt is null && persisted.AppliedAt is null,
+            "Persistence retained an independent legacy state alongside the canonical state.");
     }
     finally
     {
@@ -810,16 +825,16 @@ static async Task TestSavedJobMutationAsync()
     }
 }
 
-static async Task TestSavedJobRoundTripAsync()
+static async Task TestWorkflowStateRoundTripAsync()
 {
-    var directory = TestDirectory("saved-roundtrip");
+    var directory = TestDirectory("workflow-roundtrip");
     try
     {
         var (first, _, job) = await CreateCatalogAsync(directory);
-        await first.SetSavedAsync(job.StableId, true);
+        await first.SetWorkflowStateAsync(job.StableId, JobWorkflowStates.Applied);
         var (restarted, _, _) = await CreateCatalogAsync(directory);
-        Assert(restarted.Snapshot.SavedJobIds.Contains(job.StableId),
-            "Saved state did not survive catalog reinitialization.");
+        Assert(restarted.Snapshot.JobStates[job.StableId] == JobWorkflowStates.Applied,
+            "Applied state did not survive catalog reinitialization.");
     }
     finally
     {
@@ -827,18 +842,18 @@ static async Task TestSavedJobRoundTripAsync()
     }
 }
 
-static async Task TestSavedJobWorkspaceIsolationAsync()
+static async Task TestWorkflowStateWorkspaceIsolationAsync()
 {
-    var firstDirectory = TestDirectory("saved-workspace-a");
-    var secondDirectory = TestDirectory("saved-workspace-b");
+    var firstDirectory = TestDirectory("workflow-workspace-a");
+    var secondDirectory = TestDirectory("workflow-workspace-b");
     try
     {
         var (first, _, job) = await CreateCatalogAsync(firstDirectory);
-        await first.SetSavedAsync(job.StableId, true);
+        await first.SetWorkflowStateAsync(job.StableId, JobWorkflowStates.Saved);
         var (second, _, _) = await CreateCatalogAsync(secondDirectory);
-        Assert(first.Snapshot.SavedJobIds.Contains(job.StableId) &&
-               !second.Snapshot.SavedJobIds.Contains(job.StableId),
-            "Saved state crossed workspace storage boundaries.");
+        Assert(first.Snapshot.JobStates[job.StableId] == JobWorkflowStates.Saved &&
+               second.Snapshot.JobStates[job.StableId] == JobWorkflowStates.Normal,
+            "Workflow state crossed workspace storage boundaries.");
     }
     finally
     {
@@ -847,19 +862,21 @@ static async Task TestSavedJobWorkspaceIsolationAsync()
     }
 }
 
-static async Task TestSavedJobCompanyIsolationAsync()
+static async Task TestWorkflowStateCompanyIsolationAsync()
 {
-    var directory = TestDirectory("saved-company");
+    var directory = TestDirectory("workflow-company");
     try
     {
         var store = new FileWorkspaceDataStore(directory, NullLogger<FileWorkspaceDataStore>.Instance);
         var now = DateTimeOffset.UtcNow;
-        var history = new JobHistoryDocument(3, new Dictionary<string, JobHistoryEntry>
+        var history = new JobHistoryDocument(4, new Dictionary<string, JobHistoryEntry>
         {
             ["leidos:REQ-SAME"] = new("REQ-SAME", "/leidos/job", now, now, true,
-                CompanyId: "leidos", Saved: true, SavedAt: now),
+                WorkflowState: JobWorkflowStates.Saved, WorkflowStateChangedAt: now,
+                CompanyId: "leidos"),
             ["boeing:REQ-SAME"] = new("REQ-SAME", "/boeing/job", now, now, true,
-                CompanyId: "boeing", Saved: false)
+                WorkflowState: JobWorkflowStates.Applied, WorkflowStateChangedAt: now,
+                CompanyId: "boeing")
         });
         await store.WriteJsonAsync(WorkspaceDataFile.JobHistory, history);
         var state = new AppStateStore(
@@ -867,9 +884,89 @@ static async Task TestSavedJobCompanyIsolationAsync()
             new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory)),
             store);
         var loaded = await state.LoadJobHistoryAsync();
-        Assert(loaded.Jobs["leidos:REQ-SAME"].Saved &&
-               !loaded.Jobs["boeing:REQ-SAME"].Saved,
-            "Same requisition text cross-mapped Saved state between companies.");
+        Assert(loaded.Jobs["leidos:REQ-SAME"].WorkflowState == JobWorkflowStates.Saved &&
+               loaded.Jobs["boeing:REQ-SAME"].WorkflowState == JobWorkflowStates.Applied,
+            "Same requisition text cross-mapped workflow state between companies.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static async Task TestLegacySavedHistoryMigrationAsync()
+{
+    var directory = TestDirectory("workflow-legacy-saved");
+    try
+    {
+        var store = new FileWorkspaceDataStore(directory, NullLogger<FileWorkspaceDataStore>.Instance);
+        var now = DateTimeOffset.UtcNow;
+        await store.WriteJsonAsync(WorkspaceDataFile.JobHistory, new JobHistoryDocument(3,
+            new Dictionary<string, JobHistoryEntry>
+            {
+                ["REQ-LEGACY"] = new(
+                    "REQ-LEGACY", "/legacy/job", now.AddDays(-3), now, false,
+                    CompanyId: "leidos", Saved: true, SavedAt: now.AddHours(-1))
+            }));
+        var appState = new AppStateStore(
+            NullLogger<AppStateStore>.Instance,
+            new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory)),
+            store);
+
+        var migrated = await appState.LoadJobHistoryAsync();
+        var entry = migrated.Jobs["leidos:REQ-LEGACY"];
+        Assert(migrated.SchemaVersion == 4 && entry.WorkflowState == JobWorkflowStates.Saved,
+            "Legacy Saved state did not migrate to canonical Saved.");
+        Assert(!entry.HasBeenViewed && entry.FirstSeenAt == now.AddDays(-3) && entry.LastSeenAt == now,
+            "Migration changed existing NEW/viewed history timestamps.");
+        Assert(!entry.Dismissed && !entry.Saved && !entry.Applied &&
+               entry.DismissedAt is null && entry.SavedAt is null && entry.AppliedAt is null,
+            "Legacy state fields survived schema-4 migration.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static async Task TestLegacyCombinationMigrationAsync()
+{
+    var directory = TestDirectory("workflow-legacy-combinations");
+    try
+    {
+        var store = new FileWorkspaceDataStore(directory, NullLogger<FileWorkspaceDataStore>.Instance);
+        var now = DateTimeOffset.UtcNow;
+        await store.WriteJsonAsync(WorkspaceDataFile.JobHistory, new JobHistoryDocument(3,
+            new Dictionary<string, JobHistoryEntry>
+            {
+                ["leidos:REQ-HIDDEN"] = new(
+                    "REQ-HIDDEN", "/hidden/job", now, now, true,
+                    Dismissed: true, DismissedAt: now, CompanyId: "leidos",
+                    Saved: true, SavedAt: now, Applied: true, AppliedAt: now),
+                ["leidos:REQ-APPLIED"] = new(
+                    "REQ-APPLIED", "/applied/job", now, now, true,
+                    CompanyId: "leidos", Saved: true, SavedAt: now,
+                    Applied: true, AppliedAt: now),
+                ["leidos:REQ-STALE-TIMESTAMP"] = new(
+                    "REQ-STALE-TIMESTAMP", "/normal/job", now, now, true,
+                    CompanyId: "leidos", SavedAt: now)
+            }));
+        var appState = new AppStateStore(
+            NullLogger<AppStateStore>.Instance,
+            new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory)),
+            store);
+
+        var migrated = await appState.LoadJobHistoryAsync();
+        Assert(migrated.Jobs["leidos:REQ-HIDDEN"].WorkflowState == JobWorkflowStates.Hidden,
+            "Dismissed+Saved+Applied did not migrate to the single safe Hidden state.");
+        Assert(migrated.Jobs["leidos:REQ-APPLIED"].WorkflowState == JobWorkflowStates.Applied,
+            "Saved+Applied did not migrate to the single Applied state.");
+        Assert(migrated.Jobs["leidos:REQ-STALE-TIMESTAMP"].WorkflowState == JobWorkflowStates.Normal,
+            "A stray legacy timestamp changed the canonical Normal state.");
+        Assert(migrated.Jobs.Values.All(entry =>
+                !entry.Dismissed && !entry.Saved && !entry.Applied &&
+                entry.DismissedAt is null && entry.SavedAt is null && entry.AppliedAt is null),
+            "An invalid independent-state combination survived migration.");
     }
     finally
     {

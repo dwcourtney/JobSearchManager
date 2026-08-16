@@ -860,21 +860,6 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   background: var(--color-detail-tab-active-background);
 }
 
-.show-hidden-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: .3rem;
-  color: var(--color-pane-heading-text);
-  cursor: pointer;
-  font-size: var(--font-size-caption);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--letter-spacing-normal);
-  text-transform: var(--text-transform-normal);
-  white-space: nowrap;
-}
-
-.show-hidden-toggle input { margin: 0; accent-color: var(--color-accent); }
-
 .results-tab-panel { min-height: 0; overflow: hidden; }
 .job-list { height: 100%; overflow-y: auto; }
 
@@ -913,7 +898,7 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   grid-template-columns: 4.5rem minmax(0, 1fr);
   gap: .23rem .65rem;
   width: 100%;
-  padding: .8rem 5rem .8rem .85rem;
+  padding: .8rem var(--job-card-actions-padding-right) .8rem .85rem;
   border: 0;
   color: inherit;
   background: var(--color-job-action-background);
@@ -933,10 +918,10 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 
 .job-dismiss-button {
   position: absolute;
-  top: .52rem;
-  right: .55rem;
-  min-width: 1.65rem;
-  min-height: 1.65rem;
+  top: var(--job-action-top);
+  right: var(--job-action-edge-offset);
+  min-width: var(--job-action-min-size);
+  min-height: var(--job-action-min-size);
   padding: .1rem .38rem;
   border: var(--border-width-default) solid var(--color-dismiss-action-border);
   border-radius: var(--radius-badge);
@@ -964,10 +949,10 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 
 .job-save-button {
   position: absolute;
-  top: .52rem;
-  right: 2.55rem;
-  min-width: 1.65rem;
-  min-height: 1.65rem;
+  top: var(--job-action-top);
+  right: var(--job-action-third-offset);
+  min-width: var(--job-action-min-size);
+  min-height: var(--job-action-min-size);
   padding: .1rem .3rem;
   border: var(--border-width-default) solid var(--color-save-action-border);
   border-radius: var(--radius-badge);
@@ -980,12 +965,50 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 .job-save-button:hover { background: var(--color-save-action-hover); }
 .job-save-button.saved { color: var(--color-save-action-active); }
 
+.job-applied-button {
+  position: absolute;
+  top: var(--job-action-top);
+  right: var(--job-action-second-offset);
+  min-width: var(--job-action-min-size);
+  min-height: var(--job-action-min-size);
+  padding: .1rem .3rem;
+  border: var(--border-width-default) solid var(--color-applied-action-border);
+  border-radius: var(--radius-badge);
+  color: var(--color-applied-action);
+  background: var(--color-applied-action-background);
+  cursor: pointer;
+  font-size: var(--font-size-icon);
+  line-height: var(--line-height-icon);
+}
+
+.job-applied-button:hover { background: var(--color-applied-action-hover); }
+.job-applied-button.applied { color: var(--color-applied-action-active); }
+
+.job-applied-icon {
+  display: block;
+  width: var(--font-size-icon);
+  height: var(--font-size-icon);
+  margin: auto;
+  stroke-width: var(--stroke-width-icon);
+  pointer-events: none;
+}
+
+.job-applied-icon-background { fill: var(--color-applied-icon-background); }
+.job-applied-button.applied .job-applied-icon-background { fill: currentColor; }
+.job-applied-button.applied .job-applied-icon-check { stroke: var(--color-applied-action-active-mark); }
+
 .job-card.dismissed .job-dismiss-button {
   border-color: var(--color-restore-action-border);
   color: var(--color-restore-action-text);
   background: var(--color-restore-action-background);
   font-size: var(--font-size-tiny);
   font-weight: var(--font-weight-bold);
+}
+
+.job-card.dismissed .job-dismiss-button:hover {
+  border-color: var(--color-restore-action-hover-border);
+  color: var(--color-restore-action-hover-text);
+  background: var(--color-restore-action-hover-background);
 }
 
 .job-card-main time {
@@ -1092,6 +1115,17 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   border-radius: var(--radius-badge);
   color: var(--color-saved-badge-text);
   background: var(--color-saved-badge-background);
+  font-size: var(--font-size-tiny);
+  font-weight: var(--font-weight-emphasis);
+}
+
+.applied-badge {
+  display: inline-block;
+  padding: .12rem .4rem;
+  border: var(--border-width-default) solid var(--color-applied-badge-border);
+  border-radius: var(--radius-badge);
+  color: var(--color-applied-badge-text);
+  background: var(--color-applied-badge-background);
   font-size: var(--font-size-tiny);
   font-weight: var(--font-weight-emphasis);
 }
