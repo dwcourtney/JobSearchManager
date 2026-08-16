@@ -1,6 +1,6 @@
 "use strict";
 
-globalThis.JobSourceCountryOrdering = (() => {
+globalThis.CountryOrdering = (() => {
   const DEFAULT_REGION = "US";
   const COUNTRY_LABEL_BY_REGION = Object.freeze({
     US: "United States of America",

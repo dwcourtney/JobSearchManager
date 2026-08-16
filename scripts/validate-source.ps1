@@ -8,6 +8,8 @@ $themePath = Join-Path $repo "wwwroot\theme.css"
 $stylesPath = Join-Path $repo "wwwroot\styles.css"
 $indexPath = Join-Path $repo "wwwroot\index.html"
 $appPath = Join-Path $repo "wwwroot\app.js"
+$countryOrderingPath = Join-Path $repo "wwwroot\country-ordering.js"
+$countryOrderingTestsPath = Join-Path $repo "Tests\country-ordering.tests.js"
 $postingTextPath = Join-Path $repo "wwwroot\job-posting-text.js"
 $postingTextTestsPath = Join-Path $repo "Tests\job-posting-text.tests.js"
 $workflowStatePath = Join-Path $repo "wwwroot\job-workflow-state.js"
@@ -17,6 +19,8 @@ $sourceStateTestsPath = Join-Path $repo "Tests\job-source-state.tests.js"
 
 foreach ($scriptPath in @(
     $appPath,
+    $countryOrderingPath,
+    $countryOrderingTestsPath,
     $postingTextPath,
     $postingTextTestsPath,
     $workflowStatePath,
@@ -27,6 +31,11 @@ foreach ($scriptPath in @(
     if ($LASTEXITCODE -ne 0) {
         throw "JavaScript syntax validation failed for $scriptPath."
     }
+}
+
+& $NodePath $countryOrderingTestsPath
+if ($LASTEXITCODE -ne 0) {
+    throw "Country-ordering runtime tests failed."
 }
 
 & $NodePath $postingTextTestsPath
@@ -48,11 +57,22 @@ $styles = Get-Content -LiteralPath $stylesPath -Raw
 $theme = Get-Content -LiteralPath $themePath -Raw
 $index = Get-Content -LiteralPath $indexPath -Raw
 $app = Get-Content -LiteralPath $appPath -Raw
+$countryOrdering = Get-Content -LiteralPath $countryOrderingPath -Raw
 
+$countryOrderingScript = $index.IndexOf('src="/country-ordering.js?v=2"')
 $sourceStateScript = $index.IndexOf('src="/job-source-state.js"')
-$appScript = $index.IndexOf('src="/app.js"')
+$appScript = $index.IndexOf('src="/app.js?v=2"')
+if ($countryOrderingScript -lt 0 -or $appScript -le $countryOrderingScript) {
+    throw "The versioned country-ordering.js asset must load before app.js."
+}
 if ($sourceStateScript -lt 0 -or $appScript -le $sourceStateScript) {
     throw "job-source-state.js must load before app.js."
+}
+if ($countryOrdering -notmatch 'globalThis\.CountryOrdering\s*=' -or
+    $app -notmatch '\bCountryOrdering\.orderCountryFacets\b' -or
+    $countryOrdering -match '\b(?:Workday|JobSource)CountryOrdering\b' -or
+    $app -match '\b(?:Workday|JobSource)CountryOrdering\b') {
+    throw "The country-ordering declaration and application consumer are inconsistent."
 }
 
 if ([regex]::IsMatch($index, '(?is)<h2[^>]*>\s*Settings\s*</h2>')) {

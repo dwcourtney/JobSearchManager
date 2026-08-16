@@ -1029,7 +1029,7 @@ function populateCountrySelect(select, options, allLabel, selectedId) {
   all.textContent = allLabel;
   select.append(all);
 
-  const orderedOptions = JobSourceCountryOrdering.orderCountryFacets(options);
+  const orderedOptions = CountryOrdering.orderCountryFacets(options);
   for (const item of orderedOptions) {
     const option = document.createElement("option");
     option.value = item.id;
