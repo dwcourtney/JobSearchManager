@@ -19,6 +19,8 @@ $workflowStatePath = Join-Path $repo "wwwroot\job-workflow-state.js"
 $workflowStateTestsPath = Join-Path $repo "Tests\job-workflow-state.tests.js"
 $sourceStatePath = Join-Path $repo "wwwroot\job-source-state.js"
 $sourceStateTestsPath = Join-Path $repo "Tests\job-source-state.tests.js"
+$credentialFitPath = Join-Path $repo "wwwroot\credential-fit.js"
+$credentialFitTestsPath = Join-Path $repo "Tests\credential-fit.tests.js"
 
 foreach ($scriptPath in @(
     $appPath,
@@ -29,7 +31,9 @@ foreach ($scriptPath in @(
     $workflowStatePath,
     $workflowStateTestsPath,
     $sourceStatePath,
-    $sourceStateTestsPath)) {
+    $sourceStateTestsPath,
+    $credentialFitPath,
+    $credentialFitTestsPath)) {
     & $NodePath --check $scriptPath
     if ($LASTEXITCODE -ne 0) {
         throw "JavaScript syntax validation failed for $scriptPath."
@@ -54,6 +58,11 @@ if ($LASTEXITCODE -ne 0) {
 & $NodePath $sourceStateTestsPath
 if ($LASTEXITCODE -ne 0) {
     throw "Job-source state tests failed."
+}
+
+& $NodePath $credentialFitTestsPath
+if ($LASTEXITCODE -ne 0) {
+    throw "Credential-fit tests failed."
 }
 
 $styles = Get-Content -LiteralPath $stylesPath -Raw -Encoding UTF8
@@ -117,12 +126,16 @@ foreach ($icon in $manifest.icons) {
 
 $countryOrderingScript = $index.IndexOf('src="/country-ordering.js?v=2"')
 $sourceStateScript = $index.IndexOf('src="/job-source-state.js"')
-$appScript = $index.IndexOf('src="/app.js?v=2"')
+$credentialFitScript = $index.IndexOf('src="/credential-fit.js"')
+$appScript = $index.IndexOf('src="/app.js?v=3"')
 if ($countryOrderingScript -lt 0 -or $appScript -le $countryOrderingScript) {
     throw "The versioned country-ordering.js asset must load before app.js."
 }
 if ($sourceStateScript -lt 0 -or $appScript -le $sourceStateScript) {
     throw "job-source-state.js must load before app.js."
+}
+if ($credentialFitScript -lt 0 -or $appScript -le $credentialFitScript) {
+    throw "credential-fit.js must load before app.js."
 }
 if ($countryOrdering -notmatch 'globalThis\.CountryOrdering\s*=' -or
     $app -notmatch '\bCountryOrdering\.orderCountryFacets\b' -or

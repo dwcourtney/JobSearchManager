@@ -169,6 +169,10 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Unsupported active company state migrates without source reinterpretation", TestUnsupportedCompanyMigrationAsync),
     ("Unsupported company history remains isolated", TestUnsupportedCompanyHistoryAsync),
     ("Established credential catalog entries validate", TestCredentialCatalogAsync),
+    ("NetApp and Dell storage credentials are structured", TestStorageCredentialsAsync),
+    ("Existing credential recognition does not regress", TestExistingCredentialRegressionAsync),
+    ("Unknown mandatory credentials are surfaced conservatively", TestUnknownRequiredCredentialAsync),
+    ("Today's named credentials avoid obvious false positives", TestLeidosCredentialDiscoveryFixtureAsync),
     ("Academic detector recognizes advanced master's-or-higher wording", TestAdvancedDegreeAsync),
     ("Academic detector treats ABET as accreditation", TestAbetAccreditationAsync),
     ("Work authorization detector recognizes strict U.S. citizenship", TestUsCitizenshipAsync),
@@ -575,7 +579,8 @@ static Task TestPortableWorkspaceRoundTripAsync()
         UserProfile = new UserProfile(
             new EducationProfile("bachelor", null),
             new SecurityProfile("secret", "current"),
-            new WorkAuthorizationProfile("usCitizen", "notRequired")),
+            new WorkAuthorizationProfile("usCitizen", "notRequired"),
+            new CredentialProfile("complete", ["netapp-ncda", "itil-foundation"])),
         HideStrictEducationMismatch = true,
         HideStrictClearanceMismatch = true,
         HideStrictWorkAuthorizationMismatch = true,
@@ -601,6 +606,7 @@ static Task TestPortableWorkspaceRoundTripAsync()
     var exported = portable.Export(settings, history);
     var json = JsonSerializer.Serialize(exported, new JsonSerializerOptions(JsonSerializerDefaults.Web));
     var imported = portable.ImportJson(json, ViewerSettings.Default, JobHistoryDocument.Empty);
+    var importedCredentials = imported.Settings.UserProfile?.Credentials;
 
     Assert(exported.Format == PortableWorkspaceService.FormatIdentifier && exported.Version == 1 &&
            exported.CuratedJobs.Count == 3 &&
@@ -613,7 +619,10 @@ static Task TestPortableWorkspaceRoundTripAsync()
            imported.Settings.PendingSource?.CompanyId == "leidos" &&
            imported.Settings.IncludeKeywords.SequenceEqual(["integration"]) &&
            imported.Settings.ExcludeKeywords.SequenceEqual(["substation", "power distribution"]) &&
-           imported.Settings.MinimumSalary == 115_000m && imported.Settings.ThemeMode == "dark",
+           imported.Settings.MinimumSalary == 115_000m && imported.Settings.ThemeMode == "dark" &&
+           importedCredentials is { InventoryStatus: "complete" } &&
+           importedCredentials.HeldCredentialIds.SequenceEqual(
+               ["netapp-ncda", "itil-foundation"]),
         "Portable preferences or pending source selection did not round-trip.");
     Assert(imported.History.Jobs["leidos:REQ-SAVED"].WorkflowState == JobWorkflowStates.Saved &&
            imported.History.Jobs["leidos:REQ-SAME"].WorkflowState == JobWorkflowStates.Applied &&
@@ -1808,7 +1817,7 @@ static async Task TestUnsupportedCompanyHistoryAsync()
 static Task TestCredentialCatalogAsync()
 {
     var detector = new CredentialDetector(NullLogger<CredentialDetector>.Instance);
-    Assert(detector.CatalogVersion == 11, "The expanded credential catalog version was not loaded.");
+    Assert(detector.CatalogVersion == 12, "The expanded credential catalog version was not loaded.");
     using var document = JsonDocument.Parse(File.ReadAllText(
         Path.Combine(AppContext.BaseDirectory, "CredentialCatalog.json")));
     var ids = document.RootElement.GetProperty("credentials").EnumerateArray()
@@ -1820,9 +1829,111 @@ static Task TestCredentialCatalogAsync()
         "cfa-charter", "iapp-cipp-e", "iapp-aigp", "iapp-cipm", "iapp-cipt",
         "ipass-payroll-qualification", "cta-chartered-tax-adviser",
         "oracle-certification-unspecified", "sap-certification-unspecified",
-        "faa-airframe-powerplant", "epa-section-608-universal", "cpsm"
+        "faa-airframe-powerplant", "epa-section-608-universal", "cpsm",
+        "netapp-ncda", "netapp-ncse", "netapp-ncsie", "dell-proven-professional",
+        "ipc-whma-a-620", "ipc-j-std-001", "ifma-cfm", "gccc-scmp", "gccc-cmp",
+        "splunk-enterprise-admin", "giac-gcih", "giac-gcti",
+        "independent-mental-health-license", "driver-license"
     };
     Assert(expected.All(ids.Contains), "One or more verified credentials are absent.");
+    return Task.CompletedTask;
+}
+
+static Task TestStorageCredentialsAsync()
+{
+    var detector = new CredentialDetector(NullLogger<CredentialDetector>.Instance);
+    var required = detector.Analyze(
+        "<p>Must possess a NetApp Certified Data Administrator (NCDA) certification or equivalent.</p>");
+    var ncda = required.Credentials.Single(item => item.CredentialId == "netapp-ncda");
+    Assert(ncda.Requirement == "required" && ncda.EquivalentAccepted &&
+           ncda.Family == "NetApp Certification Program" &&
+           ncda.EquivalentCredentialIds is { Count: 0 },
+        "Full-name NCDA was not modeled as a required open-equivalence credential.");
+
+    var abbreviation = detector.Analyze("<p>NCDA certification required.</p>");
+    Assert(abbreviation.Credentials.Any(item =>
+            item.CredentialId == "netapp-ncda" && item.Requirement == "required"),
+        "NCDA abbreviation was not recognized as required.");
+
+    var preferred = detector.Analyze(
+        "<h3>Preferred Qualifications</h3><p>NCDA certification preferred.</p>");
+    Assert(preferred.Credentials.Single(item => item.CredentialId == "netapp-ncda").Requirement == "preferred",
+        "Preferred NCDA language became a hard requirement.");
+
+    var related = detector.Analyze(
+        "<p>NetApp Certified Support Engineer (NCSE) or NetApp Certified Storage Installation Engineer (NCSIE).</p>" +
+        "<p>Dell EMC Proven Professional certification.</p><p>ITIL 4 Foundation.</p>");
+    var ids = related.Credentials.Select(item => item.CredentialId).ToHashSet(StringComparer.Ordinal);
+    Assert(new[] { "netapp-ncse", "netapp-ncsie", "dell-proven-professional", "itil-foundation" }
+            .All(ids.Contains),
+        $"Storage fixture recognized only: {string.Join(',', ids)}.");
+    return Task.CompletedTask;
+}
+
+static Task TestExistingCredentialRegressionAsync()
+{
+    var analysis = new CredentialDetector(NullLogger<CredentialDetector>.Instance).Analyze(
+        "<p>PE license; Security+; Network+; CCNA; CCNP; CISSP; ITIL Foundation certifications.</p>");
+    var ids = analysis.Credentials.Select(item => item.CredentialId).ToHashSet(StringComparer.Ordinal);
+    Assert(new[] { "pe", "security-plus", "network-plus", "ccna", "ccnp", "cissp", "itil-foundation" }
+            .All(ids.Contains),
+        $"Existing credential regression fixture recognized only: {string.Join(',', ids)}.");
+    return Task.CompletedTask;
+}
+
+static Task TestUnknownRequiredCredentialAsync()
+{
+    var detector = new CredentialDetector(NullLogger<CredentialDetector>.Instance);
+    var unknown = detector.Analyze(
+        "<p>Must possess an Acme Certified Quantum Storage Administrator certification.</p>");
+    Assert(unknown.UnknownRequirements is [{
+            Name: "Acme Certified Quantum Storage Administrator",
+            Requirement: "required",
+            EquivalentAccepted: false
+        }],
+        $"Unknown mandatory credential was not surfaced: {string.Join('|', unknown.UnknownRequirements.Select(item => item.Name))}.");
+
+    var mixed = detector.Analyze(
+        "<p>Must possess a Security+ certification and Microsoft Associate Level certification.</p>");
+    Assert(mixed.Credentials.Any(item => item.CredentialId == "security-plus") &&
+           mixed.UnknownRequirements.Any(item =>
+               item.Name.Contains("Microsoft Associate Level", StringComparison.OrdinalIgnoreCase)),
+        "A new mandatory credential beside a known credential was silently ignored.");
+    Assert(unknown.UnknownRequirements.All(item => !item.EquivalentAccepted),
+        "An unknown requirement received a fabricated equivalence.");
+    var certified = detector.Analyze("<p>Applicants must be Acme Quantum Platform certified.</p>");
+    Assert(certified.UnknownRequirements.Any(item =>
+            item.Name == "Acme Quantum Platform" && item.Requirement == "required"),
+        "Unknown 'must be certified' language was not surfaced.");
+    return Task.CompletedTask;
+}
+
+static Task TestLeidosCredentialDiscoveryFixtureAsync()
+{
+    var detector = new CredentialDetector(NullLogger<CredentialDetector>.Instance);
+    var named = detector.Analyze(
+        "<h3>Preferred Qualifications</h3>" +
+        "<p>Certified Facility Manager (CFM) or similar professional certification.</p>" +
+        "<p>Splunk Certified Administrator certification strongly preferred.</p>" +
+        "<p>GIAC Certified Incident Handler (GCIH) Certification.</p>" +
+        "<p>GIAC Cyber Threat Intelligence (GCIT) Certification.</p>" +
+        "<p>Current certification in IPC/WHMA-A-620 with Space addendum and J-STD-001.</p>" +
+        "<p>Strategic Communication Management Professional (SCMP) or Communication Management Professional (CMP).</p>" +
+        "<p>The candidate must hold a valid independent license in the mental health field.</p>");
+    var ids = named.Credentials.Select(item => item.CredentialId).ToHashSet(StringComparer.Ordinal);
+    Assert(new[] { "ifma-cfm", "splunk-enterprise-admin", "giac-gcih", "giac-gcti",
+                   "ipc-whma-a-620", "ipc-j-std-001", "gccc-scmp", "gccc-cmp",
+                   "independent-mental-health-license" }.All(ids.Contains),
+        $"Today's named-credential fixture recognized only: {string.Join(',', ids)}.");
+
+    var traps = detector.Analyze(
+        "<p>Support Certification and Accreditation (C&A) activities and certificate management.</p>" +
+        "<p>Relevant professional certifications are preferred.</p>" +
+        "<p>Additional experience/certifications may be considered in lieu of a degree.</p>" +
+        "<p>Active Professional Engineer (PE) license required; must hold or be able to obtain licensure in Pennsylvania.</p>");
+    Assert(traps.Credentials.All(item => item.CredentialId == "pe") &&
+           traps.UnknownRequirements.Count == 0,
+        $"Corpus language created false requirements: {string.Join(',', traps.UnknownRequirements.Select(item => item.Name))}.");
     return Task.CompletedTask;
 }
 

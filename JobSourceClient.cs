@@ -12,7 +12,7 @@ namespace JobSearchManager;
 
 public sealed class JobSourceClient
 {
-    public const int CurrentAnalysisVersion = 1;
+    public const int CurrentAnalysisVersion = 3;
 
     private sealed record ListingBatch(IReadOnlyList<ListingPosting> Listings, bool Truncated);
     private sealed record SmartSummaryBatch(IReadOnlyList<SmartRecruitersPosting> Postings, bool Truncated);
@@ -587,7 +587,8 @@ public sealed class JobSourceClient
             CurrentAnalysisVersion,
             true,
             null,
-            listing.IdentityDiscriminator);
+            listing.IdentityDiscriminator,
+            credentials.UnknownRequirements);
     }
 
     public async Task<JobRecord> FetchJobDetailAsync(
@@ -616,6 +617,7 @@ public sealed class JobSourceClient
         job.CredentialCatalogVersion == _credentialDetector.CatalogVersion &&
         job.Credentials is not null &&
         job.UnrecognizedCredentialMentions is not null &&
+        job.UnknownCredentialRequirements is not null &&
         job.AcademicQualification?.AnalysisVersion == _academicQualificationDetector.AnalysisVersion &&
         job.WorkAuthorization?.AnalysisVersion == WorkAuthorizationDetector.CurrentAnalysisVersion &&
         job.RemoteWork?.AnalysisVersion == RemoteWorkDetector.CurrentAnalysisVersion;
@@ -648,6 +650,7 @@ public sealed class JobSourceClient
             ClearanceParseStatus = clearance.ParseStatus,
             Credentials = credentials.Credentials,
             UnrecognizedCredentialMentions = credentials.UnrecognizedMentions,
+            UnknownCredentialRequirements = credentials.UnknownRequirements,
             CredentialCatalogVersion = credentials.CatalogVersion,
             AcademicQualification = academic,
             WorkAuthorization = authorization,

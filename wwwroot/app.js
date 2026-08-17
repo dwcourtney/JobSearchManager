@@ -43,6 +43,9 @@ const state = {
   usWorkAuthorizationStatus: "notSpecified",
   sponsorshipProfile: "unknown",
   hideStrictWorkAuthorizationMismatch: false,
+  credentialOptions: [],
+  credentialInventoryStatus: "notConfigured",
+  heldCredentialIds: new Set(),
   detailTab: "glance",
   renderedDetailJobId: null,
   lastObservedAutomaticRefreshUtc: null,
@@ -152,6 +155,9 @@ const elements = {
   usWorkAuthorizationStatus: document.querySelector("#us-work-authorization-status"),
   sponsorshipProfile: document.querySelector("#sponsorship-profile"),
   hideStrictWorkAuthorizationMismatch: document.querySelector("#hide-strict-work-authorization-mismatch"),
+  credentialInventoryStatus: document.querySelector("#credential-inventory-status"),
+  heldCredentialsField: document.querySelector("#held-credentials-field"),
+  heldCredentials: document.querySelector("#held-credentials"),
   resultCount: document.querySelector("#result-count"),
   appShell: document.querySelector("#app-shell"),
   errorBanner: document.querySelector("#error-banner"),
@@ -219,6 +225,9 @@ const elements = {
   detailClearanceMismatchText: document.querySelector("#detail-clearance-mismatch-text"),
   detailWorkAuthorizationMismatch: document.querySelector("#detail-work-authorization-mismatch"),
   detailWorkAuthorizationMismatchText: document.querySelector("#detail-work-authorization-mismatch-text"),
+  detailCredentialNote: document.querySelector("#detail-credential-note"),
+  detailCredentialNoteTitle: document.querySelector("#detail-credential-note-title"),
+  detailCredentialNoteText: document.querySelector("#detail-credential-note-text"),
   detailClearanceRow: document.querySelector("#detail-clearance-row"),
   detailClearance: document.querySelector("#detail-clearance"),
   detailClearanceStatusRow: document.querySelector("#detail-clearance-status-row"),
@@ -389,6 +398,22 @@ async function initialize() {
     renderResults();
     queueSettingsSave();
   });
+  elements.credentialInventoryStatus.addEventListener("change", () => {
+    state.credentialInventoryStatus = normalizeCredentialInventoryStatus(
+      elements.credentialInventoryStatus.value);
+    if (state.credentialInventoryStatus !== "complete") {
+      state.heldCredentialIds.clear();
+    }
+    updateCredentialSettingsUi();
+    renderResults();
+    queueSettingsSave();
+  });
+  elements.heldCredentials.addEventListener("change", () => {
+    state.heldCredentialIds = new Set(
+      Array.from(elements.heldCredentials.selectedOptions, option => option.value));
+    renderResults();
+    queueSettingsSave();
+  });
   elements.hideStrictWorkAuthorizationMismatch.addEventListener("change", () => {
     state.hideStrictWorkAuthorizationMismatch = elements.hideStrictWorkAuthorizationMismatch.checked;
     renderResults();
@@ -537,18 +562,22 @@ function handleDetailTabKeydown(event) {
 
 async function loadInitialState() {
   try {
-    const [companiesResponse, settingsResponse, jobsResponse] = await Promise.all([
+    const [companiesResponse, credentialsResponse, settingsResponse, jobsResponse] = await Promise.all([
       fetch("/api/companies", { cache: "no-store" }),
+      fetch("/api/credentials", { cache: "no-store" }),
       fetch("/api/settings", { cache: "no-store" }),
       fetch("/api/jobs", { cache: "no-store" })
     ]);
-    if (!companiesResponse.ok || !settingsResponse.ok || !jobsResponse.ok) {
-      const failed = [companiesResponse, settingsResponse, jobsResponse].find(response => !response.ok);
+    if (!companiesResponse.ok || !credentialsResponse.ok || !settingsResponse.ok || !jobsResponse.ok) {
+      const failed = [companiesResponse, credentialsResponse, settingsResponse, jobsResponse]
+        .find(response => !response.ok);
       throw new Error(await apiErrorMessage(failed, "Application data could not be loaded."));
     }
     state.companies = await companiesResponse.json();
+    state.credentialOptions = await credentialsResponse.json();
     populateCompanySelect();
     applySettings(await settingsResponse.json());
+    populateCredentialSelect();
     const initialSnapshot = await jobsResponse.json();
     const needsInitialRefresh = state.hasConfiguredSource && !initialSnapshot.isRefreshing &&
       !initialSnapshot.lastRefreshedUtc &&
@@ -604,6 +633,12 @@ function applySettings(settings) {
     settings.userProfile?.workAuthorization?.usStatus);
   state.sponsorshipProfile = normalizeSponsorshipProfile(
     settings.userProfile?.workAuthorization?.sponsorship);
+  state.credentialInventoryStatus = normalizeCredentialInventoryStatus(
+    settings.userProfile?.credentials?.inventoryStatus);
+  state.heldCredentialIds = new Set(
+    Array.isArray(settings.userProfile?.credentials?.heldCredentialIds)
+      ? settings.userProfile.credentials.heldCredentialIds
+      : []);
   state.hideStrictWorkAuthorizationMismatch = settings.hideStrictWorkAuthorizationMismatch === true;
   state.hasConfiguredSource = settings.hasConfiguredSource === true;
   state.pendingImportedSource = settings.pendingSource || null;
@@ -633,8 +668,10 @@ function applySettings(settings) {
   elements.hideStrictClearanceMismatch.checked = state.hideStrictClearanceMismatch;
   elements.usWorkAuthorizationStatus.value = state.usWorkAuthorizationStatus;
   elements.sponsorshipProfile.value = state.sponsorshipProfile;
+  elements.credentialInventoryStatus.value = state.credentialInventoryStatus;
   elements.hideStrictWorkAuthorizationMismatch.checked = state.hideStrictWorkAuthorizationMismatch;
   updateEducationSettingsUi();
+  updateCredentialSettingsUi();
   applyTheme();
   const scopeRadio = document.querySelector(`input[name="scope"][value="${state.scope}"]`);
   const locationRadio = document.querySelector(`input[name="location-mode"][value="${state.locationMode}"]`);
@@ -660,6 +697,44 @@ function updateEducationSettingsUi() {
   const isDoctorate = state.educationLevel === "doctorate";
   elements.doctorateTypeField.hidden = !isDoctorate;
   elements.doctorateType.disabled = !isDoctorate;
+}
+
+function populateCredentialSelect() {
+  elements.heldCredentials.replaceChildren();
+  const byCategory = new Map();
+  state.credentialOptions.forEach(credential => {
+    const category = credential.category || "Other";
+    if (!byCategory.has(category)) byCategory.set(category, []);
+    byCategory.get(category).push(credential);
+  });
+  for (const [category, credentials] of byCategory) {
+    const group = document.createElement("optgroup");
+    group.label = category;
+    credentials.forEach(credential => {
+      const option = document.createElement("option");
+      option.value = credential.id;
+      option.textContent = credential.name === credential.fullName
+        ? credential.name
+        : `${credential.name} — ${credential.fullName}`;
+      option.selected = state.heldCredentialIds.has(credential.id);
+      group.append(option);
+    });
+    elements.heldCredentials.append(group);
+  }
+  updateCredentialSettingsUi();
+}
+
+function updateCredentialSettingsUi() {
+  const configured = state.credentialInventoryStatus === "complete";
+  elements.heldCredentialsField.hidden = !configured;
+  elements.heldCredentials.disabled = !configured;
+  Array.from(elements.heldCredentials.options).forEach(option => {
+    option.selected = configured && state.heldCredentialIds.has(option.value);
+  });
+}
+
+function normalizeCredentialInventoryStatus(value) {
+  return ["none", "complete"].includes(value) ? value : "notConfigured";
 }
 
 function normalizeEducationLevel(value) {
@@ -1687,6 +1762,12 @@ async function saveSettings() {
           workAuthorization: {
             usStatus: state.usWorkAuthorizationStatus,
             sponsorship: state.sponsorshipProfile
+          },
+          credentials: {
+            inventoryStatus: state.credentialInventoryStatus,
+            heldCredentialIds: state.credentialInventoryStatus === "complete"
+              ? Array.from(state.heldCredentialIds).sort()
+              : []
           }
         },
         hideStrictEducationMismatch: state.hideStrictEducationMismatch,
@@ -1918,6 +1999,13 @@ function currentWorkAuthorizationProfile() {
   return {
     usStatus: state.usWorkAuthorizationStatus,
     sponsorship: state.sponsorshipProfile
+  };
+}
+
+function currentCredentialProfile() {
+  return {
+    inventoryStatus: state.credentialInventoryStatus,
+    heldCredentialIds: Array.from(state.heldCredentialIds)
   };
 }
 
@@ -2539,6 +2627,25 @@ function createJobListItem(job) {
     moreCredentials.textContent = `+${credentials.length - 2} credentials`;
     badges.append(moreCredentials);
   }
+  const unknownCredentials = Array.isArray(job.unknownCredentialRequirements)
+    ? job.unknownCredentialRequirements
+    : [];
+  unknownCredentials.filter(credential => credential.requirement === "required")
+    .slice(0, 1).forEach(credential => {
+      const badge = document.createElement("span");
+      badge.className = "credential-badge required";
+      badge.textContent = `${credential.name || "Unknown credential"} — review`;
+      badge.title = "Explicitly required credential not yet recognized by the catalog";
+      badges.append(badge);
+    });
+  const credentialFit = CredentialFit.evaluate(
+    credentials, unknownCredentials, currentCredentialProfile());
+  if (credentialFit.blockers.length) {
+    const mismatch = document.createElement("span");
+    mismatch.className = "education-mismatch-badge";
+    mismatch.textContent = "Credential mismatch";
+    badges.append(mismatch);
+  }
   if (job.isRemoteLocationRestricted) {
     const restriction = document.createElement("span");
     restriction.className = "restriction-badge";
@@ -2864,7 +2971,11 @@ function renderDetail(job) {
 
   const educationStatus = evaluateEducationMatch(job.academicQualification, currentEducationProfile());
   renderAcademicQualification(job, educationStatus);
-  renderCredentials(job);
+  const credentialStatus = CredentialFit.evaluate(
+    job.credentials,
+    job.unknownCredentialRequirements,
+    currentCredentialProfile());
+  renderCredentials(job, credentialStatus);
   const workAuthorizationStatus = evaluateWorkAuthorizationMatch(
     job.workAuthorization, currentWorkAuthorizationProfile());
   renderWorkAuthorization(job.workAuthorization, workAuthorizationStatus);
@@ -2880,6 +2991,20 @@ function renderDetail(job) {
   elements.detailWorkAuthorizationMismatch.hidden = workAuthorizationStatus.kind !== "strictMismatch";
   elements.detailWorkAuthorizationMismatchText.textContent =
     workAuthorizationStatus.kind === "strictMismatch" ? workAuthorizationStatus.explanation : "";
+
+  const credentialBlockers = credentialStatus.blockers.length;
+  const credentialReviews = credentialStatus.reviews.length;
+  elements.detailCredentialNote.hidden = credentialBlockers === 0 && credentialReviews === 0;
+  elements.detailCredentialNote.className =
+    `summary-note ${credentialBlockers ? "mismatch" : "caution"}`;
+  elements.detailCredentialNoteTitle.textContent = credentialBlockers
+    ? "Credential mismatch"
+    : "Credential review";
+  elements.detailCredentialNoteText.textContent = credentialBlockers
+    ? `${credentialBlockers} required credential${credentialBlockers === 1 ? " is" : "s are"} not present in your configured inventory.`
+    : credentialReviews
+      ? `${credentialReviews} required credential${credentialReviews === 1 ? " needs" : "s need"} review because your status or an accepted equivalent cannot be confirmed.`
+      : "";
 
   elements.detailLocationNote.hidden = !job.isRemoteLocationRestricted;
   elements.detailLocationNoteText.textContent = job.isRemoteLocationRestricted
@@ -2906,7 +3031,8 @@ function renderDetail(job) {
       `negotiating room may be limited.`
     : "";
 
-  renderQualificationFit(job, educationStatus, clearanceStatus, workAuthorizationStatus, headroom);
+  renderQualificationFit(
+    job, educationStatus, clearanceStatus, workAuthorizationStatus, credentialStatus, headroom);
 
   elements.sourcePostingLink.href = safeHttpUrl(job.sourceUrl) || "#";
   elements.sourcePostingLink.hidden = !safeHttpUrl(job.sourceUrl);
@@ -2919,6 +3045,8 @@ function renderDetail(job) {
     educationStatus.kind === "strictMismatch" ||
     clearanceStatus.kind === "strictMismatch" ||
     workAuthorizationStatus.kind === "strictMismatch" ||
+    credentialBlockers > 0 ||
+    credentialReviews > 0 ||
     job.isRemoteLocationRestricted ||
     hasRemoteWorkConcern ||
     headroom?.isLimited ||
@@ -2991,11 +3119,13 @@ function resetCopyFeedback() {
   elements.copyPostingStatus.textContent = "";
 }
 
-function renderQualificationFit(job, educationStatus, clearanceStatus, workAuthorizationStatus, headroom) {
+function renderQualificationFit(
+  job, educationStatus, clearanceStatus, workAuthorizationStatus, credentialStatus, headroom) {
   const blockers = [];
   if (clearanceStatus.kind === "strictMismatch") blockers.push("Clearance mismatch");
   if (educationStatus.kind === "strictMismatch") blockers.push("Education mismatch");
   if (workAuthorizationStatus.kind === "strictMismatch") blockers.push("Work authorization mismatch");
+  if (credentialStatus.blockers.length) blockers.push("Credential mismatch");
 
   const notes = [];
   if (job.isRemoteLocationRestricted) notes.push("remote-location condition");
@@ -3014,11 +3144,14 @@ function renderQualificationFit(job, educationStatus, clearanceStatus, workAutho
   if (["review", "profileNotConfigured"].includes(workAuthorizationStatus.kind)) {
     notes.push("work-authorization review");
   }
+  if (credentialStatus.reviews.length) notes.push("credential review");
 
   elements.detailFitSummary.className = `fit-summary ${blockers.length ? "blocker" : notes.length ? "review" : "compatible"}`;
   elements.detailFitTitle.textContent = blockers.length
     ? `${blockers.length} potential blocker${blockers.length === 1 ? "" : "s"}`
-    : "No confirmed strict blockers";
+    : credentialStatus.reviews.length
+      ? "Credential status needs review"
+      : "No confirmed strict blockers";
 
   const parts = [];
   if (blockers.length) parts.push(blockers.join(" · "));
@@ -3459,9 +3592,12 @@ function academicRequirementLabel(requirement) {
   })[requirement] || "Mentioned; status unclear";
 }
 
-function renderCredentials(job) {
+function renderCredentials(job, credentialStatus) {
   const credentials = Array.isArray(job.credentials) ? job.credentials : [];
-  elements.detailCredentials.hidden = credentials.length === 0;
+  const unknown = Array.isArray(job.unknownCredentialRequirements)
+    ? job.unknownCredentialRequirements
+    : [];
+  elements.detailCredentials.hidden = credentials.length === 0 && unknown.length === 0;
   elements.detailCredentialsList.replaceChildren();
 
   credentials.forEach((credential, index) => {
@@ -3471,7 +3607,8 @@ function renderCredentials(job) {
     name.textContent = credential.name;
     const status = document.createElement("span");
     status.className = `summary-status credential${credential.requirement === "required" ? " required" : ""}`;
-    status.textContent = credentialRequirementLabel(credential);
+    const assessment = credentialStatus.assessments.find(item => item.credential === credential);
+    status.textContent = credentialRequirementLabel(credential, assessment);
 
     const identity = document.createElement("p");
     identity.className = "disclosure-metadata";
@@ -3479,7 +3616,8 @@ function renderCredentials(job) {
       credential.fullName,
       credential.issuer,
       credentialTypeLabel(credential.type),
-      credential.category
+      credential.category,
+      credential.family
     ].filter(Boolean).join(" · ");
 
     const details = document.createElement("details");
@@ -3502,9 +3640,39 @@ function renderCredentials(job) {
     item.append(name, status, details);
     elements.detailCredentialsList.append(item);
   });
+
+  unknown.forEach((credential, index) => {
+    const item = document.createElement("div");
+    item.className = "credential-row";
+    const name = document.createElement("strong");
+    name.textContent = credential.name || "Unrecognized credential";
+    const status = document.createElement("span");
+    status.className = "summary-status credential required";
+    status.textContent = "Required · unrecognized; review";
+    const details = document.createElement("details");
+    details.className = "inline-details";
+    details.id = `unknown-credential-details-${index}`;
+    const summary = document.createElement("summary");
+    summary.textContent = "Details";
+    summary.setAttribute("aria-controls", details.id);
+    const explanation = document.createElement("p");
+    explanation.className = "disclosure-metadata";
+    explanation.textContent = credential.equivalentAccepted
+      ? "The posting explicitly requires this credential or an equivalent, but it is not yet in the catalog. No equivalence was inferred."
+      : "The posting explicitly requires this credential, but it is not yet in the catalog.";
+    details.append(summary, explanation);
+    if (credential.evidence) {
+      const evidence = document.createElement("p");
+      evidence.className = "disclosure-evidence";
+      evidence.textContent = `“${credential.evidence}”`;
+      details.append(evidence);
+    }
+    item.append(name, status, details);
+    elements.detailCredentialsList.append(item);
+  });
 }
 
-function credentialRequirementLabel(credential) {
+function credentialRequirementLabel(credential, assessment) {
   const labels = [];
   if (credential.postHireAcquisitionAllowed) {
     labels.push("Required; post-hire acquisition allowed");
@@ -3525,6 +3693,9 @@ function credentialRequirementLabel(credential) {
   if (credential.inProgressAccepted) {
     labels.push("in progress accepted");
   }
+  if (assessment?.kind === "meets") labels.push("held");
+  if (assessment?.kind === "strictMismatch") labels.push("not in your inventory");
+  if (assessment?.kind === "review") labels.push("status needs review");
   return labels.join(" · ");
 }
 

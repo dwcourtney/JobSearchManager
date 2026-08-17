@@ -385,7 +385,16 @@ internal sealed partial class PortableWorkspaceService
             profile.Security.PublicTrust is not ("none" or "current" or "unknown") ||
             profile.WorkAuthorization?.UsStatus is not
                 ("notSpecified" or "usCitizen" or "permanentResident" or "otherAuthorized" or "notAuthorized") ||
-            profile.WorkAuthorization.Sponsorship is not ("unknown" or "notRequired" or "required"))
+            profile.WorkAuthorization.Sponsorship is not ("unknown" or "notRequired" or "required") ||
+            (profile.Credentials is not null &&
+                (profile.Credentials.InventoryStatus is not ("notConfigured" or "none" or "complete") ||
+                 profile.Credentials.HeldCredentialIds is null ||
+                 profile.Credentials.HeldCredentialIds.Count > 200 ||
+                 (profile.Credentials.InventoryStatus != "complete" &&
+                    profile.Credentials.HeldCredentialIds.Count > 0) ||
+                 profile.Credentials.HeldCredentialIds.Any(id =>
+                    string.IsNullOrWhiteSpace(id) || id.Length > 100 ||
+                    id.Any(character => !char.IsAsciiLetterOrDigit(character) && character != '-')))))
         {
             throw new WorkspaceImportException("The qualification profile contains an invalid value.");
         }

@@ -572,10 +572,25 @@ public sealed class AppStateStore
             "unknown" or "notRequired" or "required"
                 ? settings.UserProfile.WorkAuthorization.Sponsorship
                 : "unknown";
+        var credentialInventoryStatus = settings.UserProfile?.Credentials?.InventoryStatus is
+            "none" or "complete"
+                ? settings.UserProfile.Credentials.InventoryStatus
+                : "notConfigured";
+        var heldCredentialIds = credentialInventoryStatus == "complete"
+            ? (settings.UserProfile?.Credentials?.HeldCredentialIds ?? [])
+                .Where(id => !string.IsNullOrWhiteSpace(id) && id.Length <= 100 &&
+                    id.All(character => char.IsAsciiLetterOrDigit(character) || character == '-'))
+                .Select(id => id.Trim().ToLowerInvariant())
+                .Distinct(StringComparer.Ordinal)
+                .Order(StringComparer.Ordinal)
+                .Take(200)
+                .ToArray()
+            : [];
         var userProfile = new UserProfile(
             new EducationProfile(educationLevel, doctorateType),
             new SecurityProfile(clearanceLevel, publicTrust),
-            new WorkAuthorizationProfile(usWorkAuthorizationStatus, sponsorship));
+            new WorkAuthorizationProfile(usWorkAuthorizationStatus, sponsorship),
+            new CredentialProfile(credentialInventoryStatus, heldCredentialIds));
 
         var companySources = new Dictionary<string, CompanySourceSettings>(StringComparer.OrdinalIgnoreCase);
         foreach (var pair in settings.CompanySources ??

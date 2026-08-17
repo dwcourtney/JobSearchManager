@@ -1548,6 +1548,7 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   color: var(--color-credential-required-text);
   background: var(--color-credential-required-background);
 }
+.credential-profile-select { min-height: 12rem; }
 .inline-details {
   grid-column: 1 / -1;
   justify-self: start;

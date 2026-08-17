@@ -218,7 +218,8 @@ public sealed record JobRecord(
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     string? CompressedDescriptionHtml = null,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    string? IdentityDiscriminator = null)
+    string? IdentityDiscriminator = null,
+    IReadOnlyList<UnknownCredentialRequirement>? UnknownCredentialRequirements = null)
 {
     public string StableId => $"{CompanyId}:{(!string.IsNullOrWhiteSpace(RequisitionId)
         ? RequisitionId
@@ -239,6 +240,16 @@ public sealed record CredentialMatch(
     bool EquivalentAccepted,
     bool InProgressAccepted,
     bool PostHireAcquisitionAllowed,
+    string Evidence,
+    string Family = "",
+    IReadOnlyList<string>? LegacyNames = null,
+    IReadOnlyList<string>? EquivalentCredentialIds = null,
+    IReadOnlyList<string>? RelatedCredentialIds = null);
+
+public sealed record UnknownCredentialRequirement(
+    string Name,
+    string Requirement,
+    bool EquivalentAccepted,
     string Evidence);
 
 public sealed record AcademicQualificationAnalysis(
@@ -313,6 +324,7 @@ internal sealed record ClearanceAnalysis(
 internal sealed record CredentialAnalysis(
     IReadOnlyList<CredentialMatch> Credentials,
     IReadOnlyList<string> UnrecognizedMentions,
+    IReadOnlyList<UnknownCredentialRequirement> UnknownRequirements,
     int CatalogVersion);
 
 public sealed record JobSourceFetchResult(
@@ -454,6 +466,7 @@ public sealed record JobListItem(
     bool PolygraphRequired,
     string ClearanceParseStatus,
     IReadOnlyList<JobListCredential>? Credentials,
+    IReadOnlyList<JobListUnknownCredential>? UnknownCredentialRequirements,
     JobListAcademicQualification? AcademicQualification,
     JobListWorkAuthorization? WorkAuthorization,
     JobListRemoteWork? RemoteWork,
@@ -480,6 +493,9 @@ public sealed record JobListItem(
             : job.Credentials?.Select(JobListCredential.FromAnalysis).ToArray(),
         string.IsNullOrWhiteSpace(job.DescriptionHtml)
             ? null
+            : job.UnknownCredentialRequirements?.Select(JobListUnknownCredential.FromAnalysis).ToArray(),
+        string.IsNullOrWhiteSpace(job.DescriptionHtml)
+            ? null
             : JobListAcademicQualification.FromAnalysis(job.AcademicQualification),
         string.IsNullOrWhiteSpace(job.DescriptionHtml) || job.WorkAuthorization is null
             ? null
@@ -491,20 +507,37 @@ public sealed record JobListItem(
 }
 
 public sealed record JobListCredential(
+    string CredentialId,
     string Name,
     string FullName,
     string Requirement,
     bool IsAlternative,
+    bool EquivalentAccepted,
     bool InProgressAccepted,
-    bool PostHireAcquisitionAllowed)
+    bool PostHireAcquisitionAllowed,
+    IReadOnlyList<string>? EquivalentCredentialIds)
 {
     public static JobListCredential FromAnalysis(CredentialMatch credential) => new(
+        credential.CredentialId,
         credential.Name,
         credential.FullName,
         credential.Requirement,
         credential.IsAlternative,
+        credential.EquivalentAccepted,
         credential.InProgressAccepted,
-        credential.PostHireAcquisitionAllowed);
+        credential.PostHireAcquisitionAllowed,
+        credential.EquivalentCredentialIds);
+}
+
+public sealed record JobListUnknownCredential(
+    string Name,
+    string Requirement,
+    bool EquivalentAccepted)
+{
+    public static JobListUnknownCredential FromAnalysis(UnknownCredentialRequirement credential) => new(
+        credential.Name,
+        credential.Requirement,
+        credential.EquivalentAccepted);
 }
 
 public sealed record JobListAcademicQualification(
@@ -582,12 +615,21 @@ public sealed record DescriptionMatchRequest(
 public sealed record UserProfile(
     EducationProfile Education,
     SecurityProfile? Security = null,
-    WorkAuthorizationProfile? WorkAuthorization = null)
+    WorkAuthorizationProfile? WorkAuthorization = null,
+    CredentialProfile? Credentials = null)
 {
     public static UserProfile Default { get; } = new(
         EducationProfile.Default,
         SecurityProfile.Default,
-        WorkAuthorizationProfile.Default);
+        WorkAuthorizationProfile.Default,
+        CredentialProfile.Default);
+}
+
+public sealed record CredentialProfile(
+    string InventoryStatus,
+    IReadOnlyList<string> HeldCredentialIds)
+{
+    public static CredentialProfile Default { get; } = new("notConfigured", []);
 }
 
 public sealed record EducationProfile(string Level, string? DoctorateType)

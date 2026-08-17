@@ -255,6 +255,9 @@ app.MapGet("/api/companies", (CompanyCatalog companies) => Results.Ok(
         company.PublicSiteUrl
     })));
 
+app.MapGet("/api/credentials", (CredentialDetector credentials) =>
+    Results.Ok(credentials.CatalogItems));
+
 app.MapPost("/api/refresh", async (
     WorkspaceRuntimeProvider provider,
     CancellationToken token) =>

@@ -16,7 +16,8 @@
   <script src="/job-posting-text.js" defer></script>
   <script src="/job-workflow-state.js" defer></script>
   <script src="/job-source-state.js" defer></script>
-  <script src="/app.js?v=2" defer></script>
+  <script src="/credential-fit.js" defer></script>
+  <script src="/app.js?v=3" defer></script>
 </head>
 <body>
   <main id="app-shell" class="app-shell" aria-busy="true" inert>
@@ -248,6 +249,10 @@
                       <strong>Work authorization mismatch</strong>
                       <p id="detail-work-authorization-mismatch-text"></p>
                     </div>
+                    <div id="detail-credential-note" class="summary-note caution" hidden>
+                      <strong id="detail-credential-note-title">Credential review</strong>
+                      <p id="detail-credential-note-text"></p>
+                    </div>
                     <div id="detail-location-note" class="summary-note warning" hidden>
                       <strong>Remote location restriction</strong>
                       <p id="detail-location-note-text"></p>
@@ -410,6 +415,29 @@
                 <option value="">Not specified</option>
                 <option value="phD">Ph.D.</option>
               </select>
+            </div>
+          </div>
+        </section>
+
+        <section class="settings-section" aria-labelledby="credential-profile-heading">
+          <h3 id="credential-profile-heading">Certifications / Licenses</h3>
+          <div class="settings-row">
+            <label for="credential-inventory-status">Credential inventory</label>
+            <div class="settings-control">
+              <select id="credential-inventory-status">
+                <option value="notConfigured">Not configured</option>
+                <option value="none">I hold none</option>
+                <option value="complete">Complete inventory configured</option>
+              </select>
+              <small>A complete inventory lets Qualification Fit confirm named required credentials as met or missing. Open-ended equivalents remain review items unless the catalog identifies a concrete equivalent.</small>
+            </div>
+          </div>
+          <div id="held-credentials-field" class="settings-row" hidden>
+            <label for="held-credentials">Credentials held</label>
+            <div class="settings-control">
+              <select id="held-credentials" class="credential-profile-select" multiple size="10"
+                      aria-describedby="held-credentials-help"></select>
+              <small id="held-credentials-help">Select every current certification or license you hold. Use Ctrl or Command to select more than one.</small>
             </div>
           </div>
         </section>

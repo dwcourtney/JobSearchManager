@@ -37,16 +37,26 @@ public sealed class CredentialDetector
 
     public int CatalogVersion => _catalog.SchemaVersion;
 
+    public IReadOnlyList<CredentialCatalogItem> CatalogItems => _credentials
+        .Select(item => item.Definition)
+        .OrderBy(item => item.Category, StringComparer.OrdinalIgnoreCase)
+        .ThenBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
+        .Select(item => new CredentialCatalogItem(
+            item.Id, item.Name, item.FullName, item.Issuer, item.Category,
+            string.IsNullOrWhiteSpace(item.Family) ? item.Category : item.Family))
+        .ToArray();
+
     internal CredentialAnalysis Analyze(string descriptionHtml)
     {
         if (string.IsNullOrWhiteSpace(descriptionHtml))
         {
-            return new CredentialAnalysis([], [], CatalogVersion);
+            return new CredentialAnalysis([], [], [], CatalogVersion);
         }
 
         var segments = CreateSegments(descriptionHtml);
         var found = new List<FoundCredential>();
         var unrecognized = new List<string>();
+        var unknownRequirements = new List<UnknownCredentialRequirement>();
         var sectionRequirement = "mentioned";
 
         for (var segmentIndex = 0; segmentIndex < segments.Count; segmentIndex++)
@@ -90,6 +100,8 @@ public sealed class CredentialDetector
                     match.Index));
             }
 
+            unknownRequirements.AddRange(ExtractUnknownRequirements(segment, segmentMatches));
+
             if (segmentMatches.Count == 0 &&
                 GeneralCredentialLanguageRegex.IsMatch(segment) &&
                 !IgnoredGeneralLanguageRegex.IsMatch(segment))
@@ -110,6 +122,11 @@ public sealed class CredentialDetector
         return new CredentialAnalysis(
             normalized,
             unrecognized.Distinct(StringComparer.OrdinalIgnoreCase).Take(10).ToArray(),
+            unknownRequirements
+                .GroupBy(item => $"{item.Name}\n{item.Evidence}", StringComparer.OrdinalIgnoreCase)
+                .Select(group => group.First())
+                .Take(10)
+                .ToArray(),
             CatalogVersion);
     }
 
@@ -120,6 +137,7 @@ public sealed class CredentialDetector
         {
             Credentials = analysis.Credentials,
             UnrecognizedCredentialMentions = analysis.UnrecognizedMentions,
+            UnknownCredentialRequirements = analysis.UnknownRequirements,
             CredentialCatalogVersion = analysis.CatalogVersion
         };
     }
@@ -141,12 +159,53 @@ public sealed class CredentialDetector
             definition.Type,
             definition.Category,
             strongest.Requirement,
-            candidates.Any(item => item.IsAlternative),
+            strongest.IsAlternative,
             candidates.Any(item => item.EquivalentAccepted),
             candidates.Any(item => item.InProgressAccepted),
             candidates.Any(item => item.PostHireAcquisitionAllowed),
-            strongest.Evidence);
+            strongest.Evidence,
+            string.IsNullOrWhiteSpace(definition.Family) ? definition.Category : definition.Family,
+            definition.LegacyNames,
+            definition.EquivalentCredentialIds,
+            definition.RelatedCredentialIds);
     }
+
+    private IReadOnlyList<UnknownCredentialRequirement> ExtractUnknownRequirements(
+        string segment,
+        IReadOnlyList<(CompiledCredential Credential, Match Match)> knownMatches)
+    {
+        if (!UnequivocalCredentialRequirementRegex.IsMatch(segment))
+        {
+            return [];
+        }
+
+        var results = new List<UnknownCredentialRequirement>();
+        foreach (var match in NamedCredentialRegex.Matches(segment).Cast<Match>()
+            .Concat(NamedCertifiedSuffixRegex.Matches(segment).Cast<Match>()))
+        {
+            var candidate = NormalizeUnknownName(match.Groups["name"].Value);
+            if (candidate.Length is < 3 or > 140 ||
+                IgnoredUnknownNameRegex.IsMatch(candidate) ||
+                knownMatches.Any(item =>
+                    item.Match.Index < match.Index + match.Length &&
+                    match.Index < item.Match.Index + item.Match.Length) ||
+                knownMatches.Any(item => item.Credential.Patterns.Any(pattern => pattern.IsMatch(candidate))))
+            {
+                continue;
+            }
+
+            results.Add(new UnknownCredentialRequirement(
+                candidate,
+                "required",
+                EquivalentAcceptedRegex.IsMatch(segment),
+                CreateEvidence(segment, match.Index)));
+        }
+        return results;
+    }
+
+    private static string NormalizeUnknownName(string value) => UnknownNamePrefixRegex
+        .Replace(WhitespaceRegex.Replace(value, " ").Trim(" ,;:-–—()".ToCharArray()), "")
+        .Trim(" ,;:-–—()".ToCharArray());
 
     private static string ClassifyRequirement(
         string segment,
@@ -274,6 +333,16 @@ public sealed class CredentialDetector
                 throw new InvalidDataException($"Invalid or duplicate credential catalog entry '{credential.Id}'.");
             }
         }
+
+        foreach (var credential in catalog.Credentials)
+        {
+            if (credential.EquivalentCredentialIds.Concat(credential.RelatedCredentialIds)
+                .Any(id => !ids.Contains(id) || string.Equals(id, credential.Id, StringComparison.Ordinal)))
+            {
+                throw new InvalidDataException(
+                    $"Credential catalog entry '{credential.Id}' has an invalid relationship.");
+            }
+        }
     }
 
     private sealed record CompiledCredential(
@@ -328,6 +397,27 @@ public sealed class CredentialDetector
         @"^(?:responsibilities|primary\s+duties|what\s+you['’]ll\s+be\s+doing|original\s+posting|pay\s+range)\s*:?");
     private static readonly Regex GeneralCredentialLanguageRegex = CreateRegex(
         @"\b(?:certification|certifications|certified|credential|credentials|professional\s+licen[cs]e|professional\s+licensure|licen[cs]ed\s+[A-Za-z]+)\b");
+    private static readonly Regex UnequivocalCredentialRequirementRegex = CreateRegex(
+        @"\b(?:must|shall)\s+(?:possess|hold|have|maintain|obtain)\b.{0,180}\b(?:certification|credential|licen[cs]e|licensure)\b|" +
+        @"\b(?:must|shall)\s+be\b.{0,120}\bcertified\b|" +
+        @"\b(?:required|mandatory)\s+(?:[\p{L}\p{N}+&./'®™()-]+\s+){0,10}(?:certification|credential|licen[cs]e|licensure)\b|" +
+        @"\b(?:certification|credential|licen[cs]e|licensure)\s+(?:is\s+)?(?:required|mandatory)\b");
+    private static readonly Regex NamedCredentialRegex = CreateRegex(
+        @"(?<name>(?:(?!(?:certification|credential|licen[cs]e|licensure)\b)" +
+        @"[\p{L}\p{N}+&./'®™()-]+\s+){0,11}" +
+        @"(?!(?:certification|credential|licen[cs]e|licensure)\b)[\p{L}\p{N}+&./'®™()-]+)\s+" +
+        @"(?:certification|credential|licen[cs]e|licensure)\b");
+    private static readonly Regex NamedCertifiedSuffixRegex = CreateRegex(
+        @"\b(?:must|shall)\s+be\s+(?<name>(?:[\p{L}\p{N}+&./'®™()-]+\s+){0,10}" +
+        @"[\p{L}\p{N}+&./'®™()-]+)\s+certified\b");
+    private static readonly Regex UnknownNamePrefixRegex = CreateRegex(
+        @"^(?:(?:(?:the\s+)?candidate\s+)?(?:must|shall)\s+" +
+        @"(?:possess|hold|have|maintain|obtain)\s+(?:an?\s+)?|" +
+        @"(?:and|or)\s+(?:be\s+)?(?:able\s+to\s+)?(?:obtain\s+)?|" +
+        @"(?:a|an|the|current|required|mandatory)\s+)");
+    private static readonly Regex IgnoredUnknownNameRegex = CreateRegex(
+        @"^(?:required|professional|relevant|technical|industry|industry-recognized|applicable|current|prior|" +
+        @"one\s+or\s+more|(?:or\s+)?(?:be\s+)?able\s+to\s+obtain|obtain)$");
     private static readonly Regex IgnoredGeneralLanguageRegex = CreateRegex(
         @"\bassistance\s+with\s+obtaining\s+pertinent\s+certifications\b|" +
         @"\bcertification\s+(?:activities|packages|authority)\b|" +
@@ -358,8 +448,20 @@ internal sealed class CredentialDefinition
     public string Issuer { get; init; } = "";
     public string Type { get; init; } = "";
     public string Category { get; init; } = "";
+    public string Family { get; init; } = "";
+    public List<string> LegacyNames { get; init; } = [];
+    public List<string> EquivalentCredentialIds { get; init; } = [];
+    public List<string> RelatedCredentialIds { get; init; } = [];
     public List<CredentialAliasDefinition> Aliases { get; init; } = [];
 }
+
+public sealed record CredentialCatalogItem(
+    string Id,
+    string Name,
+    string FullName,
+    string Issuer,
+    string Category,
+    string Family);
 
 internal sealed class CredentialAliasDefinition
 {
