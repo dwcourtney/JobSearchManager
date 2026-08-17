@@ -56,11 +56,23 @@ if ($LASTEXITCODE -ne 0) {
     throw "Job-source state tests failed."
 }
 
-$styles = Get-Content -LiteralPath $stylesPath -Raw
-$theme = Get-Content -LiteralPath $themePath -Raw
-$index = Get-Content -LiteralPath $indexPath -Raw
-$app = Get-Content -LiteralPath $appPath -Raw
-$countryOrdering = Get-Content -LiteralPath $countryOrderingPath -Raw
+$styles = Get-Content -LiteralPath $stylesPath -Raw -Encoding UTF8
+$theme = Get-Content -LiteralPath $themePath -Raw -Encoding UTF8
+$index = Get-Content -LiteralPath $indexPath -Raw -Encoding UTF8
+$app = Get-Content -LiteralPath $appPath -Raw -Encoding UTF8
+$countryOrdering = Get-Content -LiteralPath $countryOrderingPath -Raw -Encoding UTF8
+
+$mojibakeMarkers = @(
+    [char]0x00e2,
+    [char]0x00c3,
+    [char]0x00c2,
+    [char]0xfffd
+)
+foreach ($webSource in @($index, $app, $styles)) {
+    if ($mojibakeMarkers | Where-Object { $webSource.Contains([string]$_) }) {
+        throw "A browser source file contains mojibake or a Unicode replacement character."
+    }
+}
 
 if ($app -match 'setInterval\s*\(' -or
     $app -match 'setTimeout\s*\(\s*loadSnapshot' -or
@@ -294,3 +306,4 @@ Write-Output "Browser icon/manifest audit: PASS"
 Write-Output "Bandwidth-efficient polling audit: PASS"
 Write-Output "Source modal/loading race audit: PASS"
 Write-Output "Posting normalization/sanitization order audit: PASS"
+Write-Output "Browser text encoding audit: PASS"

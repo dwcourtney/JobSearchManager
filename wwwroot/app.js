@@ -2927,7 +2927,7 @@ function renderDetail(job) {
   if (!job.descriptionHtml) {
     elements.detailDescription.textContent = job.detailLoaded
       ? "The formatted description is unavailable for this job."
-      : "Loading the full posting from the server-side cacheâ€¦";
+      : "Loading the full posting from the server-side cache...";
     return;
   }
 
@@ -3665,7 +3665,7 @@ function beginSourceMetadataLoad(companyId) {
   elements.sourceLoadingTitle.textContent =
     `Loading ${company?.displayName || "job source"} job source`;
   elements.sourceLoadingPhase.textContent =
-    "Retrieving available countries and locationsâ€¦";
+    "Retrieving available countries and locations...";
   state.sourceOverlayShowTimer = setTimeout(() => {
     if (!isCurrentSourceRequest(request)) return;
     if (document.activeElement !== document.body) {
