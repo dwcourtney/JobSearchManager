@@ -2,6 +2,8 @@ using System.Text.Json;
 
 namespace JobSearchManager;
 
+using Microsoft.Extensions.Options;
+
 public sealed class JobCatalog
 {
     private readonly JobSourceClient _jobSourceClient;
@@ -12,6 +14,7 @@ public sealed class JobCatalog
     private readonly WorkAuthorizationDetector _workAuthorizationDetector;
     private readonly RemoteWorkDetector _remoteWorkDetector;
     private readonly CompanyCatalog _companyCatalog;
+    private readonly JobSourceOptions _options;
     private readonly object _gate = new();
     private readonly SemaphoreSlim _historyGate = new(1, 1);
     private readonly SemaphoreSlim _sourceOperationGate = new(1, 1);
@@ -32,7 +35,8 @@ public sealed class JobCatalog
         AcademicQualificationDetector academicQualificationDetector,
         WorkAuthorizationDetector workAuthorizationDetector,
         RemoteWorkDetector remoteWorkDetector,
-        CompanyCatalog companyCatalog)
+        CompanyCatalog companyCatalog,
+        IOptions<JobSourceOptions> options)
     {
         _jobSourceClient = jobSourceClient;
         _stateStore = stateStore;
@@ -42,6 +46,7 @@ public sealed class JobCatalog
         _workAuthorizationDetector = workAuthorizationDetector;
         _remoteWorkDetector = remoteWorkDetector;
         _companyCatalog = companyCatalog;
+        _options = options.Value;
     }
 
     public JobsSnapshot Snapshot
@@ -96,12 +101,13 @@ public sealed class JobCatalog
             !string.IsNullOrWhiteSpace(job.DescriptionHtml) && !_jobSourceClient.IsAnalysisCurrent(job));
         var cacheNeedsQueryUpgrade = cache.Query is not null &&
             (!string.IsNullOrWhiteSpace(cache.Query.LocationLabel) || cache.Query.SourceModelVersion < 2);
-        var cachedJobs = cache.Jobs.Select(job =>
+        var cachedJobs = CanonicalizeStableIdentities(cache.Jobs.Select(job =>
             !string.IsNullOrWhiteSpace(job.DescriptionHtml) && !_jobSourceClient.IsAnalysisCurrent(job)
                 ? _jobSourceClient.Reclassify(job)
-                : job).ToArray();
+                : job).ToArray(), "cache initialization");
+        var cacheNeedsIdentityRepair = cachedJobs.Count != cache.Jobs.Count;
 
-        if (cacheNeedsAnalysisUpgrade || cacheNeedsQueryUpgrade)
+        if (cacheNeedsAnalysisUpgrade || cacheNeedsQueryUpgrade || cacheNeedsIdentityRepair)
         {
             await _stateStore.SaveJobsCacheAsync(
                 cachedJobs,
@@ -148,7 +154,7 @@ public sealed class JobCatalog
 
         _logger.LogInformation(
             "Loaded {JobCount} jobs from {CachePath}.",
-            cachedJobs.Length,
+            cachedJobs.Count,
             _stateStore.JobsCachePath);
     }
 
@@ -165,6 +171,69 @@ public sealed class JobCatalog
         JobSourceQuery query,
         CancellationToken cancellationToken)
         => RefreshAsync(query, automaticCheck: false, cancellationToken);
+
+    public async Task<JobsSnapshot> SwitchSourceAsync(
+        JobSourceQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        var company = _companyCatalog.Get(query.CompanyId);
+        query = query.Normalize(company);
+        await _sourceOperationGate.WaitAsync(cancellationToken);
+        try
+        {
+            lock (_gate)
+            {
+                if (_activeRefresh is { IsCompleted: false })
+                {
+                    throw new InvalidOperationException(
+                        "A job-source refresh is already running. Wait for it to finish before applying another location.");
+                }
+            }
+
+            var cache = await _stateStore.LoadJobsCacheAsync(query);
+            var status = await _stateStore.LoadSourceStatusAsync(query);
+            var cacheMatches = cache?.Query?.IsEquivalentTo(query, _companyCatalog) == true;
+            var lastRefreshed = status?.LastSuccessfulRefreshUtc ??
+                cache?.LastRefreshedUtc ?? cache?.SavedAtUtc;
+            var freshAfter = DateTimeOffset.UtcNow.AddMinutes(
+                -_options.SourceSwitchCacheFreshnessMinutes);
+            if (cacheMatches && lastRefreshed >= freshAfter)
+            {
+                var cachedJobs = CanonicalizeStableIdentities(cache!.Jobs, "recent source cache");
+                var availableJobs = cachedJobs.Where(job => job.IsSourceAvailable).ToArray();
+                var snapshot = new JobsSnapshot(
+                    availableJobs,
+                    availableJobs.Length,
+                    lastRefreshed,
+                    false,
+                    null,
+                    status?.DetailFailureCount ?? cache.DetailFailureCount,
+                    true,
+                    GetNewJobIds(availableJobs),
+                    query,
+                    GetJobStates(availableJobs),
+                    null,
+                    new RefreshMetrics(0, 0, cachedJobs.Count, 0, 0, 0, 0, 0,
+                        status?.ListingsTruncated ?? false, 0));
+                lock (_gate)
+                {
+                    _currentQuery = query;
+                    _cachedJobs = cachedJobs;
+                    _snapshot = snapshot;
+                }
+                _logger.LogInformation(
+                    "Switched to the recent {Company} cache ({JobCount} jobs, refreshed {LastRefreshed}); no provider listing or detail requests were made.",
+                    company.DisplayName, availableJobs.Length, lastRefreshed);
+                return snapshot;
+            }
+        }
+        finally
+        {
+            _sourceOperationGate.Release();
+        }
+
+        return await RefreshAsync(query, cancellationToken);
+    }
 
     private Task<JobsSnapshot> RefreshAsync(
         JobSourceQuery query,
@@ -538,8 +607,10 @@ public sealed class JobCatalog
             var filterSettings = await _stateStore.LoadSettingsAsync();
             var cachedDocument = await _stateStore.LoadJobsCacheAsync(query);
             var cacheWasPresent = cachedDocument?.Query?.IsEquivalentTo(query, _companyCatalog) == true;
-            var cachedJobs = cacheWasPresent ? cachedDocument!.Jobs : [];
-            var result = await _jobSourceClient.FetchAllJobsAsync(
+            var cachedJobs = cacheWasPresent
+                ? CanonicalizeStableIdentities(cachedDocument!.Jobs, "source cache")
+                : [];
+            var fetched = await _jobSourceClient.FetchAllJobsAsync(
                 company,
                 query,
                 progress => ReportRefreshProgress(query, progress),
@@ -547,6 +618,10 @@ public sealed class JobCatalog
                 cachedJobs: cachedJobs,
                 automaticCheck: automaticCheck,
                 filterSettings: filterSettings);
+            var result = fetched with
+            {
+                Jobs = CanonicalizeStableIdentities(fetched.Jobs, "provider refresh")
+            };
             var refreshedAt = DateTimeOffset.UtcNow;
 
             ReportRefreshProgress(query, new RefreshProgress("saving", 0, null));
@@ -793,6 +868,55 @@ public sealed class JobCatalog
             }
         }
         return changed;
+    }
+
+    private IReadOnlyList<JobRecord> CanonicalizeStableIdentities(
+        IReadOnlyList<JobRecord> jobs,
+        string source)
+    {
+        var canonical = new List<JobRecord>(jobs.Count);
+        foreach (var identityGroup in jobs.GroupBy(job => job.StableId, StringComparer.Ordinal))
+        {
+            if (identityGroup.Count() == 1)
+            {
+                canonical.Add(identityGroup.First());
+                continue;
+            }
+
+            var variants = identityGroup
+                .GroupBy(job => string.Join('\n',
+                    job.Title.Trim().ToUpperInvariant(),
+                    job.RequisitionId.Trim().ToUpperInvariant(),
+                    job.TimeType.Trim().ToUpperInvariant()), StringComparer.Ordinal)
+                .OrderBy(group => group.Key, StringComparer.Ordinal)
+                .ToArray();
+            _logger.Log(variants.Length == 1 ? LogLevel.Information : LogLevel.Warning,
+                "Canonicalizing {DuplicateCount} records with stable identity {StableId} from {Source}; {VariantCount} material variants were found.",
+                identityGroup.Count(), identityGroup.Key, source, variants.Length);
+
+            for (var variantIndex = 0; variantIndex < variants.Length; variantIndex++)
+            {
+                var records = variants[variantIndex]
+                    .OrderBy(job => job.ExternalPath, StringComparer.Ordinal)
+                    .ToArray();
+                var selected = records[0];
+                var locations = records
+                    .SelectMany(job => new[] { job.PrimaryLocation }.Concat(job.AdditionalLocations))
+                    .Where(location => !string.IsNullOrWhiteSpace(location))
+                    .Select(location => location.Trim())
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
+                canonical.Add(selected with
+                {
+                    PrimaryLocation = locations.FirstOrDefault() ?? selected.PrimaryLocation,
+                    AdditionalLocations = locations.Skip(1).ToArray(),
+                    IdentityDiscriminator = variantIndex == 0
+                        ? selected.IdentityDiscriminator
+                        : $"path:{selected.ExternalPath.Trim('/')}"
+                });
+            }
+        }
+        return canonical;
     }
 
     private string[] GetNewJobIds(IReadOnlyList<JobRecord> jobs) => jobs

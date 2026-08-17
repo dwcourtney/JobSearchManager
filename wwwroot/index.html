@@ -584,6 +584,24 @@
     </section>
   </div>
 
+  <div id="source-loading-overlay" class="loading-overlay" role="dialog" aria-modal="true"
+       aria-hidden="true" aria-labelledby="source-loading-title"
+       aria-describedby="source-loading-phase source-loading-note" tabindex="-1" hidden>
+    <section class="loading-panel">
+      <span class="loading-spinner" aria-hidden="true"></span>
+      <h2 id="source-loading-title">Loading job source</h2>
+      <p id="source-loading-phase" class="loading-phase" aria-live="polite">
+        Retrieving available countries and locationsâ€¦
+      </p>
+      <div class="loading-progress" aria-hidden="true">
+        <span></span>
+      </div>
+      <p id="source-loading-note" class="loading-note">
+        Source choices will be available shortly.
+      </p>
+    </section>
+  </div>
+
   <div id="source-confirmation-overlay" class="loading-overlay confirmation-overlay"
        role="dialog" aria-modal="true" aria-hidden="true"
        aria-labelledby="source-confirmation-title"
@@ -610,6 +628,9 @@
       <div class="confirmation-actions">
         <button id="source-confirmation-stay" class="confirmation-secondary-button" type="button">
           Stay in Settings
+        </button>
+        <button id="source-confirmation-discard" class="confirmation-secondary-button" type="button">
+          Cancel Changes and go to Jobs
         </button>
         <button id="source-confirmation-apply" class="primary-button" type="button">
           Apply and go to Jobs

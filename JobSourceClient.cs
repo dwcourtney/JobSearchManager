@@ -57,7 +57,8 @@ public sealed class JobSourceClient
             _options.MaximumDetailRequestsPerRefresh is < 1 or > 2000 ||
             _options.MaximumAutomaticDetailRequests is < 1 or > 500 ||
             _options.MaximumRevalidationsPerRefresh is < 0 or > 500 ||
-            _options.DetailReuseHours is < 1 or > 8760)
+            _options.DetailReuseHours is < 1 or > 8760 ||
+            _options.SourceSwitchCacheFreshnessMinutes is < 1 or > 120)
         {
             throw new InvalidOperationException("Job-source safety limits are outside their supported ranges.");
         }
@@ -94,7 +95,14 @@ public sealed class JobSourceClient
         {
             var listing = listings[index];
             currentPaths.Add(listing.ExternalPath);
+            foreach (var equivalentPath in listing.EquivalentExternalPaths)
+            {
+                currentPaths.Add(equivalentPath);
+            }
             cachedByPath.TryGetValue(listing.ExternalPath, out var cached);
+            cached ??= listing.EquivalentExternalPaths
+                .Select(path => cachedByPath.GetValueOrDefault(path))
+                .FirstOrDefault(job => job is not null);
             var fingerprint = ListingFingerprint(listing);
             if (cached is not null && !string.IsNullOrWhiteSpace(cached.DescriptionHtml) &&
                 (string.IsNullOrWhiteSpace(cached.ListingFingerprint) ||
@@ -255,6 +263,10 @@ public sealed class JobSourceClient
             var stableId = !string.IsNullOrWhiteSpace(requisitionId)
                 ? $"{company.Id}:{requisitionId}"
                 : $"{company.Id}:path:{listing.ExternalPath}";
+            if (!string.IsNullOrWhiteSpace(listing.IdentityDiscriminator))
+            {
+                stableId += $":variant:{listing.IdentityDiscriminator}";
+            }
             return new ListingIdentity(stableId, requisitionId, listing.ExternalPath);
         }).ToArray();
     }
@@ -499,10 +511,15 @@ public sealed class JobSourceClient
         var requisitionId = FirstNonEmpty(detail?.JobReqId, listing.BulletFields.FirstOrDefault());
         var title = FirstNonEmpty(detail?.Title, listing.Title);
         var primaryLocation = FirstNonEmpty(detail?.Location, listing.LocationsText);
-        var additionalLocations = detail?.AdditionalLocations
+        var additionalLocations = (detail?.AdditionalLocations ?? [])
+            .Concat(listing.AdditionalLocations)
             .Where(location => !string.IsNullOrWhiteSpace(location))
+            .Where(location => !string.Equals(location.Trim(), primaryLocation.Trim(),
+                StringComparison.OrdinalIgnoreCase))
+            .Select(location => location.Trim())
             .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToArray() ?? [];
+            .OrderBy(location => location, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
 
         DateOnly? startDate = null;
         if (!string.IsNullOrWhiteSpace(detail?.StartDate) &&
@@ -520,7 +537,7 @@ public sealed class JobSourceClient
             new Uri(company.PublicSiteUrl.TrimEnd('/') + "/"),
             listing.ExternalPath.TrimStart('/')).ToString();
         var sourceUrl = IsSafeHttpUrl(detail?.ExternalUrl) ? detail!.ExternalUrl : fallbackUrl;
-        var descriptionHtml = detail?.JobDescription ?? "";
+        var descriptionHtml = ProviderHtmlNormalizer.Normalize(detail?.JobDescription);
         var salary = JobAnalysis.AnalyzeSalary(descriptionHtml);
         var remoteLocation = JobAnalysis.AnalyzeRemoteLocation(
             descriptionHtml,
@@ -568,7 +585,9 @@ public sealed class JobSourceClient
             listingFingerprint ?? ListingFingerprint(listing),
             detail is null ? null : DateTimeOffset.UtcNow,
             CurrentAnalysisVersion,
-            true);
+            true,
+            null,
+            listing.IdentityDiscriminator);
     }
 
     public async Task<JobRecord> FetchJobDetailAsync(
@@ -584,7 +603,9 @@ public sealed class JobSourceClient
             PostedOn = cachedOrSummary.PostedOn,
             BulletFields = string.IsNullOrWhiteSpace(cachedOrSummary.RequisitionId)
                 ? []
-                : [cachedOrSummary.RequisitionId]
+                : [cachedOrSummary.RequisitionId],
+            AdditionalLocations = cachedOrSummary.AdditionalLocations.ToList(),
+            IdentityDiscriminator = cachedOrSummary.IdentityDiscriminator
         };
         var detail = await FetchDetailAsync(company, listing.ExternalPath, cancellationToken);
         return Normalize(company, listing, detail, null, ListingFingerprint(listing));
@@ -682,12 +703,22 @@ public sealed class JobSourceClient
             PrimaryLocation = string.IsNullOrWhiteSpace(cached.PrimaryLocation)
                 ? listing.LocationsText
                 : cached.PrimaryLocation,
+            AdditionalLocations = cached.AdditionalLocations
+                .Concat(listing.AdditionalLocations)
+                .Where(location => !string.IsNullOrWhiteSpace(location))
+                .Select(location => location.Trim())
+                .Where(location => !string.Equals(location, cached.PrimaryLocation.Trim(),
+                    StringComparison.OrdinalIgnoreCase))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(location => location, StringComparer.OrdinalIgnoreCase)
+                .ToArray(),
             SourceUrl = string.IsNullOrWhiteSpace(cached.SourceUrl) ? fallbackUrl : cached.SourceUrl,
             ExternalPath = listing.ExternalPath,
             CompanyId = company.Id,
             ListingFingerprint = fingerprint,
             DetailCachedAtUtc = cached.DetailCachedAtUtc ?? DateTimeOffset.UtcNow,
-            IsSourceAvailable = true
+            IsSourceAvailable = true,
+            IdentityDiscriminator = listing.IdentityDiscriminator
         };
     }
 
@@ -699,7 +730,9 @@ public sealed class JobSourceClient
             listing.ExternalPath.Trim(),
             listing.Title.Trim(),
             listing.LocationsText.Trim(),
-            listing.BulletFields.FirstOrDefault()?.Trim() ?? "");
+            listing.BulletFields.FirstOrDefault()?.Trim() ?? "",
+            string.Join('\n', listing.AdditionalLocations.Order(StringComparer.OrdinalIgnoreCase)),
+            listing.IdentityDiscriminator ?? "");
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value)));
     }
 
@@ -759,29 +792,93 @@ public sealed class JobSourceClient
         query = query.Normalize(company);
         var summaryBatch = await FetchSmartRecruitersSummariesAsync(
             company, query.CountryId, cancellationToken);
-        var postings = summaryBatch.Postings;
+        var rawPostings = summaryBatch.Postings
+            .Where(posting => !string.IsNullOrWhiteSpace(posting.Id))
+            .ToArray();
+        var postings = rawPostings
+            .GroupBy(posting => posting.Id.Trim(), StringComparer.Ordinal)
+            .Select(group =>
+            {
+                var ordered = group.OrderBy(SmartRecruitersRecordSignature, StringComparer.Ordinal)
+                    .ThenBy(posting => posting.ReleasedDate, StringComparer.Ordinal)
+                    .ToArray();
+                if (ordered.Length > 1)
+                {
+                    var distinct = ordered.Select(SmartRecruitersRecordSignature)
+                        .Distinct(StringComparer.Ordinal).Count();
+                    _logger.Log(distinct == 1 ? LogLevel.Information : LogLevel.Warning,
+                        "SmartRecruiters returned provider posting {PostingId} {DuplicateCount} times across listing pages with {VariantCount} metadata variants; using the deterministic first record.",
+                        group.Key, ordered.Length, distinct);
+                }
+                return ordered[0];
+            })
+            .ToArray();
         var allowedLocations = query.EffectiveLocationIds(company).ToHashSet(StringComparer.Ordinal);
         var filtered = query.IncludeAllLocations
             ? postings
             : postings.Where(posting => allowedLocations.Contains(
                 SmartRecruitersLocationId(posting.Location))).ToArray();
-        var listings = filtered
-            .Where(posting => !string.IsNullOrWhiteSpace(posting.Id))
-            .GroupBy(posting => posting.Id, StringComparer.Ordinal)
-            .Select(group => group.First())
-            .Select(posting => new ListingPosting
+        var listings = new List<ListingPosting>();
+        foreach (var identityGroup in filtered
+            .GroupBy(posting => string.IsNullOrWhiteSpace(posting.RefNumber)
+                ? $"path:{posting.Id.Trim()}"
+                : $"req:{posting.RefNumber.Trim()}", StringComparer.OrdinalIgnoreCase)
+            .OrderBy(group => group.Key, StringComparer.OrdinalIgnoreCase))
+        {
+            var variants = identityGroup
+                .GroupBy(SmartRecruitersConflictSignature, StringComparer.Ordinal)
+                .OrderBy(group => group.Key, StringComparer.Ordinal)
+                .ToArray();
+            if (variants.Length > 1)
             {
-                Title = posting.Name,
-                ExternalPath = posting.Id,
-                LocationsText = posting.Location.Remote
-                    ? $"{posting.Location.FullLocation} (Remote)"
-                    : posting.Location.FullLocation,
-                PostedOn = posting.ReleasedDate,
-                BulletFields = string.IsNullOrWhiteSpace(posting.RefNumber)
-                    ? []
-                    : [posting.RefNumber]
-            })
-            .ToList();
+                _logger.LogWarning(
+                    "SmartRecruiters provider-data conflict for {Company} identity {Identity}: {PostingCount} postings contain {VariantCount} materially different title/employment variants. All variants will be retained with deterministic company-scoped identities.",
+                    company.DisplayName, identityGroup.Key, identityGroup.Count(), variants.Length);
+            }
+            else if (identityGroup.Count() > 1)
+            {
+                _logger.LogInformation(
+                    "SmartRecruiters returned {PostingCount} equivalent location variants for {Company} identity {Identity}; merging them deterministically.",
+                    identityGroup.Count(), company.DisplayName, identityGroup.Key);
+            }
+
+            for (var variantIndex = 0; variantIndex < variants.Length; variantIndex++)
+            {
+                var members = variants[variantIndex]
+                    .OrderBy(posting => posting.Id.Trim(), StringComparer.Ordinal)
+                    .ToArray();
+                var canonical = members[0];
+                var primaryLocation = SmartRecruitersLocationLabel(canonical);
+                listings.Add(new ListingPosting
+                {
+                    Title = canonical.Name.Trim(),
+                    ExternalPath = canonical.Id.Trim(),
+                    LocationsText = primaryLocation,
+                    AdditionalLocations = members
+                        .Select(SmartRecruitersLocationLabel)
+                        .Where(location => !string.Equals(location, primaryLocation,
+                            StringComparison.OrdinalIgnoreCase))
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .OrderBy(location => location, StringComparer.OrdinalIgnoreCase)
+                        .ToList(),
+                    EquivalentExternalPaths = members
+                        .Select(posting => posting.Id.Trim())
+                        .Where(path => !string.Equals(path, canonical.Id.Trim(), StringComparison.Ordinal))
+                        .Distinct(StringComparer.Ordinal)
+                        .Order(StringComparer.Ordinal)
+                        .ToList(),
+                    PostedOn = members.Select(posting => posting.ReleasedDate)
+                        .OrderByDescending(value => value, StringComparer.Ordinal)
+                        .FirstOrDefault() ?? "",
+                    BulletFields = string.IsNullOrWhiteSpace(canonical.RefNumber)
+                        ? []
+                        : [canonical.RefNumber.Trim()],
+                    IdentityDiscriminator = variantIndex == 0
+                        ? null
+                        : $"path:{canonical.Id.Trim()}"
+                });
+            }
+        }
         reportProgress?.Invoke(new RefreshProgress("listings", listings.Count, listings.Count));
         return new ListingBatch(listings, summaryBatch.Truncated);
     }
@@ -885,6 +982,25 @@ public sealed class JobSourceClient
         location.Remote
             ? $"remote:{location.Country.Trim().ToLowerInvariant()}"
             : $"location:{location.Country.Trim().ToLowerInvariant()}:{location.FullLocation.Trim()}";
+
+    private static string SmartRecruitersLocationLabel(SmartRecruitersPosting posting)
+    {
+        var location = posting.Location.FullLocation.Trim();
+        return posting.Location.Remote ? $"{location} (Remote)" : location;
+    }
+
+    private static string SmartRecruitersConflictSignature(SmartRecruitersPosting posting) =>
+        string.Join('\n',
+            posting.Name.Trim().ToUpperInvariant(),
+            posting.RefNumber.Trim().ToUpperInvariant(),
+            posting.TypeOfEmployment.Label.Trim().ToUpperInvariant());
+
+    private static string SmartRecruitersRecordSignature(SmartRecruitersPosting posting) =>
+        string.Join('\n',
+            SmartRecruitersConflictSignature(posting),
+            posting.Location.Country.Trim().ToUpperInvariant(),
+            posting.Location.FullLocation.Trim().ToUpperInvariant(),
+            posting.Location.Remote ? "REMOTE" : "PHYSICAL");
 
     private static string CountryLabel(SmartRecruitersLocation location)
     {

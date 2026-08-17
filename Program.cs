@@ -361,7 +361,7 @@ app.MapPost("/api/query", async Task<IResult> (
     });
     await stateStore.SaveSettingsAsync(updated);
     runtime.AutomaticChecks.ApplySettings(updated);
-    var snapshot = await runtime.Catalog.RefreshAsync(
+    var snapshot = await runtime.Catalog.SwitchSourceAsync(
         JobSourceQuery.FromSettings(updated, companies), token);
     if (snapshot.Error is null)
     {

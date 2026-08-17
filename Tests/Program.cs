@@ -143,7 +143,12 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Expanded company catalog contains the five selected live sources", TestExpandedCompanyCatalogAsync),
     ("Cross-provider location labels are grouped by U.S. state", TestExpandedLocationGroupingAsync),
     ("SmartRecruiters postings normalize through the generic source client", TestSmartRecruitersSourceAsync),
+    ("SmartRecruiters exact duplicates across pages are deterministic", TestSmartRecruitersCrossPageDuplicateAsync),
+    ("SmartRecruiters location variants merge without identity collisions", TestSmartRecruitersLocationVariantAsync),
+    ("SmartRecruiters conflicting requisitions retain unique identities", TestSmartRecruitersConflictAsync),
+    ("AECOM duplicate requisitions complete a catalog refresh", TestAecomDuplicateRefreshAsync),
     ("Repeated refresh reuses unchanged cached job details", TestRepeatedRefreshCacheReuseAsync),
+    ("Recent company switches use cache while explicit and stale refreshes use providers", TestRecentSourceSwitchAsync),
     ("Changed listing metadata invalidates one cached detail", TestChangedListingInvalidationAsync),
     ("Parser-version changes reclassify cached text without provider download", TestLocalReclassificationAsync),
     ("Large source hydration obeys detail and concurrency bounds", TestBoundedLargeSourceAsync),
@@ -186,6 +191,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Remote detector keeps a sanitized MTM-style remote role neutral", TestMtmRemoteFixtureAsync),
     ("Remote detector recognizes sanitized Boeing frequent-travel language", TestBoeingRemoteFixtureAsync),
     ("Selected-company terminology remains covered by sanitized fixtures", TestExpandedCompanyFixturesAsync),
+    ("Provider HTML normalization preserves parsing and display separators", TestProviderHtmlNormalizationAsync),
     ("Workflow state transitions are canonical and validated", TestWorkflowStateTransitionsAsync),
     ("Workflow state persists through a catalog restart", TestWorkflowStateRoundTripAsync),
     ("Workflow state remains workspace-isolated", TestWorkflowStateWorkspaceIsolationAsync),
@@ -872,7 +878,8 @@ static async Task TestFreshCatalogSourceAsync()
             academics,
             authorization,
             remote,
-            companies);
+            companies,
+            Options.Create(new JobSourceOptions()));
 
         await catalog.InitializeAsync(query);
 
@@ -990,6 +997,163 @@ static async Task TestSmartRecruitersSourceAsync()
         $"SmartRecruiters normalization: company={job.CompanyId}, stable={job.StableId}, url={job.SourceUrl}, pay={job.PayMinimum}-{job.PayMaximum}/{job.PayPeriod}, sponsorship={job.WorkAuthorization?.Sponsorship}, remote={job.RemoteWork?.IsRemoteDesignated}, boilerplate={job.DescriptionHtml.Contains("Generic company", StringComparison.Ordinal)}.");
 }
 
+static async Task TestSmartRecruitersCrossPageDuplicateAsync()
+{
+    var detailRequests = 0;
+    var handler = new StubHttpMessageHandler(request =>
+    {
+        if (!string.IsNullOrEmpty(request.RequestUri!.Query))
+        {
+            return SmartSummaryJson(101, SmartPostingJson(
+                "744000100000001", "Project Analyst", "J-DUP", "Orlando, FL, United States"));
+        }
+        detailRequests++;
+        return SmartDetailJson("744000100000001", "Project Analyst", "J-DUP",
+            "Orlando, FL, United States", "<p>Exact duplicate fixture.</p>");
+    });
+    var result = await FetchAecomAsync(handler);
+    Assert(result.Jobs.Count == 1 && detailRequests == 1 &&
+           result.Jobs.Single().StableId == "aecom:J-DUP",
+        "An exact SmartRecruiters duplicate across listing pages was not removed before detail hydration.");
+}
+
+static async Task TestSmartRecruitersLocationVariantAsync()
+{
+    var detailRequests = 0;
+    var handler = new StubHttpMessageHandler(request =>
+    {
+        if (!string.IsNullOrEmpty(request.RequestUri!.Query))
+        {
+            return SmartSummaryJson(2,
+                SmartPostingJson("744000100000010", "Lead Geologist", "J10156797",
+                    " Bloomfield, New Jersey, United States"),
+                SmartPostingJson("744000100000011", "Lead Geologist", "J10156797",
+                    "Oakland, CA, United States"));
+        }
+        detailRequests++;
+        return SmartDetailJson("744000100000010", "Lead Geologist", "J10156797",
+            " Bloomfield, New Jersey, United States", "<p>Location-variant fixture.</p>");
+    });
+    var result = await FetchAecomAsync(handler);
+    var job = result.Jobs.Single();
+    Assert(job.StableId == "aecom:J10156797" && detailRequests == 1 &&
+           job.PrimaryLocation.Contains("Bloomfield", StringComparison.Ordinal) &&
+           job.AdditionalLocations.Single().Contains("Oakland", StringComparison.Ordinal),
+        "Equivalent requisition location variants were not merged deterministically.");
+}
+
+static async Task TestSmartRecruitersConflictAsync()
+{
+    var handler = new StubHttpMessageHandler(request =>
+    {
+        if (!string.IsNullOrEmpty(request.RequestUri!.Query))
+        {
+            return SmartSummaryJson(2,
+                SmartPostingJson("744000100000020", "Project Engineer", "J-CONFLICT",
+                    "Orlando, FL, United States"),
+                SmartPostingJson("744000100000021", "Program Manager", "J-CONFLICT",
+                    "Orlando, FL, United States"));
+        }
+        var id = request.RequestUri.AbsolutePath.Split('/').Last();
+        var title = id.EndsWith("20", StringComparison.Ordinal)
+            ? "Project Engineer"
+            : "Program Manager";
+        return SmartDetailJson(id, title, "J-CONFLICT", "Orlando, FL, United States",
+            $"<p>{title} materially distinct fixture.</p>");
+    });
+    var result = await FetchAecomAsync(handler);
+    Assert(result.Jobs.Count == 2 &&
+           result.Jobs.Select(job => job.StableId).Distinct(StringComparer.Ordinal).Count() == 2 &&
+           result.Jobs.Any(job => job.StableId == "aecom:J-CONFLICT") &&
+           result.Jobs.Any(job => job.StableId.Contains(":variant:path:", StringComparison.Ordinal)),
+        "Conflicting provider records were discarded or retained with colliding identities.");
+}
+
+static async Task TestAecomDuplicateRefreshAsync()
+{
+    var directory = TestDirectory("aecom-duplicate-refresh");
+    try
+    {
+        var handler = new StubHttpMessageHandler(request =>
+            !string.IsNullOrEmpty(request.RequestUri!.Query)
+                ? SmartSummaryJson(2,
+                    SmartPostingJson("744000100000030", "Lead Geologist", "J10156797",
+                        "Bloomfield, New Jersey, United States"),
+                    SmartPostingJson("744000100000031", "Lead Geologist", "J10156797",
+                        "Oakland, CA, United States"))
+                : SmartDetailJson("744000100000030", "Lead Geologist", "J10156797",
+                    "Bloomfield, New Jersey, United States", "<p>Refresh fixture.</p>"));
+        var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+        var store = new FileWorkspaceDataStore(directory, NullLogger<FileWorkspaceDataStore>.Instance);
+        var state = new AppStateStore(NullLogger<AppStateStore>.Instance, companies, store);
+        var credentials = new CredentialDetector(NullLogger<CredentialDetector>.Instance);
+        var options = Options.Create(new JobSourceOptions());
+        var client = new JobSourceClient(new HttpClient(handler), options,
+            NullLogger<JobSourceClient>.Instance, credentials,
+            new AcademicQualificationDetector(), new WorkAuthorizationDetector(),
+            new RemoteWorkDetector());
+        var catalog = new JobCatalog(client, state, NullLogger<JobCatalog>.Instance,
+            credentials, new AcademicQualificationDetector(), new WorkAuthorizationDetector(),
+            new RemoteWorkDetector(), companies, options);
+        var query = AecomQuery();
+        await catalog.InitializeAsync(query);
+        var snapshot = await catalog.RefreshAsync(query);
+        Assert(snapshot.Error is null && snapshot.Jobs.Count == 1 &&
+               snapshot.Jobs.Single().StableId == "aecom:J10156797",
+            $"AECOM duplicate requisition refresh failed: {snapshot.Error}");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, true);
+    }
+}
+
+static Task<JobSourceFetchResult> FetchAecomAsync(HttpMessageHandler handler)
+{
+    var catalog = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+    return CreateSourceClient(new HttpClient(handler)).FetchAllJobsAsync(
+        catalog.Get("aecom"), AecomQuery());
+}
+
+static JobSourceQuery AecomQuery() =>
+    new("us", "United States", false, true, [], CompanyId: "aecom");
+
+static string SmartSummaryJson(int totalFound, params string[] postings) =>
+    $"{{\"totalFound\":{totalFound},\"content\":[{string.Join(',', postings)}]}}";
+
+static string SmartPostingJson(string id, string title, string requisition, string location) =>
+    JsonSerializer.Serialize(new
+    {
+        id,
+        name = title,
+        refNumber = requisition,
+        releasedDate = "2026-08-15T12:30:00Z",
+        location = new { city = "", region = "", country = "us", remote = true,
+            hybrid = false, fullLocation = location },
+        typeOfEmployment = new { label = "Full-time" }
+    });
+
+static string SmartDetailJson(
+    string id, string title, string requisition, string location, string description) =>
+    JsonSerializer.Serialize(new
+    {
+        id,
+        name = title,
+        refNumber = requisition,
+        releasedDate = "2026-08-15T12:30:00Z",
+        postingUrl = $"https://jobs.smartrecruiters.com/AECOM2/{id}",
+        location = new { city = "", region = "", country = "us", remote = true,
+            hybrid = false, fullLocation = location },
+        typeOfEmployment = new { label = "Full-time" },
+        jobAd = new { sections = new
+        {
+            companyDescription = new { title = "Company", text = "" },
+            jobDescription = new { title = "Job Description", text = description },
+            qualifications = new { title = "Qualifications", text = "" },
+            additionalInformation = new { title = "Additional Information", text = "" }
+        }}
+    });
+
 static async Task TestRepeatedRefreshCacheReuseAsync()
 {
     var handler = CreateWorkdayHandler(() => 3);
@@ -1003,6 +1167,97 @@ static async Task TestRepeatedRefreshCacheReuseAsync()
         "An unchanged repeated refresh downloaded cached descriptions again.");
     Assert(second.Metrics is { DetailRequests: 0, CacheHits: 3, CacheMisses: 0 },
         "Repeated-refresh cache metrics did not report complete reuse.");
+}
+
+static async Task TestRecentSourceSwitchAsync()
+{
+    var directory = TestDirectory("recent-source-switch");
+    try
+    {
+        var handler = CreateWorkdayHandler(() => 3);
+        var client = CreateSourceClient(new HttpClient(handler));
+        var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+        var (_, baseQuery) = WorkdaySource();
+        var northropQuery = baseQuery with { CompanyId = "northrop-grumman" };
+        var hydrated = await client.FetchAllJobsAsync(
+            companies.Get("northrop-grumman"), northropQuery);
+        var (catalog, store, stateStore) = await CreateTestCatalogAsync(
+            directory, handler, hydrated.Jobs, northropQuery);
+        var northrop = await catalog.RefreshAsync(northropQuery);
+        var nvidiaQuery = northropQuery with { CompanyId = "nvidia" };
+        var rtxQuery = northropQuery with { CompanyId = "rtx" };
+        store.Diagnostics.Reset();
+        var nvidia = await catalog.RefreshAsync(nvidiaQuery);
+        var nvidiaIo = store.Diagnostics.Snapshot();
+        store.Diagnostics.Reset();
+        var rtx = await catalog.RefreshAsync(rtxQuery);
+        var rtxIo = store.Diagnostics.Snapshot();
+        Console.WriteLine(
+            $"METRIC Northrop listing={northrop.Metrics?.ListingsFetched} details={northrop.Metrics?.DetailRequests} reused={northrop.Metrics?.CacheHits}; " +
+            $"NVIDIA listing={nvidia.Metrics?.ListingsFetched} details={nvidia.Metrics?.DetailRequests} writes={nvidiaIo.Writes} bytes={nvidiaIo.BytesWritten}; " +
+            $"RTX listing={rtx.Metrics?.ListingsFetched} details={rtx.Metrics?.DetailRequests} writes={rtxIo.Writes} bytes={rtxIo.BytesWritten}");
+
+        var listingBeforeReturn = handler.ListingRequests;
+        var detailsBeforeReturn = handler.DetailRequests;
+        store.Diagnostics.Reset();
+        var cachedReturn = await catalog.SwitchSourceAsync(northropQuery);
+        var cachedIo = store.Diagnostics.Snapshot();
+        Console.WriteLine(
+            $"METRIC Northrop->NVIDIA->RTX->Northrop return-listings=0 return-details=0 cache-reads={cachedIo.Reads} " +
+            $"cache-writes={cachedIo.Writes} jobs={cachedReturn.Jobs.Count} elapsed-ms={cachedReturn.Metrics?.ElapsedMilliseconds}");
+        Assert(handler.ListingRequests == listingBeforeReturn &&
+               handler.DetailRequests == detailsBeforeReturn && cachedIo.Reads == 2 &&
+               cachedIo.Writes == 0 && cachedReturn.IsCached &&
+               cachedReturn.Metrics is { ListingsFetched: 0, DetailRequests: 0, CacheHits: 3 },
+            "Returning to a recent company cache performed provider requests or persistence writes.");
+
+        store.Diagnostics.Reset();
+        await catalog.RefreshAsync(northropQuery);
+        Assert(handler.ListingRequests == listingBeforeReturn + 1 &&
+               handler.DetailRequests == detailsBeforeReturn &&
+               store.Diagnostics.Snapshot().Writes == 1,
+            "Explicit Refresh did not remain distinct from a cached source switch.");
+
+        var repeatListings = handler.ListingRequests;
+        var repeatDetails = handler.DetailRequests;
+        await catalog.SwitchSourceAsync(nvidiaQuery);
+        await catalog.SwitchSourceAsync(rtxQuery);
+        await catalog.SwitchSourceAsync(northropQuery);
+        Assert(handler.ListingRequests == repeatListings && handler.DetailRequests == repeatDetails,
+            "The repeated NVIDIA/RTX/Northrop switch sequence did not remain cache-only.");
+
+        await catalog.SwitchSourceAsync(rtxQuery);
+        await stateStore.SaveSourceStatusAsync(northropQuery,
+            DateTimeOffset.UtcNow.AddMinutes(-16), 0, null);
+        var listingsBeforeStale = handler.ListingRequests;
+        await catalog.SwitchSourceAsync(northropQuery);
+        Assert(handler.ListingRequests == listingsBeforeStale + 1,
+            "A stale source cache bypassed the conservative provider freshness check.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, true);
+    }
+}
+
+static Task TestProviderHtmlNormalizationAsync()
+{
+    const string northrop = "RELOCATION ASSISTANCE: No relocation assistance available" +
+        "<p style=\"text-align:inherit\"></p><p style=\"text-align:inherit\"></p>" +
+        "CLEARANCE REQUIRED FOR START: No<p></p>CLEARANCE TYPE: Secret<p></p>" +
+        "TRAVEL: Yes, 75% of the Time";
+    const string rtx = "2026-08-14&amp;#xa;&amp;#xa;United States of America&#10;&#xA;";
+    var normalizedNorthrop = ProviderHtmlNormalizer.Normalize(northrop);
+    var normalizedRtx = ProviderHtmlNormalizer.Normalize(rtx);
+    var clearance = JobAnalysis.AnalyzeClearance(normalizedNorthrop);
+    Assert(normalizedNorthrop.Contains("available<br>CLEARANCE", StringComparison.Ordinal) &&
+           normalizedNorthrop.Contains("No<br>CLEARANCE TYPE", StringComparison.Ordinal) &&
+           normalizedNorthrop.Contains("Secret<br>TRAVEL", StringComparison.Ordinal) &&
+           !normalizedRtx.Contains("&#", StringComparison.Ordinal) &&
+           normalizedRtx.Contains("2026-08-14<br><br>United States", StringComparison.Ordinal) &&
+           clearance.Level == "secret",
+        "Provider HTML artifacts remained visible or normalization stopped feeding classification correctly.");
+    return Task.CompletedTask;
 }
 
 static async Task TestChangedListingInvalidationAsync()
@@ -2227,7 +2482,8 @@ static async Task<(JobCatalog Catalog, FileWorkspaceDataStore Store, AppStateSto
         academics,
         authorization,
         remote,
-        companies);
+        companies,
+        Options.Create(new JobSourceOptions()));
     await catalog.InitializeAsync(query);
     return (catalog, store, state);
 }
@@ -2304,7 +2560,8 @@ static async Task<(JobCatalog Catalog, AppStateStore State, JobRecord Job)> Crea
         academics,
         authorization,
         remote,
-        companyCatalog);
+        companyCatalog,
+        Options.Create(new JobSourceOptions()));
     await catalog.InitializeAsync(query);
     return (catalog, state, job);
 }

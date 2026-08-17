@@ -12,6 +12,13 @@
   const TEXT_NODE = 3;
   const BLOCK_TAGS = new Set(["ADDRESS", "ARTICLE", "DIV", "H1", "H2", "H3", "H4", "P", "SECTION"]);
 
+  function normalizeHtml(value) {
+    return String(value || "")
+      .replace(/&(?:amp;)*#(?:x0*a|0*10);/gi, "<br>")
+      .replace(/(?:<p\b[^>]*>\s*(?:&nbsp;)?\s*<\/p>\s*)+/gi, "<br>")
+      .replace(/(?:\s*<br\s*\/?>){3,}/gi, "<br><br>");
+  }
+
   function toPlainText(root) {
     if (!root) {
       return "";
@@ -109,5 +116,5 @@
     return value.replace(/^\n+|\n+$/g, "").replace(/\n{3,}/g, "\n\n");
   }
 
-  return { toPlainText };
+  return { normalizeHtml, toPlainText };
 });

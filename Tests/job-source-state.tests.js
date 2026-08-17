@@ -120,6 +120,23 @@ const tests = [
       "settings", "jobs", true, applied, pending), "guard");
     assert.equal(sourceState.navigationDecision(
       "jobs", "jobs", true, applied, pending), "allow");
+  }],
+  ["discard restores pending company, location, and remote fields without refresh", () => {
+    const plan = sourceState.discardPlan(true, applied);
+    assert.deepEqual(plan.editable, sourceState.normalize(applied));
+    assert.equal(plan.refreshProvider, false);
+    assert.equal(plan.navigateTo, "jobs");
+    assert.equal(sourceState.areEquivalent(applied, plan.editable), true);
+  }],
+  ["discard is unavailable without a currently applied source", () => {
+    assert.equal(sourceState.discardPlan(false, applied), null);
+  }],
+  ["only the latest company metadata response may update source controls", () => {
+    const nvidia = { generation: 4, companyId: "nvidia", aborted: false };
+    const rtx = { generation: 5, companyId: "rtx", aborted: false };
+    assert.equal(sourceState.isCurrentRequest(nvidia, 5, "rtx"), false);
+    assert.equal(sourceState.isCurrentRequest(rtx, 5, "rtx"), true);
+    assert.equal(sourceState.isCurrentRequest({ ...rtx, aborted: true }, 5, "rtx"), false);
   }]
 ];
 

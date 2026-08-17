@@ -159,6 +159,36 @@ if ($index -match 'id="job-search-heading"' -or $index -match 'id="qualification
     throw "A redundant top-level Settings panel heading is still present."
 }
 
+foreach ($requiredId in @(
+    "source-confirmation-stay",
+    "source-confirmation-discard",
+    "source-confirmation-apply",
+    "source-loading-overlay",
+    "source-loading-title",
+    "source-loading-phase")) {
+    if ($index -notmatch "id=`"$requiredId`"") {
+        throw "Source confirmation/loading UX is missing $requiredId."
+    }
+}
+$discardHandler = [regex]::Match(
+    $app,
+    '(?s)async function discardPendingSourceAndGoToJobs\(\).*?\n}')
+if (-not $discardHandler.Success -or
+    $discardHandler.Value -match '/api/(?:query|refresh)' -or
+    $app -notmatch 'sourceConfirmationDiscard\.hidden\s*=\s*!state\.hasConfiguredSource' -or
+    $app -notmatch 'sourceRequestGeneration' -or
+    $app -notmatch 'sourceAbortController' -or
+    $app -notmatch 'isCurrentSourceRequest') {
+    throw "Source discard or stale-response protection is incomplete."
+}
+if ($app.IndexOf('JobPostingText.normalizeHtml(job.descriptionHtml)') -lt 0 -or
+    $app.IndexOf('DOMPurify.sanitize(normalizedHtml') -lt 0 -or
+    $app.IndexOf('DOMPurify.sanitize(normalizedHtml') -lt
+        $app.IndexOf('JobPostingText.normalizeHtml(job.descriptionHtml)') -or
+    $app -notmatch 'FORBID_TAGS:\s*\["script"') {
+    throw "Posting normalization must remain ahead of the strict HTML sanitizer."
+}
+
 $jobSearchStart = $index.IndexOf('id="job-search-settings-panel"')
 $qualificationsStart = $index.IndexOf('id="qualifications-settings-panel"')
 $preferencesStart = $index.IndexOf('id="preferences-settings-panel"')
@@ -262,3 +292,5 @@ Write-Output "Settings tab structure audit: PASS"
 Write-Output "HTML ID uniqueness audit: PASS"
 Write-Output "Browser icon/manifest audit: PASS"
 Write-Output "Bandwidth-efficient polling audit: PASS"
+Write-Output "Source modal/loading race audit: PASS"
+Write-Output "Posting normalization/sanitization order audit: PASS"

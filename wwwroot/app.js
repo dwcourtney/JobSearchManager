@@ -80,6 +80,13 @@ const state = {
   overlayHideTimer: null,
   copyFeedbackTimer: null,
   focusBeforeLoading: null,
+  sourceMetadataLoading: false,
+  sourceRequestGeneration: 0,
+  sourceAbortController: null,
+  sourceOverlayShowTimer: null,
+  sourceOverlayHideTimer: null,
+  focusBeforeSourceLoading: null,
+  sourceFacetCache: new Map(),
   sourceConfirmationOpen: false,
   sourceConfirmationMode: null,
   sourceConfirmationHideTimer: null,
@@ -153,6 +160,9 @@ const elements = {
   loadingTitle: document.querySelector("#loading-title"),
   loadingPhase: document.querySelector("#loading-phase"),
   loadingNote: document.querySelector("#loading-note"),
+  sourceLoadingOverlay: document.querySelector("#source-loading-overlay"),
+  sourceLoadingTitle: document.querySelector("#source-loading-title"),
+  sourceLoadingPhase: document.querySelector("#source-loading-phase"),
   sourceConfirmationOverlay: document.querySelector("#source-confirmation-overlay"),
   sourceConfirmationTitle: document.querySelector("#source-confirmation-title"),
   sourceConfirmationCopy: document.querySelector("#source-confirmation-copy"),
@@ -161,6 +171,7 @@ const elements = {
   sourceConfirmationPending: document.querySelector("#source-confirmation-pending"),
   sourceConfirmationQuestion: document.querySelector("#source-confirmation-question"),
   sourceConfirmationStay: document.querySelector("#source-confirmation-stay"),
+  sourceConfirmationDiscard: document.querySelector("#source-confirmation-discard"),
   sourceConfirmationApply: document.querySelector("#source-confirmation-apply"),
   resetWorkspaceButton: document.querySelector("#reset-workspace-button"),
   resetConfirmationOverlay: document.querySelector("#reset-confirmation-overlay"),
@@ -252,8 +263,10 @@ async function initialize() {
     phaseText: "Loading saved settings and job data…"
   });
   elements.loadingOverlay.addEventListener("keydown", constrainLoadingFocus);
+  elements.sourceLoadingOverlay.addEventListener("keydown", constrainSourceLoadingFocus);
   elements.sourceConfirmationOverlay.addEventListener("keydown", constrainSourceConfirmationFocus);
   elements.sourceConfirmationStay.addEventListener("click", handleSourceConfirmationSecondary);
+  elements.sourceConfirmationDiscard.addEventListener("click", discardPendingSourceAndGoToJobs);
   elements.sourceConfirmationApply.addEventListener("click", applyPendingSourceAndGoToJobs);
   elements.resetWorkspaceButton.addEventListener("click", showResetConfirmation);
   elements.resetConfirmationCancel.addEventListener("click", () => closeResetConfirmation(true));
@@ -962,16 +975,19 @@ async function companySelectionChanged() {
     await hydrateSourceControls();
     return;
   }
+  const request = beginSourceMetadataLoad(companyId);
   state.facetsLoaded = false;
   updateQueryControls();
   try {
     const response = await fetch(`/api/source/${encodeURIComponent(companyId)}`, {
-      cache: "no-store"
+      cache: "no-store",
+      signal: request.signal
     });
     if (!response.ok) {
       throw new Error(`Company source returned HTTP ${response.status}.`);
     }
     const result = await response.json();
+    if (!isCurrentSourceRequest(request)) return;
     const source = result.source || {};
     const country = normalizeFacetSelection(source.country, ALL_COUNTRIES_LABEL);
     await loadLocationFacets(
@@ -979,10 +995,14 @@ async function companySelectionChanged() {
       country.id,
       source.selectedPhysicalLocations || [],
       source.includeAllLocations === true,
-      source.includeRemote === true);
+      source.includeRemote === true,
+      request);
   } catch (error) {
+    if (error?.name === "AbortError" || !isCurrentSourceRequest(request)) return;
     elements.errorBanner.textContent = `Company source could not be loaded: ${error.message || error}`;
     elements.errorBanner.hidden = false;
+  } finally {
+    endSourceMetadataLoad(request);
   }
 }
 
@@ -1019,7 +1039,10 @@ async function loadLocationFacets(
   countryId,
   selectedLocations = [],
   includeAll = false,
-  includeRemote = false) {
+  includeRemote = false,
+  existingRequest = null) {
+  const request = existingRequest || beginSourceMetadataLoad(companyId);
+  const ownsRequest = existingRequest === null;
   state.facetsLoaded = false;
   let loaded = false;
   updateQueryControls();
@@ -1028,11 +1051,21 @@ async function loadLocationFacets(
     const parameters = new URLSearchParams();
     parameters.set("companyId", companyId);
     if (countryId) parameters.set("countryId", countryId);
-    const response = await fetch(`/api/location-facets?${parameters}`, { cache: "no-store" });
-    if (!response.ok) {
-      throw new Error(await apiErrorMessage(response, "Location choices could not be loaded."));
+    const cacheKey = `${companyId}|${countryId || ""}`;
+    let facets = state.sourceFacetCache.get(cacheKey);
+    if (!facets) {
+      const response = await fetch(`/api/location-facets?${parameters}`, {
+        cache: "no-store",
+        signal: request.signal
+      });
+      if (!response.ok) {
+        throw new Error(await apiErrorMessage(response, "Location choices could not be loaded."));
+      }
+      facets = await response.json();
+      if (!isCurrentSourceRequest(request)) return;
+      state.sourceFacetCache.set(cacheKey, facets);
     }
-    const facets = await response.json();
+    if (!isCurrentSourceRequest(request) || elements.companySelect.value !== companyId) return;
     populateCountrySelect(
       elements.countrySelect,
       facets.countries || [],
@@ -1051,12 +1084,16 @@ async function loadLocationFacets(
     updateSelectedLocationSummary();
     loaded = true;
   } catch (error) {
+    if (error?.name === "AbortError" || !isCurrentSourceRequest(request)) return;
     elements.facetStatus.textContent = `Location choices unavailable: ${error.message || error}`;
     elements.errorBanner.textContent = elements.facetStatus.textContent;
     elements.errorBanner.hidden = false;
   } finally {
-    state.facetsLoaded = loaded;
-    updateQueryControls();
+    if (isCurrentSourceRequest(request)) {
+      state.facetsLoaded = loaded;
+      updateQueryControls();
+    }
+    if (ownsRequest) endSourceMetadataLoad(request);
   }
 }
 
@@ -1084,13 +1121,17 @@ function populateCountrySelect(select, options, allLabel, selectedId) {
 
 async function countrySelectionChanged() {
   const countryId = elements.countrySelect.value || null;
+  const companyId = elements.companySelect.value;
+  const request = beginSourceMetadataLoad(companyId);
   await loadLocationFacets(
-    elements.companySelect.value,
+    companyId,
     countryId,
     [],
     true,
-    true);
-  updateQueryControls();
+    true,
+    request);
+  endSourceMetadataLoad(request);
+  if (isCurrentSourceRequest(request)) updateQueryControls();
 }
 
 function selectedFacet(select, allLabel) {
@@ -1307,6 +1348,7 @@ function showSourceConfirmation() {
   elements.sourceConfirmationPending.textContent = pendingSourceDescription();
   elements.sourceConfirmationQuestion.hidden = false;
   elements.sourceConfirmationStay.textContent = "Stay in Settings";
+  elements.sourceConfirmationDiscard.hidden = !state.hasConfiguredSource;
   elements.sourceConfirmationApply.hidden = false;
   openSourceConfirmation(elements.sourceConfirmationApply);
 }
@@ -1323,6 +1365,7 @@ function showSourceRequired() {
   elements.sourceConfirmationComparison.hidden = true;
   elements.sourceConfirmationQuestion.hidden = true;
   elements.sourceConfirmationStay.textContent = "Go to Job Source";
+  elements.sourceConfirmationDiscard.hidden = true;
   elements.sourceConfirmationApply.hidden = true;
   openSourceConfirmation(elements.sourceConfirmationStay);
 }
@@ -1357,7 +1400,8 @@ function closeSourceConfirmation(restoreFocus) {
   state.sourceConfirmationMode = null;
   elements.sourceConfirmationOverlay.classList.remove("visible");
   elements.sourceConfirmationOverlay.setAttribute("aria-hidden", "true");
-  elements.appShell.inert = state.isRefreshing || state.resetConfirmationOpen;
+  elements.appShell.inert = state.isRefreshing || state.sourceMetadataLoading ||
+    state.resetConfirmationOpen;
   state.sourceConfirmationHideTimer = setTimeout(() => {
     if (!state.sourceConfirmationOpen) elements.sourceConfirmationOverlay.hidden = true;
   }, OVERLAY_TRANSITION_MS);
@@ -1377,7 +1421,7 @@ async function applyPendingSourceAndGoToJobs() {
 }
 
 function updateQueryControls() {
-  const disabled = !state.facetsLoaded || state.isRefreshing;
+  const disabled = !state.facetsLoaded || state.isRefreshing || state.sourceMetadataLoading;
   elements.companySelect.disabled = state.isRefreshing;
   elements.countrySelect.disabled = disabled;
   elements.includeAllLocations.disabled = disabled;
@@ -1591,6 +1635,15 @@ function removeKeyword(kind, index) {
   renderResults();
   refreshDescriptionMatches();
   queueSettingsSave();
+}
+
+async function discardPendingSourceAndGoToJobs() {
+  if (!state.hasConfiguredSource) return;
+  closeSourceConfirmation(false);
+  state.pendingImportedSource = null;
+  elements.companySelect.value = state.companyId;
+  await hydrateSourceControls();
+  showView("jobs", true, { bypassSourceGuard: true });
 }
 
 function queueSettingsSave() {
@@ -2878,7 +2931,8 @@ function renderDetail(job) {
     return;
   }
 
-  const cleanHtml = DOMPurify.sanitize(job.descriptionHtml, {
+  const normalizedHtml = JobPostingText.normalizeHtml(job.descriptionHtml);
+  const cleanHtml = DOMPurify.sanitize(normalizedHtml, {
     ALLOWED_TAGS: ["a", "b", "br", "div", "em", "h1", "h2", "h3", "h4", "i", "li", "ol", "p", "span", "strong", "u", "ul"],
     ALLOWED_ATTR: ["href", "title"],
     ALLOW_DATA_ATTR: false,
@@ -3579,7 +3633,8 @@ function setLoading(isLoading, options = {}) {
     });
   } else {
     clearTimeout(state.refreshProgressTimer);
-    elements.appShell.inert = state.sourceConfirmationOpen || state.resetConfirmationOpen;
+    elements.appShell.inert = state.sourceMetadataLoading ||
+      state.sourceConfirmationOpen || state.resetConfirmationOpen;
     elements.loadingOverlay.classList.remove("visible");
     elements.loadingOverlay.setAttribute("aria-hidden", "true");
     state.overlayHideTimer = setTimeout(() => {
@@ -3591,6 +3646,67 @@ function setLoading(isLoading, options = {}) {
     state.focusBeforeLoading = null;
     state.loadingTitle = `Loading ${state.companyName} jobs`;
   }
+  updateQueryControls();
+}
+
+function beginSourceMetadataLoad(companyId) {
+  state.sourceAbortController?.abort();
+  const controller = new AbortController();
+  const request = {
+    generation: ++state.sourceRequestGeneration,
+    companyId,
+    signal: controller.signal
+  };
+  state.sourceAbortController = controller;
+  state.sourceMetadataLoading = true;
+  clearTimeout(state.sourceOverlayShowTimer);
+  clearTimeout(state.sourceOverlayHideTimer);
+  const company = companyById(companyId);
+  elements.sourceLoadingTitle.textContent =
+    `Loading ${company?.displayName || "job source"} job source`;
+  elements.sourceLoadingPhase.textContent =
+    "Retrieving available countries and locationsâ€¦";
+  state.sourceOverlayShowTimer = setTimeout(() => {
+    if (!isCurrentSourceRequest(request)) return;
+    if (document.activeElement !== document.body) {
+      state.focusBeforeSourceLoading = document.activeElement;
+    }
+    elements.appShell.inert = true;
+    elements.sourceLoadingOverlay.hidden = false;
+    elements.sourceLoadingOverlay.setAttribute("aria-hidden", "false");
+    requestAnimationFrame(() => {
+      if (!isCurrentSourceRequest(request)) return;
+      elements.sourceLoadingOverlay.classList.add("visible");
+      elements.sourceLoadingOverlay.focus({ preventScroll: true });
+    });
+  }, OVERLAY_TRANSITION_MS);
+  updateQueryControls();
+  return request;
+}
+
+function isCurrentSourceRequest(request) {
+  return JobSourceState.isCurrentRequest(
+    request ? { ...request, aborted: request.signal.aborted } : null,
+    state.sourceRequestGeneration,
+    elements.companySelect.value);
+}
+
+function endSourceMetadataLoad(request) {
+  if (!isCurrentSourceRequest(request)) return;
+  clearTimeout(state.sourceOverlayShowTimer);
+  state.sourceMetadataLoading = false;
+  state.sourceAbortController = null;
+  elements.sourceLoadingOverlay.classList.remove("visible");
+  elements.sourceLoadingOverlay.setAttribute("aria-hidden", "true");
+  elements.appShell.inert = state.isRefreshing ||
+    state.sourceConfirmationOpen || state.resetConfirmationOpen;
+  state.sourceOverlayHideTimer = setTimeout(() => {
+    if (!state.sourceMetadataLoading) elements.sourceLoadingOverlay.hidden = true;
+  }, OVERLAY_TRANSITION_MS);
+  if (state.focusBeforeSourceLoading?.isConnected) {
+    state.focusBeforeSourceLoading.focus({ preventScroll: true });
+  }
+  state.focusBeforeSourceLoading = null;
   updateQueryControls();
 }
 
@@ -3669,6 +3785,13 @@ function constrainLoadingFocus(event) {
   }
 }
 
+function constrainSourceLoadingFocus(event) {
+  if (event.key === "Tab") {
+    event.preventDefault();
+    elements.sourceLoadingOverlay.focus({ preventScroll: true });
+  }
+}
+
 function constrainSourceConfirmationFocus(event) {
   if (event.key === "Escape") {
     event.preventDefault();
@@ -3676,7 +3799,8 @@ function constrainSourceConfirmationFocus(event) {
     return;
   }
   if (event.key !== "Tab") return;
-  const focusable = [elements.sourceConfirmationStay, elements.sourceConfirmationApply]
+  const focusable = [elements.sourceConfirmationStay, elements.sourceConfirmationDiscard,
+    elements.sourceConfirmationApply]
     .filter(control => !control.hidden && !control.disabled);
   const currentIndex = focusable.indexOf(document.activeElement);
   const nextIndex = event.shiftKey

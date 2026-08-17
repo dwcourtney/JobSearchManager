@@ -1,7 +1,7 @@
 "use strict";
 
 const assert = require("node:assert/strict");
-const { toPlainText } = require("../wwwroot/job-posting-text.js");
+const { normalizeHtml, toPlainText } = require("../wwwroot/job-posting-text.js");
 
 const TEXT_NODE = 3;
 const ELEMENT_NODE = 1;
@@ -52,6 +52,27 @@ const tests = [
     root.clientHeight = 1;
     root.scrollHeight = 1000;
     assert.equal(toPlainText(root), "Visible opening.\n\nMiddle content.\n\nOff-screen closing content.");
+  }],
+  ["Northrop empty spacer paragraphs preserve adjacent metadata fields", () => {
+    const source = "RELOCATION ASSISTANCE: No<p style=\"text-align:inherit\"></p>" +
+      "<p style=\"text-align:inherit\"></p>CLEARANCE REQUIRED FOR START: No" +
+      "<p></p>CLEARANCE TYPE: Secret<p></p>TRAVEL: Yes, 75% of the Time";
+    const normalized = normalizeHtml(source);
+    assert.match(normalized, /No<br>CLEARANCE REQUIRED/);
+    assert.match(normalized, /No<br>CLEARANCE TYPE/);
+    assert.match(normalized, /Secret<br>TRAVEL/);
+  }],
+  ["RTX encoded numeric newlines become bounded breaks", () => {
+    const normalized = normalizeHtml(
+      "2026-08-14&amp;#xa;&amp;#xA;&#10;&#xa;United States of America");
+    assert.equal(normalized, "2026-08-14<br><br>United States of America");
+    assert.doesNotMatch(normalized, /&#(?:x?a|10);/i);
+  }],
+  ["meaningful paragraphs, lists, named entities, and unsafe markup are preserved for sanitization", () => {
+    const source = "<p>Research &amp; Development</p><ul><li>One</li></ul>" +
+      "<script>alert(1)</script>";
+    const normalized = normalizeHtml(source);
+    assert.equal(normalized, source);
   }]
 ];
 

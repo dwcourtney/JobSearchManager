@@ -314,10 +314,14 @@ internal sealed partial class PortableWorkspaceService
         {
             throw new WorkspaceImportException("A curated job contains an invalid workflow state.");
         }
+        var providerPathIsValid = _companies.TryGet(job.CompanyId, out var company) &&
+            company.IsSmartRecruiters
+                ? job.ExternalPath.All(char.IsDigit)
+                : job.ExternalPath.StartsWith("/", StringComparison.Ordinal);
         if (string.IsNullOrWhiteSpace(job.StableId) || job.StableId.Length > 600 ||
             !job.StableId.StartsWith(job.CompanyId + ":", StringComparison.Ordinal) ||
             string.IsNullOrWhiteSpace(job.ExternalPath) || job.ExternalPath.Length > 1000 ||
-            !job.ExternalPath.StartsWith("/", StringComparison.Ordinal) ||
+            !providerPathIsValid ||
             job.RequisitionId.Length > 300)
         {
             throw new WorkspaceImportException("A curated job contains an invalid company-scoped identity.");
@@ -325,7 +329,9 @@ internal sealed partial class PortableWorkspaceService
         var expected = string.IsNullOrWhiteSpace(job.RequisitionId)
             ? $"{job.CompanyId}:path:{job.ExternalPath}"
             : $"{job.CompanyId}:{job.RequisitionId}";
-        if (!string.Equals(job.StableId, expected, StringComparison.Ordinal))
+        var deterministicVariant = $"{expected}:variant:path:{job.ExternalPath.Trim('/')}";
+        if (!string.Equals(job.StableId, expected, StringComparison.Ordinal) &&
+            !string.Equals(job.StableId, deterministicVariant, StringComparison.Ordinal))
         {
             throw new WorkspaceImportException(
                 "A curated job's stable identity does not match its company and requisition ID.");

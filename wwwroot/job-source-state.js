@@ -70,10 +70,26 @@
     return areEquivalent(applied, editable, options) ? "allow" : "guard";
   }
 
+  function discardPlan(hasAppliedSource, applied, options = {}) {
+    if (!hasAppliedSource) return null;
+    return {
+      editable: normalize(applied, options),
+      refreshProvider: false,
+      navigateTo: "jobs"
+    };
+  }
+
+  function isCurrentRequest(request, generation, selectedCompanyId) {
+    return Boolean(request) && request.generation === generation &&
+      request.companyId === selectedCompanyId && request.aborted !== true;
+  }
+
   return {
     normalize,
     areEquivalent,
     hasValidSelection,
-    navigationDecision
+    navigationDecision,
+    discardPlan,
+    isCurrentRequest
   };
 });

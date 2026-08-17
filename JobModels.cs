@@ -12,6 +12,7 @@ public sealed class JobSourceOptions
     public int MaximumAutomaticDetailRequests { get; init; } = 50;
     public int MaximumRevalidationsPerRefresh { get; init; } = 25;
     public int DetailReuseHours { get; init; } = 168;
+    public int SourceSwitchCacheFreshnessMinutes { get; init; } = 15;
 }
 
 public static class FacetDefaults
@@ -215,11 +216,15 @@ public sealed record JobRecord(
     int AnalysisVersion = 0,
     bool IsSourceAvailable = true,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    string? CompressedDescriptionHtml = null)
+    string? CompressedDescriptionHtml = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? IdentityDiscriminator = null)
 {
     public string StableId => $"{CompanyId}:{(!string.IsNullOrWhiteSpace(RequisitionId)
         ? RequisitionId
-        : $"path:{ExternalPath}")}";
+        : $"path:{ExternalPath}")}{(string.IsNullOrWhiteSpace(IdentityDiscriminator)
+            ? ""
+            : $":variant:{IdentityDiscriminator}")}";
 }
 
 public sealed record CredentialMatch(
@@ -704,6 +709,9 @@ internal sealed class ListingPosting
     public string LocationsText { get; init; } = "";
     public string PostedOn { get; init; } = "";
     public List<string> BulletFields { get; init; } = [];
+    public List<string> AdditionalLocations { get; init; } = [];
+    public List<string> EquivalentExternalPaths { get; init; } = [];
+    public string? IdentityDiscriminator { get; init; }
 }
 
 internal sealed class DetailResponse
