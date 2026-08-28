@@ -32,7 +32,7 @@ assert.match(index, /education-fit\.js\?v=2/);
 assert.match(index, /credential-fit\.js\?v=2/);
 assert.match(index, /clearance-fit\.js\?v=1/);
 assert.match(index, /job-unseen-state\.js\?v=1/);
-assert.match(index, /job-fit\.js\?v=1/);
+assert.match(index, /job-fit\.js\?v=2/);
 assert.match(index, /app\.js\?v=22/);
 assert.doesNotMatch(app, /badges\.append\((?:unseenIndicator|newBadge)\)/);
 
