@@ -134,14 +134,16 @@ Questionable detection is shown in a dedicated **Deployment / Location
 Requirement** section in At a Glance with the preserved posting evidence.
 
 Settings > Job Fit provides optional workspace-specific suitability scoring. It is
-disabled by default for new and existing workspaces. When enabled, users select only
-canonical concepts from `JobConceptCatalog.json` and assign named positive or
-negative preferences; arbitrary Job Fit keywords cannot be entered. Concept evidence
+disabled by default for new and existing workspaces. When enabled, users rate every
+canonical concept from `JobConceptCatalog.json` as Hard Conflict, Strong Negative,
+Neutral, Positive, or Strong Positive; arbitrary Job Fit keywords cannot be entered. Concept evidence
 is detected during normal ingestion or cache reclassification and stored with each
 job. The versioned catalog currently provides 76 job-level concepts grouped as Work
 Arrangement, Role Type / Career Direction, Technical Domain, Work Environment, and
-Responsibility Shape. Configured concepts are shown first in collapsible category
-sections, while the Add Signal control supports search and category filtering.
+Responsibility Shape. All concepts appear in a searchable radio matrix organized into
+collapsible category sections. Neutral is the default and is omitted from sparse
+workspace settings. The retired `negative` value imports as Strong Negative so older
+workspaces retain their explicitly unfavorable intent.
 
 Cards show a themed 1–10 badge. Scoring starts at 5 and bounds each category's total
 contribution, so 100% Remote Work can improve Work Arrangement by at most one point,

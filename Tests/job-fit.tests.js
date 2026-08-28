@@ -31,6 +31,20 @@ const cicd = concept("technical.cicd", "CI/CD", "Technical Domain");
 assert.equal(JobFit.evaluate([], { enabled: false, signals: [] }, []), null,
   "Disabled Job Fit must not produce an assessment.");
 
+const sparse = JobFit.normalizeConfiguration(configuration([
+  signal(remote, "neutral"),
+  signal(hybrid, "negative"),
+  signal(fullRemote, "positive")
+]));
+assert.deepEqual(sparse.signals, [
+  signal(hybrid, "strongNegative"),
+  signal(fullRemote, "positive")
+], "Neutral must be omitted and legacy Negative must migrate explicitly to Strong Negative.");
+assert.equal(JobFit.evaluate(detected([remote]), configuration([signal(remote, "neutral")]), [remote]).score, 5,
+  "Neutral must contribute zero and retain the baseline score.");
+assert.equal(JobFit.preferenceLabels.negative, undefined,
+  "Ordinary Negative must not remain available as a sixth UI state.");
+
 const remoteOnly = JobFit.evaluate(detected([fullRemote]),
   configuration([signal(fullRemote, "strongPositive")]), [fullRemote]);
 assert.equal(remoteOnly.score, 6,

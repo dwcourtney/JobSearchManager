@@ -757,24 +757,15 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   font-size: var(--font-size-label);
   line-height: var(--line-height-note);
 }
-.job-fit-subheading {
-  margin: .85rem 0 .5rem;
-  color: var(--color-label);
-  font-size: var(--font-size-control);
-}
-.job-fit-add-grid {
-  display: grid;
-  grid-template-columns: minmax(9rem, 24%) minmax(0, 1fr);
-  align-items: center;
-  gap: .45rem .75rem;
-}
-.job-fit-add-grid > label {
+.job-fit-search-label {
+  display: block;
+  margin: .85rem 0 .3rem;
   color: var(--color-label);
   font-size: var(--font-size-label);
   font-weight: var(--font-weight-semibold);
 }
-.job-fit-add-grid input, .job-fit-add-grid select,
-.job-fit-signal-row select {
+.job-fit-search {
+  width: min(100%, 32rem);
   min-width: 0;
   min-height: 2.25rem;
   padding: .48rem .6rem;
@@ -784,33 +775,26 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   background: var(--color-input-background);
   font: inherit;
 }
-.job-fit-add-grid input:focus-visible, .job-fit-add-grid select:focus-visible,
-.job-fit-signal-row select:focus-visible {
+.job-fit-search:focus-visible, .job-fit-survey-choice input:focus-visible {
   outline: var(--focus-ring-width) solid var(--color-focus-ring);
   outline-offset: var(--focus-ring-offset-compact);
 }
-.job-fit-add-grid button {
-  justify-self: start;
-  padding: .48rem .75rem;
-  border: var(--border-width-default) solid var(--color-secondary-button-border);
-  border-radius: var(--radius-control);
-  color: var(--color-secondary-button-text);
-  background: var(--color-secondary-button-background);
-  cursor: pointer;
+.job-fit-survey-status {
+  margin: .35rem 0 .6rem;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
 }
-.job-fit-add-grid button:hover:not(:disabled) { background: var(--color-secondary-button-hover); }
-.job-fit-add-grid button:disabled { cursor: default; opacity: var(--opacity-disabled); }
-.job-fit-signal-list {
+.job-fit-survey {
   display: grid;
-  gap: .45rem;
+  gap: .55rem;
 }
-.job-fit-category-section {
+.job-fit-survey-category {
   overflow: hidden;
   border: var(--border-width-default) solid var(--color-border);
   border-radius: var(--radius-control);
   background: var(--color-accordion-body-background);
 }
-.job-fit-category-section > summary {
+.job-fit-survey-category > summary {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -823,36 +807,53 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   font-size: var(--font-size-label);
   font-weight: var(--font-weight-semibold);
 }
-.job-fit-category-section > summary:hover { background: var(--color-accordion-header-hover); }
-.job-fit-category-section > summary small {
+.job-fit-survey-category > summary:hover { background: var(--color-accordion-header-hover); }
+.job-fit-survey-category > summary small {
   color: var(--color-text-secondary);
   font-size: var(--font-size-caption);
   font-weight: var(--font-weight-regular);
 }
-.job-fit-category-rows { display: grid; gap: .4rem; padding: .45rem; }
-.job-fit-signal-row {
+.job-fit-matrix { display: grid; }
+.job-fit-matrix-header, .job-fit-survey-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(10rem, 14rem) auto;
+  grid-template-columns: minmax(12rem, 1fr) repeat(5, minmax(4.6rem, 5.8rem));
   align-items: center;
-  gap: .6rem;
-  padding: .55rem .65rem;
-  border: var(--border-width-default) solid var(--color-border);
-  border-radius: var(--radius-control);
-  background: var(--color-accordion-body-background);
+  gap: .2rem;
 }
-.job-fit-signal-identity { display: grid; gap: .12rem; min-width: 0; }
-.job-fit-signal-identity strong { color: var(--color-label); }
-.job-fit-signal-identity small { color: var(--color-text-secondary); }
-.job-fit-remove-signal {
-  padding: .42rem .65rem;
-  border: var(--border-width-default) solid var(--color-secondary-button-border);
+.job-fit-matrix-header {
+  padding: .38rem .55rem;
+  border-bottom: var(--border-width-default) solid var(--color-border);
+  color: var(--color-text-secondary);
+  background: var(--color-surface-secondary);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  text-align: center;
+}
+.job-fit-survey-row {
+  min-height: 2.7rem;
+  padding: .32rem .55rem;
+}
+.job-fit-survey-row + .job-fit-survey-row {
+  border-top: var(--border-width-default) solid var(--color-border);
+}
+.job-fit-survey-concept {
+  min-width: 0;
+  color: var(--color-label);
+  font-size: var(--font-size-label);
+}
+.job-fit-survey-choice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
   border-radius: var(--radius-control);
-  color: var(--color-secondary-button-text);
-  background: var(--color-secondary-button-background);
   cursor: pointer;
 }
-.job-fit-remove-signal:hover:not(:disabled) { background: var(--color-secondary-button-hover); }
-.job-fit-remove-signal:disabled { cursor: default; opacity: var(--opacity-disabled); }
+.job-fit-survey-choice:hover { background: var(--color-accordion-header-hover); }
+.job-fit-survey-choice:has(input:checked) { background: var(--color-accent-soft); }
+.job-fit-survey-choice:has(input:disabled) { cursor: default; opacity: var(--opacity-disabled); }
+.job-fit-survey-choice input { margin: 0; accent-color: var(--color-accent); }
+.job-fit-choice-short { display: none; color: var(--color-text-secondary); font-size: var(--font-size-caption); }
 .settings-save-note {
   margin: 0 0 .72rem;
   color: var(--color-text-secondary);
@@ -2081,10 +2082,11 @@ mark {
   .settings-section { padding: .78rem .82rem .88rem; }
   .settings-row { grid-template-columns: 1fr; gap: .28rem; }
   .settings-row > label, .settings-row > .settings-row-label { padding-top: 0; }
-  .job-fit-add-grid, .job-fit-signal-row { grid-template-columns: 1fr; }
-  .job-fit-add-grid > span { display: none; }
-  .job-fit-signal-row select { width: 100%; }
-  .job-fit-remove-signal { justify-self: start; }
+  .job-fit-matrix-header { display: none; }
+  .job-fit-survey-row { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .12rem; padding: .45rem; }
+  .job-fit-survey-concept { grid-column: 1 / -1; padding: 0 .15rem .25rem; }
+  .job-fit-survey-choice { gap: .22rem; }
+  .job-fit-choice-short { display: inline; }
   .confirmation-actions {
     align-items: stretch;
     flex-direction: column;

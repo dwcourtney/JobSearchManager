@@ -56,7 +56,6 @@ const state = {
   jobFitSignals: [],
   jobFitConcepts: [],
   jobFitConceptSearch: "",
-  jobFitCategoryFilter: "all",
   credentialOptions: [],
   credentialInventoryStatus: "notConfigured",
   heldCredentialIds: new Set(),
@@ -180,11 +179,8 @@ const elements = {
   jobFitEnabled: document.querySelector("#job-fit-enabled"),
   jobFitConfiguration: document.querySelector("#job-fit-configuration"),
   jobFitConceptSearch: document.querySelector("#job-fit-concept-search"),
-  jobFitCategoryFilter: document.querySelector("#job-fit-category-filter"),
-  jobFitConceptSelect: document.querySelector("#job-fit-concept-select"),
-  jobFitPreferenceSelect: document.querySelector("#job-fit-preference-select"),
-  jobFitAddSignal: document.querySelector("#job-fit-add-signal"),
-  jobFitSignalList: document.querySelector("#job-fit-signal-list"),
+  jobFitSurveyStatus: document.querySelector("#job-fit-survey-status"),
+  jobFitSurvey: document.querySelector("#job-fit-survey"),
   credentialInventoryStatus: document.querySelector("#credential-inventory-status"),
   heldCredentialsField: document.querySelector("#held-credentials-field"),
   heldCredentials: document.querySelector("#held-credentials"),
@@ -445,28 +441,16 @@ async function initialize() {
   });
   elements.jobFitConceptSearch.addEventListener("input", () => {
     state.jobFitConceptSearch = elements.jobFitConceptSearch.value.trim().toLocaleLowerCase();
-    populateJobFitConceptSelect();
+    renderJobFitSurvey();
   });
-  elements.jobFitCategoryFilter.addEventListener("change", () => {
-    state.jobFitCategoryFilter = elements.jobFitCategoryFilter.value;
-    populateJobFitConceptSelect();
-  });
-  elements.jobFitAddSignal.addEventListener("click", addJobFitSignal);
-  elements.jobFitSignalList.addEventListener("change", event => {
-    const select = event.target.closest("select[data-job-fit-concept-id]");
-    if (!select || !JobFit.preferenceLabels[select.value]) return;
-    const signal = state.jobFitSignals.find(item => item.conceptId === select.dataset.jobFitConceptId);
-    if (!signal) return;
-    signal.preference = select.value;
-    renderResults();
-    queueSettingsSave();
-  });
-  elements.jobFitSignalList.addEventListener("click", event => {
-    const button = event.target.closest("button[data-job-fit-concept-id]");
-    if (!button) return;
-    state.jobFitSignals = state.jobFitSignals
-      .filter(signal => signal.conceptId !== button.dataset.jobFitConceptId);
-    updateJobFitSettingsUi();
+  elements.jobFitSurvey.addEventListener("change", event => {
+    const radio = event.target.closest('input[type="radio"][data-job-fit-concept-id]');
+    if (!radio || !JobFit.preferenceLabels[radio.value]) return;
+    const conceptId = radio.dataset.jobFitConceptId;
+    state.jobFitSignals = state.jobFitSignals.filter(signal => signal.conceptId !== conceptId);
+    if (radio.value !== "neutral") {
+      state.jobFitSignals.push({ conceptId, preference: radio.value });
+    }
     renderResults();
     queueSettingsSave();
   });
@@ -844,157 +828,97 @@ function applyTheme() {
 function updateJobFitSettingsUi() {
   elements.jobFitConfiguration.hidden = !state.jobFitEnabled;
   elements.jobFitConceptSearch.disabled = !state.jobFitEnabled;
-  elements.jobFitCategoryFilter.disabled = !state.jobFitEnabled;
-  elements.jobFitConceptSelect.disabled = !state.jobFitEnabled;
-  elements.jobFitPreferenceSelect.disabled = !state.jobFitEnabled;
-  populateJobFitCategoryFilter();
-  populateJobFitConceptSelect();
-  renderJobFitSignals();
+  renderJobFitSurvey();
 }
 
-function populateJobFitCategoryFilter() {
-  const categories = Array.from(new Set(state.jobFitConcepts.map(concept => concept.category))).sort();
-  const selected = categories.includes(state.jobFitCategoryFilter)
-    ? state.jobFitCategoryFilter
-    : "all";
-  elements.jobFitCategoryFilter.replaceChildren();
-  const all = document.createElement("option");
-  all.value = "all";
-  all.textContent = "All categories";
-  elements.jobFitCategoryFilter.append(all);
-  categories.forEach(category => {
-    const option = document.createElement("option");
-    option.value = category;
-    option.textContent = category;
-    elements.jobFitCategoryFilter.append(option);
-  });
-  state.jobFitCategoryFilter = selected;
-  elements.jobFitCategoryFilter.value = selected;
-}
-
-function populateJobFitConceptSelect() {
-  const previous = elements.jobFitConceptSelect.value;
-  const selectedIds = new Set(state.jobFitSignals.map(signal => signal.conceptId));
+function renderJobFitSurvey() {
+  elements.jobFitSurvey.replaceChildren();
   const query = state.jobFitConceptSearch;
-  const available = state.jobFitConcepts.filter(concept =>
-    !selectedIds.has(concept.id) &&
-    (state.jobFitCategoryFilter === "all" || concept.category === state.jobFitCategoryFilter) &&
-    (!query || `${concept.displayName} ${concept.category}`.toLocaleLowerCase().includes(query)));
+  const visible = state.jobFitConcepts.filter(concept => !query ||
+    `${concept.displayName} ${concept.category}`.toLocaleLowerCase().includes(query));
+  const configured = new Map(state.jobFitSignals.map(signal => [signal.conceptId, signal.preference]));
   const byCategory = new Map();
-  available.forEach(concept => {
+  visible.forEach(concept => {
     if (!byCategory.has(concept.category)) byCategory.set(concept.category, []);
     byCategory.get(concept.category).push(concept);
   });
-
-  elements.jobFitConceptSelect.replaceChildren();
-  for (const category of Array.from(byCategory.keys()).sort()) {
-    const group = document.createElement("optgroup");
-    group.label = category;
-    byCategory.get(category)
-      .sort((left, right) => left.displayName.localeCompare(right.displayName))
-      .forEach(concept => {
-        const option = document.createElement("option");
-        option.value = concept.id;
-        option.textContent = concept.displayName;
-        group.append(option);
-      });
-    elements.jobFitConceptSelect.append(group);
-  }
-  if (available.some(concept => concept.id === previous)) {
-    elements.jobFitConceptSelect.value = previous;
-  }
-  elements.jobFitAddSignal.disabled = !state.jobFitEnabled || available.length === 0;
-}
-
-function renderJobFitSignals() {
-  elements.jobFitSignalList.replaceChildren();
-  if (state.jobFitSignals.length === 0) {
+  elements.jobFitSurveyStatus.textContent = `${visible.length} of ${state.jobFitConcepts.length} concepts shown.`;
+  if (visible.length === 0) {
     const empty = document.createElement("p");
     empty.className = "job-fit-empty";
-    empty.textContent = "No Job Fit signals configured.";
-    elements.jobFitSignalList.append(empty);
+    empty.textContent = "No canonical concepts match this filter.";
+    elements.jobFitSurvey.append(empty);
     return;
   }
-
-  const concepts = new Map(state.jobFitConcepts.map(concept => [concept.id, concept]));
-  const configured = state.jobFitSignals
-    .filter(signal => concepts.has(signal.conceptId))
-    .sort((left, right) => {
-      const leftConcept = concepts.get(left.conceptId);
-      const rightConcept = concepts.get(right.conceptId);
-      return leftConcept.category.localeCompare(rightConcept.category) ||
-        leftConcept.displayName.localeCompare(rightConcept.displayName);
-    });
-  const byCategory = new Map();
-  configured.forEach(signal => {
-    const category = concepts.get(signal.conceptId).category;
-    if (!byCategory.has(category)) byCategory.set(category, []);
-    byCategory.get(category).push(signal);
-  });
-  for (const [categoryName, signals] of byCategory) {
+  const preferences = [
+    ["hardConflict", "HC"],
+    ["strongNegative", "SN"],
+    ["neutral", "N"],
+    ["positive", "P"],
+    ["strongPositive", "SP"]
+  ];
+  const categoryOrder = Object.keys(JobFit.dimensionLimits);
+  const orderedCategories = Array.from(byCategory.keys()).sort((left, right) =>
+    categoryOrder.indexOf(left) - categoryOrder.indexOf(right));
+  for (const categoryName of orderedCategories) {
+    const concepts = byCategory.get(categoryName);
     const section = document.createElement("details");
-    section.className = "job-fit-category-section";
+    section.className = "job-fit-survey-category";
     section.open = true;
     const summary = document.createElement("summary");
     const heading = document.createElement("span");
     heading.textContent = categoryName;
     const count = document.createElement("small");
-    count.textContent = `${signals.length} configured`;
+    count.textContent = `${concepts.length} concept${concepts.length === 1 ? "" : "s"}`;
     summary.append(heading, count);
-    const rows = document.createElement("div");
-    rows.className = "job-fit-category-rows";
-    signals.forEach(signal => {
-      const concept = concepts.get(signal.conceptId);
-      const row = document.createElement("div");
-      row.className = "job-fit-signal-row";
-
-      const identity = document.createElement("span");
-      identity.className = "job-fit-signal-identity";
-      const name = document.createElement("strong");
-      name.textContent = concept.displayName;
-      const category = document.createElement("small");
-      category.textContent = concept.category;
-      identity.append(name, category);
-
-      const preference = document.createElement("select");
-      preference.dataset.jobFitConceptId = signal.conceptId;
-      preference.setAttribute("aria-label", `Preference for ${concept.displayName}`);
-      Object.entries(JobFit.preferenceLabels).forEach(([value, label]) => {
-        const option = document.createElement("option");
-        option.value = value;
-        option.textContent = label;
-        preference.append(option);
-      });
-      preference.value = signal.preference;
-      preference.disabled = !state.jobFitEnabled;
-
-      const remove = document.createElement("button");
-      remove.type = "button";
-      remove.className = "job-fit-remove-signal";
-      remove.dataset.jobFitConceptId = signal.conceptId;
-      remove.textContent = "Remove";
-      remove.setAttribute("aria-label", `Remove Job Fit signal ${concept.displayName}`);
-      remove.disabled = !state.jobFitEnabled;
-      row.append(identity, preference, remove);
-      rows.append(row);
+    const matrix = document.createElement("div");
+    matrix.className = "job-fit-matrix";
+    const header = document.createElement("div");
+    header.className = "job-fit-matrix-header";
+    header.setAttribute("aria-hidden", "true");
+    const blank = document.createElement("span");
+    preferences.forEach(([value]) => {
+      const label = document.createElement("span");
+      label.textContent = JobFit.preferenceLabels[value];
+      header.append(label);
     });
-    section.append(summary, rows);
-    elements.jobFitSignalList.append(section);
+    header.prepend(blank);
+    matrix.append(header);
+    concepts.sort((left, right) => left.displayName.localeCompare(right.displayName)).forEach(concept => {
+      const row = document.createElement("div");
+      row.className = "job-fit-survey-row";
+      row.setAttribute("role", "radiogroup");
+      const labelId = `job-fit-concept-${concept.id.replace(/[^a-z0-9_-]/gi, "-")}`;
+      row.setAttribute("aria-labelledby", labelId);
+      const name = document.createElement("strong");
+      name.id = labelId;
+      name.className = "job-fit-survey-concept";
+      name.textContent = concept.displayName;
+      row.append(name);
+      preferences.forEach(([value, abbreviation]) => {
+        const choice = document.createElement("label");
+        choice.className = "job-fit-survey-choice";
+        choice.title = JobFit.preferenceLabels[value];
+        const radio = document.createElement("input");
+        radio.type = "radio";
+        radio.name = `job-fit-${concept.id}`;
+        radio.value = value;
+        radio.dataset.jobFitConceptId = concept.id;
+        radio.checked = (configured.get(concept.id) || "neutral") === value;
+        radio.disabled = !state.jobFitEnabled;
+        radio.setAttribute("aria-label", `${concept.displayName}: ${JobFit.preferenceLabels[value]}`);
+        const short = document.createElement("span");
+        short.className = "job-fit-choice-short";
+        short.setAttribute("aria-hidden", "true");
+        short.textContent = abbreviation;
+        choice.append(radio, short);
+        row.append(choice);
+      });
+      matrix.append(row);
+    });
+    section.append(summary, matrix);
+    elements.jobFitSurvey.append(section);
   }
-}
-
-function addJobFitSignal() {
-  const conceptId = elements.jobFitConceptSelect.value;
-  const preference = elements.jobFitPreferenceSelect.value;
-  if (!state.jobFitEnabled || !JobFit.preferenceLabels[preference] ||
-      !state.jobFitConcepts.some(concept => concept.id === conceptId) ||
-      state.jobFitSignals.some(signal => signal.conceptId === conceptId)) {
-    return;
-  }
-  state.jobFitSignals.push({ conceptId, preference });
-  updateJobFitSettingsUi();
-  renderResults();
-  queueSettingsSave();
 }
 
 function updateEducationSettingsUi() {

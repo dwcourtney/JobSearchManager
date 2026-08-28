@@ -11,16 +11,15 @@
   const WEIGHTS = Object.freeze({
     strongPositive: 2,
     positive: 1,
-    negative: -1,
     strongNegative: -3,
     hardConflict: -6
   });
   const LABELS = Object.freeze({
-    strongPositive: "Strong Positive",
-    positive: "Positive",
-    negative: "Negative",
+    hardConflict: "Hard Conflict",
     strongNegative: "Strong Negative",
-    hardConflict: "Hard Conflict"
+    neutral: "Neutral",
+    positive: "Positive",
+    strongPositive: "Strong Positive"
   });
   const BASELINE = 5;
   const DIMENSION_LIMITS = Object.freeze({
@@ -37,12 +36,16 @@
     const seen = new Set();
     const signals = [];
     for (const signal of Array.isArray(configuration?.signals) ? configuration.signals : []) {
-      if (!signal || !Object.hasOwn(WEIGHTS, signal.preference) ||
-          typeof signal.conceptId !== "string" || seen.has(signal.conceptId)) {
+      if (!signal || typeof signal.conceptId !== "string" || seen.has(signal.conceptId)) {
         continue;
       }
+      const preference = signal.preference === "negative"
+        ? "strongNegative"
+        : signal.preference;
       seen.add(signal.conceptId);
-      signals.push({ conceptId: signal.conceptId, preference: signal.preference });
+      if (preference === "neutral") continue;
+      if (!Object.hasOwn(WEIGHTS, preference)) continue;
+      signals.push({ conceptId: signal.conceptId, preference });
     }
     return { enabled: configuration?.enabled === true, signals };
   }

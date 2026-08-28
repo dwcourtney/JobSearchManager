@@ -422,14 +422,24 @@ public static class ThemeModes
 
 public static class JobFitPreferenceLevels
 {
+    public const string Neutral = "neutral";
     public const string StrongPositive = "strongPositive";
     public const string Positive = "positive";
+    // Retained as a read-only compatibility value for previously saved workspaces.
     public const string Negative = "negative";
     public const string StrongNegative = "strongNegative";
     public const string HardConflict = "hardConflict";
 
     public static bool IsSupported(string? value) => value is
-        StrongPositive or Positive or Negative or StrongNegative or HardConflict;
+        Neutral or StrongPositive or Positive or Negative or StrongNegative or HardConflict;
+
+    public static string? Normalize(string? value) => value switch
+    {
+        Negative => StrongNegative,
+        Neutral => null,
+        StrongPositive or Positive or StrongNegative or HardConflict => value,
+        _ => null
+    };
 }
 
 public sealed record JobFitSignalPreference(string ConceptId, string Preference);
@@ -450,11 +460,15 @@ public sealed record JobFitConfiguration(
         }
 
         var signals = (configuration.Signals ?? [])
-            .Where(signal => signal is not null &&
-                concepts.Contains(signal.ConceptId) &&
-                JobFitPreferenceLevels.IsSupported(signal.Preference))
+            .Where(signal => signal is not null && concepts.Contains(signal.ConceptId))
+            .Select(signal => new
+            {
+                signal.ConceptId,
+                Preference = JobFitPreferenceLevels.Normalize(signal.Preference)
+            })
+            .Where(signal => signal.Preference is not null)
             .GroupBy(signal => signal.ConceptId, StringComparer.Ordinal)
-            .Select(group => group.First())
+            .Select(group => new JobFitSignalPreference(group.Key, group.First().Preference!))
             .OrderBy(signal => signal.ConceptId, StringComparer.Ordinal)
             .Take(100)
             .ToArray();

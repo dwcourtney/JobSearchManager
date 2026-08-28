@@ -10,7 +10,7 @@
   <link rel="manifest" href="/site.webmanifest?v=1">
   <script src="/theme-bootstrap.js"></script>
   <link rel="stylesheet" href="/theme.css?v=10">
-  <link rel="stylesheet" href="/styles.css?v=19">
+  <link rel="stylesheet" href="/styles.css?v=20">
   <script src="/vendor/purify.min.js" defer></script>
   <script src="/country-ordering.js?v=2" defer></script>
   <script src="/company-selector.js?v=1" defer></script>
@@ -23,7 +23,7 @@
   <script src="/extended-location-ui.js?v=5" defer></script>
   <script src="/education-fit.js?v=2" defer></script>
   <script src="/job-fit.js?v=1" defer></script>
-  <script src="/app.js?v=21" defer></script>
+  <script src="/app.js?v=22" defer></script>
 </head>
 <body>
   <main id="app-shell" class="app-shell" aria-busy="true" inert>
@@ -662,32 +662,14 @@
             <section class="settings-section" aria-labelledby="job-fit-signals-heading">
               <h3 id="job-fit-signals-heading">Canonical corpus signals</h3>
               <p class="job-fit-introduction">
-                Choose detected concepts from the application corpus. Evidence phrases are normalized into these concepts during job ingestion; custom words cannot be added here.
+                Rate every canonical concept from the application corpus. Neutral is the default and is not saved; custom words cannot be added here.
               </p>
-              <h4 class="job-fit-subheading">Configured signals</h4>
-              <div id="job-fit-signal-list" class="job-fit-signal-list" aria-live="polite"></div>
-              <h4 class="job-fit-subheading">Add signal</h4>
-              <div class="job-fit-add-grid">
-                <label for="job-fit-concept-search">Filter concepts</label>
-                <input id="job-fit-concept-search" type="search" autocomplete="off"
-                       placeholder="Filter canonical concepts…">
-                <label for="job-fit-category-filter">Category</label>
-                <select id="job-fit-category-filter">
-                  <option value="all">All categories</option>
-                </select>
-                <label for="job-fit-concept-select">Corpus concept</label>
-                <select id="job-fit-concept-select"></select>
-                <label for="job-fit-preference-select">Preference</label>
-                <select id="job-fit-preference-select">
-                  <option value="strongPositive">Strong Positive</option>
-                  <option value="positive" selected>Positive</option>
-                  <option value="negative">Negative</option>
-                  <option value="strongNegative">Strong Negative</option>
-                  <option value="hardConflict">Hard Conflict</option>
-                </select>
-                <span></span>
-                <button id="job-fit-add-signal" class="secondary-button" type="button">Add Signal</button>
-              </div>
+              <label class="job-fit-search-label" for="job-fit-concept-search">Filter concepts</label>
+              <input id="job-fit-concept-search" class="job-fit-search" type="search"
+                     autocomplete="off" placeholder="Filter canonical concepts…">
+              <p id="job-fit-survey-status" class="job-fit-survey-status" aria-live="polite"></p>
+              <div id="job-fit-survey" class="job-fit-survey"
+                   aria-describedby="job-fit-survey-status"></div>
             </section>
           </div>
         </div>

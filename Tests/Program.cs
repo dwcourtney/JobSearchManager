@@ -698,19 +698,38 @@ static async Task TestJobFitSettingsAsync()
         JobFit = new JobFitConfiguration(true,
         [
             new("technical.machine-learning", JobFitPreferenceLevels.StrongPositive),
+            new("work.onsite", JobFitPreferenceLevels.Negative),
+            new("work.remote", JobFitPreferenceLevels.Neutral),
             new("user.arbitrary-concept", JobFitPreferenceLevels.HardConflict),
             new("work.deployment", "unsupported")
         ])
     });
     Assert(normalized.JobFit is { Enabled: true } &&
-           normalized.JobFit.Signals.Count == 1 &&
-           normalized.JobFit.Signals[0].ConceptId == "technical.machine-learning",
-        "Unknown or invalid Job Fit concepts entered normalized persistence.");
+           normalized.JobFit.Signals.Count == 2 &&
+           normalized.JobFit.Signals.Any(signal =>
+               signal.ConceptId == "technical.machine-learning" &&
+               signal.Preference == JobFitPreferenceLevels.StrongPositive) &&
+           normalized.JobFit.Signals.Any(signal =>
+               signal.ConceptId == "work.onsite" &&
+               signal.Preference == JobFitPreferenceLevels.StrongNegative) &&
+           normalized.JobFit.Signals.All(signal => signal.ConceptId != "work.remote"),
+        "Sparse normalization did not omit Neutral, migrate legacy Negative, or reject invalid signals.");
     await state.SaveSettingsAsync(normalized);
     var reloaded = await state.LoadSettingsAsync();
     Assert(reloaded.JobFit is { Enabled: true } &&
-           reloaded.JobFit.Signals.SequenceEqual(normalized.JobFit.Signals),
+           reloaded.JobFit.Signals.SequenceEqual(normalized.JobFit!.Signals),
         "Enabling Job Fit and selecting canonical concepts did not persist.");
+
+    var cleared = state.NormalizeSettings(reloaded with
+    {
+        JobFit = new JobFitConfiguration(true,
+        [new("technical.machine-learning", JobFitPreferenceLevels.Neutral)])
+    });
+    await state.SaveSettingsAsync(cleared);
+    var clearedReloaded = await state.LoadSettingsAsync();
+    Assert(clearedReloaded.JobFit is { Enabled: true } &&
+           clearedReloaded.JobFit.Signals.Count == 0,
+        "Returning a Job Fit concept to Neutral did not remove its sparse persisted setting.");
     }
     finally
     {
@@ -1140,7 +1159,9 @@ static Task TestPortableJobFitAsync()
         JobFit = new JobFitConfiguration(true,
         [
             new("technical.machine-learning", JobFitPreferenceLevels.StrongPositive),
-            new("work.deployment", JobFitPreferenceLevels.HardConflict)
+            new("work.deployment", JobFitPreferenceLevels.HardConflict),
+            new("work.onsite", JobFitPreferenceLevels.Negative),
+            new("work.remote", JobFitPreferenceLevels.Neutral)
         ])
     };
 
@@ -1148,8 +1169,12 @@ static Task TestPortableJobFitAsync()
     var imported = portable.Import(exported, ViewerSettings.Default, JobHistoryDocument.Empty);
     Assert(exported.Version == 4 && exported.Preferences.JobFit is { Enabled: true } &&
            imported.Settings.JobFit is { Enabled: true } &&
-           imported.Settings.JobFit.Signals.SequenceEqual(configured.JobFit!.Signals),
-        "Job Fit configuration did not round-trip through portable workspace settings.");
+           imported.Settings.JobFit.Signals.Count == 3 &&
+           imported.Settings.JobFit.Signals.Any(signal =>
+               signal.ConceptId == "work.onsite" &&
+               signal.Preference == JobFitPreferenceLevels.StrongNegative) &&
+           imported.Settings.JobFit.Signals.All(signal => signal.ConceptId != "work.remote"),
+        "Sparse Job Fit configuration or legacy Negative migration did not round-trip through portable settings.");
 
     var legacy = exported with
     {
