@@ -133,6 +133,15 @@ do ordinary business travel and ordinary onsite geography. Every Strong or
 Questionable detection is shown in a dedicated **Deployment / Location
 Requirement** section in At a Glance with the preserved posting evidence.
 
+Settings > Job Fit provides optional workspace-specific suitability scoring. It is
+disabled by default for new and existing workspaces. When enabled, users select only
+canonical concepts from `JobConceptCatalog.json` and assign named positive or
+negative preferences; arbitrary Job Fit keywords cannot be entered. Concept evidence
+is detected during normal ingestion or cache reclassification and stored with each
+job. Cards show a themed 1–10 badge whose tooltip lists only actual contributing
+concepts and evidence. A Hard Conflict caps the score at 2 even when several positive
+concepts match. Job Fit does not change filtering, sorting, or qualification behavior.
+
 The active query identity includes company, country, remote coverage, and a
 canonical set of location facet IDs. Location order therefore does not change cache
 identity, and cached jobs from one company cannot appear under another company.
@@ -209,7 +218,8 @@ The versioned JSON file is a portable workspace backup containing:
 
 - the pending or applied Job Source selection (company, country, coverage flags,
   and selected physical provider facet IDs/labels);
-- search preferences, My Qualifications, screening choices, and theme;
+- search preferences, My Qualifications, screening choices, optional Job Fit
+  configuration, and theme;
 - one canonical record for each Saved, Applied, Closed, or Hidden job: company ID,
   company-scoped stable ID, requisition ID when available, workflow state, and
   provider external path.
@@ -338,6 +348,8 @@ The project intentionally remains a single small ASP.NET Core application:
 - `JobAnalysis.cs` and detectors — shared salary, location, clearance, credential,
   academic, work-authorization, remote-work credibility, and extended-location
   obligation analysis
+- `JobConceptCatalog.json`, `JobConceptCatalog.cs`, and `JobConceptDetector.cs` —
+  stable canonical concept IDs, corpus evidence mappings, and persisted detections
 - `wwwroot/` — dependency-light HTML, JavaScript, and CSS UI
 
 The hosting and persistence split is implemented by:

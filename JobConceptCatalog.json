@@ -1,0 +1,219 @@
+{
+  "version": 1,
+  "concepts": [
+    {
+      "id": "work.remote",
+      "displayName": "Remote Work",
+      "category": "Work Arrangement",
+      "remoteDesignation": true
+    },
+    {
+      "id": "work.remote.full",
+      "displayName": "100% Remote Work",
+      "category": "Work Arrangement",
+      "evidencePatterns": [
+        "\\b(?:100\\s*%|fully|completely)\\s+remote\\b",
+        "\\bremote[- ]only\\b"
+      ]
+    },
+    {
+      "id": "work.hybrid",
+      "displayName": "Hybrid Work",
+      "category": "Work Arrangement",
+      "evidencePatterns": [
+        "\\bhybrid\\s+(?:work|role|position|schedule)\\b",
+        "\\bhybrid[- ]remote\\b"
+      ]
+    },
+    {
+      "id": "work.onsite",
+      "displayName": "Onsite Work",
+      "category": "Work Arrangement",
+      "evidencePatterns": [
+        "\\b(?:fully|100\\s*%)\\s+on[- ]?site\\b",
+        "\\bno\\s+remote\\s+work\\b"
+      ],
+      "remoteSignalCategories": [
+        "scheduled-onsite",
+        "onsite-duty",
+        "operational-site",
+        "physical-installation"
+      ]
+    },
+    {
+      "id": "work.travel.frequent",
+      "displayName": "Frequent Travel",
+      "category": "Work Arrangement",
+      "evidencePatterns": [
+        "\\b(?:frequent|extensive)\\s+travel\\b",
+        "\\btravel\\s+frequently\\b"
+      ],
+      "remoteSignalCategories": ["frequent-travel"]
+    },
+    {
+      "id": "work.travel.substantial",
+      "displayName": "Substantial Travel",
+      "category": "Work Arrangement",
+      "evidencePatterns": ["\\b(?:[2-9]\\d|100)\\s*%\\s+travel\\b"],
+      "remoteSignalCategories": ["substantial-travel"]
+    },
+    {
+      "id": "work.deployment",
+      "displayName": "Deployment",
+      "category": "Work Arrangement",
+      "remoteSignalCategories": ["field-deployment"],
+      "extendedLocationCategories": [
+        "required-deployment",
+        "recurring-deployment",
+        "extended-deployment",
+        "forward-deployed",
+        "possible-deployment"
+      ]
+    },
+    {
+      "id": "work.relocation",
+      "displayName": "Relocation",
+      "category": "Work Arrangement",
+      "evidencePatterns": [
+        "\\brelocation\\s+(?:is\\s+)?required\\b",
+        "\\bmust\\s+relocate\\b"
+      ],
+      "extendedLocationCategories": ["required-unusual-relocation"]
+    },
+    {
+      "id": "work.rotation",
+      "displayName": "Rotational Assignment",
+      "category": "Work Arrangement",
+      "extendedLocationCategories": ["rotation"]
+    },
+    {
+      "id": "work.international-assignment",
+      "displayName": "International / OCONUS Assignment",
+      "category": "Work Arrangement",
+      "extendedLocationCategories": [
+        "explicit-job-location",
+        "oconus-assignment",
+        "temporary-duty",
+        "possible-extended-assignment"
+      ]
+    },
+    {
+      "id": "work.shipboard",
+      "displayName": "Shipboard / Sea-going Work",
+      "category": "Work Environment",
+      "evidencePatterns": [
+        "\\bshipboard\\b",
+        "\\baboard\\s+(?:a\\s+)?(?:ship|vessel)\\b",
+        "\\bsea[- ]going\\b",
+        "\\bat\\s+sea\\b",
+        "\\bsea\\s+trials?\\b"
+      ]
+    },
+    {
+      "id": "work.scuba",
+      "displayName": "SCUBA / Diving",
+      "category": "Work Environment",
+      "evidencePatterns": ["\\bSCUBA\\b", "\\bcommercial\\s+diving\\b"]
+    },
+    {
+      "id": "work.confined-spaces",
+      "displayName": "Confined Spaces",
+      "category": "Work Environment",
+      "evidencePatterns": ["\\bconfined\\s+spaces?\\b"]
+    },
+    {
+      "id": "work.heights",
+      "displayName": "Work at Heights",
+      "category": "Work Environment",
+      "evidencePatterns": [
+        "\\bwork(?:ing)?\\s+at\\s+heights?\\b",
+        "\\bclimb(?:ing)?\\s+(?:ladders?|towers?|structures?)\\b"
+      ]
+    },
+    {
+      "id": "work.field-engineering",
+      "displayName": "Field Engineering",
+      "category": "Work Environment",
+      "evidencePatterns": [
+        "\\bfield\\s+engineer(?:ing)?\\b",
+        "\\bfield\\s+service\\s+engineer(?:ing)?\\b"
+      ]
+    },
+    {
+      "id": "role.management-heavy",
+      "displayName": "Management-heavy Role",
+      "category": "Role Character",
+      "evidencePatterns": [
+        "\\b(?:program|project|engineering|product|people)\\s+manager\\b",
+        "\\bdirector\\s+of\\b",
+        "\\bmanage\\s+(?:a\\s+)?team\\s+of\\b"
+      ]
+    },
+    {
+      "id": "technical.machine-learning",
+      "displayName": "Machine Learning",
+      "category": "Technical Domain",
+      "evidencePatterns": ["\\bmachine\\s+learning\\b"]
+    },
+    {
+      "id": "technical.artificial-intelligence",
+      "displayName": "Artificial Intelligence",
+      "category": "Technical Domain",
+      "evidencePatterns": ["\\bartificial\\s+intelligence\\b"]
+    },
+    {
+      "id": "technical.nlp",
+      "displayName": "Natural Language Processing",
+      "category": "Technical Domain",
+      "evidencePatterns": [
+        "\\bnatural\\s+language\\s+processing\\b",
+        "\\bNLP\\b"
+      ]
+    },
+    {
+      "id": "technical.large-language-models",
+      "displayName": "Large Language Models",
+      "category": "Technical Domain",
+      "evidencePatterns": [
+        "\\blarge\\s+language\\s+models?\\b",
+        "\\bLLMs?\\b"
+      ]
+    },
+    {
+      "id": "technical.software-development",
+      "displayName": "Software Development",
+      "category": "Technical Domain",
+      "evidencePatterns": [
+        "\\bsoftware\\s+(?:development|engineering)\\b",
+        "\\bdevelop(?:ing|ment)?\\s+software\\b"
+      ]
+    },
+    {
+      "id": "technical.linux",
+      "displayName": "Linux",
+      "category": "Technical Domain",
+      "evidencePatterns": ["\\bLinux\\b"]
+    },
+    {
+      "id": "technical.cloud",
+      "displayName": "Cloud Platforms",
+      "category": "Technical Domain",
+      "evidencePatterns": [
+        "\\bcloud\\s+(?:computing|platforms?|infrastructure|services?)\\b",
+        "\\bAmazon\\s+Web\\s+Services\\b",
+        "\\bMicrosoft\\s+Azure\\b",
+        "\\bGoogle\\s+Cloud(?:\\s+Platform)?\\b"
+      ]
+    },
+    {
+      "id": "technical.cicd",
+      "displayName": "CI/CD",
+      "category": "Technical Domain",
+      "evidencePatterns": [
+        "\\bCI\\s*/\\s*CD\\b",
+        "\\bcontinuous\\s+integration\\b",
+        "\\bcontinuous\\s+(?:delivery|deployment)\\b"
+      ]
+    }
+  ]
+}

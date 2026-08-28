@@ -296,10 +296,13 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Workspace preferences cannot mutate canonical shared source data", TestPreferencesDoNotMutateSharedCacheAsync),
     ("Legacy workspace split caches are never active storage", TestLegacyWorkspaceCacheInactiveAsync),
     ("New workspace settings are neutral", TestNeutralDefaultsAsync),
+    ("Job Fit defaults off and rejects unknown concepts", TestJobFitSettingsAsync),
+    ("Canonical job concepts are detected during normalization", TestJobConceptDetectionAsync),
     ("Obsolete automatic-refresh settings are ignored", TestObsoleteAutomaticSettingsIgnoredAsync),
     ("Legacy applied source remains configured", TestLegacyAppliedSourceMigrationAsync),
     ("Legacy cached posting URLs migrate to the canonical field", TestLegacyCacheUrlMigrationAsync),
     ("Portable workspace round-trips settings and curated states", TestPortableWorkspaceRoundTripAsync),
+    ("Portable Job Fit settings reject unknown concepts and preserve legacy imports", TestPortableJobFitAsync),
     ("Portable source import distinguishes pending and equivalent state", TestPortableSourceImportStateAsync),
     ("Portable workspace validates company-scoped canonical job state", TestPortableWorkspaceValidationAsync),
     ("Portable workspace restores after a complete reset", TestPortableWorkspaceResetRestoreAsync),
@@ -665,8 +668,88 @@ static Task TestNeutralDefaultsAsync()
            !settings.IncludeAllLocations && !settings.IncludeRemote &&
            settings.SelectedPhysicalLocations?.Count == 0,
         "A new workspace was not an explicit unconfigured source with the United States preselected.");
+    Assert(settings.JobFit is { Enabled: false } && settings.JobFit.Signals.Count == 0,
+        "A new workspace did not default Job Fit to disabled with no required configuration.");
     var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
     AssertThrows<InvalidOperationException>(() => JobSourceQuery.FromSettings(settings, companies));
+    return Task.CompletedTask;
+}
+
+static async Task TestJobFitSettingsAsync()
+{
+    var directory = TestDirectory("job-fit-settings");
+    try
+    {
+    var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+    var concepts = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+    var store = new FileWorkspaceDataStore(
+        directory, NullLogger<FileWorkspaceDataStore>.Instance);
+    var state = new AppStateStore(
+        NullLogger<AppStateStore>.Instance, companies, store, concepts);
+
+    var missing = JsonSerializer.Deserialize<ViewerSettings>(
+        "{}", new JsonSerializerOptions(JsonSerializerDefaults.Web));
+    var legacy = state.NormalizeSettings(missing!);
+    Assert(legacy.JobFit is { Enabled: false } && legacy.JobFit.Signals.Count == 0,
+        "An existing workspace without Job Fit fields did not behave as disabled.");
+
+    var normalized = state.NormalizeSettings(ViewerSettings.Default with
+    {
+        JobFit = new JobFitConfiguration(true,
+        [
+            new("technical.machine-learning", JobFitPreferenceLevels.StrongPositive),
+            new("user.arbitrary-concept", JobFitPreferenceLevels.HardConflict),
+            new("work.deployment", "unsupported")
+        ])
+    });
+    Assert(normalized.JobFit is { Enabled: true } &&
+           normalized.JobFit.Signals.Count == 1 &&
+           normalized.JobFit.Signals[0].ConceptId == "technical.machine-learning",
+        "Unknown or invalid Job Fit concepts entered normalized persistence.");
+    await state.SaveSettingsAsync(normalized);
+    var reloaded = await state.LoadSettingsAsync();
+    Assert(reloaded.JobFit is { Enabled: true } &&
+           reloaded.JobFit.Signals.SequenceEqual(normalized.JobFit.Signals),
+        "Enabling Job Fit and selecting canonical concepts did not persist.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static Task TestJobConceptDetectionAsync()
+{
+    var concepts = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+    var detector = new JobConceptDetector(concepts);
+    var remote = new RemoteWorkDetector().Analyze(
+        "Machine Learning Engineer", "Remote / Teleworker US", [],
+        "<p>This is a fully remote role using Linux and CI/CD. Frequent travel is required.</p>");
+    var extended = new ExtendedLocationRequirementDetector().Analyze(
+        "Machine Learning Engineer", "Remote / Teleworker US", [],
+        "<p>This is a fully remote role using Linux and CI/CD. Frequent travel is required.</p>");
+    var detected = detector.Analyze(
+        "Machine Learning Engineer",
+        "Remote / Teleworker US",
+        [],
+        "<p>This is a fully remote role using Linux and CI/CD. Frequent travel is required.</p>",
+        remote,
+        extended);
+    var ids = detected.Select(item => item.ConceptId).ToHashSet(StringComparer.Ordinal);
+    Assert(ids.IsSupersetOf([
+               "work.remote",
+               "work.remote.full",
+               "work.travel.frequent",
+               "technical.machine-learning",
+               "technical.linux",
+               "technical.cicd"
+           ]) && detected.All(item => !string.IsNullOrWhiteSpace(item.Evidence)),
+        "Canonical corpus concepts or their actual evidence were not detected consistently.");
+    Assert(concepts.Options.All(option =>
+            !string.IsNullOrWhiteSpace(option.Id) &&
+            !string.IsNullOrWhiteSpace(option.DisplayName) &&
+            !string.IsNullOrWhiteSpace(option.Category)),
+        "A selectable canonical concept lacks a stable ID or display metadata.");
     return Task.CompletedTask;
 }
 
@@ -1007,6 +1090,51 @@ static Task TestPortableWorkspaceRoundTripAsync()
     Assert(legacyImported.History.Jobs["leidos:REQ-SAVED"].WorkflowState == JobWorkflowStates.Saved &&
            legacyImported.Settings.ExcludeKeywords.SequenceEqual(["substation", "power distribution"]),
         "A backup exported under the previous product name did not import safely.");
+    return Task.CompletedTask;
+}
+
+static Task TestPortableJobFitAsync()
+{
+    var environment = new TestHostEnvironment(AppContext.BaseDirectory);
+    var concepts = new JobConceptCatalog(environment);
+    var portable = new PortableWorkspaceService(new CompanyCatalog(environment), concepts);
+    var configured = ViewerSettings.Default with
+    {
+        JobFit = new JobFitConfiguration(true,
+        [
+            new("technical.machine-learning", JobFitPreferenceLevels.StrongPositive),
+            new("work.deployment", JobFitPreferenceLevels.HardConflict)
+        ])
+    };
+
+    var exported = portable.Export(configured, JobHistoryDocument.Empty);
+    var imported = portable.Import(exported, ViewerSettings.Default, JobHistoryDocument.Empty);
+    Assert(exported.Version == 4 && exported.Preferences.JobFit is { Enabled: true } &&
+           imported.Settings.JobFit is { Enabled: true } &&
+           imported.Settings.JobFit.Signals.SequenceEqual(configured.JobFit!.Signals),
+        "Job Fit configuration did not round-trip through portable workspace settings.");
+
+    var legacy = exported with
+    {
+        Version = 3,
+        Preferences = exported.Preferences with { JobFit = null }
+    };
+    var legacyImported = portable.Import(legacy, configured, JobHistoryDocument.Empty);
+    Assert(legacyImported.Settings.JobFit is { Enabled: false } &&
+           legacyImported.Settings.JobFit.Signals.Count == 0,
+        "An older workspace import without Job Fit data did not default to disabled.");
+
+    AssertThrows<WorkspaceImportException>(() => portable.Import(
+        exported with
+        {
+            Preferences = exported.Preferences with
+            {
+                JobFit = new JobFitConfiguration(true,
+                [new("arbitrary.user.phrase", JobFitPreferenceLevels.Positive)])
+            }
+        },
+        ViewerSettings.Default,
+        JobHistoryDocument.Empty));
     return Task.CompletedTask;
 }
 

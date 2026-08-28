@@ -32,6 +32,9 @@ $clearanceFitTestsPath = Join-Path $repo "Tests\clearance-fit.tests.js"
 $qualificationSettingsTestsPath = Join-Path $repo "Tests\qualification-settings.tests.js"
 $themeSettingsTestsPath = Join-Path $repo "Tests\theme-settings.tests.js"
 $cacheStatusTestsPath = Join-Path $repo "Tests\cache-status.tests.js"
+$jobFitPath = Join-Path $repo "wwwroot\job-fit.js"
+$jobFitTestsPath = Join-Path $repo "Tests\job-fit.tests.js"
+$jobFitUiTestsPath = Join-Path $repo "Tests\job-fit-ui.tests.js"
 
 foreach ($scriptPath in @(
     $appPath,
@@ -55,7 +58,10 @@ foreach ($scriptPath in @(
     $clearanceFitTestsPath,
     $qualificationSettingsTestsPath,
     $themeSettingsTestsPath,
-    $cacheStatusTestsPath)) {
+    $cacheStatusTestsPath,
+    $jobFitPath,
+    $jobFitTestsPath,
+    $jobFitUiTestsPath)) {
     & $NodePath --check $scriptPath
     if ($LASTEXITCODE -ne 0) {
         throw "JavaScript syntax validation failed for $scriptPath."
@@ -127,6 +133,16 @@ if ($LASTEXITCODE -ne 0) {
     throw "Compact cache-status tests failed."
 }
 
+& $NodePath $jobFitTestsPath
+if ($LASTEXITCODE -ne 0) {
+    throw "Job Fit scoring tests failed."
+}
+
+& $NodePath $jobFitUiTestsPath
+if ($LASTEXITCODE -ne 0) {
+    throw "Job Fit UI integration tests failed."
+}
+
 $styles = Get-Content -LiteralPath $stylesPath -Raw -Encoding UTF8
 $theme = Get-Content -LiteralPath $themePath -Raw -Encoding UTF8
 $index = Get-Content -LiteralPath $indexPath -Raw -Encoding UTF8
@@ -192,7 +208,8 @@ $sourceStateScript = $index.IndexOf('src="/job-source-state.js"')
 $unseenStateScript = $index.IndexOf('src="/job-unseen-state.js?v=1"')
 $credentialFitScript = $index.IndexOf('src="/credential-fit.js?v=2"')
 $clearanceFitScript = $index.IndexOf('src="/clearance-fit.js?v=1"')
-$appScript = $index.IndexOf('src="/app.js?v=19"')
+$jobFitScript = $index.IndexOf('src="/job-fit.js?v=1"')
+$appScript = $index.IndexOf('src="/app.js?v=20"')
 if ($countryOrderingScript -lt 0 -or $appScript -le $countryOrderingScript) {
     throw "The versioned country-ordering.js asset must load before app.js."
 }
@@ -212,6 +229,9 @@ if ($credentialFitScript -lt 0 -or $appScript -le $credentialFitScript) {
 if ($clearanceFitScript -lt 0 -or $appScript -le $clearanceFitScript) {
     throw "clearance-fit.js must load before app.js."
 }
+if ($jobFitScript -lt 0 -or $appScript -le $jobFitScript) {
+    throw "job-fit.js must load before app.js."
+}
 if ($countryOrdering -notmatch 'globalThis\.CountryOrdering\s*=' -or
     $app -notmatch '\bCountryOrdering\.orderCountryFacets\b' -or
     $countryOrdering -match '\b(?:Workday|JobSource)CountryOrdering\b' -or
@@ -226,7 +246,8 @@ if ([regex]::IsMatch($index, '(?is)<h2[^>]*>\s*Settings\s*</h2>')) {
 $settingsTabIds = @(
     "job-search-settings",
     "qualifications-settings",
-    "preferences-settings"
+    "preferences-settings",
+    "job-fit-settings"
 )
 foreach ($tabId in $settingsTabIds) {
     if (-not [regex]::IsMatch(
@@ -245,6 +266,7 @@ $settingsTabLabels = @{
     "job-search-settings" = "Job Source"
     "qualifications-settings" = "My Qualifications"
     "preferences-settings" = "My Preferences"
+    "job-fit-settings" = "Job Fit"
 }
 foreach ($tabId in $settingsTabLabels.Keys) {
     $label = [regex]::Escape($settingsTabLabels[$tabId])
@@ -292,15 +314,18 @@ if ($app.IndexOf('JobPostingText.normalizeHtml(job.descriptionHtml)') -lt 0 -or
 $jobSearchStart = $index.IndexOf('id="job-search-settings-panel"')
 $qualificationsStart = $index.IndexOf('id="qualifications-settings-panel"')
 $preferencesStart = $index.IndexOf('id="preferences-settings-panel"')
+$jobFitStart = $index.IndexOf('id="job-fit-settings-panel"')
 $settingsEnd = $index.IndexOf('id="loading-overlay"')
 if ($jobSearchStart -lt 0 -or $qualificationsStart -le $jobSearchStart -or
-    $preferencesStart -le $qualificationsStart -or $settingsEnd -le $preferencesStart) {
+    $preferencesStart -le $qualificationsStart -or $jobFitStart -le $preferencesStart -or
+    $settingsEnd -le $jobFitStart) {
     throw "Settings tab panels are missing or out of order."
 }
 $settingsPanelMarkup = @{
     "Job Search" = $index.Substring($jobSearchStart, $qualificationsStart - $jobSearchStart)
     "Qualifications" = $index.Substring($qualificationsStart, $preferencesStart - $qualificationsStart)
-    "Preferences" = $index.Substring($preferencesStart, $settingsEnd - $preferencesStart)
+    "Preferences" = $index.Substring($preferencesStart, $jobFitStart - $preferencesStart)
+    "Job Fit" = $index.Substring($jobFitStart, $settingsEnd - $jobFitStart)
 }
 $requiredSettingsControls = @{
     "Job Search" = @(
@@ -317,6 +342,11 @@ $requiredSettingsControls = @{
         "minimum-pay",
         "theme-mode", "import-workspace-button", "export-workspace-button",
         "import-workspace-file", "reset-workspace-button"
+    )
+    "Job Fit" = @(
+        "job-fit-enabled", "job-fit-configuration", "job-fit-concept-search",
+        "job-fit-concept-select", "job-fit-preference-select", "job-fit-add-signal",
+        "job-fit-signal-list"
     )
 }
 foreach ($panelName in $requiredSettingsControls.Keys) {
@@ -335,8 +365,9 @@ if ($settingsPanelMarkup["Job Search"] -match 'saved automatically') {
     throw "Job Source incorrectly claims that source changes are saved automatically."
 }
 if ($settingsPanelMarkup["Qualifications"] -notmatch 'Changes on this tab are saved automatically\.' -or
-    $settingsPanelMarkup["Preferences"] -notmatch 'Changes on this tab are saved automatically\.') {
-    throw "The auto-save note is missing from My Qualifications or My Preferences."
+    $settingsPanelMarkup["Preferences"] -notmatch 'Changes on this tab are saved automatically\.' -or
+    $settingsPanelMarkup["Job Fit"] -notmatch 'Changes on this tab are saved automatically\.') {
+    throw "The auto-save note is missing from a settings panel."
 }
 if ($settingsPanelMarkup["Qualifications"] -match 'id="screening-heading"' -or
     $settingsPanelMarkup["Qualifications"] -match '>\s*Screening Rules\s*<') {

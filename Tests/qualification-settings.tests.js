@@ -12,9 +12,9 @@ const theme = fs.readFileSync(path.join(root, "wwwroot", "theme.css"), "utf8");
 
 const qualificationsStart = index.indexOf('id="qualifications-settings-panel"');
 const preferencesStart = index.indexOf('id="preferences-settings-panel"');
-const settingsEnd = index.indexOf('id="loading-overlay"');
+const jobFitStart = index.indexOf('id="job-fit-settings-panel"');
 const qualifications = index.slice(qualificationsStart, preferencesStart);
-const preferences = index.slice(preferencesStart, settingsEnd);
+const preferences = index.slice(preferencesStart, jobFitStart);
 
 assert.match(qualifications, /id="qualification-basics-tab"[\s\S]*?>\s*Basics\s*</);
 assert.match(qualifications, /id="qualification-credentials-tab"[\s\S]*?Certifications &amp; Licenses/);

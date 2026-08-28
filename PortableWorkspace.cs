@@ -15,7 +15,8 @@ public sealed record PortablePreferenceValues(
     PortableSearchPreferences Search,
     PortableQualifications Qualifications,
     PortableApplicationPreferences Application,
-    PortableCompensationPreferences? Compensation = null);
+    PortableCompensationPreferences? Compensation = null,
+    JobFitConfiguration? JobFit = null);
 
 public sealed record PortableJobSource(
     string CompanyId,
@@ -64,12 +65,19 @@ internal sealed partial class PortableWorkspaceService
 {
     public const string FormatIdentifier = "JobSearchManagerBackup";
     internal const string LegacyFormatIdentifier = "WorkdayJobManagerWorkspace";
-    public const int CurrentVersion = 3;
+    public const int CurrentVersion = 4;
     public const int MaximumImportBytes = 1_000_000;
     private readonly CompanyCatalog _companies;
+    private readonly JobConceptCatalog _jobConcepts;
     private readonly JsonSerializerOptions _json = new(JsonSerializerDefaults.Web);
 
-    public PortableWorkspaceService(CompanyCatalog companies) => _companies = companies;
+    public PortableWorkspaceService(
+        CompanyCatalog companies,
+        JobConceptCatalog? jobConcepts = null)
+    {
+        _companies = companies;
+        _jobConcepts = jobConcepts ?? JobConceptCatalog.LoadDefault();
+    }
 
     public PortableWorkspaceDocument Export(ViewerSettings settings, JobHistoryDocument history)
     {
@@ -124,7 +132,8 @@ internal sealed partial class PortableWorkspaceService
                 new PortableApplicationPreferences(
                     settings.ThemeMode,
                     settings.ExcludeStrongExtendedLocationRequirements),
-                new PortableCompensationPreferences(settings.MinimumSalary ?? 0m)),
+                new PortableCompensationPreferences(settings.MinimumSalary ?? 0m),
+                JobFitConfiguration.Normalize(settings.JobFit, _jobConcepts)),
             curatedJobs);
     }
 
@@ -158,7 +167,7 @@ internal sealed partial class PortableWorkspaceService
             throw new WorkspaceImportException(
                 "The selected file is not a Job Search Manager workspace export.");
         }
-        if (document.Version is not (1 or 2 or CurrentVersion))
+        if (document.Version is not (1 or 2 or 3 or CurrentVersion))
         {
             throw new WorkspaceImportException($"Workspace version {document.Version} is not supported.");
         }
@@ -194,6 +203,9 @@ internal sealed partial class PortableWorkspaceService
             throw new WorkspaceImportException("The theme value is not supported.");
         }
         var importedThemeMode = ThemeModes.Normalize(application.ThemeMode);
+        var importedJobFit = document.Preferences.JobFit ?? JobFitConfiguration.Disabled;
+        ValidateJobFit(importedJobFit);
+        importedJobFit = JobFitConfiguration.Normalize(importedJobFit, _jobConcepts);
 
         PendingJobSource? pendingSource = null;
         if (document.Preferences.JobSource is { } importedSource)
@@ -264,6 +276,7 @@ internal sealed partial class PortableWorkspaceService
             HideStrictWorkAuthorizationMismatch = qualifications.HideStrictWorkAuthorizationMismatch,
             ExcludeStrongExtendedLocationRequirements =
                 application.ExcludeStrongExtendedLocationRequirements,
+            JobFit = importedJobFit,
             PendingSource = pendingSource
         };
 
@@ -334,6 +347,35 @@ internal sealed partial class PortableWorkspaceService
         return new PortableWorkspaceImport(
             importedSettings,
             new JobHistoryDocument(5, mergedHistory));
+    }
+
+    private void ValidateJobFit(JobFitConfiguration configuration)
+    {
+        if (configuration.Signals is null || configuration.Signals.Count > 100)
+        {
+            throw new WorkspaceImportException(
+                "The workspace file contains an invalid number of Job Fit signals.");
+        }
+
+        var ids = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var signal in configuration.Signals)
+        {
+            if (signal is null || !_jobConcepts.Contains(signal.ConceptId))
+            {
+                throw new WorkspaceImportException(
+                    "The workspace file contains an unknown canonical Job Fit concept.");
+            }
+            if (!JobFitPreferenceLevels.IsSupported(signal.Preference))
+            {
+                throw new WorkspaceImportException(
+                    $"The Job Fit preference for '{signal.ConceptId}' is not supported.");
+            }
+            if (!ids.Add(signal.ConceptId))
+            {
+                throw new WorkspaceImportException(
+                    $"The workspace file contains duplicate Job Fit concept '{signal.ConceptId}'.");
+            }
+        }
     }
 
     private void ValidateCuratedJob(PortableCuratedJob? job)

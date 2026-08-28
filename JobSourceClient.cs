@@ -12,7 +12,7 @@ namespace JobSearchManager;
 
 public sealed class JobSourceClient
 {
-    public const int CurrentAnalysisVersion = 4;
+    public const int CurrentAnalysisVersion = 5;
 
     private sealed record ListingBatch(IReadOnlyList<ListingPosting> Listings, bool Truncated);
     private sealed record SmartSummaryBatch(IReadOnlyList<SmartRecruitersPosting> Postings, bool Truncated);
@@ -26,6 +26,7 @@ public sealed class JobSourceClient
     private readonly WorkAuthorizationDetector _workAuthorizationDetector;
     private readonly RemoteWorkDetector _remoteWorkDetector;
     private readonly ExtendedLocationRequirementDetector _extendedLocationRequirementDetector;
+    private readonly JobConceptDetector _jobConceptDetector;
     private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
 
     public JobSourceClient(
@@ -36,7 +37,8 @@ public sealed class JobSourceClient
         AcademicQualificationDetector academicQualificationDetector,
         WorkAuthorizationDetector workAuthorizationDetector,
         RemoteWorkDetector remoteWorkDetector,
-        ExtendedLocationRequirementDetector extendedLocationRequirementDetector)
+        ExtendedLocationRequirementDetector extendedLocationRequirementDetector,
+        JobConceptDetector? jobConceptDetector = null)
     {
         _httpClient = httpClient;
         _options = options.Value;
@@ -46,6 +48,7 @@ public sealed class JobSourceClient
         _workAuthorizationDetector = workAuthorizationDetector;
         _remoteWorkDetector = remoteWorkDetector;
         _extendedLocationRequirementDetector = extendedLocationRequirementDetector;
+        _jobConceptDetector = jobConceptDetector ?? JobConceptDetector.CreateDefault();
 
         if (_options.PageSize is < 1 or > 20)
         {
@@ -545,6 +548,13 @@ public sealed class JobSourceClient
             title, primaryLocation, additionalLocations, descriptionHtml);
         var extendedLocationRequirement = _extendedLocationRequirementDetector.Analyze(
             title, primaryLocation, additionalLocations, descriptionHtml);
+        var detectedConcepts = _jobConceptDetector.Analyze(
+            title,
+            primaryLocation,
+            additionalLocations,
+            descriptionHtml,
+            remoteWork,
+            extendedLocationRequirement);
 
         return new JobRecord(
             title,
@@ -585,7 +595,9 @@ public sealed class JobSourceClient
             null,
             listing.IdentityDiscriminator,
             credentials.UnknownRequirements,
-            extendedLocationRequirement);
+            extendedLocationRequirement,
+            detectedConcepts,
+            _jobConceptDetector.CatalogVersion);
     }
 
     public async Task<JobRecord> FetchJobDetailAsync(
@@ -619,7 +631,9 @@ public sealed class JobSourceClient
         job.WorkAuthorization?.AnalysisVersion == WorkAuthorizationDetector.CurrentAnalysisVersion &&
         job.RemoteWork?.AnalysisVersion == RemoteWorkDetector.CurrentAnalysisVersion &&
         job.ExtendedLocationRequirement?.AnalysisVersion ==
-            ExtendedLocationRequirementDetector.CurrentAnalysisVersion;
+            ExtendedLocationRequirementDetector.CurrentAnalysisVersion &&
+        job.DetectedConcepts is not null &&
+        job.JobConceptCatalogVersion == _jobConceptDetector.CatalogVersion;
 
     internal JobRecord Reclassify(JobRecord job)
     {
@@ -635,6 +649,13 @@ public sealed class JobSourceClient
             job.Title, job.PrimaryLocation, job.AdditionalLocations, description);
         var extendedLocationRequirement = _extendedLocationRequirementDetector.Analyze(
             job.Title, job.PrimaryLocation, job.AdditionalLocations, description);
+        var detectedConcepts = _jobConceptDetector.Analyze(
+            job.Title,
+            job.PrimaryLocation,
+            job.AdditionalLocations,
+            description,
+            remoteWork,
+            extendedLocationRequirement);
         return job with
         {
             PayMinimum = salary.Minimum,
@@ -657,6 +678,8 @@ public sealed class JobSourceClient
             WorkAuthorization = authorization,
             RemoteWork = remoteWork,
             ExtendedLocationRequirement = extendedLocationRequirement,
+            DetectedConcepts = detectedConcepts,
+            JobConceptCatalogVersion = _jobConceptDetector.CatalogVersion,
             AnalysisVersion = CurrentAnalysisVersion
         };
     }

@@ -49,6 +49,8 @@ builder.Services.AddSingleton<AcademicQualificationDetector>();
 builder.Services.AddSingleton<WorkAuthorizationDetector>();
 builder.Services.AddSingleton<RemoteWorkDetector>();
 builder.Services.AddSingleton<ExtendedLocationRequirementDetector>();
+builder.Services.AddSingleton<JobConceptCatalog>();
+builder.Services.AddSingleton<JobConceptDetector>();
 builder.Services.AddSingleton<PortableWorkspaceService>();
 builder.Services.AddSingleton<SharedSourceRefreshCoordinator>();
 // Preserve the established data-protection discriminator so existing Azure
@@ -259,6 +261,9 @@ app.MapGet("/api/companies", (CompanyCatalog companies) => Results.Ok(
 
 app.MapGet("/api/credentials", (CredentialDetector credentials) =>
     Results.Ok(credentials.CatalogItems));
+
+app.MapGet("/api/job-fit/concepts", (JobConceptCatalog concepts) =>
+    Results.Ok(concepts.Options));
 
 app.MapGet("/api/workspace/identity", (WorkspaceContext workspace) =>
     Results.Ok(new { workspaceId = workspace.WorkspaceId }));

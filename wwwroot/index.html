@@ -10,7 +10,7 @@
   <link rel="manifest" href="/site.webmanifest?v=1">
   <script src="/theme-bootstrap.js"></script>
   <link rel="stylesheet" href="/theme.css?v=10">
-  <link rel="stylesheet" href="/styles.css?v=17">
+  <link rel="stylesheet" href="/styles.css?v=18">
   <script src="/vendor/purify.min.js" defer></script>
   <script src="/country-ordering.js?v=2" defer></script>
   <script src="/company-selector.js?v=1" defer></script>
@@ -22,7 +22,8 @@
   <script src="/clearance-fit.js?v=1" defer></script>
   <script src="/extended-location-ui.js?v=5" defer></script>
   <script src="/education-fit.js?v=2" defer></script>
-  <script src="/app.js?v=19" defer></script>
+  <script src="/job-fit.js?v=1" defer></script>
+  <script src="/app.js?v=20" defer></script>
 </head>
 <body>
   <main id="app-shell" class="app-shell" aria-busy="true" inert>
@@ -324,6 +325,10 @@
           <button id="preferences-settings-tab" class="detail-tab" type="button" role="tab"
                   aria-selected="false" aria-controls="preferences-settings-panel" tabindex="-1">
             My Preferences
+          </button>
+          <button id="job-fit-settings-tab" class="detail-tab" type="button" role="tab"
+                  aria-selected="false" aria-controls="job-fit-settings-panel" tabindex="-1">
+            Job Fit
           </button>
         </div>
 
@@ -638,6 +643,47 @@
             </button>
           </div>
         </section>
+        </div>
+
+        <div id="job-fit-settings-panel" class="settings-tab-panel" role="tabpanel"
+             aria-labelledby="job-fit-settings-tab" hidden>
+          <section class="settings-section" aria-labelledby="job-fit-heading">
+            <p class="settings-save-note">Changes on this tab are saved automatically.</p>
+            <h3 id="job-fit-heading">Optional Job Fit scoring</h3>
+            <label class="settings-check">
+              <input id="job-fit-enabled" type="checkbox">
+              <span>
+                Enable Job Fit scoring for this workspace
+                <small>When disabled, no Job Fit score is shown and existing filtering, sorting, and qualification behavior is unchanged.</small>
+              </span>
+            </label>
+          </section>
+          <div id="job-fit-configuration" hidden>
+            <section class="settings-section" aria-labelledby="job-fit-signals-heading">
+              <h3 id="job-fit-signals-heading">Canonical corpus signals</h3>
+              <p class="job-fit-introduction">
+                Choose detected concepts from the application corpus. Evidence phrases are normalized into these concepts during job ingestion; custom words cannot be added here.
+              </p>
+              <div class="job-fit-add-grid">
+                <label for="job-fit-concept-search">Filter concepts</label>
+                <input id="job-fit-concept-search" type="search" autocomplete="off"
+                       placeholder="Filter canonical concepts…">
+                <label for="job-fit-concept-select">Corpus concept</label>
+                <select id="job-fit-concept-select"></select>
+                <label for="job-fit-preference-select">Preference</label>
+                <select id="job-fit-preference-select">
+                  <option value="strongPositive">Strong Positive</option>
+                  <option value="positive" selected>Positive</option>
+                  <option value="negative">Negative</option>
+                  <option value="strongNegative">Strong Negative</option>
+                  <option value="hardConflict">Hard Conflict</option>
+                </select>
+                <span></span>
+                <button id="job-fit-add-signal" class="secondary-button" type="button">Add Signal</button>
+              </div>
+              <div id="job-fit-signal-list" class="job-fit-signal-list" aria-live="polite"></div>
+            </section>
+          </div>
         </div>
       </div>
     </section>

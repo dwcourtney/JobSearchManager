@@ -219,7 +219,9 @@ public sealed record JobRecord(
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     string? IdentityDiscriminator = null,
     IReadOnlyList<UnknownCredentialRequirement>? UnknownCredentialRequirements = null,
-    ExtendedLocationRequirementAnalysis? ExtendedLocationRequirement = null)
+    ExtendedLocationRequirementAnalysis? ExtendedLocationRequirement = null,
+    IReadOnlyList<DetectedJobConcept>? DetectedConcepts = null,
+    int JobConceptCatalogVersion = 0)
 {
     public string StableId => $"{CompanyId}:{(!string.IsNullOrWhiteSpace(RequisitionId)
         ? RequisitionId
@@ -317,6 +319,8 @@ public sealed record ExtendedLocationRequirementSignal(
     string Confidence,
     string Reason,
     string Evidence);
+
+public sealed record DetectedJobConcept(string ConceptId, string Evidence);
 
 internal sealed record SalaryAnalysis(
     decimal? Minimum,
@@ -416,6 +420,48 @@ public static class ThemeModes
     public static string Normalize(string? value) => IsSupported(value) ? value! : Default;
 }
 
+public static class JobFitPreferenceLevels
+{
+    public const string StrongPositive = "strongPositive";
+    public const string Positive = "positive";
+    public const string Negative = "negative";
+    public const string StrongNegative = "strongNegative";
+    public const string HardConflict = "hardConflict";
+
+    public static bool IsSupported(string? value) => value is
+        StrongPositive or Positive or Negative or StrongNegative or HardConflict;
+}
+
+public sealed record JobFitSignalPreference(string ConceptId, string Preference);
+
+public sealed record JobFitConfiguration(
+    bool Enabled,
+    IReadOnlyList<JobFitSignalPreference> Signals)
+{
+    public static JobFitConfiguration Disabled { get; } = new(false, []);
+
+    public static JobFitConfiguration Normalize(
+        JobFitConfiguration? configuration,
+        JobConceptCatalog concepts)
+    {
+        if (configuration is null)
+        {
+            return Disabled;
+        }
+
+        var signals = (configuration.Signals ?? [])
+            .Where(signal => signal is not null &&
+                concepts.Contains(signal.ConceptId) &&
+                JobFitPreferenceLevels.IsSupported(signal.Preference))
+            .GroupBy(signal => signal.ConceptId, StringComparer.Ordinal)
+            .Select(group => group.First())
+            .OrderBy(signal => signal.ConceptId, StringComparer.Ordinal)
+            .Take(100)
+            .ToArray();
+        return new JobFitConfiguration(configuration.Enabled, signals);
+    }
+}
+
 public sealed record ViewerSettings(
     IReadOnlyList<string> IncludeKeywords,
     IReadOnlyList<string> ExcludeKeywords,
@@ -439,7 +485,8 @@ public sealed record ViewerSettings(
     bool HideStrictWorkAuthorizationMismatch = false,
     bool? HasConfiguredSource = null,
     PendingJobSource? PendingSource = null,
-    bool ExcludeStrongExtendedLocationRequirements = false)
+    bool ExcludeStrongExtendedLocationRequirements = false,
+    JobFitConfiguration? JobFit = null)
 {
     public static ViewerSettings Default { get; } = new(
         [], [], 0m, "metadata", "all", true,
@@ -459,7 +506,8 @@ public sealed record ViewerSettings(
         false,
         false,
         null,
-        false);
+        false,
+        JobFitConfiguration.Disabled);
 }
 
 public sealed record JobListItem(
@@ -484,6 +532,7 @@ public sealed record JobListItem(
     JobListWorkAuthorization? WorkAuthorization,
     JobListRemoteWork? RemoteWork,
     JobListExtendedLocationRequirement? ExtendedLocationRequirement,
+    IReadOnlyList<DetectedJobConcept> DetectedConcepts,
     bool AnalysisPending)
 {
     public static JobListItem FromJob(JobRecord job) => new(
@@ -520,6 +569,9 @@ public sealed record JobListItem(
         string.IsNullOrWhiteSpace(job.DescriptionHtml) || job.ExtendedLocationRequirement is null
             ? null
             : JobListExtendedLocationRequirement.FromAnalysis(job.ExtendedLocationRequirement),
+        string.IsNullOrWhiteSpace(job.DescriptionHtml)
+            ? []
+            : job.DetectedConcepts ?? [],
         string.IsNullOrWhiteSpace(job.DescriptionHtml));
 }
 

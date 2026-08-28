@@ -10,6 +10,7 @@ public sealed class AppStateStore
     private const int CacheSchemaVersion = 6;
     private readonly ILogger<AppStateStore> _logger;
     private readonly CompanyCatalog _companyCatalog;
+    private readonly JobConceptCatalog _jobConceptCatalog;
     private readonly IWorkspaceDataStore _dataStore;
     private readonly SemaphoreSlim _cacheMigrationGate = new(1, 1);
     private bool _cacheMigrationChecked;
@@ -17,11 +18,13 @@ public sealed class AppStateStore
     public AppStateStore(
         ILogger<AppStateStore> logger,
         CompanyCatalog companyCatalog,
-        IWorkspaceDataStore dataStore)
+        IWorkspaceDataStore dataStore,
+        JobConceptCatalog? jobConceptCatalog = null)
     {
         _logger = logger;
         _companyCatalog = companyCatalog;
         _dataStore = dataStore;
+        _jobConceptCatalog = jobConceptCatalog ?? JobConceptCatalog.LoadDefault();
     }
 
     public string DataDirectory => _dataStore.Description;
@@ -599,6 +602,7 @@ public sealed class AppStateStore
             new SecurityProfile(clearanceLevel, publicTrust),
             new WorkAuthorizationProfile(usWorkAuthorizationStatus, sponsorship),
             new CredentialProfile(credentialInventoryStatus, heldCredentialIds));
+        var jobFit = JobFitConfiguration.Normalize(settings.JobFit, _jobConceptCatalog);
 
         var companySources = new Dictionary<string, CompanySourceSettings>(StringComparer.OrdinalIgnoreCase);
         foreach (var pair in settings.CompanySources ??
@@ -652,7 +656,8 @@ public sealed class AppStateStore
             settings.HideStrictWorkAuthorizationMismatch,
             hasConfiguredSource,
             pendingSource,
-            settings.ExcludeStrongExtendedLocationRequirements);
+            settings.ExcludeStrongExtendedLocationRequirements,
+            jobFit);
     }
 
     public CompanySourceSettings GetSourceSettings(ViewerSettings settings, string companyId)
