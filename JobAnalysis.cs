@@ -7,8 +7,8 @@ namespace JobSearchManager;
 internal static partial class JobAnalysis
 {
     private const string AmountRangePattern =
-        @"\$\s*(?<minimum>\d[\d,]*(?:\.\d{1,2})?)\s*(?:-|–|—|to)\s*" +
-        @"\$\s*(?<maximum>\d[\d,]*(?:\.\d{1,2})?)";
+        @"\$\s*(?<minimum>\d[\d,]*(?:\.\d{1,2})?)\s*(?<minimumScale>[kK])?\s*(?:-|–|—|to)\s*" +
+        @"\$?\s*(?<maximum>\d[\d,]*(?:\.\d{1,2})?)\s*(?<maximumScale>[kK])?";
 
     private static readonly (string Category, Regex Pattern)[] LocationRules =
     [
@@ -46,6 +46,12 @@ internal static partial class JobAnalysis
         if (standardMatch.Success)
         {
             return CreateSalaryAnalysis(standardMatch, "standard-pay-range");
+        }
+
+        var compensationMatch = CompensationRangeRegex().Match(text);
+        if (compensationMatch.Success)
+        {
+            return CreateSalaryAnalysis(compensationMatch, "compensation-range");
         }
 
         var separatedBoundsMatch = SeparatedSalaryBoundsRegex().Match(text);
@@ -197,6 +203,14 @@ internal static partial class JobAnalysis
                 out var maximum))
         {
             return new SalaryAnalysis(null, null, "unknown", "unparseable");
+        }
+        if (match.Groups["minimumScale"].Success)
+        {
+            minimum *= 1_000m;
+        }
+        if (match.Groups["maximumScale"].Success)
+        {
+            maximum *= 1_000m;
         }
 
         var nearbyText = match.Value + " " + match.Groups["context"].Value;
@@ -404,6 +418,13 @@ internal static partial class JobAnalysis
         @"(?<context>.{0,100})",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex StandardPayRangeRegex();
+
+    [GeneratedRegex(
+        @"\b(?:(?:Basic|Projected)\s+Compensation|Compensation\s+Details|" +
+        @"projected\s+compensation\s+range(?:\s+for\s+this\s+position)?)\s*(?:is|:)?\s*" +
+        AmountRangePattern + @"(?<context>.{0,100})",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex CompensationRangeRegex();
 
     [GeneratedRegex(
         @"\b(?:Minimum|Min)\s+(?:Annual\s+)?Salary\s*:?\s*\$\s*(?<minimum>\d[\d,]*(?:\.\d{1,2})?)" +

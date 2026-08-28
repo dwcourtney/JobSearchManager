@@ -9,7 +9,7 @@ namespace JobSearchManager;
 /// </summary>
 public sealed class AcademicQualificationDetector
 {
-    public const int CurrentAnalysisVersion = 3;
+    public const int CurrentAnalysisVersion = 4;
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromMilliseconds(250);
 
     public int AnalysisVersion => CurrentAnalysisVersion;
@@ -50,17 +50,21 @@ public sealed class AcademicQualificationDetector
                 continue;
             }
 
-            var segmentRequirement = ClassifyRequirement(segment, sectionRequirement);
             var fields = ExtractFields(segment, mentions[0]);
             for (var index = 0; index < mentions.Count; index++)
             {
                 var mention = mentions[index];
                 var nextIndex = index + 1 < mentions.Count ? mentions[index + 1].Index : segment.Length;
                 var experience = ExtractExperience(segment, mention, nextIndex);
+                var mentionRequirement = ClassifyRequirement(
+                    segment,
+                    mentions,
+                    index,
+                    sectionRequirement);
                 paths.Add(new AcademicQualificationPath(
                     mention.Level,
                     mention.SpecificDegree,
-                    segmentRequirement,
+                    mentionRequirement,
                     experience.Minimum,
                     experience.Maximum,
                     fields,
@@ -357,25 +361,75 @@ public sealed class AcademicQualificationDetector
         return field;
     }
 
-    private static string ClassifyRequirement(string segment, string sectionRequirement)
+    private static string ClassifyRequirement(
+        string segment,
+        IReadOnlyList<DegreeMention> mentions,
+        int mentionIndex,
+        string sectionRequirement)
     {
-        if (PreferredCueRegex.IsMatch(segment))
+        var groupStart = mentionIndex;
+        while (groupStart > 0 && DegreeAlternativeConnectorRegex.IsMatch(
+            segment[RangeEnd(mentions[groupStart - 1])..mentions[groupStart].Index]))
         {
-            return "preferred";
+            groupStart--;
         }
-        if (DesiredCueRegex.IsMatch(segment))
+        var groupEnd = mentionIndex;
+        while (groupEnd + 1 < mentions.Count && DegreeAlternativeConnectorRegex.IsMatch(
+            segment[RangeEnd(mentions[groupEnd])..mentions[groupEnd + 1].Index]))
         {
-            return "desired";
+            groupEnd++;
         }
-        if (RequiredCueRegex.IsMatch(segment))
+
+        var contextStart = mentions[groupStart].Index;
+        var contextEnd = groupEnd + 1 < mentions.Count
+            ? mentions[groupEnd + 1].Index
+            : segment.Length;
+        var context = segment[contextStart..contextEnd];
+        var explicitRequirement = EarliestExplicitRequirement(context);
+        if (explicitRequirement is not null)
         {
-            return "required";
+            return explicitRequirement;
         }
         if (sectionRequirement == "mentioned" && ImplicitQualificationRegex.IsMatch(segment))
         {
             return "minimum";
         }
         return sectionRequirement;
+    }
+
+    private static int RangeEnd(DegreeMention mention) => mention.Index + mention.Length;
+
+    private static string? EarliestExplicitRequirement(string context)
+    {
+        var matches = new (Match Match, string Requirement)[]
+        {
+            (NotRequiredCueRegex.Match(context), "preferred"),
+            (PreferredQualifierRegex.Match(context), "preferred"),
+            (DesiredQualifierRegex.Match(context), "desired"),
+            (RequiredQualifierRegex.Match(context), "required"),
+            (MinimumQualifierRegex.Match(context), "minimum")
+        };
+        return matches
+            .Where(candidate => candidate.Match.Success)
+            .Where(candidate => candidate.Requirement != "preferred" ||
+                !IsFieldPreferenceQualifier(context, candidate.Match))
+            .OrderBy(candidate => candidate.Match.Index)
+            .ThenBy(candidate => RequirementPriority(candidate.Requirement))
+            .Select(candidate => candidate.Requirement)
+            .FirstOrDefault();
+    }
+
+    private static bool IsFieldPreferenceQualifier(string context, Match qualifier)
+    {
+        foreach (Match fieldPreference in FieldPreferenceQualifierRegex.Matches(context))
+        {
+            if (qualifier.Index >= fieldPreference.Index &&
+                qualifier.Index < fieldPreference.Index + fieldPreference.Length)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static string UpdateSectionRequirement(string segment, string current)
@@ -459,9 +513,13 @@ public sealed class AcademicQualificationDetector
     private static readonly Regex AssociateRegex = CreateRegex(
         @"\bassociate(?:['’]s)?\s+(?:degree|of\s+(?:arts|science|applied\s+science))\b");
     private static readonly Regex BachelorRegex = CreateRegex(
-        @"\bbachelor(?:['’]s|s)?(?:\s+degree|\s+of\s+(?:arts|science)|(?=\s+in\b))\b|\bundergraduate\s+degree\b");
+        @"\bbachelor(?:['’]s|s)?(?:\s+degree|\s+of\s+(?:arts|science)|" +
+        @"(?=\s+in\b)|(?=\s+(?:is\s+)?(?:required|preferred|desired|desirable|minimum|a\s+plus)\b)|" +
+        @"(?=\s+or\s+))\b|\bundergraduate\s+degree\b");
     private static readonly Regex MasterRegex = CreateRegex(
-        @"\bmaster(?:['’]s|s)?(?:\s+degree|\s+of\s+(?:arts|science))\b|\bgraduate\s+degree\b|\bMBA\s+degree\b|" +
+        @"\bmaster(?:['’]s|s)?(?:\s+degree|\s+of\s+(?:arts|science)|" +
+        @"(?=\s+(?:is\s+)?(?:required|preferred|desired|desirable|minimum|a\s+plus)\b)|" +
+        @"(?=\s*(?:/|or\b)))\b|\bgraduate\s+degree\b|\bMBA\s+degree\b|" +
         @"\badvanced\s+degree\s*\(\s*master(?:['’]s|s)?\s+or\s+higher\s*\)");
     private static readonly Regex DoctorateRegex = CreateRegex(
         @"\b(?:doctoral(?:-level)?\s+degree|doctorate(?:\s+degree)?)\b");
@@ -469,7 +527,10 @@ public sealed class AcademicQualificationDetector
         @"(?<![\p{L}\p{N}])Ph\.?\s*D\.?(?![\p{L}\p{N}])|\bDoctor\s+of\s+Philosophy\b");
     private static readonly Regex ContextualAbbreviationRegex = CreateRegex(
         @"(?<![\p{L}\p{N}])(?<degree>A\.?\s*A\.?\s*S?\.?|B\.?\s*A\.?|B\.?\s*S\.?\s*(?:C|EE)?\.?|M\.?\s*A\.?|M\.?\s*S\.?\s*C?\.?|MBA)(?![\p{L}\p{N}])" +
-        @"(?=\s*(?:degree\b|[/+]\s*\d|(?:and|with)\s+(?:at\s+least\s+)?\d|\bin\s+[A-Za-z]))");
+        @"(?=\s*(?:degree\b|or\s+(?:an?\s+)?degree\b|" +
+        @"[/+]\s*(?:\d|Ph\.?\s*D\.?|doctorate|doctoral|[BM]\.?\s*[AS]\.?)|" +
+        @"(?:is\s+)?(?:required|preferred|desired|desirable|minimum)\b|" +
+        @"(?:and|with)\s+(?:at\s+least\s+)?\d|\bin\s+[A-Za-z]))");
     private static readonly Regex ExperienceAfterDegreeRegex = CreateRegex(
         @"(?:\b(?:with|and|plus)\b|\+)\s*(?:at\s+least\s+|minimum\s+(?:of\s+)?)?(?<min>\d{1,2})\s*\+?\s*(?:[–—-]\s*(?<max>\d{1,2}))?\s*\+?\s*(?:years?|yrs?)\b");
     private static readonly Regex ExperienceBeforeDegreeRegex = CreateRegex(
@@ -501,25 +562,32 @@ public sealed class AcademicQualificationDetector
         @"\s+(?:is\s+)?(?:preferred|desired|required)$");
     private static readonly Regex IgnoredFieldFragmentRegex = CreateRegex(
         @"^(?:preferred|desired)$|\b(?:years?|experience|project\s+designs?|completion\s+of|more\s+years?)\b");
-    private static readonly Regex PreferredCueRegex = CreateRegex(
-        @"\b(?:degree|diploma|GED)\s+(?:is\s+)?preferred\b|" +
-        @"\b(?:bachelor(?:['’]s|s)?|master(?:['’]s|s)?|doctorate|Ph\.?\s*D\.?)\s+(?:degree\s+)?(?:is\s+)?preferred\b");
-    private static readonly Regex DesiredCueRegex = CreateRegex(
-        @"\b(?:degree|diploma|GED)\s+(?:is\s+)?(?:desired|highly\s+desired|desirable)\b|" +
-        @"\b(?:bachelor(?:['’]s|s)?|master(?:['’]s|s)?|doctorate|Ph\.?\s*D\.?)\s+(?:degree\s+)?(?:is\s+)?(?:desired|highly\s+desired|desirable)\b");
-    private static readonly Regex RequiredCueRegex = CreateRegex(
-        @"\b(?:degree\s+)?required\b|\brequires?\b.{0,45}\b(?:degree|BS|MS|doctorate|Ph\.?D\.?)\b|" +
-        @"\bmust\s+(?:have|possess|hold)\b.{0,80}\b(?:degree|diploma|GED)\b");
+    private static readonly Regex DegreeAlternativeConnectorRegex = CreateRegex(
+        @"^\s*(?:/|,?\s*(?:or|and)\s*)$");
+    private static readonly Regex NotRequiredCueRegex = CreateRegex(@"\bnot\s+required\b");
+    private static readonly Regex PreferredQualifierRegex = CreateRegex(
+        @"\bpreferred\b|\ba\s+plus\b|\b(?:an?\s+)?(?:asset|advantage)\b|\bbonus\b");
+    private static readonly Regex FieldPreferenceQualifierRegex = CreateRegex(
+        @",\s*preferred\s*,\s*or\b|;\s*[^;.]{1,100}\b(?:is\s+)?preferred\b");
+    private static readonly Regex DesiredQualifierRegex = CreateRegex(
+        @"\b(?:desired|highly\s+desired|desirable|advantageous)\b");
+    private static readonly Regex RequiredQualifierRegex = CreateRegex(
+        @"\brequired\b|\bmust\s+(?:have|possess|hold)\b");
+    private static readonly Regex MinimumQualifierRegex = CreateRegex(
+        @"\bminimum(?:\s+(?:education|degree|qualification))?\b");
     private static readonly Regex ImplicitQualificationRegex = CreateRegex(
         @"^(?:[•*·-]\s*)?(?:education\s*:\s*)?(?:high\s+school|GED|associate(?:['’]s|s)?|bachelor(?:['’]s|s)?|master(?:['’]s|s)?|doctorate|doctoral|Ph\.?\s*D\.?|" +
         @"A\.?\s*A\.?\s*S?\.?|B\.?\s*[AS]\.?|M\.?\s*[AS]\.?)\b");
     private static readonly Regex RequiredSectionRegex = CreateRegex(
         @"^(?:basic|required|minimum)\s+(?:qualifications?|requirements?|education|experience)\b|" +
+        @"^requirements?\s*:?$|^what\s+we\s+need\s+to\s+see\b|" +
         @"^what\s+(?:does\s+)?(?:[\p{L}\p{N}&.'-]+\s+){0,4}need\s+from\s+me\b|^about\s+the\s+must\s+haves\b");
     private static readonly Regex RequiredSectionMinimumRegex = CreateRegex(@"^(?:basic|minimum)\b");
     private static readonly Regex PreferredSectionRegex = CreateRegex(
         @"^(?:preferred|favorable)\s+(?:qualifications?|requirements?|education|experience)\b|" +
-        @"^you\s+might\s+also\s+have\b|^bonus\s+points\b");
+        @"^preferred\s*:?$|^ways?\s+to\s+stand\s+out(?:\s+from\s+the\s+crowd)?\b|" +
+        @"^nice\s+to\s+have\b|^you\s+might\s+also\s+have\b|^bonus(?:\s+points)?\b|" +
+        @"^what\s+(?:will|would)\s+help\s+you\s+stand\s+out\b");
     private static readonly Regex DesiredSectionRegex = CreateRegex(
         @"^desired\s+(?:qualifications?|requirements?|education|experience)\b");
     private static readonly Regex SectionResetRegex = CreateRegex(

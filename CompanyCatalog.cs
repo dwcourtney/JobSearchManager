@@ -57,6 +57,7 @@ public sealed record CompanyCatalogDocument(
 public sealed record CompanyDefinition(
     string Id,
     string DisplayName,
+    string IndustryCategory,
     string ApiHost,
     string Tenant,
     string Site,
@@ -86,6 +87,7 @@ public sealed record CompanyDefinition(
     public void Validate()
     {
         if (string.IsNullOrWhiteSpace(Id) || string.IsNullOrWhiteSpace(DisplayName) ||
+            string.IsNullOrWhiteSpace(IndustryCategory) ||
             string.IsNullOrWhiteSpace(ApiHost) || string.IsNullOrWhiteSpace(Tenant) ||
             string.IsNullOrWhiteSpace(Site) || string.IsNullOrWhiteSpace(CountryFacetParameter) ||
             !Uri.TryCreate(PublicSiteUrl, UriKind.Absolute, out var publicUri) ||

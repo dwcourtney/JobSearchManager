@@ -4,6 +4,7 @@
     {
       "id": "leidos",
       "displayName": "Leidos",
+      "industryCategory": "Defense & Federal",
       "apiHost": "leidos.wd5.myworkdayjobs.com",
       "tenant": "leidos",
       "site": "External",
@@ -20,6 +21,7 @@
     {
       "id": "mtm",
       "displayName": "MTM",
+      "industryCategory": "Healthcare & Transportation Services",
       "apiHost": "mtminc.wd1.myworkdayjobs.com",
       "tenant": "mtminc",
       "site": "MTMTransit_External",
@@ -33,6 +35,7 @@
     {
       "id": "boeing",
       "displayName": "Boeing",
+      "industryCategory": "Defense & Federal",
       "apiHost": "boeing.wd1.myworkdayjobs.com",
       "tenant": "boeing",
       "site": "EXTERNAL_CAREERS",
@@ -48,6 +51,7 @@
     {
       "id": "northrop-grumman",
       "displayName": "Northrop Grumman",
+      "industryCategory": "Defense & Federal",
       "apiHost": "ngc.wd1.myworkdayjobs.com",
       "tenant": "ngc",
       "site": "Northrop_Grumman_External_Site",
@@ -63,6 +67,7 @@
     {
       "id": "nvidia",
       "displayName": "NVIDIA",
+      "industryCategory": "Semiconductors",
       "apiHost": "nvidia.wd5.myworkdayjobs.com",
       "tenant": "nvidia",
       "site": "NVIDIAExternalCareerSite",
@@ -110,6 +115,7 @@
     {
       "id": "parsons",
       "displayName": "Parsons",
+      "industryCategory": "Defense & Federal",
       "apiHost": "parsons.wd5.myworkdayjobs.com",
       "tenant": "parsons",
       "site": "Search",
@@ -125,6 +131,7 @@
     {
       "id": "aecom",
       "displayName": "AECOM",
+      "industryCategory": "Engineering & Infrastructure",
       "apiHost": "api.smartrecruiters.com",
       "tenant": "AECOM2",
       "site": "postings",
@@ -141,6 +148,7 @@
     {
       "id": "rtx",
       "displayName": "RTX",
+      "industryCategory": "Defense & Federal",
       "apiHost": "globalhr.wd5.myworkdayjobs.com",
       "tenant": "globalhr",
       "site": "REC_RTX_Ext_Gateway",
@@ -182,6 +190,87 @@
         "3fdcdf714c56010b127e34b44e063abc",
         "fcaf58e9ef3501b2918dc4dd8d19899b",
         "22490aebfb05103ebe17060ad7390bce"
+      ]
+    },
+    {
+      "id": "amentum",
+      "displayName": "Amentum",
+      "industryCategory": "Defense & Federal",
+      "apiHost": "pae.wd1.myworkdayjobs.com",
+      "tenant": "pae",
+      "site": "Amentum_Careers",
+      "publicSiteUrl": "https://pae.wd1.myworkdayjobs.com/Amentum_Careers",
+      "defaultCountry": {
+        "id": null,
+        "label": "All countries"
+      },
+      "remoteLocationIds": [
+        "2b9a7b8b48bf01010e090b4a75cb0000"
+      ]
+    },
+    {
+      "id": "kbr",
+      "displayName": "KBR",
+      "industryCategory": "Defense & Federal",
+      "apiHost": "kbr.wd5.myworkdayjobs.com",
+      "tenant": "kbr",
+      "site": "KBR_Careers",
+      "publicSiteUrl": "https://kbr.wd5.myworkdayjobs.com/KBR_Careers",
+      "defaultCountry": {
+        "id": "7d7dca02efe301804a21b8e9f401c00f",
+        "label": "United States"
+      },
+      "countryFacetParameter": "locationHierarchy1",
+      "remoteLocationIds": [
+        "b7e4888e385f0100c42aad8bc64c0000"
+      ]
+    },
+    {
+      "id": "booz-allen-hamilton",
+      "displayName": "Booz Allen Hamilton",
+      "industryCategory": "Defense & Federal",
+      "apiHost": "bah.wd1.myworkdayjobs.com",
+      "tenant": "bah",
+      "site": "BAH_Jobs",
+      "publicSiteUrl": "https://bah.wd1.myworkdayjobs.com/BAH_Jobs",
+      "defaultCountry": {
+        "id": null,
+        "label": "All countries"
+      },
+      "remoteLocationIds": []
+    },
+    {
+      "id": "servicenow",
+      "displayName": "ServiceNow",
+      "industryCategory": "Enterprise Software",
+      "apiHost": "api.smartrecruiters.com",
+      "tenant": "ServiceNow",
+      "site": "postings",
+      "publicSiteUrl": "https://jobs.smartrecruiters.com/ServiceNow",
+      "defaultCountry": {
+        "id": "us",
+        "label": "United States"
+      },
+      "remoteLocationIds": [
+        "remote:us"
+      ],
+      "provider": "smartRecruiters"
+    },
+    {
+      "id": "nxp-semiconductors",
+      "displayName": "NXP Semiconductors",
+      "industryCategory": "Semiconductors",
+      "apiHost": "nxp.wd3.myworkdayjobs.com",
+      "tenant": "nxp",
+      "site": "careers",
+      "publicSiteUrl": "https://nxp.wd3.myworkdayjobs.com/careers",
+      "defaultCountry": {
+        "id": "bc33aa3152ec42d4995f4791a106ed09",
+        "label": "United States of America"
+      },
+      "countryFacetParameter": "Location_Country",
+      "remoteLocationIds": [
+        "98d67abaaa8a100fa63430f6acfc9346"
       ]
     }
   ]

@@ -7,6 +7,60 @@
 
 /* Typography */
 :root {
+  /* Official Nord palette: https://www.nordtheme.com/docs/colors-and-palettes */
+  --nord0: #2E3440;
+  --nord1: #3B4252;
+  --nord2: #434C5E;
+  --nord3: #4C566A;
+  --nord4: #D8DEE9;
+  --nord5: #E5E9F0;
+  --nord6: #ECEFF4;
+  --nord7: #8FBCBB;
+  --nord8: #88C0D0;
+  --nord9: #81A1C1;
+  --nord10: #5E81AC;
+  --nord11: #BF616A;
+  --nord12: #D08770;
+  --nord13: #EBCB8B;
+  --nord14: #A3BE8C;
+  --nord15: #B48EAD;
+
+  /* Official Dracula Classic palette: https://draculatheme.com/spec */
+  --dracula-background: #282A36;
+  --dracula-current-line: #6272A4;
+  --dracula-selection: #44475A;
+  --dracula-foreground: #F8F8F2;
+  --dracula-comment: #6272A4;
+  --dracula-red: #FF5555;
+  --dracula-orange: #FFB86C;
+  --dracula-yellow: #F1FA8C;
+  --dracula-green: #50FA7B;
+  --dracula-cyan: #8BE9FD;
+  --dracula-purple: #BD93F9;
+  --dracula-pink: #FF79C6;
+
+  /* Derived Dracula neutrals. Canvas/control darken Background to 80%/90%;
+     panel/elevated blend Background with Selection at 82:18 and 62:38;
+     hover is their 50:50 midpoint; selected blends Selection with Current Line
+     at 72:28; outline and muted text use 65:35 and 78:22 anchor blends. */
+  --dracula-canvas: #20222B;
+  --dracula-panel: #2D2F3C;
+  --dracula-elevated: #333544;
+  --dracula-control: #242631;
+  --dracula-hover: #363948;
+  --dracula-selected: #4C536F;
+  --dracula-outline: #3C435E;
+  --dracula-text-muted: #D7DBE1;
+
+  /* Derived semantic tints: 88% Background plus 12% of the named accent. */
+  --dracula-red-tint: #422F3A;
+  --dracula-orange-tint: #423B3C;
+  --dracula-yellow-tint: #404340;
+  --dracula-green-tint: #2D433E;
+  --dracula-cyan-tint: #34414E;
+  --dracula-purple-tint: #3A374D;
+  --dracula-pink-tint: #423347;
+
   --font-family-ui: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --font-family-description: Arial, sans-serif;
   --font-size-micro: .68rem;
@@ -58,6 +112,8 @@
   --focus-ring-offset-default: 2px;
   --focus-ring-offset-compact: 1px;
   --selected-job-indicator-width: 4px;
+  --selected-job-outline-width: 2px;
+  --unseen-job-indicator-width: 2px;
   --status-indicator-width: 3px;
   --tab-indicator-width: 2px;
   --opacity-disabled: .7;
@@ -76,7 +132,7 @@
   --loading-spinner-size: 2.15rem;
   --loading-progress-height: .42rem;
   --loading-progress-fill-width: 42%;
-  --confirmation-panel-width: 34rem;
+  --confirmation-panel-width: 44rem;
   --confirmation-panel-padding: 1.55rem 1.7rem 1.35rem;
   --confirmation-panel-gap: .85rem;
   --confirmation-source-gap: .55rem;
@@ -114,7 +170,8 @@
   --animation-loading-progress:
     loading-progress var(--duration-loading-progress) var(--easing-loading-progress) infinite;
   --shadow-job-selected:
-    inset var(--selected-job-indicator-width) 0 0 var(--color-job-selected-indicator);
+    inset var(--selected-job-indicator-width) 0 0 var(--color-job-selected-indicator),
+    inset 0 0 0 var(--selected-job-outline-width) var(--color-job-selected-indicator);
   --shadow-keyword-highlight:
     inset 0 calc(-1 * var(--border-width-default)) 0 var(--color-keyword-highlight-underline);
   --color-confirmation-backdrop: var(--color-loading-backdrop);
@@ -129,6 +186,7 @@
   --color-confirmation-secondary-text: var(--color-secondary-button-text);
   --color-confirmation-secondary-background: var(--color-secondary-button-background);
   --color-confirmation-secondary-hover: var(--color-secondary-button-hover);
+  --color-primary-action-text: var(--color-header-text);
   --opacity-disabled-control: .65;
   --shadow-confirmation-panel: var(--shadow-loading-panel);
   --color-applied-action: var(--color-save-action);
@@ -141,6 +199,20 @@
   --color-applied-badge-border: var(--color-new-badge-border);
   --color-applied-badge-text: var(--color-new-badge-text);
   --color-applied-badge-background: var(--color-new-badge-background);
+  --color-closed-action: var(--color-headroom-badge-text);
+  --color-closed-action-border: var(--color-headroom-badge-border);
+  --color-closed-action-background: transparent;
+  --color-closed-action-hover: var(--color-headroom-badge-background);
+  --color-reopen-action: var(--color-restore-action-text);
+  --color-reopen-action-border: var(--color-restore-action-border);
+  --color-reopen-action-background: var(--color-restore-action-background);
+  --color-reopen-action-hover: var(--color-restore-action-hover-background);
+  --color-closed-badge-border: var(--color-headroom-badge-border);
+  --color-closed-badge-text: var(--color-headroom-badge-text);
+  --color-closed-badge-background: var(--color-headroom-badge-background);
+  --color-close-reason-badge-border: var(--color-headroom-badge-border);
+  --color-close-reason-badge-text: var(--color-headroom-badge-text);
+  --color-close-reason-badge-background: var(--color-headroom-badge-background);
   --color-restore-action-hover-border: var(--color-dismiss-action-hover-border);
   --color-restore-action-hover-text: var(--color-dismiss-action-hover-text);
   --color-restore-action-hover-background: var(--color-dismiss-action-hover-background);
@@ -193,6 +265,15 @@
   --color-settings-surface-background: #ffffff;
   --color-settings-surface-border: #cbd4dc;
   --color-settings-section-separator: #d9e0e5;
+  --color-settings-subsection-divider: #d9e0e5;
+  --color-settings-tab-bar-background: #f3f6f8;
+  --color-settings-subtab-bar-background: #f7f9fb;
+  --color-settings-section-header-background: #f3f6f8;
+  --color-settings-section-header-border: #aebac5;
+  --color-accordion-header-background: #edf3f7;
+  --color-accordion-header-border: #aebac5;
+  --color-accordion-header-hover: #e4edf3;
+  --color-accordion-body-background: #ffffff;
 
   /* Forms and secondary actions */
   --color-input-background: #ffffff;
@@ -327,6 +408,12 @@
   --color-remote-strong-border: #bf795d;
   --color-remote-strong-text: #73351f;
   --color-remote-strong-background: #ffede7;
+  --color-deployment-question-border: #8da5d6;
+  --color-deployment-question-text: #2f477d;
+  --color-deployment-question-background: #edf1fb;
+  --color-deployment-strong-border: #a76a9b;
+  --color-deployment-strong-text: #69245d;
+  --color-deployment-strong-background: #faeafa;
 
   /* Error state */
   --color-error-border: #e1abab;
@@ -442,6 +529,15 @@
   --color-settings-surface-background: #172029;
   --color-settings-surface-border: #344451;
   --color-settings-section-separator: #3a4c59;
+  --color-settings-subsection-divider: #3a4c59;
+  --color-settings-tab-bar-background: #111a22;
+  --color-settings-subtab-bar-background: #1b2630;
+  --color-settings-section-header-background: #1b2630;
+  --color-settings-section-header-border: #526675;
+  --color-accordion-header-background: #20303b;
+  --color-accordion-header-border: #526675;
+  --color-accordion-header-hover: #2a3e4c;
+  --color-accordion-body-background: #111a22;
 
   /* Forms and secondary actions */
   --color-input-background: #111a22;
@@ -576,6 +672,12 @@
   --color-remote-strong-border: #9d624d;
   --color-remote-strong-text: #f2c1b0;
   --color-remote-strong-background: #472b25;
+  --color-deployment-question-border: #637cb0;
+  --color-deployment-question-text: #cad8f7;
+  --color-deployment-question-background: #293752;
+  --color-deployment-strong-border: #936087;
+  --color-deployment-strong-text: #f3c7ec;
+  --color-deployment-strong-background: #43263e;
 
   /* Error state */
   --color-error-border: #8c5559;
@@ -643,4 +745,618 @@
   --color-description-heading: #d9ecf8;
   --color-keyword-highlight-background: #735f18;
   --color-keyword-highlight-underline: #b99a2f;
+}
+
+/* Nord — Polar Night: official Polar Night surfaces with Snow Storm text. */
+[data-theme="nord-polar-night"] {
+  color-scheme: dark;
+  --nord-theme-background: var(--nord0);
+  --nord-theme-surface: var(--nord1);
+  --nord-theme-surface-secondary: var(--nord2);
+  --nord-theme-surface-hover: var(--nord2);
+  --nord-theme-surface-selected: var(--nord3);
+  --nord-theme-border: var(--nord3);
+  --nord-theme-border-strong: var(--nord9);
+  --nord-theme-text: var(--nord6);
+  --nord-theme-text-secondary: var(--nord4);
+  --nord-theme-heading: var(--nord6);
+  --nord-theme-header: var(--nord0);
+  --nord-theme-header-hover: var(--nord2);
+  --nord-theme-accent: var(--nord8);
+  --nord-theme-accent-hover: var(--nord7);
+  --nord-theme-action-text: var(--nord8);
+  --nord-theme-action-hover-text: var(--nord7);
+  --nord-theme-accent-soft: var(--nord2);
+  --nord-theme-focus: var(--nord13);
+  --nord-theme-input: var(--nord0);
+  --nord-theme-muted-surface: var(--nord2);
+  --nord-theme-info-border: var(--nord9);
+  --nord-theme-info-surface: var(--nord2);
+  --nord-theme-success-border: var(--nord14);
+  --nord-theme-success-text: var(--nord14);
+  --nord-theme-success-surface: var(--nord2);
+  --nord-theme-warning-border: var(--nord13);
+  --nord-theme-warning-text: var(--nord13);
+  --nord-theme-warning-surface: var(--nord2);
+  --nord-theme-danger-border: var(--nord11);
+  --nord-theme-danger-text: var(--nord11);
+  --nord-theme-danger-surface: var(--nord2);
+  --nord-theme-orange-border: var(--nord12);
+  --nord-theme-orange-surface: var(--nord2);
+  --nord-theme-purple-border: var(--nord15);
+  --nord-theme-purple-surface: var(--nord2);
+  --nord-theme-overlay: rgba(46, 52, 64, .82);
+  --nord-theme-detail-header: rgba(59, 66, 82, .97);
+  --nord-theme-shadow: 0 .8rem 2.4rem rgba(46, 52, 64, .72);
+  --nord-theme-highlight: var(--nord13);
+  --nord-theme-highlight-underline: var(--nord12);
+}
+
+/* Nord — Snow Storm: official Snow Storm surfaces with Polar Night text. */
+[data-theme="nord-snow-storm"] {
+  color-scheme: light;
+  --nord-theme-background: var(--nord5);
+  --nord-theme-surface: var(--nord6);
+  --nord-theme-surface-secondary: var(--nord5);
+  --nord-theme-surface-hover: var(--nord5);
+  --nord-theme-surface-selected: var(--nord4);
+  --nord-theme-border: var(--nord4);
+  --nord-theme-border-strong: var(--nord3);
+  --nord-theme-text: var(--nord0);
+  --nord-theme-text-secondary: var(--nord3);
+  --nord-theme-heading: var(--nord0);
+  --nord-theme-header: var(--nord1);
+  --nord-theme-header-hover: var(--nord2);
+  --nord-theme-accent: var(--nord10);
+  --nord-theme-accent-hover: var(--nord3);
+  --nord-theme-action-text: var(--nord3);
+  --nord-theme-action-hover-text: var(--nord0);
+  --nord-theme-accent-soft: var(--nord4);
+  --nord-theme-focus: var(--nord10);
+  --nord-theme-input: var(--nord6);
+  --nord-theme-muted-surface: var(--nord5);
+  --nord-theme-info-border: var(--nord9);
+  --nord-theme-info-surface: var(--nord5);
+  --nord-theme-success-border: var(--nord14);
+  --nord-theme-success-text: var(--nord0);
+  --nord-theme-success-surface: var(--nord5);
+  --nord-theme-warning-border: var(--nord13);
+  --nord-theme-warning-text: var(--nord0);
+  --nord-theme-warning-surface: var(--nord5);
+  --nord-theme-danger-border: var(--nord11);
+  --nord-theme-danger-text: var(--nord0);
+  --nord-theme-danger-surface: var(--nord5);
+  --nord-theme-orange-border: var(--nord12);
+  --nord-theme-orange-surface: var(--nord5);
+  --nord-theme-purple-border: var(--nord15);
+  --nord-theme-purple-surface: var(--nord5);
+  --nord-theme-overlay: rgba(46, 52, 64, .62);
+  --nord-theme-detail-header: rgba(236, 239, 244, .97);
+  --nord-theme-shadow: 0 .8rem 2.4rem rgba(46, 52, 64, .28);
+  --nord-theme-highlight: var(--nord13);
+  --nord-theme-highlight-underline: var(--nord12);
+}
+
+/* Shared Nord semantic mapping. Components remain unaware of Nord. */
+[data-theme="nord-polar-night"],
+[data-theme="nord-snow-storm"] {
+  /* Core surfaces and text */
+  --color-background: var(--nord-theme-background);
+  --color-surface: var(--nord-theme-surface);
+  --color-surface-secondary: var(--nord-theme-surface-secondary);
+  --color-border: var(--nord-theme-border);
+  --color-border-strong: var(--nord-theme-border-strong);
+  --color-text-primary: var(--nord-theme-text);
+  --color-text-secondary: var(--nord-theme-text-secondary);
+  --color-text-heading: var(--nord-theme-heading);
+  --color-label: var(--nord-theme-text);
+  --color-tap-highlight: transparent;
+
+  /* Header and accent */
+  --color-header-background: var(--nord-theme-header);
+  --color-header-text: var(--nord6);
+  --color-header-secondary: var(--nord4);
+  --color-accent: var(--nord-theme-accent);
+  --color-accent-hover: var(--nord-theme-accent-hover);
+  --color-accent-soft: var(--nord-theme-accent-soft);
+  --color-focus-ring: var(--nord-theme-focus);
+  --color-link: var(--nord-theme-action-text);
+  --color-link-hover: var(--nord-theme-action-hover-text);
+  --color-tab-text: var(--nord4);
+  --color-tab-hover-text: var(--nord6);
+  --color-tab-hover-background: var(--nord-theme-header-hover);
+  --color-tab-active-text: var(--nord6);
+  --color-tab-active-background: var(--nord3);
+  --color-tab-active-border: var(--nord-theme-focus);
+  --color-tab-inactive-border: transparent;
+  --color-tab-background: transparent;
+
+  /* Navigation context and settings */
+  --color-source-background: var(--nord-theme-surface-secondary);
+  --color-source-text: var(--nord-theme-text-secondary);
+  --color-source-action: var(--nord-theme-action-text);
+  --color-source-action-hover: var(--nord-theme-action-hover-text);
+  --color-source-hover-background: var(--nord-theme-surface-hover);
+  --color-source-button-background: transparent;
+  --color-settings-background: var(--nord-theme-background);
+  --color-settings-surface-background: var(--nord-theme-surface);
+  --color-settings-surface-border: var(--nord-theme-border);
+  --color-settings-section-separator: var(--nord-theme-border);
+  --color-settings-subsection-divider: var(--nord-theme-border);
+  --color-settings-tab-bar-background: var(--nord-theme-background);
+  --color-settings-subtab-bar-background: var(--nord-theme-surface-secondary);
+  --color-settings-section-header-background: var(--nord-theme-surface-secondary);
+  --color-settings-section-header-border: var(--nord-theme-border-strong);
+  --color-accordion-header-background: var(--nord-theme-surface-secondary);
+  --color-accordion-header-border: var(--nord-theme-border-strong);
+  --color-accordion-header-hover: var(--nord-theme-surface-selected);
+  --color-accordion-body-background: var(--nord-theme-surface);
+
+  /* Forms and secondary actions */
+  --color-input-background: var(--nord-theme-input);
+  --color-input-text: var(--nord-theme-text);
+  --color-input-prefix: var(--nord-theme-text-secondary);
+  --color-secondary-button-border: var(--nord-theme-border-strong);
+  --color-secondary-button-text: var(--nord-theme-text);
+  --color-secondary-button-background: var(--nord-theme-surface-secondary);
+  --color-secondary-button-hover: var(--nord-theme-surface-selected);
+  --color-primary-action-border: transparent;
+  --color-currency-field-background: transparent;
+  --color-destructive-button: var(--nord11);
+  --color-destructive-button-hover: var(--nord12);
+  --color-destructive-button-border: var(--nord11);
+  --color-destructive-button-text: var(--nord6);
+  --color-reset-section-background: var(--nord-theme-danger-surface);
+  --color-reset-section-text: var(--nord-theme-text);
+  --color-reset-section-secondary: var(--nord-theme-text-secondary);
+  --color-reset-panel-border: var(--nord-theme-danger-border);
+  --color-reset-warning-text: var(--nord-theme-danger-text);
+
+  /* Filter and section headers */
+  --color-filter-toggle-text: var(--nord-theme-text);
+  --color-filter-toggle-background: var(--nord-theme-surface-secondary);
+  --color-filter-toggle-hover: var(--nord-theme-surface-hover);
+  --color-pane-heading-text: var(--nord-theme-text-secondary);
+  --color-pane-heading-background: var(--nord-theme-surface-secondary);
+  --color-detail-tab-text: var(--nord-theme-text-secondary);
+  --color-detail-tab-background: transparent;
+  --color-detail-tab-hover: var(--nord-theme-surface-hover);
+  --color-detail-tab-active-text: var(--nord-theme-accent-hover);
+  --color-detail-tab-active-background: var(--nord-theme-surface);
+  --color-detail-tab-active-border: var(--nord-theme-accent);
+  --color-glance-background: var(--nord-theme-background);
+  --color-glance-card-background: var(--nord-theme-surface);
+  --color-glance-card-border: var(--nord-theme-border);
+  --color-summary-separator: var(--nord-theme-border);
+  --color-summary-row-separator: var(--nord-theme-border);
+  --color-posting-strip-background: var(--nord-theme-surface-secondary);
+  --color-posting-strip-text: var(--nord-theme-text-secondary);
+  --color-age-heading-text: var(--nord-theme-text);
+  --color-age-heading-background: var(--nord-theme-surface-secondary);
+  --color-age-heading-hover: var(--nord-theme-surface-hover);
+  --color-age-heading-border: var(--nord-theme-border);
+
+  /* Job results */
+  --color-job-border: var(--nord-theme-border);
+  --color-job-hover: var(--nord-theme-surface-hover);
+  --color-job-selected: var(--nord-theme-surface-selected);
+  --color-job-selected-indicator: var(--nord-theme-accent);
+  --color-job-pay: var(--nord-theme-text-secondary);
+  --color-hidden-job-background: var(--nord-theme-muted-surface);
+  --color-job-action-background: transparent;
+  --color-dismiss-action: var(--nord-theme-text-secondary);
+  --color-dismiss-action-border: transparent;
+  --color-dismiss-action-background: transparent;
+  --color-dismiss-action-hover-border: var(--nord-theme-danger-border);
+  --color-dismiss-action-hover-text: var(--nord-theme-danger-text);
+  --color-dismiss-action-hover-background: var(--nord-theme-danger-surface);
+  --color-restore-action-border: var(--nord-theme-info-border);
+  --color-restore-action-text: var(--nord-theme-text);
+  --color-restore-action-background: var(--nord-theme-info-surface);
+  --color-save-action: var(--nord-theme-text-secondary);
+  --color-save-action-border: transparent;
+  --color-save-action-background: transparent;
+  --color-save-action-hover: var(--nord-theme-surface-hover);
+  --color-save-action-active: var(--nord13);
+  --color-saved-badge-border: var(--nord13);
+  --color-saved-badge-text: var(--nord-theme-text);
+  --color-saved-badge-background: var(--nord-theme-warning-surface);
+
+  /* Keyword chips */
+  --color-chip-border: var(--nord-theme-info-border);
+  --color-chip-text: var(--nord-theme-text);
+  --color-chip-action: var(--nord-theme-accent);
+  --color-chip-action-hover: var(--nord-theme-surface-selected);
+  --color-chip-action-background: transparent;
+  --color-include-chip-border: var(--nord-theme-success-border);
+  --color-include-chip-text: var(--nord-theme-text);
+  --color-include-chip-background: var(--nord-theme-success-surface);
+  --color-include-chip-action: var(--nord14);
+  --color-include-chip-action-hover: var(--nord-theme-surface-selected);
+  --color-exclude-chip-border: var(--nord-theme-danger-border);
+  --color-exclude-chip-text: var(--nord-theme-text);
+  --color-exclude-chip-background: var(--nord-theme-danger-surface);
+  --color-exclude-chip-action: var(--nord11);
+  --color-exclude-chip-action-hover: var(--nord-theme-surface-selected);
+
+  /* Badges and compact notices */
+  --color-new-badge-border: var(--nord-theme-success-border);
+  --color-new-badge-text: var(--nord-theme-text);
+  --color-new-badge-background: var(--nord-theme-success-surface);
+  --color-clearance-badge-border: var(--nord-theme-info-border);
+  --color-clearance-badge-text: var(--nord-theme-text);
+  --color-clearance-badge-background: var(--nord-theme-info-surface);
+  --color-credential-badge-border: var(--nord-theme-accent);
+  --color-credential-badge-text: var(--nord-theme-text);
+  --color-credential-badge-background: var(--nord-theme-info-surface);
+  --color-analysis-pending-badge-border: var(--color-clearance-badge-border);
+  --color-analysis-pending-badge-text: var(--color-clearance-badge-text);
+  --color-analysis-pending-badge-background: var(--color-clearance-badge-background);
+  --color-credential-required-border: var(--nord-theme-orange-border);
+  --color-credential-required-text: var(--nord-theme-text);
+  --color-credential-required-background: var(--nord-theme-orange-surface);
+  --color-academic-badge-border: var(--nord7);
+  --color-academic-badge-text: var(--nord-theme-text);
+  --color-academic-badge-background: var(--nord-theme-success-surface);
+  --color-education-mismatch-badge-border: var(--nord-theme-orange-border);
+  --color-education-mismatch-badge-text: var(--nord-theme-text);
+  --color-education-mismatch-badge-background: var(--nord-theme-orange-surface);
+  --color-clearance-mismatch-badge-border: var(--nord-theme-danger-border);
+  --color-clearance-mismatch-badge-text: var(--nord-theme-text);
+  --color-clearance-mismatch-badge-background: var(--nord-theme-danger-surface);
+  --color-work-authorization-badge-border: var(--nord-theme-info-border);
+  --color-work-authorization-badge-text: var(--nord-theme-text);
+  --color-work-authorization-badge-background: var(--nord-theme-info-surface);
+  --color-work-authorization-mismatch-border: var(--nord-theme-danger-border);
+  --color-work-authorization-mismatch-text: var(--nord-theme-text);
+  --color-work-authorization-mismatch-background: var(--nord-theme-danger-surface);
+  --color-location-badge-border: var(--nord-theme-warning-border);
+  --color-location-badge-text: var(--nord-theme-text);
+  --color-location-badge-background: var(--nord-theme-warning-surface);
+  --color-headroom-badge-border: var(--nord-theme-purple-border);
+  --color-headroom-badge-text: var(--nord-theme-text);
+  --color-headroom-badge-background: var(--nord-theme-purple-surface);
+  --color-hidden-badge-border: var(--nord-theme-border-strong);
+  --color-hidden-badge-text: var(--nord-theme-text-secondary);
+  --color-hidden-badge-background: var(--nord-theme-muted-surface);
+  --color-remote-question-border: var(--nord-theme-warning-border);
+  --color-remote-question-text: var(--nord-theme-text);
+  --color-remote-question-background: var(--nord-theme-warning-surface);
+  --color-remote-strong-border: var(--nord-theme-danger-border);
+  --color-remote-strong-text: var(--nord-theme-text);
+  --color-remote-strong-background: var(--nord-theme-danger-surface);
+  --color-deployment-question-border: var(--nord-theme-info-border);
+  --color-deployment-question-text: var(--nord-theme-text);
+  --color-deployment-question-background: var(--nord-theme-info-surface);
+  --color-deployment-strong-border: var(--nord-theme-purple-border);
+  --color-deployment-strong-text: var(--nord-theme-text);
+  --color-deployment-strong-background: var(--nord-theme-purple-surface);
+
+  /* Errors, loading, and dialogs */
+  --color-error-border: var(--nord-theme-danger-border);
+  --color-error-text: var(--nord-theme-text);
+  --color-error-background: var(--nord-theme-danger-surface);
+  --color-loading-backdrop: var(--nord-theme-overlay);
+  --color-loading-surface: var(--nord-theme-surface);
+  --color-loading-panel-border: var(--nord-theme-border-strong);
+  --color-loading-text-primary: var(--nord-theme-text);
+  --color-loading-text-secondary: var(--nord-theme-text-secondary);
+  --color-loading-progress-track: var(--nord-theme-surface-secondary);
+  --color-loading-progress-fill: var(--nord-theme-accent);
+  --shadow-loading-panel: var(--nord-theme-shadow);
+
+  /* Cache status and qualification analysis */
+  --color-cache-border: var(--nord-theme-warning-border);
+  --color-cache-text: var(--nord-theme-text);
+  --color-cache-background: var(--nord-theme-warning-surface);
+  --color-clearance-status-meets-text: var(--nord-theme-success-text);
+  --color-clearance-status-mismatch-text: var(--nord-theme-danger-text);
+  --color-clearance-status-review-text: var(--nord-theme-warning-text);
+  --color-authorization-status-meets-text: var(--nord-theme-success-text);
+  --color-authorization-status-mismatch-text: var(--nord-theme-danger-text);
+  --color-authorization-status-review-text: var(--nord-theme-warning-text);
+  --color-education-mismatch-border: var(--nord-theme-orange-border);
+  --color-education-mismatch-text: var(--nord-theme-text);
+  --color-education-mismatch-background: var(--nord-theme-orange-surface);
+  --color-education-status-meets-border: var(--nord-theme-success-border);
+  --color-education-status-meets-text: var(--nord-theme-text);
+  --color-education-status-meets-background: var(--nord-theme-success-surface);
+  --color-education-status-uncertain-border: var(--nord-theme-warning-border);
+  --color-education-status-uncertain-text: var(--nord-theme-text);
+  --color-education-status-uncertain-background: var(--nord-theme-warning-surface);
+  --color-fit-compatible-border: var(--nord-theme-success-border);
+  --color-fit-compatible-text: var(--nord-theme-text);
+  --color-fit-compatible-background: var(--nord-theme-success-surface);
+  --color-fit-review-border: var(--nord-theme-warning-border);
+  --color-fit-review-text: var(--nord-theme-text);
+  --color-fit-review-background: var(--nord-theme-warning-surface);
+  --color-fit-blocker-border: var(--nord-theme-danger-border);
+  --color-fit-blocker-text: var(--nord-theme-text);
+  --color-fit-blocker-background: var(--nord-theme-danger-surface);
+  --color-summary-note-warning-border: var(--nord-theme-warning-border);
+  --color-summary-note-warning-text: var(--nord-theme-text);
+  --color-summary-note-warning-background: var(--nord-theme-warning-surface);
+  --color-summary-note-mismatch-border: var(--nord-theme-danger-border);
+  --color-summary-note-mismatch-text: var(--nord-theme-text);
+  --color-summary-note-mismatch-background: var(--nord-theme-danger-surface);
+  --color-summary-note-caution-border: var(--nord-theme-purple-border);
+  --color-summary-note-caution-text: var(--nord-theme-text);
+  --color-summary-note-caution-background: var(--nord-theme-purple-surface);
+  --color-summary-status-border: var(--nord-theme-info-border);
+  --color-summary-status-text: var(--nord-theme-text);
+  --color-summary-status-background: var(--nord-theme-info-surface);
+  --color-disclosure-text: var(--nord-theme-text-secondary);
+  --color-disclosure-action: var(--nord-theme-action-text);
+  --color-disclosure-action-hover: var(--nord-theme-action-hover-text);
+  --color-evidence-text: var(--nord-theme-text-secondary);
+
+  /* Posting content and keyword highlighting */
+  --color-detail-header-background: var(--nord-theme-detail-header);
+  --color-description-text: var(--nord-theme-text);
+  --color-description-heading: var(--nord-theme-heading);
+  --color-keyword-highlight-background: var(--nord-theme-highlight);
+  --color-keyword-highlight-underline: var(--nord-theme-highlight-underline);
+}
+
+/* Dracula: official Dracula Classic palette mapped to application semantics. */
+[data-theme="dracula"] {
+  color-scheme: dark;
+
+  /* Core surfaces and text */
+  --color-background: var(--dracula-canvas);
+  --color-surface: var(--dracula-panel);
+  --color-surface-secondary: var(--dracula-elevated);
+  --color-border: var(--dracula-outline);
+  --color-border-strong: var(--dracula-current-line);
+  --color-text-primary: var(--dracula-foreground);
+  --color-text-secondary: var(--dracula-text-muted);
+  --color-text-heading: var(--dracula-foreground);
+  --color-label: var(--dracula-foreground);
+  --color-tap-highlight: transparent;
+
+  /* Header and accent */
+  --color-header-background: var(--dracula-control);
+  --color-header-text: var(--dracula-foreground);
+  --color-header-secondary: var(--dracula-cyan);
+  --color-accent: var(--dracula-purple);
+  --color-accent-hover: var(--dracula-pink);
+  --color-accent-soft: var(--dracula-purple-tint);
+  --color-focus-ring: var(--dracula-yellow);
+  --color-link: var(--dracula-cyan);
+  --color-link-hover: var(--dracula-pink);
+  --color-tab-text: var(--dracula-foreground);
+  --color-tab-hover-text: var(--dracula-cyan);
+  --color-tab-hover-background: var(--dracula-hover);
+  --color-tab-active-text: var(--dracula-foreground);
+  --color-tab-active-background: var(--dracula-elevated);
+  --color-tab-active-border: var(--dracula-pink);
+  --color-tab-inactive-border: transparent;
+  --color-tab-background: transparent;
+
+  /* Navigation context and settings */
+  --color-source-background: var(--dracula-panel);
+  --color-source-text: var(--dracula-text-muted);
+  --color-source-action: var(--dracula-cyan);
+  --color-source-action-hover: var(--dracula-pink);
+  --color-source-hover-background: var(--dracula-hover);
+  --color-source-button-background: transparent;
+  --color-settings-background: var(--dracula-canvas);
+  --color-settings-surface-background: var(--dracula-panel);
+  --color-settings-surface-border: var(--dracula-outline);
+  --color-settings-section-separator: transparent;
+  --color-settings-subsection-divider: var(--dracula-outline);
+  --color-settings-tab-bar-background: var(--dracula-control);
+  --color-settings-subtab-bar-background: transparent;
+  --color-settings-section-header-background: transparent;
+  --color-settings-section-header-border: var(--dracula-purple);
+  --color-accordion-header-background: var(--dracula-elevated);
+  --color-accordion-header-border: var(--dracula-current-line);
+  --color-accordion-header-hover: var(--dracula-hover);
+  --color-accordion-body-background: var(--dracula-panel);
+
+  /* Forms and secondary actions */
+  --color-input-background: var(--dracula-control);
+  --color-input-text: var(--dracula-foreground);
+  --color-input-prefix: var(--dracula-text-muted);
+  --color-secondary-button-border: var(--dracula-outline);
+  --color-secondary-button-text: var(--dracula-foreground);
+  --color-secondary-button-background: var(--dracula-elevated);
+  --color-secondary-button-hover: var(--dracula-hover);
+  --color-primary-action-border: var(--dracula-purple);
+  --color-primary-action-text: var(--dracula-background);
+  --color-currency-field-background: transparent;
+  --color-destructive-button: var(--dracula-red-tint);
+  --color-destructive-button-hover: var(--dracula-hover);
+  --color-destructive-button-border: var(--dracula-red);
+  --color-destructive-button-text: var(--dracula-foreground);
+  --color-reset-section-background: var(--dracula-red-tint);
+  --color-reset-section-text: var(--dracula-foreground);
+  --color-reset-section-secondary: var(--dracula-text-muted);
+  --color-reset-panel-border: var(--dracula-red);
+  --color-reset-warning-text: var(--dracula-foreground);
+
+  /* Filter and section headers */
+  --color-filter-toggle-text: var(--dracula-foreground);
+  --color-filter-toggle-background: var(--dracula-elevated);
+  --color-filter-toggle-hover: var(--dracula-hover);
+  --color-pane-heading-text: var(--dracula-foreground);
+  --color-pane-heading-background: var(--dracula-elevated);
+  --color-detail-tab-text: var(--dracula-text-muted);
+  --color-detail-tab-background: transparent;
+  --color-detail-tab-hover: var(--dracula-hover);
+  --color-detail-tab-active-text: var(--dracula-cyan);
+  --color-detail-tab-active-background: var(--dracula-panel);
+  --color-detail-tab-active-border: var(--dracula-purple);
+  --color-glance-background: var(--dracula-canvas);
+  --color-glance-card-background: var(--dracula-panel);
+  --color-glance-card-border: var(--dracula-outline);
+  --color-summary-separator: var(--dracula-outline);
+  --color-summary-row-separator: var(--dracula-outline);
+  --color-posting-strip-background: var(--dracula-elevated);
+  --color-posting-strip-text: var(--dracula-text-muted);
+  --color-age-heading-text: var(--dracula-foreground);
+  --color-age-heading-background: var(--dracula-elevated);
+  --color-age-heading-hover: var(--dracula-hover);
+  --color-age-heading-border: var(--dracula-outline);
+
+  /* Job results */
+  --color-job-border: var(--dracula-outline);
+  --color-job-hover: var(--dracula-hover);
+  --color-job-selected: var(--dracula-selected);
+  --color-job-selected-indicator: var(--dracula-cyan);
+  --color-job-pay: var(--dracula-cyan);
+  --color-hidden-job-background: var(--dracula-elevated);
+  --color-job-action-background: transparent;
+  --color-dismiss-action: var(--dracula-foreground);
+  --color-dismiss-action-border: transparent;
+  --color-dismiss-action-background: transparent;
+  --color-dismiss-action-hover-border: var(--dracula-red);
+  --color-dismiss-action-hover-text: var(--dracula-red);
+  --color-dismiss-action-hover-background: var(--dracula-red-tint);
+  --color-restore-action-border: var(--dracula-cyan);
+  --color-restore-action-text: var(--dracula-foreground);
+  --color-restore-action-background: var(--dracula-cyan-tint);
+  --color-save-action: var(--dracula-foreground);
+  --color-save-action-border: transparent;
+  --color-save-action-background: transparent;
+  --color-save-action-hover: var(--dracula-hover);
+  --color-save-action-active: var(--dracula-yellow);
+  --color-saved-badge-border: var(--dracula-yellow);
+  --color-saved-badge-text: var(--dracula-foreground);
+  --color-saved-badge-background: var(--dracula-yellow-tint);
+
+  /* Keyword chips */
+  --color-chip-border: var(--dracula-cyan);
+  --color-chip-text: var(--dracula-foreground);
+  --color-chip-action: var(--dracula-cyan);
+  --color-chip-action-hover: var(--dracula-hover);
+  --color-chip-action-background: transparent;
+  --color-include-chip-border: var(--dracula-green);
+  --color-include-chip-text: var(--dracula-foreground);
+  --color-include-chip-background: var(--dracula-green-tint);
+  --color-include-chip-action: var(--dracula-green);
+  --color-include-chip-action-hover: var(--dracula-hover);
+  --color-exclude-chip-border: var(--dracula-red);
+  --color-exclude-chip-text: var(--dracula-foreground);
+  --color-exclude-chip-background: var(--dracula-red-tint);
+  --color-exclude-chip-action: var(--dracula-red);
+  --color-exclude-chip-action-hover: var(--dracula-hover);
+
+  /* Badges and compact notices */
+  --color-new-badge-border: var(--dracula-green);
+  --color-new-badge-text: var(--dracula-foreground);
+  --color-new-badge-background: var(--dracula-green-tint);
+  --color-clearance-badge-border: var(--dracula-cyan);
+  --color-clearance-badge-text: var(--dracula-foreground);
+  --color-clearance-badge-background: var(--dracula-cyan-tint);
+  --color-credential-badge-border: var(--dracula-purple);
+  --color-credential-badge-text: var(--dracula-foreground);
+  --color-credential-badge-background: var(--dracula-purple-tint);
+  --color-analysis-pending-badge-border: var(--dracula-cyan);
+  --color-analysis-pending-badge-text: var(--dracula-foreground);
+  --color-analysis-pending-badge-background: var(--dracula-cyan-tint);
+  --color-credential-required-border: var(--dracula-orange);
+  --color-credential-required-text: var(--dracula-foreground);
+  --color-credential-required-background: var(--dracula-orange-tint);
+  --color-academic-badge-border: var(--dracula-green);
+  --color-academic-badge-text: var(--dracula-foreground);
+  --color-academic-badge-background: var(--dracula-green-tint);
+  --color-education-mismatch-badge-border: var(--dracula-orange);
+  --color-education-mismatch-badge-text: var(--dracula-foreground);
+  --color-education-mismatch-badge-background: var(--dracula-orange-tint);
+  --color-clearance-mismatch-badge-border: var(--dracula-red);
+  --color-clearance-mismatch-badge-text: var(--dracula-foreground);
+  --color-clearance-mismatch-badge-background: var(--dracula-red-tint);
+  --color-work-authorization-badge-border: var(--dracula-purple);
+  --color-work-authorization-badge-text: var(--dracula-foreground);
+  --color-work-authorization-badge-background: var(--dracula-purple-tint);
+  --color-work-authorization-mismatch-border: var(--dracula-red);
+  --color-work-authorization-mismatch-text: var(--dracula-foreground);
+  --color-work-authorization-mismatch-background: var(--dracula-red-tint);
+  --color-location-badge-border: var(--dracula-yellow);
+  --color-location-badge-text: var(--dracula-foreground);
+  --color-location-badge-background: var(--dracula-yellow-tint);
+  --color-headroom-badge-border: var(--dracula-purple);
+  --color-headroom-badge-text: var(--dracula-foreground);
+  --color-headroom-badge-background: var(--dracula-purple-tint);
+  --color-hidden-badge-border: var(--dracula-outline);
+  --color-hidden-badge-text: var(--dracula-text-muted);
+  --color-hidden-badge-background: var(--dracula-elevated);
+  --color-remote-question-border: var(--dracula-yellow);
+  --color-remote-question-text: var(--dracula-foreground);
+  --color-remote-question-background: var(--dracula-yellow-tint);
+  --color-remote-strong-border: var(--dracula-red);
+  --color-remote-strong-text: var(--dracula-foreground);
+  --color-remote-strong-background: var(--dracula-red-tint);
+  --color-deployment-question-border: var(--dracula-purple);
+  --color-deployment-question-text: var(--dracula-foreground);
+  --color-deployment-question-background: var(--dracula-purple-tint);
+  --color-deployment-strong-border: var(--dracula-pink);
+  --color-deployment-strong-text: var(--dracula-foreground);
+  --color-deployment-strong-background: var(--dracula-pink-tint);
+
+  /* Errors, loading, and dialogs */
+  --color-error-border: var(--dracula-red);
+  --color-error-text: var(--dracula-foreground);
+  --color-error-background: var(--dracula-red-tint);
+  --color-loading-backdrop: rgba(40, 42, 54, .84);
+  --color-loading-surface: var(--dracula-panel);
+  --color-loading-panel-border: var(--dracula-purple);
+  --color-loading-text-primary: var(--dracula-foreground);
+  --color-loading-text-secondary: var(--dracula-foreground);
+  --color-loading-progress-track: var(--dracula-elevated);
+  --color-loading-progress-fill: var(--dracula-purple);
+  --shadow-loading-panel: 0 .8rem 2.4rem rgba(40, 42, 54, .78);
+
+  /* Cache status and qualification analysis */
+  --color-cache-border: var(--dracula-yellow);
+  --color-cache-text: var(--dracula-foreground);
+  --color-cache-background: var(--dracula-yellow-tint);
+  --color-clearance-status-meets-text: var(--dracula-green);
+  --color-clearance-status-mismatch-text: var(--dracula-red);
+  --color-clearance-status-review-text: var(--dracula-yellow);
+  --color-authorization-status-meets-text: var(--dracula-green);
+  --color-authorization-status-mismatch-text: var(--dracula-red);
+  --color-authorization-status-review-text: var(--dracula-yellow);
+  --color-education-mismatch-border: var(--dracula-orange);
+  --color-education-mismatch-text: var(--dracula-foreground);
+  --color-education-mismatch-background: var(--dracula-orange-tint);
+  --color-education-status-meets-border: var(--dracula-green);
+  --color-education-status-meets-text: var(--dracula-foreground);
+  --color-education-status-meets-background: var(--dracula-green-tint);
+  --color-education-status-uncertain-border: var(--dracula-yellow);
+  --color-education-status-uncertain-text: var(--dracula-foreground);
+  --color-education-status-uncertain-background: var(--dracula-yellow-tint);
+  --color-fit-compatible-border: var(--dracula-green);
+  --color-fit-compatible-text: var(--dracula-foreground);
+  --color-fit-compatible-background: var(--dracula-green-tint);
+  --color-fit-review-border: var(--dracula-yellow);
+  --color-fit-review-text: var(--dracula-foreground);
+  --color-fit-review-background: var(--dracula-yellow-tint);
+  --color-fit-blocker-border: var(--dracula-red);
+  --color-fit-blocker-text: var(--dracula-foreground);
+  --color-fit-blocker-background: var(--dracula-red-tint);
+  --color-summary-note-warning-border: var(--dracula-yellow);
+  --color-summary-note-warning-text: var(--dracula-foreground);
+  --color-summary-note-warning-background: var(--dracula-yellow-tint);
+  --color-summary-note-mismatch-border: var(--dracula-red);
+  --color-summary-note-mismatch-text: var(--dracula-foreground);
+  --color-summary-note-mismatch-background: var(--dracula-red-tint);
+  --color-summary-note-caution-border: var(--dracula-purple);
+  --color-summary-note-caution-text: var(--dracula-foreground);
+  --color-summary-note-caution-background: var(--dracula-purple-tint);
+  --color-summary-status-border: var(--dracula-cyan);
+  --color-summary-status-text: var(--dracula-foreground);
+  --color-summary-status-background: var(--dracula-cyan-tint);
+  --color-disclosure-text: var(--dracula-text-muted);
+  --color-disclosure-action: var(--dracula-cyan);
+  --color-disclosure-action-hover: var(--dracula-pink);
+  --color-evidence-text: var(--dracula-text-muted);
+
+  /* Posting content and keyword highlighting */
+  --color-detail-header-background: rgba(40, 42, 54, .97);
+  --color-description-text: var(--dracula-foreground);
+  --color-description-heading: var(--dracula-cyan);
+  --color-keyword-highlight-background: var(--dracula-yellow);
+  --color-keyword-highlight-underline: var(--dracula-orange);
 }

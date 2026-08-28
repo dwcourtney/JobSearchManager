@@ -8,7 +8,7 @@ namespace JobSearchManager;
 /// </summary>
 public sealed class RemoteWorkDetector
 {
-    public const int CurrentAnalysisVersion = 1;
+    public const int CurrentAnalysisVersion = 2;
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(1);
     private const RegexOptions Options =
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled;
@@ -22,6 +22,10 @@ public sealed class RemoteWorkDetector
     private static readonly Regex RemoteDesignationPattern = CreateRegex(
         @"\b(?:remote|telework(?:er)?|telecommut(?:e|er|ing)|work(?:ing)?\s+(?:from|at)\s+home|" +
         @"home[- ]based|WFH|virtual)\b");
+    private static readonly Regex ExplicitRemoteRolePattern = CreateRegex(
+        @"\bthis\s+(?:position|role)\s+is\s+(?:a\s+)?(?:U\.?S\.?\s+)?(?:fully\s+)?remote(?:[- ]telework)?\b|" +
+        @"\bthis\s+is\s+(?:a\s+)?(?:U\.?S\.?\s+)?remote[- ]telework\s+role\b|" +
+        @"\bthis\s+position\b.{0,140}\bfollows\s+a\s+remote\s+work\s+schedule\b");
     private static readonly Regex BlockEndPattern = CreateRegex(
         @"</(?:p|li|div|h[1-6])\s*>|<br\s*/?>");
     private static readonly Regex SentenceSplitPattern = CreateRegex(
@@ -31,7 +35,7 @@ public sealed class RemoteWorkDetector
         @"\b(?:prior|previous|demonstrated|relevant)?\s*experience\s+(?:working|supporting|performing|conducting|at|in|with)\b|" +
         @"\b(?:familiarity|knowledge|background)\s+(?:with|of|in)\b");
     private static readonly Regex CurrentObligationPattern = CreateRegex(
-        @"\b(?:must|required|requires?|will|shall|responsib(?:le|ilities)|you(?:'|â€™)?ll|this\s+(?:position|role)|" +
+        @"\b(?:must|required|requires?|will|shall|responsib(?:le|ilities)|you(?:'|\u2019)?ll|this\s+(?:position|role)|" +
         @"provide|perform|conduct|support|lead|assist|serve|deploys?)\b");
     private static readonly Regex TravelPercentagePattern = CreateRegex(
         @"\b(?<percent>\d{1,3})\s*%\s+travel\b|" +
@@ -46,8 +50,8 @@ public sealed class RemoteWorkDetector
     [
         new("scheduled-onsite", "strong",
             "scheduled onsite attendance",
-            CreateRegex(@"\b(?:work|be|spend|report|in[- ]person).{0,70}\b(?:one|two|three|four|five|[1-5])\s*(?:-|â€“)?\s*days?\s+(?:a|per)\s+week\b.{0,70}\b(?:on[- ]?site|in[- ]person|office|facility)\b|" +
-                        @"\b(?:one|two|three|four|five|[1-5])\s*(?:-|â€“)?\s*days?\s+(?:a|per)\s+week\b.{0,70}\b(?:on[- ]?site|in[- ]person|office|facility)\b")),
+            CreateRegex(@"\b(?:work|be|spend|report|in[- ]person).{0,70}\b(?:one|two|three|four|five|[1-5])\s*(?:-|\u2013)?\s*days?\s+(?:a|per)\s+week\b.{0,70}\b(?:on[- ]?site|in[- ]person|office|facility)\b|" +
+                        @"\b(?:one|two|three|four|five|[1-5])\s*(?:-|\u2013)?\s*days?\s+(?:a|per)\s+week\b.{0,70}\b(?:on[- ]?site|in[- ]person|office|facility)\b")),
         new("onsite-duty", "strong",
             "onsite duties",
             CreateRegex(@"\b(?:provide|perform|serve\s+as|lead|maintain).{0,45}\bon[- ]?site\b|" +
@@ -82,7 +86,11 @@ public sealed class RemoteWorkDetector
     {
         var metadata = string.Join(" ", new[] { title, primaryLocation }
             .Concat(additionalLocations ?? []));
-        var isRemoteDesignated = RemoteDesignationPattern.IsMatch(metadata);
+        var plainDescription = string.IsNullOrWhiteSpace(descriptionHtml)
+            ? ""
+            : JobAnalysis.HtmlToPlainText(descriptionHtml);
+        var isRemoteDesignated = RemoteDesignationPattern.IsMatch(metadata) ||
+            ExplicitRemoteRolePattern.IsMatch(plainDescription);
         if (!isRemoteDesignated)
         {
             return Empty(false, "not-remote-designated");
@@ -210,7 +218,7 @@ public sealed class RemoteWorkDetector
     private static string NormalizeEvidence(string value)
     {
         var normalized = WhitespacePattern.Replace(value, " ").Trim(' ', '.', ';', '\u2022');
-        return normalized.Length <= 300 ? normalized : normalized[..297] + "â€¦";
+        return normalized.Length <= 300 ? normalized : normalized[..297] + "...";
     }
 
     private static Regex CreateRegex(string pattern) =>

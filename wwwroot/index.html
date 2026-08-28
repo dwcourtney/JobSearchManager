@@ -9,15 +9,20 @@
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png?v=1" sizes="180x180">
   <link rel="manifest" href="/site.webmanifest?v=1">
   <script src="/theme-bootstrap.js"></script>
-  <link rel="stylesheet" href="/theme.css">
-  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/theme.css?v=10">
+  <link rel="stylesheet" href="/styles.css?v=17">
   <script src="/vendor/purify.min.js" defer></script>
   <script src="/country-ordering.js?v=2" defer></script>
+  <script src="/company-selector.js?v=1" defer></script>
   <script src="/job-posting-text.js" defer></script>
-  <script src="/job-workflow-state.js" defer></script>
+  <script src="/job-workflow-state.js?v=2" defer></script>
+  <script src="/job-unseen-state.js?v=1" defer></script>
   <script src="/job-source-state.js" defer></script>
-  <script src="/credential-fit.js" defer></script>
-  <script src="/app.js?v=3" defer></script>
+  <script src="/credential-fit.js?v=2" defer></script>
+  <script src="/clearance-fit.js?v=1" defer></script>
+  <script src="/extended-location-ui.js?v=5" defer></script>
+  <script src="/education-fit.js?v=2" defer></script>
+  <script src="/app.js?v=19" defer></script>
 </head>
 <body>
   <main id="app-shell" class="app-shell" aria-busy="true" inert>
@@ -29,7 +34,10 @@
         <button id="settings-tab" class="app-tab" type="button" role="tab"
                 aria-selected="false" aria-controls="settings-view">Settings</button>
       </nav>
-      <p id="last-refreshed" class="subtle">Starting…</p>
+      <p class="subtle header-status">
+        <span id="last-refreshed">Starting…</span>
+        <span id="cache-status" class="cache-status" hidden>Using cache</span>
+      </p>
       <button id="refresh-button" class="primary-button" type="button">Refresh</button>
     </header>
 
@@ -116,6 +124,10 @@
                       aria-selected="false" aria-controls="results-tab-panel" tabindex="-1">
                 Applied <span id="applied-job-count">(0)</span>
               </button>
+              <button id="closed-results-tab" class="results-tab" type="button" role="tab"
+                      aria-selected="false" aria-controls="results-tab-panel" tabindex="-1">
+                Closed <span id="closed-job-count">(0)</span>
+              </button>
               <button id="hidden-results-tab" class="results-tab" type="button" role="tab"
                       aria-selected="false" aria-controls="results-tab-panel" tabindex="-1">
                 Hidden <span id="hidden-job-count">(0)</span>
@@ -138,9 +150,10 @@
                 <div>
                   <h2 id="detail-title"></h2>
                   <p class="detail-identity">
-                    <span id="detail-new-badge" class="new-badge" hidden>NEW</span>
                     <span id="detail-saved-badge" class="saved-badge" hidden>Saved</span>
                     <span id="detail-applied-badge" class="applied-badge" hidden>Applied</span>
+                    <span id="detail-closed-badge" class="closed-badge" hidden>Closed</span>
+                    <span id="detail-close-reason-badge" class="close-reason-badge" hidden></span>
                     <span id="detail-hidden-badge" class="hidden-badge" hidden>Hidden</span>
                     <span id="detail-requisition" class="requisition"></span>
                   </p>
@@ -204,6 +217,17 @@
                   <details id="detail-clearance-evidence" class="evidence-disclosure">
                     <summary>Show evidence</summary>
                     <p id="detail-clearance-note-text"></p>
+                  </details>
+                </section>
+
+                <section id="detail-extended-location-requirement" class="summary-section"
+                         aria-labelledby="extended-location-requirement-heading" hidden>
+                  <h3 id="extended-location-requirement-heading">Deployment / Relocation</h3>
+                  <div id="detail-extended-location-destination" class="extended-location-destination"></div>
+                  <p id="detail-extended-location-summary" class="extended-location-summary"></p>
+                  <details class="evidence-disclosure">
+                    <summary>Show evidence</summary>
+                    <div id="detail-extended-location-evidence" class="disclosure-evidence"></div>
                   </details>
                 </section>
 
@@ -375,22 +399,19 @@
 
         <div id="qualifications-settings-panel" class="settings-tab-panel" role="tabpanel"
              aria-labelledby="qualifications-settings-tab" hidden>
-        <section class="settings-section" aria-labelledby="compensation-heading">
-          <p class="settings-save-note">Changes on this tab are saved automatically.</p>
-          <h3 id="compensation-heading">Compensation</h3>
-          <div class="settings-row">
-            <label for="minimum-pay">Minimum acceptable annual pay</label>
-            <div class="settings-control salary-filter">
-              <div class="currency-input">
-                <span aria-hidden="true">$</span>
-                <input id="minimum-pay" type="text" inputmode="numeric" autocomplete="off"
-                       placeholder="0" aria-describedby="minimum-pay-help">
-              </div>
-              <small id="minimum-pay-help">Jobs will not be hidden if no annual salary is listed or if the posting only provides non-annual pay.</small>
-            </div>
+          <p class="settings-save-note qualifications-save-note">Changes on this tab are saved automatically.</p>
+          <div class="settings-tabs qualification-subtabs" role="tablist" aria-label="Qualification categories">
+            <button id="qualification-basics-tab" class="detail-tab active" type="button" role="tab"
+                    aria-selected="true" aria-controls="qualification-basics-panel">
+              Basics
+            </button>
+            <button id="qualification-credentials-tab" class="detail-tab" type="button" role="tab"
+                    aria-selected="false" aria-controls="qualification-credentials-panel" tabindex="-1">
+              Certifications &amp; Licenses
+            </button>
           </div>
-        </section>
-
+          <div id="qualification-basics-panel" class="qualification-subtab-panel" role="tabpanel"
+               aria-labelledby="qualification-basics-tab">
         <section class="settings-section" aria-labelledby="education-heading">
           <h3 id="education-heading">Education</h3>
           <div class="settings-row">
@@ -417,28 +438,14 @@
               </select>
             </div>
           </div>
-        </section>
-
-        <section class="settings-section" aria-labelledby="credential-profile-heading">
-          <h3 id="credential-profile-heading">Certifications / Licenses</h3>
-          <div class="settings-row">
-            <label for="credential-inventory-status">Credential inventory</label>
-            <div class="settings-control">
-              <select id="credential-inventory-status">
-                <option value="notConfigured">Not configured</option>
-                <option value="none">I hold none</option>
-                <option value="complete">Complete inventory configured</option>
-              </select>
-              <small>A complete inventory lets Qualification Fit confirm named required credentials as met or missing. Open-ended equivalents remain review items unless the catalog identifies a concrete equivalent.</small>
-            </div>
-          </div>
-          <div id="held-credentials-field" class="settings-row" hidden>
-            <label for="held-credentials">Credentials held</label>
-            <div class="settings-control">
-              <select id="held-credentials" class="credential-profile-select" multiple size="10"
-                      aria-describedby="held-credentials-help"></select>
-              <small id="held-credentials-help">Select every current certification or license you hold. Use Ctrl or Command to select more than one.</small>
-            </div>
+          <div class="settings-check-list qualification-screening-option">
+            <label class="settings-check">
+              <input id="hide-strict-education-mismatch" type="checkbox">
+              <span>
+                Hide jobs with strict education requirements above my completed level
+                <small>Jobs will not be hidden if no education requirement is listed, or if the requirement is preferred, flexible, or uncertain.</small>
+              </span>
+            </label>
           </div>
         </section>
 
@@ -465,6 +472,15 @@
                 <option value="required">I require sponsorship now or in the future</option>
               </select>
             </div>
+          </div>
+          <div class="settings-check-list qualification-screening-option">
+            <label class="settings-check">
+              <input id="hide-strict-work-authorization-mismatch" type="checkbox">
+              <span>
+                Hide jobs with confidently incompatible strict work-authorization requirements
+                <small>Jobs will not be hidden if no work-authorization requirement is listed, or if the wording is preferred, export-control, U.S.-person, non-U.S., or uncertain.</small>
+              </span>
+            </label>
           </div>
         </section>
 
@@ -493,18 +509,7 @@
               </select>
             </div>
           </div>
-        </section>
-
-        <section class="settings-section" aria-labelledby="screening-heading">
-          <h3 id="screening-heading">Screening Rules</h3>
-          <div class="settings-check-list">
-            <label class="settings-check">
-              <input id="hide-strict-education-mismatch" type="checkbox">
-              <span>
-                Hide jobs with strict education requirements above my completed level
-                <small>Jobs will not be hidden if no education requirement is listed, or if the requirement is preferred, flexible, or uncertain.</small>
-              </span>
-            </label>
+          <div class="settings-check-list qualification-screening-option">
             <label class="settings-check">
               <input id="hide-strict-clearance-mismatch" type="checkbox">
               <span>
@@ -512,42 +517,69 @@
                 <small>Jobs will not be hidden if no clearance requirement is listed, or if the clearance is obtainable, preferred, or uncertain.</small>
               </span>
             </label>
-            <label class="settings-check">
-              <input id="hide-strict-work-authorization-mismatch" type="checkbox">
-              <span>
-                Hide jobs with confidently incompatible strict work-authorization requirements
-                <small>Jobs will not be hidden if no work-authorization requirement is listed, or if the wording is preferred, export-control, U.S.-person, non-U.S., or uncertain.</small>
-              </span>
-            </label>
           </div>
         </section>
+          </div>
+
+          <div id="qualification-credentials-panel" class="qualification-subtab-panel" role="tabpanel"
+               aria-labelledby="qualification-credentials-tab" hidden>
+            <section class="settings-section" aria-labelledby="credential-profile-heading">
+              <h3 id="credential-profile-heading">Certifications &amp; Licenses</h3>
+              <div class="settings-row">
+                <label for="credential-inventory-status">Credential inventory</label>
+                <div class="settings-control">
+                  <select id="credential-inventory-status">
+                    <option value="notConfigured">Not configured</option>
+                    <option value="none">I hold none</option>
+                    <option value="complete">Complete inventory configured</option>
+                  </select>
+                  <small>A complete inventory lets Qualification Fit distinguish held, missing, preferred, post-hire, and equivalent credential requirements.</small>
+                </div>
+              </div>
+              <div id="held-credentials-field" class="settings-row" hidden>
+                <label for="credential-search">Credentials held</label>
+                <div class="settings-control credential-inventory-control">
+                  <input id="credential-search" type="search" autocomplete="off"
+                         placeholder="Search credentials, issuers, or categories…"
+                         aria-describedby="held-credentials-help credential-selection-summary">
+                  <small id="held-credentials-help">Select every current certification, license, or endorsement you hold. Categories reflect credentials found in the current catalog and job corpus.</small>
+                  <div id="credential-selection-summary" class="selected-location-summary" aria-live="polite">No credentials selected.</div>
+                  <div id="held-credentials" class="credential-inventory-list"
+                       aria-label="Credential inventory"></div>
+                </div>
+              </div>
+            </section>
+          </div>
         </div>
 
         <div id="preferences-settings-panel" class="settings-tab-panel" role="tabpanel"
              aria-labelledby="preferences-settings-tab" hidden>
-        <section class="settings-section" aria-labelledby="automatic-checking-heading">
+        <section class="settings-section" aria-labelledby="compensation-heading">
           <p class="settings-save-note">Changes on this tab are saved automatically.</p>
-          <h3 id="automatic-checking-heading">Automatic Checking</h3>
+          <h3 id="compensation-heading">Compensation</h3>
+          <div class="settings-row">
+            <label for="minimum-pay">Minimum acceptable annual pay</label>
+            <div class="settings-control salary-filter">
+              <div class="currency-input">
+                <span aria-hidden="true">$</span>
+                <input id="minimum-pay" type="text" inputmode="numeric" autocomplete="off"
+                       placeholder="0" aria-describedby="minimum-pay-help">
+              </div>
+              <small id="minimum-pay-help">Jobs will not be hidden if no annual salary is listed or if the posting only provides non-annual pay.</small>
+            </div>
+          </div>
+        </section>
+
+        <section class="settings-section" aria-labelledby="deployment-filtering-heading">
+          <h3 id="deployment-filtering-heading">Deployment Filtering</h3>
           <div class="settings-check-list">
             <label class="settings-check">
-              <input id="automatic-check-enabled" type="checkbox" checked>
-              <span>Check for new jobs automatically</span>
+              <input id="exclude-strong-extended-location-requirements" type="checkbox">
+              <span>
+                Exclude deployment / remote-assignment jobs
+                <small>Hide Strong detections that explicitly require deployment, rotation, relocation, or extended work at locations such as Antarctica, Guam, or Ramstein AFB in Germany. Ordinary business travel is not excluded.</small>
+              </span>
             </label>
-          </div>
-          <div class="settings-row">
-            <label for="automatic-check-interval">Frequency</label>
-            <div class="settings-control compact-control">
-              <select id="automatic-check-interval">
-                <option value="30">Every 30 minutes</option>
-                <option value="60" selected>Every 1 hour</option>
-                <option value="120">Every 2 hours</option>
-                <option value="240">Every 4 hours</option>
-                <option value="480">Every 8 hours</option>
-              </select>
-              <small id="automatic-check-status" class="settings-status">
-                Last checked: Never · Next check: Scheduling…
-              </small>
-            </div>
           </div>
         </section>
 
@@ -557,8 +589,11 @@
             <label for="theme-mode">Theme</label>
             <div class="settings-control compact-control">
               <select id="theme-mode">
-                <option value="light">Light</option>
-                <option value="dark">Dark</option>
+                  <option value="light">Light</option>
+                  <option value="dark">Dark</option>
+                  <option value="nord-polar-night">Nord — Polar Night</option>
+                  <option value="nord-snow-storm">Nord — Snow Storm</option>
+                  <option value="dracula">Dracula</option>
               </select>
             </div>
           </div>
@@ -569,7 +604,7 @@
           <div class="portable-preferences-content">
             <div>
               <p>Back up portable settings and curated jobs to one JSON file, or restore them in another workspace.</p>
-              <small>Import replaces current portable settings and curated states. Saved, Applied, and Hidden jobs are included; the live catalog and full descriptions are excluded.</small>
+              <small>Import replaces current portable settings and curated states. Saved, Applied, Closed, and Hidden jobs are included; the live catalog and full descriptions are excluded.</small>
               <p id="portable-workspace-status" class="settings-status" role="status" aria-live="polite"></p>
             </div>
             <div class="portable-preferences-actions">
@@ -583,9 +618,20 @@
         <section class="settings-section reset-workspace-section" aria-labelledby="reset-workspace-heading">
           <h3 id="reset-workspace-heading">Reset Workspace</h3>
           <div class="reset-workspace-content">
-            <div>
+            <div class="reset-workspace-details">
               <p>Delete all settings, history, cached jobs, and preferences for this workspace.</p>
               <small>The application will reload with first-run defaults. This cannot be undone.</small>
+              <div class="workspace-identity">
+                <label for="workspace-id">Current Workspace ID</label>
+                <div class="workspace-identity-controls">
+                  <input id="workspace-id" type="text" value="Loading…" readonly
+                         autocomplete="off" spellcheck="false" aria-describedby="workspace-id-status">
+                  <button id="copy-workspace-id-button" class="confirmation-secondary-button" type="button"
+                          disabled>Copy</button>
+                </div>
+                <span id="workspace-id-status" class="workspace-identity-status" role="status"
+                      aria-live="polite"></span>
+              </div>
             </div>
             <button id="reset-workspace-button" class="destructive-button" type="button">
               Reset Current Workspace
@@ -658,7 +704,7 @@
           Stay in Settings
         </button>
         <button id="source-confirmation-discard" class="confirmation-secondary-button" type="button">
-          Cancel Changes and go to Jobs
+          Discard Changes and go to Jobs
         </button>
         <button id="source-confirmation-apply" class="primary-button" type="button">
           Apply and go to Jobs
@@ -692,6 +738,38 @@
         </button>
         <button id="reset-confirmation-submit" class="destructive-button" type="button">
           Reset Current Workspace
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <div id="close-application-overlay" class="loading-overlay confirmation-overlay"
+       role="dialog" aria-modal="true" aria-hidden="true"
+       aria-labelledby="close-application-title"
+       aria-describedby="close-application-copy close-application-error"
+       tabindex="-1" hidden>
+    <section class="loading-panel confirmation-panel close-application-panel">
+      <h2 id="close-application-title">Close application?</h2>
+      <p id="close-application-copy" class="confirmation-copy"></p>
+      <label class="close-application-reason" for="close-application-reason">
+        <span>Close reason</span>
+        <select id="close-application-reason">
+          <option value="PositionWithdrawn">Position Withdrawn — company canceled or withdrew the position</option>
+          <option value="NotSelected">Not Selected — no longer considered before screening or interview</option>
+          <option value="ScreenedOut">Screened Out — screening occurred and they did not proceed</option>
+          <option value="InterviewedOut">Interviewed Out — an interview occurred and they did not proceed</option>
+          <option value="Ghosted">Ghosted — no response for long enough to consider it closed</option>
+          <option value="Withdrew">Withdrew — you withdrew the application</option>
+          <option value="Other">Other</option>
+        </select>
+      </label>
+      <p id="close-application-error" class="reset-confirmation-error" role="alert" hidden></p>
+      <div class="confirmation-actions">
+        <button id="close-application-cancel" class="confirmation-secondary-button" type="button">
+          Cancel
+        </button>
+        <button id="close-application-submit" class="primary-button" type="button">
+          Close Application
         </button>
       </div>
     </section>

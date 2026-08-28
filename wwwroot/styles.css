@@ -567,14 +567,27 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 
 .confirmation-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
+  align-items: center;
   gap: var(--confirmation-actions-gap);
   margin-top: var(--confirmation-actions-margin-top);
 }
 
+.header-status {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: .15rem .4rem;
+}
+
+.cache-status { white-space: nowrap; }
+.cache-status::before { margin-right: .4rem; content: "·"; }
+
 .confirmation-actions button {
+  flex: 0 1 auto;
   padding: var(--confirmation-button-padding);
+  white-space: nowrap;
 }
 
 .confirmation-secondary-button {
@@ -659,15 +672,23 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   overflow-x: auto;
   padding: 0 .7rem;
   border-bottom: var(--border-width-default) solid var(--color-border);
-  background: var(--color-detail-header-background);
+  background: var(--color-settings-tab-bar-background);
 }
 .settings-tabs .detail-tab { flex: 0 0 auto; white-space: nowrap; }
 .settings-tab-panel { min-width: 0; }
+.qualification-subtabs {
+  padding-inline: 1.1rem;
+  background: var(--color-settings-subtab-bar-background);
+}
+.qualification-subtab-panel { min-width: 0; }
 .settings-section { padding: .9rem 1.1rem 1rem; }
 .settings-section + .settings-section { border-top: var(--border-width-default) solid var(--color-settings-section-separator); }
 .settings-section h3 {
   margin: 0 0 .72rem;
+  padding: .42rem .55rem;
+  border-left: var(--status-indicator-width) solid var(--color-settings-section-header-border);
   color: var(--color-text-heading);
+  background: var(--color-settings-section-header-background);
   font-size: var(--font-size-small);
   letter-spacing: var(--letter-spacing-section);
   text-transform: var(--text-transform-section);
@@ -713,6 +734,11 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   line-height: var(--line-height-control);
 }
 .settings-check-list { display: grid; gap: .62rem; }
+.qualification-screening-option {
+  margin-top: .75rem;
+  padding-top: .75rem;
+  border-top: var(--border-width-default) solid var(--color-settings-subsection-divider);
+}
 .settings-check {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -731,6 +757,7 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   font-size: var(--font-size-label);
   line-height: var(--line-height-note);
 }
+.qualifications-save-note { padding: .9rem 1.1rem 0; }
 
 .source-coverage-options { gap: .62rem; }
 .source-coverage-option { cursor: pointer; }
@@ -773,18 +800,19 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   overflow: auto;
   border: var(--border-width-default) solid var(--color-border);
   border-radius: var(--radius-control);
-  background: var(--color-surface);
+  background: var(--color-accordion-body-background);
 }
 .location-group + .location-group { border-top: var(--border-width-default) solid var(--color-border); }
 .location-group > summary {
   padding: .48rem .58rem;
+  border-left: var(--status-indicator-width) solid var(--color-accordion-header-border);
   color: var(--color-label);
-  background: var(--color-surface-secondary);
+  background: var(--color-accordion-header-background);
   cursor: pointer;
   font-size: var(--font-size-label);
   font-weight: var(--font-weight-semibold);
 }
-.location-group > summary:hover { background: var(--color-accent-soft); }
+.location-group > summary:hover { background: var(--color-accordion-header-hover); }
 .location-choice-list { display: grid; padding: .28rem .58rem .42rem; }
 .location-choice {
   display: grid;
@@ -896,7 +924,16 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 
 .job-card:hover { background: var(--color-job-hover); }
 
+.job-card.unseen:not(.dismissed) {
+  box-shadow: inset var(--unseen-job-indicator-width) 0 0 var(--color-job-selected-indicator);
+}
+
 .job-card.selected {
+  box-shadow: var(--shadow-job-selected);
+  background: var(--color-job-selected);
+}
+
+.job-card.unseen.selected:not(.dismissed) {
   box-shadow: var(--shadow-job-selected);
   background: var(--color-job-selected);
 }
@@ -985,6 +1022,49 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 .job-applied-button.applied .job-applied-icon-background { fill: currentColor; }
 .job-applied-button.applied .job-applied-icon-check { stroke: var(--color-applied-action-active-mark); }
 
+.job-close-application-button,
+.job-reopen-application-button {
+  position: absolute;
+  top: var(--job-action-top);
+  min-width: var(--job-action-min-size);
+  min-height: var(--job-action-min-size);
+  padding: .1rem .3rem;
+  border: var(--border-width-default) solid;
+  border-radius: var(--radius-badge);
+  cursor: pointer;
+  font-size: var(--font-size-icon);
+  line-height: var(--line-height-icon);
+}
+
+.job-close-application-button {
+  right: var(--job-action-third-offset);
+  border-color: var(--color-closed-action-border);
+  color: var(--color-closed-action);
+  background: var(--color-closed-action-background);
+}
+
+.job-close-application-button:hover { background: var(--color-closed-action-hover); }
+
+.job-reopen-application-button {
+  right: var(--job-action-edge-offset);
+  border-color: var(--color-reopen-action-border);
+  color: var(--color-reopen-action);
+  background: var(--color-reopen-action-background);
+}
+
+.job-reopen-application-button:hover { background: var(--color-reopen-action-hover); }
+
+.job-close-application-icon {
+  display: block;
+  width: var(--font-size-icon);
+  height: var(--font-size-icon);
+  margin: auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: var(--stroke-width-icon);
+  pointer-events: none;
+}
+
 .job-card.dismissed .job-dismiss-button {
   border-color: var(--color-restore-action-border);
   color: var(--color-restore-action-text);
@@ -999,11 +1079,49 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   background: var(--color-restore-action-hover-background);
 }
 
-.job-card-main time {
+.job-date-column {
   grid-row: 1 / span 7;
+  display: grid;
+  grid-template-rows: auto minmax(1.35rem, auto);
+  align-content: start;
+  justify-items: start;
+  gap: .18rem;
+  min-width: 0;
+}
+
+.job-card-main .job-date-indicators {
+  display: grid;
+  justify-items: start;
+  gap: .18rem;
+  min-height: 1.35rem;
+  overflow: visible;
+  white-space: normal;
+}
+
+.job-date-column time {
   color: var(--color-accent-hover);
   font-size: var(--font-size-label);
   font-weight: var(--font-weight-semibold);
+}
+
+.job-card-main .job-date-new-indicator {
+  display: inline-block;
+  align-self: start;
+  padding: .12rem .4rem;
+  border: var(--border-width-default) solid var(--color-new-badge-border);
+  border-radius: var(--radius-badge);
+  color: var(--color-new-badge-text);
+  background: var(--color-new-badge-background);
+  font-size: var(--font-size-tiny);
+  font-weight: var(--font-weight-emphasis);
+  letter-spacing: var(--letter-spacing-badge);
+  line-height: var(--line-height-control);
+}
+
+.job-card-main .job-date-state-indicator {
+  align-self: start;
+  font-size: var(--font-size-tiny);
+  line-height: var(--line-height-control);
 }
 
 .job-card-main strong { line-height: var(--line-height-title); }
@@ -1021,7 +1139,8 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 .job-card .clearance-badge, .job-card .credential-badge, .job-card .analysis-pending-badge,
 .job-card .academic-badge, .job-card .education-mismatch-badge,
 .job-card .clearance-mismatch-badge, .job-card .work-authorization-badge,
-.job-card .work-authorization-mismatch-badge, .job-card .new-badge {
+.job-card .work-authorization-mismatch-badge,
+.job-card .extended-location-badge {
   display: inline-block;
   padding: .14rem .4rem;
   border-radius: var(--radius-badge);
@@ -1124,6 +1243,51 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   font-weight: var(--font-weight-emphasis);
 }
 
+.closed-badge {
+  display: inline-block;
+  padding: .12rem .4rem;
+  border: var(--border-width-default) solid var(--color-closed-badge-border);
+  border-radius: var(--radius-badge);
+  color: var(--color-closed-badge-text);
+  background: var(--color-closed-badge-background);
+  font-size: var(--font-size-tiny);
+  font-weight: var(--font-weight-emphasis);
+}
+
+.job-card .close-reason-badge,
+.close-reason-badge {
+  display: inline-block;
+  padding: .14rem .4rem;
+  border: var(--border-width-default) solid var(--color-close-reason-badge-border);
+  border-radius: var(--radius-badge);
+  color: var(--color-close-reason-badge-text);
+  background: var(--color-close-reason-badge-background);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+}
+
+.close-application-reason {
+  display: grid;
+  gap: .35rem;
+  color: var(--color-confirmation-text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.close-application-reason select {
+  width: 100%;
+  min-height: 2.25rem;
+  padding: .48rem 2rem .48rem .6rem;
+  border: var(--border-width-default) solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  color: var(--color-input-text);
+  background: var(--color-input-background);
+}
+
+.close-application-reason select:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: var(--focus-ring-offset-compact);
+}
+
 .job-card .remote-work-badge.questionable {
   border: var(--border-width-default) solid var(--color-remote-question-border);
   color: var(--color-remote-question-text);
@@ -1133,6 +1297,17 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   border: var(--border-width-default) solid var(--color-remote-strong-border);
   color: var(--color-remote-strong-text);
   background: var(--color-remote-strong-background);
+}
+.job-card .extended-location-badge.strong {
+  border: var(--border-width-default) solid var(--color-deployment-strong-border);
+  color: var(--color-deployment-strong-text);
+  background: var(--color-deployment-strong-background);
+  font-weight: var(--font-weight-emphasis);
+}
+.job-card .extended-location-badge.questionable {
+  border: var(--border-width-default) solid var(--color-deployment-question-border);
+  color: var(--color-deployment-question-text);
+  background: var(--color-deployment-question-background);
 }
 .reset-workspace-section {
   background: var(--color-reset-section-background);
@@ -1203,7 +1378,7 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 .apply-source-button:disabled { cursor: not-allowed; }
 .apply-source-section.pending .apply-source-button {
   border-color: var(--color-primary-action-border);
-  color: var(--color-header-text);
+  color: var(--color-primary-action-text);
   background: var(--color-accent);
   font-weight: var(--font-weight-emphasis);
 }
@@ -1219,6 +1394,47 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   display: block;
   margin-top: var(--reset-help-margin-top);
   color: var(--color-reset-section-secondary);
+}
+.reset-workspace-details {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.workspace-identity {
+  margin-top: 1rem;
+  color: var(--color-text-secondary);
+}
+.workspace-identity label {
+  display: block;
+  margin-bottom: .35rem;
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-semibold);
+}
+.workspace-identity-controls {
+  display: flex;
+  align-items: stretch;
+  gap: .5rem;
+  max-width: 46rem;
+}
+.workspace-identity input {
+  min-width: 0;
+  flex: 1 1 32rem;
+  padding: .45rem .6rem;
+  border: var(--border-width-default) solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  color: var(--color-input-text);
+  background: var(--color-input-background);
+  font-size: var(--font-size-label);
+}
+.workspace-identity-controls button {
+  flex: 0 0 auto;
+  padding: var(--reset-button-padding);
+}
+.workspace-identity-status {
+  display: block;
+  min-height: var(--line-height-note);
+  margin-top: .25rem;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-label);
 }
 .destructive-button {
   flex: 0 0 auto;
@@ -1251,18 +1467,6 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 }
 
 .job-card .credential-count-badge { font-weight: var(--font-weight-medium); }
-
-.new-badge {
-  display: inline-block;
-  padding: .12rem .4rem;
-  border: var(--border-width-default) solid var(--color-new-badge-border);
-  border-radius: var(--radius-badge);
-  color: var(--color-new-badge-text);
-  background: var(--color-new-badge-background);
-  font-size: var(--font-size-tiny);
-  font-weight: var(--font-weight-emphasis);
-  letter-spacing: var(--letter-spacing-badge);
-}
 
 .detail-identity {
   display: flex;
@@ -1393,6 +1597,33 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   font-size: var(--font-size-detail-heading);
   line-height: var(--line-height-heading);
 }
+.extended-location-requirement {
+  border-left: var(--status-indicator-width) solid var(--color-deployment-question-border);
+  background: var(--color-deployment-question-background);
+}
+.extended-location-requirement.strong {
+  border-left-color: var(--color-deployment-strong-border);
+  background: var(--color-deployment-strong-background);
+}
+.extended-location-destination {
+  color: var(--color-deployment-question-text);
+  font-size: var(--font-size-detail-heading);
+  font-weight: var(--font-weight-emphasis);
+  letter-spacing: var(--letter-spacing-badge);
+  line-height: var(--line-height-heading);
+}
+.extended-location-requirement.strong .extended-location-destination {
+  color: var(--color-deployment-strong-text);
+}
+.extended-location-summary {
+  margin: .32rem 0 0;
+  color: var(--color-deployment-question-text);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-note);
+}
+.extended-location-requirement.strong .extended-location-summary {
+  color: var(--color-deployment-strong-text);
+}
 
 .requisition { margin: .3rem 0 0; color: var(--color-text-secondary); font-size: var(--font-size-ui); }
 
@@ -1426,6 +1657,13 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   cursor: pointer;
   font-weight: var(--font-weight-medium);
 }
+.selected-credential-chip {
+  border-color: var(--color-credential-badge-border);
+  color: var(--color-credential-badge-text);
+  background: var(--color-credential-badge-background);
+  font-size: var(--font-size-caption);
+}
+.selected-credential-chip button { color: inherit; }
 
 .copy-posting-button:hover:not(:disabled) { background: var(--color-secondary-button-hover); }
 .copy-posting-button:disabled { cursor: not-allowed; opacity: var(--opacity-disabled-control); }
@@ -1548,7 +1786,60 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   color: var(--color-credential-required-text);
   background: var(--color-credential-required-background);
 }
-.credential-profile-select { min-height: 12rem; }
+.credential-inventory-control { width: min(100%, 40rem); }
+.credential-inventory-control > input[type="search"] {
+  width: 100%;
+  min-width: 0;
+  padding: .5rem .6rem;
+  border: var(--border-width-default) solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  color: var(--color-input-text);
+  background: var(--color-input-background);
+  font: inherit;
+}
+.credential-inventory-control > input[type="search"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: var(--focus-ring-offset-compact);
+}
+.credential-inventory-list {
+  max-height: 30rem;
+  overflow: auto;
+  border: var(--border-width-default) solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-accordion-body-background);
+}
+.credential-inventory-category + .credential-inventory-category {
+  border-top: var(--border-width-default) solid var(--color-border);
+}
+.credential-inventory-category > summary {
+  padding: .5rem .62rem;
+  border-left: var(--status-indicator-width) solid var(--color-accordion-header-border);
+  color: var(--color-label);
+  background: var(--color-accordion-header-background);
+  cursor: pointer;
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-semibold);
+}
+.credential-inventory-category > summary:hover { background: var(--color-accordion-header-hover); }
+.credential-inventory-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
+.credential-inventory-option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: .42rem;
+  padding: .48rem .62rem;
+  border-top: var(--border-width-default) solid var(--color-summary-row-separator);
+  cursor: pointer;
+}
+.credential-inventory-option input { margin-top: .18rem; accent-color: var(--color-accent); }
+.credential-inventory-option strong { display: block; color: var(--color-label); font-size: var(--font-size-label); }
+.credential-inventory-option small {
+  display: block;
+  margin-top: .08rem;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-note);
+}
+.credential-inventory-empty { margin: 0; padding: .8rem; color: var(--color-text-secondary); }
 .inline-details {
   grid-column: 1 / -1;
   justify-self: start;
@@ -1621,6 +1912,7 @@ mark {
   .app-shell { height: auto; min-height: 100vh; }
   .app-header { grid-template-columns: auto minmax(0, 1fr) auto; }
   .app-header .subtle { grid-column: 1 / -1; grid-row: 2; justify-self: start; }
+  .app-header .header-status { justify-content: flex-start; }
   .filter-panel { grid-template-columns: 1fr; align-items: stretch; }
   .results-summary { align-items: flex-start; }
   .jobs-context-bar .results-summary { align-items: flex-end; }
@@ -1651,10 +1943,15 @@ mark {
   .settings-section { padding: .78rem .82rem .88rem; }
   .settings-row { grid-template-columns: 1fr; gap: .28rem; }
   .settings-row > label, .settings-row > .settings-row-label { padding-top: 0; }
+  .confirmation-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
   .apply-source-content, .portable-preferences-content, .reset-workspace-content {
     align-items: stretch;
     flex-direction: column;
   }
   .apply-source-content .apply-source-button,
   .reset-workspace-content .destructive-button { align-self: flex-start; }
+  .workspace-identity-controls { flex-wrap: wrap; }
 }

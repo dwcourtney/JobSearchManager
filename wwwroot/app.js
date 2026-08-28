@@ -4,11 +4,20 @@ const HEADROOM_WARNING_THRESHOLD = 0.75;
 const SETTINGS_SAVE_DEBOUNCE_MS = 400;
 const OVERLAY_TRANSITION_MS = 180;
 const COPY_FEEDBACK_MS = 2000;
-const AUTOMATIC_STATUS_JOBS_POLL_MS = 30000;
-const AUTOMATIC_STATUS_SETTINGS_POLL_MS = 120000;
 const REFRESH_STATUS_POLL_MS = 1000;
 const ALL_COUNTRIES_LABEL = "All countries";
 const ALL_LOCATIONS_LABEL = "All locations";
+const SUPPORTED_THEME_MODES = new Set([
+  "light",
+  "dark",
+  "nord-polar-night",
+  "nord-snow-storm",
+  "dracula"
+]);
+
+function normalizeThemeMode(value) {
+  return SUPPORTED_THEME_MODES.has(value) ? value : "light";
+}
 const AGE_GROUPS = [
   { id: "today", label: "Posted Today", minimumDays: 0, maximumDays: 0 },
   { id: "yesterday", label: "Posted Yesterday", minimumDays: 1, maximumDays: 1 },
@@ -22,6 +31,7 @@ const AGE_GROUPS = [
 const state = {
   activeView: "jobs",
   activeSettingsTab: "job-search",
+  activeQualificationTab: "basics",
   jobs: [],
   inclusions: [],
   exclusions: [],
@@ -31,8 +41,6 @@ const state = {
   highlightInclusions: true,
   collapsedAgeGroups: {},
   searchFiltersCollapsed: false,
-  automaticCheckEnabled: true,
-  automaticCheckIntervalMinutes: 60,
   themeMode: "light",
   educationLevel: "notSpecified",
   doctorateType: null,
@@ -43,15 +51,16 @@ const state = {
   usWorkAuthorizationStatus: "notSpecified",
   sponsorshipProfile: "unknown",
   hideStrictWorkAuthorizationMismatch: false,
+  excludeStrongExtendedLocationRequirements: false,
   credentialOptions: [],
   credentialInventoryStatus: "notConfigured",
   heldCredentialIds: new Set(),
+  credentialSearch: "",
   detailTab: "glance",
   renderedDetailJobId: null,
-  lastObservedAutomaticRefreshUtc: null,
-  automaticCheckRequestInFlight: false,
   newJobIds: new Set(),
   jobStates: new Map(),
+  jobClosures: new Map(),
   activeResultsTab: "all",
   selectedJobId: null,
   detailLoadingIds: new Set(),
@@ -75,8 +84,6 @@ const state = {
   locationGroups: [],
   remoteLocations: [],
   facetMatchingJobs: 0,
-  automaticStatusTimer: null,
-  automaticStatusRequestInFlight: false,
   refreshProgressTimer: null,
   refreshStatusRequestInFlight: false,
   refreshPollingGeneration: 0,
@@ -98,6 +105,11 @@ const state = {
   resetConfirmationHideTimer: null,
   focusBeforeResetConfirmation: null,
   resetInProgress: false,
+  closeApplicationOpen: false,
+  closeApplicationHideTimer: null,
+  closeApplicationJobId: null,
+  closeApplicationInProgress: false,
+  focusBeforeCloseApplication: null,
   loadingTitle: "Loading jobs",
   settingsSaveTimer: null
 };
@@ -113,10 +125,15 @@ const elements = {
   jobSearchSettingsPanel: document.querySelector("#job-search-settings-panel"),
   qualificationsSettingsPanel: document.querySelector("#qualifications-settings-panel"),
   preferencesSettingsPanel: document.querySelector("#preferences-settings-panel"),
+  qualificationBasicsTab: document.querySelector("#qualification-basics-tab"),
+  qualificationCredentialsTab: document.querySelector("#qualification-credentials-tab"),
+  qualificationBasicsPanel: document.querySelector("#qualification-basics-panel"),
+  qualificationCredentialsPanel: document.querySelector("#qualification-credentials-panel"),
   sourceSettingsLink: document.querySelector("#source-settings-link"),
   sourceSummary: document.querySelector("#source-summary"),
   refreshButton: document.querySelector("#refresh-button"),
   lastRefreshed: document.querySelector("#last-refreshed"),
+  cacheStatus: document.querySelector("#cache-status"),
   filterToggle: document.querySelector("#filter-toggle"),
   filterContent: document.querySelector("#filter-content"),
   filterChevron: document.querySelector("#filter-chevron"),
@@ -141,9 +158,6 @@ const elements = {
   applySourceSection: document.querySelector("#apply-source-section"),
   facetStatus: document.querySelector("#facet-status"),
   highlightInclusions: document.querySelector("#highlight-inclusions"),
-  automaticCheckEnabled: document.querySelector("#automatic-check-enabled"),
-  automaticCheckInterval: document.querySelector("#automatic-check-interval"),
-  automaticCheckStatus: document.querySelector("#automatic-check-status"),
   themeMode: document.querySelector("#theme-mode"),
   educationLevel: document.querySelector("#education-level"),
   doctorateTypeField: document.querySelector("#doctorate-type-field"),
@@ -155,9 +169,12 @@ const elements = {
   usWorkAuthorizationStatus: document.querySelector("#us-work-authorization-status"),
   sponsorshipProfile: document.querySelector("#sponsorship-profile"),
   hideStrictWorkAuthorizationMismatch: document.querySelector("#hide-strict-work-authorization-mismatch"),
+  excludeStrongExtendedLocationRequirements: document.querySelector("#exclude-strong-extended-location-requirements"),
   credentialInventoryStatus: document.querySelector("#credential-inventory-status"),
   heldCredentialsField: document.querySelector("#held-credentials-field"),
   heldCredentials: document.querySelector("#held-credentials"),
+  credentialSearch: document.querySelector("#credential-search"),
+  credentialSelectionSummary: document.querySelector("#credential-selection-summary"),
   resultCount: document.querySelector("#result-count"),
   appShell: document.querySelector("#app-shell"),
   errorBanner: document.querySelector("#error-banner"),
@@ -179,11 +196,20 @@ const elements = {
   sourceConfirmationStay: document.querySelector("#source-confirmation-stay"),
   sourceConfirmationDiscard: document.querySelector("#source-confirmation-discard"),
   sourceConfirmationApply: document.querySelector("#source-confirmation-apply"),
+  workspaceId: document.querySelector("#workspace-id"),
+  copyWorkspaceIdButton: document.querySelector("#copy-workspace-id-button"),
+  workspaceIdStatus: document.querySelector("#workspace-id-status"),
   resetWorkspaceButton: document.querySelector("#reset-workspace-button"),
   resetConfirmationOverlay: document.querySelector("#reset-confirmation-overlay"),
   resetConfirmationCancel: document.querySelector("#reset-confirmation-cancel"),
   resetConfirmationSubmit: document.querySelector("#reset-confirmation-submit"),
   resetConfirmationError: document.querySelector("#reset-confirmation-error"),
+  closeApplicationOverlay: document.querySelector("#close-application-overlay"),
+  closeApplicationCopy: document.querySelector("#close-application-copy"),
+  closeApplicationReason: document.querySelector("#close-application-reason"),
+  closeApplicationCancel: document.querySelector("#close-application-cancel"),
+  closeApplicationSubmit: document.querySelector("#close-application-submit"),
+  closeApplicationError: document.querySelector("#close-application-error"),
   importWorkspaceButton: document.querySelector("#import-workspace-button"),
   exportWorkspaceButton: document.querySelector("#export-workspace-button"),
   importWorkspaceFile: document.querySelector("#import-workspace-file"),
@@ -193,17 +219,20 @@ const elements = {
   allJobCount: document.querySelector("#all-job-count"),
   savedResultsTab: document.querySelector("#saved-results-tab"),
   appliedResultsTab: document.querySelector("#applied-results-tab"),
+  closedResultsTab: document.querySelector("#closed-results-tab"),
   hiddenResultsTab: document.querySelector("#hidden-results-tab"),
   savedJobCount: document.querySelector("#saved-job-count"),
   appliedJobCount: document.querySelector("#applied-job-count"),
+  closedJobCount: document.querySelector("#closed-job-count"),
   resultsTabPanel: document.querySelector("#results-tab-panel"),
   jobList: document.querySelector("#job-list"),
   emptyDetail: document.querySelector("#empty-detail"),
   jobDetail: document.querySelector("#job-detail"),
   detailTitle: document.querySelector("#detail-title"),
-  detailNewBadge: document.querySelector("#detail-new-badge"),
   detailSavedBadge: document.querySelector("#detail-saved-badge"),
   detailAppliedBadge: document.querySelector("#detail-applied-badge"),
+  detailClosedBadge: document.querySelector("#detail-closed-badge"),
+  detailCloseReasonBadge: document.querySelector("#detail-close-reason-badge"),
   detailHiddenBadge: document.querySelector("#detail-hidden-badge"),
   detailRequisition: document.querySelector("#detail-requisition"),
   detailDate: document.querySelector("#detail-date"),
@@ -241,6 +270,10 @@ const elements = {
   detailRemoteWorkNote: document.querySelector("#detail-remote-work-note"),
   detailRemoteWorkNoteTitle: document.querySelector("#detail-remote-work-note-title"),
   detailRemoteWorkNoteText: document.querySelector("#detail-remote-work-note-text"),
+  detailExtendedLocationRequirement: document.querySelector("#detail-extended-location-requirement"),
+  detailExtendedLocationDestination: document.querySelector("#detail-extended-location-destination"),
+  detailExtendedLocationSummary: document.querySelector("#detail-extended-location-summary"),
+  detailExtendedLocationEvidence: document.querySelector("#detail-extended-location-evidence"),
   detailHeadroomNote: document.querySelector("#detail-headroom-note"),
   detailHeadroomNoteText: document.querySelector("#detail-headroom-note-text"),
   detailClearanceNote: document.querySelector("#detail-clearance-note"),
@@ -277,9 +310,13 @@ async function initialize() {
   elements.sourceConfirmationStay.addEventListener("click", handleSourceConfirmationSecondary);
   elements.sourceConfirmationDiscard.addEventListener("click", discardPendingSourceAndGoToJobs);
   elements.sourceConfirmationApply.addEventListener("click", applyPendingSourceAndGoToJobs);
+  elements.copyWorkspaceIdButton.addEventListener("click", copyWorkspaceId);
   elements.resetWorkspaceButton.addEventListener("click", showResetConfirmation);
   elements.resetConfirmationCancel.addEventListener("click", () => closeResetConfirmation(true));
   elements.resetConfirmationSubmit.addEventListener("click", resetCurrentWorkspace);
+  elements.closeApplicationCancel.addEventListener("click", () => closeCloseApplicationModal(true));
+  elements.closeApplicationSubmit.addEventListener("click", confirmCloseApplication);
+  elements.closeApplicationOverlay.addEventListener("keydown", constrainCloseApplicationFocus);
   elements.importWorkspaceButton.addEventListener("click", () =>
     elements.importWorkspaceFile.click());
   elements.importWorkspaceFile.addEventListener("change", importWorkspace);
@@ -295,6 +332,10 @@ async function initialize() {
   elements.qualificationsSettingsTab.addEventListener("click", () => showSettingsTab("qualifications", true));
   elements.preferencesSettingsTab.addEventListener("click", () => showSettingsTab("preferences", true));
   document.querySelector(".settings-tabs").addEventListener("keydown", handleSettingsTabKeydown);
+  elements.qualificationBasicsTab.addEventListener("click", () => showQualificationTab("basics", true));
+  elements.qualificationCredentialsTab.addEventListener("click", () => showQualificationTab("credentials", true));
+  document.querySelector(".qualification-subtabs")
+    .addEventListener("keydown", handleQualificationTabKeydown);
   elements.refreshButton.addEventListener("click", refreshJobs);
   elements.filterToggle.addEventListener("click", toggleSearchFilters);
   elements.companySelect.addEventListener("change", companySelectionChanged);
@@ -335,17 +376,8 @@ async function initialize() {
     renderResults();
     queueSettingsSave();
   });
-  elements.automaticCheckEnabled.addEventListener("change", () => {
-    state.automaticCheckEnabled = elements.automaticCheckEnabled.checked;
-    elements.automaticCheckInterval.disabled = !state.automaticCheckEnabled;
-    queueSettingsSave();
-  });
-  elements.automaticCheckInterval.addEventListener("change", () => {
-    state.automaticCheckIntervalMinutes = Number(elements.automaticCheckInterval.value);
-    queueSettingsSave();
-  });
   elements.themeMode.addEventListener("change", () => {
-    state.themeMode = elements.themeMode.value === "dark" ? "dark" : "light";
+    state.themeMode = normalizeThemeMode(elements.themeMode.value);
     applyTheme();
     queueSettingsSave();
   });
@@ -383,9 +415,16 @@ async function initialize() {
     renderResults();
     queueSettingsSave();
   });
+  elements.excludeStrongExtendedLocationRequirements.addEventListener("change", () => {
+    state.excludeStrongExtendedLocationRequirements =
+      elements.excludeStrongExtendedLocationRequirements.checked;
+    renderResults();
+    queueSettingsSave();
+  });
   elements.allResultsTab.addEventListener("click", () => showResultsTab("all", true));
   elements.savedResultsTab.addEventListener("click", () => showResultsTab("saved", true));
   elements.appliedResultsTab.addEventListener("click", () => showResultsTab("applied", true));
+  elements.closedResultsTab.addEventListener("click", () => showResultsTab("closed", true));
   elements.hiddenResultsTab.addEventListener("click", () => showResultsTab("hidden", true));
   document.querySelector(".results-tabs").addEventListener("keydown", handleResultsTabKeydown);
   elements.usWorkAuthorizationStatus.addEventListener("change", () => {
@@ -408,11 +447,18 @@ async function initialize() {
     renderResults();
     queueSettingsSave();
   });
-  elements.heldCredentials.addEventListener("change", () => {
-    state.heldCredentialIds = new Set(
-      Array.from(elements.heldCredentials.selectedOptions, option => option.value));
+  elements.heldCredentials.addEventListener("change", event => {
+    const checkbox = event.target.closest("input[data-credential-id]");
+    if (!checkbox) return;
+    if (checkbox.checked) state.heldCredentialIds.add(checkbox.dataset.credentialId);
+    else state.heldCredentialIds.delete(checkbox.dataset.credentialId);
+    updateCredentialSelectionSummary();
     renderResults();
     queueSettingsSave();
+  });
+  elements.credentialSearch.addEventListener("input", () => {
+    state.credentialSearch = elements.credentialSearch.value.trim().toLocaleLowerCase();
+    populateCredentialInventory();
   });
   elements.hideStrictWorkAuthorizationMismatch.addEventListener("change", () => {
     state.hideStrictWorkAuthorizationMismatch = elements.hideStrictWorkAuthorizationMismatch.checked;
@@ -464,7 +510,6 @@ function showView(view, focusFirstControl = false, options = {}) {
   if (focusFirstControl) {
     (jobsSelected ? elements.filterToggle : elements.companySelect).focus();
   }
-  if (!state.isInitializing) scheduleAutomaticStatusPolling();
   return true;
 }
 
@@ -516,6 +561,32 @@ function handleSettingsTabKeydown(event) {
   showSettingsTab(tabs[nextIndex], true);
 }
 
+function showQualificationTab(tab, moveFocus = false) {
+  state.activeQualificationTab = tab === "credentials" ? "credentials" : "basics";
+  const tabs = [
+    { id: "basics", tab: elements.qualificationBasicsTab, panel: elements.qualificationBasicsPanel },
+    { id: "credentials", tab: elements.qualificationCredentialsTab, panel: elements.qualificationCredentialsPanel }
+  ];
+  tabs.forEach(candidate => {
+    const selected = candidate.id === state.activeQualificationTab;
+    candidate.tab.classList.toggle("active", selected);
+    candidate.tab.setAttribute("aria-selected", String(selected));
+    candidate.tab.tabIndex = selected ? 0 : -1;
+    candidate.panel.hidden = !selected;
+  });
+  if (moveFocus) tabs.find(candidate => candidate.id === state.activeQualificationTab).tab.focus();
+}
+
+function handleQualificationTabKeydown(event) {
+  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+  event.preventDefault();
+  const tabs = ["basics", "credentials"];
+  const currentIndex = tabs.indexOf(state.activeQualificationTab);
+  const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? 1 :
+    event.key === "ArrowLeft" ? (currentIndex + 1) % 2 : (currentIndex + 1) % 2;
+  showQualificationTab(tabs[nextIndex], true);
+}
+
 function handleTabKeydown(event) {
   if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
     return;
@@ -562,29 +633,33 @@ function handleDetailTabKeydown(event) {
 
 async function loadInitialState() {
   try {
-    const [companiesResponse, credentialsResponse, settingsResponse, jobsResponse] = await Promise.all([
+    const [companiesResponse, credentialsResponse, settingsResponse, jobsResponse, workspaceResponse] = await Promise.all([
       fetch("/api/companies", { cache: "no-store" }),
       fetch("/api/credentials", { cache: "no-store" }),
       fetch("/api/settings", { cache: "no-store" }),
-      fetch("/api/jobs", { cache: "no-store" })
+      fetch("/api/jobs", { cache: "no-store" }),
+      fetch("/api/workspace/identity", { cache: "no-store" })
     ]);
-    if (!companiesResponse.ok || !credentialsResponse.ok || !settingsResponse.ok || !jobsResponse.ok) {
-      const failed = [companiesResponse, credentialsResponse, settingsResponse, jobsResponse]
+    if (!companiesResponse.ok || !credentialsResponse.ok || !settingsResponse.ok ||
+        !jobsResponse.ok || !workspaceResponse.ok) {
+      const failed = [companiesResponse, credentialsResponse, settingsResponse, jobsResponse, workspaceResponse]
         .find(response => !response.ok);
       throw new Error(await apiErrorMessage(failed, "Application data could not be loaded."));
     }
     state.companies = await companiesResponse.json();
     state.credentialOptions = await credentialsResponse.json();
+    const workspaceIdentity = await workspaceResponse.json();
+    elements.workspaceId.value = workspaceIdentity.workspaceId || "Unavailable";
+    elements.copyWorkspaceIdButton.disabled = !workspaceIdentity.workspaceId;
     populateCompanySelect();
     applySettings(await settingsResponse.json());
-    populateCredentialSelect();
+    populateCredentialInventory();
     const initialSnapshot = await jobsResponse.json();
     const needsInitialRefresh = state.hasConfiguredSource && !initialSnapshot.isRefreshing &&
       !initialSnapshot.lastRefreshedUtc &&
       (!initialSnapshot.jobs || initialSnapshot.jobs.length === 0);
     applySnapshot(initialSnapshot);
     await hydrateSourceControls();
-    await loadAutomaticCheckStatus();
     state.isInitializing = false;
     if (!state.hasConfiguredSource) {
       setLoading(false);
@@ -595,10 +670,23 @@ async function loadInitialState() {
     } else if (!state.catalogIsRefreshing) {
       setLoading(false);
     }
-    scheduleAutomaticStatusPolling();
   } catch (error) {
     state.isInitializing = false;
     showClientError(error);
+  }
+}
+
+async function copyWorkspaceId() {
+  const workspaceId = elements.workspaceId.value;
+  if (!workspaceId || workspaceId === "Unavailable" || workspaceId === "Loading…") return;
+
+  try {
+    if (!navigator.clipboard?.writeText) throw new Error("Clipboard API is unavailable.");
+    await navigator.clipboard.writeText(workspaceId);
+    elements.workspaceIdStatus.textContent = "Workspace ID copied.";
+  } catch {
+    elements.workspaceId.select();
+    elements.workspaceIdStatus.textContent = "Select the Workspace ID and copy it manually.";
   }
 }
 
@@ -613,12 +701,7 @@ function applySettings(settings) {
   state.highlightInclusions = settings.highlightIncludeKeywords !== false;
   state.collapsedAgeGroups = settings.collapsedAgeGroups || {};
   state.searchFiltersCollapsed = settings.searchFiltersCollapsed === true;
-  state.automaticCheckEnabled = settings.automaticCheckEnabled !== false;
-  state.automaticCheckIntervalMinutes = [30, 60, 120, 240, 480]
-      .includes(settings.automaticCheckIntervalMinutes)
-    ? settings.automaticCheckIntervalMinutes
-    : 60;
-  state.themeMode = settings.themeMode === "dark" ? "dark" : "light";
+  state.themeMode = normalizeThemeMode(settings.themeMode);
   state.educationLevel = normalizeEducationLevel(settings.userProfile?.education?.level);
   state.doctorateType = state.educationLevel === "doctorate" &&
     settings.userProfile?.education?.doctorateType === "phD"
@@ -640,6 +723,8 @@ function applySettings(settings) {
       ? settings.userProfile.credentials.heldCredentialIds
       : []);
   state.hideStrictWorkAuthorizationMismatch = settings.hideStrictWorkAuthorizationMismatch === true;
+  state.excludeStrongExtendedLocationRequirements =
+    settings.excludeStrongExtendedLocationRequirements === true;
   state.hasConfiguredSource = settings.hasConfiguredSource === true;
   state.pendingImportedSource = settings.pendingSource || null;
   state.companyId = state.hasConfiguredSource ? settings.companyId || "" : "";
@@ -656,9 +741,6 @@ function applySettings(settings) {
     ? ""
     : new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(state.minimumSalary);
   elements.highlightInclusions.checked = state.highlightInclusions;
-  elements.automaticCheckEnabled.checked = state.automaticCheckEnabled;
-  elements.automaticCheckInterval.value = String(state.automaticCheckIntervalMinutes);
-  elements.automaticCheckInterval.disabled = !state.automaticCheckEnabled;
   elements.themeMode.value = state.themeMode;
   elements.educationLevel.value = state.educationLevel;
   elements.doctorateType.value = state.doctorateType || "";
@@ -670,6 +752,8 @@ function applySettings(settings) {
   elements.sponsorshipProfile.value = state.sponsorshipProfile;
   elements.credentialInventoryStatus.value = state.credentialInventoryStatus;
   elements.hideStrictWorkAuthorizationMismatch.checked = state.hideStrictWorkAuthorizationMismatch;
+  elements.excludeStrongExtendedLocationRequirements.checked =
+    state.excludeStrongExtendedLocationRequirements;
   updateEducationSettingsUi();
   updateCredentialSettingsUi();
   applyTheme();
@@ -699,27 +783,88 @@ function updateEducationSettingsUi() {
   elements.doctorateType.disabled = !isDoctorate;
 }
 
-function populateCredentialSelect() {
+const CREDENTIAL_CATEGORY_ORDER = [
+  "Engineering & Professional Licenses",
+  "Project, Program & Construction Management",
+  "Cybersecurity, Privacy & DoD",
+  "Technology, IT & Systems",
+  "Cloud, DevOps & Data Platforms",
+  "Construction, Quality & Safety",
+  "Transportation & Aviation",
+  "Facilities, Electrical & Skilled Trades",
+  "Business & Other Professional Credentials"
+];
+
+function credentialInventoryCategory(credential) {
+  const category = credential.category || "Other";
+  if (category === "Engineering License") return "Engineering & Professional Licenses";
+  if (category === "Project Management") return "Project, Program & Construction Management";
+  if (["Cybersecurity", "Privacy"].includes(category)) return "Cybersecurity, Privacy & DoD";
+  if (["Systems", "Networking", "Linux", "IT Support", "IT Service Management"].includes(category)) {
+    return "Technology, IT & Systems";
+  }
+  if (["Cloud", "DevOps"].includes(category) || credential.family === "Data Platforms") {
+    return "Cloud, DevOps & Data Platforms";
+  }
+  if (["Quality", "Safety"].includes(category) || credential.family === "Construction Management") {
+    return "Construction, Quality & Safety";
+  }
+  if (["Transportation", "Aviation"].includes(category) || credential.family === "Pilot Credentials") {
+    return "Transportation & Aviation";
+  }
+  if (category === "Facilities / Skilled Trades") return "Facilities, Electrical & Skilled Trades";
+  return "Business & Other Professional Credentials";
+}
+
+function populateCredentialInventory() {
   elements.heldCredentials.replaceChildren();
   const byCategory = new Map();
-  state.credentialOptions.forEach(credential => {
-    const category = credential.category || "Other";
+  const visible = state.credentialOptions.filter(credential => {
+    if (!state.credentialSearch) return true;
+    return [credential.name, credential.fullName, credential.issuer, credential.category,
+      credential.family, credentialInventoryCategory(credential)]
+      .filter(Boolean).join(" ").toLocaleLowerCase().includes(state.credentialSearch);
+  });
+  visible.forEach(credential => {
+    const category = credentialInventoryCategory(credential);
     if (!byCategory.has(category)) byCategory.set(category, []);
     byCategory.get(category).push(credential);
   });
-  for (const [category, credentials] of byCategory) {
-    const group = document.createElement("optgroup");
-    group.label = category;
-    credentials.forEach(credential => {
-      const option = document.createElement("option");
-      option.value = credential.id;
-      option.textContent = credential.name === credential.fullName
-        ? credential.name
-        : `${credential.name} — ${credential.fullName}`;
-      option.selected = state.heldCredentialIds.has(credential.id);
-      group.append(option);
-    });
-    elements.heldCredentials.append(group);
+  CREDENTIAL_CATEGORY_ORDER.filter(category => byCategory.has(category)).forEach(category => {
+    const details = document.createElement("details");
+    details.className = "credential-inventory-category";
+    details.open = Boolean(state.credentialSearch) || byCategory.size <= 3;
+    const summary = document.createElement("summary");
+    summary.textContent = `${category} (${byCategory.get(category).length})`;
+    const options = document.createElement("div");
+    options.className = "credential-inventory-options";
+    byCategory.get(category)
+      .sort((left, right) => left.issuer.localeCompare(right.issuer) || left.name.localeCompare(right.name))
+      .forEach(credential => {
+        const label = document.createElement("label");
+        label.className = "credential-inventory-option";
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.dataset.credentialId = credential.id;
+        checkbox.checked = state.heldCredentialIds.has(credential.id);
+        const text = document.createElement("span");
+        const name = document.createElement("strong");
+        name.textContent = credential.name;
+        const detail = document.createElement("small");
+        detail.textContent = [credential.fullName !== credential.name ? credential.fullName : null,
+          credential.issuer].filter(Boolean).join(" · ");
+        text.append(name, detail);
+        label.append(checkbox, text);
+        options.append(label);
+      });
+    details.append(summary, options);
+    elements.heldCredentials.append(details);
+  });
+  if (visible.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "credential-inventory-empty";
+    empty.textContent = "No credentials match this search.";
+    elements.heldCredentials.append(empty);
   }
   updateCredentialSettingsUi();
 }
@@ -727,10 +872,49 @@ function populateCredentialSelect() {
 function updateCredentialSettingsUi() {
   const configured = state.credentialInventoryStatus === "complete";
   elements.heldCredentialsField.hidden = !configured;
-  elements.heldCredentials.disabled = !configured;
-  Array.from(elements.heldCredentials.options).forEach(option => {
-    option.selected = configured && state.heldCredentialIds.has(option.value);
+  elements.credentialSearch.disabled = !configured;
+  elements.heldCredentials.querySelectorAll("input[data-credential-id]").forEach(checkbox => {
+    checkbox.disabled = !configured;
+    checkbox.checked = configured && state.heldCredentialIds.has(checkbox.dataset.credentialId);
   });
+  updateCredentialSelectionSummary();
+}
+
+function updateCredentialSelectionSummary() {
+  const selected = state.credentialInventoryStatus === "complete"
+    ? state.credentialOptions
+      .filter(credential => state.heldCredentialIds.has(credential.id))
+      .sort((left, right) => left.name.localeCompare(right.name))
+    : [];
+  elements.credentialSelectionSummary.replaceChildren();
+  if (selected.length === 0) {
+    elements.credentialSelectionSummary.textContent = "No credentials selected.";
+    return;
+  }
+
+  const prefix = document.createElement("span");
+  prefix.textContent = `Selected (${selected.length}):`;
+  elements.credentialSelectionSummary.append(prefix);
+  selected.forEach(credential => {
+    const chip = document.createElement("span");
+    chip.className = "chip selected-credential-chip";
+    chip.append(document.createTextNode(credential.name));
+
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.setAttribute("aria-label", `Remove credential ${credential.name}`);
+    remove.textContent = "×";
+    remove.addEventListener("click", () => removeHeldCredential(credential.id));
+    chip.append(remove);
+    elements.credentialSelectionSummary.append(chip);
+  });
+}
+
+function removeHeldCredential(credentialId) {
+  if (!state.heldCredentialIds.delete(credentialId)) return;
+  updateCredentialSettingsUi();
+  renderResults();
+  queueSettingsSave();
 }
 
 function normalizeCredentialInventoryStatus(value) {
@@ -802,11 +986,14 @@ async function hydrateSourceControls() {
 }
 
 function showResultsTab(tab, moveFocus = false) {
-  state.activeResultsTab = ["all", "saved", "applied", "hidden"].includes(tab) ? tab : "all";
+  state.activeResultsTab = ["all", "saved", "applied", "closed", "hidden"].includes(tab)
+    ? tab
+    : "all";
   const tabs = [
     { id: "all", element: elements.allResultsTab },
     { id: "saved", element: elements.savedResultsTab },
     { id: "applied", element: elements.appliedResultsTab },
+    { id: "closed", element: elements.closedResultsTab },
     { id: "hidden", element: elements.hiddenResultsTab }
   ];
   for (const candidate of tabs) {
@@ -825,7 +1012,7 @@ function showResultsTab(tab, moveFocus = false) {
 function handleResultsTabKeydown(event) {
   if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
   event.preventDefault();
-  const tabs = ["all", "saved", "applied", "hidden"];
+  const tabs = ["all", "saved", "applied", "closed", "hidden"];
   const currentIndex = tabs.indexOf(state.activeResultsTab);
   const nextIndex = event.key === "Home"
     ? 0
@@ -846,129 +1033,9 @@ function normalizeSponsorshipProfile(value) {
   return ["unknown", "notRequired", "required"].includes(value) ? value : "unknown";
 }
 
-async function loadAutomaticCheckStatus() {
-  if (document.visibilityState === "hidden" || state.automaticStatusRequestInFlight) {
-    return;
-  }
-  clearTimeout(state.automaticStatusTimer);
-  state.automaticStatusRequestInFlight = true;
-  try {
-    const response = await fetch("/api/automatic-check/status", { cache: "no-store" });
-    if (!response.ok) {
-      throw new Error(`Automatic-check status returned HTTP ${response.status}.`);
-    }
-    const status = await response.json();
-    renderAutomaticCheckStatus(status);
-
-    if (status.isChecking && !state.isRefreshing) {
-      await detectAutomaticFullRefresh();
-    }
-
-    const automaticRefreshUtc = status.lastAutomaticRefreshUtc || null;
-    if (state.lastObservedAutomaticRefreshUtc &&
-        automaticRefreshUtc &&
-        automaticRefreshUtc !== state.lastObservedAutomaticRefreshUtc) {
-      await loadAutomaticSnapshotPreservingUi();
-    }
-    state.lastObservedAutomaticRefreshUtc = automaticRefreshUtc;
-
-    const nextCheckUtc = status.nextCheckUtc ? new Date(status.nextCheckUtc).getTime() : null;
-    if (status.enabled && !status.isChecking && nextCheckUtc !== null &&
-        nextCheckUtc <= Date.now() && !state.automaticCheckRequestInFlight) {
-      runDueAutomaticCheck();
-    }
-  } catch (error) {
-    console.warn("Automatic-check status is temporarily unavailable.", error);
-  } finally {
-    state.automaticStatusRequestInFlight = false;
-    scheduleAutomaticStatusPolling();
-  }
-}
-
-function scheduleAutomaticStatusPolling(delay = null) {
-  clearTimeout(state.automaticStatusTimer);
-  state.automaticStatusTimer = null;
-  if (document.visibilityState === "hidden" || state.isInitializing) return;
-  const interval = delay ?? (state.activeView === "jobs"
-    ? AUTOMATIC_STATUS_JOBS_POLL_MS
-    : AUTOMATIC_STATUS_SETTINGS_POLL_MS);
-  state.automaticStatusTimer = setTimeout(loadAutomaticCheckStatus, interval);
-}
-
 function handleVisibilityChange() {
-  if (document.visibilityState === "hidden") {
-    clearTimeout(state.automaticStatusTimer);
-    state.automaticStatusTimer = null;
-    return;
-  }
-  scheduleAutomaticStatusPolling(250);
-  if (state.catalogIsRefreshing) beginRefreshProgressPolling(true);
-}
-
-async function runDueAutomaticCheck() {
-  state.automaticCheckRequestInFlight = true;
-  try {
-    const response = await fetch("/api/automatic-check/run", {
-      method: "POST",
-      cache: "no-store"
-    });
-    if (!response.ok) {
-      throw new Error(`Automatic check returned HTTP ${response.status}.`);
-    }
-  } catch (error) {
-    console.warn("The due automatic check could not be completed.", error);
-  } finally {
-    state.automaticCheckRequestInFlight = false;
-    scheduleAutomaticStatusPolling(1000);
-  }
-}
-
-async function detectAutomaticFullRefresh() {
-  try {
-    const response = await fetch("/api/jobs/status", { cache: "no-store" });
-    if (!response.ok) return;
-    const status = await response.json();
-    if (status.isRefreshing) {
-      setLoading(true, { title: `Refreshing ${state.companyName} jobs` });
-      updateLoadingProgress(status.refreshProgress);
-    }
-  } catch (error) {
-    console.warn("Could not inspect automatic refresh progress.", error);
-  }
-}
-
-function renderAutomaticCheckStatus(status) {
-  if (!status.enabled) {
-    elements.automaticCheckStatus.textContent = "Automatic checks disabled";
-    return;
-  }
-  const lastChecked = status.lastCheckedUtc
-    ? new Date(status.lastCheckedUtc).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
-    : "Never";
-  const nextCheck = status.nextCheckUtc
-    ? new Date(status.nextCheckUtc).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
-    : "Scheduling…";
-  elements.automaticCheckStatus.textContent = status.isChecking
-    ? `Checking now · Last checked: ${lastChecked}`
-    : `Last checked: ${lastChecked} · Next check: ${nextCheck}`;
-}
-
-async function loadAutomaticSnapshotPreservingUi() {
-  const listScrollTop = elements.jobList.scrollTop;
-  const detailPane = document.querySelector(".detail-pane");
-  const detailScrollTop = detailPane.scrollTop;
-  try {
-    const response = await fetch("/api/jobs", { cache: "no-store" });
-    if (!response.ok) {
-      throw new Error(`Local API returned HTTP ${response.status}.`);
-    }
-    applySnapshot(await response.json());
-    requestAnimationFrame(() => {
-      elements.jobList.scrollTop = listScrollTop;
-      detailPane.scrollTop = detailScrollTop;
-    });
-  } catch (error) {
-    console.warn("The automatic-refresh snapshot could not be loaded.", error);
+  if (document.visibilityState !== "hidden" && state.catalogIsRefreshing) {
+    beginRefreshProgressPolling(true);
   }
 }
 
@@ -1009,9 +1076,12 @@ function buildFilterSummary() {
   if (state.hideStrictWorkAuthorizationMismatch) {
     summary.push("Strict work-authorization filter");
   }
+  if (state.excludeStrongExtendedLocationRequirements) {
+    summary.push("Deployment / remote assignments excluded");
+  }
   return summary.length
     ? summary.join(" · ")
-    : "No active keyword, salary, remote-location, education, clearance, or work-authorization filters";
+    : "No active keyword, salary, remote-location, qualification, or deployment filters";
 }
 
 function updateSourceSummary() {
@@ -1036,11 +1106,16 @@ function populateCompanySelect() {
   placeholder.value = "";
   placeholder.textContent = "Select a company…";
   elements.companySelect.append(placeholder);
-  for (const company of state.companies) {
-    const option = document.createElement("option");
-    option.value = company.id;
-    option.textContent = company.displayName;
-    elements.companySelect.append(option);
+  for (const group of CompanySelector.groupCompanies(state.companies)) {
+    const optionGroup = document.createElement("optgroup");
+    optionGroup.label = group.category;
+    for (const company of group.companies) {
+      const option = document.createElement("option");
+      option.value = company.id;
+      option.textContent = company.displayName;
+      optionGroup.append(option);
+    }
+    elements.companySelect.append(optionGroup);
   }
 }
 
@@ -1476,7 +1551,7 @@ function closeSourceConfirmation(restoreFocus) {
   elements.sourceConfirmationOverlay.classList.remove("visible");
   elements.sourceConfirmationOverlay.setAttribute("aria-hidden", "true");
   elements.appShell.inert = state.isRefreshing || state.sourceMetadataLoading ||
-    state.resetConfirmationOpen;
+    state.resetConfirmationOpen || state.closeApplicationOpen;
   state.sourceConfirmationHideTimer = setTimeout(() => {
     if (!state.sourceConfirmationOpen) elements.sourceConfirmationOverlay.hidden = true;
   }, OVERLAY_TRANSITION_MS);
@@ -1567,7 +1642,6 @@ async function applyJobSource(options = {}) {
     state.hasConfiguredSource = true;
     state.pendingImportedSource = null;
     applySnapshot(snapshot);
-    await loadAutomaticCheckStatus();
     if (options.navigateToJobs === true) {
       showView("jobs", true, { bypassSourceGuard: true });
     }
@@ -1585,7 +1659,6 @@ async function loadSnapshot() {
       throw new Error(`Local API returned HTTP ${response.status}.`);
     }
     applySnapshot(await response.json());
-    await loadAutomaticCheckStatus();
   } catch (error) {
     showClientError(error);
   }
@@ -1607,7 +1680,6 @@ async function refreshJobs() {
       throw new Error(await apiErrorMessage(response, "Jobs could not be refreshed."));
     }
     applySnapshot(await response.json());
-    await loadAutomaticCheckStatus();
   } catch (error) {
     showClientError(error);
     await loadSnapshot();
@@ -1627,6 +1699,7 @@ function applySnapshot(snapshot) {
   state.isCached = Boolean(snapshot.isCached);
   state.newJobIds = new Set(snapshot.newJobIds || []);
   state.jobStates = new Map(Object.entries(snapshot.jobStates || {}));
+  state.jobClosures = new Map(Object.entries(snapshot.jobClosures || {}));
   if (state.hasConfiguredSource && snapshot.query) {
     state.companyId = snapshot.query.companyId || "";
     state.companyName = companyById(state.companyId)?.displayName || state.companyId;
@@ -1649,7 +1722,7 @@ function applySnapshot(snapshot) {
   renderResults();
   refreshDescriptionMatches();
   updateLastRefreshed();
-  updateCacheBanner(snapshot);
+  updateCacheStatus(snapshot);
 
   if (snapshot.isRefreshing) {
     beginRefreshProgressPolling(true);
@@ -1657,21 +1730,22 @@ function applySnapshot(snapshot) {
   updateQueryControls();
 }
 
-function updateCacheBanner(snapshot) {
+function updateCacheStatus(snapshot) {
   const usingCache = Boolean(snapshot.isCached);
+  const showCompactStatus = usingCache && !snapshot.isRefreshing;
+  elements.cacheStatus.textContent = "Using cache";
+  elements.cacheStatus.hidden = !showCompactStatus;
+
   if (!usingCache || snapshot.isRefreshing) {
     elements.cacheBanner.hidden = true;
     elements.cacheBanner.textContent = "";
     return;
   }
 
-  const refreshed = snapshot.lastRefreshedUtc
-    ? new Date(snapshot.lastRefreshedUtc).toLocaleString()
-    : "an earlier run";
   elements.cacheBanner.textContent = snapshot.error
-    ? `Showing cached jobs from ${refreshed}; the live refresh failed.`
-    : `Showing cached jobs from ${refreshed}.`;
-  elements.cacheBanner.hidden = false;
+    ? "Cached jobs remain available because the live refresh failed."
+    : "";
+  elements.cacheBanner.hidden = !snapshot.error;
 }
 
 function wireKeywordInput(kind, input, button) {
@@ -1747,8 +1821,6 @@ async function saveSettings() {
         includeRemote: state.includeRemote,
         selectedPhysicalLocations: state.physicalLocations,
         searchFiltersCollapsed: state.searchFiltersCollapsed,
-        automaticCheckEnabled: state.automaticCheckEnabled,
-        automaticCheckIntervalMinutes: state.automaticCheckIntervalMinutes,
         themeMode: state.themeMode,
         userProfile: {
           education: {
@@ -1772,13 +1844,13 @@ async function saveSettings() {
         },
         hideStrictEducationMismatch: state.hideStrictEducationMismatch,
         hideStrictClearanceMismatch: state.hideStrictClearanceMismatch,
-        hideStrictWorkAuthorizationMismatch: state.hideStrictWorkAuthorizationMismatch
+        hideStrictWorkAuthorizationMismatch: state.hideStrictWorkAuthorizationMismatch,
+        excludeStrongExtendedLocationRequirements: state.excludeStrongExtendedLocationRequirements
       })
     });
     if (!response.ok) {
       throw new Error(await apiErrorMessage(response, "Settings could not be saved."));
     }
-    await loadAutomaticCheckStatus();
   } catch (error) {
     elements.errorBanner.textContent = `Settings could not be saved: ${error.message || error}`;
     elements.errorBanner.hidden = false;
@@ -1837,9 +1909,13 @@ function jobsPassingGeneralFilters() {
       job.workAuthorization, currentWorkAuthorizationProfile());
     const passesWorkAuthorization = !state.hideStrictWorkAuthorizationMismatch ||
       !workAuthorizationStatus.hide;
+    const passesExtendedLocationRequirement =
+      !state.excludeStrongExtendedLocationRequirements ||
+      job.extendedLocationRequirement?.confidence !== "strong";
 
     return passesInclusion && passesExclusion && passesSalary && passesLocation &&
-      passesEducation && passesClearance && passesWorkAuthorization;
+      passesEducation && passesClearance && passesWorkAuthorization &&
+      passesExtendedLocationRequirement;
   });
 }
 
@@ -1907,7 +1983,7 @@ async function importWorkspace(event) {
   event.target.value = "";
   if (!file) return;
   if (!window.confirm(
-    "Import this workspace backup? Portable settings and Saved, Applied, and Hidden states will replace their current values."
+    "Import this workspace backup? Portable settings and Saved, Applied, Closed, and Hidden states will replace their current values."
   )) return;
 
   elements.portableWorkspaceStatus.textContent = "Validating workspace backup…";
@@ -1959,7 +2035,8 @@ function closeResetConfirmation(restoreFocus) {
   state.resetConfirmationOpen = false;
   elements.resetConfirmationOverlay.classList.remove("visible");
   elements.resetConfirmationOverlay.setAttribute("aria-hidden", "true");
-  elements.appShell.inert = state.isRefreshing || state.sourceConfirmationOpen;
+  elements.appShell.inert = state.isRefreshing || state.sourceConfirmationOpen ||
+    state.closeApplicationOpen;
   state.resetConfirmationHideTimer = setTimeout(() => {
     if (!state.resetConfirmationOpen) elements.resetConfirmationOverlay.hidden = true;
   }, OVERLAY_TRANSITION_MS);
@@ -2066,13 +2143,6 @@ function evaluateWorkAuthorizationMatch(analysis, profile) {
     explanation: "Your configured work status is compatible with the posting's detected requirement." };
 }
 
-const CLEARANCE_LEVEL_RANK = Object.freeze({
-  none: 0,
-  secret: 1,
-  topSecret: 2,
-  topSecretSCI: 3
-});
-
 function currentSecurityProfile() {
   return {
     clearanceLevel: state.clearanceProfileLevel,
@@ -2080,275 +2150,16 @@ function currentSecurityProfile() {
   };
 }
 
-function evaluateClearanceMatch(job, profile) {
-  const level = job?.clearanceLevel || "noneMentioned";
-  const requirement = job?.clearanceRequirement || "none";
-  const parseStatus = job?.clearanceParseStatus || "not-mentioned";
-  const strict = requirement === "activeRequired" || requirement === "mustPossess";
-  const user = {
-    clearanceLevel: normalizeClearanceProfileLevel(profile?.clearanceLevel),
-    publicTrust: normalizePublicTrustProfile(profile?.publicTrust)
-  };
-  const publicTrustJob = level === "publicTrust";
-  const userLabel = publicTrustJob
-    ? publicTrustProfileLabel(user.publicTrust)
-    : clearanceProfileLevelLabel(user.clearanceLevel);
-
-  if (level === "noneMentioned" || requirement === "none") {
-    return {
-      kind: "noneSpecified",
-      hide: false,
-      strict: false,
-      userLabel,
-      summary: "No clearance requirement identified",
-      explanation: "The posting does not state a recognized clearance requirement."
-    };
-  }
-
-  if (parseStatus !== "parsed" || level === "other" || requirement === "ambiguous") {
-    return {
-      kind: "uncertain",
-      hide: false,
-      strict: false,
-      userLabel,
-      summary: "Clearance wording requires review",
-      explanation: "The clearance language is uncertain, so this job remains visible."
-    };
-  }
-
-  if (!strict) {
-    const obtainable = requirement === "obtain" || requirement === "obtainAndMaintain" ||
-      requirement === "eligible" || requirement === "publicTrustSuitability";
-    return {
-      kind: requirement === "preferred" ? "preferredOnly" : "notStrict",
-      hide: false,
-      strict: false,
-      userLabel,
-      summary: requirement === "preferred"
-        ? "Clearance is preferred, not required"
-        : obtainable
-          ? "Obtainable after hire / not automatically disqualifying"
-          : "Not a strict day-one hiring blocker",
-      explanation: obtainable
-        ? "The posting allows the clearance or suitability status to be obtained or established; it is not treated as an already-held requirement."
-        : "Only explicit active/current/day-one requirements can hide a job."
-    };
-  }
-
-  if (publicTrustJob) {
-    if (user.publicTrust === "unknown") {
-      return {
-        kind: "profileNotConfigured",
-        hide: false,
-        strict: true,
-        userLabel,
-        summary: "Strict Public Trust requirement; status unknown",
-        explanation: "The posting explicitly requires current Public Trust status, but your separate Public Trust status is unknown. The job remains visible."
-      };
-    }
-    if (user.publicTrust !== "current") {
-      return {
-        kind: "strictMismatch",
-        hide: true,
-        strict: true,
-        userLabel,
-        summary: "Does not meet strict current Public Trust requirement",
-        explanation: "The posting explicitly requires current Public Trust status, which your profile says you do not hold."
-      };
-    }
-    return {
-      kind: job.polygraphRequired ? "meetsLevelPolygraphReview" : "meets",
-      hide: false,
-      strict: true,
-      userLabel,
-      summary: job.polygraphRequired
-        ? "Public Trust status meets; polygraph requires separate review"
-        : "Meets strict current Public Trust requirement",
-      explanation: job.polygraphRequired
-        ? "Your Public Trust status matches, but this posting also requires a polygraph that the profile does not track."
-        : "Your separately reported Public Trust status meets this strict requirement."
-    };
-  }
-
-  if (!(level in CLEARANCE_LEVEL_RANK)) {
-    return {
-      kind: "uncertain",
-      hide: false,
-      strict: true,
-      userLabel,
-      summary: "Strict clearance language requires review",
-      explanation: "The required clearance level could not be compared confidently, so this job remains visible."
-    };
-  }
-
-  if (user.clearanceLevel === "notSpecified" || user.clearanceLevel === "otherUnknown") {
-    return {
-      kind: "profileNotConfigured",
-      hide: false,
-      strict: true,
-      userLabel,
-      summary: "Strict clearance requirement; profile not comparable",
-      explanation: "Choose a specific current clearance level in Settings to enable strict comparison. The job remains visible."
-    };
-  }
-
-  if ((CLEARANCE_LEVEL_RANK[user.clearanceLevel] ?? -1) < CLEARANCE_LEVEL_RANK[level]) {
-    return {
-      kind: "strictMismatch",
-      hide: true,
-      strict: true,
-      userLabel,
-      summary: "Does not meet strict current-clearance requirement",
-      explanation: `The posting requires an active/current ${clearanceLevelLabel(level)}, while your profile reports ${userLabel}.`
-    };
-  }
-
-  return {
-    kind: job.polygraphRequired ? "meetsLevelPolygraphReview" : "meets",
-    hide: false,
-    strict: true,
-    userLabel,
-    summary: job.polygraphRequired
-      ? "Clearance level meets; polygraph requires separate review"
-      : "Meets strict current-clearance requirement",
-    explanation: job.polygraphRequired
-      ? `Your ${userLabel} meets the clearance level, but this posting also requires a polygraph that the profile does not track.`
-      : `Your ${userLabel} meets or exceeds the strict ${clearanceLevelLabel(level)} requirement.`
-  };
-}
-
-const EDUCATION_LEVEL_RANK = Object.freeze({
-  noCredential: 0,
-  ged: 1,
-  highSchool: 1,
-  associate: 2,
-  bachelor: 3,
-  master: 4,
-  doctorate: 5
-});
-
 function currentEducationProfile() {
   return { level: state.educationLevel, doctorateType: state.doctorateType };
 }
 
+function evaluateClearanceMatch(job, profile) {
+  return ClearanceFit.evaluate(job, profile);
+}
+
 function evaluateEducationMatch(academic, profile) {
-  const user = {
-    level: normalizeEducationLevel(profile?.level),
-    doctorateType: profile?.level === "doctorate" && profile?.doctorateType === "phD"
-      ? "phD"
-      : null
-  };
-  const userLabel = educationProfileLabel(user);
-  if (user.level === "notSpecified") {
-    return {
-      kind: "profileNotConfigured",
-      hide: false,
-      userLabel,
-      summary: "Education profile not configured",
-      explanation: "Choose your highest completed education in Settings to enable personal comparison."
-    };
-  }
-  if (!academic || academic.requirementType === "noDegreeSpecified") {
-    return {
-      kind: "noneSpecified",
-      hide: false,
-      userLabel,
-      summary: "No academic requirement specified",
-      explanation: "The posting does not state a recognized academic requirement."
-    };
-  }
-
-  const requiredLabel = academicLevelLabel(academic.minimumLevel, academic.specificDegree);
-  if (academic.parseStatus !== "parsed" || academic.requirementType === "mentionedUnclear") {
-    return {
-      kind: "uncertain",
-      hide: false,
-      userLabel,
-      requiredLabel,
-      summary: "Academic wording is uncertain",
-      explanation: "The parser found academic language but will not use it to exclude this job."
-    };
-  }
-
-  if (academic.requirementType === "preferredOnly") {
-    return {
-      kind: "preferredOnly",
-      hide: false,
-      userLabel,
-      requiredLabel,
-      summary: `${requiredLabel} preferred`,
-      explanation: "This is a preference, not a strict minimum requirement."
-    };
-  }
-
-  if (academic.experienceSubstitutionAccepted ||
-      academic.requirementType === "degreeOrExperience" ||
-      academic.requirementType === "degreeWithExperienceSubstitution") {
-    return {
-      kind: "flexible",
-      hide: false,
-      userLabel,
-      requiredLabel,
-      summary: academic.requirementType === "degreeWithExperienceSubstitution"
-        ? "Alternative degree/experience paths"
-        : `${requiredLabel} or experience alternative`,
-      explanation: "The posting provides an experience or alternate education path, so no automatic mismatch is applied."
-    };
-  }
-
-  if (academic.requirementType !== "strictDegree") {
-    return {
-      kind: "uncertain",
-      hide: false,
-      userLabel,
-      requiredLabel,
-      summary: "Academic requirement is not strict",
-      explanation: "This academic language is informational and will not exclude the job."
-    };
-  }
-
-  const requiredRank = EDUCATION_LEVEL_RANK[academic.minimumLevel] ?? 0;
-  const userRank = EDUCATION_LEVEL_RANK[user.level] ?? 0;
-  if (academic.minimumLevel === "doctorate" && academic.specificDegree === "phD" &&
-      user.level === "doctorate" && user.doctorateType !== "phD") {
-    return {
-      kind: "specificDegreeUncertain",
-      hide: false,
-      userLabel,
-      requiredLabel,
-      summary: "Specific Ph.D. requirement is uncertain",
-      explanation: "You reported a doctorate without specifying Ph.D.; the application will not assume equivalence or hide this job."
-    };
-  }
-
-  if (requiredRank > userRank) {
-    return {
-      kind: "strictMismatch",
-      hide: true,
-      userLabel,
-      requiredLabel,
-      summary: `${requiredLabel} required`,
-      explanation: `The posting's strict ${requiredLabel} requirement is above your completed ${userLabel}.`
-    };
-  }
-
-  const preferredLevels = Array.isArray(academic.preferredLevels) ? academic.preferredLevels : [];
-  const unmetPreferred = preferredLevels
-    .filter(level => (EDUCATION_LEVEL_RANK[level] ?? 0) > userRank)
-    .sort((left, right) => (EDUCATION_LEVEL_RANK[left] ?? 0) - (EDUCATION_LEVEL_RANK[right] ?? 0))[0];
-  return {
-    kind: unmetPreferred ? "meetsMinimumPreferredNotMet" : "meets",
-    hide: false,
-    userLabel,
-    requiredLabel,
-    preferredLabel: unmetPreferred ? academicLevelLabel(unmetPreferred) : null,
-    summary: unmetPreferred
-      ? `Meets minimum; ${academicLevelLabel(unmetPreferred)} preferred`
-      : "Meets strict education requirement",
-    explanation: unmetPreferred
-      ? `Your ${userLabel} meets the strict ${requiredLabel} minimum; ${academicLevelLabel(unmetPreferred)} is preferred.`
-      : `Your ${userLabel} meets or exceeds the strict ${requiredLabel} requirement.`
-  };
+  return EducationFit.evaluate(academic, profile);
 }
 
 function educationLevelLabel(level) {
@@ -2379,6 +2190,8 @@ function renderResults() {
       job.stableId, "saved", state.jobStates)),
     applied: filteredJobs.filter(job => JobWorkflowState.belongsToTab(
       job.stableId, "applied", state.jobStates)),
+    closed: filteredJobs.filter(job => JobWorkflowState.belongsToTab(
+      job.stableId, "closed", state.jobStates)),
     hidden: filteredJobs.filter(job => JobWorkflowState.belongsToTab(
       job.stableId, "hidden", state.jobStates))
   };
@@ -2386,12 +2199,15 @@ function renderResults() {
   elements.allJobCount.textContent = `(${populations.all.length})`;
   elements.savedJobCount.textContent = `(${populations.saved.length})`;
   elements.appliedJobCount.textContent = `(${populations.applied.length})`;
+  elements.closedJobCount.textContent = `(${populations.closed.length})`;
   elements.hiddenJobCount.textContent = `(${populations.hidden.length})`;
   const tabLabel = state.activeResultsTab === "saved"
     ? "saved"
     : state.activeResultsTab === "applied"
       ? "applied"
-      : state.activeResultsTab === "hidden" ? "hidden" : "available";
+      : state.activeResultsTab === "closed"
+        ? "closed"
+        : state.activeResultsTab === "hidden" ? "hidden" : "available";
   elements.resultCount.textContent =
     `Showing ${jobs.length} ${tabLabel} job${jobs.length === 1 ? "" : "s"}`;
   elements.filterSummary.textContent = buildFilterSummary();
@@ -2416,6 +2232,8 @@ function renderResults() {
       empty.textContent = "No saved jobs are available in the current job source.";
     } else if (state.activeResultsTab === "applied") {
       empty.textContent = "No applied jobs are available in the current job source.";
+    } else if (state.activeResultsTab === "closed") {
+      empty.textContent = "No closed applications are available in the current job source.";
     } else if (state.activeResultsTab === "hidden") {
       empty.textContent = "No hidden jobs are available in the current job source.";
     }
@@ -2503,6 +2321,9 @@ function createJobListItem(job) {
   const isHidden = workflowState === JobWorkflowState.STATES.hidden;
   const isSaved = workflowState === JobWorkflowState.STATES.saved;
   const isApplied = workflowState === JobWorkflowState.STATES.applied;
+  const isClosed = workflowState === JobWorkflowState.STATES.closed;
+  const closure = state.jobClosures.get(job.stableId);
+  JobUnseenState.applyToCard(card, state.newJobIds, job.stableId);
   if (isHidden) {
     card.classList.add("dismissed");
   }
@@ -2518,6 +2339,41 @@ function createJobListItem(job) {
   const date = document.createElement("time");
   date.dateTime = job.startDate || "";
   date.textContent = formatShortDate(job.startDate) || job.postedOn || "Date unavailable";
+  const dateColumn = document.createElement("span");
+  dateColumn.className = "job-date-column";
+  const dateIndicators = document.createElement("span");
+  dateIndicators.className = "job-date-indicators";
+  if (JobUnseenState.isUnseen(state.newJobIds, job.stableId)) {
+    const unseenIndicator = document.createElement("span");
+    unseenIndicator.className = "job-date-new-indicator";
+    unseenIndicator.textContent = "NEW";
+    dateIndicators.append(unseenIndicator);
+  }
+  if (isSaved) {
+    const savedBadge = document.createElement("span");
+    savedBadge.className = "saved-badge job-date-state-indicator";
+    savedBadge.textContent = "Saved";
+    dateIndicators.append(savedBadge);
+  }
+  if (isApplied) {
+    const appliedBadge = document.createElement("span");
+    appliedBadge.className = "applied-badge job-date-state-indicator";
+    appliedBadge.textContent = "Applied";
+    dateIndicators.append(appliedBadge);
+  }
+  if (isClosed) {
+    const closedBadge = document.createElement("span");
+    closedBadge.className = "closed-badge job-date-state-indicator";
+    closedBadge.textContent = "Closed";
+    dateIndicators.append(closedBadge);
+  }
+  if (isHidden) {
+    const hiddenBadge = document.createElement("span");
+    hiddenBadge.className = "hidden-badge job-date-state-indicator";
+    hiddenBadge.textContent = "Hidden";
+    dateIndicators.append(hiddenBadge);
+  }
+  dateColumn.append(date, dateIndicators);
 
   const title = document.createElement("strong");
   appendHighlightedText(title, job.title || "Untitled job");
@@ -2532,14 +2388,16 @@ function createJobListItem(job) {
   pay.className = "job-pay";
   pay.textContent = `Pay: ${formatPay(job)}`;
 
-  button.append(date, title, location, requisition, pay);
+  button.append(dateColumn, title, location, requisition, pay);
   const badges = document.createElement("span");
   badges.className = "job-badges";
-  if (state.newJobIds.has(job.stableId)) {
-    const newBadge = document.createElement("span");
-    newBadge.className = "new-badge";
-    newBadge.textContent = "NEW";
-    badges.append(newBadge);
+  if (isClosed && closure?.reason) {
+    appendJobBadge(
+      badges,
+      "close-reason-badge",
+      closeReasonLabel(closure.reason),
+      closure.closedAt ? `Application closed ${formatDateTime(closure.closedAt)}.` : "Application closed."
+    );
   }
   if (job.analysisPending) {
     const pendingBadge = document.createElement("span");
@@ -2548,118 +2406,53 @@ function createJobListItem(job) {
     pendingBadge.title = "Full-description analysis will be completed in a bounded refresh batch or when this job is opened.";
     badges.append(pendingBadge);
   }
-  if (isSaved) {
-    const savedBadge = document.createElement("span");
-    savedBadge.className = "saved-badge";
-    savedBadge.textContent = "Saved";
-    badges.append(savedBadge);
-  }
-  if (isApplied) {
-    const appliedBadge = document.createElement("span");
-    appliedBadge.className = "applied-badge";
-    appliedBadge.textContent = "Applied";
-    badges.append(appliedBadge);
-  }
-  if (isHidden) {
-    const hiddenBadge = document.createElement("span");
-    hiddenBadge.className = "hidden-badge";
-    hiddenBadge.textContent = "Hidden";
-    badges.append(hiddenBadge);
-  }
   const workAuthorizationStatus = evaluateWorkAuthorizationMatch(
     job.workAuthorization, currentWorkAuthorizationProfile());
-  if (job.workAuthorization &&
-      (job.workAuthorization.eligibility !== "noneSpecified" ||
-       job.workAuthorization.sponsorship !== "noneSpecified")) {
-    const authorizationBadge = document.createElement("span");
-    authorizationBadge.className = "work-authorization-badge";
-    authorizationBadge.textContent = workAuthorizationBadgeLabel(job.workAuthorization);
-    authorizationBadge.title = workAuthorizationStatus.explanation;
-    badges.append(authorizationBadge);
-  }
-  if (workAuthorizationStatus.kind === "strictMismatch") {
-    const authorizationMismatchBadge = document.createElement("span");
-    authorizationMismatchBadge.className = "work-authorization-mismatch-badge";
-    authorizationMismatchBadge.textContent = "Work authorization mismatch";
-    authorizationMismatchBadge.title = workAuthorizationStatus.explanation;
-    badges.append(authorizationMismatchBadge);
-  }
-  if (job.clearanceLevel && job.clearanceLevel !== "noneMentioned") {
-    const clearanceBadge = document.createElement("span");
-    clearanceBadge.className = "clearance-badge";
-    clearanceBadge.textContent = clearanceBadgeLabel(job);
-    badges.append(clearanceBadge);
-  }
+  ClearanceFit.workAuthorizationBadges(job.workAuthorization, workAuthorizationStatus)
+    .forEach(badge => appendJobBadge(badges, badge.className, badge.text, badge.title));
   const clearanceStatus = evaluateClearanceMatch(job, currentSecurityProfile());
-  if (clearanceStatus.kind === "strictMismatch") {
-    const clearanceMismatchBadge = document.createElement("span");
-    clearanceMismatchBadge.className = "clearance-mismatch-badge";
-    clearanceMismatchBadge.textContent = `${clearanceLevelLabel(job.clearanceLevel)} required`;
-    clearanceMismatchBadge.title = clearanceStatus.explanation;
-    badges.append(clearanceMismatchBadge);
-  }
+  ClearanceFit.jobCardBadges(job, clearanceStatus)
+    .forEach(badge => appendJobBadge(badges, badge.className, badge.text, badge.title));
   const academicQualification = job.academicQualification;
-  if (academicQualification && academicQualification.requirementType !== "noDegreeSpecified") {
-    const academicBadge = document.createElement("span");
-    academicBadge.className = "academic-badge";
-    academicBadge.textContent = academicBadgeLabel(academicQualification);
-    badges.append(academicBadge);
-  }
   const educationStatus = evaluateEducationMatch(academicQualification, currentEducationProfile());
-  if (educationStatus.kind === "strictMismatch") {
-    const mismatchBadge = document.createElement("span");
-    mismatchBadge.className = "education-mismatch-badge";
-    mismatchBadge.textContent = "Education mismatch";
-    mismatchBadge.title = educationStatus.explanation;
-    badges.append(mismatchBadge);
+  const educationBadge = EducationFit.jobCardBadge(academicQualification, educationStatus);
+  if (educationBadge) {
+    appendJobBadge(
+      badges,
+      educationBadge.className,
+      educationBadge.text,
+      educationBadge.title
+    );
   }
   const credentials = Array.isArray(job.credentials) ? job.credentials : [];
-  credentials.slice(0, 2).forEach(credential => {
-    const credentialBadge = document.createElement("span");
-    credentialBadge.className = `credential-badge${credential.requirement === "required" ? " required" : ""}`;
-    credentialBadge.textContent = credentialBadgeLabel(credential);
-    credentialBadge.title = credential.fullName || credential.name;
-    badges.append(credentialBadge);
-  });
-  if (credentials.length > 2) {
-    const moreCredentials = document.createElement("span");
-    moreCredentials.className = "credential-badge credential-count-badge";
-    moreCredentials.textContent = `+${credentials.length - 2} credentials`;
-    badges.append(moreCredentials);
-  }
   const unknownCredentials = Array.isArray(job.unknownCredentialRequirements)
     ? job.unknownCredentialRequirements
     : [];
-  unknownCredentials.filter(credential => credential.requirement === "required")
-    .slice(0, 1).forEach(credential => {
-      const badge = document.createElement("span");
-      badge.className = "credential-badge required";
-      badge.textContent = `${credential.name || "Unknown credential"} — review`;
-      badge.title = "Explicitly required credential not yet recognized by the catalog";
-      badges.append(badge);
-    });
   const credentialFit = CredentialFit.evaluate(
     credentials, unknownCredentials, currentCredentialProfile());
-  if (credentialFit.blockers.length) {
-    const mismatch = document.createElement("span");
-    mismatch.className = "education-mismatch-badge";
-    mismatch.textContent = "Credential mismatch";
-    badges.append(mismatch);
-  }
+  CredentialFit.jobCardBadges(credentialFit).forEach(badge =>
+    appendJobBadge(badges, badge.className, badge.text, badge.title));
   if (job.isRemoteLocationRestricted) {
-    const restriction = document.createElement("span");
-    restriction.className = "restriction-badge";
-    restriction.textContent = "⚠ Location restricted";
-    badges.append(restriction);
+    appendJobBadge(badges, "restriction-badge", "⚠ Location restricted");
   }
   if (job.remoteWork?.concernLevel && job.remoteWork.concernLevel !== "none") {
-    const remoteWarning = document.createElement("span");
-    remoteWarning.className = `remote-work-badge ${job.remoteWork.concernLevel}`;
-    remoteWarning.textContent = job.remoteWork.concernLevel === "strong"
-      ? "\u26A0 Remote work conflict"
-      : "\u26A0 Remote work may be restricted";
-    remoteWarning.title = job.remoteWork.summary || "Review the posting's onsite or travel requirements.";
-    badges.append(remoteWarning);
+    appendJobBadge(
+      badges,
+      `remote-work-badge ${job.remoteWork.concernLevel}`,
+      job.remoteWork.concernLevel === "strong"
+        ? "\u26A0 Remote work conflict"
+        : "\u26A0 Remote work may be restricted",
+      job.remoteWork.summary || "Review the posting's onsite or travel requirements."
+    );
+  }
+  const extendedLocationBadge = ExtendedLocationUi.listBadge(job.extendedLocationRequirement);
+  if (extendedLocationBadge) {
+    appendJobBadge(
+      badges,
+      `extended-location-badge ${extendedLocationBadge.confidence}`,
+      extendedLocationBadge.text,
+      ExtendedLocationUi.requirementLine(job.extendedLocationRequirement)
+    );
   }
   const headroom = calculateSalaryHeadroom(job);
   if (headroom?.isLimited) {
@@ -2680,24 +2473,27 @@ function createJobListItem(job) {
     renderResults();
   });
 
-  const dismissButton = document.createElement("button");
-  dismissButton.type = "button";
-  dismissButton.className = `job-dismiss-button${isHidden ? " restore" : ""}`;
-  if (isHidden) {
-    dismissButton.append(createRestoreIcon());
-  } else {
-    dismissButton.append(createTrashCanIcon());
+  let dismissButton = null;
+  if (!isClosed) {
+    dismissButton = document.createElement("button");
+    dismissButton.type = "button";
+    dismissButton.className = `job-dismiss-button${isHidden ? " restore" : ""}`;
+    if (isHidden) {
+      dismissButton.append(createRestoreIcon());
+    } else {
+      dismissButton.append(createTrashCanIcon());
+    }
+    dismissButton.setAttribute(
+      "aria-label",
+      isHidden
+        ? `Restore job: ${job.title || job.requisitionId || job.stableId}`
+        : `Hide this job: ${job.title || job.requisitionId || job.stableId}`);
+    dismissButton.title = isHidden ? "Restore job" : "Hide this job";
+    dismissButton.addEventListener("click", () => setJobHidden(job, !isHidden));
   }
-  dismissButton.setAttribute(
-    "aria-label",
-    isHidden
-      ? `Restore job: ${job.title || job.requisitionId || job.stableId}`
-      : `Hide this job: ${job.title || job.requisitionId || job.stableId}`);
-  dismissButton.title = isHidden ? "Restore job" : "Hide this job";
-  dismissButton.addEventListener("click", () => setJobHidden(job, !isHidden));
 
   let saveButton = null;
-  if (!isApplied && !isHidden) {
+  if (!isApplied && !isClosed && !isHidden) {
     saveButton = document.createElement("button");
     saveButton.type = "button";
     saveButton.className = `job-save-button${isSaved ? " saved" : ""}`;
@@ -2711,7 +2507,7 @@ function createJobListItem(job) {
   }
 
   let appliedButton = null;
-  if (!isHidden) {
+  if (!isHidden && !isClosed) {
     appliedButton = document.createElement("button");
     appliedButton.type = "button";
     appliedButton.className = `job-applied-button${isApplied ? " applied" : ""}`;
@@ -2725,11 +2521,46 @@ function createJobListItem(job) {
     appliedButton.addEventListener("click", () => setJobApplied(job, !isApplied));
   }
 
+  let closeButton = null;
+  if (isApplied) {
+    closeButton = document.createElement("button");
+    closeButton.type = "button";
+    closeButton.className = "job-close-application-button";
+    closeButton.append(createCloseApplicationIcon());
+    closeButton.setAttribute(
+      "aria-label",
+      `Close application: ${job.title || job.requisitionId || job.stableId}`);
+    closeButton.title = "Close Application";
+    closeButton.addEventListener("click", () => showCloseApplicationModal(job));
+  } else if (isClosed) {
+    closeButton = document.createElement("button");
+    closeButton.type = "button";
+    closeButton.className = "job-reopen-application-button";
+    closeButton.append(createReopenApplicationIcon());
+    closeButton.setAttribute(
+      "aria-label",
+      `Reopen application: ${job.title || job.requisitionId || job.stableId}`);
+    closeButton.title = "Reopen Application";
+    closeButton.addEventListener("click", () => reopenApplication(job));
+  }
+
   card.append(button);
   if (saveButton) card.append(saveButton);
   if (appliedButton) card.append(appliedButton);
-  card.append(dismissButton);
+  if (closeButton) card.append(closeButton);
+  if (dismissButton) card.append(dismissButton);
   return card;
+}
+
+function appendJobBadge(container, className, text, title = "") {
+  const badge = document.createElement("span");
+  badge.className = className;
+  badge.textContent = text;
+  if (title) {
+    badge.title = title;
+  }
+  container.append(badge);
+  return badge;
 }
 
 function createAppliedIcon() {
@@ -2753,6 +2584,42 @@ function createAppliedIcon() {
   check.classList.add("job-applied-icon-check");
   check.setAttribute("d", "m8 12 2.6 2.6L16.5 9");
   icon.append(background, check);
+  return icon;
+}
+
+function createCloseApplicationIcon() {
+  const svgNamespace = "http://www.w3.org/2000/svg";
+  const icon = document.createElementNS(svgNamespace, "svg");
+  icon.classList.add("job-close-application-icon");
+  icon.setAttribute("viewBox", "0 0 24 24");
+  icon.setAttribute("aria-hidden", "true");
+  icon.setAttribute("focusable", "false");
+  icon.setAttribute("fill", "none");
+  icon.setAttribute("stroke", "currentColor");
+  icon.setAttribute("stroke-linecap", "round");
+  icon.setAttribute("stroke-linejoin", "round");
+  const archive = document.createElementNS(svgNamespace, "path");
+  archive.setAttribute("d", "M4 7h16v13H4zM3 4h18v3H3zM9 11h6");
+  const close = document.createElementNS(svgNamespace, "path");
+  close.setAttribute("d", "m9 14 6 6m0-6-6 6");
+  icon.append(archive, close);
+  return icon;
+}
+
+function createReopenApplicationIcon() {
+  const svgNamespace = "http://www.w3.org/2000/svg";
+  const icon = document.createElementNS(svgNamespace, "svg");
+  icon.classList.add("job-close-application-icon");
+  icon.setAttribute("viewBox", "0 0 24 24");
+  icon.setAttribute("aria-hidden", "true");
+  icon.setAttribute("focusable", "false");
+  icon.setAttribute("fill", "none");
+  icon.setAttribute("stroke", "currentColor");
+  icon.setAttribute("stroke-linecap", "round");
+  icon.setAttribute("stroke-linejoin", "round");
+  const arrow = document.createElementNS(svgNamespace, "path");
+  arrow.setAttribute("d", "M8 8H4V4M4 8a8 8 0 1 1-1 7M9 12h6");
+  icon.append(arrow);
   return icon;
 }
 
@@ -2815,35 +2682,130 @@ async function setJobHidden(job, hidden) {
     "Hidden");
 }
 
-async function setJobWorkflowState(job, nextState, label) {
+const CLOSE_REASON_LABELS = Object.freeze({
+  PositionWithdrawn: "Position Withdrawn",
+  NotSelected: "Not Selected",
+  ScreenedOut: "Screened Out",
+  InterviewedOut: "Interviewed Out",
+  Ghosted: "Ghosted",
+  Withdrew: "Withdrew",
+  Other: "Other"
+});
+
+function closeReasonLabel(reason) {
+  return CLOSE_REASON_LABELS[reason] || "Other";
+}
+
+function showCloseApplicationModal(job) {
+  if (JobWorkflowState.stateForJob(job.stableId, state.jobStates) !==
+      JobWorkflowState.STATES.applied) return;
+  clearTimeout(state.closeApplicationHideTimer);
+  state.closeApplicationOpen = true;
+  state.closeApplicationJobId = job.stableId;
+  state.focusBeforeCloseApplication = document.activeElement;
+  elements.closeApplicationCopy.textContent =
+    `Choose why the application for ${job.title || job.requisitionId || "this job"} is closed.`;
+  elements.closeApplicationReason.value = "PositionWithdrawn";
+  elements.closeApplicationError.hidden = true;
+  elements.closeApplicationError.textContent = "";
+  elements.appShell.inert = true;
+  elements.closeApplicationOverlay.hidden = false;
+  elements.closeApplicationOverlay.setAttribute("aria-hidden", "false");
+  requestAnimationFrame(() => {
+    elements.closeApplicationOverlay.classList.add("visible");
+    elements.closeApplicationReason.focus({ preventScroll: true });
+  });
+}
+
+function closeCloseApplicationModal(restoreFocus) {
+  if (!state.closeApplicationOpen || state.closeApplicationInProgress) return;
+  state.closeApplicationOpen = false;
+  state.closeApplicationJobId = null;
+  elements.closeApplicationOverlay.classList.remove("visible");
+  elements.closeApplicationOverlay.setAttribute("aria-hidden", "true");
+  elements.appShell.inert = state.isRefreshing || state.sourceMetadataLoading ||
+    state.sourceConfirmationOpen || state.resetConfirmationOpen;
+  state.closeApplicationHideTimer = setTimeout(() => {
+    if (!state.closeApplicationOpen) elements.closeApplicationOverlay.hidden = true;
+  }, OVERLAY_TRANSITION_MS);
+  if (restoreFocus && state.focusBeforeCloseApplication?.isConnected) {
+    state.focusBeforeCloseApplication.focus({ preventScroll: true });
+  }
+  state.focusBeforeCloseApplication = null;
+}
+
+async function confirmCloseApplication() {
+  if (state.closeApplicationInProgress) return;
+  const job = state.jobs.find(item => item.stableId === state.closeApplicationJobId);
+  const reason = elements.closeApplicationReason.value;
+  if (!job || !CLOSE_REASON_LABELS[reason]) return;
+  state.closeApplicationInProgress = true;
+  elements.closeApplicationCancel.disabled = true;
+  elements.closeApplicationSubmit.disabled = true;
+  elements.closeApplicationSubmit.textContent = "Closing…";
+  elements.closeApplicationError.hidden = true;
+  const updated = await setJobWorkflowState(
+    job, JobWorkflowState.STATES.closed, "Closed", reason);
+  state.closeApplicationInProgress = false;
+  elements.closeApplicationCancel.disabled = false;
+  elements.closeApplicationSubmit.disabled = false;
+  elements.closeApplicationSubmit.textContent = "Close Application";
+  if (updated) {
+    closeCloseApplicationModal(false);
+  } else {
+    elements.closeApplicationError.textContent =
+      "The application could not be closed. Review the error banner and try again.";
+    elements.closeApplicationError.hidden = false;
+    elements.closeApplicationCancel.focus({ preventScroll: true });
+  }
+}
+
+async function reopenApplication(job) {
+  await setJobWorkflowState(job, JobWorkflowState.STATES.applied, "Reopen application");
+}
+
+async function setJobWorkflowState(job, nextState, label, closeReason = null) {
   const previousState = JobWorkflowState.stateForJob(job.stableId, state.jobStates);
+  const previousClosure = state.jobClosures.get(job.stableId);
   state.jobStates.set(job.stableId, nextState);
+  if (nextState === JobWorkflowState.STATES.closed) {
+    state.jobClosures.set(job.stableId, {
+      reason: closeReason,
+      closedAt: new Date().toISOString(),
+      appliedAt: previousClosure?.appliedAt || null
+    });
+  } else {
+    state.jobClosures.delete(job.stableId);
+  }
   renderResults();
 
   try {
     const response = await fetch("/api/history/workflow-state", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ stableId: job.stableId, state: nextState }),
+      body: JSON.stringify({ stableId: job.stableId, state: nextState, closeReason }),
       keepalive: true
     });
     if (!response.ok) {
       throw new Error(`${label}-state update returned HTTP ${response.status}.`);
     }
+    return true;
   } catch (error) {
     state.jobStates.set(job.stableId, previousState);
+    if (previousClosure) state.jobClosures.set(job.stableId, previousClosure);
+    else state.jobClosures.delete(job.stableId);
     renderResults();
     elements.errorBanner.textContent = `${label} state could not be updated: ${error.message || error}`;
     elements.errorBanner.hidden = false;
+    return false;
   }
 }
 
 async function markJobViewed(job) {
-  if (!state.newJobIds.has(job.stableId)) {
+  if (!JobUnseenState.markViewed(state.newJobIds, job.stableId)) {
     return;
   }
 
-  state.newJobIds.delete(job.stableId);
   renderResults();
   try {
     const response = await fetch("/api/history/viewed", {
@@ -2856,7 +2818,7 @@ async function markJobViewed(job) {
       throw new Error(`Viewed-state save returned HTTP ${response.status}.`);
     }
   } catch (error) {
-    state.newJobIds.add(job.stableId);
+    JobUnseenState.restoreUnseen(state.newJobIds, job.stableId);
     renderResults();
     elements.errorBanner.textContent = `Viewed state could not be saved: ${error.message || error}`;
     elements.errorBanner.hidden = false;
@@ -2926,10 +2888,16 @@ function renderDetail(job) {
   // and only after a strict DOMPurify allowlist has removed executable content.
   replaceWithHighlightedText(elements.detailTitle, job.title);
   replaceWithHighlightedText(elements.detailRequisition, job.requisitionId);
-  elements.detailNewBadge.hidden = !state.newJobIds.has(job.stableId);
   const detailWorkflowState = JobWorkflowState.stateForJob(job.stableId, state.jobStates);
   elements.detailSavedBadge.hidden = detailWorkflowState !== JobWorkflowState.STATES.saved;
   elements.detailAppliedBadge.hidden = detailWorkflowState !== JobWorkflowState.STATES.applied;
+  const detailClosure = state.jobClosures.get(job.stableId);
+  elements.detailClosedBadge.hidden = detailWorkflowState !== JobWorkflowState.STATES.closed;
+  elements.detailCloseReasonBadge.hidden = detailWorkflowState !== JobWorkflowState.STATES.closed ||
+    !detailClosure?.reason;
+  elements.detailCloseReasonBadge.textContent = detailClosure?.reason
+    ? closeReasonLabel(detailClosure.reason)
+    : "";
   elements.detailHiddenBadge.hidden = detailWorkflowState !== JobWorkflowState.STATES.hidden;
   elements.copyPostingButton.disabled = !job.descriptionHtml;
   if (!job.descriptionHtml) {
@@ -3021,6 +2989,27 @@ function renderDetail(job) {
   elements.detailRemoteWorkNoteText.textContent = hasRemoteWorkConcern
     ? job.remoteWork.summary || "The description includes onsite, field, or travel requirements worth reviewing."
     : "";
+
+  const extendedLocation = job.extendedLocationRequirement;
+  const hasExtendedLocationRequirement = extendedLocation?.confidence === "strong" ||
+    extendedLocation?.confidence === "questionable";
+  elements.detailExtendedLocationRequirement.hidden = !hasExtendedLocationRequirement;
+  elements.detailExtendedLocationRequirement.className =
+    `summary-section extended-location-requirement ${extendedLocation?.confidence || "questionable"}`;
+  elements.detailExtendedLocationDestination.textContent = hasExtendedLocationRequirement
+    ? ExtendedLocationUi.destinationDisplay(extendedLocation)
+    : "";
+  elements.detailExtendedLocationSummary.textContent = hasExtendedLocationRequirement
+    ? ExtendedLocationUi.requirementLine(extendedLocation)
+    : "";
+  elements.detailExtendedLocationEvidence.replaceChildren();
+  if (hasExtendedLocationRequirement) {
+    (extendedLocation.signals || []).forEach(signal => {
+      const evidence = document.createElement("p");
+      evidence.textContent = signal.evidence;
+      elements.detailExtendedLocationEvidence.append(evidence);
+    });
+  }
 
   const headroom = calculateSalaryHeadroom(job);
   elements.detailHeadroomNote.hidden = !headroom?.isLimited;
@@ -3370,21 +3359,6 @@ function clearanceRequirementLabel(requirement) {
   })[requirement] || "Mentioned; requirement unclear";
 }
 
-function clearanceBadgeLabel(job) {
-  const level = clearanceLevelLabel(job.clearanceLevel);
-  const suffix = ({
-    activeRequired: " — Active",
-    mustPossess: " — Possess",
-    obtainAndMaintain: " — Obtainable",
-    obtain: " — Obtainable",
-    maintain: " — Maintain",
-    eligible: " — Eligible",
-    publicTrustSuitability: " — Suitability",
-    preferred: " — Preferred"
-  })[job.clearanceRequirement] || "";
-  return `${level}${suffix}${job.polygraphRequired ? " + Poly" : ""}`;
-}
-
 function usWorkAuthorizationProfileLabel(status) {
   return ({
     notSpecified: "U.S. work status not configured",
@@ -3421,21 +3395,6 @@ function workAuthorizationRequirementLabel(analysis) {
   return requirement || "Work-authorization language requires review";
 }
 
-function workAuthorizationBadgeLabel(analysis) {
-  const eligibility = ({
-    usCitizen: "U.S. Citizen",
-    usCitizenOrPermanentResident: "Citizen / Green Card",
-    usWorkAuthorized: "U.S. Work Authorized",
-    locationWorkAuthorized: "Local Work Rights — Review",
-    usPerson: "U.S. Person — Review",
-    australianCitizen: "Australian Citizen — Review",
-    exportControlled: "Export Control — Review",
-    ambiguousCitizenship: "Citizenship — Review"
-  })[analysis?.eligibility] || "";
-  const sponsor = analysis?.sponsorship === "notAvailable" ? "No Sponsorship" : "";
-  return [eligibility, sponsor].filter(Boolean).join(" + ") || "Authorization — Review";
-}
-
 function academicLevelLabel(level, specificDegree = null) {
   if (level === "doctorate" && specificDegree === "phD") {
     return "Ph.D.";
@@ -3448,26 +3407,6 @@ function academicLevelLabel(level, specificDegree = null) {
     doctorate: "Doctorate",
     noneSpecified: "None specified"
   })[level] || "Academic qualification";
-}
-
-function academicBadgeLabel(academic) {
-  if (academic.minimumLevel === "noneSpecified" &&
-      (academic.hasAccreditation ||
-       (Array.isArray(academic.accreditations) && academic.accreditations.length))) {
-    return "Accreditation";
-  }
-  const level = academicLevelLabel(academic.minimumLevel, academic.specificDegree);
-  const degreeOrExperience = academic.minimumLevel === "noneSpecified"
-    ? "Degree/Experience"
-    : `${level}/Experience`;
-  return ({
-    degreeOrExperience,
-    degreeWithExperienceSubstitution: "Degree/experience options",
-    accreditationOnly: "Accreditation",
-    preferredOnly: `${level} \u2014 Preferred`,
-    strictDegree: `${level} \u2014 Required`,
-    mentionedUnclear: `${level} \u2014 Mentioned`
-  })[academic.requirementType] || level;
 }
 
 function renderAcademicQualification(job, educationStatus) {
@@ -3600,14 +3539,15 @@ function renderCredentials(job, credentialStatus) {
   elements.detailCredentials.hidden = credentials.length === 0 && unknown.length === 0;
   elements.detailCredentialsList.replaceChildren();
 
-  credentials.forEach((credential, index) => {
+  credentialDisplayRows(credentials).forEach(({ credential, members }, index) => {
     const item = document.createElement("div");
     item.className = "credential-row";
     const name = document.createElement("strong");
     name.textContent = credential.name;
     const status = document.createElement("span");
     status.className = `summary-status credential${credential.requirement === "required" ? " required" : ""}`;
-    const assessment = credentialStatus.assessments.find(item => item.credential === credential);
+    const assessment = credentialStatus.assessments.find(item =>
+      CredentialFit.assessmentCredentials(item).some(member => members.includes(member)));
     status.textContent = credentialRequirementLabel(credential, assessment);
 
     const identity = document.createElement("p");
@@ -3672,6 +3612,38 @@ function renderCredentials(job, credentialStatus) {
   });
 }
 
+function credentialDisplayRows(credentials) {
+  const rows = [];
+  const renderedGroups = new Set();
+  credentials.forEach(credential => {
+    const groupId = credential.alternativeGroup;
+    const members = groupId
+      ? credentials.filter(candidate => candidate.alternativeGroup === groupId)
+      : [credential];
+    if (groupId && members.length > 1) {
+      if (renderedGroups.has(groupId)) return;
+      renderedGroups.add(groupId);
+      const distinct = key => [...new Set(members.map(member => member[key]).filter(Boolean))];
+      rows.push({
+        members,
+        credential: {
+          ...members[0],
+          name: distinct("name").join(" or "),
+          fullName: distinct("fullName").join(" / "),
+          issuer: distinct("issuer").join(" / "),
+          category: distinct("category").join(" / "),
+          family: distinct("family").join(" / "),
+          evidence: distinct("evidence").join(" "),
+          isAlternative: true
+        }
+      });
+      return;
+    }
+    rows.push({ credential, members: [credential] });
+  });
+  return rows;
+}
+
 function credentialRequirementLabel(credential, assessment) {
   const labels = [];
   if (credential.postHireAcquisitionAllowed) {
@@ -3696,23 +3668,12 @@ function credentialRequirementLabel(credential, assessment) {
   if (assessment?.kind === "meets") labels.push("held");
   if (assessment?.kind === "strictMismatch") labels.push("not in your inventory");
   if (assessment?.kind === "review") labels.push("status needs review");
-  return labels.join(" · ");
-}
-
-function credentialBadgeLabel(credential) {
-  let status = ({
-    required: "Required",
-    preferred: "Preferred",
-    desired: "Desired"
-  })[credential.requirement] || "";
-  if (credential.postHireAcquisitionAllowed) {
-    status = "Required after hire";
-  } else if (credential.isAlternative && status) {
-    status += " alternative";
-  } else if (credential.inProgressAccepted) {
-    status = status ? `${status} / in progress` : "In progress accepted";
+  if (assessment?.kind === "nonBlocking") {
+    labels.push(assessment.reason === "profileNotConfiguredNonBlocking"
+      ? "status unknown"
+      : "not held");
   }
-  return status ? `${credential.name} — ${status}` : credential.name;
+  return labels.join(" · ");
 }
 
 function credentialTypeLabel(type) {
@@ -3805,7 +3766,7 @@ function setLoading(isLoading, options = {}) {
   } else {
     clearTimeout(state.refreshProgressTimer);
     elements.appShell.inert = state.sourceMetadataLoading ||
-      state.sourceConfirmationOpen || state.resetConfirmationOpen;
+      state.sourceConfirmationOpen || state.resetConfirmationOpen || state.closeApplicationOpen;
     elements.loadingOverlay.classList.remove("visible");
     elements.loadingOverlay.setAttribute("aria-hidden", "true");
     state.overlayHideTimer = setTimeout(() => {
@@ -3818,6 +3779,11 @@ function setLoading(isLoading, options = {}) {
     state.loadingTitle = `Loading ${state.companyName} jobs`;
   }
   updateQueryControls();
+}
+
+function formatDateTime(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toLocaleString();
 }
 
 function beginSourceMetadataLoad(companyId) {
@@ -3870,7 +3836,7 @@ function endSourceMetadataLoad(request) {
   elements.sourceLoadingOverlay.classList.remove("visible");
   elements.sourceLoadingOverlay.setAttribute("aria-hidden", "true");
   elements.appShell.inert = state.isRefreshing ||
-    state.sourceConfirmationOpen || state.resetConfirmationOpen;
+    state.sourceConfirmationOpen || state.resetConfirmationOpen || state.closeApplicationOpen;
   state.sourceOverlayHideTimer = setTimeout(() => {
     if (!state.sourceMetadataLoading) elements.sourceLoadingOverlay.hidden = true;
   }, OVERLAY_TRANSITION_MS);
@@ -3995,6 +3961,26 @@ function constrainResetConfirmationFocus(event) {
     elements.resetConfirmationOverlay.focus({ preventScroll: true });
     return;
   }
+  const currentIndex = focusable.indexOf(document.activeElement);
+  const nextIndex = event.shiftKey
+    ? (currentIndex <= 0 ? focusable.length - 1 : currentIndex - 1)
+    : (currentIndex < 0 || currentIndex === focusable.length - 1 ? 0 : currentIndex + 1);
+  event.preventDefault();
+  focusable[nextIndex].focus({ preventScroll: true });
+}
+
+function constrainCloseApplicationFocus(event) {
+  if (event.key === "Escape" && !state.closeApplicationInProgress) {
+    event.preventDefault();
+    closeCloseApplicationModal(true);
+    return;
+  }
+  if (event.key !== "Tab") return;
+  const focusable = [
+    elements.closeApplicationReason,
+    elements.closeApplicationCancel,
+    elements.closeApplicationSubmit
+  ].filter(element => !element.disabled);
   const currentIndex = focusable.indexOf(document.activeElement);
   const nextIndex = event.shiftKey
     ? (currentIndex <= 0 ? focusable.length - 1 : currentIndex - 1)

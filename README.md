@@ -41,12 +41,19 @@ a private Azure Blob container.
 - AECOM (SmartRecruiters company `AECOM2`)
 - RTX (`globalhr.wd5.myworkdayjobs.com`, tenant `globalhr`, site
   `REC_RTX_Ext_Gateway`)
+- Amentum (`pae.wd1.myworkdayjobs.com`, tenant `pae`, site `Amentum_Careers`)
+- KBR (`kbr.wd5.myworkdayjobs.com`, tenant `kbr`, site `KBR_Careers`)
+- Booz Allen Hamilton (`bah.wd1.myworkdayjobs.com`, tenant `bah`, site `BAH_Jobs`)
+- ServiceNow (SmartRecruiters company `ServiceNow`)
+- NXP Semiconductors (`nxp.wd3.myworkdayjobs.com`, tenant `nxp`, site `careers`)
 
 The source-controlled [CompanyCatalog.json](CompanyCatalog.json) is the authority
 for supported companies, providers, hosts, tenants/company keys, sites, public
 URLs, default countries, provider-specific country facets, and known remote-location
-facet IDs. Adding another compatible employer should primarily require adding and
-verifying one catalog entry; a new provider requires one reusable adapter.
+facet IDs. It also assigns each employer a broad industry category. The native
+Company selector renders those categories as groups without duplicating industry
+rules in the browser. Adding another compatible employer should primarily require
+adding and verifying one catalog entry; a new provider requires one reusable adapter.
 
 Provider sites can expose different facet structures and description conventions,
 so the project does not claim universal compatibility with every public career site.
@@ -109,8 +116,7 @@ the user to Job Source; it is never a silent, disabled navigation action. The
 unconfigured state is distinct from an unapplied edit to an existing source.
 
 The application remembers source choices separately for each company while keeping
-the user profile and screening preferences global. Automatic checks monitor only
-the currently applied source.
+the user profile and screening preferences global.
 
 Settings > My Qualifications keeps U.S. work status and employer-sponsorship need
 as separate profile facts. The optional strict work-authorization screening rule
@@ -118,6 +124,14 @@ is off by default and excludes only confidently incompatible requirements. U.S.
 person, export-control, preferred, non-U.S., and uncertain language remains visible
 for review. These values persist through the same local or anonymous-workspace
 settings document as the other profile fields.
+
+Settings > My Preferences also offers **Exclude deployment / remote-assignment
+jobs**. It is off by default and hides only Strong extended-location detections:
+explicit deployment, rotation, relocation, or extended-presence obligations at
+unusual remote or overseas locations. Questionable detections remain visible, as
+do ordinary business travel and ordinary onsite geography. Every Strong or
+Questionable detection is shown in a dedicated **Deployment / Location
+Requirement** section in At a Glance with the preserved posting evidence.
 
 The active query identity includes company, country, remote coverage, and a
 canonical set of location facet IDs. Location order therefore does not change cache
@@ -133,8 +147,7 @@ incompatibility schedules detail work; providers without a reliable modified mar
 are covered by a seven-day, bounded revalidation policy rather than a complete crawl.
 
 Manual refreshes retrieve at most 200 details, with at most 25 age-based
-revalidations, and automatic checks retrieve at most 50 new or materially changed
-details. Detail requests use configured bounded concurrency. Listing retrieval is
+revalidations. Detail requests use configured bounded concurrency. Listing retrieval is
 also page-bounded and reports truncation instead of silently issuing unbounded
 requests. Deferred jobs remain visible with an Analysis pending badge and are
 hydrated in later manual batches or immediately when opened.
@@ -144,15 +157,15 @@ large evidence collections. Selecting a job requests that one detail from the
 server-side cache, fetching it from the provider only when absent. Description-scope
 keyword matching runs against cached text on the server and returns only matching
 stable IDs. Refresh-progress polling uses a status-only endpoint and transfers the
-complete job list once, when a detached refresh completes. Polls do not overlap,
-slow down when the tab is hidden, and the ordinary automatic-check status cadence
-is 30 seconds while Jobs is visible and 120 seconds elsewhere.
+complete job list once, when a detached refresh completes. Refresh-progress polls
+do not overlap and stop when the tab is hidden.
 
 Cached descriptions are compressed at rest. Parser-version changes re-run analysis
 against inflated cached HTML locally and do not cause provider downloads. Cache
 schema 6 stores one compact document per company and canonical query fingerprint.
-An unchanged automatic refresh writes neither cache nor history; a manual refresh
-updates only its small source-status document when job content is unchanged.
+An unchanged refresh writes neither cache nor history. Manual refreshes update
+only the small source-status document so the last successful
+provider pass remains accurate across process restarts.
 
 ## Local persistent data
 
@@ -162,8 +175,8 @@ All persistent state is stored beside the running application in:
 <AppContext.BaseDirectory>\data\
   settings.json
   job-history.json
-  job-caches\{companyId}\{queryFingerprint}.json
-  source-status\{companyId}\{queryFingerprint}.json
+  shared\job-caches\{companyId}\{queryFingerprint}.json
+  shared\source-status\{companyId}\{queryFingerprint}.json
 ```
 
 Nothing is stored in AppData, LocalAppData, Temp, the registry, or another hidden
@@ -176,9 +189,9 @@ first-seen, last-seen, or hidden state. A legacy single-source or cumulative
 `jobs-cache.json` envelope is split into company/query documents idempotently and
 removed only after every supported entry has migrated safely.
 
-Each job has exactly one persisted workflow state: Normal, Saved, Applied, or
+Each job has exactly one persisted workflow state: Normal, Saved, Applied, Closed, or
 Hidden. The results tabs show those mutually exclusive populations as All Jobs,
-Saved, Applied, and Hidden. Restoring a Hidden job returns it to Normal; it does
+Saved, Applied, Closed, and Hidden. Restoring a Hidden job returns it to Normal; it does
 not revive an earlier Saved or Applied state. State uses the same company-scoped
 history identity and workspace storage, so it returns if that company/job identity
 reappears in a later provider snapshot.
@@ -196,9 +209,8 @@ The versioned JSON file is a portable workspace backup containing:
 
 - the pending or applied Job Source selection (company, country, coverage flags,
   and selected physical provider facet IDs/labels);
-- search preferences, My Qualifications, screening choices, automatic-check
-  preferences, and theme;
-- one canonical record for each Saved, Applied, or Hidden job: company ID,
+- search preferences, My Qualifications, screening choices, and theme;
+- one canonical record for each Saved, Applied, Closed, or Hidden job: company ID,
   company-scoped stable ID, requisition ID when available, workflow state, and
   provider external path.
 
@@ -223,8 +235,8 @@ unapplied-source guard as a manual edit and offers **Apply and go to Jobs** when
 imported source is valid.
 
 Settings also provides **Reset Current Workspace**. After confirmation, local mode
-deletes only the application-owned JSON documents and cache/status subtrees shown
-above and reloads first-run defaults. Unrelated files are left untouched.
+deletes only `settings.json` and `job-history.json` and reloads first-run defaults.
+Shared employer cache/status data and unrelated files are left untouched.
 
 ## Azure App Service mode
 
@@ -270,18 +282,21 @@ Each workspace is isolated under:
 
 ```text
 userdata (private container)
+  shared/
+    job-caches/{companyId}/{queryFingerprint}.json
+    source-status/{companyId}/{queryFingerprint}.json
   workspaces/{workspaceId}/
     settings.json
     job-history.json
-    job-caches/{companyId}/{queryFingerprint}.json
-    source-status/{companyId}/{queryFingerprint}.json
 ```
 
-Blob names are constructed from a fixed document set plus strictly validated
-company IDs and SHA-256 query fingerprints; workspace IDs are generated and
-validated server-side. ETag conditions prevent a stale request from silently
-overwriting a newer Blob version. Storage errors are reported without creating a
-different workspace or falling back to local files.
+Employer listings, full details, and refresh status are canonical shared source data.
+Identical normalized source configurations resolve to the same SHA-256 query
+fingerprint regardless of Workspace ID; genuinely different company/location queries
+remain separate. Settings and curated/viewed workflow history remain isolated under
+the workspace prefix. ETag conditions prevent stale writes, and source-keyed
+single-flight coordination prevents simultaneous workspaces from duplicating a
+provider refresh within the running service.
 
 Anonymous identity has an intentional limitation: clearing the workspace cookie,
 using another browser/profile, or moving to another device prevents the system
@@ -294,23 +309,19 @@ user's salary, education, clearance, filters, locations, hidden jobs, or history
 The company and credential catalogs remain shared source-controlled application
 configuration.
 
-In Azure mode, **Reset Current Workspace** deletes only application-owned documents
-under the server-resolved current workspace prefix. The browser cannot supply a
+In Azure mode, **Reset Current Workspace** deletes only `settings.json` and
+`job-history.json` under the server-resolved current workspace prefix. It never
+deletes shared employer caches. The browser cannot supply a
 workspace ID. Only after all deletions succeed does the server expire the protected
 workspace cookie; the reload then creates a new anonymous workspace. A storage
 failure preserves the cookie and reports an error instead of pretending the reset
 succeeded.
 
-### Automatic checks in Azure
-
-Local mode retains its background automatic-check scheduler. Azure mode does not
-assume the Free F1 process remains awake and does not run one global multi-user
-timer. While a workspace is open, the browser checks the lightweight status
-endpoint and asks the ASP.NET Core backend to perform a due check for that
-workspace. Hidden tabs back off and browser requests never overlap. All provider calls
-remain server-side and are limited to companies in `CompanyCatalog.json`.
-The automatic path performs one listing pass, reuses unchanged cached jobs, and
-hydrates only new or materially changed jobs within its smaller detail budget.
+Job data is refreshed when the user explicitly selects **Refresh**, when a source is
+applied without a sufficiently fresh shared cache, or through the existing local
+startup-refresh option. Azure does not advertise or run periodic background checks.
+All provider calls remain server-side and are limited to companies in
+`CompanyCatalog.json`.
 
 The Azure implementation is ready for review but this repository does not deploy
 or configure Azure resources automatically.
@@ -322,17 +333,18 @@ The project intentionally remains a single small ASP.NET Core application:
 - `CompanyCatalog.json` — supported job sites and source capabilities
 - `CompanyCatalog.cs` — validated catalog loader
 - `JobSourceClient.cs` — generic company-driven CXS listing/detail client
-- `JobCatalog.cs` — active snapshot, cache, history, refresh, and automatic checks
+- `JobCatalog.cs` — active snapshot, cache, history, and refresh coordination
 - `AppStateStore.cs` — application-local JSON persistence and schema migration
 - `JobAnalysis.cs` and detectors — shared salary, location, clearance, credential,
-  academic, work-authorization, and remote-work credibility analysis
+  academic, work-authorization, remote-work credibility, and extended-location
+  obligation analysis
 - `wwwroot/` — dependency-light HTML, JavaScript, and CSS UI
 
 The hosting and persistence split is implemented by:
 
 - `HostingConfiguration.cs` for explicit Local/Azure selection and validation
 - `WorkspaceIdentity.cs` for protected anonymous workspace cookie resolution
-- `WorkspaceRuntime.cs` for isolated catalog and automatic-check state per workspace
+- `WorkspaceRuntime.cs` for isolated catalog state per workspace
 - `WorkspaceDataStore.cs` for the persistence contract and portable local files
 - `AzureBlobWorkspaceDataStore.cs` for private Blob persistence with ETag-safe writes
 - `AppStateStore.cs` for storage-independent JSON normalization and migration
@@ -344,8 +356,8 @@ presentation originating in a posting is not treated as application theme stylin
 
 ## Current source protocols verified
 
-Leidos, MTM, Boeing, Northrop Grumman, NVIDIA, Parsons, and RTX use the Workday
-CXS protocol:
+Leidos, MTM, Boeing, Northrop Grumman, NVIDIA, Parsons, RTX, Amentum, KBR,
+Booz Allen Hamilton, and NXP Semiconductors use the Workday CXS protocol:
 
 - `POST /wday/cxs/{tenant}/{site}/jobs`
 - JSON pagination with `limit` (maximum 20) and `offset`
@@ -353,22 +365,24 @@ CXS protocol:
 - `GET /wday/cxs/{tenant}/{site}{externalPath}` for job detail
 - exact `startDate`, rich HTML `jobDescription`, and authoritative `externalUrl`
 
-AECOM uses the official public SmartRecruiters Posting API:
+AECOM and ServiceNow use the official public SmartRecruiters Posting API:
 
-- paged `GET /v1/companies/AECOM2/postings` listing metadata
+- paged `GET /v1/companies/{companyKey}/postings` listing metadata
 - server-side country filtering plus stable remote/hybrid and location fields
-- `GET /v1/companies/AECOM2/postings/{id}` for structured job-ad sections and
+- `GET /v1/companies/{companyKey}/postings/{id}` for structured job-ad sections and
   canonical posting/apply URLs
 
-The AECOM adapter deliberately excludes generic company-description boilerplate
+The shared SmartRecruiters adapter deliberately excludes generic company-description boilerplate
 from job analysis, while retaining job description, qualifications, and additional
 information where requirements, compensation, travel, and restrictions appear.
 
-Leidos, Boeing, NVIDIA, and Parsons expose country facets. NVIDIA names its country
-hierarchy differently, which is catalog data rather than a client special case.
-MTM, Northrop Grumman, and RTX currently expose usable location facets without a
-country facet. The UI adapts to those differences instead of applying one employer's
-facet IDs to another employer.
+Leidos, Boeing, NVIDIA, Parsons, KBR, and NXP expose usable country or regional
+facets. NVIDIA and KBR name their hierarchy differently, while NXP exposes its
+country facet at the top level instead of beneath Workday's location group. Those
+differences are handled through catalog metadata and generic facet normalization.
+MTM, Northrop Grumman, RTX, Amentum, and Booz Allen currently expose usable
+location facets without a country facet. The UI adapts to those differences instead
+of applying one employer's facet IDs to another employer.
 
 Boeing's public source defaults to the United States and supports country-wide,
 physical-location, and configured Remote location selection. Its recurring ABET

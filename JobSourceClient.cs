@@ -12,7 +12,7 @@ namespace JobSearchManager;
 
 public sealed class JobSourceClient
 {
-    public const int CurrentAnalysisVersion = 3;
+    public const int CurrentAnalysisVersion = 4;
 
     private sealed record ListingBatch(IReadOnlyList<ListingPosting> Listings, bool Truncated);
     private sealed record SmartSummaryBatch(IReadOnlyList<SmartRecruitersPosting> Postings, bool Truncated);
@@ -25,6 +25,7 @@ public sealed class JobSourceClient
     private readonly AcademicQualificationDetector _academicQualificationDetector;
     private readonly WorkAuthorizationDetector _workAuthorizationDetector;
     private readonly RemoteWorkDetector _remoteWorkDetector;
+    private readonly ExtendedLocationRequirementDetector _extendedLocationRequirementDetector;
     private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
 
     public JobSourceClient(
@@ -34,7 +35,8 @@ public sealed class JobSourceClient
         CredentialDetector credentialDetector,
         AcademicQualificationDetector academicQualificationDetector,
         WorkAuthorizationDetector workAuthorizationDetector,
-        RemoteWorkDetector remoteWorkDetector)
+        RemoteWorkDetector remoteWorkDetector,
+        ExtendedLocationRequirementDetector extendedLocationRequirementDetector)
     {
         _httpClient = httpClient;
         _options = options.Value;
@@ -43,6 +45,7 @@ public sealed class JobSourceClient
         _academicQualificationDetector = academicQualificationDetector;
         _workAuthorizationDetector = workAuthorizationDetector;
         _remoteWorkDetector = remoteWorkDetector;
+        _extendedLocationRequirementDetector = extendedLocationRequirementDetector;
 
         if (_options.PageSize is < 1 or > 20)
         {
@@ -55,7 +58,6 @@ public sealed class JobSourceClient
         }
         if (_options.MaximumListingPages is < 1 or > 1000 ||
             _options.MaximumDetailRequestsPerRefresh is < 1 or > 2000 ||
-            _options.MaximumAutomaticDetailRequests is < 1 or > 500 ||
             _options.MaximumRevalidationsPerRefresh is < 0 or > 500 ||
             _options.DetailReuseHours is < 1 or > 8760 ||
             _options.SourceSwitchCacheFreshnessMinutes is < 1 or > 120)
@@ -70,7 +72,6 @@ public sealed class JobSourceClient
         Action<RefreshProgress>? reportProgress = null,
         CancellationToken cancellationToken = default,
         IReadOnlyList<JobRecord>? cachedJobs = null,
-        bool automaticCheck = false,
         ViewerSettings? filterSettings = null)
     {
         var stopwatch = Stopwatch.StartNew();
@@ -116,7 +117,7 @@ public sealed class JobSourceClient
                 }
                 jobs[index] = reusable;
                 cacheHits++;
-                if (!automaticCheck && ShouldRevalidate(reusable))
+                if (ShouldRevalidate(reusable))
                 {
                     candidates.Add(new DetailCandidate(index, listing, reusable, true));
                 }
@@ -129,20 +130,11 @@ public sealed class JobSourceClient
                 jobs[index] = cached is not null && !materiallyChanged
                     ? MergeListing(company, listing, cached, fingerprint)
                     : Normalize(company, listing, null, null, fingerprint);
-                if (!automaticCheck || cached is null || materiallyChanged ||
-                    !string.IsNullOrWhiteSpace(cached.DetailError))
-                {
-                    // Automatic checks hydrate new/changed jobs only. A summary that
-                    // was deliberately deferred by a prior bounded manual refresh
-                    // remains deferred instead of becoming recurring background load.
-                    candidates.Add(new DetailCandidate(index, listing, cached, false));
-                }
+                candidates.Add(new DetailCandidate(index, listing, cached, false));
             }
         }
 
-        var detailLimit = automaticCheck
-            ? _options.MaximumAutomaticDetailRequests
-            : _options.MaximumDetailRequestsPerRefresh;
+        var detailLimit = _options.MaximumDetailRequestsPerRefresh;
         var selectedCandidates = candidates
             .Where(candidate => !candidate.Revalidation)
             .OrderByDescending(candidate => IsSafePreliminaryMatch(candidate.Listing, filterSettings))
@@ -303,7 +295,9 @@ public sealed class JobSourceClient
         var locationGroup = page.Facets.FirstOrDefault(facet =>
             string.Equals(facet.FacetParameter, "locationMainGroup", StringComparison.Ordinal));
         var countryFacet = locationGroup?.Values.FirstOrDefault(facet =>
-            string.Equals(facet.FacetParameter, company.CountryFacetParameter, StringComparison.Ordinal));
+                string.Equals(facet.FacetParameter, company.CountryFacetParameter, StringComparison.Ordinal))
+            ?? page.Facets.FirstOrDefault(facet =>
+                string.Equals(facet.FacetParameter, company.CountryFacetParameter, StringComparison.Ordinal));
         var locationFacet = locationGroup?.Values.FirstOrDefault(facet =>
             string.Equals(facet.FacetParameter, "locations", StringComparison.Ordinal));
 
@@ -549,6 +543,8 @@ public sealed class JobSourceClient
         var workAuthorization = _workAuthorizationDetector.Analyze(descriptionHtml);
         var remoteWork = _remoteWorkDetector.Analyze(
             title, primaryLocation, additionalLocations, descriptionHtml);
+        var extendedLocationRequirement = _extendedLocationRequirementDetector.Analyze(
+            title, primaryLocation, additionalLocations, descriptionHtml);
 
         return new JobRecord(
             title,
@@ -588,7 +584,8 @@ public sealed class JobSourceClient
             true,
             null,
             listing.IdentityDiscriminator,
-            credentials.UnknownRequirements);
+            credentials.UnknownRequirements,
+            extendedLocationRequirement);
     }
 
     public async Task<JobRecord> FetchJobDetailAsync(
@@ -620,7 +617,9 @@ public sealed class JobSourceClient
         job.UnknownCredentialRequirements is not null &&
         job.AcademicQualification?.AnalysisVersion == _academicQualificationDetector.AnalysisVersion &&
         job.WorkAuthorization?.AnalysisVersion == WorkAuthorizationDetector.CurrentAnalysisVersion &&
-        job.RemoteWork?.AnalysisVersion == RemoteWorkDetector.CurrentAnalysisVersion;
+        job.RemoteWork?.AnalysisVersion == RemoteWorkDetector.CurrentAnalysisVersion &&
+        job.ExtendedLocationRequirement?.AnalysisVersion ==
+            ExtendedLocationRequirementDetector.CurrentAnalysisVersion;
 
     internal JobRecord Reclassify(JobRecord job)
     {
@@ -633,6 +632,8 @@ public sealed class JobSourceClient
         var academic = _academicQualificationDetector.Analyze(description);
         var authorization = _workAuthorizationDetector.Analyze(description);
         var remoteWork = _remoteWorkDetector.Analyze(
+            job.Title, job.PrimaryLocation, job.AdditionalLocations, description);
+        var extendedLocationRequirement = _extendedLocationRequirementDetector.Analyze(
             job.Title, job.PrimaryLocation, job.AdditionalLocations, description);
         return job with
         {
@@ -655,6 +656,7 @@ public sealed class JobSourceClient
             AcademicQualification = academic,
             WorkAuthorization = authorization,
             RemoteWork = remoteWork,
+            ExtendedLocationRequirement = extendedLocationRequirement,
             AnalysisVersion = CurrentAnalysisVersion
         };
     }

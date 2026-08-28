@@ -14,3 +14,7 @@ data/
 publish/
 *.tmp
 *.log
+
+# Generated Azure deployment bundles
+/azure-deploy-*/
+/azure-deploy-*.zip

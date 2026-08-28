@@ -102,17 +102,24 @@ public sealed class AzureBlobWorkspaceDataStore : IWorkspaceDataStore
     public static string BuildCompanyCacheBlobName(
         string workspaceId,
         string companyId,
+        string queryFingerprint)
+    {
+        if (!WorkspaceIdentity.IsValid(workspaceId))
+        {
+            throw new ArgumentException("Invalid workspace identifier.", nameof(workspaceId));
+        }
+        return WorkspaceDataFiles.CompanyCacheRelativePath(companyId, queryFingerprint);
+    }
+
+    public static string BuildSharedCompanyCacheBlobName(
+        string companyId,
         string queryFingerprint) =>
-        BuildScopedBlobName(
-            workspaceId,
-            WorkspaceDataFiles.CompanyCacheRelativePath(companyId, queryFingerprint));
+        WorkspaceDataFiles.CompanyCacheRelativePath(companyId, queryFingerprint);
 
     public string DescribeCompanyCache(string companyId, string queryFingerprint) =>
-        $"workspaces/{WorkspaceIdentity.Redact(_workspaceId)}/" +
         WorkspaceDataFiles.CompanyCacheRelativePath(companyId, queryFingerprint);
 
     public string DescribeSourceStatus(string companyId, string queryFingerprint) =>
-        $"workspaces/{WorkspaceIdentity.Redact(_workspaceId)}/" +
         WorkspaceDataFiles.SourceStatusRelativePath(companyId, queryFingerprint);
 
     public async Task<bool> ExistsAsync(
@@ -125,17 +132,20 @@ public sealed class AzureBlobWorkspaceDataStore : IWorkspaceDataStore
         string queryFingerprint,
         CancellationToken cancellationToken = default) =>
         await ExistsRelativeAsync(
-            WorkspaceDataFiles.CompanyCacheRelativePath(companyId, queryFingerprint), cancellationToken);
+            WorkspaceDataFiles.CompanyCacheRelativePath(companyId, queryFingerprint), cancellationToken,
+            shared: true);
 
     private async Task<bool> ExistsRelativeAsync(
         string relativePath,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool shared = false)
     {
-        var gate = Gate(relativePath);
+        var storageKey = StorageKey(relativePath, shared);
+        var gate = Gate(storageKey);
         await gate.WaitAsync(cancellationToken);
         try
         {
-            return (await GetCurrentVersionAsync(relativePath, cancellationToken)).Exists;
+            return (await GetCurrentVersionAsync(relativePath, cancellationToken, shared)).Exists;
         }
         finally
         {
@@ -153,35 +163,39 @@ public sealed class AzureBlobWorkspaceDataStore : IWorkspaceDataStore
         string queryFingerprint,
         CancellationToken cancellationToken = default) =>
         await ReadRelativeJsonAsync<T>(
-            WorkspaceDataFiles.CompanyCacheRelativePath(companyId, queryFingerprint), cancellationToken);
+            WorkspaceDataFiles.CompanyCacheRelativePath(companyId, queryFingerprint), cancellationToken,
+            shared: true);
 
     public async Task<T?> ReadSourceStatusJsonAsync<T>(
         string companyId,
         string queryFingerprint,
         CancellationToken cancellationToken = default) =>
         await ReadRelativeJsonAsync<T>(
-            WorkspaceDataFiles.SourceStatusRelativePath(companyId, queryFingerprint), cancellationToken);
+            WorkspaceDataFiles.SourceStatusRelativePath(companyId, queryFingerprint), cancellationToken,
+            shared: true);
 
     private async Task<T?> ReadRelativeJsonAsync<T>(
         string relativePath,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool shared = false)
     {
-        var gate = Gate(relativePath);
+        var storageKey = StorageKey(relativePath, shared);
+        var gate = Gate(storageKey);
         await gate.WaitAsync(cancellationToken);
         try
         {
-            var blob = Blob(relativePath);
+            var blob = Blob(relativePath, shared);
             try
             {
                 var response = await blob.DownloadContentAsync(cancellationToken);
-                _versions[relativePath] = new BlobVersion(true, response.Value.Details.ETag);
+                _versions[storageKey] = new BlobVersion(true, response.Value.Details.ETag);
                 var result = response.Value.Content.ToObjectFromJson<T>(_jsonOptions);
                 Diagnostics.RecordRead();
                 return result;
             }
             catch (RequestFailedException ex) when (ex.Status == 404)
             {
-                _versions[relativePath] = new BlobVersion(false, null);
+                _versions[storageKey] = new BlobVersion(false, null);
                 return default;
             }
             catch (JsonException ex)
@@ -218,7 +232,8 @@ public sealed class AzureBlobWorkspaceDataStore : IWorkspaceDataStore
         T value,
         CancellationToken cancellationToken = default) =>
         await WriteRelativeJsonAsync(
-            WorkspaceDataFiles.CompanyCacheRelativePath(companyId, queryFingerprint), value, cancellationToken);
+            WorkspaceDataFiles.CompanyCacheRelativePath(companyId, queryFingerprint), value, cancellationToken,
+            shared: true);
 
     public async Task WriteSourceStatusJsonAsync<T>(
         string companyId,
@@ -226,20 +241,23 @@ public sealed class AzureBlobWorkspaceDataStore : IWorkspaceDataStore
         T value,
         CancellationToken cancellationToken = default) =>
         await WriteRelativeJsonAsync(
-            WorkspaceDataFiles.SourceStatusRelativePath(companyId, queryFingerprint), value, cancellationToken);
+            WorkspaceDataFiles.SourceStatusRelativePath(companyId, queryFingerprint), value, cancellationToken,
+            shared: true);
 
     private async Task WriteRelativeJsonAsync<T>(
         string relativePath,
         T value,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool shared = false)
     {
-        var gate = Gate(relativePath);
+        var storageKey = StorageKey(relativePath, shared);
+        var gate = Gate(storageKey);
         await gate.WaitAsync(cancellationToken);
         try
         {
-            var version = _versions.TryGetValue(relativePath, out var known)
+            var version = _versions.TryGetValue(storageKey, out var known)
                 ? known
-                : await GetCurrentVersionAsync(relativePath, cancellationToken);
+                : await GetCurrentVersionAsync(relativePath, cancellationToken, shared);
             var conditions = version.Exists
                 ? new BlobRequestConditions { IfMatch = version.ETag }
                 : new BlobRequestConditions { IfNoneMatch = ETag.All };
@@ -248,7 +266,7 @@ public sealed class AzureBlobWorkspaceDataStore : IWorkspaceDataStore
                 IsCompactDocument(relativePath) ? _compactJsonOptions : _jsonOptions);
             try
             {
-                var response = await Blob(relativePath).UploadAsync(
+                var response = await Blob(relativePath, shared).UploadAsync(
                     content,
                     new BlobUploadOptions
                     {
@@ -256,7 +274,7 @@ public sealed class AzureBlobWorkspaceDataStore : IWorkspaceDataStore
                         Conditions = conditions
                     },
                     cancellationToken);
-                _versions[relativePath] = new BlobVersion(true, response.Value.ETag);
+                _versions[storageKey] = new BlobVersion(true, response.Value.ETag);
                 Diagnostics.RecordWrite(relativePath, content.ToMemory().Length);
                 _logger.LogInformation(
                     "Wrote {StorageBytes} bytes to workspace document {DocumentName}.",
@@ -265,7 +283,7 @@ public sealed class AzureBlobWorkspaceDataStore : IWorkspaceDataStore
             }
             catch (RequestFailedException ex) when (ex.Status is 409 or 412)
             {
-                _versions.TryRemove(relativePath, out _);
+                _versions.TryRemove(storageKey, out _);
                 throw new WorkspaceConcurrencyException(
                     "Workspace state changed in another request. Reload the application before saving again.",
                     ex);
@@ -282,8 +300,8 @@ public sealed class AzureBlobWorkspaceDataStore : IWorkspaceDataStore
     }
 
     private static bool IsCompactDocument(string relativePath) =>
-        relativePath.StartsWith("job-caches/", StringComparison.Ordinal) ||
-        relativePath.StartsWith("source-status/", StringComparison.Ordinal);
+        relativePath.StartsWith("shared/job-caches/", StringComparison.Ordinal) ||
+        relativePath.StartsWith("shared/source-status/", StringComparison.Ordinal);
 
     public async Task<bool> DeleteAsync(
         WorkspaceDataFile file,
@@ -316,24 +334,9 @@ public sealed class AzureBlobWorkspaceDataStore : IWorkspaceDataStore
 
     public async Task<int> DeleteAllAsync(CancellationToken cancellationToken = default)
     {
-        var relativePaths = Enum.GetValues<WorkspaceDataFile>()
+        var relativePaths = new[] { WorkspaceDataFile.Settings, WorkspaceDataFile.JobHistory }
             .Select(WorkspaceDataFiles.FileName)
             .ToList();
-        var prefix = $"workspaces/{_workspaceId}/";
-        await foreach (var blob in _container.GetBlobsAsync(
-            BlobTraits.None,
-            BlobStates.None,
-            prefix,
-            cancellationToken))
-        {
-            var relativePath = blob.Name[prefix.Length..];
-            if ((relativePath.StartsWith("job-caches/", StringComparison.Ordinal) ||
-                 relativePath.StartsWith("source-status/", StringComparison.Ordinal)) &&
-                !relativePaths.Contains(relativePath, StringComparer.Ordinal))
-            {
-                relativePaths.Add(relativePath);
-            }
-        }
         relativePaths.Sort(StringComparer.Ordinal);
         var acquired = new List<SemaphoreSlim>(relativePaths.Count);
         try
@@ -376,19 +379,21 @@ public sealed class AzureBlobWorkspaceDataStore : IWorkspaceDataStore
 
     private async Task<BlobVersion> GetCurrentVersionAsync(
         string relativePath,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool shared = false)
     {
+        var storageKey = StorageKey(relativePath, shared);
         try
         {
-            var response = await Blob(relativePath).GetPropertiesAsync(cancellationToken: cancellationToken);
+            var response = await Blob(relativePath, shared).GetPropertiesAsync(cancellationToken: cancellationToken);
             var version = new BlobVersion(true, response.Value.ETag);
-            _versions[relativePath] = version;
+            _versions[storageKey] = version;
             return version;
         }
         catch (RequestFailedException ex) when (ex.Status == 404)
         {
             var version = new BlobVersion(false, null);
-            _versions[relativePath] = version;
+            _versions[storageKey] = version;
             return version;
         }
         catch (RequestFailedException ex)
@@ -406,8 +411,13 @@ public sealed class AzureBlobWorkspaceDataStore : IWorkspaceDataStore
         return $"workspaces/{workspaceId}/{relativePath}";
     }
 
-    private BlobClient Blob(string relativePath) =>
-        _container.GetBlobClient(BuildScopedBlobName(_workspaceId, relativePath));
+    private BlobClient Blob(string relativePath, bool shared = false) =>
+        _container.GetBlobClient(shared
+            ? relativePath
+            : BuildScopedBlobName(_workspaceId, relativePath));
+
+    private static string StorageKey(string relativePath, bool shared) =>
+        shared ? $"shared::{relativePath}" : $"workspace::{relativePath}";
 
     private SemaphoreSlim Gate(string relativePath) =>
         _fileGates.GetOrAdd(relativePath, _ => new SemaphoreSlim(1, 1));

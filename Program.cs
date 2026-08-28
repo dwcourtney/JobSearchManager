@@ -48,7 +48,9 @@ builder.Services.AddSingleton<CredentialDetector>();
 builder.Services.AddSingleton<AcademicQualificationDetector>();
 builder.Services.AddSingleton<WorkAuthorizationDetector>();
 builder.Services.AddSingleton<RemoteWorkDetector>();
+builder.Services.AddSingleton<ExtendedLocationRequirementDetector>();
 builder.Services.AddSingleton<PortableWorkspaceService>();
+builder.Services.AddSingleton<SharedSourceRefreshCoordinator>();
 // Preserve the established data-protection discriminator so existing Azure
 // workspace cookies can be decrypted and migrated to the new cookie name.
 builder.Services.AddDataProtection().SetApplicationName("WorkdayJobManager");
@@ -80,7 +82,6 @@ if (hosting.IsAzure)
 else
 {
     builder.Services.AddSingleton<IWorkspaceDataStoreFactory, FileWorkspaceDataStoreFactory>();
-    builder.Services.AddHostedService<LocalAutomaticCheckHostedService>();
 }
 
 builder.Services.AddSingleton<WorkspaceRuntimeManager>();
@@ -252,11 +253,15 @@ app.MapGet("/api/companies", (CompanyCatalog companies) => Results.Ok(
     {
         company.Id,
         company.DisplayName,
+        company.IndustryCategory,
         company.PublicSiteUrl
     })));
 
 app.MapGet("/api/credentials", (CredentialDetector credentials) =>
     Results.Ok(credentials.CatalogItems));
+
+app.MapGet("/api/workspace/identity", (WorkspaceContext workspace) =>
+    Results.Ok(new { workspaceId = workspace.WorkspaceId }));
 
 app.MapPost("/api/refresh", async (
     WorkspaceRuntimeProvider provider,
@@ -269,10 +274,6 @@ app.MapPost("/api/refresh", async (
         return Results.Conflict(new { error = "Configure and apply a job source before refreshing jobs." });
     }
     var snapshot = await runtime.Catalog.RefreshAsync(token);
-    if (snapshot.Error is null)
-    {
-        runtime.AutomaticChecks.ResetSchedule();
-    }
     return Results.Ok(JobsListSnapshot.FromSnapshot(snapshot));
 }).RequireRateLimiting("provider");
 
@@ -363,17 +364,11 @@ app.MapPost("/api/query", async Task<IResult> (
         PendingSource = null
     });
     await stateStore.SaveSettingsAsync(updated);
-    runtime.AutomaticChecks.ApplySettings(updated);
     var snapshot = await runtime.Catalog.SwitchSourceAsync(
         JobSourceQuery.FromSettings(updated, companies), token);
-    if (snapshot.Error is null)
-    {
-        runtime.AutomaticChecks.ResetSchedule();
-    }
-    else
+    if (snapshot.Error is not null)
     {
         await stateStore.SaveSettingsAsync(current);
-        runtime.AutomaticChecks.ApplySettings(current);
     }
     return Results.Ok(JobsListSnapshot.FromSnapshot(snapshot));
 }).RequireRateLimiting("provider");
@@ -397,7 +392,6 @@ app.MapPut("/api/settings", async (
         PendingSource = current.PendingSource
     });
     await runtime.StateStore.SaveSettingsAsync(normalized);
-    runtime.AutomaticChecks.ApplySettings(normalized);
     return Results.NoContent();
 }).RequireRateLimiting("state");
 
@@ -450,7 +444,6 @@ app.MapPost("/api/workspace/import", async Task<IResult> (
             throw;
         }
         await runtime.Catalog.ReloadHistoryAsync();
-        runtime.AutomaticChecks.ApplySettings(normalized);
         return Results.Ok(new
         {
             settings = normalized,
@@ -481,17 +474,6 @@ app.MapDelete("/api/workspace", async (
     return Results.Ok(new { deletedDocuments });
 }).RequireRateLimiting("state");
 
-app.MapGet("/api/automatic-check/status", async (
-    WorkspaceRuntimeProvider provider,
-    CancellationToken token) =>
-    Results.Ok((await provider.GetAsync(token)).AutomaticChecks.Status));
-
-app.MapPost("/api/automatic-check/run", async (
-    WorkspaceRuntimeProvider provider,
-    CancellationToken token) =>
-    Results.Ok(await (await provider.GetAsync(token)).AutomaticChecks.CheckNowAsync(token)))
-    .RequireRateLimiting("provider");
-
 app.MapPost("/api/history/viewed", async (
     ViewedJobRequest request,
     WorkspaceRuntimeProvider provider,
@@ -505,7 +487,8 @@ app.MapPut("/api/history/workflow-state", async (
     JobWorkflowStateRequest request,
     WorkspaceRuntimeProvider provider,
     CancellationToken token) =>
-    await (await provider.GetAsync(token)).Catalog.SetWorkflowStateAsync(request.StableId, request.State)
+    await (await provider.GetAsync(token)).Catalog.SetWorkflowStateAsync(
+        request.StableId, request.State, request.CloseReason)
         ? Results.NoContent()
         : Results.BadRequest())
     .RequireRateLimiting("state");

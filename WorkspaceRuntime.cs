@@ -5,7 +5,6 @@ namespace JobSearchManager;
 public sealed record WorkspaceRuntime(
     AppStateStore StateStore,
     JobCatalog Catalog,
-    AutomaticJobCheckService AutomaticChecks,
     IWorkspaceDataStore DataStore);
 
 public sealed class WorkspaceRuntimeManager
@@ -89,7 +88,7 @@ public sealed class WorkspaceRuntimeManager
                 entry.Runtime.Value.IsCompletedSuccessfully)
             {
                 var runtime = entry.Runtime.Value.Result;
-                if (runtime.Catalog.Snapshot.IsRefreshing || runtime.AutomaticChecks.Status.IsChecking)
+                if (runtime.Catalog.Snapshot.IsRefreshing)
                 {
                     throw new WorkspaceBusyException(
                         "The workspace cannot be reset while a job refresh is in progress. Try again when it finishes.");
@@ -136,18 +135,13 @@ public sealed class WorkspaceRuntimeManager
         {
             await catalog.InitializeWithoutSourceAsync();
         }
-        var automaticChecks = ActivatorUtilities.CreateInstance<AutomaticJobCheckService>(
-            _services,
-            catalog);
-        automaticChecks.ApplySettings(settings);
-
         _logger.LogInformation(
             "Initialized workspace {WorkspaceReference} using {StorageDescription}.",
             workspaceId == WorkspaceContext.LocalWorkspaceId
                 ? WorkspaceContext.LocalWorkspaceId
                 : WorkspaceIdentity.Redact(workspaceId),
             dataStore.Description);
-        return new WorkspaceRuntime(stateStore, catalog, automaticChecks, dataStore);
+        return new WorkspaceRuntime(stateStore, catalog, dataStore);
     }
 
     private void PruneIdleEntries()
@@ -168,7 +162,7 @@ public sealed class WorkspaceRuntimeManager
             }
 
             var runtime = pair.Value.Runtime.Value.Result;
-            if (runtime.Catalog.Snapshot.IsRefreshing || runtime.AutomaticChecks.Status.IsChecking)
+            if (runtime.Catalog.Snapshot.IsRefreshing)
             {
                 continue;
             }

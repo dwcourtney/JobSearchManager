@@ -6,7 +6,7 @@ using System.Text;
 
 public sealed class AppStateStore
 {
-    private const int SchemaVersion = 4;
+    private const int SchemaVersion = 5;
     private const int CacheSchemaVersion = 6;
     private readonly ILogger<AppStateStore> _logger;
     private readonly CompanyCatalog _companyCatalog;
@@ -380,7 +380,7 @@ public sealed class AppStateStore
                 : $"{companyId}:{pair.Key}";
             var hasLegacyState = pair.Value.Dismissed || pair.Value.Saved || pair.Value.Applied;
             var hasLegacyStateData = hasLegacyState || pair.Value.DismissedAt is not null ||
-                pair.Value.SavedAt is not null || pair.Value.AppliedAt is not null;
+                pair.Value.SavedAt is not null;
             var workflowState = hasLegacyState
                 ? pair.Value.Dismissed
                     ? JobWorkflowStates.Hidden
@@ -397,6 +397,17 @@ public sealed class AppStateStore
                     _ => null
                 }
                 : pair.Value.WorkflowStateChangedAt;
+            var appliedAt = workflowState is JobWorkflowStates.Applied or JobWorkflowStates.Closed
+                ? pair.Value.AppliedAt ?? workflowStateChangedAt
+                : null;
+            var validClosure = workflowState == JobWorkflowStates.Closed &&
+                JobCloseReasons.IsValid(pair.Value.CloseReason) && pair.Value.ClosedAt is not null;
+            if (workflowState == JobWorkflowStates.Closed && !validClosure)
+            {
+                workflowState = JobWorkflowStates.Applied;
+                workflowStateChangedAt = appliedAt;
+                migrationRequired = true;
+            }
             migrationRequired |= !string.Equals(key, pair.Key, StringComparison.Ordinal) ||
                 !string.Equals(pair.Value.CompanyId, companyId, StringComparison.OrdinalIgnoreCase) ||
                 !JobWorkflowStates.IsValid(pair.Value.WorkflowState) ||
@@ -411,7 +422,9 @@ public sealed class AppStateStore
                 Saved = false,
                 SavedAt = null,
                 Applied = false,
-                AppliedAt = null
+                AppliedAt = appliedAt,
+                CloseReason = validClosure ? pair.Value.CloseReason : null,
+                ClosedAt = validClosure ? pair.Value.ClosedAt : null
             };
         }
 
@@ -420,7 +433,7 @@ public sealed class AppStateStore
         {
             await SaveJobHistoryAsync(migratedDocument);
             _logger.LogInformation(
-                "Migrated {HistoryPath} to company-scoped history schema {SchemaVersion}.",
+                "Migrated {HistoryPath} to workflow history schema {SchemaVersion}.",
                 JobHistoryPath,
                 SchemaVersion);
         }
@@ -536,12 +549,7 @@ public sealed class AppStateStore
                 .Select(group => group.First())
                 .OrderBy(location => location.Id, StringComparer.Ordinal)
                 .ToArray();
-        var automaticCheckInterval = settings.AutomaticCheckIntervalMinutes is 30 or 60 or 120 or 240 or 480
-            ? settings.AutomaticCheckIntervalMinutes
-            : 60;
-        var themeMode = settings.ThemeMode is "light" or "dark"
-            ? settings.ThemeMode
-            : "light";
+        var themeMode = ThemeModes.Normalize(settings.ThemeMode);
         var educationLevel = settings.UserProfile?.Education?.Level is
             "notSpecified" or "noCredential" or "ged" or "highSchool" or "associate" or
             "bachelor" or "master" or "doctorate"
@@ -632,8 +640,6 @@ public sealed class AppStateStore
             country,
             null,
             settings.SearchFiltersCollapsed,
-            settings.AutomaticCheckEnabled ?? true,
-            automaticCheckInterval,
             themeMode,
             userProfile,
             settings.HideStrictEducationMismatch,
@@ -645,7 +651,8 @@ public sealed class AppStateStore
             companySources,
             settings.HideStrictWorkAuthorizationMismatch,
             hasConfiguredSource,
-            pendingSource);
+            pendingSource,
+            settings.ExcludeStrongExtendedLocationRequirements);
     }
 
     public CompanySourceSettings GetSourceSettings(ViewerSettings settings, string companyId)

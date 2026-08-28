@@ -8,6 +8,166 @@ using System.Text.Json;
 using System.IO.Compression;
 using JobSearchManager;
 
+if (args.Length >= 2 && args[0] == "--extended-location-corpus")
+{
+    var detector = new ExtendedLocationRequirementDetector();
+    foreach (var path in args.Skip(1))
+    {
+        using var document = JsonDocument.Parse(await File.ReadAllTextAsync(path));
+        var jobs = document.RootElement.GetProperty("jobs").EnumerateArray().ToArray();
+        var results = jobs.Select(job =>
+        {
+            var html = job.TryGetProperty("descriptionHtml", out var description) &&
+                !string.IsNullOrWhiteSpace(description.GetString())
+                    ? description.GetString() ?? ""
+                    : job.TryGetProperty("compressedDescriptionHtml", out var compressed) &&
+                        !string.IsNullOrWhiteSpace(compressed.GetString())
+                            ? ExpandCachedDescription(compressed.GetString()!)
+                            : "";
+            return new
+            {
+                Company = job.TryGetProperty("companyId", out var company) ? company.GetString() ?? "unknown" : "unknown",
+                Requisition = job.TryGetProperty("requisitionId", out var requisition) ? requisition.GetString() ?? "" : "",
+                Title = job.TryGetProperty("title", out var title) ? title.GetString() ?? "" : "",
+                Analysis = detector.Analyze(
+                    job.TryGetProperty("title", out title) ? title.GetString() ?? "" : "",
+                    job.TryGetProperty("primaryLocation", out var location) ? location.GetString() ?? "" : "",
+                    job.TryGetProperty("additionalLocations", out var additional) &&
+                        additional.ValueKind == JsonValueKind.Array
+                            ? additional.EnumerateArray().Select(item => item.GetString() ?? "").ToArray()
+                            : [],
+                    html)
+            };
+        }).ToArray();
+
+        Console.WriteLine($"EXTENDED LOCATION CORPUS {Path.GetFileName(path)} jobs={jobs.Length}");
+        foreach (var company in results.GroupBy(result => result.Company).OrderBy(group => group.Key))
+        {
+            Console.WriteLine($"  {company.Key}: total={company.Count()}, " +
+                $"strong={company.Count(item => item.Analysis.Confidence == "strong")}, " +
+                $"questionable={company.Count(item => item.Analysis.Confidence == "questionable")}, " +
+                $"none={company.Count(item => item.Analysis.Confidence == "none")}");
+            foreach (var item in company.Where(item => item.Analysis.Confidence != "none"))
+            {
+                Console.WriteLine($"    {item.Analysis.Confidence} {item.Requisition} {item.Title}: {item.Analysis.Summary}");
+            }
+        }
+    }
+    return;
+}
+
+if (args.Length >= 2 && args[0] == "--credential-corpus")
+{
+    var detector = new CredentialDetector(NullLogger<CredentialDetector>.Instance);
+    var catalog = detector.CatalogItems.ToDictionary(item => item.Id, StringComparer.Ordinal);
+    foreach (var path in args.Skip(1))
+    {
+        using var document = JsonDocument.Parse(await File.ReadAllTextAsync(path));
+        var jobs = document.RootElement.GetProperty("jobs").EnumerateArray().ToArray();
+        var results = jobs.Select(job =>
+        {
+            var html = job.TryGetProperty("descriptionHtml", out var description) &&
+                !string.IsNullOrWhiteSpace(description.GetString())
+                    ? description.GetString() ?? ""
+                    : job.TryGetProperty("compressedDescriptionHtml", out var compressed) &&
+                        !string.IsNullOrWhiteSpace(compressed.GetString())
+                            ? ExpandCachedDescription(compressed.GetString()!)
+                            : "";
+            return new
+            {
+                Company = job.TryGetProperty("companyId", out var company)
+                    ? company.GetString() ?? "unknown" : "unknown",
+                Requisition = job.TryGetProperty("requisitionId", out var requisition)
+                    ? requisition.GetString() ?? "" : "",
+                Analysis = detector.Analyze(html)
+            };
+        }).ToArray();
+
+        Console.WriteLine($"CREDENTIAL CORPUS {Path.GetFileName(path)} jobs={jobs.Length}");
+        foreach (var company in results.GroupBy(result => result.Company).OrderBy(group => group.Key))
+        {
+            var matches = company.SelectMany(item => item.Analysis.Credentials).ToArray();
+            Console.WriteLine($"  COMPANY {company.Key}: jobs-with-credentials=" +
+                $"{company.Count(item => item.Analysis.Credentials.Count > 0)}/{company.Count()}, " +
+                $"matches={matches.Length}, required={matches.Count(item => item.Requirement == "required")}");
+            foreach (var category in matches
+                .GroupBy(match => catalog[match.CredentialId].Category)
+                .OrderByDescending(group => group.Count()).ThenBy(group => group.Key))
+            {
+                Console.WriteLine($"    CATEGORY {category.Key}: {category.Count()}");
+                foreach (var credential in category.GroupBy(match => match.CredentialId)
+                    .OrderByDescending(group => group.Count()).ThenBy(group => group.Key))
+                {
+                    Console.WriteLine($"      {credential.Key}: {credential.Count()} " +
+                        $"(required={credential.Count(item => item.Requirement == "required")}, " +
+                        $"preferred={credential.Count(item => item.Requirement == "preferred")})");
+                }
+            }
+            foreach (var unknown in company.SelectMany(item => item.Analysis.UnknownRequirements
+                .Select(requirement => new { item.Requisition, Requirement = requirement }))
+                .GroupBy(item => item.Requirement.Name, StringComparer.OrdinalIgnoreCase)
+                .OrderByDescending(group => group.Count()).ThenBy(group => group.Key))
+            {
+                Console.WriteLine($"    UNKNOWN REQUIRED {unknown.Key}: {unknown.Count()} " +
+                    $"[{string.Join(',', unknown.Select(item => item.Requisition).Distinct().Take(5))}]");
+            }
+            foreach (var mention in company.SelectMany(item => item.Analysis.UnrecognizedMentions)
+                .GroupBy(value => value, StringComparer.OrdinalIgnoreCase)
+                .OrderByDescending(group => group.Count()).Take(20))
+            {
+                Console.WriteLine($"    UNRESOLVED MENTION ({mention.Count()}): {mention.Key}");
+            }
+        }
+    }
+    return;
+}
+
+if (args.Length >= 2 && args[0] == "--academic-corpus")
+{
+    var detector = new AcademicQualificationDetector();
+    foreach (var path in args.Skip(1))
+    {
+        using var document = JsonDocument.Parse(await File.ReadAllTextAsync(path));
+        var jobs = document.RootElement.GetProperty("jobs").EnumerateArray().ToArray();
+        var results = jobs.Select(job =>
+        {
+            var html = job.TryGetProperty("descriptionHtml", out var description) &&
+                !string.IsNullOrWhiteSpace(description.GetString())
+                    ? description.GetString() ?? ""
+                    : job.TryGetProperty("compressedDescriptionHtml", out var compressed) &&
+                        !string.IsNullOrWhiteSpace(compressed.GetString())
+                            ? ExpandCachedDescription(compressed.GetString()!)
+                            : "";
+            return new
+            {
+                Requisition = job.TryGetProperty("requisitionId", out var requisition)
+                    ? requisition.GetString() ?? "" : "",
+                Title = job.TryGetProperty("title", out var title) ? title.GetString() ?? "" : "",
+                Analysis = detector.Analyze(html)
+            };
+        }).ToArray();
+        var mixed = results.Where(result =>
+            result.Analysis.Paths.Any(item => item.Requirement is "required" or "minimum") &&
+            result.Analysis.Paths.Any(item => item.Requirement is "preferred" or "desired"))
+            .ToArray();
+        Console.WriteLine($"ACADEMIC CORPUS {Path.GetFileName(path)} jobs={jobs.Length}, " +
+            $"parsed={results.Count(result => result.Analysis.ParseStatus == "parsed")}, " +
+            $"mixed-strict-preferred={mixed.Length}");
+        foreach (var result in mixed.Take(30))
+        {
+            Console.WriteLine($"  {result.Requisition} | {result.Title} | " +
+                $"minimum={result.Analysis.MinimumLevel} | " +
+                string.Join(", ", result.Analysis.Paths.Select(item =>
+                    $"{item.Level}:{item.Requirement}")));
+            foreach (var evidence in result.Analysis.Evidence.Take(4))
+            {
+                Console.WriteLine($"    {evidence}");
+            }
+        }
+    }
+    return;
+}
+
 if (args.Length >= 2 && args[0] == "--remote-corpus")
 {
     var detector = new RemoteWorkDetector();
@@ -131,7 +291,12 @@ var tests = new (string Name, Func<Task> Run)[]
     ("File storage round-trips beside its configured base", TestFileStoreAsync),
     ("Workspace reset deletes only known local state documents", TestFileResetAsync),
     ("Blob namespaces are isolated and traversal-resistant", TestBlobNamespaceAsync),
+    ("Different workspaces resolve identical sources to one shared cache", TestSharedSourceCacheAsync),
+    ("Concurrent workspace refreshes use one provider request", TestSharedRefreshSingleFlightAsync),
+    ("Workspace preferences cannot mutate canonical shared source data", TestPreferencesDoNotMutateSharedCacheAsync),
+    ("Legacy workspace split caches are never active storage", TestLegacyWorkspaceCacheInactiveAsync),
     ("New workspace settings are neutral", TestNeutralDefaultsAsync),
+    ("Obsolete automatic-refresh settings are ignored", TestObsoleteAutomaticSettingsIgnoredAsync),
     ("Legacy applied source remains configured", TestLegacyAppliedSourceMigrationAsync),
     ("Legacy cached posting URLs migrate to the canonical field", TestLegacyCacheUrlMigrationAsync),
     ("Portable workspace round-trips settings and curated states", TestPortableWorkspaceRoundTripAsync),
@@ -141,6 +306,8 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Fresh catalog snapshots retain the applied source", TestFreshCatalogSourceAsync),
     ("Boeing is a catalog-driven U.S. job source", TestBoeingCatalogAsync),
     ("Expanded company catalog contains the five selected live sources", TestExpandedCompanyCatalogAsync),
+    ("Expanded company catalog contains the next five categorized sources", TestNextCompanyCatalogAsync),
+    ("Workday top-level country facets normalize generically", TestTopLevelCountryFacetAsync),
     ("Cross-provider location labels are grouped by U.S. state", TestExpandedLocationGroupingAsync),
     ("SmartRecruiters postings normalize through the generic source client", TestSmartRecruitersSourceAsync),
     ("SmartRecruiters exact duplicates across pages are deterministic", TestSmartRecruitersCrossPageDuplicateAsync),
@@ -153,9 +320,13 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Parser-version changes reclassify cached text without provider download", TestLocalReclassificationAsync),
     ("Large source hydration obeys detail and concurrency bounds", TestBoundedLargeSourceAsync),
     ("Removed source jobs remain cached without remaining available", TestRemovedJobCacheAsync),
+    ("Untracked jobs missing from refresh leave the visible catalog", () => TestMissingJobWorkflowRetentionAsync(JobWorkflowStates.Normal)),
+    ("Saved jobs missing from refresh remain visible", () => TestMissingJobWorkflowRetentionAsync(JobWorkflowStates.Saved)),
+    ("Applied jobs missing from refresh remain visible", () => TestMissingJobWorkflowRetentionAsync(JobWorkflowStates.Applied)),
+    ("Closed jobs missing from refresh remain visible", () => TestMissingJobWorkflowRetentionAsync(JobWorkflowStates.Closed)),
+    ("Retained jobs reconcile without duplication when relisted", TestRetainedJobRelistingAsync),
     ("Compact list responses omit full descriptions", TestCompactListPayloadAsync),
     ("Lazy detail loading fetches a missing detail only once", TestLazyDetailCacheAsync),
-    ("Automatic checking fetches details only for new jobs", TestAutomaticCheckIncrementalAsync),
     ("Company caches coexist without requisition collisions", TestPerCompanyCacheEnvelopeAsync),
     ("Company/query cache writes remain isolated", TestCompanyCacheWriteIsolationAsync),
     ("Legacy cumulative caches migrate safely and idempotently", TestSplitCacheMigrationAsync),
@@ -171,9 +342,11 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Established credential catalog entries validate", TestCredentialCatalogAsync),
     ("NetApp and Dell storage credentials are structured", TestStorageCredentialsAsync),
     ("Existing credential recognition does not regress", TestExistingCredentialRegressionAsync),
+    ("Credential alternatives retain explicit OR semantics", TestCredentialAlternativeSemanticsAsync),
     ("Unknown mandatory credentials are surfaced conservatively", TestUnknownRequiredCredentialAsync),
     ("Today's named credentials avoid obvious false positives", TestLeidosCredentialDiscoveryFixtureAsync),
     ("Academic detector recognizes advanced master's-or-higher wording", TestAdvancedDegreeAsync),
+    ("Academic detector separates strict minimums from preferred higher degrees", TestAcademicPreferenceSeparationAsync),
     ("Academic detector treats ABET as accreditation", TestAbetAccreditationAsync),
     ("Work authorization detector recognizes strict U.S. citizenship", TestUsCitizenshipAsync),
     ("Work authorization detector distinguishes citizens and permanent residents", TestCitizenOrResidentAsync),
@@ -194,6 +367,13 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Remote detector recognizes sanitized Leidos deployment language", TestLeidosRemoteFixtureAsync),
     ("Remote detector keeps a sanitized MTM-style remote role neutral", TestMtmRemoteFixtureAsync),
     ("Remote detector recognizes sanitized Boeing frequent-travel language", TestBoeingRemoteFixtureAsync),
+    ("New-company prose identifies remote roles without trusting generic boilerplate", TestExpandedRemoteTerminologyAsync),
+    ("New-company compensation wording parses deterministically", TestExpandedSalaryTerminologyAsync),
+    ("New-company credential terminology is cataloged", TestExpandedCredentialTerminologyAsync),
+    ("Extended-location detector recognizes explicit assignment obligations", TestExtendedLocationPositiveAsync),
+    ("Extended-location detector rejects incidental locations and ordinary travel", TestExtendedLocationNegativeAsync),
+    ("Extended-location detector preserves relevant evidence in mixed context", TestExtendedLocationMixedContextAsync),
+    ("Extended-location detector separates questionable from strong evidence", TestExtendedLocationConfidenceAsync),
     ("Selected-company terminology remains covered by sanitized fixtures", TestExpandedCompanyFixturesAsync),
     ("Provider HTML normalization preserves parsing and display separators", TestProviderHtmlNormalizationAsync),
     ("Workflow state transitions are canonical and validated", TestWorkflowStateTransitionsAsync),
@@ -449,8 +629,12 @@ static Task TestBlobNamespaceAsync()
         $"workspaces/{secondId}/job-history.json", "Second actual Blob namespace is incorrect.");
     var fingerprint = new string('a', 64);
     Assert(AzureBlobWorkspaceDataStore.BuildCompanyCacheBlobName(firstId, "northrop-grumman", fingerprint) ==
-        $"workspaces/{firstId}/job-caches/northrop-grumman/{fingerprint}.json",
-        "Company/query Blob namespace is incorrect.");
+        $"shared/job-caches/northrop-grumman/{fingerprint}.json" &&
+        AzureBlobWorkspaceDataStore.BuildCompanyCacheBlobName(secondId, "northrop-grumman", fingerprint) ==
+        $"shared/job-caches/northrop-grumman/{fingerprint}.json" &&
+        first.DescribeCompanyCache("northrop-grumman", fingerprint) ==
+        second.DescribeCompanyCache("northrop-grumman", fingerprint),
+        "Identical company/query caches remained workspace-scoped.");
     AssertThrows<ArgumentException>(() => AzureBlobWorkspaceDataStore.BuildBlobName(
         "../another-workspace", WorkspaceDataFile.Settings));
     AssertThrows<ArgumentException>(() => AzureBlobWorkspaceDataStore.BuildCompanyCacheBlobName(
@@ -484,6 +668,123 @@ static Task TestNeutralDefaultsAsync()
     var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
     AssertThrows<InvalidOperationException>(() => JobSourceQuery.FromSettings(settings, companies));
     return Task.CompletedTask;
+}
+
+static async Task TestObsoleteAutomaticSettingsIgnoredAsync()
+{
+    var directory = TestDirectory("obsolete-automatic-settings");
+    try
+    {
+        var jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        var currentJson = JsonSerializer.Serialize(ViewerSettings.Default, jsonOptions);
+        var legacyJson = currentJson[..^1] +
+            ",\"automaticCheckEnabled\":true,\"automaticCheckIntervalMinutes\":60}";
+        var loaded = JsonSerializer.Deserialize<ViewerSettings>(legacyJson, jsonOptions);
+        Assert(loaded is not null, "A settings document with obsolete automatic fields did not load.");
+
+        var store = new FileWorkspaceDataStore(
+            directory, NullLogger<FileWorkspaceDataStore>.Instance);
+        var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+        var state = new AppStateStore(NullLogger<AppStateStore>.Instance, companies, store);
+        var normalized = state.NormalizeSettings(loaded!);
+        var savedJson = JsonSerializer.Serialize(normalized, jsonOptions);
+        Assert(!savedJson.Contains("automaticCheck", StringComparison.OrdinalIgnoreCase),
+            "Obsolete automatic-refresh settings were written back into canonical settings.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static async Task TestSharedSourceCacheAsync()
+{
+    var directory = TestDirectory("shared-source-cache");
+    try
+    {
+        var firstStore = new FileWorkspaceDataStore(
+            directory, NullLogger<FileWorkspaceDataStore>.Instance);
+        var secondStore = new FileWorkspaceDataStore(
+            directory, NullLogger<FileWorkspaceDataStore>.Instance);
+        var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+        var firstState = new AppStateStore(NullLogger<AppStateStore>.Instance, companies, firstStore);
+        var secondState = new AppStateStore(NullLogger<AppStateStore>.Instance, companies, secondStore);
+        var query = WorkdaySource().Query;
+        var refreshedAt = DateTimeOffset.UtcNow;
+        await firstState.SaveJobsCacheAsync(
+            [CachedJob("leidos", "REQ-SHARED", "/shared/job", "<p>Canonical posting.</p>")],
+            refreshedAt, 0, query);
+        await firstState.SaveSourceStatusAsync(query, refreshedAt, 0, null);
+
+        var secondCache = await secondState.LoadJobsCacheAsync(query);
+        var secondStatus = await secondState.LoadSourceStatusAsync(query);
+        Assert(secondCache?.Jobs.Single().RequisitionId == "REQ-SHARED" &&
+               secondStatus?.LastSuccessfulRefreshUtc == refreshedAt &&
+               firstState.JobsCachePathFor(query) == secondState.JobsCachePathFor(query) &&
+               firstState.JobsCachePathFor(query).Contains(
+                   $"shared{Path.DirectorySeparatorChar}job-caches", StringComparison.Ordinal),
+            "A cache/status refresh written by one workspace was not visible through the shared source identity.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static async Task TestPreferencesDoNotMutateSharedCacheAsync()
+{
+    var directory = TestDirectory("shared-cache-preference-isolation");
+    try
+    {
+        var store = new FileWorkspaceDataStore(directory, NullLogger<FileWorkspaceDataStore>.Instance);
+        var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+        var state = new AppStateStore(NullLogger<AppStateStore>.Instance, companies, store);
+        var query = WorkdaySource().Query;
+        await state.SaveJobsCacheAsync(
+            [CachedJob("leidos", "REQ-CANONICAL", "/canonical/job", "<p>Bachelor's required.</p>")],
+            DateTimeOffset.UtcNow, 0, query);
+        var cachePath = state.JobsCachePathFor(query);
+        var before = await File.ReadAllBytesAsync(cachePath);
+        await state.SaveSettingsAsync(ViewerSettings.Default with
+        {
+            MinimumSalary = 250_000m,
+            UserProfile = new UserProfile(new EducationProfile("doctorate", "Physics"), null, null, null)
+        });
+        _ = await state.LoadJobsCacheAsync(query);
+        var after = await File.ReadAllBytesAsync(cachePath);
+        Assert(before.SequenceEqual(after),
+            "Workspace qualifications or compensation preferences altered the canonical shared job document.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static async Task TestLegacyWorkspaceCacheInactiveAsync()
+{
+    var directory = TestDirectory("legacy-workspace-cache-inactive");
+    try
+    {
+        var store = new FileWorkspaceDataStore(directory, NullLogger<FileWorkspaceDataStore>.Instance);
+        var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+        var state = new AppStateStore(NullLogger<AppStateStore>.Instance, companies, store);
+        var query = WorkdaySource().Query;
+        var fingerprint = state.QueryFingerprint(query);
+        var legacyRelative = WorkspaceDataFiles.LegacyWorkspaceCompanyCacheRelativePath(
+            "leidos", fingerprint).Replace('/', Path.DirectorySeparatorChar);
+        var legacyPath = Path.Combine(directory, legacyRelative);
+        Directory.CreateDirectory(Path.GetDirectoryName(legacyPath)!);
+        await File.WriteAllTextAsync(legacyPath, "{\"schemaVersion\":6,\"jobs\":[]}");
+
+        Assert(await state.LoadJobsCacheAsync(query) is null &&
+               state.JobsCachePathFor(query) != legacyPath && File.Exists(legacyPath),
+            "A legacy workspace-local split cache became the active source cache path.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
 }
 
 static async Task TestLegacyAppliedSourceMigrationAsync()
@@ -584,6 +885,7 @@ static Task TestPortableWorkspaceRoundTripAsync()
         HideStrictEducationMismatch = true,
         HideStrictClearanceMismatch = true,
         HideStrictWorkAuthorizationMismatch = true,
+        ExcludeStrongExtendedLocationRequirements = true,
         HasConfiguredSource = true,
         CompanyId = "leidos",
         Country = source.Country,
@@ -591,7 +893,7 @@ static Task TestPortableWorkspaceRoundTripAsync()
         CompanySources = new Dictionary<string, CompanySourceSettings> { ["leidos"] = source }
     };
     var now = new DateTimeOffset(2026, 8, 16, 12, 0, 0, TimeSpan.Zero);
-    var history = new JobHistoryDocument(4, new Dictionary<string, JobHistoryEntry>
+    var history = new JobHistoryDocument(5, new Dictionary<string, JobHistoryEntry>
     {
         ["leidos:REQ-SAVED"] = new("REQ-SAVED", "/job/saved", now, now, true,
             JobWorkflowStates.Saved, now, CompanyId: "leidos"),
@@ -599,6 +901,10 @@ static Task TestPortableWorkspaceRoundTripAsync()
             JobWorkflowStates.Applied, now, CompanyId: "leidos"),
         ["boeing:REQ-SAME"] = new("REQ-SAME", "/job/hidden", now, now, true,
             JobWorkflowStates.Hidden, now, CompanyId: "boeing"),
+        ["leidos:REQ-CLOSED"] = new("REQ-CLOSED", "/job/closed", now, now, true,
+            JobWorkflowStates.Closed, now.AddHours(2), CompanyId: "leidos",
+            AppliedAt: now, CloseReason: JobCloseReasons.ScreenedOut,
+            ClosedAt: now.AddHours(2)),
         ["leidos:REQ-NORMAL"] = new("REQ-NORMAL", "/job/normal", now, now, true,
             CompanyId: "leidos")
     });
@@ -608,27 +914,92 @@ static Task TestPortableWorkspaceRoundTripAsync()
     var imported = portable.ImportJson(json, ViewerSettings.Default, JobHistoryDocument.Empty);
     var importedCredentials = imported.Settings.UserProfile?.Credentials;
 
-    Assert(exported.Format == PortableWorkspaceService.FormatIdentifier && exported.Version == 1 &&
-           exported.CuratedJobs.Count == 3 &&
+    Assert(exported.Format == PortableWorkspaceService.FormatIdentifier &&
+           exported.Version == PortableWorkspaceService.CurrentVersion &&
+           exported.CuratedJobs.Count == 4 &&
            exported.CuratedJobs.All(job => job.WorkflowState != JobWorkflowStates.Normal),
-        "The portable file did not contain exactly the three curated workflow records.");
+        "The portable file did not contain exactly the four curated workflow records.");
     Assert(exported.Format == "JobSearchManagerBackup" &&
-           !json.Contains("WorkdayJobManager", StringComparison.OrdinalIgnoreCase),
-        "A new portable backup used a legacy product-owned identifier.");
+           !json.Contains("WorkdayJobManager", StringComparison.OrdinalIgnoreCase) &&
+           !json.Contains("automaticCheck", StringComparison.OrdinalIgnoreCase),
+        "A new portable backup used a legacy identifier or retained automatic-refresh settings.");
     Assert(imported.Settings.HasConfiguredSource == false &&
            imported.Settings.PendingSource?.CompanyId == "leidos" &&
            imported.Settings.IncludeKeywords.SequenceEqual(["integration"]) &&
            imported.Settings.ExcludeKeywords.SequenceEqual(["substation", "power distribution"]) &&
            imported.Settings.MinimumSalary == 115_000m && imported.Settings.ThemeMode == "dark" &&
+           imported.Settings.ExcludeStrongExtendedLocationRequirements &&
            importedCredentials is { InventoryStatus: "complete" } &&
            importedCredentials.HeldCredentialIds.SequenceEqual(
                ["netapp-ncda", "itil-foundation"]),
         "Portable preferences or pending source selection did not round-trip.");
+    foreach (var themeMode in new[] { "nord-polar-night", "nord-snow-storm", "dracula" })
+    {
+        var nordExport = portable.Export(
+            settings with { ThemeMode = themeMode }, JobHistoryDocument.Empty);
+        var nordImport = portable.Import(
+            nordExport, ViewerSettings.Default, JobHistoryDocument.Empty);
+        Assert(nordImport.Settings.ThemeMode == themeMode,
+            $"Theme {themeMode} did not survive workspace export/import.");
+    }
+    Assert(exported.Preferences.Compensation?.MinimumSalary == 115_000m &&
+           exported.Preferences.Qualifications.MinimumSalary is null &&
+           json.Contains("\"compensation\":{\"minimumSalary\":115000}", StringComparison.Ordinal) &&
+           !json.Contains("\"qualifications\":{\"minimumSalary\"", StringComparison.Ordinal),
+        "Compensation was not exported in the My Preferences section.");
+    var legacyWorkspace = exported with
+    {
+        Version = 1,
+        Preferences = exported.Preferences with
+        {
+            Compensation = null,
+            Qualifications = exported.Preferences.Qualifications with
+            {
+                MinimumSalary = 99_000m,
+                UserProfile = exported.Preferences.Qualifications.UserProfile with { Credentials = null }
+            }
+        }
+    };
+    var legacyPreferences = portable.Import(
+        legacyWorkspace, ViewerSettings.Default, JobHistoryDocument.Empty).Settings;
+    Assert(legacyPreferences.MinimumSalary == 99_000m &&
+           legacyPreferences.UserProfile?.Credentials is null,
+        "A version-1 workspace without credential inventory did not import conservatively.");
+    var preFeatureJson = json.Replace(
+        ",\"excludeStrongExtendedLocationRequirements\":true",
+        "",
+        StringComparison.Ordinal);
+    var preFeatureImported = portable.ImportJson(
+        preFeatureJson, ViewerSettings.Default, JobHistoryDocument.Empty);
+    Assert(!preFeatureImported.Settings.ExcludeStrongExtendedLocationRequirements,
+        "A pre-feature workspace backup did not retain the conservative disabled default.");
+    var preThemeJson = json.Replace("\"themeMode\":\"dark\",", "", StringComparison.Ordinal);
+    var preThemeImported = portable.ImportJson(
+        preThemeJson, ViewerSettings.Default, JobHistoryDocument.Empty);
+    Assert(preThemeImported.Settings.ThemeMode == ThemeModes.Default,
+        "A workspace without a theme value did not fall back safely.");
+    var obsoleteAutomaticJson = json.Replace(
+        "\"application\":{",
+        "\"application\":{\"automaticCheckEnabled\":true,\"automaticCheckIntervalMinutes\":60,",
+        StringComparison.Ordinal);
+    var obsoleteAutomaticImported = portable.ImportJson(
+        obsoleteAutomaticJson, ViewerSettings.Default, JobHistoryDocument.Empty);
+    Assert(obsoleteAutomaticImported.Settings.ThemeMode == "dark",
+        "A workspace backup with obsolete automatic-refresh fields did not import normally.");
+    Assert(ThemeModes.Normalize("unknown-theme") == ThemeModes.Default &&
+           ViewerSettings.Default.ThemeMode == ThemeModes.Default,
+        "Unknown themes or reset defaults do not resolve to Light.");
     Assert(imported.History.Jobs["leidos:REQ-SAVED"].WorkflowState == JobWorkflowStates.Saved &&
            imported.History.Jobs["leidos:REQ-SAME"].WorkflowState == JobWorkflowStates.Applied &&
            imported.History.Jobs["boeing:REQ-SAME"].WorkflowState == JobWorkflowStates.Hidden &&
+           imported.History.Jobs["leidos:REQ-CLOSED"] is
+           {
+               WorkflowState: JobWorkflowStates.Closed,
+               CloseReason: JobCloseReasons.ScreenedOut
+           } importedClosed &&
+           importedClosed.AppliedAt == now && importedClosed.ClosedAt == now.AddHours(2) &&
            !imported.History.Jobs.ContainsKey("leidos:REQ-NORMAL"),
-        "Saved, Applied, Hidden, absent-catalog, or company-isolated state did not round-trip.");
+        "Saved, Applied, Closed, Hidden, absent-catalog, or company-isolated state did not round-trip.");
     var legacyImported = portable.Import(
         exported with { Format = PortableWorkspaceService.LegacyFormatIdentifier },
         ViewerSettings.Default,
@@ -676,7 +1047,7 @@ static Task TestPortableWorkspaceValidationAsync()
     AssertThrows<WorkspaceImportException>(() => portable.Import(
         baseline with { Preferences = baseline.Preferences with
         {
-            Qualifications = baseline.Preferences.Qualifications with { MinimumSalary = -1m }
+            Compensation = new PortableCompensationPreferences(-1m)
         } }, ViewerSettings.Default, JobHistoryDocument.Empty));
     AssertThrows<WorkspaceImportException>(() => portable.Import(
         baseline with { Preferences = baseline.Preferences with
@@ -878,7 +1249,8 @@ static async Task TestFreshCatalogSourceAsync()
             credentials,
             academics,
             authorization,
-            remote);
+            remote,
+            new ExtendedLocationRequirementDetector());
         var catalog = new JobCatalog(
             client,
             state,
@@ -949,6 +1321,84 @@ static Task TestExpandedCompanyCatalogAsync()
            catalog.Get("nvidia").Provider == JobSourceProviders.Workday,
         "Provider selection was not represented by catalog data.");
     return Task.CompletedTask;
+}
+
+static Task TestNextCompanyCatalogAsync()
+{
+    var catalog = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+    var expected = new Dictionary<string, (string Name, string Category, string Provider)>
+    {
+        ["amentum"] = ("Amentum", "Defense & Federal", JobSourceProviders.Workday),
+        ["kbr"] = ("KBR", "Defense & Federal", JobSourceProviders.Workday),
+        ["booz-allen-hamilton"] = ("Booz Allen Hamilton", "Defense & Federal", JobSourceProviders.Workday),
+        ["servicenow"] = ("ServiceNow", "Enterprise Software", JobSourceProviders.SmartRecruiters),
+        ["nxp-semiconductors"] = ("NXP Semiconductors", "Semiconductors", JobSourceProviders.Workday)
+    };
+    foreach (var (id, source) in expected)
+    {
+        var company = catalog.Get(id);
+        Assert(company.DisplayName == source.Name &&
+               company.IndustryCategory == source.Category &&
+               string.Equals(company.Provider, source.Provider, StringComparison.OrdinalIgnoreCase),
+            $"The categorized source definition for {source.Name} is incomplete.");
+    }
+
+    var categories = catalog.Companies.ToDictionary(company => company.Id, company => company.IndustryCategory);
+    Assert(categories.Count == 13 &&
+           new[] { "leidos", "boeing", "northrop-grumman", "parsons", "rtx", "amentum", "kbr", "booz-allen-hamilton" }
+               .All(id => categories[id] == "Defense & Federal") &&
+           categories["servicenow"] == "Enterprise Software" &&
+           new[] { "nvidia", "nxp-semiconductors" }.All(id => categories[id] == "Semiconductors") &&
+           categories["aecom"] == "Engineering & Infrastructure" &&
+           categories["mtm"] == "Healthcare & Transportation Services",
+        "The supported-company category metadata does not match the broad industry taxonomy.");
+    Assert(catalog.Get("kbr").CountryFacetParameter == "locationHierarchy1" &&
+           catalog.Get("kbr").DefaultCountry.Id == "7d7dca02efe301804a21b8e9f401c00f" &&
+           catalog.Get("nxp-semiconductors").CountryFacetParameter == "Location_Country" &&
+           catalog.Get("servicenow").IsSmartRecruiters &&
+           catalog.Get("booz-allen-hamilton").RemoteLocationIds.Count == 0,
+        "A source-specific provider, country, or conservative remote capability is incorrect.");
+    return Task.CompletedTask;
+}
+
+static async Task TestTopLevelCountryFacetAsync()
+{
+    const string response = """
+        {
+          "total": 161,
+          "jobPostings": [],
+          "facets": [
+            {
+              "facetParameter": "Location_Country",
+              "descriptor": "Country/Territory",
+              "values": [
+                { "descriptor": "United States of America", "id": "bc33aa3152ec42d4995f4791a106ed09", "count": 161 }
+              ]
+            },
+            {
+              "facetParameter": "locationMainGroup",
+              "values": [
+                {
+                  "facetParameter": "locations",
+                  "descriptor": "Location",
+                  "values": [
+                    { "descriptor": "USA (home based)", "id": "98d67abaaa8a100fa63430f6acfc9346", "count": 12 },
+                    { "descriptor": "Austin (Oakhill, Office)", "id": "nxp-austin", "count": 74 }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+        """;
+    var client = CreateSourceClient(new HttpClient(new StubHttpMessageHandler(_ => response)));
+    var company = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory))
+        .Get("nxp-semiconductors");
+    var facets = await client.FetchLocationFacetsAsync(company, company.DefaultCountry.Id);
+    Assert(facets.Countries.Single().Label == "United States of America" &&
+           facets.RemoteLocations.Single().Label == "USA (home based)" &&
+           facets.Groups.SelectMany(group => group.Locations).Single().Label == "Austin (Oakhill, Office)",
+        "A top-level Workday country facet or nested location facet was not normalized generically.");
 }
 
 static Task TestExpandedLocationGroupingAsync()
@@ -1100,7 +1550,7 @@ static async Task TestAecomDuplicateRefreshAsync()
         var client = new JobSourceClient(new HttpClient(handler), options,
             NullLogger<JobSourceClient>.Instance, credentials,
             new AcademicQualificationDetector(), new WorkAuthorizationDetector(),
-            new RemoteWorkDetector());
+            new RemoteWorkDetector(), new ExtendedLocationRequirementDetector());
         var catalog = new JobCatalog(client, state, NullLogger<JobCatalog>.Instance,
             credentials, new AcademicQualificationDetector(), new WorkAuthorizationDetector(),
             new RemoteWorkDetector(), companies, options);
@@ -1249,6 +1699,31 @@ static async Task TestRecentSourceSwitchAsync()
     }
 }
 
+static async Task TestSharedRefreshSingleFlightAsync()
+{
+    var directory = TestDirectory("shared-refresh-single-flight");
+    try
+    {
+        var handler = CreateWorkdayHandler(() => 3, delayMilliseconds: 100);
+        var query = WorkdaySource().Query;
+        var coordinator = new SharedSourceRefreshCoordinator();
+        var (first, _, _) = await CreateTestCatalogAsync(
+            directory, handler, [], query, seedCache: false, coordinator: coordinator);
+        var (second, _, _) = await CreateTestCatalogAsync(
+            directory, handler, [], query, seedCache: false, coordinator: coordinator);
+
+        var results = await Task.WhenAll(first.RefreshAsync(query), second.RefreshAsync(query));
+        Assert(handler.ListingRequests == 1 &&
+               results.All(result => result.Jobs.Count == 3) &&
+               results.Count(result => result.IsCached) == 1,
+            "Simultaneous workspaces performed duplicate provider refreshes instead of sharing one result.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
 static Task TestProviderHtmlNormalizationAsync()
 {
     const string northrop = "RELOCATION ASSISTANCE: No relocation assistance available" +
@@ -1332,6 +1807,90 @@ static async Task TestRemovedJobCacheAsync()
         "A removed source job was destroyed instead of retained as unavailable cache history.");
 }
 
+static async Task TestMissingJobWorkflowRetentionAsync(string workflowState)
+{
+    var directory = TestDirectory($"missing-{workflowState}");
+    try
+    {
+        var listingCount = 1;
+        var handler = CreateWorkdayHandler(() => listingCount);
+        var (_, query) = WorkdaySource();
+        var job = CachedJob("leidos", "REQ-0000", "/job/0", "<p>Last known description</p>");
+        var (catalog, _, _) = await CreateTestCatalogAsync(directory, handler, [job], query);
+
+        if (workflowState == JobWorkflowStates.Closed)
+        {
+            Assert(await catalog.SetWorkflowStateAsync(job.StableId, JobWorkflowStates.Applied) &&
+                   await catalog.SetWorkflowStateAsync(
+                       job.StableId, JobWorkflowStates.Closed, JobCloseReasons.PositionWithdrawn),
+                "Could not arrange the closed-job refresh test state.");
+        }
+        else if (workflowState != JobWorkflowStates.Normal)
+        {
+            Assert(await catalog.SetWorkflowStateAsync(job.StableId, workflowState),
+                $"Could not arrange the {workflowState}-job refresh test state.");
+        }
+
+        listingCount = 0;
+        var refreshed = await catalog.RefreshAsync();
+
+        if (workflowState == JobWorkflowStates.Normal)
+        {
+            Assert(refreshed.Jobs.Count == 0,
+                "An untracked job missing from the provider remained in the visible catalog.");
+        }
+        else
+        {
+            var retained = refreshed.Jobs.SingleOrDefault();
+            Assert(retained is not null && !retained.IsSourceAvailable &&
+                   retained.StableId == job.StableId &&
+                   retained.RequisitionId == job.RequisitionId &&
+                   retained.Title == job.Title &&
+                   retained.PrimaryLocation == job.PrimaryLocation &&
+                   retained.StartDate == job.StartDate &&
+                   retained.DescriptionHtml == job.DescriptionHtml &&
+                   refreshed.JobStates[retained.StableId] == workflowState,
+                $"A missing {workflowState} job or its last-known metadata was not retained.");
+        }
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static async Task TestRetainedJobRelistingAsync()
+{
+    var directory = TestDirectory("retained-job-relisting");
+    try
+    {
+        var listingCount = 1;
+        var handler = CreateWorkdayHandler(() => listingCount);
+        var (_, query) = WorkdaySource();
+        var job = CachedJob("leidos", "REQ-0000", "/job/0", "<p>Last known description</p>");
+        var (catalog, _, state) = await CreateTestCatalogAsync(directory, handler, [job], query);
+        Assert(await catalog.SetWorkflowStateAsync(job.StableId, JobWorkflowStates.Saved),
+            "Could not arrange the retained-job relisting test state.");
+
+        listingCount = 0;
+        var missing = await catalog.RefreshAsync();
+        listingCount = 1;
+        var relisted = await catalog.RefreshAsync();
+        var cached = await state.LoadJobsCacheAsync(query);
+
+        Assert(missing.Jobs is [var retained] && !retained.IsSourceAvailable &&
+               relisted.Jobs is [var current] && current.IsSourceAvailable &&
+               current.StableId == job.StableId &&
+               relisted.JobStates[current.StableId] == JobWorkflowStates.Saved &&
+               cached?.Jobs.Count(item => item.StableId == job.StableId) == 1,
+            "A relisted retained requisition duplicated or lost its saved workflow state.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
 static Task TestCompactListPayloadAsync()
 {
     var description = $"<p>{new string('x', 5000)} secret-description-marker</p>";
@@ -1339,7 +1898,7 @@ static Task TestCompactListPayloadAsync()
     var query = WorkdaySource().Query;
     var snapshot = new JobsSnapshot(
         [job], 1, DateTimeOffset.UtcNow, false, null, 0, false, [], query,
-        new Dictionary<string, string>(), null);
+        new Dictionary<string, string>(), new Dictionary<string, JobClosureInfo>(), null);
     var compactJson = JsonSerializer.Serialize(JobsListSnapshot.FromSnapshot(snapshot));
     var fullJson = JsonSerializer.Serialize(snapshot);
 
@@ -1369,27 +1928,6 @@ static async Task TestLazyDetailCacheAsync()
         Assert(first?.DescriptionHtml.Length > 0 && second?.DescriptionHtml.Length > 0 &&
                handler.DetailRequests == 1 && store.Diagnostics.Snapshot().Writes == 0,
             "Lazy detail loading did not persist and reuse the first provider response.");
-    }
-    finally
-    {
-        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
-    }
-}
-
-static async Task TestAutomaticCheckIncrementalAsync()
-{
-    var directory = TestDirectory("automatic-incremental");
-    try
-    {
-        var handler = CreateWorkdayHandler(() => 2);
-        var query = WorkdaySource().Query;
-        var cached = CachedJob("leidos", "REQ-0000", "/job/0", "<p>Cached detail.</p>");
-        var (catalog, _, _) = await CreateTestCatalogAsync(directory, handler, [cached], query);
-
-        var result = await catalog.CheckForUnknownJobsAsync();
-        Assert(result.Performed && result.UnknownStableIds.SequenceEqual(["leidos:REQ-0001"]) &&
-               handler.DetailRequests == 1,
-            "Automatic checking did not limit detail retrieval to the newly discovered job.");
     }
     finally
     {
@@ -1570,13 +2108,9 @@ static async Task TestUnchangedRefreshWriteSuppressionAsync()
         Console.WriteLine(
             $"METRIC unchanged-refresh manual-writes={manual.Writes} manual-bytes={manual.BytesWritten}");
         Assert(handler.DetailRequests == providerCalls && manual.Writes == 1 &&
-               manual.WritesByDocument.Keys.Single().StartsWith("source-status/", StringComparison.Ordinal),
+               manual.WritesByDocument.Keys.Single().StartsWith("shared/source-status/", StringComparison.Ordinal),
             "An unchanged manual refresh rewrote cache/history instead of only its tiny source status.");
 
-        store.Diagnostics.Reset();
-        await catalog.CheckForUnknownJobsAsync();
-        Assert(handler.DetailRequests == providerCalls && store.Diagnostics.Snapshot().Writes == 0,
-            "An unchanged automatic check wrote cache, history, or source status.");
     }
     finally
     {
@@ -1598,7 +2132,7 @@ static async Task TestFirstEmptyRefreshPersistsBaselineAsync()
         await catalog.RefreshAsync();
         var writes = store.Diagnostics.Snapshot();
         Assert(writes.WritesByDocument.Keys.Any(path =>
-                   path.StartsWith("job-caches/", StringComparison.Ordinal)) &&
+                   path.StartsWith("shared/job-caches/", StringComparison.Ordinal)) &&
                (await state.LoadJobsCacheAsync(query)) is { Jobs.Count: 0 },
             "The first empty provider result was not persisted as a valid source baseline.");
     }
@@ -1703,6 +2237,7 @@ static async Task TestNorthropScaleMetricsAsync()
         [],
         query,
         new Dictionary<string, string>(),
+        new Dictionary<string, JobClosureInfo>(),
         null,
         second.Metrics);
     var compactBytes = JsonSerializer.SerializeToUtf8Bytes(
@@ -1817,7 +2352,7 @@ static async Task TestUnsupportedCompanyHistoryAsync()
 static Task TestCredentialCatalogAsync()
 {
     var detector = new CredentialDetector(NullLogger<CredentialDetector>.Instance);
-    Assert(detector.CatalogVersion == 12, "The expanded credential catalog version was not loaded.");
+    Assert(detector.CatalogVersion == 15, "The expanded credential catalog version was not loaded.");
     using var document = JsonDocument.Parse(File.ReadAllText(
         Path.Combine(AppContext.BaseDirectory, "CredentialCatalog.json")));
     var ids = document.RootElement.GetProperty("credentials").EnumerateArray()
@@ -1833,7 +2368,12 @@ static Task TestCredentialCatalogAsync()
         "netapp-ncda", "netapp-ncse", "netapp-ncsie", "dell-proven-professional",
         "ipc-whma-a-620", "ipc-j-std-001", "ifma-cfm", "gccc-scmp", "gccc-cmp",
         "splunk-enterprise-admin", "giac-gcih", "giac-gcti",
-        "independent-mental-health-license", "driver-license"
+        "independent-mental-health-license", "driver-license",
+        "ccm", "ptoe", "aicp", "usace-cqm", "leed", "faa-part-107",
+        "aws-cloud-practitioner", "aws-solutions-architect", "elastic-certification",
+        "confluent-certification", "databricks-certification",
+        "six-sigma-green-belt", "six-sigma-black-belt", "pmi-sp",
+        "wilderness-first-responder", "cpa", "isa-cap"
     };
     Assert(expected.All(ids.Contains), "One or more verified credentials are absent.");
     return Task.CompletedTask;
@@ -1878,6 +2418,30 @@ static Task TestExistingCredentialRegressionAsync()
     Assert(new[] { "pe", "security-plus", "network-plus", "ccna", "ccnp", "cissp", "itil-foundation" }
             .All(ids.Contains),
         $"Existing credential regression fixture recognized only: {string.Join(',', ids)}.");
+    return Task.CompletedTask;
+}
+
+static Task TestCredentialAlternativeSemanticsAsync()
+{
+    var detector = new CredentialDetector(NullLogger<CredentialDetector>.Instance);
+    var alternatives = detector.Analyze("<p>PMP or CCM certification required.</p>").Credentials
+        .Where(item => item.CredentialId is "pmp" or "ccm")
+        .ToArray();
+    Assert(alternatives.Length == 2 &&
+           alternatives.All(item => item.Requirement == "required" && item.IsAlternative) &&
+           alternatives.Select(item => item.AlternativeGroup).Distinct().Count() == 1 &&
+           !string.IsNullOrWhiteSpace(alternatives[0].AlternativeGroup),
+        "PMP-or-CCM was not preserved as one explicit alternative group.");
+
+    var corpusCredentials = detector.Analyze(
+        "<p>PTOE certification preferred; AICP certification desired; " +
+        "AWS Certified Solutions Architect required; FAA Part 107 certificate preferred; " +
+        "USACE Construction Quality Management certification required.</p>");
+    var ids = corpusCredentials.Credentials.Select(item => item.CredentialId)
+        .ToHashSet(StringComparer.Ordinal);
+    Assert(new[] { "ptoe", "aicp", "aws-solutions-architect", "faa-part-107", "usace-cqm" }
+            .All(ids.Contains),
+        $"Corpus-backed credential fixture recognized only: {string.Join(',', ids)}.");
     return Task.CompletedTask;
 }
 
@@ -1947,6 +2511,77 @@ static Task TestAdvancedDegreeAsync()
     return Task.CompletedTask;
 }
 
+static Task TestAcademicPreferenceSeparationAsync()
+{
+    var detector = new AcademicQualificationDetector();
+    var fixtures = new[]
+    {
+        "<p>Bachelor's required. Master's preferred.</p>",
+        "<p>B.S. required. M.S./PhD preferred.</p>",
+        "<p>Bachelor's minimum; graduate degree desirable.</p>",
+        "<p>Bachelor's or equivalent experience required. Master's a plus.</p>",
+        "<h3>Minimum Qualifications</h3><p>Bachelor's degree</p>" +
+            "<h3>Preferred Qualifications</h3><p>PhD</p>",
+        "<h3>What we need to see</h3>" +
+            "<p>B.S. or degree in Computer Science/Engineering or equivalent experience</p>" +
+            "<h3>Ways to stand out from the crowd:</h3>" +
+            "<p>M.S./PhD with significant compiler related project or thesis work preferred</p>"
+    };
+
+    foreach (var fixture in fixtures)
+    {
+        var analysis = detector.Analyze(fixture);
+        Assert(analysis.MinimumLevel == "bachelor" &&
+               analysis.RequirementType is "strictDegree" or "degreeOrExperience" &&
+               analysis.ParseStatus == "parsed" &&
+               analysis.Paths.Any(path =>
+                   path.Level == "bachelor" && path.Requirement is "required" or "minimum") &&
+               analysis.Paths.Any(path =>
+                   path.Level is "master" or "doctorate" &&
+                   path.Requirement is "preferred" or "desired"),
+            $"Strict/preferred education separation failed: minimum={analysis.MinimumLevel}, " +
+            $"type={analysis.RequirementType}, paths={string.Join('|', analysis.Paths.Select(path => $"{path.Level}:{path.Requirement}"))}, " +
+            $"fixture={fixture}.");
+    }
+
+    var acceptedPaths = detector.Analyze("<p>Bachelor's or Master's degree required.</p>");
+    Assert(acceptedPaths.MinimumLevel == "bachelor" &&
+           acceptedPaths.Paths.Where(path => path.Level is "bachelor" or "master")
+               .All(path => path.Requirement == "required"),
+        "Bachelor's-or-Master's accepted paths became a master's minimum.");
+
+    var fieldPreference = detector.Analyze(
+        "<h3>Required Qualifications</h3>" +
+        "<p>M.S. degree in Structural Engineering.</p>" +
+        "<p>Bachelor's degree in Civil, preferred, or Mechanical Engineering.</p>");
+    Assert(fieldPreference.MinimumLevel == "bachelor",
+        "A preferred field inside a Bachelor's path must not make the degree itself preferred.");
+
+    var trailingFieldPreference = detector.Analyze(
+        "<h3>Required Qualifications</h3>" +
+        "<p>Master's degree in Structural Engineering.</p>" +
+        "<p>Bachelor's degree in Civil, Electrical, or Mechanical Engineering; Civil Engineering is preferred.</p>");
+    Assert(trailingFieldPreference.MinimumLevel == "bachelor",
+        "A trailing preferred field must not make the Bachelor's path optional.");
+
+    var mastersRequired = detector.Analyze(
+        "<h3>Minimum Qualifications</h3><p>Master's degree in Engineering required.</p>" +
+        "<h3>Preferred Qualifications</h3><p>PhD preferred.</p>");
+    Assert(mastersRequired.MinimumLevel == "master" &&
+           mastersRequired.Paths.Any(path =>
+               path.Level == "master" && path.Requirement == "required") &&
+           mastersRequired.Paths.Any(path =>
+               path.Level == "doctorate" && path.Requirement == "preferred"),
+        "A true master's minimum with preferred PhD was weakened or inflated.");
+
+    var doctorateRequired = detector.Analyze(
+        "<h3>Required Qualifications</h3><p>PhD required.</p>");
+    Assert(doctorateRequired.MinimumLevel == "doctorate" &&
+           doctorateRequired.RequirementType == "strictDegree",
+        "A true required doctorate was no longer strict.");
+    return Task.CompletedTask;
+}
+
 static Task TestAbetAccreditationAsync()
 {
     var detector = new AcademicQualificationDetector();
@@ -1983,12 +2618,15 @@ static async Task TestFileResetAsync()
         await File.WriteAllTextAsync(unrelatedPath, "not application state");
 
         var deleted = await store.DeleteAllAsync();
-        Assert(deleted == 5, $"Expected five application documents to be deleted, but deleted {deleted}.");
-        Assert(Enum.GetValues<WorkspaceDataFile>().All(file => !File.Exists(store.Describe(file))),
-            "A known workspace document survived reset.");
-        Assert(!File.Exists(store.DescribeCompanyCache("northrop-grumman", fingerprint)) &&
-               !File.Exists(store.DescribeSourceStatus("northrop-grumman", fingerprint)),
-            "A company cache or source-status document survived reset.");
+        Assert(deleted == 2, $"Expected two user-specific documents to be deleted, but deleted {deleted}.");
+        Assert(!File.Exists(store.Describe(WorkspaceDataFile.Settings)) &&
+               !File.Exists(store.Describe(WorkspaceDataFile.JobHistory)),
+            "A user-specific workspace document survived reset.");
+        Assert(File.Exists(store.Describe(WorkspaceDataFile.JobsCache)),
+            "Reset deleted a retained legacy cache before migration verification.");
+        Assert(File.Exists(store.DescribeCompanyCache("northrop-grumman", fingerprint)) &&
+               File.Exists(store.DescribeSourceStatus("northrop-grumman", fingerprint)),
+            "Reset deleted shared company cache or source-status data.");
         Assert(File.Exists(unrelatedPath), "Reset deleted an unrelated file from the data directory.");
     }
     finally
@@ -2232,6 +2870,180 @@ static Task TestBoeingRemoteFixtureAsync()
     return Task.CompletedTask;
 }
 
+static Task TestExpandedRemoteTerminologyAsync()
+{
+    var detector = new RemoteWorkDetector();
+    var amentum = detector.Analyze(
+        "Supplier Excellence Lead", "United States", [],
+        "<p>This position is remote-telework.</p><p>Occasional travel to operating sites.</p>");
+    var kbr = detector.Analyze(
+        "Risk Manager", "Houston, Texas", [],
+        "<p>This position is based out of our headquarters and follows a remote work schedule.</p>");
+    var conflicting = detector.Analyze(
+        "Program Specialist", "United States", [],
+        "<p>This is a US remote-telework role.</p><p>This role requires one day per week on-site.</p>");
+    var serviceNowBoilerplate = detector.Analyze(
+        "Software Engineer", "Mountain View, California", [],
+        "<p>Work personas (flexible, remote, or required in office) are categories assigned depending on the nature of the work.</p>");
+
+    Assert(amentum.IsRemoteDesignated && amentum.ConcernLevel == "none" &&
+           kbr.IsRemoteDesignated && kbr.ConcernLevel == "none",
+        "Explicit Amentum or KBR role-specific remote prose was not recognized.");
+    Assert(conflicting.IsRemoteDesignated && conflicting.ConcernLevel == "strong" &&
+           conflicting.Signals.Any(signal => signal.Category == "scheduled-onsite"),
+        "An explicit remote role with scheduled onsite attendance did not produce a conflict.");
+    Assert(!serviceNowBoilerplate.IsRemoteDesignated,
+        "Generic ServiceNow work-persona boilerplate falsely designated an onsite posting as remote.");
+    return Task.CompletedTask;
+}
+
+static Task TestExpandedSalaryTerminologyAsync()
+{
+    var cases = new[]
+    {
+        ("<p>Compensation Details: $100k - $121k. The listed amount is an annual estimate.</p>", 100_000m, 121_000m),
+        ("<p>Basic Compensation: $127,000 - $158,600 annually.</p>", 127_000m, 158_600m),
+        ("<p>The projected compensation range for this position is $69,400.00 to $158,000.00 (annualized USD).</p>", 69_400m, 158_000m)
+    };
+    foreach (var (fixture, minimum, maximum) in cases)
+    {
+        var salary = JobAnalysis.AnalyzeSalary(fixture);
+        Assert(salary.Minimum == minimum && salary.Maximum == maximum && salary.Period == "annual",
+            $"Expanded-corpus compensation wording did not parse: {salary.Minimum}-{salary.Maximum}/{salary.Period}.");
+    }
+    return Task.CompletedTask;
+}
+
+static Task TestExpandedCredentialTerminologyAsync()
+{
+    const string fixture = """
+        <h2>Preferred Skills &amp; Certifications</h2>
+        <p>CDPSE, AWS Certified Security, Azure Security Engineer, or Google Cloud Professional Security Engineer.</p>
+        <p>Certifications in Systems Engineering such as INCOSE ESEP or CSEP are preferred.</p>
+        <p>Illumio certifications such as Illumio Platform Associate are preferred.</p>
+        <p>Acquisition Professional Development Program (APDP) Program Management Level II or higher Certification.</p>
+        <p>The regulatory counsel must be a U.S.-licensed attorney with an active state bar license.</p>
+        """;
+    var analysis = new CredentialDetector(NullLogger<CredentialDetector>.Instance).Analyze(fixture);
+    var ids = analysis.Credentials.Select(match => match.CredentialId).ToHashSet(StringComparer.Ordinal);
+    var expected = new[]
+    {
+        "cdpse",
+        "aws-security-specialty",
+        "azure-security-engineer-associate",
+        "google-cloud-security-engineer",
+        "incose-esep",
+        "incose-csep",
+        "illumio-platform-certification",
+        "apdp-program-management",
+        "attorney-bar-license"
+    };
+    Assert(expected.All(ids.Contains),
+        $"Expanded-corpus credential fixture recognized only: {string.Join(',', ids.Order())}.");
+    return Task.CompletedTask;
+}
+
+static Task TestExtendedLocationPositiveAsync()
+{
+    var detector = new ExtendedLocationRequirementDetector();
+    var cases = new Dictionary<string, string>
+    {
+        ["Job location is Guam."] = "Guam",
+        ["Candidate must deploy to Antarctica for the austral summer season."] = "Antarctica",
+        ["This is a 90-day rotational assignment in Kwajalein."] = "Kwajalein",
+        ["Employee will be forward deployed to Germany for the duration of the contract."] = "Germany",
+        ["Must relocate to Diego Garcia."] = "Diego Garcia",
+        ["Employee will be forward deployed to Japan for the duration of the contract."] = "Japan",
+        ["This position requires a temporary duty assignment in the Marshall Islands."] = "Marshall Islands",
+        ["Ability and willingness to deploy to client and federal sites for extended periods."] = "Destination not specified"
+    };
+
+    foreach (var (text, expectedDestination) in cases)
+    {
+        var analysis = detector.Analyze(
+            "Remote Program Specialist", "US - Remote (Any Location)", [], $"<p>{text}</p>");
+        Assert(analysis.Confidence == "strong" && analysis.Signals.Count > 0 &&
+               analysis.Destination == expectedDestination &&
+               !string.IsNullOrWhiteSpace(analysis.Summary) &&
+               analysis.Signals.Any(signal => !string.IsNullOrWhiteSpace(signal.Evidence)),
+            $"Extended-location normalization failed: {text} => {analysis.Confidence}/{analysis.Destination}/{analysis.Summary}.");
+    }
+    var titleOnly = detector.Analyze(
+        "Instructor — This position is located in Germany (International Assignment) NO REMOTE WORK",
+        "US - Remote (Any Location)", [], "<p>Provide classroom instruction.</p>");
+    Assert(titleOnly.Confidence == "strong",
+        "An explicit international-assignment/no-remote title was not classified.");
+    Assert(titleOnly.Destination == "Germany",
+        $"Title-only destination was not normalized: {titleOnly.Destination}.");
+    return Task.CompletedTask;
+}
+
+static Task TestExtendedLocationNegativeAsync()
+{
+    var detector = new ExtendedLocationRequirementDetector();
+    var cases = new[]
+    {
+        "Our company supports customers in Guam, Germany, and Japan.",
+        "Prior Guam experience preferred.",
+        "Program operations include sites in Antarctica.",
+        "Up to 10% international travel may be required.",
+        "Experience supporting OCONUS customers preferred.",
+        "Prior OCONUS assignment experience preferred.",
+        "Previous experience in a 90-day rotational assignment is desirable.",
+        "The candidate will support teams deployed throughout the Pacific.",
+        "Must be able to travel to Guam occasionally.",
+        "The platform is deployed to customer data centers worldwide.",
+        "Relocation assistance is not available.",
+        "Travel required throughout CONUS and some OCONUS travel driven by project needs."
+    };
+
+    foreach (var text in cases)
+    {
+        var analysis = detector.Analyze(
+            "Program Analyst", "US - Remote (Any Location)", [], $"<p>{text}</p>");
+        Assert(analysis.Confidence == "none",
+            $"Incidental location or ordinary-travel text was classified: {text} => {analysis.Confidence}.");
+        Assert(analysis.Destination is null,
+            $"Incidental location produced a destination: {text} => {analysis.Destination}.");
+    }
+    return Task.CompletedTask;
+}
+
+static Task TestExtendedLocationMixedContextAsync()
+{
+    const string fixture = """
+        <p>Our company supports customers in Guam, Germany, and Japan.</p>
+        <p>Prior OCONUS experience is preferred and occasional international travel may be required.</p>
+        <p>***job location is Guam***</p>
+        """;
+    var analysis = new ExtendedLocationRequirementDetector().Analyze(
+        "UXO Technician", "US - VA, Centreville", [], fixture);
+    Assert(analysis.Confidence == "strong" &&
+           analysis.Destination == "Guam" &&
+           analysis.Summary == "Job location is Guam" &&
+           analysis.Signals.Any(signal => signal.Category == "explicit-job-location") &&
+           analysis.Signals.Any(signal => signal.Evidence.Contains(
+               "job location is Guam", StringComparison.OrdinalIgnoreCase)) &&
+           analysis.Signals.All(signal => !signal.Evidence.Contains(
+               "supports customers", StringComparison.OrdinalIgnoreCase)),
+        "Mixed relevant and incidental location references did not preserve only useful evidence.");
+    return Task.CompletedTask;
+}
+
+static Task TestExtendedLocationConfidenceAsync()
+{
+    var detector = new ExtendedLocationRequirementDetector();
+    var questionable = detector.Analyze(
+        "Electrical Engineer", "Remote / Teleworker US", [],
+        "<p>Deployment to Antarctica may be necessary at the discretion of management.</p>");
+    var strong = detector.Analyze(
+        "Safety Engineer", "Remote / Teleworker US", [],
+        "<p>Deployment to Antarctica is required in this role for seven months.</p>");
+    Assert(questionable.Confidence == "questionable" && strong.Confidence == "strong",
+        $"Confidence separation regressed: possible={questionable.Confidence}, required={strong.Confidence}.");
+    return Task.CompletedTask;
+}
+
 static Task TestExpandedCompanyFixturesAsync()
 {
     const string northrop = """
@@ -2299,9 +3111,33 @@ static async Task TestWorkflowStateTransitionsAsync()
         Assert(await catalog.SetWorkflowStateAsync(job.StableId, JobWorkflowStates.Applied) &&
                catalog.Snapshot.JobStates[job.StableId] == JobWorkflowStates.Applied,
             "Saved -> Applied did not update the canonical state.");
+        var appliedAt = (await state.LoadJobHistoryAsync()).Jobs[job.StableId].AppliedAt;
+        Assert(appliedAt is not null,
+            "Applying a job did not record its original application timestamp.");
         Assert(!await catalog.SetWorkflowStateAsync(job.StableId, JobWorkflowStates.Saved) &&
                catalog.Snapshot.JobStates[job.StableId] == JobWorkflowStates.Applied,
             "An invalid Applied -> Saved transition was accepted.");
+        Assert(!await catalog.SetWorkflowStateAsync(job.StableId, JobWorkflowStates.Closed) &&
+               catalog.Snapshot.JobStates[job.StableId] == JobWorkflowStates.Applied,
+            "A close transition without a canonical reason was accepted.");
+        Assert(await catalog.SetWorkflowStateAsync(
+                   job.StableId, JobWorkflowStates.Closed, JobCloseReasons.NotSelected) &&
+               catalog.Snapshot.JobStates[job.StableId] == JobWorkflowStates.Closed &&
+               catalog.Snapshot.JobClosures[job.StableId].Reason == JobCloseReasons.NotSelected,
+            "Applied -> Closed did not persist and expose its canonical close reason.");
+        var closed = (await state.LoadJobHistoryAsync()).Jobs[job.StableId];
+        Assert(closed.CloseReason == JobCloseReasons.NotSelected &&
+               closed.ClosedAt is not null && closed.AppliedAt == appliedAt,
+            "Closing an application did not retain AppliedAt or persist closure metadata.");
+        Assert(!await catalog.SetWorkflowStateAsync(job.StableId, JobWorkflowStates.Hidden),
+            "Closed state incorrectly transitioned directly to Hidden.");
+        Assert(await catalog.SetWorkflowStateAsync(job.StableId, JobWorkflowStates.Applied) &&
+               catalog.Snapshot.JobStates[job.StableId] == JobWorkflowStates.Applied &&
+               !catalog.Snapshot.JobClosures.ContainsKey(job.StableId),
+            "Reopening did not return Closed to Applied or clear the active closure.");
+        var reopened = (await state.LoadJobHistoryAsync()).Jobs[job.StableId];
+        Assert(reopened.CloseReason is null && reopened.ClosedAt is null && reopened.AppliedAt == appliedAt,
+            "Reopening did not clear close reason/timestamp while retaining original AppliedAt.");
         Assert(await catalog.SetWorkflowStateAsync(job.StableId, JobWorkflowStates.Hidden) &&
                catalog.Snapshot.JobStates[job.StableId] == JobWorkflowStates.Hidden,
             "Applied -> Hidden did not update the canonical state.");
@@ -2314,7 +3150,8 @@ static async Task TestWorkflowStateTransitionsAsync()
         var persisted = (await state.LoadJobHistoryAsync()).Jobs[job.StableId];
         Assert(persisted.WorkflowState == JobWorkflowStates.Normal &&
                !persisted.Dismissed && !persisted.Saved && !persisted.Applied &&
-               persisted.DismissedAt is null && persisted.SavedAt is null && persisted.AppliedAt is null,
+               persisted.DismissedAt is null && persisted.SavedAt is null &&
+               persisted.AppliedAt is null && persisted.CloseReason is null && persisted.ClosedAt is null,
             "Persistence retained an independent legacy state alongside the canonical state.");
     }
     finally
@@ -2330,9 +3167,13 @@ static async Task TestWorkflowStateRoundTripAsync()
     {
         var (first, _, job) = await CreateCatalogAsync(directory);
         await first.SetWorkflowStateAsync(job.StableId, JobWorkflowStates.Applied);
+        await first.SetWorkflowStateAsync(
+            job.StableId, JobWorkflowStates.Closed, JobCloseReasons.InterviewedOut);
         var (restarted, _, _) = await CreateCatalogAsync(directory);
-        Assert(restarted.Snapshot.JobStates[job.StableId] == JobWorkflowStates.Applied,
-            "Applied state did not survive catalog reinitialization.");
+        Assert(restarted.Snapshot.JobStates[job.StableId] == JobWorkflowStates.Closed &&
+               restarted.Snapshot.JobClosures[job.StableId] is
+               { Reason: JobCloseReasons.InterviewedOut, AppliedAt: not null },
+            "Closed state, reason, timestamp, or original applied date did not survive catalog reinitialization.");
     }
     finally
     {
@@ -2413,13 +3254,14 @@ static async Task TestLegacySavedHistoryMigrationAsync()
 
         var migrated = await appState.LoadJobHistoryAsync();
         var entry = migrated.Jobs["leidos:REQ-LEGACY"];
-        Assert(migrated.SchemaVersion == 4 && entry.WorkflowState == JobWorkflowStates.Saved,
+        Assert(migrated.SchemaVersion == 5 && entry.WorkflowState == JobWorkflowStates.Saved,
             "Legacy Saved state did not migrate to canonical Saved.");
         Assert(!entry.HasBeenViewed && entry.FirstSeenAt == now.AddDays(-3) && entry.LastSeenAt == now,
             "Migration changed existing NEW/viewed history timestamps.");
         Assert(!entry.Dismissed && !entry.Saved && !entry.Applied &&
-               entry.DismissedAt is null && entry.SavedAt is null && entry.AppliedAt is null,
-            "Legacy state fields survived schema-4 migration.");
+               entry.DismissedAt is null && entry.SavedAt is null && entry.AppliedAt is null &&
+               entry.CloseReason is null && entry.ClosedAt is null,
+            "Legacy state fields survived schema-5 migration.");
     }
     finally
     {
@@ -2463,7 +3305,10 @@ static async Task TestLegacyCombinationMigrationAsync()
             "A stray legacy timestamp changed the canonical Normal state.");
         Assert(migrated.Jobs.Values.All(entry =>
                 !entry.Dismissed && !entry.Saved && !entry.Applied &&
-                entry.DismissedAt is null && entry.SavedAt is null && entry.AppliedAt is null),
+                entry.DismissedAt is null && entry.SavedAt is null) &&
+               migrated.Jobs["leidos:REQ-APPLIED"].AppliedAt == now &&
+               migrated.Jobs["leidos:REQ-HIDDEN"].AppliedAt is null &&
+               migrated.Jobs.Values.All(entry => entry.CloseReason is null && entry.ClosedAt is null),
             "An invalid independent-state combination survived migration.");
     }
     finally
@@ -2474,6 +3319,15 @@ static async Task TestLegacyCombinationMigrationAsync()
 
 static RemoteWorkAnalysis RemoteAnalysis(string html) => new RemoteWorkDetector().Analyze(
     "Software Engineer", "Remote / Teleworker US", [], html);
+
+static string ExpandCachedDescription(string encoded)
+{
+    var bytes = Convert.FromBase64String(encoded);
+    using var input = new MemoryStream(bytes);
+    using var gzip = new GZipStream(input, CompressionMode.Decompress);
+    using var reader = new StreamReader(gzip, System.Text.Encoding.UTF8);
+    return reader.ReadToEnd();
+}
 
 static (CompanyDefinition Company, JobSourceQuery Query) WorkdaySource()
 {
@@ -2564,7 +3418,8 @@ static async Task<(JobCatalog Catalog, FileWorkspaceDataStore Store, AppStateSto
     HttpMessageHandler handler,
     IReadOnlyList<JobRecord> cachedJobs,
     JobSourceQuery query,
-    bool seedCache = true)
+    bool seedCache = true,
+    SharedSourceRefreshCoordinator? coordinator = null)
 {
     var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
     var store = new FileWorkspaceDataStore(directory, NullLogger<FileWorkspaceDataStore>.Instance);
@@ -2584,7 +3439,8 @@ static async Task<(JobCatalog Catalog, FileWorkspaceDataStore Store, AppStateSto
         credentials,
         academics,
         authorization,
-        remote);
+        remote,
+        new ExtendedLocationRequirementDetector());
     var catalog = new JobCatalog(
         client,
         state,
@@ -2594,7 +3450,8 @@ static async Task<(JobCatalog Catalog, FileWorkspaceDataStore Store, AppStateSto
         authorization,
         remote,
         companies,
-        Options.Create(new JobSourceOptions()));
+        Options.Create(new JobSourceOptions()),
+        coordinator);
     await catalog.InitializeAsync(query);
     return (catalog, store, state);
 }
@@ -2611,7 +3468,8 @@ static JobSourceClient CreateSourceClient(
         credentials,
         new AcademicQualificationDetector(),
         new WorkAuthorizationDetector(),
-        new RemoteWorkDetector());
+        new RemoteWorkDetector(),
+        new ExtendedLocationRequirementDetector());
 }
 
 static string TestDirectory(string purpose) =>
@@ -2662,7 +3520,8 @@ static async Task<(JobCatalog Catalog, AppStateStore State, JobRecord Job)> Crea
         credentials,
         academics,
         authorization,
-        remote);
+        remote,
+        new ExtendedLocationRequirementDetector());
     var catalog = new JobCatalog(
         client,
         state,

@@ -32,6 +32,8 @@
     <Compile Remove="Tests\**\*.cs" />
     <Content Remove="Tests\**\*" />
     <None Remove="Tests\**\*" />
+    <Content Remove="azure-deploy-*\**\*;publish\**\*" />
+    <None Remove="azure-deploy-*\**\*;publish\**\*" />
   </ItemGroup>
 
 </Project>

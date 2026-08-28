@@ -12,6 +12,7 @@
     normal: "normal",
     saved: "saved",
     applied: "applied",
+    closed: "closed",
     hidden: "hidden"
   });
   const VALID_STATES = new Set(Object.values(STATES));
@@ -37,7 +38,10 @@
         ? STATES.applied
         : current;
       case "unapply": return current === STATES.applied ? STATES.normal : current;
-      case "hide": return current === STATES.hidden ? current : STATES.hidden;
+      case "close": return current === STATES.applied ? STATES.closed : current;
+      case "reopen": return current === STATES.closed ? STATES.applied : current;
+      case "hide": return current === STATES.normal || current === STATES.saved ||
+        current === STATES.applied ? STATES.hidden : current;
       case "restore": return current === STATES.hidden ? STATES.normal : current;
       default: return current;
     }

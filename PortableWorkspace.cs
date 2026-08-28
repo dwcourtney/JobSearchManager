@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 namespace JobSearchManager;
@@ -13,7 +14,8 @@ public sealed record PortablePreferenceValues(
     PortableJobSource? JobSource,
     PortableSearchPreferences Search,
     PortableQualifications Qualifications,
-    PortableApplicationPreferences Application);
+    PortableApplicationPreferences Application,
+    PortableCompensationPreferences? Compensation = null);
 
 public sealed record PortableJobSource(
     string CompanyId,
@@ -30,23 +32,27 @@ public sealed record PortableSearchPreferences(
     bool HighlightIncludeKeywords);
 
 public sealed record PortableQualifications(
-    decimal MinimumSalary,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] decimal? MinimumSalary,
     UserProfile UserProfile,
     bool HideStrictEducationMismatch,
     bool HideStrictClearanceMismatch,
     bool HideStrictWorkAuthorizationMismatch);
 
+public sealed record PortableCompensationPreferences(decimal MinimumSalary);
+
 public sealed record PortableApplicationPreferences(
-    bool AutomaticCheckEnabled,
-    int AutomaticCheckIntervalMinutes,
-    string ThemeMode);
+    string? ThemeMode,
+    bool ExcludeStrongExtendedLocationRequirements = false);
 
 public sealed record PortableCuratedJob(
     string CompanyId,
     string StableId,
     string RequisitionId,
     string WorkflowState,
-    string ExternalPath);
+    string ExternalPath,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? CloseReason = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] DateTimeOffset? ClosedAt = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] DateTimeOffset? AppliedAt = null);
 
 internal sealed record PortableWorkspaceImport(
     ViewerSettings Settings,
@@ -58,7 +64,7 @@ internal sealed partial class PortableWorkspaceService
 {
     public const string FormatIdentifier = "JobSearchManagerBackup";
     internal const string LegacyFormatIdentifier = "WorkdayJobManagerWorkspace";
-    public const int CurrentVersion = 1;
+    public const int CurrentVersion = 3;
     public const int MaximumImportBytes = 1_000_000;
     private readonly CompanyCatalog _companies;
     private readonly JsonSerializerOptions _json = new(JsonSerializerDefaults.Web);
@@ -84,14 +90,18 @@ internal sealed partial class PortableWorkspaceService
 
         var curatedJobs = history.Jobs
             .Where(pair => JobWorkflowStates.Normalize(pair.Value.WorkflowState) is
-                JobWorkflowStates.Saved or JobWorkflowStates.Applied or JobWorkflowStates.Hidden)
+                JobWorkflowStates.Saved or JobWorkflowStates.Applied or
+                JobWorkflowStates.Closed or JobWorkflowStates.Hidden)
             .OrderBy(pair => pair.Key, StringComparer.Ordinal)
             .Select(pair => new PortableCuratedJob(
                 pair.Value.CompanyId,
                 pair.Key,
                 pair.Value.JobReqId,
                 JobWorkflowStates.Normalize(pair.Value.WorkflowState),
-                pair.Value.ExternalPath))
+                pair.Value.ExternalPath,
+                pair.Value.CloseReason,
+                pair.Value.ClosedAt,
+                pair.Value.AppliedAt))
             .ToArray();
 
         return new PortableWorkspaceDocument(
@@ -106,15 +116,15 @@ internal sealed partial class PortableWorkspaceService
                     settings.LocationMode,
                     settings.HighlightIncludeKeywords),
                 new PortableQualifications(
-                    settings.MinimumSalary ?? 0m,
+                    null,
                     settings.UserProfile ?? UserProfile.Default,
                     settings.HideStrictEducationMismatch,
                     settings.HideStrictClearanceMismatch,
                     settings.HideStrictWorkAuthorizationMismatch),
                 new PortableApplicationPreferences(
-                    settings.AutomaticCheckEnabled ?? true,
-                    settings.AutomaticCheckIntervalMinutes,
-                    settings.ThemeMode)),
+                    settings.ThemeMode,
+                    settings.ExcludeStrongExtendedLocationRequirements),
+                new PortableCompensationPreferences(settings.MinimumSalary ?? 0m)),
             curatedJobs);
     }
 
@@ -148,7 +158,7 @@ internal sealed partial class PortableWorkspaceService
             throw new WorkspaceImportException(
                 "The selected file is not a Job Search Manager workspace export.");
         }
-        if (document.Version != CurrentVersion)
+        if (document.Version is not (1 or 2 or CurrentVersion))
         {
             throw new WorkspaceImportException($"Workspace version {document.Version} is not supported.");
         }
@@ -169,21 +179,21 @@ internal sealed partial class PortableWorkspaceService
         }
 
         var qualifications = document.Preferences.Qualifications;
-        if (qualifications.MinimumSalary is < 0m or > 10_000_000m)
+        var minimumSalary = document.Preferences.Compensation?.MinimumSalary ??
+            qualifications.MinimumSalary ?? 0m;
+        if (minimumSalary is < 0m or > 10_000_000m)
         {
             throw new WorkspaceImportException("Minimum salary must be between 0 and 10,000,000.");
         }
         ValidateProfile(qualifications.UserProfile);
 
         var application = document.Preferences.Application;
-        if (application.AutomaticCheckIntervalMinutes is not (30 or 60 or 120 or 240 or 480))
-        {
-            throw new WorkspaceImportException("The automatic-check frequency is not supported.");
-        }
-        if (application.ThemeMode is not ("light" or "dark"))
+        if (!string.IsNullOrWhiteSpace(application.ThemeMode) &&
+            !ThemeModes.IsSupported(application.ThemeMode))
         {
             throw new WorkspaceImportException("The theme value is not supported.");
         }
+        var importedThemeMode = ThemeModes.Normalize(application.ThemeMode);
 
         PendingJobSource? pendingSource = null;
         if (document.Preferences.JobSource is { } importedSource)
@@ -243,17 +253,17 @@ internal sealed partial class PortableWorkspaceService
         {
             IncludeKeywords = search.IncludeKeywords.ToArray(),
             ExcludeKeywords = search.ExcludeKeywords.ToArray(),
-            MinimumSalary = qualifications.MinimumSalary,
+            MinimumSalary = minimumSalary,
             KeywordScope = search.KeywordScope,
             LocationMode = search.LocationMode,
             HighlightIncludeKeywords = search.HighlightIncludeKeywords,
-            AutomaticCheckEnabled = application.AutomaticCheckEnabled,
-            AutomaticCheckIntervalMinutes = application.AutomaticCheckIntervalMinutes,
-            ThemeMode = application.ThemeMode,
+            ThemeMode = importedThemeMode,
             UserProfile = qualifications.UserProfile,
             HideStrictEducationMismatch = qualifications.HideStrictEducationMismatch,
             HideStrictClearanceMismatch = qualifications.HideStrictClearanceMismatch,
             HideStrictWorkAuthorizationMismatch = qualifications.HideStrictWorkAuthorizationMismatch,
+            ExcludeStrongExtendedLocationRequirements =
+                application.ExcludeStrongExtendedLocationRequirements,
             PendingSource = pendingSource
         };
 
@@ -265,7 +275,10 @@ internal sealed partial class PortableWorkspaceService
                 : pair.Value with
                 {
                     WorkflowState = JobWorkflowStates.Normal,
-                    WorkflowStateChangedAt = now
+                    WorkflowStateChangedAt = now,
+                    AppliedAt = null,
+                    CloseReason = null,
+                    ClosedAt = null
                 },
             StringComparer.Ordinal);
         foreach (var job in importedJobs.Values)
@@ -279,7 +292,19 @@ internal sealed partial class PortableWorkspaceService
                     CompanyId = job.CompanyId,
                     HasBeenViewed = true,
                     WorkflowState = job.WorkflowState,
-                    WorkflowStateChangedAt = now
+                    WorkflowStateChangedAt = job.WorkflowState == JobWorkflowStates.Closed
+                        ? job.ClosedAt
+                        : now,
+                    AppliedAt = job.AppliedAt ??
+                        (job.WorkflowState is JobWorkflowStates.Applied or JobWorkflowStates.Closed
+                            ? now
+                            : null),
+                    CloseReason = job.WorkflowState == JobWorkflowStates.Closed
+                        ? job.CloseReason
+                        : null,
+                    ClosedAt = job.WorkflowState == JobWorkflowStates.Closed
+                        ? job.ClosedAt
+                        : null
                 };
             }
             else
@@ -291,14 +316,24 @@ internal sealed partial class PortableWorkspaceService
                     now,
                     true,
                     job.WorkflowState,
-                    now,
-                    CompanyId: job.CompanyId);
+                    job.WorkflowState == JobWorkflowStates.Closed ? job.ClosedAt : now,
+                    CompanyId: job.CompanyId,
+                    AppliedAt: job.AppliedAt ??
+                        (job.WorkflowState is JobWorkflowStates.Applied or JobWorkflowStates.Closed
+                            ? now
+                            : null),
+                    CloseReason: job.WorkflowState == JobWorkflowStates.Closed
+                        ? job.CloseReason
+                        : null,
+                    ClosedAt: job.WorkflowState == JobWorkflowStates.Closed
+                        ? job.ClosedAt
+                        : null);
             }
         }
 
         return new PortableWorkspaceImport(
             importedSettings,
-            new JobHistoryDocument(4, mergedHistory));
+            new JobHistoryDocument(5, mergedHistory));
     }
 
     private void ValidateCuratedJob(PortableCuratedJob? job)
@@ -310,9 +345,24 @@ internal sealed partial class PortableWorkspaceService
                 "The workspace file contains a curated job with an invalid company identity.");
         }
         if (job.WorkflowState is not
-            (JobWorkflowStates.Saved or JobWorkflowStates.Applied or JobWorkflowStates.Hidden))
+            (JobWorkflowStates.Saved or JobWorkflowStates.Applied or
+             JobWorkflowStates.Closed or JobWorkflowStates.Hidden))
         {
             throw new WorkspaceImportException("A curated job contains an invalid workflow state.");
+        }
+        var hasClosureMetadata = job.CloseReason is not null || job.ClosedAt is not null;
+        if (job.WorkflowState == JobWorkflowStates.Closed)
+        {
+            if (!JobCloseReasons.IsValid(job.CloseReason) || job.ClosedAt is null)
+            {
+                throw new WorkspaceImportException(
+                    "A closed job is missing a valid close reason or closed timestamp.");
+            }
+        }
+        else if (hasClosureMetadata)
+        {
+            throw new WorkspaceImportException(
+                "A non-closed job contains unexpected close metadata.");
         }
         var providerPathIsValid = _companies.TryGet(job.CompanyId, out var company) &&
             company.IsSmartRecruiters

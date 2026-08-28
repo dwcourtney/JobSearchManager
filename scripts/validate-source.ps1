@@ -13,27 +13,49 @@ $faviconPath = Join-Path $repo "wwwroot\favicon.ico"
 $appPath = Join-Path $repo "wwwroot\app.js"
 $countryOrderingPath = Join-Path $repo "wwwroot\country-ordering.js"
 $countryOrderingTestsPath = Join-Path $repo "Tests\country-ordering.tests.js"
+$companySelectorPath = Join-Path $repo "wwwroot\company-selector.js"
+$companySelectorTestsPath = Join-Path $repo "Tests\company-selector.tests.js"
 $postingTextPath = Join-Path $repo "wwwroot\job-posting-text.js"
 $postingTextTestsPath = Join-Path $repo "Tests\job-posting-text.tests.js"
 $workflowStatePath = Join-Path $repo "wwwroot\job-workflow-state.js"
 $workflowStateTestsPath = Join-Path $repo "Tests\job-workflow-state.tests.js"
+$unseenStatePath = Join-Path $repo "wwwroot\job-unseen-state.js"
+$unseenStateTestsPath = Join-Path $repo "Tests\job-unseen-state.tests.js"
+$jobCardBadgesTestsPath = Join-Path $repo "Tests\job-card-badges.tests.js"
+$closedStateTestsPath = Join-Path $repo "Tests\job-closed-state.tests.js"
 $sourceStatePath = Join-Path $repo "wwwroot\job-source-state.js"
 $sourceStateTestsPath = Join-Path $repo "Tests\job-source-state.tests.js"
 $credentialFitPath = Join-Path $repo "wwwroot\credential-fit.js"
 $credentialFitTestsPath = Join-Path $repo "Tests\credential-fit.tests.js"
+$clearanceFitPath = Join-Path $repo "wwwroot\clearance-fit.js"
+$clearanceFitTestsPath = Join-Path $repo "Tests\clearance-fit.tests.js"
+$qualificationSettingsTestsPath = Join-Path $repo "Tests\qualification-settings.tests.js"
+$themeSettingsTestsPath = Join-Path $repo "Tests\theme-settings.tests.js"
+$cacheStatusTestsPath = Join-Path $repo "Tests\cache-status.tests.js"
 
 foreach ($scriptPath in @(
     $appPath,
     $countryOrderingPath,
     $countryOrderingTestsPath,
+    $companySelectorPath,
+    $companySelectorTestsPath,
     $postingTextPath,
     $postingTextTestsPath,
     $workflowStatePath,
     $workflowStateTestsPath,
+    $unseenStatePath,
+    $unseenStateTestsPath,
+    $jobCardBadgesTestsPath,
+    $closedStateTestsPath,
     $sourceStatePath,
     $sourceStateTestsPath,
     $credentialFitPath,
-    $credentialFitTestsPath)) {
+    $credentialFitTestsPath,
+    $clearanceFitPath,
+    $clearanceFitTestsPath,
+    $qualificationSettingsTestsPath,
+    $themeSettingsTestsPath,
+    $cacheStatusTestsPath)) {
     & $NodePath --check $scriptPath
     if ($LASTEXITCODE -ne 0) {
         throw "JavaScript syntax validation failed for $scriptPath."
@@ -43,6 +65,11 @@ foreach ($scriptPath in @(
 & $NodePath $countryOrderingTestsPath
 if ($LASTEXITCODE -ne 0) {
     throw "Country-ordering runtime tests failed."
+}
+
+& $NodePath $companySelectorTestsPath
+if ($LASTEXITCODE -ne 0) {
+    throw "Company-selector category tests failed."
 }
 
 & $NodePath $postingTextTestsPath
@@ -55,6 +82,21 @@ if ($LASTEXITCODE -ne 0) {
     throw "Job-workflow state tests failed."
 }
 
+& $NodePath $unseenStateTestsPath
+if ($LASTEXITCODE -ne 0) {
+    throw "Unseen-job state tests failed."
+}
+
+& $NodePath $jobCardBadgesTestsPath
+if ($LASTEXITCODE -ne 0) {
+    throw "Job-card badge-path tests failed."
+}
+
+& $NodePath $closedStateTestsPath
+if ($LASTEXITCODE -ne 0) {
+    throw "Closed-state UI integration tests failed."
+}
+
 & $NodePath $sourceStateTestsPath
 if ($LASTEXITCODE -ne 0) {
     throw "Job-source state tests failed."
@@ -63,6 +105,26 @@ if ($LASTEXITCODE -ne 0) {
 & $NodePath $credentialFitTestsPath
 if ($LASTEXITCODE -ne 0) {
     throw "Credential-fit tests failed."
+}
+
+& $NodePath $clearanceFitTestsPath
+if ($LASTEXITCODE -ne 0) {
+    throw "Clearance-fit tests failed."
+}
+
+& $NodePath $qualificationSettingsTestsPath
+if ($LASTEXITCODE -ne 0) {
+    throw "Qualification-settings UI tests failed."
+}
+
+& $NodePath $themeSettingsTestsPath
+if ($LASTEXITCODE -ne 0) {
+    throw "Theme settings tests failed."
+}
+
+& $NodePath $cacheStatusTestsPath
+if ($LASTEXITCODE -ne 0) {
+    throw "Compact cache-status tests failed."
 }
 
 $styles = Get-Content -LiteralPath $stylesPath -Raw -Encoding UTF8
@@ -86,10 +148,10 @@ foreach ($webSource in @($index, $app, $styles)) {
 if ($app -match 'setInterval\s*\(' -or
     $app -match 'setTimeout\s*\(\s*loadSnapshot' -or
     $app -notmatch 'document\.visibilityState\s*===\s*"hidden"' -or
-    $app -notmatch 'automaticStatusRequestInFlight' -or
     $app -notmatch 'refreshStatusRequestInFlight' -or
-    $app -notmatch '/api/automatic-check/status' -or
-    $app -notmatch 'beginRefreshProgressPolling\(true\)') {
+    $app -notmatch 'beginRefreshProgressPolling\(true\)' -or
+    $app -match '/api/automatic-check/' -or
+    $index -match 'automatic-check-(?:enabled|interval|status)') {
     throw "Refresh polling must be visibility-aware, non-overlapping, and status-only until completion."
 }
 
@@ -125,17 +187,30 @@ foreach ($icon in $manifest.icons) {
 }
 
 $countryOrderingScript = $index.IndexOf('src="/country-ordering.js?v=2"')
+$companySelectorScript = $index.IndexOf('src="/company-selector.js?v=1"')
 $sourceStateScript = $index.IndexOf('src="/job-source-state.js"')
-$credentialFitScript = $index.IndexOf('src="/credential-fit.js"')
-$appScript = $index.IndexOf('src="/app.js?v=3"')
+$unseenStateScript = $index.IndexOf('src="/job-unseen-state.js?v=1"')
+$credentialFitScript = $index.IndexOf('src="/credential-fit.js?v=2"')
+$clearanceFitScript = $index.IndexOf('src="/clearance-fit.js?v=1"')
+$appScript = $index.IndexOf('src="/app.js?v=19"')
 if ($countryOrderingScript -lt 0 -or $appScript -le $countryOrderingScript) {
     throw "The versioned country-ordering.js asset must load before app.js."
+}
+if ($companySelectorScript -lt 0 -or $appScript -le $companySelectorScript -or
+    $app -notmatch '\bCompanySelector\.groupCompanies\b') {
+    throw "The metadata-driven company selector must load before app.js."
 }
 if ($sourceStateScript -lt 0 -or $appScript -le $sourceStateScript) {
     throw "job-source-state.js must load before app.js."
 }
+if ($unseenStateScript -lt 0 -or $appScript -le $unseenStateScript) {
+    throw "job-unseen-state.js must load before app.js."
+}
 if ($credentialFitScript -lt 0 -or $appScript -le $credentialFitScript) {
     throw "credential-fit.js must load before app.js."
+}
+if ($clearanceFitScript -lt 0 -or $appScript -le $clearanceFitScript) {
+    throw "clearance-fit.js must load before app.js."
 }
 if ($countryOrdering -notmatch 'globalThis\.CountryOrdering\s*=' -or
     $app -notmatch '\bCountryOrdering\.orderCountryFacets\b' -or
@@ -233,12 +308,13 @@ $requiredSettingsControls = @{
         "location-search", "selected-location-summary", "location-groups", "apply-location"
     )
     "Qualifications" = @(
-        "minimum-pay", "education-level", "clearance-profile-level", "public-trust-profile",
+        "education-level", "clearance-profile-level", "public-trust-profile",
         "us-work-authorization-status", "sponsorship-profile", "hide-strict-education-mismatch",
-        "hide-strict-clearance-mismatch", "hide-strict-work-authorization-mismatch"
+        "hide-strict-clearance-mismatch", "hide-strict-work-authorization-mismatch",
+        "credential-inventory-status", "credential-search", "held-credentials"
     )
     "Preferences" = @(
-        "automatic-check-enabled", "automatic-check-interval", "automatic-check-status",
+        "minimum-pay",
         "theme-mode", "import-workspace-button", "export-workspace-button",
         "import-workspace-file", "reset-workspace-button"
     )
@@ -262,9 +338,19 @@ if ($settingsPanelMarkup["Qualifications"] -notmatch 'Changes on this tab are sa
     $settingsPanelMarkup["Preferences"] -notmatch 'Changes on this tab are saved automatically\.') {
     throw "The auto-save note is missing from My Qualifications or My Preferences."
 }
-if ($settingsPanelMarkup["Qualifications"] -notmatch 'id="screening-heading"' -or
-    $settingsPanelMarkup["Preferences"] -match 'id="screening-heading"') {
-    throw "Screening Rules is not contained exclusively in My Qualifications."
+if ($settingsPanelMarkup["Qualifications"] -match 'id="screening-heading"' -or
+    $settingsPanelMarkup["Qualifications"] -match '>\s*Screening Rules\s*<') {
+    throw "The obsolete standalone Screening Rules section is still present."
+}
+if ($settingsPanelMarkup["Qualifications"] -notmatch 'id="qualification-basics-tab"' -or
+    $settingsPanelMarkup["Qualifications"] -notmatch 'id="qualification-credentials-tab"' -or
+    $settingsPanelMarkup["Qualifications"] -match 'id="minimum-pay"' -or
+    $settingsPanelMarkup["Preferences"] -notmatch 'id="compensation-heading"') {
+    throw "Qualification subtabs or Compensation placement is incomplete."
+}
+if ($settingsPanelMarkup["Preferences"] -notmatch
+    'locations such as Antarctica, Guam, or Ramstein AFB in Germany') {
+    throw "Deployment Filtering help is missing verified corpus examples."
 }
 
 if ($settingsPanelMarkup["Job Search"] -notmatch '>\s*Apply Job Source\s*<' -or

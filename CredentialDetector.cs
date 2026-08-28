@@ -79,6 +79,7 @@ public sealed class CredentialDetector
             }
 
             var hasCredentialAlternative = segmentMatches.Count > 1 && AlternativeConnectorRegex.IsMatch(segment);
+            var alternativeGroup = hasCredentialAlternative ? $"segment-{segmentIndex}" : null;
             foreach (var (credential, match) in segmentMatches)
             {
                 var postHireAllowed = PostHireAcquisitionRegex.IsMatch(segment);
@@ -97,7 +98,8 @@ public sealed class CredentialDetector
                     postHireAllowed,
                     CreateEvidence(segment, match.Index),
                     segmentIndex,
-                    match.Index));
+                    match.Index,
+                    alternativeGroup));
             }
 
             unknownRequirements.AddRange(ExtractUnknownRequirements(segment, segmentMatches));
@@ -167,7 +169,8 @@ public sealed class CredentialDetector
             string.IsNullOrWhiteSpace(definition.Family) ? definition.Category : definition.Family,
             definition.LegacyNames,
             definition.EquivalentCredentialIds,
-            definition.RelatedCredentialIds);
+            definition.RelatedCredentialIds,
+            strongest.AlternativeGroup);
     }
 
     private IReadOnlyList<UnknownCredentialRequirement> ExtractUnknownRequirements(
@@ -358,7 +361,8 @@ public sealed class CredentialDetector
         bool PostHireAcquisitionAllowed,
         string Evidence,
         int SegmentIndex,
-        int MatchIndex);
+        int MatchIndex,
+        string? AlternativeGroup);
 
     private static readonly Regex BlockTagRegex = CreateRegex(
         @"</?(?:p|li|ul|ol|div|h[1-6]|br|section|article|table|tr|td|th)[^>]*>");

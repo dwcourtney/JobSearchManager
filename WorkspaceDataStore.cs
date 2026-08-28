@@ -71,9 +71,17 @@ public static class WorkspaceDataFiles
     };
 
     public static string CompanyCacheRelativePath(string companyId, string queryFingerprint) =>
-        ScopedRelativePath("job-caches", companyId, queryFingerprint);
+        ScopedRelativePath("shared/job-caches", companyId, queryFingerprint);
 
     public static string SourceStatusRelativePath(string companyId, string queryFingerprint) =>
+        ScopedRelativePath("shared/source-status", companyId, queryFingerprint);
+
+    public static string LegacyWorkspaceCompanyCacheRelativePath(
+        string companyId, string queryFingerprint) =>
+        ScopedRelativePath("job-caches", companyId, queryFingerprint);
+
+    public static string LegacyWorkspaceSourceStatusRelativePath(
+        string companyId, string queryFingerprint) =>
         ScopedRelativePath("source-status", companyId, queryFingerprint);
 
     private static string ScopedRelativePath(string root, string companyId, string queryFingerprint)
@@ -350,8 +358,8 @@ public sealed class FileWorkspaceDataStore : IWorkspaceDataStore
     }
 
     private static bool IsCompactDocument(string relativePath) =>
-        relativePath.StartsWith("job-caches/", StringComparison.Ordinal) ||
-        relativePath.StartsWith("source-status/", StringComparison.Ordinal);
+        relativePath.StartsWith("shared/job-caches/", StringComparison.Ordinal) ||
+        relativePath.StartsWith("shared/source-status/", StringComparison.Ordinal);
 
     public async Task<bool> DeleteAsync(
         WorkspaceDataFile file,
@@ -376,17 +384,9 @@ public sealed class FileWorkspaceDataStore : IWorkspaceDataStore
 
     public async Task<int> DeleteAllAsync(CancellationToken cancellationToken = default)
     {
-        var relativePaths = Enum.GetValues<WorkspaceDataFile>()
+        var relativePaths = new[] { WorkspaceDataFile.Settings, WorkspaceDataFile.JobHistory }
             .Select(WorkspaceDataFiles.FileName)
             .ToList();
-        foreach (var directoryName in new[] { "job-caches", "source-status" })
-        {
-            var directory = DescribeRelative(directoryName);
-            if (!Directory.Exists(directory)) continue;
-            relativePaths.AddRange(Directory.GetFiles(directory, "*.json", SearchOption.AllDirectories)
-                .Select(path => Path.GetRelativePath(Description, path)
-                    .Replace(Path.DirectorySeparatorChar, '/')));
-        }
         relativePaths = relativePaths.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToList();
         var acquired = new List<SemaphoreSlim>(relativePaths.Count);
         try
@@ -406,23 +406,6 @@ public sealed class FileWorkspaceDataStore : IWorkspaceDataStore
                 File.Delete(path);
                 Diagnostics.RecordDelete();
                 deleted++;
-            }
-            foreach (var directoryName in new[] { "job-caches", "source-status" })
-            {
-                var directory = DescribeRelative(directoryName);
-                if (!Directory.Exists(directory)) continue;
-                if (!Directory.EnumerateFileSystemEntries(directory).Any())
-                {
-                    Directory.Delete(directory);
-                }
-                else
-                {
-                    foreach (var child in Directory.GetDirectories(directory))
-                    {
-                        if (!Directory.EnumerateFileSystemEntries(child).Any()) Directory.Delete(child);
-                    }
-                    if (!Directory.EnumerateFileSystemEntries(directory).Any()) Directory.Delete(directory);
-                }
             }
             return deleted;
         }

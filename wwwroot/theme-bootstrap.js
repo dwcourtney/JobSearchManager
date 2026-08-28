@@ -6,7 +6,7 @@ try {
   const hint = localStorage.getItem("job-search-manager-theme-hint") ||
     localStorage.getItem("workday-job-manager-theme-hint") ||
     localStorage.getItem("leidos-jobs-theme-hint");
-  if (hint === "light" || hint === "dark") {
+  if (["light", "dark", "nord-polar-night", "nord-snow-storm", "dracula"].includes(hint)) {
     document.documentElement.dataset.theme = hint;
   }
 } catch {

@@ -15,6 +15,7 @@ public sealed class JobCatalog
     private readonly RemoteWorkDetector _remoteWorkDetector;
     private readonly CompanyCatalog _companyCatalog;
     private readonly JobSourceOptions _options;
+    private readonly SharedSourceRefreshCoordinator _sharedSourceRefreshCoordinator;
     private readonly object _gate = new();
     private readonly SemaphoreSlim _historyGate = new(1, 1);
     private readonly SemaphoreSlim _sourceOperationGate = new(1, 1);
@@ -36,7 +37,8 @@ public sealed class JobCatalog
         WorkAuthorizationDetector workAuthorizationDetector,
         RemoteWorkDetector remoteWorkDetector,
         CompanyCatalog companyCatalog,
-        IOptions<JobSourceOptions> options)
+        IOptions<JobSourceOptions> options,
+        SharedSourceRefreshCoordinator? sharedSourceRefreshCoordinator = null)
     {
         _jobSourceClient = jobSourceClient;
         _stateStore = stateStore;
@@ -47,6 +49,7 @@ public sealed class JobCatalog
         _remoteWorkDetector = remoteWorkDetector;
         _companyCatalog = companyCatalog;
         _options = options.Value;
+        _sharedSourceRefreshCoordinator = sharedSourceRefreshCoordinator ?? new();
     }
 
     public JobsSnapshot Snapshot
@@ -115,11 +118,12 @@ public sealed class JobCatalog
                 cache.DetailFailureCount,
                 query);
             _logger.LogInformation(
-                "Updated cached query/derived analysis (credential catalog {CredentialCatalogVersion}, academic analysis {AcademicAnalysisVersion}, work-authorization analysis {WorkAuthorizationAnalysisVersion}, remote-work analysis {RemoteWorkAnalysisVersion}).",
+                "Updated cached query/derived analysis (credential catalog {CredentialCatalogVersion}, academic analysis {AcademicAnalysisVersion}, work-authorization analysis {WorkAuthorizationAnalysisVersion}, remote-work analysis {RemoteWorkAnalysisVersion}, extended-location analysis {ExtendedLocationAnalysisVersion}).",
                 _credentialDetector.CatalogVersion,
                 _academicQualificationDetector.AnalysisVersion,
                 WorkAuthorizationDetector.CurrentAnalysisVersion,
-                RemoteWorkDetector.CurrentAnalysisVersion);
+                RemoteWorkDetector.CurrentAnalysisVersion,
+                ExtendedLocationRequirementDetector.CurrentAnalysisVersion);
         }
 
         var effectiveLastRefreshed = sourceStatus?.LastSuccessfulRefreshUtc ??
@@ -137,7 +141,7 @@ public sealed class JobCatalog
         lock (_gate)
         {
             _cachedJobs = cachedJobs;
-            var availableJobs = cachedJobs.Where(job => job.IsSourceAvailable).ToArray();
+            var availableJobs = VisibleJobs(cachedJobs);
             _snapshot = new JobsSnapshot(
                 availableJobs,
                 availableJobs.Length,
@@ -149,6 +153,7 @@ public sealed class JobCatalog
                 GetNewJobIds(availableJobs),
                 query,
                 GetJobStates(availableJobs),
+                GetJobClosures(availableJobs),
                 null);
         }
 
@@ -159,18 +164,18 @@ public sealed class JobCatalog
     }
 
     public Task<JobsSnapshot> RefreshAsync()
-        => RefreshAsync(_currentQuery, automaticCheck: false, CancellationToken.None);
+        => RefreshAsync(_currentQuery, CancellationToken.None);
 
     public Task<JobsSnapshot> RefreshAsync(CancellationToken cancellationToken)
-        => RefreshAsync(_currentQuery, automaticCheck: false, cancellationToken);
+        => RefreshAsync(_currentQuery, cancellationToken);
 
     public Task<JobsSnapshot> RefreshAsync(JobSourceQuery query)
-        => RefreshAsync(query, automaticCheck: false, CancellationToken.None);
+        => RefreshAsync(query, CancellationToken.None);
 
     public Task<JobsSnapshot> RefreshAsync(
         JobSourceQuery query,
         CancellationToken cancellationToken)
-        => RefreshAsync(query, automaticCheck: false, cancellationToken);
+        => RefreshCoreEntryAsync(query, cancellationToken);
 
     public async Task<JobsSnapshot> SwitchSourceAsync(
         JobSourceQuery query,
@@ -200,7 +205,7 @@ public sealed class JobCatalog
             if (cacheMatches && lastRefreshed >= freshAfter)
             {
                 var cachedJobs = CanonicalizeStableIdentities(cache!.Jobs, "recent source cache");
-                var availableJobs = cachedJobs.Where(job => job.IsSourceAvailable).ToArray();
+                var availableJobs = VisibleJobs(cachedJobs);
                 var snapshot = new JobsSnapshot(
                     availableJobs,
                     availableJobs.Length,
@@ -212,6 +217,7 @@ public sealed class JobCatalog
                     GetNewJobIds(availableJobs),
                     query,
                     GetJobStates(availableJobs),
+                    GetJobClosures(availableJobs),
                     null,
                     new RefreshMetrics(0, 0, cachedJobs.Count, 0, 0, 0, 0, 0,
                         status?.ListingsTruncated ?? false, 0));
@@ -235,9 +241,8 @@ public sealed class JobCatalog
         return await RefreshAsync(query, cancellationToken);
     }
 
-    private Task<JobsSnapshot> RefreshAsync(
+    private Task<JobsSnapshot> RefreshCoreEntryAsync(
         JobSourceQuery query,
-        bool automaticCheck,
         CancellationToken cancellationToken)
     {
         var company = _companyCatalog.Get(query.CompanyId);
@@ -274,48 +279,9 @@ public sealed class JobCatalog
                     RefreshProgress = new RefreshProgress("listings", 0, null)
                 };
             _activeRefresh = RefreshCoreAsync(
-                query, previousQuery, previousSnapshot, automaticCheck, cancellationToken);
+                query, previousQuery, previousSnapshot, cancellationToken);
             return _activeRefresh;
         }
-    }
-
-    public async Task<AutomaticCheckResult> CheckForUnknownJobsAsync(
-        CancellationToken cancellationToken = default)
-    {
-        HashSet<string> knownIds;
-        JobSourceQuery query;
-        lock (_gate)
-        {
-            if (_snapshot.IsRefreshing)
-            {
-                return new AutomaticCheckResult(false, true, 0, [], false);
-            }
-            query = _currentQuery;
-            knownIds = _history.Jobs.Keys.ToHashSet(StringComparer.Ordinal);
-        }
-
-        Task<JobsSnapshot> refresh;
-        try
-        {
-            refresh = RefreshAsync(query, automaticCheck: true, cancellationToken);
-        }
-        catch (InvalidOperationException)
-        {
-            return new AutomaticCheckResult(false, true, 0, [], false);
-        }
-
-        var refreshed = await refresh.WaitAsync(cancellationToken);
-        var unknownStableIds = refreshed.Jobs
-            .Select(job => job.StableId)
-            .Where(id => !knownIds.Contains(id))
-            .Distinct(StringComparer.Ordinal)
-            .ToArray();
-        return new AutomaticCheckResult(
-            true,
-            false,
-            refreshed.Metrics?.ListingsFetched ?? refreshed.TotalJobs,
-            unknownStableIds,
-            refreshed.Error is null && unknownStableIds.Length > 0);
     }
 
     public async Task<JobRecord?> GetJobDetailAsync(
@@ -337,9 +303,31 @@ public sealed class JobCatalog
             }
             if (job is null) return null;
 
+            var sourceKey = $"{query.CompanyId}:{_stateStore.QueryFingerprint(query)}";
+            await using var sharedSourceLease = await _sharedSourceRefreshCoordinator.AcquireAsync(
+                sourceKey, cancellationToken);
+            var sharedDocument = await _stateStore.LoadJobsCacheAsync(query);
+            var sharedJobs = sharedDocument?.Query?.IsEquivalentTo(query, _companyCatalog) == true
+                ? CanonicalizeStableIdentities(sharedDocument.Jobs, "shared detail cache")
+                : _cachedJobs;
+            job = sharedJobs.FirstOrDefault(item =>
+                string.Equals(item.StableId, stableId, StringComparison.Ordinal)) ?? job;
+
             if (!string.IsNullOrWhiteSpace(job.DescriptionHtml) &&
                 _jobSourceClient.IsAnalysisCurrent(job))
             {
+                lock (_gate)
+                {
+                    _cachedJobs = sharedJobs;
+                    var available = VisibleJobs(sharedJobs);
+                    _snapshot = _snapshot with
+                    {
+                        Jobs = available,
+                        TotalJobs = available.Length,
+                        JobStates = GetJobStates(available),
+                        JobClosures = GetJobClosures(available)
+                    };
+                }
                 return job;
             }
 
@@ -357,17 +345,18 @@ public sealed class JobCatalog
             IReadOnlyList<JobRecord> cache;
             lock (_gate)
             {
-                _cachedJobs = _cachedJobs
+                _cachedJobs = sharedJobs
                     .Select(item => string.Equals(item.StableId, stableId, StringComparison.Ordinal)
                         ? updated
                         : item)
                     .ToArray();
-                var available = _cachedJobs.Where(item => item.IsSourceAvailable).ToArray();
+                var available = VisibleJobs(_cachedJobs);
                 _snapshot = _snapshot with
                 {
                     Jobs = available,
                     TotalJobs = available.Length,
-                    JobStates = GetJobStates(available)
+                    JobStates = GetJobStates(available),
+                    JobClosures = GetJobClosures(available)
                 };
                 cache = _cachedJobs;
             }
@@ -449,12 +438,12 @@ public sealed class JobCatalog
 
             if (!_history.Jobs.TryGetValue(stableId, out var entry))
             {
-                var now = DateTimeOffset.UtcNow;
+                var createdAt = DateTimeOffset.UtcNow;
                 entry = new JobHistoryEntry(
                     currentJob.RequisitionId,
                     currentJob.ExternalPath,
-                    now,
-                    now,
+                    createdAt,
+                    createdAt,
                     false,
                     CompanyId: currentJob.CompanyId);
             }
@@ -485,9 +474,16 @@ public sealed class JobCatalog
         }
     }
 
-    public async Task<bool> SetWorkflowStateAsync(string stableId, string workflowState)
+    public async Task<bool> SetWorkflowStateAsync(
+        string stableId,
+        string workflowState,
+        string? closeReason = null)
     {
         if (string.IsNullOrWhiteSpace(stableId) || !JobWorkflowStates.IsValid(workflowState))
+        {
+            return false;
+        }
+        if (workflowState == JobWorkflowStates.Closed && !JobCloseReasons.IsValid(closeReason))
         {
             return false;
         }
@@ -509,12 +505,12 @@ public sealed class JobCatalog
 
             if (!_history.Jobs.TryGetValue(stableId, out var entry))
             {
-                var now = DateTimeOffset.UtcNow;
+                var createdAt = DateTimeOffset.UtcNow;
                 entry = new JobHistoryEntry(
                     currentJob.RequisitionId,
                     currentJob.ExternalPath,
-                    now,
-                    now,
+                    createdAt,
+                    createdAt,
                     false,
                     CompanyId: currentJob.CompanyId);
             }
@@ -529,16 +525,27 @@ public sealed class JobCatalog
                 return true;
             }
 
+            var now = DateTimeOffset.UtcNow;
+            var currentState = JobWorkflowStates.Normalize(entry.WorkflowState);
+            var appliedAt = workflowState switch
+            {
+                JobWorkflowStates.Closed => entry.AppliedAt ?? entry.WorkflowStateChangedAt ?? now,
+                JobWorkflowStates.Applied when currentState == JobWorkflowStates.Closed => entry.AppliedAt,
+                JobWorkflowStates.Applied => now,
+                _ => null
+            };
             _history.Jobs[stableId] = entry with
             {
                 WorkflowState = workflowState,
-                WorkflowStateChangedAt = DateTimeOffset.UtcNow,
+                WorkflowStateChangedAt = now,
                 Dismissed = false,
                 DismissedAt = null,
                 Saved = false,
                 SavedAt = null,
                 Applied = false,
-                AppliedAt = null
+                AppliedAt = appliedAt,
+                CloseReason = workflowState == JobWorkflowStates.Closed ? closeReason : null,
+                ClosedAt = workflowState == JobWorkflowStates.Closed ? now : null
             };
             await _stateStore.SaveJobHistoryAsync(CloneHistory());
 
@@ -546,7 +553,8 @@ public sealed class JobCatalog
             {
                 _snapshot = _snapshot with
                 {
-                    JobStates = GetJobStates(_snapshot.Jobs)
+                    JobStates = GetJobStates(_snapshot.Jobs),
+                    JobClosures = GetJobClosures(_snapshot.Jobs)
                 };
             }
 
@@ -578,7 +586,8 @@ public sealed class JobCatalog
                 _snapshot = _snapshot with
                 {
                     NewJobIds = GetNewJobIds(_snapshot.Jobs),
-                    JobStates = GetJobStates(_snapshot.Jobs)
+                    JobStates = GetJobStates(_snapshot.Jobs),
+                    JobClosures = GetJobClosures(_snapshot.Jobs)
                 };
             }
         }
@@ -592,19 +601,32 @@ public sealed class JobCatalog
         JobSourceQuery query,
         JobSourceQuery previousQuery,
         JobsSnapshot previousSnapshot,
-        bool automaticCheck,
         CancellationToken cancellationToken)
     {
         await _sourceOperationGate.WaitAsync(cancellationToken);
         try
         {
             var company = _companyCatalog.Get(query.CompanyId);
+            var observedStatus = await _stateStore.LoadSourceStatusAsync(query);
+            var sourceKey = $"{company.Id}:{_stateStore.QueryFingerprint(query)}";
+            await using var sharedSourceLease = await _sharedSourceRefreshCoordinator.AcquireAsync(
+                sourceKey, cancellationToken);
+            var currentStatus = await _stateStore.LoadSourceStatusAsync(query);
+            if (currentStatus?.LastSuccessfulRefreshUtc is { } currentRefresh &&
+                currentRefresh > (observedStatus?.LastSuccessfulRefreshUtc ?? DateTimeOffset.MinValue))
+            {
+                var currentCache = await _stateStore.LoadJobsCacheAsync(query);
+                if (currentCache?.Query?.IsEquivalentTo(query, _companyCatalog) == true)
+                {
+                    return await ApplySharedCacheAfterConcurrentRefreshAsync(
+                        query, currentCache, currentStatus, cancellationToken);
+                }
+            }
             _logger.LogInformation(
                 "Refreshing the {Company} job snapshot for country {Country} and locations {Locations}.",
                 company.DisplayName,
                 query.CountryLabel,
                 DescribeLocations(query));
-            var filterSettings = await _stateStore.LoadSettingsAsync();
             var cachedDocument = await _stateStore.LoadJobsCacheAsync(query);
             var cacheWasPresent = cachedDocument?.Query?.IsEquivalentTo(query, _companyCatalog) == true;
             var cachedJobs = cacheWasPresent
@@ -616,8 +638,7 @@ public sealed class JobCatalog
                 progress => ReportRefreshProgress(query, progress),
                 cancellationToken,
                 cachedJobs: cachedJobs,
-                automaticCheck: automaticCheck,
-                filterSettings: filterSettings);
+                filterSettings: null);
             var result = fetched with
             {
                 Jobs = CanonicalizeStableIdentities(fetched.Jobs, "provider refresh")
@@ -655,16 +676,16 @@ public sealed class JobCatalog
                     result.DetailFailureCount,
                     query);
             }
-            if (!automaticCheck || cacheChanged || historyChanged)
-            {
-                await _stateStore.SaveSourceStatusAsync(
-                    query,
-                    refreshedAt,
-                    result.DetailFailureCount,
-                    result.Metrics);
-            }
+            // Source status represents the last successful provider pass, not merely
+            // the last time job content changed. This small write also lets an automatic
+            // check survive an App Service recycle without making cache/history mutable.
+            await _stateStore.SaveSourceStatusAsync(
+                query,
+                refreshedAt,
+                result.DetailFailureCount,
+                result.Metrics);
 
-            var availableJobs = result.Jobs.Where(job => job.IsSourceAvailable).ToArray();
+            var availableJobs = VisibleJobs(result.Jobs);
             var refreshed = new JobsSnapshot(
                 availableJobs,
                 availableJobs.Length,
@@ -676,6 +697,7 @@ public sealed class JobCatalog
                 GetNewJobIds(availableJobs),
                 query,
                 GetJobStates(availableJobs),
+                GetJobClosures(availableJobs),
                 null,
                 result.Metrics);
 
@@ -728,6 +750,58 @@ public sealed class JobCatalog
         {
             _sourceOperationGate.Release();
         }
+    }
+
+    private async Task<JobsSnapshot> ApplySharedCacheAfterConcurrentRefreshAsync(
+        JobSourceQuery query,
+        JobsCacheDocument cache,
+        SourceStatusDocument status,
+        CancellationToken cancellationToken)
+    {
+        var cachedJobs = CanonicalizeStableIdentities(cache.Jobs, "shared concurrent refresh");
+        var historyChanged = false;
+        await _historyGate.WaitAsync(cancellationToken);
+        try
+        {
+            historyChanged = ReconcileHistory(
+                cachedJobs.Where(job => job.IsSourceAvailable).ToArray(),
+                status.LastSuccessfulRefreshUtc,
+                updateKnownLastSeen: true);
+            if (historyChanged)
+            {
+                await _stateStore.SaveJobHistoryAsync(CloneHistory());
+            }
+        }
+        finally
+        {
+            _historyGate.Release();
+        }
+
+        var availableJobs = VisibleJobs(cachedJobs);
+        var snapshot = new JobsSnapshot(
+            availableJobs,
+            availableJobs.Length,
+            status.LastSuccessfulRefreshUtc,
+            false,
+            null,
+            status.DetailFailureCount,
+            true,
+            GetNewJobIds(availableJobs),
+            query,
+            GetJobStates(availableJobs),
+            GetJobClosures(availableJobs),
+            null,
+            new RefreshMetrics(0, 0, cachedJobs.Count, 0, 0, 0, 0, 0,
+                status.ListingsTruncated, 0));
+        lock (_gate)
+        {
+            _cachedJobs = cachedJobs;
+            _snapshot = snapshot;
+        }
+        _logger.LogInformation(
+            "Reused a shared {Company} refresh completed by another workspace; no duplicate provider requests were made.",
+            _companyCatalog.Get(query.CompanyId).DisplayName);
+        return snapshot;
     }
 
     private async Task<IReadOnlyList<JobRecord>> CachedJobsForQueryAsync(JobSourceQuery query)
@@ -930,6 +1004,28 @@ public sealed class JobCatalog
             job => _history.Jobs.TryGetValue(job.StableId, out var entry)
                 ? JobWorkflowStates.Normalize(entry.WorkflowState)
                 : JobWorkflowStates.Normal,
+            StringComparer.Ordinal);
+
+    private JobRecord[] VisibleJobs(IReadOnlyList<JobRecord> jobs) => jobs
+        .Where(job => job.IsSourceAvailable || IsUserMaintained(job.StableId))
+        .ToArray();
+
+    private bool IsUserMaintained(string stableId) =>
+        _history.Jobs.TryGetValue(stableId, out var entry) &&
+        JobWorkflowStates.Normalize(entry.WorkflowState) is
+            JobWorkflowStates.Saved or JobWorkflowStates.Applied or JobWorkflowStates.Closed;
+
+    private Dictionary<string, JobClosureInfo> GetJobClosures(IReadOnlyList<JobRecord> jobs) => jobs
+        .Where(job => _history.Jobs.TryGetValue(job.StableId, out var entry) &&
+            JobWorkflowStates.Normalize(entry.WorkflowState) == JobWorkflowStates.Closed &&
+            JobCloseReasons.IsValid(entry.CloseReason) && entry.ClosedAt is not null)
+        .ToDictionary(
+            job => job.StableId,
+            job =>
+            {
+                var entry = _history.Jobs[job.StableId];
+                return new JobClosureInfo(entry.CloseReason!, entry.ClosedAt!.Value, entry.AppliedAt);
+            },
             StringComparer.Ordinal);
 
     private JobHistoryDocument CloneHistory() => _history with

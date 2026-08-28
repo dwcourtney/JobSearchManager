@@ -7,10 +7,10 @@ const tests = [
   ["every job resolves to exactly one canonical state", () => {
     const states = new Map([
       ["normal", "normal"], ["saved", "saved"], ["applied", "applied"],
-      ["hidden", "hidden"], ["invalid", "not-a-state"]
+      ["closed", "closed"], ["hidden", "hidden"], ["invalid", "not-a-state"]
     ]);
     for (const id of states.keys()) {
-      const memberships = ["normal", "saved", "applied", "hidden"]
+      const memberships = ["normal", "saved", "applied", "closed", "hidden"]
         .filter(tab => workflow.belongsToTab(id, tab, states));
       assert.equal(memberships.length, 1);
     }
@@ -21,21 +21,27 @@ const tests = [
     assert.equal(workflow.belongsToTab("job", "normal", states), true);
     assert.equal(workflow.belongsToTab("job", "saved", states), false);
     assert.equal(workflow.belongsToTab("job", "applied", states), false);
+    assert.equal(workflow.belongsToTab("job", "closed", states), false);
     assert.equal(workflow.belongsToTab("job", "hidden", states), false);
   }],
   ["Saved appears only in Saved", () => {
     const states = new Map([["job", "saved"]]);
-    assert.deepEqual(["normal", "saved", "applied", "hidden"]
+    assert.deepEqual(["normal", "saved", "applied", "closed", "hidden"]
       .filter(tab => workflow.belongsToTab("job", tab, states)), ["saved"]);
   }],
   ["Applied appears only in Applied", () => {
     const states = new Map([["job", "applied"]]);
-    assert.deepEqual(["normal", "saved", "applied", "hidden"]
+    assert.deepEqual(["normal", "saved", "applied", "closed", "hidden"]
       .filter(tab => workflow.belongsToTab("job", tab, states)), ["applied"]);
+  }],
+  ["Closed appears only in Closed", () => {
+    const states = new Map([["job", "closed"]]);
+    assert.deepEqual(["normal", "saved", "applied", "closed", "hidden"]
+      .filter(tab => workflow.belongsToTab("job", tab, states)), ["closed"]);
   }],
   ["Hidden appears only in Hidden", () => {
     const states = new Map([["job", "hidden"]]);
-    assert.deepEqual(["normal", "saved", "applied", "hidden"]
+    assert.deepEqual(["normal", "saved", "applied", "closed", "hidden"]
       .filter(tab => workflow.belongsToTab("job", tab, states)), ["hidden"]);
   }],
   ["Save moves Normal to Saved", () => {
@@ -53,6 +59,14 @@ const tests = [
   ["Undo Applied moves Applied to Normal", () => {
     assert.equal(workflow.transition("applied", "unapply"), "normal");
   }],
+  ["Close moves only Applied to Closed", () => {
+    assert.equal(workflow.transition("applied", "close"), "closed");
+    assert.equal(workflow.transition("normal", "close"), "normal");
+    assert.equal(workflow.transition("saved", "close"), "saved");
+  }],
+  ["Reopen moves Closed to Applied", () => {
+    assert.equal(workflow.transition("closed", "reopen"), "applied");
+  }],
   ["Hide moves Normal to Hidden", () => {
     assert.equal(workflow.transition("normal", "hide"), "hidden");
   }],
@@ -69,6 +83,8 @@ const tests = [
     assert.equal(workflow.transition("applied", "save"), "applied");
     assert.equal(workflow.transition("hidden", "apply"), "hidden");
     assert.equal(workflow.transition("hidden", "save"), "hidden");
+    assert.equal(workflow.transition("closed", "hide"), "closed");
+    assert.equal(workflow.transition("closed", "unapply"), "closed");
   }]
 ];
 

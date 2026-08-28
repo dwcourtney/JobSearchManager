@@ -9,7 +9,6 @@ public sealed class JobSourceOptions
     public int RequestTimeoutSeconds { get; init; } = 30;
     public int MaximumListingPages { get; init; } = 200;
     public int MaximumDetailRequestsPerRefresh { get; init; } = 200;
-    public int MaximumAutomaticDetailRequests { get; init; } = 50;
     public int MaximumRevalidationsPerRefresh { get; init; } = 25;
     public int DetailReuseHours { get; init; } = 168;
     public int SourceSwitchCacheFreshnessMinutes { get; init; } = 15;
@@ -219,7 +218,8 @@ public sealed record JobRecord(
     string? CompressedDescriptionHtml = null,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     string? IdentityDiscriminator = null,
-    IReadOnlyList<UnknownCredentialRequirement>? UnknownCredentialRequirements = null)
+    IReadOnlyList<UnknownCredentialRequirement>? UnknownCredentialRequirements = null,
+    ExtendedLocationRequirementAnalysis? ExtendedLocationRequirement = null)
 {
     public string StableId => $"{CompanyId}:{(!string.IsNullOrWhiteSpace(RequisitionId)
         ? RequisitionId
@@ -244,7 +244,8 @@ public sealed record CredentialMatch(
     string Family = "",
     IReadOnlyList<string>? LegacyNames = null,
     IReadOnlyList<string>? EquivalentCredentialIds = null,
-    IReadOnlyList<string>? RelatedCredentialIds = null);
+    IReadOnlyList<string>? RelatedCredentialIds = null,
+    string? AlternativeGroup = null);
 
 public sealed record UnknownCredentialRequirement(
     string Name,
@@ -303,6 +304,20 @@ public sealed record RemoteWorkSignal(
     string Reason,
     string Evidence);
 
+public sealed record ExtendedLocationRequirementAnalysis(
+    string Confidence,
+    string? Destination,
+    string? Summary,
+    IReadOnlyList<ExtendedLocationRequirementSignal> Signals,
+    string ParseStatus,
+    int AnalysisVersion);
+
+public sealed record ExtendedLocationRequirementSignal(
+    string Category,
+    string Confidence,
+    string Reason,
+    string Evidence);
+
 internal sealed record SalaryAnalysis(
     decimal? Minimum,
     decimal? Maximum,
@@ -350,21 +365,6 @@ public sealed record ListingIdentity(
     string RequisitionId,
     string ExternalPath);
 
-public sealed record AutomaticCheckResult(
-    bool Performed,
-    bool SkippedBecauseBusy,
-    int ListingCount,
-    IReadOnlyList<string> UnknownStableIds,
-    bool FullRefreshTriggered);
-
-public sealed record AutomaticCheckStatus(
-    bool Enabled,
-    int IntervalMinutes,
-    bool IsChecking,
-    DateTimeOffset? LastCheckedUtc,
-    DateTimeOffset? NextCheckUtc,
-    DateTimeOffset? LastAutomaticRefreshUtc);
-
 public sealed record RefreshProgress(
     string Phase,
     int Completed,
@@ -381,6 +381,7 @@ public sealed record JobsSnapshot(
     IReadOnlyList<string> NewJobIds,
     JobSourceQuery Query,
     IReadOnlyDictionary<string, string> JobStates,
+    IReadOnlyDictionary<string, JobClosureInfo> JobClosures,
     RefreshProgress? RefreshProgress,
     RefreshMetrics? Metrics = null)
 {
@@ -390,8 +391,14 @@ public sealed record JobsSnapshot(
             FacetDefaults.AllCountriesLabel,
             true,
             false,
-            []), new Dictionary<string, string>(StringComparer.Ordinal), null);
+            []), new Dictionary<string, string>(StringComparer.Ordinal),
+            new Dictionary<string, JobClosureInfo>(StringComparer.Ordinal), null);
 }
+
+public sealed record JobClosureInfo(
+    string Reason,
+    DateTimeOffset ClosedAt,
+    DateTimeOffset? AppliedAt);
 
 public sealed record CompanySourceSettings(
     FacetSelection Country,
@@ -400,6 +407,14 @@ public sealed record CompanySourceSettings(
     IReadOnlyList<FacetSelection> SelectedPhysicalLocations);
 
 public sealed record PendingJobSource(string CompanyId, CompanySourceSettings Source);
+
+public static class ThemeModes
+{
+    public const string Default = "light";
+    public static bool IsSupported(string? value) => value is
+        "light" or "dark" or "nord-polar-night" or "nord-snow-storm" or "dracula";
+    public static string Normalize(string? value) => IsSupported(value) ? value! : Default;
+}
 
 public sealed record ViewerSettings(
     IReadOnlyList<string> IncludeKeywords,
@@ -412,8 +427,6 @@ public sealed record ViewerSettings(
     FacetSelection Country,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] FacetSelection? Location,
     bool SearchFiltersCollapsed,
-    bool? AutomaticCheckEnabled,
-    int AutomaticCheckIntervalMinutes,
     string ThemeMode,
     UserProfile? UserProfile = null,
     bool HideStrictEducationMismatch = false,
@@ -425,7 +438,8 @@ public sealed record ViewerSettings(
     IReadOnlyDictionary<string, CompanySourceSettings>? CompanySources = null,
     bool HideStrictWorkAuthorizationMismatch = false,
     bool? HasConfiguredSource = null,
-    PendingJobSource? PendingSource = null)
+    PendingJobSource? PendingSource = null,
+    bool ExcludeStrongExtendedLocationRequirements = false)
 {
     public static ViewerSettings Default { get; } = new(
         [], [], 0m, "metadata", "all", true,
@@ -433,9 +447,7 @@ public sealed record ViewerSettings(
         FacetDefaults.UnitedStatesCountry,
         null,
         false,
-        true,
-        60,
-        "light",
+        ThemeModes.Default,
         UserProfile.Default,
         false,
         false,
@@ -446,7 +458,8 @@ public sealed record ViewerSettings(
         new Dictionary<string, CompanySourceSettings>(StringComparer.OrdinalIgnoreCase),
         false,
         false,
-        null);
+        null,
+        false);
 }
 
 public sealed record JobListItem(
@@ -470,6 +483,7 @@ public sealed record JobListItem(
     JobListAcademicQualification? AcademicQualification,
     JobListWorkAuthorization? WorkAuthorization,
     JobListRemoteWork? RemoteWork,
+    JobListExtendedLocationRequirement? ExtendedLocationRequirement,
     bool AnalysisPending)
 {
     public static JobListItem FromJob(JobRecord job) => new(
@@ -503,6 +517,9 @@ public sealed record JobListItem(
         string.IsNullOrWhiteSpace(job.DescriptionHtml) || job.RemoteWork is null
             ? null
             : JobListRemoteWork.FromAnalysis(job.RemoteWork),
+        string.IsNullOrWhiteSpace(job.DescriptionHtml) || job.ExtendedLocationRequirement is null
+            ? null
+            : JobListExtendedLocationRequirement.FromAnalysis(job.ExtendedLocationRequirement),
         string.IsNullOrWhiteSpace(job.DescriptionHtml));
 }
 
@@ -515,7 +532,8 @@ public sealed record JobListCredential(
     bool EquivalentAccepted,
     bool InProgressAccepted,
     bool PostHireAcquisitionAllowed,
-    IReadOnlyList<string>? EquivalentCredentialIds)
+    IReadOnlyList<string>? EquivalentCredentialIds,
+    string? AlternativeGroup)
 {
     public static JobListCredential FromAnalysis(CredentialMatch credential) => new(
         credential.CredentialId,
@@ -526,7 +544,8 @@ public sealed record JobListCredential(
         credential.EquivalentAccepted,
         credential.InProgressAccepted,
         credential.PostHireAcquisitionAllowed,
-        credential.EquivalentCredentialIds);
+        credential.EquivalentCredentialIds,
+        credential.AlternativeGroup);
 }
 
 public sealed record JobListUnknownCredential(
@@ -579,6 +598,16 @@ public sealed record JobListRemoteWork(string ConcernLevel, string? Summary)
         new(analysis.ConcernLevel, analysis.Summary);
 }
 
+public sealed record JobListExtendedLocationRequirement(
+    string Confidence,
+    string? Destination,
+    string? Summary)
+{
+    public static JobListExtendedLocationRequirement FromAnalysis(
+        ExtendedLocationRequirementAnalysis analysis) =>
+        new(analysis.Confidence, analysis.Destination, analysis.Summary);
+}
+
 public sealed record JobsListSnapshot(
     IReadOnlyList<JobListItem> Jobs,
     int TotalJobs,
@@ -590,6 +619,7 @@ public sealed record JobsListSnapshot(
     IReadOnlyList<string> NewJobIds,
     JobSourceQuery Query,
     IReadOnlyDictionary<string, string> JobStates,
+    IReadOnlyDictionary<string, JobClosureInfo> JobClosures,
     RefreshProgress? RefreshProgress,
     RefreshMetrics? Metrics)
 {
@@ -604,6 +634,7 @@ public sealed record JobsListSnapshot(
         snapshot.NewJobIds,
         snapshot.Query,
         snapshot.JobStates,
+        snapshot.JobClosures,
         snapshot.RefreshProgress,
         snapshot.Metrics);
 }
@@ -648,7 +679,10 @@ public sealed record WorkAuthorizationProfile(string UsStatus, string Sponsorshi
 }
 
 public sealed record ViewedJobRequest(string StableId);
-public sealed record JobWorkflowStateRequest(string StableId, string State);
+public sealed record JobWorkflowStateRequest(
+    string StableId,
+    string State,
+    string? CloseReason = null);
 
 internal sealed record JobsCacheDocument(
     int SchemaVersion,
@@ -674,7 +708,7 @@ internal sealed record JobHistoryDocument(
     Dictionary<string, JobHistoryEntry> Jobs)
 {
     public static JobHistoryDocument Empty { get; } = new(
-        4, new Dictionary<string, JobHistoryEntry>(StringComparer.Ordinal));
+        5, new Dictionary<string, JobHistoryEntry>(StringComparer.Ordinal));
 }
 
 internal sealed record JobHistoryEntry(
@@ -685,7 +719,7 @@ internal sealed record JobHistoryEntry(
     bool HasBeenViewed,
     string WorkflowState = JobWorkflowStates.Normal,
     DateTimeOffset? WorkflowStateChangedAt = null,
-    // Schema 1-3 migration inputs. Normalized schema-4 writes always clear these.
+    // Schema 1-3 migration inputs. Normalized writes clear legacy booleans and their state timestamps.
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     bool Dismissed = false,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -698,16 +732,21 @@ internal sealed record JobHistoryEntry(
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     bool Applied = false,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    DateTimeOffset? AppliedAt = null);
+    DateTimeOffset? AppliedAt = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? CloseReason = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    DateTimeOffset? ClosedAt = null);
 
 internal static class JobWorkflowStates
 {
     public const string Normal = "normal";
     public const string Saved = "saved";
     public const string Applied = "applied";
+    public const string Closed = "closed";
     public const string Hidden = "hidden";
 
-    public static bool IsValid(string? state) => state is Normal or Saved or Applied or Hidden;
+    public static bool IsValid(string? state) => state is Normal or Saved or Applied or Closed or Hidden;
 
     public static string Normalize(string? state) => IsValid(state) ? state! : Normal;
 
@@ -721,11 +760,26 @@ internal static class JobWorkflowStates
         {
             Normal => nextState is Saved or Applied or Hidden,
             Saved => nextState is Normal or Applied or Hidden,
-            Applied => nextState is Normal or Hidden,
+            Applied => nextState is Normal or Closed or Hidden,
+            Closed => nextState is Applied,
             Hidden => nextState is Normal,
             _ => false
         };
     }
+}
+
+internal static class JobCloseReasons
+{
+    public const string PositionWithdrawn = "PositionWithdrawn";
+    public const string NotSelected = "NotSelected";
+    public const string ScreenedOut = "ScreenedOut";
+    public const string InterviewedOut = "InterviewedOut";
+    public const string Ghosted = "Ghosted";
+    public const string Withdrew = "Withdrew";
+    public const string Other = "Other";
+
+    public static bool IsValid(string? reason) => reason is
+        PositionWithdrawn or NotSelected or ScreenedOut or InterviewedOut or Ghosted or Withdrew or Other;
 }
 
 internal sealed class ListingResponse
