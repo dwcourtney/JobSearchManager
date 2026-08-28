@@ -255,8 +255,11 @@ const elements = {
   detailFitTitle: document.querySelector("#detail-fit-title"),
   detailFitText: document.querySelector("#detail-fit-text"),
   atAGlanceTab: document.querySelector("#at-a-glance-tab"),
+  jobFitDetailTab: document.querySelector("#job-fit-detail-tab"),
   fullPostingTab: document.querySelector("#full-posting-tab"),
   atAGlancePanel: document.querySelector("#at-a-glance-panel"),
+  jobFitDetailPanel: document.querySelector("#job-fit-detail-panel"),
+  jobFitDetailContent: document.querySelector("#job-fit-detail-content"),
   fullPostingPanel: document.querySelector("#full-posting-panel"),
   detailFlags: document.querySelector("#detail-flags"),
   detailEducationMismatch: document.querySelector("#detail-education-mismatch"),
@@ -499,6 +502,7 @@ async function initialize() {
     queueSettingsSave();
   });
   elements.atAGlanceTab.addEventListener("click", () => showDetailTab("glance", true));
+  elements.jobFitDetailTab.addEventListener("click", () => showDetailTab("fit", true));
   elements.fullPostingTab.addEventListener("click", () => showDetailTab("posting", true));
   document.querySelector(".detail-tabs").addEventListener("keydown", handleDetailTabKeydown);
   elements.copyPostingButton.addEventListener("click", copySelectedJobPosting);
@@ -640,23 +644,32 @@ function handleTabKeydown(event) {
 }
 
 function showDetailTab(tab, moveFocus = false) {
-  const nextTab = tab === "posting" ? "posting" : "glance";
+  const fitAvailable = !elements.jobFitDetailTab.hidden;
+  const nextTab = tab === "posting" ? "posting" : tab === "fit" && fitAvailable ? "fit" : "glance";
   const changed = state.detailTab !== nextTab;
   state.detailTab = nextTab;
   const glanceSelected = state.detailTab === "glance";
+  const fitSelected = state.detailTab === "fit";
+  const postingSelected = state.detailTab === "posting";
   elements.atAGlancePanel.hidden = !glanceSelected;
-  elements.fullPostingPanel.hidden = glanceSelected;
+  elements.jobFitDetailPanel.hidden = !fitSelected;
+  elements.fullPostingPanel.hidden = !postingSelected;
   elements.atAGlanceTab.classList.toggle("active", glanceSelected);
-  elements.fullPostingTab.classList.toggle("active", !glanceSelected);
+  elements.jobFitDetailTab.classList.toggle("active", fitSelected);
+  elements.fullPostingTab.classList.toggle("active", postingSelected);
   elements.atAGlanceTab.setAttribute("aria-selected", String(glanceSelected));
-  elements.fullPostingTab.setAttribute("aria-selected", String(!glanceSelected));
+  elements.jobFitDetailTab.setAttribute("aria-selected", String(fitSelected));
+  elements.fullPostingTab.setAttribute("aria-selected", String(postingSelected));
   elements.atAGlanceTab.tabIndex = glanceSelected ? 0 : -1;
-  elements.fullPostingTab.tabIndex = glanceSelected ? -1 : 0;
+  elements.jobFitDetailTab.tabIndex = fitSelected ? 0 : -1;
+  elements.fullPostingTab.tabIndex = postingSelected ? 0 : -1;
   if (changed) {
     document.querySelector(".detail-pane").scrollTop = 0;
   }
   if (moveFocus) {
-    (glanceSelected ? elements.atAGlanceTab : elements.fullPostingTab).focus();
+    (glanceSelected
+      ? elements.atAGlanceTab
+      : fitSelected ? elements.jobFitDetailTab : elements.fullPostingTab).focus();
   }
 }
 
@@ -665,8 +678,15 @@ function handleDetailTabKeydown(event) {
     return;
   }
   event.preventDefault();
-  const tab = event.key === "ArrowLeft" || event.key === "Home" ? "glance" : "posting";
-  showDetailTab(tab, true);
+  const tabs = elements.jobFitDetailTab.hidden
+    ? ["glance", "posting"]
+    : ["glance", "fit", "posting"];
+  const currentIndex = Math.max(0, tabs.indexOf(state.detailTab));
+  const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 :
+    event.key === "ArrowLeft"
+      ? (currentIndex - 1 + tabs.length) % tabs.length
+      : (currentIndex + 1) % tabs.length;
+  showDetailTab(tabs[nextIndex], true);
 }
 
 async function loadInitialState() {
@@ -2463,6 +2483,13 @@ function createAgeGroup(group, jobs) {
   return section;
 }
 
+function evaluateJobFit(job) {
+  return JobFit.evaluate(
+    job?.detectedConcepts,
+    { enabled: state.jobFitEnabled, signals: state.jobFitSignals },
+    state.jobFitConcepts);
+}
+
 function createJobListItem(job) {
   const card = document.createElement("div");
   card.className = "job-card";
@@ -2548,10 +2575,7 @@ function createJobListItem(job) {
       closure.closedAt ? `Application closed ${formatDateTime(closure.closedAt)}.` : "Application closed."
     );
   }
-  const jobFit = JobFit.evaluate(
-    job.detectedConcepts,
-    { enabled: state.jobFitEnabled, signals: state.jobFitSignals },
-    state.jobFitConcepts);
+  const jobFit = evaluateJobFit(job);
   if (jobFit) {
     appendJobBadge(
       badges,
@@ -3025,6 +3049,184 @@ async function loadJobDetail(job) {
   }
 }
 
+function formatJobFitImpact(value) {
+  const normalized = Number.isInteger(value) ? value.toFixed(0) : value.toFixed(1);
+  return `${value >= 0 ? "+" : ""}${normalized}`;
+}
+
+function appendJobFitSignal(container, signal, options = {}) {
+  const row = document.createElement("article");
+  row.className = "job-fit-breakdown-signal";
+  const heading = document.createElement("div");
+  heading.className = "job-fit-breakdown-signal-heading";
+  const name = document.createElement("strong");
+  name.textContent = signal.displayName;
+  const preference = document.createElement("span");
+  preference.className = "job-fit-breakdown-preference";
+  preference.textContent = signal.preferenceLabel;
+  heading.append(name, preference);
+  row.append(heading);
+
+  if (options.supersededBy?.length) {
+    const note = document.createElement("p");
+    note.className = "job-fit-breakdown-note";
+    note.textContent = `Excluded from scoring because ${options.supersededBy.join(", ")} superseded it.`;
+    row.append(note);
+  } else if (signal.preference !== "neutral") {
+    const impact = document.createElement("p");
+    impact.className = "job-fit-breakdown-note";
+    impact.textContent = `Signal impact before category bounds: ${formatJobFitImpact(signal.impact)}`;
+    row.append(impact);
+  }
+
+  if (signal.evidence) {
+    const evidence = document.createElement("details");
+    evidence.className = "evidence-disclosure job-fit-evidence";
+    const summary = document.createElement("summary");
+    summary.textContent = "Show evidence";
+    const text = document.createElement("p");
+    text.textContent = `“${signal.evidence}”`;
+    evidence.append(summary, text);
+    row.append(evidence);
+  }
+  container.append(row);
+}
+
+function appendJobFitSignalGroup(container, title, signals, options = {}) {
+  if (!signals.length) return;
+  const heading = document.createElement("h4");
+  heading.textContent = title;
+  container.append(heading);
+  const list = document.createElement("div");
+  list.className = "job-fit-breakdown-signals";
+  signals.forEach(signal => appendJobFitSignal(list, signal, {
+    supersededBy: options.superseded ? signal.supersededBy : null
+  }));
+  container.append(list);
+}
+
+function appendJobFitCalculationRow(list, label, value, className = "") {
+  const row = document.createElement("div");
+  if (className) row.className = className;
+  const term = document.createElement("dt");
+  term.textContent = label;
+  const definition = document.createElement("dd");
+  definition.textContent = value;
+  row.append(term, definition);
+  list.append(row);
+}
+
+function renderJobFitDetail(result) {
+  elements.jobFitDetailTab.hidden = !result;
+  elements.jobFitDetailContent.replaceChildren();
+  if (!result) {
+    if (state.detailTab === "fit") state.detailTab = "glance";
+    return;
+  }
+
+  const scoreSection = document.createElement("section");
+  scoreSection.className = "job-fit-detail-section job-fit-score-section";
+  const scoreHeading = document.createElement("h3");
+  scoreHeading.textContent = "Job Fit";
+  const score = document.createElement("strong");
+  score.className = `job-fit-detail-score ${JobFit.scoreClass(result.score)}`;
+  score.textContent = `${result.score} / 10`;
+  const scoreSummary = document.createElement("p");
+  scoreSummary.textContent = result.contributions.length
+    ? `Baseline ${result.baseline} plus bounded category contributions produced this score.`
+    : `No configured Job Fit preferences matched this posting, so the score remains at the ${result.baseline} baseline.`;
+  scoreSection.append(scoreHeading, score, scoreSummary);
+  elements.jobFitDetailContent.append(scoreSection);
+
+  if (result.hardConflictCap.signals.length) {
+    const conflict = document.createElement("section");
+    conflict.className = "job-fit-detail-section job-fit-hard-conflict";
+    const heading = document.createElement("h3");
+    heading.textContent = "Hard Conflict";
+    const explanation = document.createElement("p");
+    explanation.textContent = result.hardConflictCap.applied
+      ? `The calculated score was ${result.scoreBeforeHardConflictCap}/10. A Hard Conflict capped the final score at ${result.hardConflictCap.maximum}/10.`
+      : `A Hard Conflict was detected, but the calculated score was already ${result.scoreBeforeHardConflictCap}/10, so the ${result.hardConflictCap.maximum}/10 cap did not lower it further.`;
+    conflict.append(heading, explanation);
+    appendJobFitSignalGroup(conflict, "Triggering signals", result.hardConflictCap.signals);
+    elements.jobFitDetailContent.append(conflict);
+  }
+
+  const categorySection = document.createElement("section");
+  categorySection.className = "job-fit-detail-section";
+  const categoryHeading = document.createElement("h3");
+  categoryHeading.textContent = "Category Breakdown";
+  categorySection.append(categoryHeading);
+  const categories = document.createElement("div");
+  categories.className = "job-fit-breakdown-categories";
+  result.dimensionBreakdown.forEach(dimension => {
+    const relevantCount = dimension.signals.length +
+      dimension.neutralSignals.length + dimension.supersededSignals.length;
+    const category = document.createElement("details");
+    category.className = "job-fit-breakdown-category";
+    category.open = relevantCount > 0;
+    const summary = document.createElement("summary");
+    const name = document.createElement("span");
+    name.textContent = dimension.category;
+    const contribution = document.createElement("strong");
+    contribution.textContent = formatJobFitImpact(dimension.impact);
+    summary.append(name, contribution);
+    const body = document.createElement("div");
+    body.className = "job-fit-breakdown-category-body";
+    const arithmetic = document.createElement("dl");
+    arithmetic.className = "job-fit-category-arithmetic";
+    appendJobFitCalculationRow(arithmetic, "Raw contribution", formatJobFitImpact(dimension.rawImpact));
+    appendJobFitCalculationRow(
+      arithmetic,
+      dimension.capped ? "After category cap" : "Category contribution",
+      formatJobFitImpact(dimension.impact),
+      dimension.capped ? "capped" : "");
+    if (dimension.capped) {
+      appendJobFitCalculationRow(
+        arithmetic,
+        "Allowed range",
+        `${formatJobFitImpact(dimension.limits.minimum)} to ${formatJobFitImpact(dimension.limits.maximum)}`);
+    }
+    body.append(arithmetic);
+    appendJobFitSignalGroup(body, "Contributing signals", dimension.signals);
+    appendJobFitSignalGroup(body, "Superseded — not counted", dimension.supersededSignals, {
+      superseded: true
+    });
+    appendJobFitSignalGroup(body, "Detected but Neutral", dimension.neutralSignals);
+    if (relevantCount === 0) {
+      const empty = document.createElement("p");
+      empty.className = "job-fit-breakdown-empty";
+      empty.textContent = "No relevant canonical concepts were detected in this category.";
+      body.append(empty);
+    }
+    category.append(summary, body);
+    categories.append(category);
+  });
+  categorySection.append(categories);
+  elements.jobFitDetailContent.append(categorySection);
+
+  const calculation = document.createElement("section");
+  calculation.className = "job-fit-detail-section";
+  const calculationHeading = document.createElement("h3");
+  calculationHeading.textContent = "Final Calculation";
+  const rows = document.createElement("dl");
+  rows.className = "job-fit-final-calculation";
+  appendJobFitCalculationRow(rows, "Baseline", result.baseline.toFixed(1));
+  result.dimensionBreakdown.forEach(dimension => appendJobFitCalculationRow(
+    rows, dimension.category, formatJobFitImpact(dimension.impact)));
+  appendJobFitCalculationRow(rows, "Calculated total", result.calculatedTotal.toFixed(1), "calculation-total");
+  appendJobFitCalculationRow(
+    rows,
+    "Rounded / score bounds",
+    `${result.scoreBeforeHardConflictCap}/10`);
+  if (result.hardConflictCap.applied) {
+    appendJobFitCalculationRow(rows, "Hard Conflict cap", `${result.hardConflictCap.maximum}/10`);
+  }
+  appendJobFitCalculationRow(rows, "Final Job Fit", `${result.score}/10`, "calculation-final");
+  calculation.append(calculationHeading, rows);
+  elements.jobFitDetailContent.append(calculation);
+}
+
 function renderDetail(job) {
   elements.emptyDetail.hidden = Boolean(job);
   elements.jobDetail.hidden = !job;
@@ -3042,6 +3244,7 @@ function renderDetail(job) {
     resetCopyFeedback();
     document.querySelector(".detail-pane").scrollTop = 0;
   }
+  renderJobFitDetail(evaluateJobFit(job));
   showDetailTab(state.detailTab);
 
   // All metadata uses textContent. Only the description fragment is inserted as HTML,

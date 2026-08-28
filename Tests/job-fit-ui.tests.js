@@ -10,7 +10,7 @@ const styles = fs.readFileSync(path.join(root, "wwwroot", "styles.css"), "utf8")
 const catalog = JSON.parse(fs.readFileSync(path.join(root, "JobConceptCatalog.json"), "utf8"));
 
 assert.match(index, /id="job-fit-settings-tab"[\s\S]*?>\s*Job Fit\s*</);
-assert.match(index, /src="\/job-fit\.js\?v=3"/,
+assert.match(index, /src="\/job-fit\.js\?v=4"/,
   "The revised Job Fit runtime must use a new cache-busting asset version.");
 assert.match(index, /id="job-fit-settings-panel"/);
 assert.match(index, /id="job-fit-enabled"/);

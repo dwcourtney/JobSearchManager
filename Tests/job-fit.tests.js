@@ -69,6 +69,13 @@ assert.equal(boundedArrangement.dimensions[0].rawImpact, 4,
 assert.deepEqual(boundedArrangement.contributions.map(item => item.conceptId).sort(),
   [fullRemote.id, hybrid.id].sort(),
   "100% Remote Work must supersede plain Remote Work without hiding other concepts.");
+assert.deepEqual(boundedArrangement.supersededSignals.map(item => item.conceptId), [remote.id]);
+assert.deepEqual(boundedArrangement.supersededSignals[0].supersededBy, [fullRemote.displayName],
+  "The explanation result must identify which detected concept caused supersession.");
+assert.equal(boundedArrangement.dimensionBreakdown[0].rawImpact, 4);
+assert.equal(boundedArrangement.dimensionBreakdown[0].impact, 1);
+assert.equal(boundedArrangement.dimensionBreakdown[0].capped, true,
+  "The explanation result must preserve raw and bounded category contributions.");
 
 const aiCluster = JobFit.evaluate(detected([ai, ml, nlp, llm]),
   configuration([ai, ml, nlp, llm].map(item => signal(item, "ideal"))),
@@ -98,6 +105,24 @@ const hardConflict = JobFit.evaluate(detected([fullRemote, softwareRole, deploym
     signal(deployment, "hardConflict")
   ]), [fullRemote, softwareRole, deployment]);
 assert.equal(hardConflict.score, 2, "A hard conflict must still cap the overall score.");
+assert.equal(hardConflict.scoreBeforeHardConflictCap, 5);
+assert.equal(hardConflict.hardConflictCap.applied, true);
+assert.equal(hardConflict.hardConflictCap.maximum, 2);
+assert.deepEqual(hardConflict.hardConflictCap.signals.map(item => item.conceptId), [deployment.id],
+  "The explanation result must identify the signal imposing the global cap.");
+
+const neutralDetection = JobFit.evaluate(
+  detected([cloud, linux]),
+  configuration([signal(cloud, "positive")]),
+  [cloud, linux]);
+assert.equal(neutralDetection.score, 6);
+assert.deepEqual(neutralDetection.neutralSignals.map(item => item.conceptId), [linux.id]);
+assert.equal(neutralDetection.neutralSignals[0].impact, 0);
+assert.equal(neutralDetection.neutralSignals[0].evidence, "Evidence for Linux");
+assert.ok(!neutralDetection.neutralSignals.some(item => item.conceptId === cicd.id),
+  "Concepts not detected in the job must not enter the explanation result.");
+assert.equal(neutralDetection.dimensionBreakdown.length, 5,
+  "The explanation result must expose every authoritative bounded scoring dimension.");
 
 const aligned = JobFit.evaluate(
   detected([fullRemote, softwareRole, devopsRole, cloud, cicd, linux, handsOn]),

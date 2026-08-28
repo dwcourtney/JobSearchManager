@@ -158,6 +158,12 @@ clearance, license, and credential mismatches remain in Qualification Fit rather
 being duplicated as description-only Job Fit concepts. Job Fit does not change
 filtering, sorting, or qualification behavior.
 
+When Job Fit is enabled, each job detail includes a Job Fit tab between At a Glance
+and Full Posting. It renders the scoring engine's structured result: the final score,
+raw and bounded category contributions, contributing and Neutral detections, evidence,
+superseded concepts, Hard Conflict cap behavior, and the final arithmetic. The tab is
+hidden when Job Fit is disabled and does not independently recalculate the score.
+
 The active query identity includes company, country, remote coverage, and a
 canonical set of location facet IDs. Location order therefore does not change cache
 identity, and cached jobs from one company cannot appear under another company.

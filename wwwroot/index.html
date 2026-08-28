@@ -10,7 +10,7 @@
   <link rel="manifest" href="/site.webmanifest?v=1">
   <script src="/theme-bootstrap.js"></script>
   <link rel="stylesheet" href="/theme.css?v=10">
-  <link rel="stylesheet" href="/styles.css?v=20">
+  <link rel="stylesheet" href="/styles.css?v=21">
   <script src="/vendor/purify.min.js" defer></script>
   <script src="/country-ordering.js?v=2" defer></script>
   <script src="/company-selector.js?v=1" defer></script>
@@ -22,8 +22,8 @@
   <script src="/clearance-fit.js?v=1" defer></script>
   <script src="/extended-location-ui.js?v=5" defer></script>
   <script src="/education-fit.js?v=2" defer></script>
-  <script src="/job-fit.js?v=3" defer></script>
-  <script src="/app.js?v=23" defer></script>
+  <script src="/job-fit.js?v=4" defer></script>
+  <script src="/app.js?v=24" defer></script>
 </head>
 <body>
   <main id="app-shell" class="app-shell" aria-busy="true" inert>
@@ -179,6 +179,9 @@
               <div class="detail-tabs" role="tablist" aria-label="Selected job detail views">
                 <button id="at-a-glance-tab" class="detail-tab active" type="button" role="tab"
                         aria-selected="true" aria-controls="at-a-glance-panel">At a Glance</button>
+                <button id="job-fit-detail-tab" class="detail-tab" type="button" role="tab"
+                        aria-selected="false" aria-controls="job-fit-detail-panel"
+                        tabindex="-1" hidden>Job Fit</button>
                 <button id="full-posting-tab" class="detail-tab" type="button" role="tab"
                         aria-selected="false" aria-controls="full-posting-panel" tabindex="-1">Full Posting</button>
               </div>
@@ -294,6 +297,11 @@
                   </div>
                 </section>
               </article>
+            </section>
+            <section id="job-fit-detail-panel" class="detail-tab-panel job-fit-detail-panel"
+                     role="tabpanel" aria-labelledby="job-fit-detail-tab" hidden>
+              <article id="job-fit-detail-content" class="job-fit-detail-dossier"
+                       aria-label="Job Fit score breakdown"></article>
             </section>
             <section id="full-posting-panel" class="detail-tab-panel full-posting-panel"
                      role="tabpanel" aria-labelledby="full-posting-tab" hidden>

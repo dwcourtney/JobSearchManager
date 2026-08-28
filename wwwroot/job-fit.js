@@ -62,28 +62,41 @@
     const concepts = new Map((Array.isArray(conceptOptions) ? conceptOptions : [])
       .filter(item => item && typeof item.id === "string")
       .map(item => [item.id, item]));
-    let contributions = normalized.signals
-      .filter(signal => detected.has(signal.conceptId) && concepts.has(signal.conceptId))
-      .map(signal => {
-        const concept = concepts.get(signal.conceptId);
+    const configured = new Map(normalized.signals.map(signal => [signal.conceptId, signal.preference]));
+    const detectedSignals = Array.from(detected.values())
+      .filter(item => concepts.has(item.conceptId))
+      .map(item => {
+        const concept = concepts.get(item.conceptId);
+        const preference = configured.get(item.conceptId) || "neutral";
         return {
-          conceptId: signal.conceptId,
+          conceptId: item.conceptId,
           displayName: concept.displayName,
           category: concept.category,
-          preference: signal.preference,
-          preferenceLabel: LABELS[signal.preference],
-          impact: WEIGHTS[signal.preference],
-          evidence: detected.get(signal.conceptId).evidence || "Canonical concept detected"
+          preference,
+          preferenceLabel: LABELS[preference],
+          impact: preference === "neutral" ? 0 : WEIGHTS[preference],
+          evidence: item.evidence || "Canonical concept detected"
         };
       });
-    const superseded = new Set();
-    for (const contribution of contributions) {
+    const neutralSignals = detectedSignals.filter(signal => signal.preference === "neutral");
+    const candidates = detectedSignals.filter(signal => signal.preference !== "neutral");
+    const candidateIds = new Set(candidates.map(signal => signal.conceptId));
+    const supersededBy = new Map();
+    for (const contribution of candidates) {
       const concept = concepts.get(contribution.conceptId);
       for (const supersededId of Array.isArray(concept.supersedes) ? concept.supersedes : []) {
-        superseded.add(supersededId);
+        if (!candidateIds.has(supersededId)) continue;
+        if (!supersededBy.has(supersededId)) supersededBy.set(supersededId, []);
+        supersededBy.get(supersededId).push(contribution.conceptId);
       }
     }
-    contributions = contributions.filter(contribution => !superseded.has(contribution.conceptId));
+    const supersededSignals = candidates
+      .filter(signal => supersededBy.has(signal.conceptId))
+      .map(signal => ({
+        ...signal,
+        supersededBy: supersededBy.get(signal.conceptId).map(id => concepts.get(id).displayName)
+      }));
+    const contributions = candidates.filter(signal => !supersededBy.has(signal.conceptId));
 
     const byCategory = new Map();
     for (const contribution of contributions) {
@@ -99,6 +112,7 @@
         impact,
         rawImpact,
         capped: impact !== rawImpact,
+        limits,
         signals
       };
     }).sort((left, right) => {
@@ -110,13 +124,48 @@
       return leftIndex - rightIndex;
     });
 
-    const total = dimensions.reduce((sum, dimension) => sum + dimension.impact, BASELINE);
-    let score = Math.max(1, Math.min(10, Math.round(total)));
-    if (contributions.some(contribution => contribution.preference === "hardConflict")) {
+    const dimensionBreakdown = DIMENSION_ORDER.map(category => {
+      const dimension = dimensions.find(item => item.category === category);
+      const limits = DIMENSION_LIMITS[category];
+      return dimension || {
+        category,
+        impact: 0,
+        rawImpact: 0,
+        capped: false,
+        limits,
+        signals: []
+      };
+    }).map(dimension => ({
+      ...dimension,
+      neutralSignals: neutralSignals.filter(signal => signal.category === dimension.category),
+      supersededSignals: supersededSignals.filter(signal => signal.category === dimension.category)
+    }));
+
+    const calculatedTotal = dimensions.reduce((sum, dimension) => sum + dimension.impact, BASELINE);
+    const scoreBeforeHardConflictCap = Math.max(1, Math.min(10, Math.round(calculatedTotal)));
+    const hardConflictSignals = contributions.filter(
+      contribution => contribution.preference === "hardConflict");
+    let score = scoreBeforeHardConflictCap;
+    if (hardConflictSignals.length > 0) {
       score = Math.min(score, 2);
     }
 
-    return { score, baseline: BASELINE, dimensions, contributions };
+    return {
+      score,
+      baseline: BASELINE,
+      calculatedTotal,
+      scoreBeforeHardConflictCap,
+      dimensions,
+      dimensionBreakdown,
+      contributions,
+      neutralSignals,
+      supersededSignals,
+      hardConflictCap: {
+        maximum: 2,
+        applied: hardConflictSignals.length > 0 && scoreBeforeHardConflictCap > 2,
+        signals: hardConflictSignals
+      }
+    };
   }
 
   function scoreClass(score) {
