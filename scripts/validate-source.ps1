@@ -208,8 +208,8 @@ $sourceStateScript = $index.IndexOf('src="/job-source-state.js"')
 $unseenStateScript = $index.IndexOf('src="/job-unseen-state.js?v=1"')
 $credentialFitScript = $index.IndexOf('src="/credential-fit.js?v=2"')
 $clearanceFitScript = $index.IndexOf('src="/clearance-fit.js?v=1"')
-$jobFitScript = $index.IndexOf('src="/job-fit.js?v=2"')
-$appScript = $index.IndexOf('src="/app.js?v=22"')
+$jobFitScript = $index.IndexOf('src="/job-fit.js?v=3"')
+$appScript = $index.IndexOf('src="/app.js?v=23"')
 if ($countryOrderingScript -lt 0 -or $appScript -le $countryOrderingScript) {
     throw "The versioned country-ordering.js asset must load before app.js."
 }

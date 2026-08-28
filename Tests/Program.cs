@@ -698,22 +698,26 @@ static async Task TestJobFitSettingsAsync()
         JobFit = new JobFitConfiguration(true,
         [
             new("technical.machine-learning", JobFitPreferenceLevels.StrongPositive),
-            new("work.onsite", JobFitPreferenceLevels.Negative),
+            new("work.onsite", JobFitPreferenceLevels.StrongNegative),
+            new("work.deployment", JobFitPreferenceLevels.Negative),
             new("work.remote", JobFitPreferenceLevels.Neutral),
             new("user.arbitrary-concept", JobFitPreferenceLevels.HardConflict),
-            new("work.deployment", "unsupported")
+            new("work.relocation", "unsupported")
         ])
     });
     Assert(normalized.JobFit is { Enabled: true } &&
-           normalized.JobFit.Signals.Count == 2 &&
+           normalized.JobFit.Signals.Count == 3 &&
            normalized.JobFit.Signals.Any(signal =>
                signal.ConceptId == "technical.machine-learning" &&
-               signal.Preference == JobFitPreferenceLevels.StrongPositive) &&
+               signal.Preference == JobFitPreferenceLevels.Ideal) &&
            normalized.JobFit.Signals.Any(signal =>
                signal.ConceptId == "work.onsite" &&
-               signal.Preference == JobFitPreferenceLevels.StrongNegative) &&
+               signal.Preference == JobFitPreferenceLevels.Negative) &&
+           normalized.JobFit.Signals.Any(signal =>
+               signal.ConceptId == "work.deployment" &&
+               signal.Preference == JobFitPreferenceLevels.Negative) &&
            normalized.JobFit.Signals.All(signal => signal.ConceptId != "work.remote"),
-        "Sparse normalization did not omit Neutral, migrate legacy Negative, or reject invalid signals.");
+        "Sparse normalization did not omit Neutral, migrate legacy preference names, or reject invalid signals.");
     await state.SaveSettingsAsync(normalized);
     var reloaded = await state.LoadSettingsAsync();
     Assert(reloaded.JobFit is { Enabled: true } &&
@@ -1160,7 +1164,7 @@ static Task TestPortableJobFitAsync()
         [
             new("technical.machine-learning", JobFitPreferenceLevels.StrongPositive),
             new("work.deployment", JobFitPreferenceLevels.HardConflict),
-            new("work.onsite", JobFitPreferenceLevels.Negative),
+            new("work.onsite", JobFitPreferenceLevels.StrongNegative),
             new("work.remote", JobFitPreferenceLevels.Neutral)
         ])
     };
@@ -1170,11 +1174,17 @@ static Task TestPortableJobFitAsync()
     Assert(exported.Version == 4 && exported.Preferences.JobFit is { Enabled: true } &&
            imported.Settings.JobFit is { Enabled: true } &&
            imported.Settings.JobFit.Signals.Count == 3 &&
+           exported.Preferences.JobFit.Signals.Any(signal =>
+               signal.ConceptId == "technical.machine-learning" &&
+               signal.Preference == JobFitPreferenceLevels.Ideal) &&
            imported.Settings.JobFit.Signals.Any(signal =>
                signal.ConceptId == "work.onsite" &&
-               signal.Preference == JobFitPreferenceLevels.StrongNegative) &&
+               signal.Preference == JobFitPreferenceLevels.Negative) &&
+           imported.Settings.JobFit.Signals.All(signal =>
+               signal.Preference is not JobFitPreferenceLevels.StrongPositive and
+                   not JobFitPreferenceLevels.StrongNegative) &&
            imported.Settings.JobFit.Signals.All(signal => signal.ConceptId != "work.remote"),
-        "Sparse Job Fit configuration or legacy Negative migration did not round-trip through portable settings.");
+        "New canonical Job Fit names or legacy-name migration did not round-trip through portable settings.");
 
     var legacy = exported with
     {

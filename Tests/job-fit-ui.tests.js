@@ -10,7 +10,7 @@ const styles = fs.readFileSync(path.join(root, "wwwroot", "styles.css"), "utf8")
 const catalog = JSON.parse(fs.readFileSync(path.join(root, "JobConceptCatalog.json"), "utf8"));
 
 assert.match(index, /id="job-fit-settings-tab"[\s\S]*?>\s*Job Fit\s*</);
-assert.match(index, /src="\/job-fit\.js\?v=2"/,
+assert.match(index, /src="\/job-fit\.js\?v=3"/,
   "The revised Job Fit runtime must use a new cache-busting asset version.");
 assert.match(index, /id="job-fit-settings-panel"/);
 assert.match(index, /id="job-fit-enabled"/);
@@ -34,6 +34,10 @@ assert.match(app, /radio\.checked = \(configured\.get\(concept\.id\) \|\| "neutr
   "Absence from sparse configuration must render as Neutral.");
 assert.match(app, /if \(radio\.value !== "neutral"\)/,
   "Returning a concept to Neutral must omit it from the sparse settings array.");
+assert.match(app, /\["negative", "NEG"\][\s\S]*?\["ideal", "I"\]/,
+  "The survey must use the balanced Hard Conflict, Negative, Neutral, Positive, Ideal scale.");
+assert.doesNotMatch(app, /\["strong(?:Negative|Positive)"/,
+  "Legacy preference names must not remain as survey columns.");
 assert.deepEqual([...new Set(catalog.concepts.map(concept => concept.category))].sort(), [
   "Responsibility Shape",
   "Role Type / Career Direction",

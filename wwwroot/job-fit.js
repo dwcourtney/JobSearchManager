@@ -9,17 +9,17 @@
   }
 })(typeof globalThis !== "undefined" ? globalThis : this, function createJobFit() {
   const WEIGHTS = Object.freeze({
-    strongPositive: 2,
+    ideal: 2,
     positive: 1,
-    strongNegative: -3,
+    negative: -3,
     hardConflict: -6
   });
   const LABELS = Object.freeze({
     hardConflict: "Hard Conflict",
-    strongNegative: "Strong Negative",
+    negative: "Negative",
     neutral: "Neutral",
     positive: "Positive",
-    strongPositive: "Strong Positive"
+    ideal: "Ideal"
   });
   const BASELINE = 5;
   const DIMENSION_LIMITS = Object.freeze({
@@ -39,9 +39,11 @@
       if (!signal || typeof signal.conceptId !== "string" || seen.has(signal.conceptId)) {
         continue;
       }
-      const preference = signal.preference === "negative"
-        ? "strongNegative"
-        : signal.preference;
+      const preference = signal.preference === "strongNegative"
+        ? "negative"
+        : signal.preference === "strongPositive"
+          ? "ideal"
+          : signal.preference;
       seen.add(signal.conceptId);
       if (preference === "neutral") continue;
       if (!Object.hasOwn(WEIGHTS, preference)) continue;

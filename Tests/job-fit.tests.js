@@ -33,20 +33,25 @@ assert.equal(JobFit.evaluate([], { enabled: false, signals: [] }, []), null,
 
 const sparse = JobFit.normalizeConfiguration(configuration([
   signal(remote, "neutral"),
-  signal(hybrid, "negative"),
-  signal(fullRemote, "positive")
+  signal(hybrid, "strongNegative"),
+  signal(fullRemote, "strongPositive"),
+  signal(cloud, "negative")
 ]));
 assert.deepEqual(sparse.signals, [
-  signal(hybrid, "strongNegative"),
-  signal(fullRemote, "positive")
-], "Neutral must be omitted and legacy Negative must migrate explicitly to Strong Negative.");
+  signal(hybrid, "negative"),
+  signal(fullRemote, "ideal"),
+  signal(cloud, "negative")
+], "Neutral must be omitted and legacy preference names must migrate to Negative and Ideal.");
 assert.equal(JobFit.evaluate(detected([remote]), configuration([signal(remote, "neutral")]), [remote]).score, 5,
   "Neutral must contribute zero and retain the baseline score.");
-assert.equal(JobFit.preferenceLabels.negative, undefined,
-  "Ordinary Negative must not remain available as a sixth UI state.");
+assert.equal(JobFit.preferenceLabels.strongNegative, undefined);
+assert.equal(JobFit.preferenceLabels.strongPositive, undefined,
+  "Legacy names must not remain available as extra UI states.");
+assert.equal(JobFit.preferenceLabels.negative, "Negative");
+assert.equal(JobFit.preferenceLabels.ideal, "Ideal");
 
 const remoteOnly = JobFit.evaluate(detected([fullRemote]),
-  configuration([signal(fullRemote, "strongPositive")]), [fullRemote]);
+  configuration([signal(fullRemote, "ideal")]), [fullRemote]);
 assert.equal(remoteOnly.score, 6,
   "100% Remote Work alone must not produce a high overall score.");
 assert.equal(remoteOnly.dimensions[0].impact, 1,
@@ -54,9 +59,9 @@ assert.equal(remoteOnly.dimensions[0].impact, 1,
 
 const boundedArrangement = JobFit.evaluate(detected([remote, fullRemote, hybrid]),
   configuration([
-    signal(remote, "strongPositive"),
-    signal(fullRemote, "strongPositive"),
-    signal(hybrid, "strongPositive")
+    signal(remote, "ideal"),
+    signal(fullRemote, "ideal"),
+    signal(hybrid, "ideal")
   ]), [remote, fullRemote, hybrid]);
 assert.equal(boundedArrangement.dimensions[0].impact, 1);
 assert.equal(boundedArrangement.dimensions[0].rawImpact, 4,
@@ -66,7 +71,7 @@ assert.deepEqual(boundedArrangement.contributions.map(item => item.conceptId).so
   "100% Remote Work must supersede plain Remote Work without hiding other concepts.");
 
 const aiCluster = JobFit.evaluate(detected([ai, ml, nlp, llm]),
-  configuration([ai, ml, nlp, llm].map(item => signal(item, "strongPositive"))),
+  configuration([ai, ml, nlp, llm].map(item => signal(item, "ideal"))),
   [ai, ml, nlp, llm]);
 assert.equal(aiCluster.dimensions[0].impact, 1.5);
 assert.equal(aiCluster.score, 7,
@@ -75,10 +80,10 @@ assert.equal(aiCluster.score, 7,
 const wrongRole = JobFit.evaluate(
   detected([fullRemote, infrastructureRole, linux, cloud, cicd, dataCenter, physical]),
   configuration([
-    signal(fullRemote, "strongPositive"),
-    signal(infrastructureRole, "strongNegative"),
+    signal(fullRemote, "ideal"),
+    signal(infrastructureRole, "negative"),
     signal(linux, "positive"), signal(cloud, "positive"), signal(cicd, "positive"),
-    signal(dataCenter, "strongNegative"), signal(physical, "strongNegative")
+    signal(dataCenter, "negative"), signal(physical, "negative")
   ]),
   [fullRemote, infrastructureRole, linux, cloud, cicd, dataCenter, physical]);
 assert.equal(wrongRole.score, 2,
@@ -88,8 +93,8 @@ assert.equal(wrongRole.dimensions.find(item => item.category === "Work Environme
 
 const hardConflict = JobFit.evaluate(detected([fullRemote, softwareRole, deployment]),
   configuration([
-    signal(fullRemote, "strongPositive"),
-    signal(softwareRole, "strongPositive"),
+    signal(fullRemote, "ideal"),
+    signal(softwareRole, "ideal"),
     signal(deployment, "hardConflict")
   ]), [fullRemote, softwareRole, deployment]);
 assert.equal(hardConflict.score, 2, "A hard conflict must still cap the overall score.");
@@ -97,10 +102,10 @@ assert.equal(hardConflict.score, 2, "A hard conflict must still cap the overall 
 const aligned = JobFit.evaluate(
   detected([fullRemote, softwareRole, devopsRole, cloud, cicd, linux, handsOn]),
   configuration([
-    signal(fullRemote, "strongPositive"),
-    signal(softwareRole, "strongPositive"), signal(devopsRole, "strongPositive"),
-    signal(cloud, "strongPositive"), signal(cicd, "positive"), signal(linux, "positive"),
-    signal(handsOn, "strongPositive")
+    signal(fullRemote, "ideal"),
+    signal(softwareRole, "ideal"), signal(devopsRole, "ideal"),
+    signal(cloud, "ideal"), signal(cicd, "positive"), signal(linux, "positive"),
+    signal(handsOn, "ideal")
   ]), [fullRemote, softwareRole, devopsRole, cloud, cicd, linux, handsOn]);
 assert.equal(aligned.score, 10, "A genuinely aligned software/cloud role should still score highly.");
 
@@ -118,7 +123,7 @@ assert.match(explanation, /Work Arrangement: \+1 \(bounded from \+2\)/);
 assert.match(explanation, /Role Type \/ Career Direction: -3/);
 assert.match(explanation, /Technical Domain: \+1\.5 \(bounded from \+3\)/);
 assert.match(explanation, /Work Environment: -3 \(bounded from -6\)/);
-assert.match(explanation, /Infrastructure Engineering — Strong Negative/);
+assert.match(explanation, /Infrastructure Engineering — Negative/);
 assert.doesNotMatch(explanation, /\n- Remote Work —/,
   "Explanations must exclude superseded or non-contributing signals.");
 

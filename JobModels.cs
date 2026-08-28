@@ -423,21 +423,23 @@ public static class ThemeModes
 public static class JobFitPreferenceLevels
 {
     public const string Neutral = "neutral";
-    public const string StrongPositive = "strongPositive";
+    public const string Ideal = "ideal";
     public const string Positive = "positive";
-    // Retained as a read-only compatibility value for previously saved workspaces.
     public const string Negative = "negative";
+    // Retained as read-only compatibility values for previously saved workspaces.
+    public const string StrongPositive = "strongPositive";
     public const string StrongNegative = "strongNegative";
     public const string HardConflict = "hardConflict";
 
     public static bool IsSupported(string? value) => value is
-        Neutral or StrongPositive or Positive or Negative or StrongNegative or HardConflict;
+        Neutral or Ideal or Positive or Negative or StrongPositive or StrongNegative or HardConflict;
 
     public static string? Normalize(string? value) => value switch
     {
-        Negative => StrongNegative,
+        StrongPositive => Ideal,
+        StrongNegative => Negative,
         Neutral => null,
-        StrongPositive or Positive or StrongNegative or HardConflict => value,
+        Ideal or Positive or Negative or HardConflict => value,
         _ => null
     };
 }

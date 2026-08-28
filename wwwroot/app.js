@@ -852,10 +852,10 @@ function renderJobFitSurvey() {
   }
   const preferences = [
     ["hardConflict", "HC"],
-    ["strongNegative", "SN"],
+    ["negative", "NEG"],
     ["neutral", "N"],
     ["positive", "P"],
-    ["strongPositive", "SP"]
+    ["ideal", "I"]
   ];
   const categoryOrder = Object.keys(JobFit.dimensionLimits);
   const orderedCategories = Array.from(byCategory.keys()).sort((left, right) =>
