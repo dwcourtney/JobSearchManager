@@ -10,7 +10,7 @@
   <link rel="manifest" href="/site.webmanifest?v=1">
   <script src="/theme-bootstrap.js"></script>
   <link rel="stylesheet" href="/theme.css?v=10">
-  <link rel="stylesheet" href="/styles.css?v=21">
+  <link rel="stylesheet" href="/styles.css?v=22">
   <script src="/vendor/purify.min.js" defer></script>
   <script src="/country-ordering.js?v=2" defer></script>
   <script src="/company-selector.js?v=1" defer></script>
@@ -23,7 +23,7 @@
   <script src="/extended-location-ui.js?v=5" defer></script>
   <script src="/education-fit.js?v=2" defer></script>
   <script src="/job-fit.js?v=4" defer></script>
-  <script src="/app.js?v=24" defer></script>
+  <script src="/app.js?v=25" defer></script>
 </head>
 <body>
   <main id="app-shell" class="app-shell" aria-busy="true" inert>
@@ -337,6 +337,10 @@
           <button id="job-fit-settings-tab" class="detail-tab" type="button" role="tab"
                   aria-selected="false" aria-controls="job-fit-settings-panel" tabindex="-1">
             Job Fit
+          </button>
+          <button id="account-settings-tab" class="detail-tab" type="button" role="tab"
+                  aria-selected="false" aria-controls="account-settings-panel" tabindex="-1">
+            Account
           </button>
         </div>
 
@@ -680,6 +684,170 @@
                    aria-describedby="job-fit-survey-status"></div>
             </section>
           </div>
+        </div>
+
+        <div id="account-settings-panel" class="settings-tab-panel" role="tabpanel"
+             aria-labelledby="account-settings-tab" hidden>
+          <section id="anonymous-account-section" class="settings-section account-section"
+                   aria-labelledby="anonymous-account-heading">
+            <h3 id="anonymous-account-heading">Optional Account</h3>
+            <p>You are using an anonymous workspace. You can continue without an account.</p>
+            <p class="account-help">Creating an account claims this exact workspace. Your settings, qualifications, Job Fit preferences, and curated jobs stay in place.</p>
+            <dl class="account-summary">
+              <div><dt>Current Workspace ID</dt><dd id="anonymous-account-workspace-id">Loading…</dd></div>
+            </dl>
+            <div class="account-mode-actions">
+              <button id="show-create-account" class="primary-button" type="button">Create Account</button>
+              <button id="show-login" type="button">Sign In</button>
+            </div>
+          </section>
+
+          <section id="create-account-section" class="settings-section account-section"
+                   aria-labelledby="create-account-heading" hidden>
+            <h3 id="create-account-heading">Create Account</h3>
+            <form id="create-account-form" class="account-form">
+              <label for="create-account-email">Email</label>
+              <input id="create-account-email" type="email" autocomplete="email" maxlength="254" required>
+              <label for="create-account-password">Password</label>
+              <input id="create-account-password" type="password" autocomplete="new-password"
+                     minlength="12" maxlength="128" required aria-describedby="account-password-help">
+              <small id="account-password-help">Use 12–128 characters. Long passphrases and password managers are welcome.</small>
+              <label for="create-account-confirm">Confirm password</label>
+              <input id="create-account-confirm" type="password" autocomplete="new-password"
+                     minlength="12" maxlength="128" required>
+              <label for="create-account-persistence">Stay signed in</label>
+              <select id="create-account-persistence" class="account-persistence">
+                <option value="session">This browser session only</option>
+                <option value="day1">1 day</option>
+                <option value="days7">7 days</option>
+                <option value="days14">14 days</option>
+                <option value="days30">30 days</option>
+                <option value="keep">Keep me signed in</option>
+              </select>
+              <p id="create-account-status" class="settings-status" role="status" aria-live="polite"></p>
+              <div class="account-form-actions">
+                <button class="primary-button" type="submit">Create Account</button>
+                <button id="cancel-create-account" type="button">Cancel</button>
+              </div>
+            </form>
+          </section>
+
+          <section id="login-account-section" class="settings-section account-section"
+                   aria-labelledby="login-account-heading" hidden>
+            <h3 id="login-account-heading">Sign In</h3>
+            <form id="login-account-form" class="account-form">
+              <label for="login-account-email">Email</label>
+              <input id="login-account-email" type="email" autocomplete="username" maxlength="254" required>
+              <label for="login-account-password">Password</label>
+              <input id="login-account-password" type="password" autocomplete="current-password"
+                     maxlength="128" required>
+              <label for="login-account-persistence">Stay signed in</label>
+              <select id="login-account-persistence" class="account-persistence">
+                <option value="session">This browser session only</option>
+                <option value="day1">1 day</option>
+                <option value="days7">7 days</option>
+                <option value="days14">14 days</option>
+                <option value="days30">30 days</option>
+                <option value="keep">Keep me signed in</option>
+              </select>
+              <p id="login-account-status" class="settings-status" role="status" aria-live="polite"></p>
+              <div class="account-form-actions">
+                <button class="primary-button" type="submit">Sign In</button>
+                <button id="show-forgot-password" type="button">Forgot Password</button>
+                <button id="cancel-login" type="button">Cancel</button>
+              </div>
+            </form>
+          </section>
+
+          <section id="forgot-password-section" class="settings-section account-section"
+                   aria-labelledby="forgot-password-heading" hidden>
+            <h3 id="forgot-password-heading">Forgot Password</h3>
+            <form id="forgot-password-form" class="account-form">
+              <label for="forgot-password-email">Email</label>
+              <input id="forgot-password-email" type="email" autocomplete="email" maxlength="254" required>
+              <p id="forgot-password-status" class="settings-status" role="status" aria-live="polite"></p>
+              <div class="account-form-actions">
+                <button class="primary-button" type="submit">Send Reset Link</button>
+                <button id="cancel-forgot-password" type="button">Back to Sign In</button>
+              </div>
+            </form>
+          </section>
+
+          <section id="reset-password-section" class="settings-section account-section"
+                   aria-labelledby="reset-password-heading" hidden>
+            <h3 id="reset-password-heading">Choose a New Password</h3>
+            <form id="reset-password-form" class="account-form">
+              <label for="reset-account-password">New password</label>
+              <input id="reset-account-password" type="password" autocomplete="new-password"
+                     minlength="12" maxlength="128" required>
+              <label for="reset-account-confirm">Confirm new password</label>
+              <input id="reset-account-confirm" type="password" autocomplete="new-password"
+                     minlength="12" maxlength="128" required>
+              <p id="reset-password-status" class="settings-status" role="status" aria-live="polite"></p>
+              <div class="account-form-actions">
+                <button class="primary-button" type="submit">Reset Password</button>
+                <button id="cancel-reset-password" type="button">Cancel</button>
+              </div>
+            </form>
+          </section>
+
+          <section id="authenticated-account-section" class="settings-section account-section"
+                   aria-labelledby="authenticated-account-heading" hidden>
+            <h3 id="authenticated-account-heading">Account</h3>
+            <dl class="account-summary">
+              <div><dt>Email</dt><dd id="account-email"></dd></div>
+              <div><dt>Email status</dt><dd id="account-email-status"></dd></div>
+              <div><dt>Workspace access</dt><dd>Authenticated owner</dd></div>
+              <div><dt>Internal workspace ID</dt><dd id="account-workspace-id">Loading…</dd></div>
+            </dl>
+            <div id="email-verification-actions" class="account-inline-action" hidden>
+              <p>Email verification is needed for reliable password recovery.</p>
+              <button id="request-email-verification" type="button">Send Verification Email</button>
+            </div>
+            <div class="account-form account-session-form">
+              <label for="account-session-persistence">Login persistence on this browser</label>
+              <select id="account-session-persistence" class="account-persistence">
+                <option value="session">This browser session only</option>
+                <option value="day1">1 day</option>
+                <option value="days7">7 days</option>
+                <option value="days14">14 days</option>
+                <option value="days30">30 days</option>
+                <option value="keep">Keep me signed in</option>
+              </select>
+            </div>
+            <p id="authenticated-account-status" class="settings-status" role="status" aria-live="polite"></p>
+            <div class="account-mode-actions">
+              <button id="show-change-password" type="button">Change Password</button>
+              <button id="sign-out-account" class="destructive-button" type="button">Sign Out</button>
+            </div>
+          </section>
+
+          <section id="change-password-section" class="settings-section account-section"
+                   aria-labelledby="change-password-heading" hidden>
+            <h3 id="change-password-heading">Change Password</h3>
+            <form id="change-password-form" class="account-form">
+              <label for="current-account-password">Current password</label>
+              <input id="current-account-password" type="password" autocomplete="current-password"
+                     maxlength="128" required>
+              <label for="new-account-password">New password</label>
+              <input id="new-account-password" type="password" autocomplete="new-password"
+                     minlength="12" maxlength="128" required>
+              <label for="new-account-confirm">Confirm new password</label>
+              <input id="new-account-confirm" type="password" autocomplete="new-password"
+                     minlength="12" maxlength="128" required>
+              <p id="change-password-status" class="settings-status" role="status" aria-live="polite"></p>
+              <div class="account-form-actions">
+                <button class="primary-button" type="submit">Change Password</button>
+                <button id="cancel-change-password" type="button">Cancel</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="settings-section account-privacy-note" aria-labelledby="account-privacy-heading">
+            <h3 id="account-privacy-heading">Account Privacy</h3>
+            <p>Email is used only for sign-in, verification, and password recovery. Authentication secrets are stored separately and are never included in workspace exports.</p>
+            <p id="account-email-configuration-note" class="account-help" hidden>Email delivery is not configured on this deployment. Account access works, but verification and password-reset messages cannot be delivered until an administrator configures the email provider.</p>
+          </section>
         </div>
       </div>
     </section>

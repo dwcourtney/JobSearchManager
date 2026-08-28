@@ -2,13 +2,17 @@ using System.Diagnostics;
 using System.IO.Compression;
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Claims;
 using System.Text.Json;
 using System.Threading.RateLimiting;
 using Azure.Identity;
 using Azure.Storage.Blobs;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Options;
@@ -58,6 +62,9 @@ builder.Services.AddSingleton<SharedSourceRefreshCoordinator>();
 builder.Services.AddDataProtection().SetApplicationName("WorkdayJobManager");
 builder.Services.AddScoped<WorkspaceContext>();
 builder.Services.AddScoped<WorkspaceRuntimeProvider>();
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<IPasswordHasher<AccountRecord>, PasswordHasher<AccountRecord>>();
+builder.Services.AddSingleton<IAccountEmailSender, SmtpAccountEmailSender>();
 
 if (hosting.IsAzure)
 {
@@ -80,13 +87,51 @@ if (hosting.IsAzure)
         services.GetRequiredService<BlobServiceClient>()
             .GetBlobContainerClient(hosting.StorageContainer));
     builder.Services.AddSingleton<IWorkspaceDataStoreFactory, AzureBlobWorkspaceDataStoreFactory>();
+    builder.Services.AddSingleton<IAccountRegistryStore, AzureBlobAccountRegistryStore>();
 }
 else
 {
     builder.Services.AddSingleton<IWorkspaceDataStoreFactory, FileWorkspaceDataStoreFactory>();
+    builder.Services.AddSingleton<IAccountRegistryStore, FileAccountRegistryStore>();
 }
 
 builder.Services.AddSingleton<WorkspaceRuntimeManager>();
+builder.Services.AddSingleton<AccountService>();
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.Cookie.Name = AccountAuthentication.CookieName;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.IsEssential = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.SecurePolicy = hosting.IsAzure
+            ? CookieSecurePolicy.Always : CookieSecurePolicy.SameAsRequest;
+        options.ExpireTimeSpan = TimeSpan.FromDays(180);
+        options.SlidingExpiration = true;
+        options.Events.OnRedirectToLogin = context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return Task.CompletedTask;
+        };
+        options.Events.OnValidatePrincipal = async context =>
+        {
+            if (!context.HttpContext.Request.Path.StartsWithSegments("/api")) return;
+            var accountId = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+            var versionText = context.Principal?.FindFirstValue(AccountAuthentication.SecurityVersionClaim);
+            var accounts = context.HttpContext.RequestServices.GetRequiredService<AccountService>();
+            var account = await accounts.GetByIdAsync(accountId, context.HttpContext.RequestAborted);
+            if (account is null || !int.TryParse(versionText, out var version) ||
+                version != account.SecurityVersion)
+            {
+                context.RejectPrincipal();
+            }
+            else
+            {
+                context.HttpContext.Items[AccountAuthentication.ResolvedAccountItem] = account;
+            }
+        };
+    });
+builder.Services.AddAuthorization();
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -94,7 +139,7 @@ builder.Services.AddRateLimiter(options =>
     {
         context.HttpContext.Response.ContentType = "application/json";
         await context.HttpContext.Response.WriteAsJsonAsync(
-            new { error = "Too many job-source requests. Wait briefly and try again." },
+            new { error = "Too many requests. Wait briefly and try again." },
             cancellationToken);
     };
     options.AddPolicy("provider", httpContext =>
@@ -114,6 +159,16 @@ builder.Services.AddRateLimiter(options =>
             {
                 PermitLimit = 60,
                 Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+    options.AddPolicy("authentication", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(5),
                 QueueLimit = 0,
                 AutoReplenishment = true
             }));
@@ -183,6 +238,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
+app.UseAuthentication();
 app.UseMiddleware<WorkspaceIdentityMiddleware>();
 
 if (hosting.IsAzure)
@@ -207,6 +263,7 @@ if (hosting.IsAzure)
 }
 
 app.UseRateLimiter();
+app.UseAuthorization();
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
@@ -265,8 +322,186 @@ app.MapGet("/api/credentials", (CredentialDetector credentials) =>
 app.MapGet("/api/job-fit/concepts", (JobConceptCatalog concepts) =>
     Results.Ok(concepts.Options));
 
-app.MapGet("/api/workspace/identity", (WorkspaceContext workspace) =>
-    Results.Ok(new { workspaceId = workspace.WorkspaceId }));
+app.MapGet("/api/workspace/identity", (WorkspaceContext workspace, HttpContext context) =>
+{
+    var authenticated = context.User.Identity?.IsAuthenticated == true;
+    return Results.Ok(new
+    {
+        workspaceId = authenticated ? null : workspace.WorkspaceId,
+        internalWorkspaceId = authenticated && WorkspaceIdentity.IsValid(workspace.WorkspaceId)
+            ? WorkspaceIdentity.Redact(workspace.WorkspaceId) : null,
+        accessMode = authenticated ? "authenticated" : "anonymous",
+        canCopyWorkspaceId = !authenticated
+    });
+});
+
+app.MapGet("/api/account/status", async (
+    HttpContext context,
+    WorkspaceContext workspace,
+    AccountService accounts,
+    CancellationToken token) =>
+{
+    var accountId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var account = accountId is null
+        ? null
+        : context.Items[AccountAuthentication.ResolvedAccountItem] as AccountRecord ??
+            await accounts.GetByIdAsync(accountId, token);
+    return Results.Ok(account is null
+        ? (object)new
+        {
+            authenticated = false,
+            email = (string?)null,
+            emailVerified = false,
+            workspace = "anonymous",
+            persistence = AccountPersistence.Session,
+            emailDeliveryConfigured = accounts.EmailDeliveryConfigured
+        }
+        : (object)new
+        {
+            authenticated = true,
+            email = account.Email,
+            emailVerified = account.EmailVerified,
+            workspace = "authenticated",
+            persistence = AccountPersistence.Normalize(
+                context.User.FindFirstValue(AccountAuthentication.PersistenceClaim)),
+            emailDeliveryConfigured = accounts.EmailDeliveryConfigured
+        });
+});
+
+app.MapPost("/api/account/create", async Task<IResult> (
+    CreateAccountRequest request,
+    HttpContext context,
+    WorkspaceContext workspace,
+    AccountService accounts,
+    IConfiguration configuration,
+    CancellationToken token) =>
+{
+    if (!string.Equals(request.Password, request.ConfirmPassword, StringComparison.Ordinal))
+        return Results.BadRequest(new { error = "The password confirmation does not match." });
+    var result = await accounts.CreateAsync(
+        workspace.WorkspaceId, request.Email, request.Password,
+        PublicBaseUri(context.Request, configuration), token);
+    if (!result.Succeeded) return Results.BadRequest(new { error = result.Error });
+    var persistence = AccountPersistence.Normalize(request.Persistence);
+    await SignInAccountAsync(context, result.Account!, persistence);
+    context.Response.Cookies.Delete(
+        WorkspaceIdentity.CookieName, WorkspaceIdentity.CreateCookieOptions(secure: hosting.IsAzure));
+    return Results.Ok(new
+    {
+        authenticated = true,
+        email = result.Account!.Email,
+        emailVerified = result.Account.EmailVerified,
+        workspace = "authenticated",
+        persistence,
+        emailDeliveryConfigured = accounts.EmailDeliveryConfigured
+    });
+}).RequireRateLimiting("authentication");
+
+app.MapPost("/api/account/login", async Task<IResult> (
+    LoginRequest request,
+    HttpContext context,
+    AccountService accounts,
+    CancellationToken token) =>
+{
+    var account = await accounts.AuthenticateAsync(request.Email, request.Password, token);
+    if (account is null) return Results.Json(
+        new { error = "The email or password is incorrect." }, statusCode: StatusCodes.Status401Unauthorized);
+    var persistence = AccountPersistence.Normalize(request.Persistence);
+    await SignInAccountAsync(context, account, persistence);
+    context.Response.Cookies.Delete(
+        WorkspaceIdentity.CookieName, WorkspaceIdentity.CreateCookieOptions(secure: hosting.IsAzure));
+    return Results.Ok(new { authenticated = true, account.Email, account.EmailVerified, persistence });
+}).RequireRateLimiting("authentication");
+
+app.MapPost("/api/account/logout", async (HttpContext context) =>
+{
+    await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    context.Response.Cookies.Delete(
+        WorkspaceIdentity.CookieName, WorkspaceIdentity.CreateCookieOptions(secure: hosting.IsAzure));
+    return Results.NoContent();
+}).RequireRateLimiting("state");
+
+app.MapPost("/api/account/forgot-password", async (
+    EmailRequest request,
+    HttpContext context,
+    AccountService accounts,
+    IConfiguration configuration,
+    CancellationToken token) =>
+{
+    await accounts.RequestPasswordResetAsync(
+        request.Email, PublicBaseUri(context.Request, configuration), token);
+    return Results.Ok(new
+    {
+        message = "If an account exists for that email, a reset message has been sent."
+    });
+}).RequireRateLimiting("authentication");
+
+app.MapPost("/api/account/reset-password", async Task<IResult> (
+    ResetPasswordRequest request,
+    AccountService accounts,
+    CancellationToken token) =>
+{
+    if (!string.Equals(request.Password, request.ConfirmPassword, StringComparison.Ordinal))
+        return Results.BadRequest(new { error = "The password confirmation does not match." });
+    var result = await accounts.ResetPasswordAsync(request.Token, request.Password, token);
+    return result.Succeeded
+        ? Results.Ok(new { message = "Your password has been reset. Sign in with the new password." })
+        : Results.BadRequest(new { error = result.Error });
+}).RequireRateLimiting("authentication");
+
+app.MapPost("/api/account/change-password", async Task<IResult> (
+    ChangePasswordRequest request,
+    HttpContext context,
+    AccountService accounts,
+    CancellationToken token) =>
+{
+    if (!string.Equals(request.Password, request.ConfirmPassword, StringComparison.Ordinal))
+        return Results.BadRequest(new { error = "The password confirmation does not match." });
+    var accountId = context.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+    var result = await accounts.ChangePasswordAsync(
+        accountId, request.CurrentPassword, request.Password, token);
+    if (!result.Succeeded) return Results.BadRequest(new { error = result.Error });
+    await SignInAccountAsync(
+        context, result.Account!, AccountPersistence.Normalize(request.Persistence));
+    return Results.Ok(new { message = "Password changed. Other signed-in sessions are no longer valid." });
+}).RequireAuthorization().RequireRateLimiting("authentication");
+
+app.MapPost("/api/account/session", async Task<IResult> (
+    SessionPersistenceRequest request,
+    HttpContext context,
+    AccountService accounts,
+    CancellationToken token) =>
+{
+    var account = await accounts.GetByIdAsync(
+        context.User.FindFirstValue(ClaimTypes.NameIdentifier), token);
+    if (account is null) return Results.Unauthorized();
+    var persistence = AccountPersistence.Normalize(request.Persistence);
+    await SignInAccountAsync(context, account, persistence);
+    return Results.Ok(new { persistence });
+}).RequireAuthorization().RequireRateLimiting("state");
+
+app.MapPost("/api/account/request-verification", async (
+    HttpContext context,
+    AccountService accounts,
+    IConfiguration configuration,
+    CancellationToken token) =>
+{
+    await accounts.RequestVerificationAsync(
+        context.User.FindFirstValue(ClaimTypes.NameIdentifier)!,
+        PublicBaseUri(context.Request, configuration), token);
+    return Results.Ok(new { message = "If email delivery is configured, a verification message has been sent." });
+}).RequireAuthorization().RequireRateLimiting("authentication");
+
+app.MapPost("/api/account/verify-email", async Task<IResult> (
+    TokenRequest request,
+    AccountService accounts,
+    CancellationToken token) =>
+{
+    var result = await accounts.VerifyEmailAsync(request.Token, token);
+    return result.Succeeded
+        ? Results.Ok(new { message = "Email address verified." })
+        : Results.BadRequest(new { error = result.Error });
+}).RequireRateLimiting("authentication");
 
 app.MapPost("/api/refresh", async (
     WorkspaceRuntimeProvider provider,
@@ -470,7 +705,7 @@ app.MapDelete("/api/workspace", async (
     CancellationToken token) =>
 {
     var deletedDocuments = await runtimes.ResetAsync(workspace.WorkspaceId, token);
-    if (hosting.IsAzure)
+    if (hosting.IsAzure && context.User.Identity?.IsAuthenticated != true)
     {
         context.Response.Cookies.Delete(
             WorkspaceIdentity.CookieName,
@@ -500,6 +735,7 @@ app.MapPut("/api/history/workflow-state", async (
 
 var dataStores = app.Services.GetRequiredService<IWorkspaceDataStoreFactory>();
 await dataStores.ValidateAsync();
+await app.Services.GetRequiredService<IAccountRegistryStore>().ValidateAsync();
 WorkspaceRuntime? localRuntime = null;
 if (hosting.IsLocal)
 {
@@ -552,7 +788,7 @@ if (hosting.IsLocal)
 else
 {
     app.Logger.LogInformation(
-        "Job Search Manager started in Azure mode with anonymous Blob-backed workspaces in container {ContainerName}.",
+        "Job Search Manager started in Azure mode with optional accounts and Blob-backed workspaces in container {ContainerName}.",
         hosting.StorageContainer);
 }
 
@@ -570,4 +806,34 @@ static bool IsAddressInUse(Exception exception)
     }
 
     return false;
+}
+
+static async Task SignInAccountAsync(HttpContext context, AccountRecord account, string persistence)
+{
+    var claims = new[]
+    {
+        new Claim(ClaimTypes.NameIdentifier, account.AccountId),
+        new Claim(ClaimTypes.Name, account.Email),
+        new Claim(AccountAuthentication.SecurityVersionClaim, account.SecurityVersion.ToString()),
+        new Claim(AccountAuthentication.PersistenceClaim, persistence)
+    };
+    var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+    var lifetime = AccountPersistence.Lifetime(persistence);
+    await context.SignInAsync(
+        CookieAuthenticationDefaults.AuthenticationScheme,
+        new ClaimsPrincipal(identity),
+        new AuthenticationProperties
+        {
+            IsPersistent = lifetime.HasValue,
+            ExpiresUtc = lifetime.HasValue ? DateTimeOffset.UtcNow.Add(lifetime.Value) : null,
+            AllowRefresh = lifetime.HasValue
+        });
+}
+
+static Uri PublicBaseUri(HttpRequest request, IConfiguration configuration)
+{
+    var configured = configuration["JOBSEARCHMANAGER_PUBLIC_BASE_URL"]?.Trim();
+    if (Uri.TryCreate(configured, UriKind.Absolute, out var publicUri) &&
+        publicUri.Scheme is "https" or "http") return new Uri(publicUri, "/");
+    return new Uri($"{request.Scheme}://{request.Host}/", UriKind.Absolute);
 }

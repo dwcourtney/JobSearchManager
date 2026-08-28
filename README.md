@@ -164,6 +164,35 @@ raw and bounded category contributions, contributing and Neutral detections, evi
 superseded concepts, Hard Conflict cap behavior, and the final arithmetic. The tab is
 hidden when Job Fit is disabled and does not independently recalculate the score.
 
+## Optional accounts
+
+Job Search Manager continues to support anonymous workspaces without sign-in. The
+Account settings tab can optionally claim the current workspace for an email/password
+account without copying or replacing its settings, qualifications, Job Fit preferences,
+or curated history. Once claimed, the old anonymous workspace cookie no longer grants
+access; the authenticated account is the authoritative owner.
+
+Passwords are processed only by the server and stored with ASP.NET Core's versioned
+`PasswordHasher<T>` format. Account records, hashed one-time verification/reset tokens,
+and workspace ownership live in a separate private authentication registry and are never
+included in portable workspace exports. Authentication uses HttpOnly SameSite cookies;
+the UI offers session-only, 1-, 7-, 14-, 30-, and renewable 180-day persistence choices.
+
+Email delivery is optional deployment configuration. If it is not configured, accounts
+and sign-in still work, while the UI reports that verification and password-recovery
+messages cannot be delivered. SMTP secrets must be supplied through secure environment
+or App Service settings, never source files:
+
+- `JOBSEARCHMANAGER_PUBLIC_BASE_URL` — public HTTPS origin used in account links
+- `JOBSEARCHMANAGER_SMTP_HOST`
+- `JOBSEARCHMANAGER_SMTP_PORT` — defaults to `587`
+- `JOBSEARCHMANAGER_SMTP_ENABLE_SSL` — defaults to `true`
+- `JOBSEARCHMANAGER_SMTP_USERNAME` and `JOBSEARCHMANAGER_SMTP_PASSWORD` when required
+- `JOBSEARCHMANAGER_EMAIL_FROM` — verified sender address
+
+Verification and reset secrets are placed in URL fragments so they are handled by the
+client and are not sent in the initial HTTP request or server request logs.
+
 The active query identity includes company, country, remote coverage, and a
 canonical set of location facet IDs. Location order therefore does not change cache
 identity, and cached jobs from one company cannot appear under another company.

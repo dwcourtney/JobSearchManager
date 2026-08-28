@@ -1,11 +1,13 @@
 using Azure.Storage.Blobs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
 using System.IO.Compression;
+using System.Net.Mail;
 using JobSearchManager;
 
 if (args.Length >= 2 && args[0] == "--extended-location-corpus")
@@ -288,6 +290,16 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Workspace middleware preserves isolation through a protected cookie", TestWorkspaceMiddlewareAsync),
     ("Legacy workspace cookies migrate without changing workspace identity", TestLegacyWorkspaceCookieMigrationAsync),
     ("Azure state changes require the exact application origin", TestOriginValidationAsync),
+    ("Account passwords are hashed and normalized emails are unique", TestAccountPasswordAndEmailAsync),
+    ("Anonymous workspace claims preserve state and establish ownership", TestAccountWorkspaceClaimAsync),
+    ("Failed account claims remain atomic and retryable", TestFailedAccountClaimAsync),
+    ("Claimed workspaces reject duplicate and cross-account ownership", TestAccountAuthorizationAsync),
+    ("Password reset tokens expire, are single use, and invalidate old credentials", TestPasswordResetAsync),
+    ("Email verification tokens are hashed and single use", TestEmailVerificationAsync),
+    ("Password reset requests do not enumerate accounts", TestPasswordResetEnumerationAsync),
+    ("Authentication persistence choices are bounded", TestAccountPersistenceAsync),
+    ("Workspace reset does not delete its owning account", TestAccountSurvivesWorkspaceResetAsync),
+    ("Portable workspace exports exclude authentication secrets", TestAccountSecretsExcludedFromExportAsync),
     ("File storage round-trips beside its configured base", TestFileStoreAsync),
     ("Workspace reset deletes only known local state documents", TestFileResetAsync),
     ("Blob namespaces are isolated and traversal-resistant", TestBlobNamespaceAsync),
@@ -516,10 +528,12 @@ static async Task TestWorkspaceMiddlewareAsync()
         hosting,
         provider,
         NullLogger<WorkspaceIdentityMiddleware>.Instance);
+    var accounts = TestAccountService().Service;
 
     var firstContext = new DefaultHttpContext();
+    firstContext.Request.Path = "/api/workspace/identity";
     var firstWorkspace = new WorkspaceContext();
-    await middleware.InvokeAsync(firstContext, firstWorkspace);
+    await middleware.InvokeAsync(firstContext, firstWorkspace, accounts);
     var setCookie = firstContext.Response.Headers.SetCookie.ToString();
     Assert(setCookie.Contains("httponly", StringComparison.OrdinalIgnoreCase) &&
            setCookie.Contains("secure", StringComparison.OrdinalIgnoreCase) &&
@@ -530,16 +544,18 @@ static async Task TestWorkspaceMiddlewareAsync()
         "Raw workspace ID leaked into the cookie.");
 
     var returningContext = new DefaultHttpContext();
+    returningContext.Request.Path = "/api/workspace/identity";
     returningContext.Request.Headers.Cookie = cookiePair;
     var returningWorkspace = new WorkspaceContext();
-    await middleware.InvokeAsync(returningContext, returningWorkspace);
+    await middleware.InvokeAsync(returningContext, returningWorkspace, accounts);
     Assert(returningWorkspace.WorkspaceId == firstWorkspace.WorkspaceId,
         "Protected cookie did not restore the same workspace.");
 
     var tamperedContext = new DefaultHttpContext();
+    tamperedContext.Request.Path = "/api/workspace/identity";
     tamperedContext.Request.Headers.Cookie = cookiePair + "tampered";
     var tamperedWorkspace = new WorkspaceContext();
-    await middleware.InvokeAsync(tamperedContext, tamperedWorkspace);
+    await middleware.InvokeAsync(tamperedContext, tamperedWorkspace, accounts);
     Assert(tamperedWorkspace.WorkspaceId != firstWorkspace.WorkspaceId,
         "Tampered cookie crossed into the original workspace.");
 }
@@ -550,6 +566,7 @@ static async Task TestLegacyWorkspaceCookieMigrationAsync()
     var workspaceId = WorkspaceIdentity.Create();
     var legacyProtector = provider.CreateProtector(WorkspaceIdentity.LegacyProtectorPurpose);
     var context = new DefaultHttpContext();
+    context.Request.Path = "/api/workspace/identity";
     context.Request.Headers.Cookie =
         $"{WorkspaceIdentity.LegacyCookieName}={legacyProtector.Protect(workspaceId)}";
     var workspace = new WorkspaceContext();
@@ -559,7 +576,7 @@ static async Task TestLegacyWorkspaceCookieMigrationAsync()
         provider,
         NullLogger<WorkspaceIdentityMiddleware>.Instance);
 
-    await middleware.InvokeAsync(context, workspace);
+    await middleware.InvokeAsync(context, workspace, TestAccountService().Service);
 
     var setCookies = context.Response.Headers.SetCookie.ToString();
     Assert(workspace.WorkspaceId == workspaceId,
@@ -672,6 +689,268 @@ static Task TestNeutralDefaultsAsync()
         "A new workspace did not default Job Fit to disabled with no required configuration.");
     var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
     AssertThrows<InvalidOperationException>(() => JobSourceQuery.FromSettings(settings, companies));
+    return Task.CompletedTask;
+}
+
+static async Task TestAccountPasswordAndEmailAsync()
+{
+    var fixture = TestAccountService();
+    var workspaceId = WorkspaceIdentity.Create();
+    const string password = "a long memorable passphrase";
+    var created = await fixture.Service.CreateAsync(
+        workspaceId, "Person@Example.com", password, new Uri("https://example.test/"));
+    Assert(created.Succeeded && created.Account is not null,
+        "A valid account could not be created.");
+    Assert(created.Account!.PasswordHash != password && !created.Account.PasswordHash.Contains(password),
+        "The original password appeared in the persisted credential field.");
+    Assert(await fixture.Service.AuthenticateAsync("person@example.COM", password) is not null,
+        "The platform password hash did not verify the correct password.");
+    Assert(await fixture.Service.AuthenticateAsync("person@example.com", "incorrect password") is null,
+        "An invalid password authenticated successfully.");
+    var duplicate = await fixture.Service.CreateAsync(
+        WorkspaceIdentity.Create(), " person@example.com ", password, new Uri("https://example.test/"));
+    Assert(!duplicate.Succeeded, "Normalized duplicate email was accepted.");
+    var registryJson = await fixture.Store.MutateAsync<string>(document =>
+        new(false, JsonSerializer.Serialize(document)));
+    Assert(!registryJson.Contains(password, StringComparison.Ordinal),
+        "Plaintext password leaked into account persistence.");
+    Assert(!registryJson.Contains(fixture.Email.VerificationToken!, StringComparison.Ordinal),
+        "A plaintext verification token leaked into account persistence.");
+    Assert(AccountService.ValidatePassword("short") is not null &&
+           AccountService.ValidatePassword(password) is null,
+        "The length-focused password policy is incorrect.");
+    fixture.Email.FailDelivery = true;
+    var deliveryFailure = await fixture.Service.CreateAsync(
+        WorkspaceIdentity.Create(), "delivery@example.com", "delivery failure passphrase",
+        new Uri("https://example.test/"));
+    Assert(deliveryFailure.Succeeded,
+        "Email-provider failure left a completed account claim inaccessible.");
+}
+
+static async Task TestAccountWorkspaceClaimAsync()
+{
+    var directory = TestDirectory("account-claim-state");
+    try
+    {
+        var workspaceStore = new FileWorkspaceDataStore(directory, NullLogger<FileWorkspaceDataStore>.Instance);
+        var settings = ViewerSettings.Default with
+        {
+            IncludeKeywords = ["linux", "cloud"],
+            ThemeMode = "dracula",
+            JobFit = new JobFitConfiguration(true,
+                [new JobFitSignalPreference("remote-work", "ideal")])
+        };
+        var history = new JobHistoryDocument(3, new Dictionary<string, JobHistoryEntry>
+        {
+            ["leidos:claim-test"] = new(
+                "REQ-CLAIM", "/jobs/claim-test", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow,
+                true, JobWorkflowStates.Saved, DateTimeOffset.UtcNow, CompanyId: "leidos")
+        });
+        await workspaceStore.WriteJsonAsync(WorkspaceDataFile.Settings, settings);
+        await workspaceStore.WriteJsonAsync(WorkspaceDataFile.JobHistory, history);
+        var beforeSettings = JsonSerializer.Serialize(
+            await workspaceStore.ReadJsonAsync<ViewerSettings>(WorkspaceDataFile.Settings));
+        var beforeHistory = JsonSerializer.Serialize(
+            await workspaceStore.ReadJsonAsync<JobHistoryDocument>(WorkspaceDataFile.JobHistory));
+
+        var fixture = TestAccountService();
+        var workspaceId = WorkspaceIdentity.Create();
+        var created = await fixture.Service.CreateAsync(
+            workspaceId, "claim@example.com", "claim workspace safely", new Uri("https://example.test/"));
+        Assert(created.Succeeded && await fixture.Service.GetWorkspaceOwnerAsync(workspaceId) ==
+            created.Account!.AccountId, "The anonymous workspace was not linked to its account.");
+        Assert(beforeSettings == JsonSerializer.Serialize(
+                   await workspaceStore.ReadJsonAsync<ViewerSettings>(WorkspaceDataFile.Settings)) &&
+               beforeHistory == JsonSerializer.Serialize(
+                   await workspaceStore.ReadJsonAsync<JobHistoryDocument>(WorkspaceDataFile.JobHistory)),
+            "Claiming changed settings, Job Fit, qualifications, or curated history.");
+    }
+    finally
+    {
+        Directory.Delete(directory, recursive: true);
+    }
+}
+
+static async Task TestFailedAccountClaimAsync()
+{
+    var fixture = TestAccountService();
+    var workspaceId = WorkspaceIdentity.Create();
+    fixture.Store.FailNextWrite = true;
+    await AssertThrowsAsync<WorkspaceStorageException>(() => fixture.Service.CreateAsync(
+        workspaceId, "retry@example.com", "retryable account claim", new Uri("https://example.test/")));
+    Assert(await fixture.Service.GetWorkspaceOwnerAsync(workspaceId) is null &&
+           await fixture.Service.AuthenticateAsync("retry@example.com", "retryable account claim") is null,
+        "A failed atomic claim left an owner or credential behind.");
+    var retry = await fixture.Service.CreateAsync(
+        workspaceId, "retry@example.com", "retryable account claim", new Uri("https://example.test/"));
+    Assert(retry.Succeeded, "A failed claim could not be retried safely.");
+}
+
+static async Task TestAccountAuthorizationAsync()
+{
+    var fixture = TestAccountService();
+    var workspaceId = WorkspaceIdentity.Create();
+    var first = await fixture.Service.CreateAsync(
+        workspaceId, "owner@example.com", "workspace owner passphrase", new Uri("https://example.test/"));
+    var second = await fixture.Service.CreateAsync(
+        workspaceId, "other@example.com", "another secure passphrase", new Uri("https://example.test/"));
+    Assert(first.Succeeded && !second.Succeeded,
+        "A second account was allowed to claim an owned workspace.");
+
+    var protection = new EphemeralDataProtectionProvider();
+    var protectedWorkspace = protection.CreateProtector(WorkspaceIdentity.ProtectorPurpose).Protect(workspaceId);
+    var middleware = new WorkspaceIdentityMiddleware(
+        _ => Task.CompletedTask,
+        new HostingConfiguration(ApplicationHostingMode.Azure, "workdayjobmanagerstore", "userdata"),
+        protection,
+        NullLogger<WorkspaceIdentityMiddleware>.Instance);
+    var anonymousContext = new DefaultHttpContext();
+    anonymousContext.Request.Path = "/api/settings";
+    anonymousContext.Request.Headers.Cookie = $"{WorkspaceIdentity.CookieName}={protectedWorkspace}";
+    var anonymousWorkspace = new WorkspaceContext();
+    await middleware.InvokeAsync(anonymousContext, anonymousWorkspace, fixture.Service);
+    Assert(anonymousWorkspace.WorkspaceId != workspaceId,
+        "Possession of an old anonymous cookie still opened a claimed workspace.");
+
+    var ownerContext = new DefaultHttpContext();
+    ownerContext.Request.Path = "/api/settings";
+    ownerContext.User = new System.Security.Claims.ClaimsPrincipal(
+        new System.Security.Claims.ClaimsIdentity(
+            [new System.Security.Claims.Claim(
+                System.Security.Claims.ClaimTypes.NameIdentifier, first.Account!.AccountId)], "test"));
+    var ownerWorkspace = new WorkspaceContext();
+    await middleware.InvokeAsync(ownerContext, ownerWorkspace, fixture.Service);
+    Assert(ownerWorkspace.WorkspaceId == workspaceId,
+        "The authenticated owner did not resolve to the claimed workspace.");
+
+    var localFixture = TestAccountService();
+    await localFixture.Service.CreateAsync(
+        WorkspaceContext.LocalWorkspaceId, "local@example.com", "local workspace passphrase",
+        new Uri("http://127.0.0.1:54321/"));
+    var localMiddleware = new WorkspaceIdentityMiddleware(
+        _ => Task.CompletedTask,
+        new HostingConfiguration(ApplicationHostingMode.Local, null, null),
+        protection,
+        NullLogger<WorkspaceIdentityMiddleware>.Instance);
+    var localAnonymousContext = new DefaultHttpContext();
+    localAnonymousContext.Request.Path = "/api/settings";
+    var localAnonymousWorkspace = new WorkspaceContext();
+    await localMiddleware.InvokeAsync(
+        localAnonymousContext, localAnonymousWorkspace, localFixture.Service);
+    Assert(WorkspaceIdentity.IsValid(localAnonymousWorkspace.WorkspaceId),
+        "Local anonymous access was not rotated away from a claimed local workspace.");
+}
+
+static async Task TestPasswordResetAsync()
+{
+    var fixture = TestAccountService();
+    var created = await fixture.Service.CreateAsync(
+        WorkspaceIdentity.Create(), "reset@example.com", "original secure passphrase",
+        new Uri("https://example.test/"));
+    var originalVersion = created.Account!.SecurityVersion;
+    await fixture.Service.RequestPasswordResetAsync(
+        "reset@example.com", new Uri("https://example.test/"));
+    var expiredToken = fixture.Email.ResetToken!;
+    fixture.Time.Advance(TimeSpan.FromMinutes(61));
+    Assert(!(await fixture.Service.ResetPasswordAsync(expiredToken, "replacement passphrase one")).Succeeded,
+        "An expired reset token was accepted.");
+
+    await fixture.Service.RequestPasswordResetAsync(
+        "reset@example.com", new Uri("https://example.test/"));
+    var token = fixture.Email.ResetToken!;
+    var reset = await fixture.Service.ResetPasswordAsync(token, "replacement passphrase two");
+    Assert(reset.Succeeded && reset.Account!.SecurityVersion == originalVersion + 1,
+        "Password reset did not invalidate existing session versions.");
+    Assert(!(await fixture.Service.ResetPasswordAsync(token, "replacement passphrase three")).Succeeded,
+        "A single-use reset token was accepted twice.");
+    Assert(await fixture.Service.AuthenticateAsync("reset@example.com", "original secure passphrase") is null &&
+           await fixture.Service.AuthenticateAsync("reset@example.com", "replacement passphrase two") is not null,
+        "Reset did not replace the password hash correctly.");
+}
+
+static async Task TestEmailVerificationAsync()
+{
+    var fixture = TestAccountService();
+    var created = await fixture.Service.CreateAsync(
+        WorkspaceIdentity.Create(), "verify@example.com", "verification passphrase",
+        new Uri("https://example.test/"));
+    var token = fixture.Email.VerificationToken!;
+    var verified = await fixture.Service.VerifyEmailAsync(token);
+    Assert(verified.Succeeded && verified.Account!.EmailVerified,
+        "A valid email-verification token did not verify the account.");
+    Assert(!(await fixture.Service.VerifyEmailAsync(token)).Succeeded,
+        "A verification token was reusable.");
+    Assert(created.Account!.Email == "verify@example.com", "Account email changed during verification.");
+}
+
+static async Task TestPasswordResetEnumerationAsync()
+{
+    var fixture = TestAccountService();
+    await fixture.Service.CreateAsync(
+        WorkspaceIdentity.Create(), "known@example.com", "enumeration test password",
+        new Uri("https://example.test/"));
+    var before = fixture.Email.ResetMessages;
+    await fixture.Service.RequestPasswordResetAsync("missing@example.com", new Uri("https://example.test/"));
+    Assert(fixture.Email.ResetMessages == before,
+        "A reset message was sent for an unknown account.");
+    await fixture.Service.RequestPasswordResetAsync("known@example.com", new Uri("https://example.test/"));
+    Assert(fixture.Email.ResetMessages == before + 1,
+        "A known account did not receive its reset message.");
+    fixture.Email.FailDelivery = true;
+    await fixture.Service.RequestPasswordResetAsync("known@example.com", new Uri("https://example.test/"));
+    await fixture.Service.RequestPasswordResetAsync("missing@example.com", new Uri("https://example.test/"));
+}
+
+static Task TestAccountPersistenceAsync()
+{
+    Assert(AccountPersistence.Lifetime(AccountPersistence.Session) is null,
+        "Session-only login unexpectedly created a persistent lifetime.");
+    Assert(AccountPersistence.Lifetime(AccountPersistence.OneDay) == TimeSpan.FromDays(1) &&
+           AccountPersistence.Lifetime(AccountPersistence.SevenDays) == TimeSpan.FromDays(7) &&
+           AccountPersistence.Lifetime(AccountPersistence.FourteenDays) == TimeSpan.FromDays(14) &&
+           AccountPersistence.Lifetime(AccountPersistence.ThirtyDays) == TimeSpan.FromDays(30) &&
+           AccountPersistence.Lifetime(AccountPersistence.KeepSignedIn) == TimeSpan.FromDays(180),
+        "A persisted login duration is incorrect or unbounded.");
+    Assert(AccountPersistence.Normalize("unexpected") == AccountPersistence.Session,
+        "Unknown persistence did not fail safely to session-only.");
+    return Task.CompletedTask;
+}
+
+static async Task TestAccountSurvivesWorkspaceResetAsync()
+{
+    var directory = TestDirectory("account-reset-separation");
+    try
+    {
+        var workspaceStore = new FileWorkspaceDataStore(directory, NullLogger<FileWorkspaceDataStore>.Instance);
+        await workspaceStore.WriteJsonAsync(WorkspaceDataFile.Settings, ViewerSettings.Default);
+        var fixture = TestAccountService();
+        var account = await fixture.Service.CreateAsync(
+            WorkspaceIdentity.Create(), "survives@example.com", "account survives reset",
+            new Uri("https://example.test/"));
+        await workspaceStore.DeleteAllAsync();
+        Assert(await fixture.Service.GetByIdAsync(account.Account!.AccountId) is not null,
+            "Resetting workspace content deleted the separate account record.");
+    }
+    finally
+    {
+        Directory.Delete(directory, recursive: true);
+    }
+}
+
+static Task TestAccountSecretsExcludedFromExportAsync()
+{
+    var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+    var portable = new PortableWorkspaceService(companies);
+    var json = JsonSerializer.Serialize(portable.Export(ViewerSettings.Default, JobHistoryDocument.Empty));
+    foreach (var forbidden in new[]
+    {
+        "passwordHash", "resetToken", "verificationToken", "sessionToken",
+        AccountAuthentication.CookieName, "normalizedEmail", "securityVersion"
+    })
+    {
+        Assert(!json.Contains(forbidden, StringComparison.OrdinalIgnoreCase),
+            $"Portable export contained authentication field '{forbidden}'.");
+    }
     return Task.CompletedTask;
 }
 
@@ -3751,7 +4030,68 @@ static void AssertThrows<TException>(Action action) where TException : Exception
     throw new InvalidOperationException($"Expected {typeof(TException).Name} was not thrown.");
 }
 
+static async Task AssertThrowsAsync<TException>(Func<Task> action) where TException : Exception
+{
+    try { await action(); }
+    catch (TException) { return; }
+    throw new InvalidOperationException($"Expected {typeof(TException).Name} was not thrown.");
+}
+
+static (AccountService Service, MemoryAccountRegistryStore Store,
+    TestAccountEmailSender Email, ManualTimeProvider Time) TestAccountService()
+{
+    var store = new MemoryAccountRegistryStore();
+    var email = new TestAccountEmailSender();
+    var time = new ManualTimeProvider(new DateTimeOffset(2026, 8, 28, 12, 0, 0, TimeSpan.Zero));
+    var service = new AccountService(
+        store, new PasswordHasher<AccountRecord>(), email, time,
+        NullLogger<AccountService>.Instance);
+    return (service, store, email, time);
+}
+
 internal sealed record TestDocument(string Name, int Value);
+
+internal sealed class ManualTimeProvider(DateTimeOffset value) : TimeProvider
+{
+    private DateTimeOffset _value = value;
+    public override DateTimeOffset GetUtcNow() => _value;
+    public void Advance(TimeSpan duration) => _value = _value.Add(duration);
+}
+
+internal sealed class TestAccountEmailSender : IAccountEmailSender
+{
+    public bool IsConfigured => true;
+    public string? VerificationToken { get; private set; }
+    public string? ResetToken { get; private set; }
+    public int ResetMessages { get; private set; }
+    public bool FailDelivery { get; set; }
+
+    public Task SendVerificationAsync(
+        string email, Uri link, CancellationToken cancellationToken = default)
+    {
+        if (FailDelivery) throw new SmtpException("Simulated provider failure.");
+        VerificationToken = TokenFromFragment(link, "verifyEmailToken");
+        return Task.CompletedTask;
+    }
+
+    public Task SendPasswordResetAsync(
+        string email, Uri link, CancellationToken cancellationToken = default)
+    {
+        if (FailDelivery) throw new SmtpException("Simulated provider failure.");
+        ResetToken = TokenFromFragment(link, "resetToken");
+        ResetMessages++;
+        return Task.CompletedTask;
+    }
+
+    private static string TokenFromFragment(Uri link, string key)
+    {
+        var fragment = link.Fragment.TrimStart('#');
+        var parts = fragment.Split('=', 2);
+        if (parts.Length != 2 || parts[0] != key)
+            throw new InvalidOperationException("Account email link did not contain the expected fragment token.");
+        return Uri.UnescapeDataString(parts[1]);
+    }
+}
 
 internal sealed class StubHttpMessageHandler(Func<HttpRequestMessage, string> responseFactory)
     : HttpMessageHandler

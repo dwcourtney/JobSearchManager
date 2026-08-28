@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Security.Claims;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.DataProtection;
 
@@ -66,13 +67,27 @@ public sealed class WorkspaceIdentityMiddleware
             WorkspaceIdentity.LegacyProtectorPurpose);
     }
 
-    public async Task InvokeAsync(HttpContext httpContext, WorkspaceContext workspace)
+    public async Task InvokeAsync(
+        HttpContext httpContext,
+        WorkspaceContext workspace,
+        AccountService accounts)
     {
-        if (_hosting.IsLocal)
+        var authenticatedAccountId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!string.IsNullOrWhiteSpace(authenticatedAccountId))
         {
-            workspace.SetWorkspace(WorkspaceContext.LocalWorkspaceId);
-            await _next(httpContext);
-            return;
+            if (!httpContext.Request.Path.StartsWithSegments("/api"))
+            {
+                await _next(httpContext);
+                return;
+            }
+            var account = httpContext.Items[AccountAuthentication.ResolvedAccountItem] as AccountRecord ??
+                await accounts.GetByIdAsync(authenticatedAccountId, httpContext.RequestAborted);
+            if (account is not null)
+            {
+                workspace.SetWorkspace(account.WorkspaceId);
+                await _next(httpContext);
+                return;
+            }
         }
 
         var protectedWorkspace = httpContext.Request.Cookies[WorkspaceIdentity.CookieName];
@@ -83,7 +98,8 @@ public sealed class WorkspaceIdentityMiddleware
             try
             {
                 workspaceId = _protector.Unprotect(protectedWorkspace);
-                canonicalCookieValid = WorkspaceIdentity.IsValid(workspaceId);
+                canonicalCookieValid = WorkspaceIdentity.IsValid(workspaceId) ||
+                    (_hosting.IsLocal && workspaceId == WorkspaceContext.LocalWorkspaceId);
             }
             catch (CryptographicException)
             {
@@ -93,12 +109,13 @@ public sealed class WorkspaceIdentityMiddleware
 
         var legacyCookie = httpContext.Request.Cookies[WorkspaceIdentity.LegacyCookieName];
         var migratedLegacyCookie = false;
-        if (!WorkspaceIdentity.IsValid(workspaceId) && !string.IsNullOrWhiteSpace(legacyCookie))
+        if (!canonicalCookieValid && !string.IsNullOrWhiteSpace(legacyCookie))
         {
             try
             {
                 workspaceId = _legacyProtector.Unprotect(legacyCookie);
-                migratedLegacyCookie = WorkspaceIdentity.IsValid(workspaceId);
+                migratedLegacyCookie = WorkspaceIdentity.IsValid(workspaceId) ||
+                    (_hosting.IsLocal && workspaceId == WorkspaceContext.LocalWorkspaceId);
             }
             catch (CryptographicException)
             {
@@ -106,9 +123,35 @@ public sealed class WorkspaceIdentityMiddleware
             }
         }
 
-        if (!WorkspaceIdentity.IsValid(workspaceId))
+        if (!WorkspaceIdentity.IsValid(workspaceId) &&
+            !(_hosting.IsLocal && workspaceId == WorkspaceContext.LocalWorkspaceId))
         {
-            workspaceId = WorkspaceIdentity.Create();
+            if (_hosting.IsLocal)
+            {
+                workspaceId = WorkspaceContext.LocalWorkspaceId;
+                canonicalCookieValid = true;
+            }
+            else
+            {
+                workspaceId = WorkspaceIdentity.Create();
+            }
+        }
+
+        // Resolve ownership on the HTML document before its scripts issue parallel API calls,
+        // and again for direct API clients. CSS, scripts, icons, and images never read workspace
+        // state and therefore do not need a registry lookup.
+        var resolvesWorkspace = httpContext.Request.Path.StartsWithSegments("/api") ||
+            httpContext.Request.Path == "/" || httpContext.Request.Path == "/index.html";
+        if (resolvesWorkspace)
+        {
+            var owner = await accounts.GetWorkspaceOwnerAsync(workspaceId!, httpContext.RequestAborted);
+            if (owner is not null)
+            {
+                workspaceId = WorkspaceIdentity.Create();
+                canonicalCookieValid = false;
+                migratedLegacyCookie = false;
+                _logger.LogInformation("Rotated an anonymous cookie that referenced a claimed workspace.");
+            }
         }
 
         if (!canonicalCookieValid || migratedLegacyCookie)
@@ -116,12 +159,12 @@ public sealed class WorkspaceIdentityMiddleware
             httpContext.Response.Cookies.Append(
                 WorkspaceIdentity.CookieName,
                 _protector.Protect(workspaceId!),
-                WorkspaceIdentity.CreateCookieOptions(secure: true));
+                WorkspaceIdentity.CreateCookieOptions(secure: _hosting.IsAzure));
             if (migratedLegacyCookie)
             {
                 httpContext.Response.Cookies.Delete(
                     WorkspaceIdentity.LegacyCookieName,
-                    WorkspaceIdentity.CreateCookieOptions(secure: true));
+                    WorkspaceIdentity.CreateCookieOptions(secure: _hosting.IsAzure));
                 _logger.LogInformation(
                     "Migrated anonymous workspace {WorkspaceReference} to the current cookie name.",
                     WorkspaceIdentity.Redact(workspaceId!));

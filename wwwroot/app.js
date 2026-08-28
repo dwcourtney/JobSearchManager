@@ -31,6 +31,9 @@ const AGE_GROUPS = [
 const state = {
   activeView: "jobs",
   activeSettingsTab: "job-search",
+  account: null,
+  workspaceIdentity: null,
+  accountLinkToken: null,
   activeQualificationTab: "basics",
   jobs: [],
   inclusions: [],
@@ -127,10 +130,61 @@ const elements = {
   qualificationsSettingsTab: document.querySelector("#qualifications-settings-tab"),
   preferencesSettingsTab: document.querySelector("#preferences-settings-tab"),
   jobFitSettingsTab: document.querySelector("#job-fit-settings-tab"),
+  accountSettingsTab: document.querySelector("#account-settings-tab"),
   jobSearchSettingsPanel: document.querySelector("#job-search-settings-panel"),
   qualificationsSettingsPanel: document.querySelector("#qualifications-settings-panel"),
   preferencesSettingsPanel: document.querySelector("#preferences-settings-panel"),
   jobFitSettingsPanel: document.querySelector("#job-fit-settings-panel"),
+  accountSettingsPanel: document.querySelector("#account-settings-panel"),
+  anonymousAccountSection: document.querySelector("#anonymous-account-section"),
+  createAccountSection: document.querySelector("#create-account-section"),
+  loginAccountSection: document.querySelector("#login-account-section"),
+  forgotPasswordSection: document.querySelector("#forgot-password-section"),
+  resetPasswordSection: document.querySelector("#reset-password-section"),
+  authenticatedAccountSection: document.querySelector("#authenticated-account-section"),
+  changePasswordSection: document.querySelector("#change-password-section"),
+  createAccountForm: document.querySelector("#create-account-form"),
+  createAccountEmail: document.querySelector("#create-account-email"),
+  createAccountPassword: document.querySelector("#create-account-password"),
+  createAccountConfirm: document.querySelector("#create-account-confirm"),
+  createAccountPersistence: document.querySelector("#create-account-persistence"),
+  createAccountStatus: document.querySelector("#create-account-status"),
+  loginAccountForm: document.querySelector("#login-account-form"),
+  loginAccountEmail: document.querySelector("#login-account-email"),
+  loginAccountPassword: document.querySelector("#login-account-password"),
+  loginAccountPersistence: document.querySelector("#login-account-persistence"),
+  loginAccountStatus: document.querySelector("#login-account-status"),
+  forgotPasswordForm: document.querySelector("#forgot-password-form"),
+  forgotPasswordEmail: document.querySelector("#forgot-password-email"),
+  forgotPasswordStatus: document.querySelector("#forgot-password-status"),
+  resetPasswordForm: document.querySelector("#reset-password-form"),
+  resetAccountPassword: document.querySelector("#reset-account-password"),
+  resetAccountConfirm: document.querySelector("#reset-account-confirm"),
+  resetPasswordStatus: document.querySelector("#reset-password-status"),
+  changePasswordForm: document.querySelector("#change-password-form"),
+  currentAccountPassword: document.querySelector("#current-account-password"),
+  newAccountPassword: document.querySelector("#new-account-password"),
+  newAccountConfirm: document.querySelector("#new-account-confirm"),
+  changePasswordStatus: document.querySelector("#change-password-status"),
+  accountEmail: document.querySelector("#account-email"),
+  accountEmailStatus: document.querySelector("#account-email-status"),
+  accountWorkspaceId: document.querySelector("#account-workspace-id"),
+  anonymousAccountWorkspaceId: document.querySelector("#anonymous-account-workspace-id"),
+  accountSessionPersistence: document.querySelector("#account-session-persistence"),
+  authenticatedAccountStatus: document.querySelector("#authenticated-account-status"),
+  emailVerificationActions: document.querySelector("#email-verification-actions"),
+  accountEmailConfigurationNote: document.querySelector("#account-email-configuration-note"),
+  showCreateAccount: document.querySelector("#show-create-account"),
+  showLogin: document.querySelector("#show-login"),
+  showForgotPassword: document.querySelector("#show-forgot-password"),
+  showChangePassword: document.querySelector("#show-change-password"),
+  cancelCreateAccount: document.querySelector("#cancel-create-account"),
+  cancelLogin: document.querySelector("#cancel-login"),
+  cancelForgotPassword: document.querySelector("#cancel-forgot-password"),
+  cancelResetPassword: document.querySelector("#cancel-reset-password"),
+  cancelChangePassword: document.querySelector("#cancel-change-password"),
+  requestEmailVerification: document.querySelector("#request-email-verification"),
+  signOutAccount: document.querySelector("#sign-out-account"),
   qualificationBasicsTab: document.querySelector("#qualification-basics-tab"),
   qualificationCredentialsTab: document.querySelector("#qualification-credentials-tab"),
   qualificationBasicsPanel: document.querySelector("#qualification-basics-panel"),
@@ -346,6 +400,7 @@ async function initialize() {
   elements.qualificationsSettingsTab.addEventListener("click", () => showSettingsTab("qualifications", true));
   elements.preferencesSettingsTab.addEventListener("click", () => showSettingsTab("preferences", true));
   elements.jobFitSettingsTab.addEventListener("click", () => showSettingsTab("job-fit", true));
+  elements.accountSettingsTab.addEventListener("click", () => showSettingsTab("account", true));
   document.querySelector(".settings-tabs").addEventListener("keydown", handleSettingsTabKeydown);
   elements.qualificationBasicsTab.addEventListener("click", () => showQualificationTab("basics", true));
   elements.qualificationCredentialsTab.addEventListener("click", () => showQualificationTab("credentials", true));
@@ -504,6 +559,23 @@ async function initialize() {
   elements.atAGlanceTab.addEventListener("click", () => showDetailTab("glance", true));
   elements.jobFitDetailTab.addEventListener("click", () => showDetailTab("fit", true));
   elements.fullPostingTab.addEventListener("click", () => showDetailTab("posting", true));
+  elements.showCreateAccount.addEventListener("click", () => showAccountSection("create"));
+  elements.showLogin.addEventListener("click", () => showAccountSection("login"));
+  elements.showForgotPassword.addEventListener("click", () => showAccountSection("forgot"));
+  elements.showChangePassword.addEventListener("click", () => showAccountSection("change"));
+  elements.cancelCreateAccount.addEventListener("click", () => showAccountSection("default"));
+  elements.cancelLogin.addEventListener("click", () => showAccountSection("default"));
+  elements.cancelForgotPassword.addEventListener("click", () => showAccountSection("login"));
+  elements.cancelResetPassword.addEventListener("click", cancelPasswordReset);
+  elements.cancelChangePassword.addEventListener("click", () => showAccountSection("default"));
+  elements.createAccountForm.addEventListener("submit", createAccount);
+  elements.loginAccountForm.addEventListener("submit", loginAccount);
+  elements.forgotPasswordForm.addEventListener("submit", requestPasswordReset);
+  elements.resetPasswordForm.addEventListener("submit", resetPassword);
+  elements.changePasswordForm.addEventListener("submit", changePassword);
+  elements.signOutAccount.addEventListener("click", signOutAccount);
+  elements.requestEmailVerification.addEventListener("click", requestEmailVerification);
+  elements.accountSessionPersistence.addEventListener("change", updateSessionPersistence);
   document.querySelector(".detail-tabs").addEventListener("keydown", handleDetailTabKeydown);
   elements.copyPostingButton.addEventListener("click", copySelectedJobPosting);
   document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -551,7 +623,7 @@ function showView(view, focusFirstControl = false, options = {}) {
 }
 
 function showSettingsTab(tab, moveFocus = false) {
-  state.activeSettingsTab = ["job-search", "qualifications", "preferences", "job-fit"].includes(tab)
+  state.activeSettingsTab = ["job-search", "qualifications", "preferences", "job-fit", "account"].includes(tab)
     ? tab
     : "job-search";
   const tabs = [
@@ -574,6 +646,11 @@ function showSettingsTab(tab, moveFocus = false) {
       id: "job-fit",
       tab: elements.jobFitSettingsTab,
       panel: elements.jobFitSettingsPanel
+    },
+    {
+      id: "account",
+      tab: elements.accountSettingsTab,
+      panel: elements.accountSettingsPanel
     }
   ];
   for (const candidate of tabs) {
@@ -591,7 +668,7 @@ function showSettingsTab(tab, moveFocus = false) {
 function handleSettingsTabKeydown(event) {
   if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
   event.preventDefault();
-  const tabs = ["job-search", "qualifications", "preferences", "job-fit"];
+  const tabs = ["job-search", "qualifications", "preferences", "job-fit", "account"];
   const currentIndex = tabs.indexOf(state.activeSettingsTab);
   const nextIndex = event.key === "Home"
     ? 0
@@ -692,27 +769,29 @@ function handleDetailTabKeydown(event) {
 async function loadInitialState() {
   try {
     const [companiesResponse, credentialsResponse, jobFitConceptsResponse,
-      settingsResponse, jobsResponse, workspaceResponse] = await Promise.all([
+      settingsResponse, jobsResponse, workspaceResponse, accountResponse] = await Promise.all([
       fetch("/api/companies", { cache: "no-store" }),
       fetch("/api/credentials", { cache: "no-store" }),
       fetch("/api/job-fit/concepts", { cache: "no-store" }),
       fetch("/api/settings", { cache: "no-store" }),
       fetch("/api/jobs", { cache: "no-store" }),
-      fetch("/api/workspace/identity", { cache: "no-store" })
+      fetch("/api/workspace/identity", { cache: "no-store" }),
+      fetch("/api/account/status", { cache: "no-store" })
     ]);
     if (!companiesResponse.ok || !credentialsResponse.ok || !jobFitConceptsResponse.ok || !settingsResponse.ok ||
-        !jobsResponse.ok || !workspaceResponse.ok) {
+        !jobsResponse.ok || !workspaceResponse.ok || !accountResponse.ok) {
       const failed = [companiesResponse, credentialsResponse, jobFitConceptsResponse,
-        settingsResponse, jobsResponse, workspaceResponse]
+        settingsResponse, jobsResponse, workspaceResponse, accountResponse]
         .find(response => !response.ok);
       throw new Error(await apiErrorMessage(failed, "Application data could not be loaded."));
     }
     state.companies = await companiesResponse.json();
     state.credentialOptions = await credentialsResponse.json();
     state.jobFitConcepts = await jobFitConceptsResponse.json();
-    const workspaceIdentity = await workspaceResponse.json();
-    elements.workspaceId.value = workspaceIdentity.workspaceId || "Unavailable";
-    elements.copyWorkspaceIdButton.disabled = !workspaceIdentity.workspaceId;
+    state.workspaceIdentity = await workspaceResponse.json();
+    state.account = await accountResponse.json();
+    updateWorkspaceIdentityUi();
+    renderAccountUi();
     populateCompanySelect();
     applySettings(await settingsResponse.json());
     populateCredentialInventory();
@@ -723,6 +802,13 @@ async function loadInitialState() {
     applySnapshot(initialSnapshot);
     await hydrateSourceControls();
     state.isInitializing = false;
+    const handledAccountLink = await handleAccountLink();
+    if (handledAccountLink) {
+      setLoading(false);
+      showView("settings", false, { bypassSourceGuard: true });
+      showSettingsTab("account");
+      return;
+    }
     if (!state.hasConfiguredSource) {
       setLoading(false);
       showView("settings");
@@ -736,6 +822,261 @@ async function loadInitialState() {
     state.isInitializing = false;
     showClientError(error);
   }
+}
+
+function updateWorkspaceIdentityUi() {
+  const identity = state.workspaceIdentity || {};
+  const authenticated = identity.accessMode === "authenticated";
+  elements.workspaceId.value = authenticated
+    ? identity.internalWorkspaceId || "Managed by account"
+    : identity.workspaceId || "Unavailable";
+  elements.copyWorkspaceIdButton.disabled = authenticated || !identity.workspaceId;
+  elements.workspaceIdStatus.textContent = authenticated
+    ? "This is an internal identifier, not an authentication credential. Account ownership controls access."
+    : "Keep this ID private; it grants access while the workspace remains anonymous.";
+}
+
+function renderAccountUi() {
+  const account = state.account || { authenticated: false, persistence: "session" };
+  elements.accountEmailConfigurationNote.hidden = account.emailDeliveryConfigured === true;
+  if (account.authenticated) {
+    elements.accountEmail.textContent = account.email;
+    elements.accountEmailStatus.textContent = account.emailVerified ? "Verified" : "Not verified";
+    elements.accountWorkspaceId.textContent = state.workspaceIdentity?.internalWorkspaceId || "Internal";
+    elements.accountSessionPersistence.value = account.persistence || "session";
+    elements.emailVerificationActions.hidden = account.emailVerified;
+    elements.requestEmailVerification.disabled = account.emailVerified ||
+      account.emailDeliveryConfigured !== true;
+  } else {
+    elements.anonymousAccountWorkspaceId.textContent =
+      state.workspaceIdentity?.workspaceId || "Unavailable";
+  }
+  showAccountSection("default");
+}
+
+function showAccountSection(mode) {
+  const sections = {
+    anonymous: elements.anonymousAccountSection,
+    create: elements.createAccountSection,
+    login: elements.loginAccountSection,
+    forgot: elements.forgotPasswordSection,
+    reset: elements.resetPasswordSection,
+    authenticated: elements.authenticatedAccountSection,
+    change: elements.changePasswordSection
+  };
+  Object.values(sections).forEach(section => { section.hidden = true; });
+  let selected = mode;
+  if (selected === "default") selected = state.account?.authenticated ? "authenticated" : "anonymous";
+  if (selected === "change" && !state.account?.authenticated) selected = "login";
+  if (!sections[selected]) selected = state.account?.authenticated ? "authenticated" : "anonymous";
+  sections[selected].hidden = false;
+  const focusTarget = sections[selected].querySelector("input, select, button");
+  if (mode !== "default") focusTarget?.focus({ preventScroll: true });
+}
+
+function setFormBusy(form, busy) {
+  form.querySelectorAll("input, select, button").forEach(control => { control.disabled = busy; });
+}
+
+async function postAccountJson(url, body) {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  const payload = response.status === 204 ? {} : await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload.error || "The account request could not be completed.");
+  return payload;
+}
+
+async function createAccount(event) {
+  event.preventDefault();
+  elements.createAccountStatus.textContent = "";
+  if (elements.createAccountPassword.value !== elements.createAccountConfirm.value) {
+    elements.createAccountStatus.textContent = "The password confirmation does not match.";
+    return;
+  }
+  setFormBusy(elements.createAccountForm, true);
+  try {
+    await postAccountJson("/api/account/create", {
+      email: elements.createAccountEmail.value,
+      password: elements.createAccountPassword.value,
+      confirmPassword: elements.createAccountConfirm.value,
+      persistence: elements.createAccountPersistence.value
+    });
+    window.location.reload();
+  } catch (error) {
+    elements.createAccountStatus.textContent = error.message || String(error);
+    setFormBusy(elements.createAccountForm, false);
+  }
+}
+
+async function loginAccount(event) {
+  event.preventDefault();
+  elements.loginAccountStatus.textContent = "";
+  setFormBusy(elements.loginAccountForm, true);
+  try {
+    await postAccountJson("/api/account/login", {
+      email: elements.loginAccountEmail.value,
+      password: elements.loginAccountPassword.value,
+      persistence: elements.loginAccountPersistence.value
+    });
+    window.location.reload();
+  } catch (error) {
+    elements.loginAccountStatus.textContent = error.message || String(error);
+    setFormBusy(elements.loginAccountForm, false);
+  }
+}
+
+async function requestPasswordReset(event) {
+  event.preventDefault();
+  elements.forgotPasswordStatus.textContent = "";
+  setFormBusy(elements.forgotPasswordForm, true);
+  try {
+    const result = await postAccountJson("/api/account/forgot-password", {
+      email: elements.forgotPasswordEmail.value
+    });
+    elements.forgotPasswordStatus.textContent = result.message;
+  } catch (error) {
+    elements.forgotPasswordStatus.textContent = error.message || String(error);
+  } finally {
+    setFormBusy(elements.forgotPasswordForm, false);
+  }
+}
+
+async function resetPassword(event) {
+  event.preventDefault();
+  elements.resetPasswordStatus.textContent = "";
+  if (elements.resetAccountPassword.value !== elements.resetAccountConfirm.value) {
+    elements.resetPasswordStatus.textContent = "The password confirmation does not match.";
+    return;
+  }
+  setFormBusy(elements.resetPasswordForm, true);
+  try {
+    const result = await postAccountJson("/api/account/reset-password", {
+      token: state.accountLinkToken,
+      password: elements.resetAccountPassword.value,
+      confirmPassword: elements.resetAccountConfirm.value
+    });
+    clearAccountLink();
+    showAccountSection("login");
+    elements.loginAccountStatus.textContent = result.message;
+  } catch (error) {
+    elements.resetPasswordStatus.textContent = error.message || String(error);
+  } finally {
+    setFormBusy(elements.resetPasswordForm, false);
+  }
+}
+
+async function changePassword(event) {
+  event.preventDefault();
+  elements.changePasswordStatus.textContent = "";
+  if (elements.newAccountPassword.value !== elements.newAccountConfirm.value) {
+    elements.changePasswordStatus.textContent = "The password confirmation does not match.";
+    return;
+  }
+  setFormBusy(elements.changePasswordForm, true);
+  try {
+    const result = await postAccountJson("/api/account/change-password", {
+      currentPassword: elements.currentAccountPassword.value,
+      password: elements.newAccountPassword.value,
+      confirmPassword: elements.newAccountConfirm.value,
+      persistence: elements.accountSessionPersistence.value
+    });
+    elements.changePasswordForm.reset();
+    showAccountSection("default");
+    elements.authenticatedAccountStatus.textContent = result.message;
+  } catch (error) {
+    elements.changePasswordStatus.textContent = error.message || String(error);
+  } finally {
+    setFormBusy(elements.changePasswordForm, false);
+  }
+}
+
+async function signOutAccount() {
+  elements.signOutAccount.disabled = true;
+  elements.authenticatedAccountStatus.textContent = "Signing out…";
+  try {
+    await postAccountJson("/api/account/logout", {});
+    window.location.reload();
+  } catch (error) {
+    elements.authenticatedAccountStatus.textContent = error.message || String(error);
+    elements.signOutAccount.disabled = false;
+  }
+}
+
+async function updateSessionPersistence() {
+  elements.accountSessionPersistence.disabled = true;
+  try {
+    const result = await postAccountJson("/api/account/session", {
+      persistence: elements.accountSessionPersistence.value
+    });
+    state.account.persistence = result.persistence;
+    elements.authenticatedAccountStatus.textContent = "Login persistence updated for this browser.";
+  } catch (error) {
+    elements.authenticatedAccountStatus.textContent = error.message || String(error);
+  } finally {
+    elements.accountSessionPersistence.disabled = false;
+  }
+}
+
+async function requestEmailVerification() {
+  elements.requestEmailVerification.disabled = true;
+  try {
+    const result = await postAccountJson("/api/account/request-verification", {});
+    elements.authenticatedAccountStatus.textContent = result.message;
+  } catch (error) {
+    elements.authenticatedAccountStatus.textContent = error.message || String(error);
+  } finally {
+    elements.requestEmailVerification.disabled = false;
+  }
+}
+
+function accountLinkParameters() {
+  const fragment = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : "";
+  return new URLSearchParams(fragment);
+}
+
+function clearAccountLink() {
+  state.accountLinkToken = null;
+  history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+}
+
+function cancelPasswordReset() {
+  clearAccountLink();
+  showAccountSection("default");
+}
+
+async function handleAccountLink() {
+  const parameters = accountLinkParameters();
+  const resetToken = parameters.get("resetToken");
+  const verificationToken = parameters.get("verifyEmailToken");
+  if (resetToken) {
+    state.accountLinkToken = resetToken;
+    showAccountSection("reset");
+    return true;
+  }
+  if (verificationToken) {
+    try {
+      const result = await postAccountJson("/api/account/verify-email", { token: verificationToken });
+      clearAccountLink();
+      const response = await fetch("/api/account/status", { cache: "no-store" });
+      if (response.ok) state.account = await response.json();
+      renderAccountUi();
+      showAccountSection("default");
+      const status = state.account?.authenticated
+        ? elements.authenticatedAccountStatus : elements.loginAccountStatus;
+      status.textContent = result.message;
+    } catch (error) {
+      clearAccountLink();
+      showAccountSection(state.account?.authenticated ? "default" : "login");
+      const status = state.account?.authenticated
+        ? elements.authenticatedAccountStatus : elements.loginAccountStatus;
+      status.textContent = error.message || String(error);
+    }
+    return true;
+  }
+  return false;
 }
 
 async function copyWorkspaceId() {

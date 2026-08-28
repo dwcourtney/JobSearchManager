@@ -36,6 +36,7 @@ $jobFitPath = Join-Path $repo "wwwroot\job-fit.js"
 $jobFitTestsPath = Join-Path $repo "Tests\job-fit.tests.js"
 $jobFitUiTestsPath = Join-Path $repo "Tests\job-fit-ui.tests.js"
 $jobFitDetailUiTestsPath = Join-Path $repo "Tests\job-fit-detail-ui.tests.js"
+$accountUiTestsPath = Join-Path $repo "Tests\account-ui.tests.js"
 
 foreach ($scriptPath in @(
     $appPath,
@@ -63,7 +64,8 @@ foreach ($scriptPath in @(
     $jobFitPath,
     $jobFitTestsPath,
     $jobFitUiTestsPath,
-    $jobFitDetailUiTestsPath)) {
+    $jobFitDetailUiTestsPath,
+    $accountUiTestsPath)) {
     & $NodePath --check $scriptPath
     if ($LASTEXITCODE -ne 0) {
         throw "JavaScript syntax validation failed for $scriptPath."
@@ -150,6 +152,11 @@ if ($LASTEXITCODE -ne 0) {
     throw "Job Fit detail-tab UI integration tests failed."
 }
 
+& $NodePath $accountUiTestsPath
+if ($LASTEXITCODE -ne 0) {
+    throw "Optional Account UI integration tests failed."
+}
+
 $styles = Get-Content -LiteralPath $stylesPath -Raw -Encoding UTF8
 $theme = Get-Content -LiteralPath $themePath -Raw -Encoding UTF8
 $index = Get-Content -LiteralPath $indexPath -Raw -Encoding UTF8
@@ -216,7 +223,7 @@ $unseenStateScript = $index.IndexOf('src="/job-unseen-state.js?v=1"')
 $credentialFitScript = $index.IndexOf('src="/credential-fit.js?v=2"')
 $clearanceFitScript = $index.IndexOf('src="/clearance-fit.js?v=1"')
 $jobFitScript = $index.IndexOf('src="/job-fit.js?v=4"')
-$appScript = $index.IndexOf('src="/app.js?v=24"')
+$appScript = $index.IndexOf('src="/app.js?v=25"')
 if ($countryOrderingScript -lt 0 -or $appScript -le $countryOrderingScript) {
     throw "The versioned country-ordering.js asset must load before app.js."
 }

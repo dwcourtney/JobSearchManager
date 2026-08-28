@@ -676,6 +676,49 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 }
 .settings-tabs .detail-tab { flex: 0 0 auto; white-space: nowrap; }
 .settings-tab-panel { min-width: 0; }
+.account-section > p { margin: .45rem 0; color: var(--color-text-secondary); line-height: var(--line-height-note); }
+.account-help { font-size: var(--font-size-label); }
+.account-mode-actions, .account-form-actions, .account-inline-action {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .55rem;
+  margin-top: .8rem;
+}
+.account-form {
+  display: grid;
+  grid-template-columns: minmax(9rem, 12rem) minmax(14rem, 28rem);
+  align-items: center;
+  gap: .55rem .8rem;
+  max-width: 44rem;
+}
+.account-form > label { color: var(--color-label); font-weight: var(--font-weight-semibold); }
+.account-form > input, .account-form > select {
+  width: 100%;
+  padding: .48rem .55rem;
+  border: var(--border-width-default) solid var(--color-border);
+  border-radius: var(--radius-control);
+  color: var(--color-input-text);
+  background: var(--color-input-background);
+}
+.account-form > small, .account-form > .settings-status, .account-form > .account-form-actions {
+  grid-column: 2;
+}
+.account-form > small { color: var(--color-text-secondary); line-height: var(--line-height-note); }
+.account-summary { display: grid; gap: .3rem; margin: .7rem 0 0; max-width: 42rem; }
+.account-summary > div {
+  display: grid;
+  grid-template-columns: minmax(9rem, 12rem) minmax(0, 1fr);
+  gap: .8rem;
+  padding: .32rem 0;
+  border-bottom: var(--border-width-default) solid var(--color-settings-section-separator);
+}
+.account-summary dt { color: var(--color-text-secondary); }
+.account-summary dd { margin: 0; color: var(--color-text-primary); font-weight: var(--font-weight-semibold); }
+.account-inline-action { justify-content: space-between; max-width: 42rem; }
+.account-inline-action p { margin: 0; color: var(--color-text-secondary); }
+.account-session-form { margin-top: 1rem; }
+.account-privacy-note { background: var(--color-surface-secondary); }
 .qualification-subtabs {
   padding-inline: 1.1rem;
   background: var(--color-settings-subtab-bar-background);
@@ -2219,6 +2262,11 @@ mark {
   .settings-view { padding: .8rem; }
   .settings-section { padding: .78rem .82rem .88rem; }
   .settings-row { grid-template-columns: 1fr; gap: .28rem; }
+  .account-form { grid-template-columns: 1fr; }
+  .account-form > small, .account-form > .settings-status, .account-form > .account-form-actions {
+    grid-column: 1;
+  }
+  .account-summary > div { grid-template-columns: 1fr; gap: .15rem; }
   .settings-row > label, .settings-row > .settings-row-label { padding-top: 0; }
   .job-fit-matrix-header { display: none; }
   .job-fit-survey-row { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .12rem; padding: .45rem; }

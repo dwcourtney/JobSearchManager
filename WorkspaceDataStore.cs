@@ -156,13 +156,16 @@ public sealed class FileWorkspaceDataStoreFactory : IWorkspaceDataStoreFactory
 
     public IWorkspaceDataStore Create(string workspaceId)
     {
-        if (!string.Equals(workspaceId, WorkspaceContext.LocalWorkspaceId, StringComparison.Ordinal))
+        if (!string.Equals(workspaceId, WorkspaceContext.LocalWorkspaceId, StringComparison.Ordinal) &&
+            !WorkspaceIdentity.IsValid(workspaceId))
         {
-            throw new InvalidOperationException("Local file storage supports only the local workspace.");
+            throw new InvalidOperationException("The local workspace identifier is invalid.");
         }
 
         return new FileWorkspaceDataStore(
-            _dataDirectory,
+            workspaceId == WorkspaceContext.LocalWorkspaceId
+                ? _dataDirectory
+                : Path.Combine(_dataDirectory, "workspaces", workspaceId),
             _loggerFactory.CreateLogger<FileWorkspaceDataStore>());
     }
 
