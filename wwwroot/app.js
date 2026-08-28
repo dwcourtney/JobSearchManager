@@ -56,6 +56,7 @@ const state = {
   jobFitSignals: [],
   jobFitConcepts: [],
   jobFitConceptSearch: "",
+  jobFitCategoryFilter: "all",
   credentialOptions: [],
   credentialInventoryStatus: "notConfigured",
   heldCredentialIds: new Set(),
@@ -179,6 +180,7 @@ const elements = {
   jobFitEnabled: document.querySelector("#job-fit-enabled"),
   jobFitConfiguration: document.querySelector("#job-fit-configuration"),
   jobFitConceptSearch: document.querySelector("#job-fit-concept-search"),
+  jobFitCategoryFilter: document.querySelector("#job-fit-category-filter"),
   jobFitConceptSelect: document.querySelector("#job-fit-concept-select"),
   jobFitPreferenceSelect: document.querySelector("#job-fit-preference-select"),
   jobFitAddSignal: document.querySelector("#job-fit-add-signal"),
@@ -443,6 +445,10 @@ async function initialize() {
   });
   elements.jobFitConceptSearch.addEventListener("input", () => {
     state.jobFitConceptSearch = elements.jobFitConceptSearch.value.trim().toLocaleLowerCase();
+    populateJobFitConceptSelect();
+  });
+  elements.jobFitCategoryFilter.addEventListener("change", () => {
+    state.jobFitCategoryFilter = elements.jobFitCategoryFilter.value;
     populateJobFitConceptSelect();
   });
   elements.jobFitAddSignal.addEventListener("click", addJobFitSignal);
@@ -838,10 +844,32 @@ function applyTheme() {
 function updateJobFitSettingsUi() {
   elements.jobFitConfiguration.hidden = !state.jobFitEnabled;
   elements.jobFitConceptSearch.disabled = !state.jobFitEnabled;
+  elements.jobFitCategoryFilter.disabled = !state.jobFitEnabled;
   elements.jobFitConceptSelect.disabled = !state.jobFitEnabled;
   elements.jobFitPreferenceSelect.disabled = !state.jobFitEnabled;
+  populateJobFitCategoryFilter();
   populateJobFitConceptSelect();
   renderJobFitSignals();
+}
+
+function populateJobFitCategoryFilter() {
+  const categories = Array.from(new Set(state.jobFitConcepts.map(concept => concept.category))).sort();
+  const selected = categories.includes(state.jobFitCategoryFilter)
+    ? state.jobFitCategoryFilter
+    : "all";
+  elements.jobFitCategoryFilter.replaceChildren();
+  const all = document.createElement("option");
+  all.value = "all";
+  all.textContent = "All categories";
+  elements.jobFitCategoryFilter.append(all);
+  categories.forEach(category => {
+    const option = document.createElement("option");
+    option.value = category;
+    option.textContent = category;
+    elements.jobFitCategoryFilter.append(option);
+  });
+  state.jobFitCategoryFilter = selected;
+  elements.jobFitCategoryFilter.value = selected;
 }
 
 function populateJobFitConceptSelect() {
@@ -850,6 +878,7 @@ function populateJobFitConceptSelect() {
   const query = state.jobFitConceptSearch;
   const available = state.jobFitConcepts.filter(concept =>
     !selectedIds.has(concept.id) &&
+    (state.jobFitCategoryFilter === "all" || concept.category === state.jobFitCategoryFilter) &&
     (!query || `${concept.displayName} ${concept.category}`.toLocaleLowerCase().includes(query)));
   const byCategory = new Map();
   available.forEach(concept => {
@@ -888,11 +917,33 @@ function renderJobFitSignals() {
   }
 
   const concepts = new Map(state.jobFitConcepts.map(concept => [concept.id, concept]));
-  state.jobFitSignals
+  const configured = state.jobFitSignals
     .filter(signal => concepts.has(signal.conceptId))
-    .sort((left, right) => concepts.get(left.conceptId).displayName
-      .localeCompare(concepts.get(right.conceptId).displayName))
-    .forEach(signal => {
+    .sort((left, right) => {
+      const leftConcept = concepts.get(left.conceptId);
+      const rightConcept = concepts.get(right.conceptId);
+      return leftConcept.category.localeCompare(rightConcept.category) ||
+        leftConcept.displayName.localeCompare(rightConcept.displayName);
+    });
+  const byCategory = new Map();
+  configured.forEach(signal => {
+    const category = concepts.get(signal.conceptId).category;
+    if (!byCategory.has(category)) byCategory.set(category, []);
+    byCategory.get(category).push(signal);
+  });
+  for (const [categoryName, signals] of byCategory) {
+    const section = document.createElement("details");
+    section.className = "job-fit-category-section";
+    section.open = true;
+    const summary = document.createElement("summary");
+    const heading = document.createElement("span");
+    heading.textContent = categoryName;
+    const count = document.createElement("small");
+    count.textContent = `${signals.length} configured`;
+    summary.append(heading, count);
+    const rows = document.createElement("div");
+    rows.className = "job-fit-category-rows";
+    signals.forEach(signal => {
       const concept = concepts.get(signal.conceptId);
       const row = document.createElement("div");
       row.className = "job-fit-signal-row";
@@ -925,8 +976,11 @@ function renderJobFitSignals() {
       remove.setAttribute("aria-label", `Remove Job Fit signal ${concept.displayName}`);
       remove.disabled = !state.jobFitEnabled;
       row.append(identity, preference, remove);
-      elements.jobFitSignalList.append(row);
+      rows.append(row);
     });
+    section.append(summary, rows);
+    elements.jobFitSignalList.append(section);
+  }
 }
 
 function addJobFitSignal() {

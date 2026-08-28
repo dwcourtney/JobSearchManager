@@ -22,6 +22,16 @@
     strongNegative: "Strong Negative",
     hardConflict: "Hard Conflict"
   });
+  const BASELINE = 5;
+  const DIMENSION_LIMITS = Object.freeze({
+    "Work Arrangement": Object.freeze({ minimum: -2, maximum: 1 }),
+    "Role Type / Career Direction": Object.freeze({ minimum: -3, maximum: 2.5 }),
+    "Technical Domain": Object.freeze({ minimum: -2, maximum: 1.5 }),
+    "Work Environment": Object.freeze({ minimum: -3, maximum: 1 }),
+    "Responsibility Shape": Object.freeze({ minimum: -2, maximum: 1.5 })
+  });
+  const DEFAULT_LIMITS = Object.freeze({ minimum: -2, maximum: 1 });
+  const DIMENSION_ORDER = Object.freeze(Object.keys(DIMENSION_LIMITS));
 
   function normalizeConfiguration(configuration) {
     const seen = new Set();
@@ -47,7 +57,7 @@
     const concepts = new Map((Array.isArray(conceptOptions) ? conceptOptions : [])
       .filter(item => item && typeof item.id === "string")
       .map(item => [item.id, item]));
-    const contributions = normalized.signals
+    let contributions = normalized.signals
       .filter(signal => detected.has(signal.conceptId) && concepts.has(signal.conceptId))
       .map(signal => {
         const concept = concepts.get(signal.conceptId);
@@ -61,14 +71,47 @@
           evidence: detected.get(signal.conceptId).evidence || "Canonical concept detected"
         };
       });
+    const superseded = new Set();
+    for (const contribution of contributions) {
+      const concept = concepts.get(contribution.conceptId);
+      for (const supersededId of Array.isArray(concept.supersedes) ? concept.supersedes : []) {
+        superseded.add(supersededId);
+      }
+    }
+    contributions = contributions.filter(contribution => !superseded.has(contribution.conceptId));
 
-    const total = contributions.reduce((sum, contribution) => sum + contribution.impact, 6);
+    const byCategory = new Map();
+    for (const contribution of contributions) {
+      if (!byCategory.has(contribution.category)) byCategory.set(contribution.category, []);
+      byCategory.get(contribution.category).push(contribution);
+    }
+    const dimensions = Array.from(byCategory, ([category, signals]) => {
+      const limits = DIMENSION_LIMITS[category] || DEFAULT_LIMITS;
+      const rawImpact = signals.reduce((sum, signal) => sum + signal.impact, 0);
+      const impact = Math.max(limits.minimum, Math.min(limits.maximum, rawImpact));
+      return {
+        category,
+        impact,
+        rawImpact,
+        capped: impact !== rawImpact,
+        signals
+      };
+    }).sort((left, right) => {
+      const leftIndex = DIMENSION_ORDER.indexOf(left.category);
+      const rightIndex = DIMENSION_ORDER.indexOf(right.category);
+      if (leftIndex < 0 && rightIndex < 0) return left.category.localeCompare(right.category);
+      if (leftIndex < 0) return 1;
+      if (rightIndex < 0) return -1;
+      return leftIndex - rightIndex;
+    });
+
+    const total = dimensions.reduce((sum, dimension) => sum + dimension.impact, BASELINE);
     let score = Math.max(1, Math.min(10, Math.round(total)));
     if (contributions.some(contribution => contribution.preference === "hardConflict")) {
       score = Math.min(score, 2);
     }
 
-    return { score, contributions };
+    return { score, baseline: BASELINE, dimensions, contributions };
   }
 
   function scoreClass(score) {
@@ -88,20 +131,30 @@
       return `${lines[0]}\n\nNo configured Job Fit signals were detected.`;
     }
 
-    const groups = [
-      ["Hard conflicts", ["hardConflict"]],
-      ["Strong negatives", ["strongNegative"]],
-      ["Negatives", ["negative"]],
-      ["Positives", ["positive", "strongPositive"]]
-    ];
-    for (const [heading, preferences] of groups) {
-      const matches = result.contributions.filter(item => preferences.includes(item.preference));
-      if (matches.length === 0) continue;
-      lines.push("", `${heading}:`);
-      matches.forEach(item => lines.push(`- ${item.displayName}: ${item.evidence}`));
+    for (const dimension of result.dimensions) {
+      const impact = formatImpact(dimension.impact);
+      const bounded = dimension.capped
+        ? ` (bounded from ${formatImpact(dimension.rawImpact)})`
+        : "";
+      lines.push("", `${dimension.category}: ${impact}${bounded}`);
+      dimension.signals.forEach(item => lines.push(
+        `- ${item.displayName} — ${item.preferenceLabel}: ${item.evidence}`));
     }
     return lines.join("\n");
   }
 
-  return { evaluate, normalizeConfiguration, scoreClass, tooltip, preferenceLabels: LABELS };
+  function formatImpact(value) {
+    const normalized = Number.isInteger(value) ? value.toFixed(0) : value.toFixed(1);
+    return `${value >= 0 ? "+" : ""}${normalized}`;
+  }
+
+  return {
+    evaluate,
+    normalizeConfiguration,
+    scoreClass,
+    tooltip,
+    preferenceLabels: LABELS,
+    baseline: BASELINE,
+    dimensionLimits: DIMENSION_LIMITS
+  };
 });

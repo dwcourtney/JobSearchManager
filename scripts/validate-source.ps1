@@ -209,7 +209,7 @@ $unseenStateScript = $index.IndexOf('src="/job-unseen-state.js?v=1"')
 $credentialFitScript = $index.IndexOf('src="/credential-fit.js?v=2"')
 $clearanceFitScript = $index.IndexOf('src="/clearance-fit.js?v=1"')
 $jobFitScript = $index.IndexOf('src="/job-fit.js?v=1"')
-$appScript = $index.IndexOf('src="/app.js?v=20"')
+$appScript = $index.IndexOf('src="/app.js?v=21"')
 if ($countryOrderingScript -lt 0 -or $appScript -le $countryOrderingScript) {
     throw "The versioned country-ordering.js asset must load before app.js."
 }
@@ -345,7 +345,7 @@ $requiredSettingsControls = @{
     )
     "Job Fit" = @(
         "job-fit-enabled", "job-fit-configuration", "job-fit-concept-search",
-        "job-fit-concept-select", "job-fit-preference-select", "job-fit-add-signal",
+        "job-fit-category-filter", "job-fit-concept-select", "job-fit-preference-select", "job-fit-add-signal",
         "job-fit-signal-list"
     )
 }

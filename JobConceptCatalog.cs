@@ -10,9 +10,14 @@ public sealed record JobConceptDefinition(
     IReadOnlyList<string>? EvidencePatterns = null,
     bool RemoteDesignation = false,
     IReadOnlyList<string>? RemoteSignalCategories = null,
-    IReadOnlyList<string>? ExtendedLocationCategories = null);
+    IReadOnlyList<string>? ExtendedLocationCategories = null,
+    IReadOnlyList<string>? Supersedes = null);
 
-public sealed record JobConceptOption(string Id, string DisplayName, string Category);
+public sealed record JobConceptOption(
+    string Id,
+    string DisplayName,
+    string Category,
+    IReadOnlyList<string> Supersedes);
 
 internal sealed record JobConceptCatalogDocument(
     int Version,
@@ -48,6 +53,17 @@ public sealed class JobConceptCatalog
                 throw new InvalidDataException($"Duplicate job concept ID '{concept.Id}'.");
             }
         }
+        foreach (var concept in _byId.Values)
+        {
+            foreach (var supersededId in concept.Supersedes ?? [])
+            {
+                if (supersededId == concept.Id || !_byId.ContainsKey(supersededId))
+                {
+                    throw new InvalidDataException(
+                        $"Job concept '{concept.Id}' supersedes unknown or invalid concept '{supersededId}'.");
+                }
+            }
+        }
 
         Concepts = _byId.Values
             .OrderBy(concept => concept.Category, StringComparer.OrdinalIgnoreCase)
@@ -59,7 +75,11 @@ public sealed class JobConceptCatalog
     public IReadOnlyList<JobConceptDefinition> Concepts { get; }
 
     public IReadOnlyList<JobConceptOption> Options => Concepts
-        .Select(concept => new JobConceptOption(concept.Id, concept.DisplayName, concept.Category))
+        .Select(concept => new JobConceptOption(
+            concept.Id,
+            concept.DisplayName,
+            concept.Category,
+            concept.Supersedes ?? []))
         .ToArray();
 
     public bool Contains(string? id) => id is not null && _byId.ContainsKey(id);
@@ -114,6 +134,13 @@ public sealed class JobConceptCatalog
                 throw new InvalidDataException(
                     $"Job concept '{concept.Id}' contains an invalid evidence pattern.", ex);
             }
+        }
+
+        if ((concept.Supersedes ?? []).Any(id =>
+                string.IsNullOrWhiteSpace(id) || !IdPattern.IsMatch(id)))
+        {
+            throw new InvalidDataException(
+                $"Job concept '{concept.Id}' contains an invalid superseded concept ID.");
         }
     }
 }

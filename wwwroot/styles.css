@@ -757,6 +757,11 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   font-size: var(--font-size-label);
   line-height: var(--line-height-note);
 }
+.job-fit-subheading {
+  margin: .85rem 0 .5rem;
+  color: var(--color-label);
+  font-size: var(--font-size-control);
+}
 .job-fit-add-grid {
   display: grid;
   grid-template-columns: minmax(9rem, 24%) minmax(0, 1fr);
@@ -798,8 +803,33 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 .job-fit-signal-list {
   display: grid;
   gap: .45rem;
-  margin-top: .9rem;
 }
+.job-fit-category-section {
+  overflow: hidden;
+  border: var(--border-width-default) solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-accordion-body-background);
+}
+.job-fit-category-section > summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: .75rem;
+  padding: .5rem .65rem;
+  border-left: var(--status-indicator-width) solid var(--color-accordion-header-border);
+  color: var(--color-label);
+  background: var(--color-accordion-header-background);
+  cursor: pointer;
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-semibold);
+}
+.job-fit-category-section > summary:hover { background: var(--color-accordion-header-hover); }
+.job-fit-category-section > summary small {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-regular);
+}
+.job-fit-category-rows { display: grid; gap: .4rem; padding: .45rem; }
 .job-fit-signal-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(10rem, 14rem) auto;

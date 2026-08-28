@@ -138,9 +138,22 @@ disabled by default for new and existing workspaces. When enabled, users select 
 canonical concepts from `JobConceptCatalog.json` and assign named positive or
 negative preferences; arbitrary Job Fit keywords cannot be entered. Concept evidence
 is detected during normal ingestion or cache reclassification and stored with each
-job. Cards show a themed 1–10 badge whose tooltip lists only actual contributing
-concepts and evidence. A Hard Conflict caps the score at 2 even when several positive
-concepts match. Job Fit does not change filtering, sorting, or qualification behavior.
+job. The versioned catalog currently provides 76 job-level concepts grouped as Work
+Arrangement, Role Type / Career Direction, Technical Domain, Work Environment, and
+Responsibility Shape. Configured concepts are shown first in collapsible category
+sections, while the Add Signal control supports search and category filtering.
+
+Cards show a themed 1–10 badge. Scoring starts at 5 and bounds each category's total
+contribution, so 100% Remote Work can improve Work Arrangement by at most one point,
+and several related AI or infrastructure technologies cannot stack without limit.
+Canonical supersedence prevents 100% Remote Work from double-counting Remote Work and
+Substantial Travel from double-counting Frequent Travel. Role and environment
+negatives have wider bounds than positives, and a Hard Conflict still caps the final
+score at 2. The tooltip reports each category's actual bounded contribution, any
+uncapped total, and its detected evidence. Profile-aware degree, experience,
+clearance, license, and credential mismatches remain in Qualification Fit rather than
+being duplicated as description-only Job Fit concepts. Job Fit does not change
+filtering, sorting, or qualification behavior.
 
 The active query identity includes company, country, remote coverage, and a
 canonical set of location facet IDs. Location order therefore does not change cache

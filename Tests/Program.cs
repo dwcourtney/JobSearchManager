@@ -740,15 +740,52 @@ static Task TestJobConceptDetectionAsync()
                "work.remote",
                "work.remote.full",
                "work.travel.frequent",
+               "role.ai-ml-engineering",
                "technical.machine-learning",
                "technical.linux",
                "technical.cicd"
            ]) && detected.All(item => !string.IsNullOrWhiteSpace(item.Evidence)),
         "Canonical corpus concepts or their actual evidence were not detected consistently.");
+
+    var infrastructureDetected = detector.Analyze(
+        "Data Center Infrastructure Engineer",
+        "Customer data center",
+        [],
+        "<p>Hands-on work within a data center environment supporting physical infrastructure. " +
+        "Perform rack and cable installation, Linux administration, Docker, cloud platforms, and CI/CD.</p>",
+        new RemoteWorkDetector().Analyze(
+            "Data Center Infrastructure Engineer", "Customer data center", [], ""),
+        new ExtendedLocationRequirementDetector().Analyze(
+            "Data Center Infrastructure Engineer", "Customer data center", [], ""));
+    var infrastructureIds = infrastructureDetected
+        .Select(item => item.ConceptId)
+        .ToHashSet(StringComparer.Ordinal);
+    Assert(infrastructureIds.IsSupersetOf([
+               "role.infrastructure-engineering",
+               "work.data-center",
+               "work.physical-infrastructure",
+               "responsibility.hands-on-implementation",
+               "technical.linux-administration",
+               "technical.containers",
+               "technical.cabling-racking"
+           ]),
+        "Infrastructure-heavy jobs did not produce canonical role, environment, responsibility, and technical concepts. " +
+        $"Detected: {string.Join(", ", infrastructureIds.OrderBy(id => id, StringComparer.Ordinal))}");
+
+    Assert(concepts.Version == 2 && concepts.Concepts.Count == 76 &&
+           concepts.Concepts.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count() == 76 &&
+           concepts.Concepts.Any(item => item.Category == "Role Type / Career Direction") &&
+           concepts.Concepts.Any(item => item.Category == "Responsibility Shape") &&
+           concepts.Concepts.All(item => !item.Id.StartsWith("qualification.", StringComparison.Ordinal)),
+        "The expanded versioned corpus is incomplete, duplicated, or improperly duplicates Qualification Fit.");
+    Assert(concepts.Get("work.remote.full").Supersedes?.SequenceEqual(["work.remote"]) == true &&
+           concepts.Get("work.travel.substantial").Supersedes?.SequenceEqual(["work.travel.frequent"]) == true,
+        "Canonical correlated-signal supersedence metadata is missing.");
     Assert(concepts.Options.All(option =>
             !string.IsNullOrWhiteSpace(option.Id) &&
             !string.IsNullOrWhiteSpace(option.DisplayName) &&
-            !string.IsNullOrWhiteSpace(option.Category)),
+            !string.IsNullOrWhiteSpace(option.Category) &&
+            option.Supersedes is not null),
         "A selectable canonical concept lacks a stable ID or display metadata.");
     return Task.CompletedTask;
 }
