@@ -1,5 +1,10 @@
 # Curiosity CI/CD operations
 
+The canonical repository for Job Search Manager is the private personal repository
+[`dwcourtney/JobSearchManager`](https://github.com/dwcourtney/JobSearchManager).
+Repository remotes, GitHub Actions, and the curiosity self-hosted runner must remain
+associated with that owner and repository, not an alternate GitHub identity.
+
 ## Trust boundaries
 
 GitHub-hosted Ubuntu runners perform all compilation, .NET tests, JavaScript and
