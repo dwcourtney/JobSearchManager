@@ -59,6 +59,42 @@ Use GitHub's repository-scoped, short-lived registration token without printing 
 persisting it elsewhere. The supported runner service should be configured only after
 the private repository exists and the runner package and checksum have been verified.
 
+The repository-scoped runner is installed at `/home/codex/jsm-cicd/runner` with
+runner name `curiosity-jsm` and labels `self-hosted`, `linux`, `x64`, `curiosity`, and
+`jsm`. The bootstrap installation used runner 2.337.0 and GitHub's published Linux x64
+SHA-256 digest. Its supported service is:
+
+```text
+actions.runner.dwc5703-JobSearchManager.curiosity-jsm.service
+```
+
+Read service state with `systemctl status` or `systemctl is-active`. Deliberate service
+maintenance uses the supported scripts from the runner directory:
+
+```bash
+cd /home/codex/jsm-cicd/runner
+sudo ./svc.sh stop
+sudo ./svc.sh start
+```
+
+Unregistration is a separate destructive approval boundary: stop and uninstall the
+service with `svc.sh`, obtain a fresh repository-scoped removal token while the active
+GitHub CLI account is exactly `dwc5703`, run `config.sh remove`, and only then remove
+the runner tree. Never print the removal token. The runner path is outside
+`/home/codex/jsm-lab`; unregistering or deleting runner infrastructure must not remove
+JSM data, Data Protection keys, backups, Mailpit state, or unrelated Docker resources.
+
+```bash
+cd /home/codex/jsm-cicd/runner
+sudo ./svc.sh stop
+sudo ./svc.sh uninstall
+./config.sh remove --token '<fresh-repository-removal-token>'
+```
+
+`.github/workflows/runner-smoke.yaml` is a manually dispatched, non-deploying check.
+It validates the exact workflow SHA, canonical repository identity, hostname, service
+user, Git, Docker, Compose, and read-only container inventory on the labeled runner.
+
 ## Hosted CI
 
 `.github/workflows/ci.yaml` runs for pull requests targeting `main` and every pushed
@@ -97,6 +133,18 @@ Manual dispatch accepts either current `main` or one lowercase full Git SHA. A
 specific SHA must resolve to a commit in current `main` history and must pass every
 hosted validation gate again. There is no workflow input that reaches a shell as an
 arbitrary command.
+
+Before a manual deployment, verify the active GitHub account and dispatch an exact
+commit rather than a moving branch target:
+
+```powershell
+pwsh -NoLogo -NoProfile -File scripts/verify-github-account.ps1
+gh workflow run deploy-curiosity.yaml --repo dwc5703/JobSearchManager --ref main `
+  -f target=commit -f commit_sha=<lowercase-full-main-sha>
+```
+
+`CURIOSITY_AUTO_DEPLOY` must remain unset until automatic CD receives separate explicit
+approval.
 
 The deploy job runs only on `[self-hosted, linux, x64, curiosity, jsm]`. It checks out
 the exact SHA, builds `jsm:<full-sha>`, confirms the OCI revision, and invokes

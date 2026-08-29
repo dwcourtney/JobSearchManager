@@ -1,0 +1,41 @@
+name: Curiosity runner smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: curiosity-runner-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    name: Verify curiosity runner host
+    runs-on: [self-hosted, linux, x64, curiosity, jsm]
+    timeout-minutes: 10
+    env:
+      EXPECTED_SHA: ${{ github.sha }}
+    steps:
+      - name: Check out exact workflow commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.EXPECTED_SHA }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify runner without deploying
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bash scripts/verify-repository-identity.sh "$GITHUB_WORKSPACE"
+          actual_sha="$(git -C "$GITHUB_WORKSPACE" rev-parse HEAD)"
+          [[ "$actual_sha" == "$EXPECTED_SHA" ]]
+          [[ "$(hostname)" == "curiosity" ]]
+          [[ "$(whoami)" == "codex" ]]
+          git --version
+          docker --version
+          docker compose version
+          docker ps --format '{{.ID}}|{{.Names}}|{{.Image}}|{{.Status}}|{{.Ports}}'
+          echo "Runner smoke test passed at $EXPECTED_SHA without deployment."
