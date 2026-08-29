@@ -179,6 +179,23 @@ them:
 /home/codex/jsm-lab/data/dataprotection
 ```
 
+Curiosity explicitly enables the physical-possession first-administrator bootstrap
+with `/app/data/admin-bootstrap-code`, backed by
+`/home/codex/jsm-lab/data/app/admin-bootstrap-code` on the host. When an authenticated
+account exists and the registry contains no Admin role, JSM creates a mode-0600 file
+containing an eight-character one-time code and its fifteen-minute expiry. Retrieve
+only the first line from an interactive curiosity session when a user is ready to
+claim the role:
+
+```bash
+sed -n '1p' /home/codex/jsm-lab/data/app/admin-bootstrap-code
+```
+
+Do not copy the code into automation logs. A successful claim deletes the file, and
+JSM does not generate another while any Admin account exists. Deployments without the
+explicit bootstrap-path setting remain disabled; Azure rejects this server-file
+mechanism.
+
 `/home/codex/jsm-lab/backups` must also exist before deployment, and the deploy script
 refuses to continue if any of these three persistent locations is absent. Application
 rollback never restores workspace data or Data Protection keys.

@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
@@ -112,6 +113,7 @@ else
 
 builder.Services.AddSingleton<WorkspaceRuntimeManager>();
 builder.Services.AddSingleton<AccountService>();
+builder.Services.AddSingleton<AdminBootstrapService>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -146,7 +148,13 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
             }
         };
     });
-builder.Services.AddAuthorization();
+builder.Services.AddSingleton<IAuthorizationHandler, AdminAuthorizationHandler>();
+builder.Services.AddAuthorization(options =>
+    options.AddPolicy(AdminAuthorization.Policy, policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.AddRequirements(new AdminRequirement());
+    }));
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -184,6 +192,16 @@ builder.Services.AddRateLimiter(options =>
             {
                 PermitLimit = 10,
                 Window = TimeSpan.FromMinutes(5),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+    options.AddPolicy("admin-bootstrap", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(15),
                 QueueLimit = 0,
                 AutoReplenishment = true
             }));
@@ -362,6 +380,7 @@ app.MapGet("/api/account/status", async (
     HttpContext context,
     WorkspaceContext workspace,
     AccountService accounts,
+    AdminBootstrapService adminBootstrap,
     CancellationToken token) =>
 {
     var accountId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -369,6 +388,8 @@ app.MapGet("/api/account/status", async (
         ? null
         : context.Items[AccountAuthentication.ResolvedAccountItem] as AccountRecord ??
             await accounts.GetByIdAsync(accountId, token);
+    var bootstrapAvailable = account is not null &&
+        await adminBootstrap.IsAvailableAsync(token);
     return Results.Ok(account is null
         ? (object)new
         {
@@ -377,7 +398,9 @@ app.MapGet("/api/account/status", async (
             emailVerified = false,
             workspace = "anonymous",
             persistence = AccountPersistence.Session,
-            emailDeliveryConfigured = accounts.EmailDeliveryConfigured
+            emailDeliveryConfigured = accounts.EmailDeliveryConfigured,
+            isAdmin = false,
+            administratorBootstrapAvailable = false
         }
         : (object)new
         {
@@ -387,9 +410,38 @@ app.MapGet("/api/account/status", async (
             workspace = "authenticated",
             persistence = AccountPersistence.Normalize(
                 context.User.FindFirstValue(AccountAuthentication.PersistenceClaim)),
-            emailDeliveryConfigured = accounts.EmailDeliveryConfigured
+            emailDeliveryConfigured = accounts.EmailDeliveryConfigured,
+            isAdmin = AccountRoles.IsAdmin(account),
+            administratorBootstrapAvailable = bootstrapAvailable
         });
 });
+
+app.MapPost("/api/account/admin-bootstrap", async Task<IResult> (
+    AdminBootstrapRequest request,
+    HttpContext context,
+    AdminBootstrapService adminBootstrap,
+    CancellationToken token) =>
+{
+    var result = await adminBootstrap.ClaimAsync(
+        context.User.FindFirstValue(ClaimTypes.NameIdentifier)!, request.Code, token);
+    return result.Succeeded
+        ? Results.Ok(new
+        {
+            isAdmin = true,
+            administratorBootstrapAvailable = false
+        })
+        : Results.BadRequest(new { error = result.Error });
+}).RequireAuthorization().RequireRateLimiting("admin-bootstrap");
+
+app.MapGet("/api/admin/status", (HttpContext context) =>
+{
+    var account = context.Items[AccountAuthentication.ResolvedAccountItem] as AccountRecord;
+    return Results.Ok(new
+    {
+        administrator = true,
+        email = account?.Email ?? context.User.FindFirstValue(ClaimTypes.Name)
+    });
+}).RequireAuthorization(AdminAuthorization.Policy);
 
 app.MapPost("/api/account/create", async Task<IResult> (
     CreateAccountRequest request,
@@ -759,6 +811,7 @@ app.MapPut("/api/history/workflow-state", async (
 var dataStores = app.Services.GetRequiredService<IWorkspaceDataStoreFactory>();
 await dataStores.ValidateAsync();
 await app.Services.GetRequiredService<IAccountRegistryStore>().ValidateAsync();
+await app.Services.GetRequiredService<AdminBootstrapService>().InitializeAsync();
 WorkspaceRuntime? localRuntime = null;
 if (hosting.IsLocal)
 {

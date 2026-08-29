@@ -18,6 +18,22 @@ public static class AccountAuthentication
     public const string ResolvedAccountItem = "JobSearchManager.ResolvedAccount";
 }
 
+public static class AccountRoles
+{
+    public const string Admin = "Admin";
+
+    public static bool IsAdmin(AccountRecord? account) =>
+        account?.Roles?.Contains(Admin, StringComparer.Ordinal) == true;
+
+    internal static List<string> Normalize(IEnumerable<string>? roles) =>
+        (roles ?? [])
+            .Where(role => !string.IsNullOrWhiteSpace(role))
+            .Select(role => role.Trim())
+            .Distinct(StringComparer.Ordinal)
+            .Order(StringComparer.Ordinal)
+            .ToList();
+}
+
 public static class AccountPersistence
 {
     public const string Session = "session";
@@ -61,6 +77,7 @@ public sealed class AccountRecord
     public DateTimeOffset? PasswordChangedUtc { get; set; }
     public int SecurityVersion { get; set; } = 1;
     public string WorkspaceId { get; set; } = "";
+    public List<string> Roles { get; set; } = [];
 }
 
 public sealed class AccountTokenRecord
@@ -82,6 +99,10 @@ public sealed class AccountRegistryDocument
     internal void Normalize()
     {
         Accounts = new Dictionary<string, AccountRecord>(Accounts ?? [], StringComparer.Ordinal);
+        foreach (var account in Accounts.Values)
+        {
+            account.Roles = AccountRoles.Normalize(account.Roles);
+        }
         EmailIndex = new Dictionary<string, string>(EmailIndex ?? [], StringComparer.Ordinal);
         WorkspaceOwners = new Dictionary<string, string>(WorkspaceOwners ?? [], StringComparer.Ordinal);
         Tokens = new Dictionary<string, AccountTokenRecord>(Tokens ?? [], StringComparer.Ordinal);
@@ -467,6 +488,29 @@ public sealed class AccountService
     public Task<string?> GetWorkspaceOwnerAsync(string workspaceId, CancellationToken cancellationToken = default) =>
         _store.MutateAsync<string?>(document => new(false,
             document.WorkspaceOwners.TryGetValue(workspaceId, out var owner) ? owner : null), cancellationToken);
+
+    public Task<int> GetAdminCountAsync(CancellationToken cancellationToken = default) =>
+        _store.MutateAsync<int>(document => new(false,
+            document.Accounts.Values.Count(AccountRoles.IsAdmin)), cancellationToken);
+
+    public Task<int> GetAccountCountAsync(CancellationToken cancellationToken = default) =>
+        _store.MutateAsync<int>(document => new(false, document.Accounts.Count), cancellationToken);
+
+    public Task<AccountOperationResult> GrantFirstAdminAsync(
+        string accountId,
+        CancellationToken cancellationToken = default) =>
+        _store.MutateAsync<AccountOperationResult>(document =>
+        {
+            if (document.Accounts.Values.Any(AccountRoles.IsAdmin) ||
+                !document.Accounts.TryGetValue(accountId, out var account))
+            {
+                return new(false, AccountOperationResult.Failure(
+                    "Administrator bootstrap is no longer available."));
+            }
+
+            account.Roles = AccountRoles.Normalize(account.Roles.Append(AccountRoles.Admin));
+            return new(true, AccountOperationResult.Success(account));
+        }, cancellationToken);
 
     public async Task RequestPasswordResetAsync(
         string? email,

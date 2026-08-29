@@ -13,12 +13,14 @@ public sealed record HostingConfiguration(
     ApplicationHostingMode Mode,
     string? StorageAccount,
     string? StorageContainer,
-    string? DataProtectionPath = null)
+    string? DataProtectionPath = null,
+    string? AdminBootstrapPath = null)
 {
     public const string ModeSetting = "JOBSEARCHMANAGER_HOSTING_MODE";
     public const string StorageAccountSetting = "JOBSEARCHMANAGER_STORAGE_ACCOUNT";
     public const string StorageContainerSetting = "JOBSEARCHMANAGER_STORAGE_CONTAINER";
     public const string DataProtectionPathSetting = "JOBSEARCHMANAGER_DATA_PROTECTION_PATH";
+    public const string AdminBootstrapPathSetting = "JOBSEARCHMANAGER_ADMIN_BOOTSTRAP_PATH";
     internal const string LegacyModeSetting = "WORKDAYJOBMANAGER_HOSTING_MODE";
     internal const string LegacyStorageAccountSetting = "WORKDAYJOBMANAGER_STORAGE_ACCOUNT";
     internal const string LegacyStorageContainerSetting = "WORKDAYJOBMANAGER_STORAGE_CONTAINER";
@@ -37,6 +39,7 @@ public sealed record HostingConfiguration(
     public bool UsesPerBrowserWorkspaces => !IsLocal;
     public bool RequiresSameOriginProtection => !IsLocal;
     public bool UsesAzureTransportSecurity => IsAzure;
+    public bool AdminBootstrapEnabled => !IsAzure && AdminBootstrapPath is not null;
 
     public static HostingConfiguration FromConfiguration(IConfiguration configuration)
     {
@@ -56,7 +59,9 @@ public sealed record HostingConfiguration(
         var container = NullIfWhiteSpace(ReadCanonicalOrLegacy(
             configuration, StorageContainerSetting, LegacyStorageContainerSetting));
         var dataProtectionPath = NullIfWhiteSpace(configuration[DataProtectionPathSetting]);
-        var result = new HostingConfiguration(mode, account, container, dataProtectionPath);
+        var adminBootstrapPath = NullIfWhiteSpace(configuration[AdminBootstrapPathSetting]);
+        var result = new HostingConfiguration(
+            mode, account, container, dataProtectionPath, adminBootstrapPath);
         result.Validate();
         return result;
     }
@@ -67,6 +72,13 @@ public sealed record HostingConfiguration(
         {
             throw new InvalidOperationException(
                 $"Container mode requires {DataProtectionPathSetting} so cookies survive container replacement.");
+        }
+
+        if (IsAzure && AdminBootstrapPath is not null)
+        {
+            throw new InvalidOperationException(
+                $"Azure mode does not support the server-file administrator bootstrap mechanism. " +
+                $"Remove {AdminBootstrapPathSetting}.");
         }
 
         if (!IsAzure)

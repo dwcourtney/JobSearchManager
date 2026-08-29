@@ -2,6 +2,7 @@ using Azure.Storage.Blobs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -9,6 +10,7 @@ using Microsoft.Extensions.Options;
 using System.Text.Json;
 using System.IO.Compression;
 using System.Net.Mail;
+using System.Security.Claims;
 using JobSearchManager;
 
 if (args.Length >= 2 && args[0] == "--extended-location-corpus")
@@ -296,6 +298,11 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Workspace middleware preserves isolation through a protected cookie", TestWorkspaceMiddlewareAsync),
     ("Legacy workspace cookies migrate without changing workspace identity", TestLegacyWorkspaceCookieMigrationAsync),
     ("Azure state changes require the exact application origin", TestOriginValidationAsync),
+    ("Legacy and new accounts default to no administrator roles", TestAccountRoleCompatibilityAsync),
+    ("Admin authorization distinguishes anonymous, non-admin, and admin users", TestAdminAuthorizationAsync),
+    ("First-admin bootstrap is hashed, expiring, single-use, and durable", TestAdminBootstrapLifecycleAsync),
+    ("Concurrent first-admin claims grant exactly one account", TestAdminBootstrapConcurrencyAsync),
+    ("Admin bootstrap requires explicit non-Azure configuration", TestAdminBootstrapConfigurationAsync),
     ("Account passwords are hashed and normalized emails are unique", TestAccountPasswordAndEmailAsync),
     ("Anonymous workspace claims preserve state and establish ownership", TestAccountWorkspaceClaimAsync),
     ("Failed account claims remain atomic and retryable", TestFailedAccountClaimAsync),
@@ -849,6 +856,240 @@ static Task TestNeutralDefaultsAsync()
     return Task.CompletedTask;
 }
 
+static async Task TestAccountRoleCompatibilityAsync()
+{
+    var legacy = JsonSerializer.Deserialize<AccountRegistryDocument>("""
+        {"accounts":{"legacy":{"accountId":"legacy","email":"legacy@example.test"}}}
+        """, new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+    legacy.Normalize();
+    Assert(legacy.Accounts["legacy"].Roles.Count == 0,
+        "An account registry without Roles did not load as an empty role list.");
+    Assert(new AccountRecord().Roles.Count == 0,
+        "A new account record did not default to no roles.");
+
+    var fixture = TestAccountService();
+    var created = await fixture.Service.CreateAsync(
+        WorkspaceIdentity.Create(), "davidcourtney@outlook.com", "role defaults passphrase",
+        new Uri("https://example.test/"));
+    Assert(created.Succeeded && created.Account!.Roles.Count == 0 &&
+           !AccountRoles.IsAdmin(created.Account),
+        "A new account or a particular email address received an implicit Admin role.");
+}
+
+static async Task TestAdminAuthorizationAsync()
+{
+    var fixture = TestAccountService();
+    var nonAdmin = (await fixture.Service.CreateAsync(
+        WorkspaceIdentity.Create(), "user@example.test", "non admin passphrase",
+        new Uri("https://example.test/"))).Account!;
+    var admin = (await fixture.Service.CreateAsync(
+        WorkspaceIdentity.Create(), "admin@example.test", "admin role passphrase",
+        new Uri("https://example.test/"))).Account!;
+    await fixture.Store.MutateAsync<bool>(document =>
+    {
+        document.Accounts[admin.AccountId].Roles = [AccountRoles.Admin];
+        return new(true, true);
+    });
+    admin = (await fixture.Service.GetByIdAsync(admin.AccountId))!;
+
+    var anonymous = new ClaimsPrincipal(new ClaimsIdentity());
+    var nonAdminPrincipal = TestPrincipal(nonAdmin);
+    var adminPrincipal = TestPrincipal(admin);
+    Assert(AdminAuthorization.ExpectedStatusCode(anonymous, null) == StatusCodes.Status401Unauthorized &&
+           AdminAuthorization.ExpectedStatusCode(nonAdminPrincipal, nonAdmin) == StatusCodes.Status403Forbidden &&
+           AdminAuthorization.ExpectedStatusCode(adminPrincipal, admin) == StatusCodes.Status200OK,
+        "The reusable Admin authorization decision did not produce 401/403/200 semantics.");
+
+    var requirement = new AdminRequirement();
+    var handler = new AdminAuthorizationHandler(fixture.Service);
+    var nonAdminHttp = new DefaultHttpContext { User = nonAdminPrincipal };
+    nonAdminHttp.Items[AccountAuthentication.ResolvedAccountItem] = nonAdmin;
+    var nonAdminContext = new AuthorizationHandlerContext([requirement], nonAdminPrincipal, nonAdminHttp);
+    await handler.HandleAsync(nonAdminContext);
+    Assert(!nonAdminContext.HasSucceeded,
+        "The Admin policy authorized an authenticated account without the server-side role.");
+
+    var adminHttp = new DefaultHttpContext { User = adminPrincipal };
+    adminHttp.Items[AccountAuthentication.ResolvedAccountItem] = admin;
+    var adminContext = new AuthorizationHandlerContext([requirement], adminPrincipal, adminHttp);
+    await handler.HandleAsync(adminContext);
+    Assert(adminContext.HasSucceeded,
+        "The Admin policy rejected an authenticated account with the server-side role.");
+}
+
+static async Task TestAdminBootstrapLifecycleAsync()
+{
+    var directory = TestDirectory("admin-bootstrap");
+    var workspaceDirectory = TestDirectory("admin-workspace-reset");
+    var codePath = Path.Combine(directory, "admin-bootstrap-code");
+    try
+    {
+        var fixture = TestAccountService();
+        var account = (await fixture.Service.CreateAsync(
+            WorkspaceIdentity.Create(), "first-admin@example.test", "first admin passphrase",
+            new Uri("https://example.test/"))).Account!;
+        var hosting = new HostingConfiguration(
+            ApplicationHostingMode.Container, null, null, "/var/lib/jsm/dataprotection", codePath);
+        var bootstrap = new AdminBootstrapService(fixture.Service, hosting, fixture.Time);
+        await bootstrap.InitializeAsync();
+
+        Assert(await bootstrap.IsAvailableAsync() && File.Exists(codePath),
+            "An enabled zero-admin instance did not create its bootstrap file.");
+        var lines = await File.ReadAllLinesAsync(codePath);
+        Assert(lines.Length == 2 && lines[0].Length == AdminBootstrapService.CodeLength &&
+               lines[0].All(AdminBootstrapService.CodeAlphabet.Contains),
+            "The bootstrap file did not contain one unambiguous eight-character code.");
+        var code = lines[0];
+        Assert(DateTimeOffset.TryParse(lines[1], out var expiry) &&
+               expiry - fixture.Time.GetUtcNow() == AdminBootstrapService.CodeLifetime,
+            "The bootstrap code did not receive its fifteen-minute expiration.");
+        Assert(bootstrap.ActiveCodeHash is { Length: 32 } &&
+               !bootstrap.ActiveCodeHash.SequenceEqual(System.Text.Encoding.ASCII.GetBytes(code)),
+            "Bootstrap validation material was not a SHA-256 hash.");
+        if (!OperatingSystem.IsWindows())
+        {
+            Assert(File.GetUnixFileMode(codePath) ==
+                   (UnixFileMode.UserRead | UnixFileMode.UserWrite),
+                "The bootstrap file was not restricted to mode 0600.");
+        }
+        var registryJson = await fixture.Store.MutateAsync<string>(document =>
+            new(false, JsonSerializer.Serialize(document)));
+        Assert(!registryJson.Contains(code, StringComparison.Ordinal) &&
+               !registryJson.Contains("adminBootstrap", StringComparison.OrdinalIgnoreCase),
+            "Plaintext bootstrap material leaked into the account registry.");
+
+        bootstrap = new AdminBootstrapService(fixture.Service, hosting, fixture.Time);
+        await bootstrap.InitializeAsync();
+        Assert((await File.ReadAllLinesAsync(codePath))[0] == code &&
+               bootstrap.ActiveCodeHash is { Length: 32 },
+            "Application restart did not preserve the still-valid one-time bootstrap code.");
+
+        var wrongCode = (code[0] == '2' ? '3' : '2') + code[1..];
+        Assert(!(await bootstrap.ClaimAsync(account.AccountId, wrongCode)).Succeeded &&
+               await fixture.Service.GetAdminCountAsync() == 0,
+            "An incorrect bootstrap code granted Admin.");
+
+        fixture.Time.Advance(TimeSpan.FromMinutes(16));
+        Assert(!(await bootstrap.ClaimAsync(account.AccountId, code)).Succeeded &&
+               await fixture.Service.GetAdminCountAsync() == 0,
+            "An expired bootstrap code granted Admin.");
+        var replacementCode = (await File.ReadAllLinesAsync(codePath))[0];
+        var claimed = await bootstrap.ClaimAsync(account.AccountId, replacementCode);
+        Assert(claimed.Succeeded && AccountRoles.IsAdmin(claimed.Account) &&
+               await fixture.Service.GetAdminCountAsync() == 1,
+            "The valid replacement code did not grant the first Admin role.");
+        Assert(!File.Exists(codePath) && !(await bootstrap.ClaimAsync(account.AccountId, replacementCode)).Succeeded,
+            "A successful bootstrap left a reusable plaintext code or token.");
+
+        await fixture.Service.RequestPasswordResetAsync(
+            account.Email, new Uri("https://example.test/"));
+        Assert((await fixture.Service.ResetPasswordAsync(
+                   fixture.Email.ResetToken, "reset administrator passphrase")).Succeeded,
+            "The Admin account password reset failed.");
+        Assert((await fixture.Service.ChangePasswordAsync(
+                   account.AccountId, "reset administrator passphrase", "changed administrator passphrase")).Succeeded,
+            "The Admin account password change failed.");
+
+        var workspaceStore = new FileWorkspaceDataStore(
+            workspaceDirectory, NullLogger<FileWorkspaceDataStore>.Instance);
+        await workspaceStore.WriteJsonAsync(WorkspaceDataFile.Settings, ViewerSettings.Default);
+        await workspaceStore.DeleteAllAsync();
+        Assert(AccountRoles.IsAdmin(await fixture.Service.GetByIdAsync(account.AccountId)),
+            "Password operations or workspace reset removed the account-level Admin role.");
+
+        await bootstrap.InitializeAsync();
+        Assert(!File.Exists(codePath) && !await bootstrap.IsAvailableAsync(),
+            "An instance with an Admin generated another bootstrap code.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+        if (Directory.Exists(workspaceDirectory)) Directory.Delete(workspaceDirectory, recursive: true);
+    }
+}
+
+static async Task TestAdminBootstrapConcurrencyAsync()
+{
+    var directory = TestDirectory("admin-bootstrap-concurrency");
+    var codePath = Path.Combine(directory, "admin-bootstrap-code");
+    try
+    {
+        var fixture = TestAccountService();
+        var first = (await fixture.Service.CreateAsync(
+            WorkspaceIdentity.Create(), "first@example.test", "first claimant passphrase",
+            new Uri("https://example.test/"))).Account!;
+        var second = (await fixture.Service.CreateAsync(
+            WorkspaceIdentity.Create(), "second@example.test", "second claimant passphrase",
+            new Uri("https://example.test/"))).Account!;
+        var bootstrap = new AdminBootstrapService(
+            fixture.Service,
+            new HostingConfiguration(
+                ApplicationHostingMode.Container, null, null,
+                "/var/lib/jsm/dataprotection", codePath),
+            fixture.Time);
+        await bootstrap.InitializeAsync();
+        var code = (await File.ReadAllLinesAsync(codePath))[0];
+        var results = await Task.WhenAll(
+            bootstrap.ClaimAsync(first.AccountId, code),
+            bootstrap.ClaimAsync(second.AccountId, code));
+        Assert(results.Count(result => result.Succeeded) == 1 &&
+               await fixture.Service.GetAdminCountAsync() == 1 &&
+               !File.Exists(codePath),
+            "Concurrent claims did not atomically grant exactly one first Admin.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static async Task TestAdminBootstrapConfigurationAsync()
+{
+    var disabledFixture = TestAccountService();
+    await disabledFixture.Service.CreateAsync(
+        WorkspaceIdentity.Create(), "disabled@example.test", "disabled bootstrap passphrase",
+        new Uri("https://example.test/"));
+    var disabled = new AdminBootstrapService(
+        disabledFixture.Service,
+        new HostingConfiguration(ApplicationHostingMode.Local, null, null),
+        disabledFixture.Time);
+    await disabled.InitializeAsync();
+    Assert(!await disabled.IsAvailableAsync(),
+        "Bootstrap was available without an explicit server-side path.");
+
+    var emptyDirectory = TestDirectory("admin-bootstrap-no-accounts");
+    var emptyPath = Path.Combine(emptyDirectory, "admin-bootstrap-code");
+    try
+    {
+        var emptyFixture = TestAccountService();
+        var empty = new AdminBootstrapService(
+            emptyFixture.Service,
+            new HostingConfiguration(
+                ApplicationHostingMode.Container, null, null,
+                "/var/lib/jsm/dataprotection", emptyPath),
+            emptyFixture.Time);
+        await empty.InitializeAsync();
+        Assert(!File.Exists(emptyPath) && !await empty.IsAvailableAsync(),
+            "A bootstrap code was generated before any authenticated account existed.");
+    }
+    finally
+    {
+        if (Directory.Exists(emptyDirectory)) Directory.Delete(emptyDirectory, recursive: true);
+    }
+
+    AssertThrows<InvalidOperationException>(() => HostingConfiguration.FromConfiguration(
+        Configuration(new Dictionary<string, string?>
+        {
+            [HostingConfiguration.ModeSetting] = "Azure",
+            [HostingConfiguration.StorageAccountSetting] = "workdayjobmanagerstore",
+            [HostingConfiguration.StorageContainerSetting] = "userdata",
+            [HostingConfiguration.AdminBootstrapPathSetting] = "/tmp/unsafe-bootstrap"
+        })));
+}
+
+static ClaimsPrincipal TestPrincipal(AccountRecord account) => new(new ClaimsIdentity(
+    [new Claim(ClaimTypes.NameIdentifier, account.AccountId)], "test"));
+
 static async Task TestAccountPasswordAndEmailAsync()
 {
     var fixture = TestAccountService();
@@ -1102,7 +1343,8 @@ static Task TestAccountSecretsExcludedFromExportAsync()
     foreach (var forbidden in new[]
     {
         "passwordHash", "resetToken", "verificationToken", "sessionToken",
-        AccountAuthentication.CookieName, "normalizedEmail", "securityVersion"
+        AccountAuthentication.CookieName, "normalizedEmail", "securityVersion",
+        "roles", "administratorBootstrap", "Admin"
     })
     {
         Assert(!json.Contains(forbidden, StringComparison.OrdinalIgnoreCase),

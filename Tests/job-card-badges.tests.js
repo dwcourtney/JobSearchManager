@@ -33,7 +33,7 @@ assert.match(index, /credential-fit\.js\?v=2/);
 assert.match(index, /clearance-fit\.js\?v=1/);
 assert.match(index, /job-unseen-state\.js\?v=1/);
 assert.match(index, /job-fit\.js\?v=4/);
-assert.match(index, /app\.js\?v=25/);
+assert.match(index, /app\.js\?v=26/);
 assert.doesNotMatch(app, /badges\.append\((?:unseenIndicator|newBadge)\)/);
 
 console.log("All deterministic job-card badge-path tests passed.");

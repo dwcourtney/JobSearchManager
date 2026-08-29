@@ -13,6 +13,7 @@ services:
     environment:
       JOBSEARCHMANAGER_HOSTING_MODE: Container
       JOBSEARCHMANAGER_DATA_PROTECTION_PATH: /var/lib/jsm/dataprotection
+      JOBSEARCHMANAGER_ADMIN_BOOTSTRAP_PATH: /app/data/admin-bootstrap-code
       JOBSEARCHMANAGER_PUBLIC_BASE_URL: http://192.168.1.20:8080
       JOBSEARCHMANAGER_SMTP_HOST: mailpit
       JOBSEARCHMANAGER_SMTP_PORT: "1025"

@@ -23,7 +23,7 @@
   <script src="/extended-location-ui.js?v=5" defer></script>
   <script src="/education-fit.js?v=2" defer></script>
   <script src="/job-fit.js?v=4" defer></script>
-  <script src="/app.js?v=25" defer></script>
+  <script src="/app.js?v=26" defer></script>
 </head>
 <body>
   <main id="app-shell" class="app-shell" aria-busy="true" inert>
@@ -800,6 +800,23 @@
               <div class="account-form-actions">
                 <button class="primary-button" type="submit">Change Password</button>
                 <button id="cancel-change-password" type="button">Cancel</button>
+              </div>
+            </form>
+          </section>
+
+          <section id="administrator-bootstrap-section" class="settings-section account-section"
+                   aria-labelledby="administrator-bootstrap-heading" hidden>
+            <h3 id="administrator-bootstrap-heading">Administrator Bootstrap</h3>
+            <p>No administrator has been configured for this JSM instance.</p>
+            <p class="account-help">If you control the server, obtain the one-time administrator bootstrap code from the server and enter it below.</p>
+            <form id="administrator-bootstrap-form" class="account-form administrator-bootstrap-form">
+              <label for="administrator-bootstrap-code">One-time code</label>
+              <input id="administrator-bootstrap-code" type="text" autocomplete="off"
+                     autocapitalize="characters" spellcheck="false" minlength="8" maxlength="8" required>
+              <p id="administrator-bootstrap-status" class="settings-status" role="status"
+                 aria-live="polite"></p>
+              <div class="account-form-actions">
+                <button class="primary-button" type="submit">Claim Administrator</button>
               </div>
             </form>
           </section>

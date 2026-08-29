@@ -34,6 +34,7 @@ const state = {
   account: null,
   workspaceIdentity: null,
   accountLinkToken: null,
+  adminStatusLoaded: false,
   activeQualificationTab: "basics",
   jobs: [],
   inclusions: [],
@@ -124,8 +125,11 @@ const state = {
 const elements = {
   jobsTab: document.querySelector("#jobs-tab"),
   settingsTab: document.querySelector("#settings-tab"),
+  adminTab: null,
   jobsView: document.querySelector("#jobs-view"),
   settingsView: document.querySelector("#settings-view"),
+  adminView: null,
+  adminStatus: null,
   jobSearchSettingsTab: document.querySelector("#job-search-settings-tab"),
   qualificationsSettingsTab: document.querySelector("#qualifications-settings-tab"),
   preferencesSettingsTab: document.querySelector("#preferences-settings-tab"),
@@ -142,6 +146,10 @@ const elements = {
   forgotPasswordSection: document.querySelector("#forgot-password-section"),
   resetPasswordSection: document.querySelector("#reset-password-section"),
   authenticatedAccountSection: document.querySelector("#authenticated-account-section"),
+  administratorBootstrapSection: document.querySelector("#administrator-bootstrap-section"),
+  administratorBootstrapForm: document.querySelector("#administrator-bootstrap-form"),
+  administratorBootstrapCode: document.querySelector("#administrator-bootstrap-code"),
+  administratorBootstrapStatus: document.querySelector("#administrator-bootstrap-status"),
   changePasswordSection: document.querySelector("#change-password-section"),
   createAccountForm: document.querySelector("#create-account-form"),
   createAccountEmail: document.querySelector("#create-account-email"),
@@ -573,6 +581,7 @@ async function initialize() {
   elements.forgotPasswordForm.addEventListener("submit", requestPasswordReset);
   elements.resetPasswordForm.addEventListener("submit", resetPassword);
   elements.changePasswordForm.addEventListener("submit", changePassword);
+  elements.administratorBootstrapForm.addEventListener("submit", claimAdministrator);
   elements.signOutAccount.addEventListener("click", signOutAccount);
   elements.requestEmailVerification.addEventListener("click", requestEmailVerification);
   elements.accountSessionPersistence.addEventListener("change", updateSessionPersistence);
@@ -590,7 +599,12 @@ async function initialize() {
 }
 
 function showView(view, focusFirstControl = false, options = {}) {
-  const nextView = view === "settings" ? "settings" : "jobs";
+  const adminAllowed = state.account?.isAdmin === true && elements.adminTab && elements.adminView;
+  const nextView = view === "settings"
+    ? "settings"
+    : view === "admin" && adminAllowed
+      ? "admin"
+      : "jobs";
   const sourceNavigation = options.bypassSourceGuard === true
     ? "allow"
     : sourceNavigationDecision(nextView);
@@ -605,20 +619,31 @@ function showView(view, focusFirstControl = false, options = {}) {
   const enteringSettings = nextView === "settings" && state.activeView !== "settings";
   state.activeView = nextView;
   const jobsSelected = nextView === "jobs";
+  const settingsSelected = nextView === "settings";
+  const adminSelected = nextView === "admin";
   elements.jobsView.hidden = !jobsSelected;
-  elements.settingsView.hidden = jobsSelected;
+  elements.settingsView.hidden = !settingsSelected;
+  if (elements.adminView) elements.adminView.hidden = !adminSelected;
   elements.jobsTab.classList.toggle("active", jobsSelected);
-  elements.settingsTab.classList.toggle("active", !jobsSelected);
+  elements.settingsTab.classList.toggle("active", settingsSelected);
+  elements.adminTab?.classList.toggle("active", adminSelected);
   elements.jobsTab.setAttribute("aria-selected", String(jobsSelected));
-  elements.settingsTab.setAttribute("aria-selected", String(!jobsSelected));
+  elements.settingsTab.setAttribute("aria-selected", String(settingsSelected));
+  elements.adminTab?.setAttribute("aria-selected", String(adminSelected));
   elements.jobsTab.tabIndex = jobsSelected ? 0 : -1;
-  elements.settingsTab.tabIndex = jobsSelected ? -1 : 0;
+  elements.settingsTab.tabIndex = settingsSelected ? 0 : -1;
+  if (elements.adminTab) elements.adminTab.tabIndex = adminSelected ? 0 : -1;
   if (enteringSettings) {
     showSettingsTab("job-search");
   }
   if (focusFirstControl) {
-    (jobsSelected ? elements.filterToggle : elements.companySelect).focus();
+    (jobsSelected
+      ? elements.filterToggle
+      : settingsSelected
+        ? elements.companySelect
+        : elements.adminView?.querySelector("h2"))?.focus?.();
   }
+  if (adminSelected) void loadAdminStatus();
   return true;
 }
 
@@ -711,12 +736,23 @@ function handleTabKeydown(event) {
     return;
   }
   event.preventDefault();
-  const targetView = event.key === "ArrowLeft" || event.key === "Home"
-    ? "jobs"
-    : "settings";
+  const tabs = [
+    { id: "jobs", element: elements.jobsTab },
+    { id: "settings", element: elements.settingsTab },
+    ...(elements.adminTab ? [{ id: "admin", element: elements.adminTab }] : [])
+  ];
+  const currentIndex = Math.max(0, tabs.findIndex(tab => tab.id === state.activeView));
+  const nextIndex = event.key === "Home"
+    ? 0
+    : event.key === "End"
+      ? tabs.length - 1
+      : event.key === "ArrowLeft"
+        ? (currentIndex - 1 + tabs.length) % tabs.length
+        : (currentIndex + 1) % tabs.length;
+  const targetView = tabs[nextIndex].id;
   const changed = showView(targetView);
   if (changed) {
-    (targetView === "jobs" ? elements.jobsTab : elements.settingsTab).focus();
+    tabs[nextIndex].element.focus();
   }
 }
 
@@ -851,7 +887,109 @@ function renderAccountUi() {
     elements.anonymousAccountWorkspaceId.textContent =
       state.workspaceIdentity?.workspaceId || "Unavailable";
   }
+  elements.administratorBootstrapSection.hidden = !(
+    account.authenticated && account.administratorBootstrapAvailable === true);
+  synchronizeAdminNavigation(account.isAdmin === true);
   showAccountSection("default");
+}
+
+function synchronizeAdminNavigation(isAdmin) {
+  if (!isAdmin) {
+    if (state.activeView === "admin") showView("jobs", false, { bypassSourceGuard: true });
+    elements.adminTab?.remove();
+    elements.adminView?.remove();
+    elements.adminTab = null;
+    elements.adminView = null;
+    elements.adminStatus = null;
+    state.adminStatusLoaded = false;
+    return;
+  }
+  if (elements.adminTab) return;
+
+  const tab = document.createElement("button");
+  tab.id = "admin-tab";
+  tab.className = "app-tab";
+  tab.type = "button";
+  tab.setAttribute("role", "tab");
+  tab.setAttribute("aria-selected", "false");
+  tab.setAttribute("aria-controls", "admin-view");
+  tab.tabIndex = -1;
+  tab.textContent = "Admin";
+  tab.addEventListener("click", () => showView("admin"));
+  elements.settingsTab.after(tab);
+
+  const view = document.createElement("section");
+  view.id = "admin-view";
+  view.className = "app-view settings-view";
+  view.setAttribute("role", "tabpanel");
+  view.setAttribute("aria-labelledby", "admin-tab");
+  view.hidden = true;
+
+  const header = document.createElement("header");
+  header.className = "settings-header";
+  const heading = document.createElement("h2");
+  heading.tabIndex = -1;
+  heading.textContent = "Administration";
+  header.append(heading);
+
+  const surface = document.createElement("div");
+  surface.className = "settings-surface";
+  const section = document.createElement("section");
+  section.className = "settings-section account-section";
+  const title = document.createElement("h3");
+  title.textContent = "Administrator Access";
+  const message = document.createElement("p");
+  message.textContent = "Administrator access is active for this account.";
+  const future = document.createElement("p");
+  future.className = "account-help";
+  future.textContent = "Administrative workspace and account management tools will be added here in future versions.";
+  const status = document.createElement("p");
+  status.className = "settings-status";
+  status.setAttribute("role", "status");
+  status.setAttribute("aria-live", "polite");
+  section.append(title, message, future, status);
+  surface.append(section);
+  view.append(header, surface);
+  elements.settingsView.after(view);
+
+  elements.adminTab = tab;
+  elements.adminView = view;
+  elements.adminStatus = status;
+}
+
+async function loadAdminStatus() {
+  if (!elements.adminStatus || state.adminStatusLoaded) return;
+  elements.adminStatus.textContent = "Verifying administrator access…";
+  try {
+    const response = await fetch("/api/admin/status", { cache: "no-store" });
+    if (!response.ok) throw new Error("Administrator access could not be verified.");
+    const status = await response.json();
+    if (status.administrator !== true) throw new Error("Administrator access could not be verified.");
+    state.adminStatusLoaded = true;
+    elements.adminStatus.textContent = status.email ? `Signed in as: ${status.email}` : "";
+  } catch (error) {
+    elements.adminStatus.textContent = error.message || String(error);
+  }
+}
+
+async function claimAdministrator(event) {
+  event.preventDefault();
+  elements.administratorBootstrapStatus.textContent = "";
+  setFormBusy(elements.administratorBootstrapForm, true);
+  try {
+    const result = await postAccountJson("/api/account/admin-bootstrap", {
+      code: elements.administratorBootstrapCode.value
+    });
+    elements.administratorBootstrapForm.reset();
+    state.account.isAdmin = result.isAdmin === true;
+    state.account.administratorBootstrapAvailable = false;
+    renderAccountUi();
+    showView("admin", true, { bypassSourceGuard: true });
+  } catch (error) {
+    elements.administratorBootstrapStatus.textContent = error.message || String(error);
+  } finally {
+    setFormBusy(elements.administratorBootstrapForm, false);
+  }
 }
 
 function showAccountSection(mode) {
