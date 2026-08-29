@@ -1,0 +1,32 @@
+name: jsm-lab
+
+services:
+  jsm:
+    image: ${JSM_IMAGE_REFERENCE:?Set JSM_IMAGE_REFERENCE to an exact JSM image tag}
+    user: "1001:1001"
+    read_only: true
+    init: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    environment:
+      JOBSEARCHMANAGER_HOSTING_MODE: Container
+      JOBSEARCHMANAGER_DATA_PROTECTION_PATH: /var/lib/jsm/dataprotection
+      JOBSEARCHMANAGER_PUBLIC_BASE_URL: http://192.168.1.20:8080
+      JOBSEARCHMANAGER_SMTP_HOST: mailpit
+      JOBSEARCHMANAGER_SMTP_PORT: "1025"
+      JOBSEARCHMANAGER_SMTP_ENABLE_SSL: "false"
+      JOBSEARCHMANAGER_EMAIL_FROM: jsm@local.invalid
+      ASPNETCORE_URLS: http://0.0.0.0:8080
+      Application__OpenBrowser: "false"
+      Application__RefreshOnStartup: "false"
+      DOTNET_ENVIRONMENT: Production
+    ports:
+      - "192.168.1.20:8080:8080"
+    volumes:
+      - "${JSM_LAB_ROOT:-/home/codex/jsm-lab}/data/app:/app/data"
+      - "${JSM_LAB_ROOT:-/home/codex/jsm-lab}/data/dataprotection:/var/lib/jsm/dataprotection"
+    tmpfs:
+      - /tmp
+    restart: unless-stopped

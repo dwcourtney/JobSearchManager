@@ -9,11 +9,38 @@ TestResults/
 # Application-local runtime state
 data/
 **/data/
+/backups/
+mailpit-data/
+**/authentication/
+**/dataprotection/
+**/sessions/
+**/accounts.json
 
 # Published output and transient files
 publish/
 *.tmp
 *.log
+*.bundle
+*.zip
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+deploy.env
+deployed-sha
+
+# GitHub Actions self-hosted runner state
+.actions-runner/
+actions-runner/
+_work/
+.runner
+.credentials
+.credentials_rsaparams
 
 # Generated Azure deployment bundles
 /azure-deploy-*/

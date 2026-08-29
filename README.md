@@ -106,7 +106,9 @@ The included multi-stage `Dockerfile` builds with the .NET 10 SDK and runs on th
 ASP.NET Core 10 runtime as non-root UID/GID 1001. The included `compose.yaml` publishes
 only `192.168.1.20:8080`, uses no named volumes, and bind-mounts application data and
 Data Protection keys under `./data`. `GET /healthz` is an unauthenticated process-health
-probe and performs no workspace, account, provider, or storage operation.
+probe and performs no workspace, account, provider, or storage operation. `GET /version`
+reports only the build commit, application version, and hosting mode so a deployment can
+prove that the running image is the exact commit selected by CI.
 
 Start the isolated project with:
 
@@ -131,6 +133,10 @@ Run JavaScript syntax and centralized-theme source checks with:
 ```powershell
 .\scripts\validate-source.ps1
 ```
+
+The repository pins .NET SDK 10.0.400 in `global.json` and commits NuGet lock files.
+Automation and release-operation details are documented in
+[`docs/curiosity-cicd.md`](docs/curiosity-cicd.md).
 
 The executable is `JobSearchManager.exe` in a Windows build or publish output.
 

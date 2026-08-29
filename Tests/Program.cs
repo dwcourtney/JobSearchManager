@@ -287,6 +287,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Container workspaces are browser-isolated with non-secure LAN cookies", TestContainerWorkspaceMiddlewareAsync),
     ("Configured Data Protection keys persist to the requested directory", TestDataProtectionPersistenceAsync),
     ("Health endpoint is lightweight and returns HTTP 200", TestHealthEndpointAsync),
+    ("Version endpoint exposes only immutable deployment identity", TestVersionEndpointAsync),
     ("Azure mode requires explicit storage configuration", TestAzureValidationAsync),
     ("Legacy Azure settings migrate without overriding canonical settings", TestLegacyAzureConfigurationAsync),
     ("Workspace identifiers are random and strictly validated", TestWorkspaceIdentityAsync),
@@ -538,6 +539,54 @@ static async Task TestHealthEndpointAsync()
     post.Request.Path = HealthEndpoint.Path;
     Assert(!await HealthEndpoint.TryHandleAsync(post),
         "The health endpoint accepted a state-changing request.");
+}
+
+static async Task TestVersionEndpointAsync()
+{
+    const string commit = "0123456789abcdef0123456789abcdef01234567";
+    var configuration = Configuration(new Dictionary<string, string?>
+    {
+        [VersionEndpoint.CommitSetting] = commit
+    });
+    var hosting = new HostingConfiguration(
+        ApplicationHostingMode.Container,
+        null,
+        null,
+        "/var/lib/jsm/dataprotection");
+    var versionInfo = VersionEndpoint.Create(configuration, hosting);
+    var context = new DefaultHttpContext();
+    context.Request.Method = HttpMethods.Get;
+    context.Request.Path = VersionEndpoint.Path;
+    context.Response.Body = new MemoryStream();
+
+    Assert(await VersionEndpoint.TryHandleAsync(context, versionInfo),
+        "The version endpoint did not handle GET /version.");
+    context.Response.Body.Position = 0;
+    using var document = await JsonDocument.ParseAsync(context.Response.Body);
+    var root = document.RootElement;
+    Assert(context.Response.StatusCode == StatusCodes.Status200OK &&
+           root.GetProperty("commit").GetString() == commit &&
+           root.GetProperty("hostingMode").GetString() == "Container" &&
+           !string.IsNullOrWhiteSpace(root.GetProperty("version").GetString()),
+        "The version endpoint did not return the expected deployment identity.");
+    Assert(root.EnumerateObject().Select(property => property.Name).Order().SequenceEqual(
+            new[] { "commit", "hostingMode", "version" }.Order()),
+        "The version endpoint exposed fields beyond commit, version, and hostingMode.");
+
+    var invalid = VersionEndpoint.Create(
+        Configuration(new Dictionary<string, string?>
+        {
+            [VersionEndpoint.CommitSetting] = "not-a-full-commit"
+        }),
+        hosting);
+    Assert(invalid.Commit == VersionEndpoint.UnknownCommit,
+        "An invalid deployment commit was reported as trusted identity.");
+
+    var post = new DefaultHttpContext();
+    post.Request.Method = HttpMethods.Post;
+    post.Request.Path = VersionEndpoint.Path;
+    Assert(!await VersionEndpoint.TryHandleAsync(post, versionInfo),
+        "The version endpoint accepted a state-changing request.");
 }
 
 static Task TestAzureValidationAsync()

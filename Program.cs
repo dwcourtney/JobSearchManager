@@ -202,10 +202,12 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
     options.Level = CompressionLevel.Fastest);
 
 var app = builder.Build();
+var versionInfo = VersionEndpoint.Create(builder.Configuration, hosting);
 
 app.Use(async (context, next) =>
 {
     if (await HealthEndpoint.TryHandleAsync(context)) return;
+    if (await VersionEndpoint.TryHandleAsync(context, versionInfo)) return;
     await next();
 });
 
