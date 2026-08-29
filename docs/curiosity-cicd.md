@@ -129,6 +129,9 @@ is disabled unless the repository variable `CURIOSITY_AUTO_DEPLOY` is explicitly
 to `true` after bootstrap validation. A successful trusted `main` push is the only
 automatic source.
 
+Automatic curiosity deployment was enabled after the repository-scoped runner,
+manual smoke test, bootstrap deployment, and persistent-state checks all passed.
+
 Manual dispatch accepts either current `main` or one lowercase full Git SHA. A
 specific SHA must resolve to a commit in current `main` history and must pass every
 hosted validation gate again. There is no workflow input that reaches a shell as an
@@ -143,8 +146,8 @@ gh workflow run deploy-curiosity.yaml --repo dwc5703/JobSearchManager --ref main
   -f target=commit -f commit_sha=<lowercase-full-main-sha>
 ```
 
-`CURIOSITY_AUTO_DEPLOY` must remain unset until automatic CD receives separate explicit
-approval.
+`CURIOSITY_AUTO_DEPLOY` is set to `true` following separate approval and successful
+bootstrap validation.
 
 The deploy job runs only on `[self-hosted, linux, x64, curiosity, jsm]`. It checks out
 the exact SHA, builds `jsm:<full-sha>`, confirms the OCI revision, and invokes
