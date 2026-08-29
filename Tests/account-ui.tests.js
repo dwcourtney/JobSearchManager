@@ -7,6 +7,9 @@ const root = path.resolve(__dirname, "..");
 const index = fs.readFileSync(path.join(root, "wwwroot", "index.html"), "utf8");
 const app = fs.readFileSync(path.join(root, "wwwroot", "app.js"), "utf8");
 const styles = fs.readFileSync(path.join(root, "wwwroot", "styles.css"), "utf8");
+const accountStart = index.indexOf('id="account-settings-panel"');
+const accountEnd = index.indexOf('id="loading-overlay"', accountStart);
+const account = index.slice(accountStart, accountEnd);
 
 assert.match(index, /id="account-settings-tab"[\s\S]*?aria-controls="account-settings-panel"/);
 assert.match(index, /You are using an anonymous workspace/);
@@ -17,6 +20,21 @@ assert.match(index, /This browser session only[\s\S]*?1 day[\s\S]*?7 days[\s\S]*
 assert.match(index, /Email is used only for sign-in, verification, and password recovery/);
 assert.doesNotMatch(index, /password hash|reset token|session token/i,
   "The Account UI must not expose authentication secret material.");
+assert.match(account, /id="import-export-heading"[\s\S]*?id="import-workspace-button"[\s\S]*?id="export-workspace-button"/);
+assert.match(account,
+  /id="reset-workspace-heading"[\s\S]*?Current Workspace ID[\s\S]*?id="workspace-id"[^>]*readonly[\s\S]*?id="copy-workspace-id-button"[\s\S]*?id="reset-workspace-button"/);
+assert.match(account, /without deleting the authenticated account/);
+
+const accountHeading = account.indexOf('id="authenticated-account-heading"');
+const privacyHeading = account.indexOf('id="account-privacy-heading"');
+const importExportHeading = account.indexOf('id="import-export-heading"');
+const resetWorkspaceHeading = account.indexOf('id="reset-workspace-heading"');
+assert.ok(accountHeading >= 0 && accountHeading < privacyHeading &&
+  privacyHeading < importExportHeading && importExportHeading < resetWorkspaceHeading,
+  "Account sections must end in Account Privacy, Import / Export, then Reset Workspace.");
+assert.equal(account.lastIndexOf('<section class="settings-section'),
+  account.indexOf('<section class="settings-section reset-workspace-section"'),
+  "Reset Workspace must remain the final Account section.");
 
 assert.match(app, /fetch\("\/api\/account\/status"/);
 assert.match(app, /postAccountJson\("\/api\/account\/create"/);

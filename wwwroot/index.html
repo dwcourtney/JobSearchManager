@@ -616,45 +616,6 @@
           </div>
         </section>
 
-        <section class="settings-section" aria-labelledby="import-export-heading">
-          <h3 id="import-export-heading">Import / Export</h3>
-          <div class="portable-preferences-content">
-            <div>
-              <p>Back up portable settings and curated jobs to one JSON file, or restore them in another workspace.</p>
-              <small>Import replaces current portable settings and curated states. Saved, Applied, Closed, and Hidden jobs are included; the live catalog and full descriptions are excluded.</small>
-              <p id="portable-workspace-status" class="settings-status" role="status" aria-live="polite"></p>
-            </div>
-            <div class="portable-preferences-actions">
-              <button id="import-workspace-button" type="button">Import Workspace</button>
-              <button id="export-workspace-button" type="button">Export Workspace</button>
-              <input id="import-workspace-file" type="file" accept="application/json,.json" hidden>
-            </div>
-          </div>
-        </section>
-
-        <section class="settings-section reset-workspace-section" aria-labelledby="reset-workspace-heading">
-          <h3 id="reset-workspace-heading">Reset Workspace</h3>
-          <div class="reset-workspace-content">
-            <div class="reset-workspace-details">
-              <p>Delete all settings, history, cached jobs, and preferences for this workspace.</p>
-              <small>The application will reload with first-run defaults. This cannot be undone.</small>
-              <div class="workspace-identity">
-                <label for="workspace-id">Current Workspace ID</label>
-                <div class="workspace-identity-controls">
-                  <input id="workspace-id" type="text" value="Loading…" readonly
-                         autocomplete="off" spellcheck="false" aria-describedby="workspace-id-status">
-                  <button id="copy-workspace-id-button" class="confirmation-secondary-button" type="button"
-                          disabled>Copy</button>
-                </div>
-                <span id="workspace-id-status" class="workspace-identity-status" role="status"
-                      aria-live="polite"></span>
-              </div>
-            </div>
-            <button id="reset-workspace-button" class="destructive-button" type="button">
-              Reset Current Workspace
-            </button>
-          </div>
-        </section>
         </div>
 
         <div id="job-fit-settings-panel" class="settings-tab-panel" role="tabpanel"
@@ -847,6 +808,46 @@
             <h3 id="account-privacy-heading">Account Privacy</h3>
             <p>Email is used only for sign-in, verification, and password recovery. Authentication secrets are stored separately and are never included in workspace exports.</p>
             <p id="account-email-configuration-note" class="account-help" hidden>Email delivery is not configured on this deployment. Account access works, but verification and password-reset messages cannot be delivered until an administrator configures the email provider.</p>
+          </section>
+
+          <section class="settings-section" aria-labelledby="import-export-heading">
+            <h3 id="import-export-heading">Import / Export</h3>
+            <div class="portable-preferences-content">
+              <div>
+                <p>Back up portable settings and curated jobs to one JSON file, or restore them in another workspace.</p>
+                <small>Import replaces current portable settings and curated states. Saved, Applied, Closed, and Hidden jobs are included; the live catalog and full descriptions are excluded.</small>
+                <p id="portable-workspace-status" class="settings-status" role="status" aria-live="polite"></p>
+              </div>
+              <div class="portable-preferences-actions">
+                <button id="import-workspace-button" type="button">Import Workspace</button>
+                <button id="export-workspace-button" type="button">Export Workspace</button>
+                <input id="import-workspace-file" type="file" accept="application/json,.json" hidden>
+              </div>
+            </div>
+          </section>
+
+          <section class="settings-section reset-workspace-section" aria-labelledby="reset-workspace-heading">
+            <h3 id="reset-workspace-heading">Reset Workspace</h3>
+            <div class="reset-workspace-content">
+              <div class="reset-workspace-details">
+                <p>Delete all settings, history, cached jobs, and preferences for this workspace without deleting the authenticated account.</p>
+                <small>The application will reload the workspace with first-run defaults. The account will remain available, but the workspace reset cannot be undone.</small>
+                <div class="workspace-identity">
+                  <label for="workspace-id">Current Workspace ID</label>
+                  <div class="workspace-identity-controls">
+                    <input id="workspace-id" type="text" value="Loading…" readonly
+                           autocomplete="off" spellcheck="false" aria-describedby="workspace-id-status">
+                    <button id="copy-workspace-id-button" class="confirmation-secondary-button" type="button"
+                            disabled>Copy</button>
+                  </div>
+                  <span id="workspace-id-status" class="workspace-identity-status" role="status"
+                        aria-live="polite"></span>
+                </div>
+              </div>
+              <button id="reset-workspace-button" class="destructive-button" type="button">
+                Reset Current Workspace
+              </button>
+            </div>
           </section>
         </div>
       </div>

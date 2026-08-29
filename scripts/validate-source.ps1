@@ -261,7 +261,8 @@ $settingsTabIds = @(
     "job-search-settings",
     "qualifications-settings",
     "preferences-settings",
-    "job-fit-settings"
+    "job-fit-settings",
+    "account-settings"
 )
 foreach ($tabId in $settingsTabIds) {
     if (-not [regex]::IsMatch(
@@ -281,6 +282,7 @@ $settingsTabLabels = @{
     "qualifications-settings" = "My Qualifications"
     "preferences-settings" = "My Preferences"
     "job-fit-settings" = "Job Fit"
+    "account-settings" = "Account"
 }
 foreach ($tabId in $settingsTabLabels.Keys) {
     $label = [regex]::Escape($settingsTabLabels[$tabId])
@@ -329,17 +331,19 @@ $jobSearchStart = $index.IndexOf('id="job-search-settings-panel"')
 $qualificationsStart = $index.IndexOf('id="qualifications-settings-panel"')
 $preferencesStart = $index.IndexOf('id="preferences-settings-panel"')
 $jobFitStart = $index.IndexOf('id="job-fit-settings-panel"')
+$accountStart = $index.IndexOf('id="account-settings-panel"')
 $settingsEnd = $index.IndexOf('id="loading-overlay"')
 if ($jobSearchStart -lt 0 -or $qualificationsStart -le $jobSearchStart -or
     $preferencesStart -le $qualificationsStart -or $jobFitStart -le $preferencesStart -or
-    $settingsEnd -le $jobFitStart) {
+    $accountStart -le $jobFitStart -or $settingsEnd -le $accountStart) {
     throw "Settings tab panels are missing or out of order."
 }
 $settingsPanelMarkup = @{
     "Job Search" = $index.Substring($jobSearchStart, $qualificationsStart - $jobSearchStart)
     "Qualifications" = $index.Substring($qualificationsStart, $preferencesStart - $qualificationsStart)
     "Preferences" = $index.Substring($preferencesStart, $jobFitStart - $preferencesStart)
-    "Job Fit" = $index.Substring($jobFitStart, $settingsEnd - $jobFitStart)
+    "Job Fit" = $index.Substring($jobFitStart, $accountStart - $jobFitStart)
+    "Account" = $index.Substring($accountStart, $settingsEnd - $accountStart)
 }
 $requiredSettingsControls = @{
     "Job Search" = @(
@@ -353,13 +357,15 @@ $requiredSettingsControls = @{
         "credential-inventory-status", "credential-search", "held-credentials"
     )
     "Preferences" = @(
-        "minimum-pay",
-        "theme-mode", "import-workspace-button", "export-workspace-button",
-        "import-workspace-file", "reset-workspace-button"
+        "minimum-pay", "theme-mode"
     )
     "Job Fit" = @(
         "job-fit-enabled", "job-fit-configuration", "job-fit-concept-search",
         "job-fit-survey-status", "job-fit-survey"
+    )
+    "Account" = @(
+        "import-workspace-button", "export-workspace-button", "import-workspace-file",
+        "reset-workspace-button", "workspace-id", "copy-workspace-id-button"
     )
 }
 foreach ($panelName in $requiredSettingsControls.Keys) {
@@ -396,11 +402,20 @@ if ($settingsPanelMarkup["Preferences"] -notmatch
     'locations such as Antarctica, Guam, or Ramstein AFB in Germany') {
     throw "Deployment Filtering help is missing verified corpus examples."
 }
+if ($settingsPanelMarkup["Preferences"] -match 'id="import-export-heading"' -or
+    $settingsPanelMarkup["Preferences"] -match 'id="reset-workspace-heading"') {
+    throw "Workspace import/export or reset controls are still assigned to My Preferences."
+}
+if ($settingsPanelMarkup["Account"] -notmatch
+    '(?s)id="account-privacy-heading".*id="import-export-heading".*id="reset-workspace-heading"' -or
+    $settingsPanelMarkup["Account"] -notmatch 'without deleting the authenticated account') {
+    throw "Account workspace controls are missing, out of order, or unclear about account preservation."
+}
 
 if ($settingsPanelMarkup["Job Search"] -notmatch '>\s*Apply Job Source\s*<' -or
-    $settingsPanelMarkup["Preferences"] -notmatch '>\s*Import Workspace\s*<' -or
-    $settingsPanelMarkup["Preferences"] -notmatch '>\s*Export Workspace\s*<' -or
-    $settingsPanelMarkup["Preferences"] -notmatch '>\s*Reset Current Workspace\s*<') {
+    $settingsPanelMarkup["Account"] -notmatch '>\s*Import Workspace\s*<' -or
+    $settingsPanelMarkup["Account"] -notmatch '>\s*Export Workspace\s*<' -or
+    $settingsPanelMarkup["Account"] -notmatch '>\s*Reset Current Workspace\s*<') {
     throw "A required action button is missing or does not use title case."
 }
 if ($app -notmatch '"Apply Job Source"' -or

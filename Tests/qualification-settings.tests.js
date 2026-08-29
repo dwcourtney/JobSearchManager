@@ -26,8 +26,8 @@ assert.match(qualifications,
 assert.doesNotMatch(qualifications, /id="minimum-pay"/);
 assert.match(preferences, /id="compensation-heading"[\s\S]*?id="minimum-pay"/);
 assert.match(preferences, /Antarctica, Guam, or Ramstein AFB in Germany/);
-assert.match(preferences,
-  /id="reset-workspace-heading"[\s\S]*?Current Workspace ID[\s\S]*?id="workspace-id"[^>]*readonly[\s\S]*?id="copy-workspace-id-button"/);
+assert.doesNotMatch(preferences, /id="import-export-heading"|id="import-workspace-button"|id="export-workspace-button"/);
+assert.doesNotMatch(preferences, /id="reset-workspace-heading"|id="reset-workspace-button"|id="workspace-id"/);
 assert.match(app, /fetch\("\/api\/workspace\/identity", \{ cache: "no-store" \}\)/);
 assert.match(app, /async function copyWorkspaceId\(\)/);
 assert.ok(app.includes("navigator.clipboard?.writeText"));

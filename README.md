@@ -297,7 +297,7 @@ company ID. The active source falls back to a safe supported default.
 Copy or move the executable directory and its `data` directory together to retain
 state.
 
-Settings > My Preferences also provides **Export Workspace** and **Import Workspace**.
+Settings > Account also provides **Export Workspace** and **Import Workspace**.
 The versioned JSON file is a portable workspace backup containing:
 
 - the pending or applied Job Source selection (company, country, coverage flags,
