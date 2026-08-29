@@ -1,7 +1,12 @@
 > **Repository note:** Job Search Manager is a personal project, not Penn State
 > coursework or university-sponsored work. This private repository is hosted under
 > my Penn State GitHub account solely to use GitHub Education/Pro CI/CD features for
-> private repositories.
+> private repositories. Its permanent canonical repository is
+> [`dwc5703/JobSearchManager`](https://github.com/dwc5703/JobSearchManager), while
+> commits remain authored and cryptographically signed with the personal identity
+> `David Courtney <davidcourtney@outlook.com>`. The `dwcourtney` account must not own
+> or be treated as canonical for a JSM repository. This deliberate account split is
+> infrastructure policy, not account drift.
 
 # Job Search Manager
 

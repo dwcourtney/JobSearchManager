@@ -13,6 +13,9 @@ if [[ "$actual_sha" != "$expected_sha" ]]; then
   exit 1
 fi
 
+bash scripts/verify-repository-identity.sh "$(pwd)"
+bash scripts/test-repository-identity.sh
+
 dotnet restore JobSearchManager.csproj --locked-mode
 dotnet restore Tests/JobSearchManager.Tests.csproj --locked-mode
 dotnet build JobSearchManager.csproj --configuration Release --no-restore

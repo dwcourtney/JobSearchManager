@@ -19,6 +19,8 @@ if [[ ! "$target_sha" =~ ^[0-9a-f]{40}$ ]]; then
   exit 2
 fi
 
+bash "$repository_root/scripts/verify-repository-identity.sh" "$repository_root"
+
 actual_sha="$(git -C "$repository_root" rev-parse HEAD)"
 [[ "$actual_sha" == "$target_sha" ]] || {
   echo "Checked-out SHA $actual_sha does not match deployment SHA $target_sha." >&2

@@ -5,11 +5,34 @@ The canonical repository for Job Search Manager is the private repository
 one intentional exception to the separation between personal and Penn State GitHub
 identities: JSM is a personal project, not coursework, research, or university-sponsored
 work, and is hosted under `dwc5703` solely for GitHub Education/Pro private-repository
-CI/CD capabilities. Repository ownership is intentionally pinned to `dwc5703`.
+CI/CD capabilities. Repository ownership is permanently pinned to `dwc5703`; the
+`dwcourtney` account must not own JSM or appear as its canonical repository owner.
+The canonical Git origin is exactly:
+
+```text
+https://github.com/dwc5703/JobSearchManager.git
+```
 
 Git repository ownership and commit authorship remain separate. Existing history is
 not rewritten, and future commits retain the repository-local identity
-`David Courtney <davidcourtney@outlook.com>`.
+`David Courtney <davidcourtney@outlook.com>`. Repository-local Git configuration
+requires SSH-signed commits and tags. `.github/allowed_signers` binds the public
+signing key to that author for local verification; no private key is committed.
+The hosting/authorship split is an intentional infrastructure decision. Do not move
+JSM back to `dwcourtney` merely to align repository ownership with the personal commit
+identity. Do not change JSM authorship or signing to a Penn State identity merely
+because `dwc5703` owns the repository.
+
+Before any GitHub administration or manual deployment dispatch from Windows, run:
+
+```powershell
+pwsh -NoLogo -NoProfile -File scripts/verify-github-account.ps1
+```
+
+The command must report exactly `dwc5703`. If it fails or names another account,
+STOP. Remote identity validation is deliberately separate in
+`scripts/verify-repository-identity.sh`, so normal compilation never requires GitHub
+CLI or network access.
 
 ## Trust boundaries
 
@@ -38,20 +61,25 @@ the private repository exists and the runner package and checksum have been veri
 
 ## Hosted CI
 
-`.github/workflows/ci.yaml` runs for pull requests targeting `main` and pushes to
-`main`. It checks out the exact event SHA with persisted Git credentials disabled,
-then `scripts/ci-validate.sh` enforces:
+`.github/workflows/ci.yaml` runs for pull requests targeting `main` and every pushed
+branch. It checks out the exact event SHA with persisted Git credentials disabled.
+For trusted push events, it uses only the built-in read-only `GITHUB_TOKEN` to require
+GitHub's commit API to report `verified: true` and `reason: valid` for that exact SHA.
+The step is skipped for pull requests, including forks, and uses no repository secret.
+The `main` ruleset is the server-side signing guarantee; this CI check is an additional
+lightweight exact-SHA signal. `scripts/ci-validate.sh` enforces:
 
-1. checked-out SHA equality;
-2. locked NuGet restore under SDK 10.0.400;
-3. Release build and the complete deterministic .NET suite;
-4. JavaScript runtime tests and centralized theme/source checks;
-5. `git diff --check` and a clean generated-file check;
-6. a linux/amd64 image tagged by full SHA;
-7. an OCI revision label equal to that SHA;
-8. an ephemeral non-root, read-only container with temporary isolated storage;
-9. Docker health plus HTTP 200 and `Healthy` from `/healthz`; and
-10. an exact SHA match from `/version`, whose response is limited to `commit`,
+1. canonical repository/remote identity and deterministic negative guard tests;
+2. checked-out SHA equality;
+3. locked NuGet restore under SDK 10.0.400;
+4. Release build and the complete deterministic .NET suite;
+5. JavaScript runtime tests and centralized theme/source checks;
+6. `git diff --check` and a clean generated-file check;
+7. a linux/amd64 image tagged by full SHA;
+8. an OCI revision label equal to that SHA;
+9. an ephemeral non-root, read-only container with temporary isolated storage;
+10. Docker health plus HTTP 200 and `Healthy` from `/healthz`; and
+11. an exact SHA match from `/version`, whose response is limited to `commit`,
     `version`, and `hostingMode`.
 
 The workflow has read-only repository permissions and pins third-party Actions by
@@ -127,9 +155,9 @@ Do not combine approval boundaries. The rollout order is:
 4. Add `origin`, push complete `main` history, and push
    `pre-authentication-2026-08-28`.
 5. Confirm hosted CI passes.
-6. Configure a lightweight `main` ruleset: block force pushes and deletion, require
-   the CI validation check where GitHub permits it without mandatory pull requests,
-   keep direct pushes, and retain an owner emergency bypass.
+6. Configure the `main` ruleset: block force pushes and deletion, require signed
+   commits and the CI validation check, keep direct pushes, and do not require pull
+   requests or configure a bypass.
 7. Register the repository-scoped runner in `/home/codex/jsm-cicd/runner`; install and
    verify its supported service with explicit approval.
 8. Leave `CURIOSITY_AUTO_DEPLOY` unset and manually dispatch one bootstrap deployment.
@@ -140,10 +168,14 @@ Do not combine approval boundaries. The rollout order is:
 ## Normal development flow
 
 Develop and test on Windows, commit normally, and push the commit to a topic branch.
-Hosted CI performs every gate for that exact SHA. After it succeeds, either open an
+Repository-local configuration makes signing mandatory, so an unavailable signer
+causes commit creation to fail rather than producing an unsigned commit. Hosted CI
+performs every gate for that exact SHA and independently requires GitHub's `Verified`
+status on pushes. After it succeeds, either open an
 optional pull request or fast-forward `main` directly to the same already-validated
-SHA. The required status check therefore protects `main` without imposing mandatory
-pull requests; an unvalidated direct push is rejected. A successful trusted `main` CI
+SHA. The required status and signed-commit rules therefore protect `main` without
+imposing mandatory pull requests; an unsigned or unvalidated direct push is rejected.
+A successful trusted `main` CI
 run queues the exact SHA for curiosity only after automatic deployment is explicitly
 enabled.
 
