@@ -3916,13 +3916,10 @@ async function copySelectedJobPosting() {
     return;
   }
 
-  try {
-    if (!navigator.clipboard?.writeText) {
-      throw new Error("Clipboard API is unavailable.");
-    }
-    await navigator.clipboard.writeText(postingText);
+  const copied = await ClipboardText.copyText(postingText);
+  if (copied) {
     showCopyFeedback("Copied", "Copied full job posting", "Full job posting copied to clipboard.");
-  } catch {
+  } else {
     showCopyFeedback(
       "Copy failed",
       "Copy failed — try again",

@@ -17,6 +17,8 @@ $companySelectorPath = Join-Path $repo "wwwroot\company-selector.js"
 $companySelectorTestsPath = Join-Path $repo "Tests\company-selector.tests.js"
 $postingTextPath = Join-Path $repo "wwwroot\job-posting-text.js"
 $postingTextTestsPath = Join-Path $repo "Tests\job-posting-text.tests.js"
+$clipboardTextPath = Join-Path $repo "wwwroot\clipboard-text.js"
+$clipboardTextTestsPath = Join-Path $repo "Tests\clipboard-text.tests.js"
 $workflowStatePath = Join-Path $repo "wwwroot\job-workflow-state.js"
 $workflowStateTestsPath = Join-Path $repo "Tests\job-workflow-state.tests.js"
 $unseenStatePath = Join-Path $repo "wwwroot\job-unseen-state.js"
@@ -48,6 +50,8 @@ foreach ($scriptPath in @(
     $companySelectorTestsPath,
     $postingTextPath,
     $postingTextTestsPath,
+    $clipboardTextPath,
+    $clipboardTextTestsPath,
     $workflowStatePath,
     $workflowStateTestsPath,
     $unseenStatePath,
@@ -89,6 +93,11 @@ if ($LASTEXITCODE -ne 0) {
 & $NodePath $postingTextTestsPath
 if ($LASTEXITCODE -ne 0) {
     throw "Job-posting text normalization tests failed."
+}
+
+& $NodePath $clipboardTextTestsPath
+if ($LASTEXITCODE -ne 0) {
+    throw "Clipboard transport and Copy Posting UI tests failed."
 }
 
 & $NodePath $workflowStateTestsPath
@@ -237,7 +246,8 @@ $unseenStateScript = $index.IndexOf('src="/job-unseen-state.js?v=1"')
 $credentialFitScript = $index.IndexOf('src="/credential-fit.js?v=2"')
 $clearanceFitScript = $index.IndexOf('src="/clearance-fit.js?v=1"')
 $jobFitScript = $index.IndexOf('src="/job-fit.js?v=4"')
-$appScript = $index.IndexOf('src="/app.js?v=26"')
+$clipboardTextScript = $index.IndexOf('src="/clipboard-text.js?v=1"')
+$appScript = $index.IndexOf('src="/app.js?v=27"')
 if ($countryOrderingScript -lt 0 -or $appScript -le $countryOrderingScript) {
     throw "The versioned country-ordering.js asset must load before app.js."
 }
@@ -259,6 +269,10 @@ if ($clearanceFitScript -lt 0 -or $appScript -le $clearanceFitScript) {
 }
 if ($jobFitScript -lt 0 -or $appScript -le $jobFitScript) {
     throw "job-fit.js must load before app.js."
+}
+if ($clipboardTextScript -lt 0 -or $appScript -le $clipboardTextScript -or
+    $app -notmatch '\bClipboardText\.copyText\(postingText\)') {
+    throw "The clipboard fallback module must load before app.js and handle Copy Posting transport."
 }
 if ($countryOrdering -notmatch 'globalThis\.CountryOrdering\s*=' -or
     $app -notmatch '\bCountryOrdering\.orderCountryFacets\b' -or
