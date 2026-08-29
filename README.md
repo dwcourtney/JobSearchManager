@@ -1,3 +1,8 @@
+> **Repository note:** Job Search Manager is a personal project, not Penn State
+> coursework or university-sponsored work. This private repository is hosted under
+> my Penn State GitHub account solely to use GitHub Education/Pro CI/CD features for
+> private repositories.
+
 # Job Search Manager
 
 Job Search Manager is a small frontend for selected public job boards.

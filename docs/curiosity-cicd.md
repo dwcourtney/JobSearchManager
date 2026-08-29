@@ -1,9 +1,15 @@
 # Curiosity CI/CD operations
 
-The canonical repository for Job Search Manager is the private personal repository
-[`dwcourtney/JobSearchManager`](https://github.com/dwcourtney/JobSearchManager).
-Repository remotes, GitHub Actions, and the curiosity self-hosted runner must remain
-associated with that owner and repository, not an alternate GitHub identity.
+The canonical repository for Job Search Manager is the private repository
+[`dwc5703/JobSearchManager`](https://github.com/dwc5703/JobSearchManager). This is the
+one intentional exception to the separation between personal and Penn State GitHub
+identities: JSM is a personal project, not coursework, research, or university-sponsored
+work, and is hosted under `dwc5703` solely for GitHub Education/Pro private-repository
+CI/CD capabilities. Repository ownership is intentionally pinned to `dwc5703`.
+
+Git repository ownership and commit authorship remain separate. Existing history is
+not rewritten, and future commits retain the repository-local identity
+`David Courtney <davidcourtney@outlook.com>`.
 
 ## Trust boundaries
 
@@ -117,7 +123,7 @@ Do not combine approval boundaries. The rollout order is:
 
 1. Commit these source changes with a clean Windows worktree.
 2. Reauthenticate GitHub CLI.
-3. Create or confirm private `dwcourtney/JobSearchManager`.
+3. Create or confirm private `dwc5703/JobSearchManager`.
 4. Add `origin`, push complete `main` history, and push
    `pre-authentication-2026-08-28`.
 5. Confirm hosted CI passes.
@@ -133,10 +139,15 @@ Do not combine approval boundaries. The rollout order is:
 
 ## Normal development flow
 
-Develop and test on Windows, commit normally, and push `main` (or open an optional
-pull request). Hosted CI performs every gate. Once automatic deployment is explicitly
-enabled, a successful trusted `main` CI run queues the exact SHA for curiosity. A
-powered-off curiosity does not affect CI; use manual dispatch later if the 24-hour
+Develop and test on Windows, commit normally, and push the commit to a topic branch.
+Hosted CI performs every gate for that exact SHA. After it succeeds, either open an
+optional pull request or fast-forward `main` directly to the same already-validated
+SHA. The required status check therefore protects `main` without imposing mandatory
+pull requests; an unvalidated direct push is rejected. A successful trusted `main` CI
+run queues the exact SHA for curiosity only after automatic deployment is explicitly
+enabled.
+
+A powered-off curiosity does not affect CI; use manual dispatch later if the 24-hour
 deployment queue expires. Roll back by manually dispatching a retained known-good SHA
 from `main` history, which is revalidated before deployment.
 
