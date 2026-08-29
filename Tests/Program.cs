@@ -446,6 +446,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Extended-location detector rejects incidental locations and ordinary travel", TestExtendedLocationNegativeAsync),
     ("Extended-location detector preserves relevant evidence in mixed context", TestExtendedLocationMixedContextAsync),
     ("Extended-location detector separates questionable from strong evidence", TestExtendedLocationConfidenceAsync),
+    ("Extended away-from-home assignments are detected without ordinary-travel noise", TestExtendedAwayAssignmentAsync),
     ("Selected-company terminology remains covered by sanitized fixtures", TestExpandedCompanyFixturesAsync),
     ("Provider HTML normalization preserves parsing and display separators", TestProviderHtmlNormalizationAsync),
     ("Workflow state transitions are canonical and validated", TestWorkflowStateTransitionsAsync),
@@ -1586,8 +1587,8 @@ static Task TestJobConceptDetectionAsync()
              "work.aircraft-flight-line" or "role.management-heavy")),
         "A title-only concept was inferred from a body reference to another role.");
 
-    Assert(concepts.Version == 4 && concepts.Concepts.Count == 78 &&
-           concepts.Concepts.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count() == 78 &&
+    Assert(concepts.Version == 5 && concepts.Concepts.Count == 79 &&
+           concepts.Concepts.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count() == 79 &&
            concepts.Concepts.Any(item => item.Category == "Role Type / Career Direction") &&
            concepts.Concepts.Any(item => item.Category == "Responsibility Shape") &&
            concepts.Concepts.All(item => !item.Id.StartsWith("qualification.", StringComparison.Ordinal)),
@@ -2756,16 +2757,26 @@ static async Task TestChangedListingInvalidationAsync()
 
 static async Task TestLocalReclassificationAsync()
 {
-    var handler = CreateWorkdayHandler(() => 1);
+    var handler = CreateWorkdayHandler(() => 1, description: _ =>
+        "<p>The position will be onsite at the Customer Site in The Hague for 3 months to onboard.</p>");
     var client = CreateSourceClient(new HttpClient(handler));
     var (company, query) = WorkdaySource();
     var first = await client.FetchAllJobsAsync(company, query);
-    var stale = first.Jobs.Select(job => job with { AnalysisVersion = 0 }).ToArray();
+    var stale = first.Jobs.Select(job => job with
+    {
+        ExtendedLocationRequirement = job.ExtendedLocationRequirement! with { AnalysisVersion = 2 },
+        DetectedConcepts = [],
+        JobConceptCatalogVersion = 4
+    }).ToArray();
     var before = handler.DetailRequests;
     var second = await client.FetchAllJobsAsync(company, query, cachedJobs: stale);
 
     Assert(handler.DetailRequests == before && second.Metrics?.ReclassifiedLocally == 1 &&
-           second.Jobs.Single().AnalysisVersion == JobSourceClient.CurrentAnalysisVersion,
+           second.Jobs.Single().AnalysisVersion == JobSourceClient.CurrentAnalysisVersion &&
+           second.Jobs.Single().ExtendedLocationRequirement?.AnalysisVersion == 3 &&
+           second.Jobs.Single().JobConceptCatalogVersion == 5 &&
+           second.Jobs.Single().DetectedConcepts?.Any(item =>
+               item.ConceptId == "work.extended-away-assignment") == true,
         "Parser invalidation did not reclassify cached text locally.");
 }
 
@@ -4055,6 +4066,83 @@ static Task TestExtendedLocationConfidenceAsync()
     return Task.CompletedTask;
 }
 
+static Task TestExtendedAwayAssignmentAsync()
+{
+    var catalog = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+    var detector = new ExtendedLocationRequirementDetector();
+    var conceptDetector = new JobConceptDetector(catalog);
+    const string conceptId = "work.extended-away-assignment";
+
+    var positiveCases = new[]
+    {
+        "The position will be onsite at the Customer Site in The Hague, Netherlands for 3 months to onboard.",
+        "Must be willing and able to deploy internationally to Kazakhstan for assignments of up to 90 consecutive days.",
+        "This winter-over assignment requires deployment to Antarctica for the austral winter.",
+        "Employees work a required rotation of 6 weeks onsite and 6 weeks remote.",
+        "The employee must reside aboard the ship for 8 weeks at sea.",
+        "The role requires an initial 12-week customer-site onboarding assignment.",
+        "Temporary duty in Guam is required for 60 days.",
+        "Ability to travel on continuous travel assignments sometimes up to 5 months is required.",
+        "Willing to travel to Wallops Island for around 10 months/year.",
+        "This is a 100% long-term OCONUS assignment in Iraq."
+    };
+
+    foreach (var text in positiveCases)
+    {
+        var extended = detector.Analyze("Site Specialist", "United States", [], $"<p>{text}</p>");
+        var detected = conceptDetector.Analyze("Site Specialist", "United States", [],
+            $"<p>{text}</p>", null, extended);
+        Assert(detected.Count(item => item.ConceptId == conceptId) == 1,
+            $"Extended assignment concept was not detected exactly once: {text}");
+        var evidence = detected.Single(item => item.ConceptId == conceptId).Evidence;
+        Assert(text.Contains("winter-over", StringComparison.OrdinalIgnoreCase) ||
+               text.Contains("long-term", StringComparison.OrdinalIgnoreCase) ||
+               System.Text.RegularExpressions.Regex.IsMatch(evidence, @"\b(?:\d{1,3}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)[- ]?(?:consecutive\s+)?(?:days?|weeks?|months?)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase),
+            $"Extended assignment evidence omitted the qualifying duration: {evidence}");
+    }
+
+    var negativeCases = new[]
+    {
+        "This role requires 25% travel.",
+        "Travel may be required up to 50%.",
+        "Occasional international travel is expected.",
+        "Visit the customer site for one week per month.",
+        "Travel for one week per quarter is required.",
+        "This hybrid role is onsite three days per week.",
+        "Relocation is required with no temporary assignment duration.",
+        "Travel destinations include Germany and Japan.",
+        "Requires five years of experience and twelve months of project leadership.",
+        "Requires a four-year degree and a certification earned within the last three years.",
+        "The project duration is 18 months.",
+        "Must remain at a workstation for extended periods.",
+        "A passport valid for 12 months is required.",
+        "Possess a passport valid for 12 months after employment start and be able to travel internationally.",
+        "Deployment to Antarctica may be necessary for approximately 6 months at management discretion."
+    };
+
+    foreach (var text in negativeCases)
+    {
+        var extended = detector.Analyze("Program Analyst", "United States", [], $"<p>{text}</p>");
+        var detected = conceptDetector.Analyze("Program Analyst", "United States", [],
+            $"<p>{text}</p>", null, extended);
+        Assert(detected.All(item => item.ConceptId != conceptId),
+            $"Ordinary, incidental, or conditional language produced the extended assignment concept: {text}");
+    }
+
+    var overlapText = "This is a 90-day rotational assignment in Guam and the employee must deploy.";
+    var overlapExtended = detector.Analyze("Field Engineer", "United States", [], $"<p>{overlapText}</p>");
+    var overlap = conceptDetector.Analyze("Field Engineer", "United States", [],
+        $"<p>{overlapText}</p>", null, overlapExtended);
+    Assert(overlap.Count(item => item.ConceptId == conceptId) == 1 &&
+           overlap.Any(item => item.ConceptId == "work.deployment") &&
+           overlap.Any(item => item.ConceptId == "work.rotation") &&
+           (catalog.Get(conceptId).Supersedes?.Count ?? 0) == 0,
+        "Overlapping deployment/rotation signals were duplicated or incorrectly superseded.");
+    Assert(ExtendedLocationRequirementDetector.CurrentAnalysisVersion == 3 && catalog.Version == 5,
+        "Extended assignment changes did not invalidate cached classification versions.");
+    return Task.CompletedTask;
+}
+
 static Task TestExpandedCompanyFixturesAsync()
 {
     const string northrop = """
@@ -4356,7 +4444,8 @@ static (CompanyDefinition Company, JobSourceQuery Query) WorkdaySource()
 static InstrumentedHttpMessageHandler CreateWorkdayHandler(
     Func<int> listingCount,
     Func<int, string>? title = null,
-    int delayMilliseconds = 0) => new(async (request, cancellationToken) =>
+    int delayMilliseconds = 0,
+    Func<int, string>? description = null) => new(async (request, cancellationToken) =>
 {
     if (request.Method == HttpMethod.Get)
     {
@@ -4373,7 +4462,8 @@ static InstrumentedHttpMessageHandler CreateWorkdayHandler(
                 startDate = "2026-08-15",
                 postedOn = "Posted Today",
                 timeType = "Full time",
-                jobDescription = $"<p>Cached description {index}. Bachelor's degree. US citizenship required.</p>",
+                jobDescription = description?.Invoke(index) ??
+                    $"<p>Cached description {index}. Bachelor's degree. US citizenship required.</p>",
                 externalUrl = $"https://example.test/job/{index}"
             }
         });

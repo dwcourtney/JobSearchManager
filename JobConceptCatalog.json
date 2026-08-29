@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "concepts": [
     {
       "id": "work.remote",
@@ -95,6 +95,17 @@
         "extended-deployment",
         "forward-deployed",
         "possible-deployment"
+      ]
+    },
+    {
+      "id": "work.extended-away-assignment",
+      "displayName": "Extended Away-from-Home Assignment",
+      "category": "Work Arrangement",
+      "extendedLocationCategories": [
+        "extended-away-duration",
+        "extended-deployment",
+        "winter-over-assignment",
+        "long-term-away-assignment"
       ]
     },
     {

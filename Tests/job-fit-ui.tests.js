@@ -47,7 +47,16 @@ assert.deepEqual([...new Set(catalog.concepts.map(concept => concept.category))]
 ]);
 assert.match(app, /const categoryOrder = Object\.keys\(JobFit\.dimensionLimits\)/,
   "The survey category order must reuse the scoring engine's canonical dimensions.");
-assert.equal(catalog.concepts.length, 78, "The complete canonical catalog must remain available.");
+assert.equal(catalog.concepts.length, 79, "The complete canonical catalog must remain available.");
+const extendedAway = catalog.concepts.find(concept =>
+  concept.id === "work.extended-away-assignment");
+assert.deepEqual(
+  { displayName: extendedAway?.displayName, category: extendedAway?.category },
+  { displayName: "Extended Away-from-Home Assignment", category: "Work Arrangement" },
+  "The extended-assignment concept must appear in the Work Arrangement survey.");
+assert.match(app,
+  /`\$\{concept\.displayName\} \$\{concept\.category\}`\.toLocaleLowerCase\(\)\.includes\(query\)/,
+  "Job Fit search must include the new concept's display name and category.");
 assert.match(app, /if \(jobFit\) \{[\s\S]*?Job Fit \$\{jobFit\.score\}\/10/,
   "The badge must be conditional on an enabled Job Fit assessment.");
 

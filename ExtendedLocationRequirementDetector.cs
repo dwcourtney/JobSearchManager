@@ -9,7 +9,7 @@ namespace JobSearchManager;
 /// </summary>
 public sealed class ExtendedLocationRequirementDetector
 {
-    public const int CurrentAnalysisVersion = 2;
+    public const int CurrentAnalysisVersion = 3;
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(1);
     private const RegexOptions Options =
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled;
@@ -56,6 +56,24 @@ public sealed class ExtendedLocationRequirementDetector
     private static readonly Regex CurrentObligationPattern = CreateRegex(
         @"\b(?:must|required|requires?|will|shall|expected|position|role|employment|candidate|employee|" +
         @"willingness|ability|reside|relocate|work\s+will)\b");
+    private static readonly Regex ConditionalOnlyPattern = CreateRegex(
+        @"\b(?:may|might|could)\b|\bat\s+(?:the\s+)?discretion\b");
+    private static readonly Regex DefiniteObligationPattern = CreateRegex(
+        @"\b(?:must|required|requires?|will|shall|expected|willing|willingness|ability|" +
+        @"position|role|employee|candidate|continuous|long[- ]term)\b");
+    private static readonly Regex ExplicitObligationPattern = CreateRegex(
+        @"\b(?:must|required|requires?|will|shall|expected)\b");
+    private static readonly Regex AwayPresencePattern = CreateRegex(
+        @"\b(?:deploy(?:ment|ed|ing)?|assignments?|rotations?|on[- ]?site|customer\s+site|" +
+        @"field\s+(?:site|camp)|remote\s+site|reside|remain|stay|aboard|shipboard|at\s+sea|" +
+        @"in[- ]country|temporary\s+duty|TDY|OCONUS|overseas|Antarct(?:ic|ica))\b");
+    private static readonly Regex LongDurationTravelPresencePattern = CreateRegex(
+        @"\b(?:willing|required|expected)\s+to\s+travel(?:\s+100\s*%)?\s+to\b|" +
+        @"\bcontinuous\s+travel\s+assignments?\b");
+    private static readonly Regex DurationPattern = CreateRegex(
+        @"\b(?<value>\d{1,3}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)" +
+        @"(?:\s*(?:-|–|—|to)\s*(?<upper>\d{1,3}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve))?" +
+        @"(?:\s+consecutive)?\s*[- ]?\s*(?<unit>days?|weeks?|months?)\b");
 
     private static readonly Rule[] StrongRules =
     [
@@ -78,6 +96,11 @@ public sealed class ExtendedLocationRequirementDetector
                         @"\bmust\s+be\s+willing\s+and\s+able\s+to\s+deploy\s+internationally\b|" +
                         @"\bmust\s+be\s+willing\s+and\s+able\s+to\s+deploy\b[^.!?]{0,120}\bup\s+to\s+\d{1,3}\s+consecutive\s+days\b|" +
                         @"\bposition\s+requires\s+extended\s+presence\s+(?:in|at)\b")),
+        new("winter-over-assignment", "strong", "winter-over assignment",
+            CreateRegex(@"\b(?:winter[- ]?over|winter\s+site\s+manager)\b")),
+        new("long-term-away-assignment", "strong", "long-term overseas or OCONUS assignment",
+            CreateRegex(@"\b(?:100\s*%\s+)?long[- ]term\s+(?:OCONUS|overseas|international)\s+assignments?\b|" +
+                        @"\b(?:OCONUS|overseas|international)\s+assignments?\b[^.!?]{0,60}\blong[- ]term\b")),
         new("forward-deployed", "strong", "forward-deployed assignment",
             CreateRegex(@"\b(?:will\s+be|must\s+be|employee\s+(?:is|will\s+be))?\s*forward[- ]deployed\b")),
         new("oconus-assignment", "strong", "long-term OCONUS or overseas assignment",
@@ -120,9 +143,9 @@ public sealed class ExtendedLocationRequirementDetector
 
         var separatedHtml = BlockEndPattern.Replace(descriptionHtml, ". ");
         var text = JobAnalysis.HtmlToPlainText(separatedHtml);
-        var sentences = new[] { NormalizeEvidence(title) }
+        var sentences = new[] { NormalizeSentence(title) }
             .Concat(SentenceSplitPattern.Split(text)
-            .Select(NormalizeEvidence)
+            .Select(NormalizeSentence)
             .Where(sentence => sentence.Length > 0))
             .Where(sentence => sentence.Length > 0)
             .ToArray();
@@ -136,6 +159,8 @@ public sealed class ExtendedLocationRequirementDetector
             {
                 continue;
             }
+
+            AddExtendedAwayDurationSignal(signals, sentence);
 
             foreach (var rule in StrongRules)
             {
@@ -198,7 +223,92 @@ public sealed class ExtendedLocationRequirementDetector
             rule.Category,
             rule.Confidence,
             rule.Reason,
-            sentence));
+            NormalizeEvidence(sentence)));
+    }
+
+    private static void AddExtendedAwayDurationSignal(
+        List<ExtendedLocationRequirementSignal> signals,
+        string sentence)
+    {
+        if (!(AwayPresencePattern.IsMatch(sentence) || LongDurationTravelPresencePattern.IsMatch(sentence)) ||
+            !DefiniteObligationPattern.IsMatch(sentence) ||
+            (ConditionalOnlyPattern.IsMatch(sentence) &&
+             !ExplicitObligationPattern.IsMatch(sentence)))
+        {
+            return;
+        }
+
+        foreach (Match match in DurationPattern.Matches(sentence))
+        {
+            if (!TryDurationDays(match, out var days) || days < 28)
+            {
+                continue;
+            }
+
+            var contextStart = Math.Max(0, match.Index - 150);
+            var contextLength = Math.Min(sentence.Length - contextStart, match.Length + 300);
+            var context = sentence.Substring(contextStart, contextLength);
+            if (!(AwayPresencePattern.IsMatch(context) || LongDurationTravelPresencePattern.IsMatch(context)))
+            {
+                continue;
+            }
+
+            signals.Add(new ExtendedLocationRequirementSignal(
+                "extended-away-duration",
+                "strong",
+                "mandatory extended away-from-home assignment",
+                EvidenceAround(sentence, match.Index, match.Length)));
+            return;
+        }
+    }
+
+    private static bool TryDurationDays(Match match, out int days)
+    {
+        days = 0;
+        if (!TryNumber(match.Groups["value"].Value, out var value))
+        {
+            return false;
+        }
+
+        days = match.Groups["unit"].Value.ToLowerInvariant() switch
+        {
+            var unit when unit.StartsWith("month", StringComparison.Ordinal) => value * 30,
+            var unit when unit.StartsWith("week", StringComparison.Ordinal) => value * 7,
+            _ => value
+        };
+        return true;
+    }
+
+    private static bool TryNumber(string value, out int number)
+    {
+        if (int.TryParse(value, out number))
+        {
+            return true;
+        }
+
+        number = value.ToLowerInvariant() switch
+        {
+            "one" => 1, "two" => 2, "three" => 3, "four" => 4,
+            "five" => 5, "six" => 6, "seven" => 7, "eight" => 8,
+            "nine" => 9, "ten" => 10, "eleven" => 11, "twelve" => 12,
+            _ => 0
+        };
+        return number > 0;
+    }
+
+    private static string EvidenceAround(string sentence, int index, int length)
+    {
+        const int maximum = 300;
+        if (sentence.Length <= maximum)
+        {
+            return sentence;
+        }
+
+        var start = Math.Max(0, index - ((maximum - length) / 2));
+        start = Math.Min(start, sentence.Length - maximum);
+        var excerpt = sentence.Substring(start, maximum).Trim(' ', '.', ';', '\u2022');
+        return (start > 0 ? "…" : "") + excerpt +
+            (start + maximum < sentence.Length ? "…" : "");
     }
 
     private static ExtendedLocationRequirementAnalysis Empty(string status) => new(
@@ -222,6 +332,9 @@ public sealed class ExtendedLocationRequirementDetector
             "required-deployment" => "Deployment required",
             "recurring-deployment" => "Recurring deployment required",
             "extended-deployment" => "Extended site deployment required",
+            "extended-away-duration" => "Extended away-from-home assignment required",
+            "winter-over-assignment" => "Winter-over assignment required",
+            "long-term-away-assignment" => "Long-term overseas assignment required",
             "forward-deployed" => "Forward-deployed assignment required",
             "oconus-assignment" => "Long-term overseas assignment required",
             "rotation" => "Rotational assignment required",
@@ -236,9 +349,12 @@ public sealed class ExtendedLocationRequirementDetector
 
     private static string NormalizeEvidence(string value)
     {
-        var normalized = WhitespacePattern.Replace(value, " ").Trim(' ', '.', ';', '\u2022');
+        var normalized = NormalizeSentence(value);
         return normalized.Length <= 360 ? normalized : normalized[..357] + "…";
     }
+
+    private static string NormalizeSentence(string value) =>
+        WhitespacePattern.Replace(value ?? "", " ").Trim(' ', '.', ';', '\u2022');
 
     private static Regex CreateRegex(string pattern) =>
         new(pattern, Options, RegexTimeout);

@@ -19,6 +19,7 @@ const devopsRole = concept("role.devops-platform", "DevOps / Platform Engineerin
 const dataCenter = concept("work.data-center", "Data Center", "Work Environment");
 const physical = concept("work.physical-infrastructure", "Physical Infrastructure", "Work Environment");
 const deployment = concept("work.deployment", "Deployment", "Work Arrangement");
+const extendedAway = concept("work.extended-away-assignment", "Extended Away-from-Home Assignment", "Work Arrangement");
 const handsOn = concept("responsibility.hands-on-implementation", "Hands-on Implementation", "Responsibility Shape");
 const ai = concept("technical.artificial-intelligence", "Artificial Intelligence", "Technical Domain");
 const ml = concept("technical.machine-learning", "Machine Learning", "Technical Domain");
@@ -76,6 +77,14 @@ assert.equal(boundedArrangement.dimensionBreakdown[0].rawImpact, 4);
 assert.equal(boundedArrangement.dimensionBreakdown[0].impact, 1);
 assert.equal(boundedArrangement.dimensionBreakdown[0].capped, true,
   "The explanation result must preserve raw and bounded category contributions.");
+
+const boundedExtendedAssignment = JobFit.evaluate(detected([deployment, extendedAway]),
+  configuration([signal(deployment, "negative"), signal(extendedAway, "negative")]),
+  [deployment, extendedAway]);
+assert.equal(boundedExtendedAssignment.dimensions[0].impact, -2);
+assert.equal(boundedExtendedAssignment.dimensions[0].rawImpact, -6);
+assert.equal(boundedExtendedAssignment.dimensionBreakdown[0].capped, true,
+  "Deployment and extended-assignment preferences must coexist but remain category-bounded.");
 
 const aiCluster = JobFit.evaluate(detected([ai, ml, nlp, llm]),
   configuration([ai, ml, nlp, llm].map(item => signal(item, "ideal"))),
