@@ -34,6 +34,7 @@ $themeSettingsTestsPath = Join-Path $repo "Tests\theme-settings.tests.js"
 $cacheStatusTestsPath = Join-Path $repo "Tests\cache-status.tests.js"
 $jobFitPath = Join-Path $repo "wwwroot\job-fit.js"
 $jobFitTestsPath = Join-Path $repo "Tests\job-fit.tests.js"
+$jobFitCalibrationReportTestsPath = Join-Path $repo "Tests\job-fit-calibration-report.tests.js"
 $jobFitUiTestsPath = Join-Path $repo "Tests\job-fit-ui.tests.js"
 $jobFitDetailUiTestsPath = Join-Path $repo "Tests\job-fit-detail-ui.tests.js"
 $accountUiTestsPath = Join-Path $repo "Tests\account-ui.tests.js"
@@ -64,6 +65,7 @@ foreach ($scriptPath in @(
     $cacheStatusTestsPath,
     $jobFitPath,
     $jobFitTestsPath,
+    $jobFitCalibrationReportTestsPath,
     $jobFitUiTestsPath,
     $jobFitDetailUiTestsPath,
     $accountUiTestsPath,
@@ -142,6 +144,11 @@ if ($LASTEXITCODE -ne 0) {
 & $NodePath $jobFitTestsPath
 if ($LASTEXITCODE -ne 0) {
     throw "Job Fit scoring tests failed."
+}
+
+& $NodePath $jobFitCalibrationReportTestsPath
+if ($LASTEXITCODE -ne 0) {
+    throw "Job Fit calibration report tests failed."
 }
 
 & $NodePath $jobFitUiTestsPath

@@ -47,7 +47,7 @@ assert.deepEqual([...new Set(catalog.concepts.map(concept => concept.category))]
 ]);
 assert.match(app, /const categoryOrder = Object\.keys\(JobFit\.dimensionLimits\)/,
   "The survey category order must reuse the scoring engine's canonical dimensions.");
-assert.equal(catalog.concepts.length, 76, "The complete canonical catalog must remain available.");
+assert.equal(catalog.concepts.length, 78, "The complete canonical catalog must remain available.");
 assert.match(app, /if \(jobFit\) \{[\s\S]*?Job Fit \$\{jobFit\.score\}\/10/,
   "The badge must be conditional on an enabled Job Fit assessment.");
 

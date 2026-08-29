@@ -13,6 +13,50 @@ using System.Net.Mail;
 using System.Security.Claims;
 using JobSearchManager;
 
+if (args.Length == 3 && args[0] == "--job-fit-calibration-detect")
+{
+    using var document = JsonDocument.Parse(await File.ReadAllTextAsync(args[1]));
+    var catalog = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+    var detector = new JobConceptDetector(catalog);
+    var remoteDetector = new RemoteWorkDetector();
+    var extendedDetector = new ExtendedLocationRequirementDetector();
+    var results = document.RootElement.GetProperty("jobs").EnumerateArray().Select(job =>
+    {
+        var title = job.TryGetProperty("title", out var value) ? value.GetString() ?? "" : "";
+        var requisition = job.TryGetProperty("requisitionId", out value) ? value.GetString() ?? "" : "";
+        var primaryLocation = job.TryGetProperty("primaryLocation", out value) ? value.GetString() ?? "" : "";
+        var additionalLocations = job.TryGetProperty("additionalLocations", out value) &&
+            value.ValueKind == JsonValueKind.Array
+                ? value.EnumerateArray().Select(item => item.GetString() ?? "").ToArray()
+                : [];
+        var html = job.TryGetProperty("descriptionHtml", out value) &&
+            !string.IsNullOrWhiteSpace(value.GetString())
+                ? value.GetString() ?? ""
+                : job.TryGetProperty("compressedDescriptionHtml", out value) &&
+                    !string.IsNullOrWhiteSpace(value.GetString())
+                        ? ExpandCachedDescription(value.GetString()!)
+                        : "";
+        var remote = remoteDetector.Analyze(title, primaryLocation, additionalLocations, html);
+        var extended = extendedDetector.Analyze(title, primaryLocation, additionalLocations, html);
+        return new
+        {
+            requisitionId = requisition,
+            title,
+            detectedConcepts = detector.Analyze(
+                title, primaryLocation, additionalLocations, html, remote, extended),
+            remoteWork = remote,
+            extendedLocationRequirement = extended
+        };
+    }).ToArray();
+    await File.WriteAllTextAsync(args[2], JsonSerializer.Serialize(new
+    {
+        jobConceptCatalogVersion = catalog.Version,
+        jobs = results
+    }, new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true }));
+    Console.WriteLine($"JOB FIT CALIBRATION DETECTOR jobs={results.Length} catalog={catalog.Version}");
+    return;
+}
+
 if (args.Length >= 2 && args[0] == "--extended-location-corpus")
 {
     var detector = new ExtendedLocationRequirementDetector();
@@ -1473,14 +1517,53 @@ static Task TestJobConceptDetectionAsync()
         "Infrastructure-heavy jobs did not produce canonical role, environment, responsibility, and technical concepts. " +
         $"Detected: {string.Join(", ", infrastructureIds.OrderBy(id => id, StringComparer.Ordinal))}");
 
-    Assert(concepts.Version == 2 && concepts.Concepts.Count == 76 &&
-           concepts.Concepts.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count() == 76 &&
+    var travelBands = new[]
+    {
+        ("This role requires up to 10% travel.", "work.travel.occasional"),
+        ("This role requires 25% travel.", "work.travel.moderate"),
+        ("This role requires travel 10%-40% depending on project needs.", "work.travel.moderate"),
+        ("This role requires 50% travel.", "work.travel.substantial")
+    };
+    foreach (var (description, expected) in travelBands)
+    {
+        var remoteTravel = new RemoteWorkDetector().Analyze(
+            "Remote Engineer", "Remote, US", [], $"<p>{description}</p>");
+        var travelIds = detector.Analyze(
+            "Remote Engineer", "Remote, US", [], $"<p>{description}</p>", remoteTravel,
+            new ExtendedLocationRequirementDetector().Analyze(
+                "Remote Engineer", "Remote, US", [], $"<p>{description}</p>"))
+            .Select(item => item.ConceptId)
+            .ToHashSet(StringComparer.Ordinal);
+        Assert(travelIds.Contains(expected),
+            $"Travel band '{expected}' was not detected for: {description}");
+        if (description.Contains("10%-40%", StringComparison.Ordinal))
+        {
+            Assert(!travelIds.Contains("work.travel.occasional"),
+                "A 10%-40% range was also misclassified as occasional travel.");
+        }
+    }
+    var travelNegative = detector.Analyze(
+        "Travel Industry Analyst", "Remote, US", [],
+        "<p>Twenty-five years of travel-industry experience is preferred.</p>",
+        new RemoteWorkDetector().Analyze(
+            "Travel Industry Analyst", "Remote, US", [],
+            "<p>Twenty-five years of travel-industry experience is preferred.</p>"),
+        new ExtendedLocationRequirementDetector().Analyze(
+            "Travel Industry Analyst", "Remote, US", [],
+            "<p>Twenty-five years of travel-industry experience is preferred.</p>"));
+    Assert(travelNegative.All(item => !item.ConceptId.StartsWith("work.travel.", StringComparison.Ordinal)),
+        "Travel-industry experience was misclassified as a current travel obligation.");
+
+    Assert(concepts.Version == 3 && concepts.Concepts.Count == 78 &&
+           concepts.Concepts.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count() == 78 &&
            concepts.Concepts.Any(item => item.Category == "Role Type / Career Direction") &&
            concepts.Concepts.Any(item => item.Category == "Responsibility Shape") &&
            concepts.Concepts.All(item => !item.Id.StartsWith("qualification.", StringComparison.Ordinal)),
         "The expanded versioned corpus is incomplete, duplicated, or improperly duplicates Qualification Fit.");
     Assert(concepts.Get("work.remote.full").Supersedes?.SequenceEqual(["work.remote"]) == true &&
-           concepts.Get("work.travel.substantial").Supersedes?.SequenceEqual(["work.travel.frequent"]) == true,
+           concepts.Get("work.travel.moderate").Supersedes?.SequenceEqual(["work.travel.occasional"]) == true &&
+           concepts.Get("work.travel.substantial").Supersedes?.SequenceEqual(
+               ["work.travel.frequent", "work.travel.moderate", "work.travel.occasional"]) == true,
         "Canonical correlated-signal supersedence metadata is missing.");
     Assert(concepts.Options.All(option =>
             !string.IsNullOrWhiteSpace(option.Id) &&
@@ -3672,12 +3755,30 @@ static Task TestRemoteOnsiteDaysAsync()
 
 static Task TestRemoteTravelAsync()
 {
-    var questionable = RemoteAnalysis("<p>This position requires 25% travel.</p>");
+    var occasional = RemoteAnalysis("<p>This position requires up to 10% travel.</p>");
+    var moderate = RemoteAnalysis("<p>This position requires 25% travel.</p>");
+    var range = RemoteAnalysis("<p>This position requires travel 10%-40% depending on project needs.</p>");
     var strong = RemoteAnalysis("<p>This position requires up to 75% travel to airport locations.</p>");
     var trailingPercentage = RemoteAnalysis("<p>The position may require travel up to 50% of the time.</p>");
-    Assert(questionable.ConcernLevel == "questionable" && strong.ConcernLevel == "strong" &&
-           trailingPercentage.ConcernLevel == "strong",
-        $"Travel severity was incorrect: {questionable.ConcernLevel}/{strong.ConcernLevel}.");
+    Assert(occasional.ConcernLevel == "none" &&
+           occasional.Signals.Any(signal => signal.Category == "occasional-travel"),
+        $"Occasional travel was incorrect: {occasional.ConcernLevel} " +
+        $"[{string.Join(',', occasional.Signals.Select(signal => signal.Category))}].");
+    Assert(moderate.ConcernLevel == "questionable" &&
+           moderate.Signals.Any(signal => signal.Category == "moderate-travel"),
+        $"Moderate travel was incorrect: {moderate.ConcernLevel} " +
+        $"[{string.Join(',', moderate.Signals.Select(signal => signal.Category))}].");
+    Assert(range.ConcernLevel == "questionable" &&
+           range.Signals.Any(signal => signal.Category == "moderate-travel" &&
+               signal.Reason == "10-40% travel"),
+        $"Travel range was incorrect: {range.ConcernLevel} " +
+        $"[{string.Join(',', range.Signals.Select(signal => $"{signal.Category}:{signal.Reason}"))}].");
+    Assert(strong.ConcernLevel == "strong" &&
+           strong.Signals.Any(signal => signal.Category == "substantial-travel"),
+        "Substantial travel was not classified as strong.");
+    Assert(trailingPercentage.ConcernLevel == "strong" &&
+           trailingPercentage.Signals.Any(signal => signal.Category == "substantial-travel"),
+        "A trailing travel percentage was not classified as substantial.");
     return Task.CompletedTask;
 }
 

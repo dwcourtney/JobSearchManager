@@ -8,7 +8,7 @@ namespace JobSearchManager;
 /// </summary>
 public sealed class RemoteWorkDetector
 {
-    public const int CurrentAnalysisVersion = 2;
+    public const int CurrentAnalysisVersion = 3;
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(1);
     private const RegexOptions Options =
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled;
@@ -38,8 +38,8 @@ public sealed class RemoteWorkDetector
         @"\b(?:must|required|requires?|will|shall|responsib(?:le|ilities)|you(?:'|\u2019)?ll|this\s+(?:position|role)|" +
         @"provide|perform|conduct|support|lead|assist|serve|deploys?)\b");
     private static readonly Regex TravelPercentagePattern = CreateRegex(
-        @"\b(?<percent>\d{1,3})\s*%\s+travel\b|" +
-        @"\btravel\b[^.!?]{0,30}\b(?<percent>\d{1,3})\s*%");
+        @"\b(?<minimum>\d{1,3})\s*%\s*(?:(?:-|\u2013|\u2014|to)\s*(?<maximum>\d{1,3})\s*%)?\s+travel\b|" +
+        @"\btravel\b[^.!?]{0,30}?\b(?<minimum>\d{1,3})\s*%\s*(?:(?:-|\u2013|\u2014|to)\s*(?<maximum>\d{1,3})\s*%)?");
     private static readonly Regex FrequentTravelPattern = CreateRegex(
         @"\b(?:requires?\s+(?:the\s+ability\s+to\s+)?travel\s+frequently|frequent\s+travel|" +
         @"travel\s+frequently|extensive\s+travel)\b");
@@ -151,7 +151,9 @@ public sealed class RemoteWorkDetector
             .ToArray();
         var level = ordered.Any(signal => signal.ConcernLevel == "strong")
             ? "strong"
-            : ordered.Length > 0 ? "questionable" : "none";
+            : ordered.Any(signal => signal.ConcernLevel == "questionable")
+                ? "questionable"
+                : "none";
         var reasons = ordered.Select(signal => signal.Reason)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .Take(2)
@@ -182,16 +184,29 @@ public sealed class RemoteWorkDetector
     {
         foreach (Match match in TravelPercentagePattern.Matches(sentence))
         {
-            if (!int.TryParse(match.Groups["percent"].Value, out var percentage) || percentage < 25)
+            if (!int.TryParse(match.Groups["minimum"].Value, out var minimum) || minimum > 100)
             {
                 continue;
             }
-
-            var strong = percentage >= 50;
+            var maximum = match.Groups["maximum"].Success &&
+                int.TryParse(match.Groups["maximum"].Value, out var parsedMaximum)
+                    ? parsedMaximum
+                    : minimum;
+            if (maximum > 100 || maximum < minimum)
+            {
+                continue;
+            }
+            var category = maximum <= 10
+                ? "occasional-travel"
+                : maximum < 50 ? "moderate-travel" : "substantial-travel";
+            var concern = maximum <= 10
+                ? "informational"
+                : maximum < 50 ? "questionable" : "strong";
+            var range = maximum == minimum ? $"{maximum}%" : $"{minimum}-{maximum}%";
             signals.Add(new RemoteWorkSignal(
-                "substantial-travel",
-                strong ? "strong" : "questionable",
-                strong ? $"{percentage}% travel" : $"substantial travel ({percentage}%)",
+                category,
+                concern,
+                $"{range} travel",
                 NormalizeEvidence(sentence)));
         }
 

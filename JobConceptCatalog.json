@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "concepts": [
     {
       "id": "work.remote",
@@ -42,6 +42,28 @@
       ]
     },
     {
+      "id": "work.travel.occasional",
+      "displayName": "Occasional Travel",
+      "category": "Work Arrangement",
+      "evidencePatterns": [
+        "\\b(?:occasional|limited)\\s+travel\\b",
+        "\\b(?:[0-9]|10)\\s*%(?!\\s*(?:-|–|—|to)\\s*\\d)\\s+travel\\b",
+        "\\btravel\\b[^.!?]{0,30}\\b(?:[0-9]|10)\\s*%(?!\\s*(?:-|–|—|to)\\s*\\d)"
+      ],
+      "remoteSignalCategories": ["occasional-travel"]
+    },
+    {
+      "id": "work.travel.moderate",
+      "displayName": "Moderate Travel",
+      "category": "Work Arrangement",
+      "evidencePatterns": [
+        "\\b(?:1[1-9]|[2-4]\\d)\\s*%\\s+travel\\b",
+        "\\btravel\\b[^.!?]{0,30}\\b(?:1[1-9]|[2-4]\\d)\\s*%"
+      ],
+      "remoteSignalCategories": ["moderate-travel"],
+      "supersedes": ["work.travel.occasional"]
+    },
+    {
       "id": "work.travel.frequent",
       "displayName": "Frequent Travel",
       "category": "Work Arrangement",
@@ -55,9 +77,12 @@
       "id": "work.travel.substantial",
       "displayName": "Substantial Travel",
       "category": "Work Arrangement",
-      "evidencePatterns": ["\\b(?:[2-9]\\d|100)\\s*%\\s+travel\\b"],
+      "evidencePatterns": [
+        "\\b(?:[5-9]\\d|100)\\s*%\\s+travel\\b",
+        "\\btravel\\b[^.!?]{0,30}\\b(?:[5-9]\\d|100)\\s*%"
+      ],
       "remoteSignalCategories": ["substantial-travel"],
-      "supersedes": ["work.travel.frequent"]
+      "supersedes": ["work.travel.frequent", "work.travel.moderate", "work.travel.occasional"]
     },
     {
       "id": "work.deployment",
