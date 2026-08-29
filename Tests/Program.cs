@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
@@ -282,6 +283,10 @@ if (args.Length >= 2 && args[0] == "--authorization-corpus")
 var tests = new (string Name, Func<Task> Run)[]
 {
     ("Local mode is the safe default", TestLocalDefaultAsync),
+    ("Container mode is isolated from Local and Azure hosting semantics", TestContainerConfigurationAsync),
+    ("Container workspaces are browser-isolated with non-secure LAN cookies", TestContainerWorkspaceMiddlewareAsync),
+    ("Configured Data Protection keys persist to the requested directory", TestDataProtectionPersistenceAsync),
+    ("Health endpoint is lightweight and returns HTTP 200", TestHealthEndpointAsync),
     ("Azure mode requires explicit storage configuration", TestAzureValidationAsync),
     ("Legacy Azure settings migrate without overriding canonical settings", TestLegacyAzureConfigurationAsync),
     ("Workspace identifiers are random and strictly validated", TestWorkspaceIdentityAsync),
@@ -430,6 +435,109 @@ static Task TestLocalDefaultAsync()
     Assert(hosting.StorageAccount is null && hosting.StorageContainer is null,
         "Local mode must not require Azure storage.");
     return Task.CompletedTask;
+}
+
+static Task TestContainerConfigurationAsync()
+{
+    AssertThrows<InvalidOperationException>(() => HostingConfiguration.FromConfiguration(
+        Configuration(new Dictionary<string, string?>
+        {
+            [HostingConfiguration.ModeSetting] = "Container"
+        })));
+
+    var hosting = HostingConfiguration.FromConfiguration(Configuration(
+        new Dictionary<string, string?>
+        {
+            [HostingConfiguration.ModeSetting] = "Container",
+            [HostingConfiguration.DataProtectionPathSetting] = "/var/lib/jsm/dataprotection"
+        }));
+    Assert(hosting.IsContainer && !hosting.IsLocal && !hosting.IsAzure,
+        "Container mode was not selected independently of Local and Azure.");
+    Assert(hosting.UsesLocalStorage && hosting.UsesPerBrowserWorkspaces,
+        "Container mode did not select local persistence with browser-isolated workspaces.");
+    Assert(hosting.RequiresSameOriginProtection && !hosting.UsesAzureTransportSecurity,
+        "Container mode did not retain browser request protection without Azure HTTPS behavior.");
+    Assert(hosting.DataProtectionPath == "/var/lib/jsm/dataprotection",
+        "Container Data Protection path was not read from configuration.");
+    return Task.CompletedTask;
+}
+
+static async Task TestContainerWorkspaceMiddlewareAsync()
+{
+    var provider = new EphemeralDataProtectionProvider();
+    var hosting = new HostingConfiguration(
+        ApplicationHostingMode.Container, null, null, "/var/lib/jsm/dataprotection");
+    var middleware = new WorkspaceIdentityMiddleware(
+        _ => Task.CompletedTask,
+        hosting,
+        provider,
+        NullLogger<WorkspaceIdentityMiddleware>.Instance);
+    var accounts = TestAccountService().Service;
+
+    var firstContext = new DefaultHttpContext();
+    firstContext.Request.Path = "/api/workspace/identity";
+    var firstWorkspace = new WorkspaceContext();
+    await middleware.InvokeAsync(firstContext, firstWorkspace, accounts);
+
+    var secondContext = new DefaultHttpContext();
+    secondContext.Request.Path = "/api/workspace/identity";
+    var secondWorkspace = new WorkspaceContext();
+    await middleware.InvokeAsync(secondContext, secondWorkspace, accounts);
+
+    Assert(WorkspaceIdentity.IsValid(firstWorkspace.WorkspaceId) &&
+           WorkspaceIdentity.IsValid(secondWorkspace.WorkspaceId) &&
+           firstWorkspace.WorkspaceId != secondWorkspace.WorkspaceId,
+        "Independent Container browsers were assigned one shared workspace.");
+    Assert(!firstContext.Response.Headers.SetCookie.ToString()
+            .Contains("secure", StringComparison.OrdinalIgnoreCase),
+        "HTTP Container mode issued an Azure-only Secure workspace cookie.");
+}
+
+static Task TestDataProtectionPersistenceAsync()
+{
+    var directory = Path.Combine(
+        Path.GetTempPath(), $"job-search-manager-dataprotection-test-{Guid.NewGuid():N}");
+    try
+    {
+        var services = new ServiceCollection();
+        services.AddJobSearchManagerDataProtection(new HostingConfiguration(
+            ApplicationHostingMode.Container, null, null, directory));
+        using var serviceProvider = services.BuildServiceProvider();
+        var protector = serviceProvider.GetRequiredService<IDataProtectionProvider>()
+            .CreateProtector("container-test");
+        var protectedValue = protector.Protect("persistent payload");
+        Assert(protector.Unprotect(protectedValue) == "persistent payload",
+            "Configured Data Protection provider did not round-trip a payload.");
+        Assert(Directory.EnumerateFiles(directory, "key-*.xml").Any(),
+            "Data Protection did not write its key ring to the configured directory.");
+        return Task.CompletedTask;
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static async Task TestHealthEndpointAsync()
+{
+    var context = new DefaultHttpContext();
+    context.Request.Method = HttpMethods.Get;
+    context.Request.Path = HealthEndpoint.Path;
+    context.Response.Body = new MemoryStream();
+
+    Assert(await HealthEndpoint.TryHandleAsync(context),
+        "The health endpoint did not handle GET /healthz.");
+    context.Response.Body.Position = 0;
+    using var reader = new StreamReader(context.Response.Body);
+    Assert(context.Response.StatusCode == StatusCodes.Status200OK &&
+           await reader.ReadToEndAsync() == HealthEndpoint.ResponseBody,
+        "The health endpoint did not return its expected HTTP 200 response.");
+
+    var post = new DefaultHttpContext();
+    post.Request.Method = HttpMethods.Post;
+    post.Request.Path = HealthEndpoint.Path;
+    Assert(!await HealthEndpoint.TryHandleAsync(post),
+        "The health endpoint accepted a state-changing request.");
 }
 
 static Task TestAzureValidationAsync()

@@ -1,0 +1,12 @@
+.git
+.gitignore
+**/bin
+**/obj
+Tests
+scripts
+data
+.env
+.env.*
+*.bundle
+azure-deploy-*
+publish

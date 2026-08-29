@@ -5,17 +5,20 @@ namespace JobSearchManager;
 public enum ApplicationHostingMode
 {
     Local,
+    Container,
     Azure
 }
 
 public sealed record HostingConfiguration(
     ApplicationHostingMode Mode,
     string? StorageAccount,
-    string? StorageContainer)
+    string? StorageContainer,
+    string? DataProtectionPath = null)
 {
     public const string ModeSetting = "JOBSEARCHMANAGER_HOSTING_MODE";
     public const string StorageAccountSetting = "JOBSEARCHMANAGER_STORAGE_ACCOUNT";
     public const string StorageContainerSetting = "JOBSEARCHMANAGER_STORAGE_CONTAINER";
+    public const string DataProtectionPathSetting = "JOBSEARCHMANAGER_DATA_PROTECTION_PATH";
     internal const string LegacyModeSetting = "WORKDAYJOBMANAGER_HOSTING_MODE";
     internal const string LegacyStorageAccountSetting = "WORKDAYJOBMANAGER_STORAGE_ACCOUNT";
     internal const string LegacyStorageContainerSetting = "WORKDAYJOBMANAGER_STORAGE_CONTAINER";
@@ -29,6 +32,11 @@ public sealed record HostingConfiguration(
 
     public bool IsAzure => Mode == ApplicationHostingMode.Azure;
     public bool IsLocal => Mode == ApplicationHostingMode.Local;
+    public bool IsContainer => Mode == ApplicationHostingMode.Container;
+    public bool UsesLocalStorage => !IsAzure;
+    public bool UsesPerBrowserWorkspaces => !IsLocal;
+    public bool RequiresSameOriginProtection => !IsLocal;
+    public bool UsesAzureTransportSecurity => IsAzure;
 
     public static HostingConfiguration FromConfiguration(IConfiguration configuration)
     {
@@ -36,23 +44,32 @@ public sealed record HostingConfiguration(
         var mode = string.IsNullOrWhiteSpace(rawMode) ||
             string.Equals(rawMode, "Local", StringComparison.OrdinalIgnoreCase)
                 ? ApplicationHostingMode.Local
-                : string.Equals(rawMode, "Azure", StringComparison.OrdinalIgnoreCase)
-                    ? ApplicationHostingMode.Azure
-                    : throw new InvalidOperationException(
-                        $"{ModeSetting} must be either 'Local' or 'Azure'.");
+                : string.Equals(rawMode, "Container", StringComparison.OrdinalIgnoreCase)
+                    ? ApplicationHostingMode.Container
+                    : string.Equals(rawMode, "Azure", StringComparison.OrdinalIgnoreCase)
+                        ? ApplicationHostingMode.Azure
+                        : throw new InvalidOperationException(
+                            $"{ModeSetting} must be 'Local', 'Container', or 'Azure'.");
 
         var account = NullIfWhiteSpace(ReadCanonicalOrLegacy(
             configuration, StorageAccountSetting, LegacyStorageAccountSetting));
         var container = NullIfWhiteSpace(ReadCanonicalOrLegacy(
             configuration, StorageContainerSetting, LegacyStorageContainerSetting));
-        var result = new HostingConfiguration(mode, account, container);
+        var dataProtectionPath = NullIfWhiteSpace(configuration[DataProtectionPathSetting]);
+        var result = new HostingConfiguration(mode, account, container, dataProtectionPath);
         result.Validate();
         return result;
     }
 
     public void Validate()
     {
-        if (IsLocal)
+        if (IsContainer && DataProtectionPath is null)
+        {
+            throw new InvalidOperationException(
+                $"Container mode requires {DataProtectionPathSetting} so cookies survive container replacement.");
+        }
+
+        if (!IsAzure)
         {
             return;
         }

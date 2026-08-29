@@ -87,6 +87,39 @@ dotnet build JobSearchManager.csproj -c Release
 dotnet publish JobSearchManager.csproj -c Release
 ```
 
+## Linux container mode
+
+Container mode keeps Local mode's filesystem persistence while using browser-isolated
+anonymous workspaces and normal Kestrel URL configuration. It never uses Azure Blob
+Storage, launches a browser, or enables Azure-only HTTPS redirection and HSTS behavior.
+
+Required container settings:
+
+| Name | Example | Purpose |
+| --- | --- | --- |
+| `JOBSEARCHMANAGER_HOSTING_MODE` | `Container` | Selects Linux container hosting with local filesystem persistence. |
+| `ASPNETCORE_URLS` | `http://0.0.0.0:8080` | Makes Kestrel reachable through Docker port publishing. |
+| `JOBSEARCHMANAGER_DATA_PROTECTION_PATH` | `/var/lib/jsm/dataprotection` | Persists cookie-protection keys across container replacement. |
+| `JOBSEARCHMANAGER_PUBLIC_BASE_URL` | `http://192.168.1.20:8080` | Supplies the origin used in optional account links. |
+
+The included multi-stage `Dockerfile` builds with the .NET 10 SDK and runs on the
+ASP.NET Core 10 runtime as non-root UID/GID 1001. The included `compose.yaml` publishes
+only `192.168.1.20:8080`, uses no named volumes, and bind-mounts application data and
+Data Protection keys under `./data`. `GET /healthz` is an unauthenticated process-health
+probe and performs no workspace, account, provider, or storage operation.
+
+Start the isolated project with:
+
+```bash
+docker compose -p jsm-lab up -d --build
+```
+
+Stop it while preserving bind-mounted state with:
+
+```bash
+docker compose -p jsm-lab down
+```
+
 Run the dependency-free deterministic architecture/security checks with:
 
 ```powershell

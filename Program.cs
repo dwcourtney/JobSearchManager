@@ -18,6 +18,21 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Options;
 using JobSearchManager;
 
+if (args is ["--healthcheck"])
+{
+    try
+    {
+        using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+        using var response = await client.GetAsync("http://127.0.0.1:8080/healthz");
+        Environment.ExitCode = response.IsSuccessStatusCode ? 0 : 1;
+    }
+    catch
+    {
+        Environment.ExitCode = 1;
+    }
+    return;
+}
+
 const int ApplicationPort = 54321;
 const string ApplicationUrl = "http://127.0.0.1:54321";
 
@@ -59,14 +74,14 @@ builder.Services.AddSingleton<PortableWorkspaceService>();
 builder.Services.AddSingleton<SharedSourceRefreshCoordinator>();
 // Preserve the established data-protection discriminator so existing Azure
 // workspace cookies can be decrypted and migrated to the new cookie name.
-builder.Services.AddDataProtection().SetApplicationName("WorkdayJobManager");
+builder.Services.AddJobSearchManagerDataProtection(hosting);
 builder.Services.AddScoped<WorkspaceContext>();
 builder.Services.AddScoped<WorkspaceRuntimeProvider>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<IPasswordHasher<AccountRecord>, PasswordHasher<AccountRecord>>();
 builder.Services.AddSingleton<IAccountEmailSender, SmtpAccountEmailSender>();
 
-if (hosting.IsAzure)
+if (!hosting.UsesLocalStorage)
 {
     builder.Services.Configure<ForwardedHeadersOptions>(options =>
     {
@@ -188,9 +203,15 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
 
 var app = builder.Build();
 
+app.Use(async (context, next) =>
+{
+    if (await HealthEndpoint.TryHandleAsync(context)) return;
+    await next();
+});
+
 app.UseResponseCompression();
 
-if (hosting.IsAzure)
+if (hosting.UsesAzureTransportSecurity)
 {
     app.UseForwardedHeaders();
     app.UseHsts();
@@ -241,7 +262,7 @@ app.Use(async (context, next) =>
 app.UseAuthentication();
 app.UseMiddleware<WorkspaceIdentityMiddleware>();
 
-if (hosting.IsAzure)
+if (hosting.RequiresSameOriginProtection)
 {
     app.Use(async (context, next) =>
     {
@@ -705,11 +726,11 @@ app.MapDelete("/api/workspace", async (
     CancellationToken token) =>
 {
     var deletedDocuments = await runtimes.ResetAsync(workspace.WorkspaceId, token);
-    if (hosting.IsAzure && context.User.Identity?.IsAuthenticated != true)
+    if (hosting.UsesPerBrowserWorkspaces && context.User.Identity?.IsAuthenticated != true)
     {
         context.Response.Cookies.Delete(
             WorkspaceIdentity.CookieName,
-            WorkspaceIdentity.CreateCookieOptions(secure: true));
+            WorkspaceIdentity.CreateCookieOptions(secure: hosting.IsAzure));
     }
     return Results.Ok(new { deletedDocuments });
 }).RequireRateLimiting("state");
@@ -785,11 +806,17 @@ if (hosting.IsLocal)
         }
     }
 }
-else
+else if (hosting.IsAzure)
 {
     app.Logger.LogInformation(
         "Job Search Manager started in Azure mode with optional accounts and Blob-backed workspaces in container {ContainerName}.",
         hosting.StorageContainer);
+}
+else
+{
+    app.Logger.LogInformation(
+        "Job Search Manager started in Container mode with browser-isolated workspaces, local filesystem persistence, and Data Protection keys at {DataProtectionPath}.",
+        hosting.DataProtectionPath);
 }
 
 await app.WaitForShutdownAsync();
