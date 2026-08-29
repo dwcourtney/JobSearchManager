@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "concepts": [
     {
       "id": "work.remote",
@@ -152,6 +152,7 @@
       "id": "work.aircraft-flight-line",
       "displayName": "Aircraft / Flight Line",
       "category": "Work Environment",
+      "titleEvidencePatterns": ["\\bairborne(?:\\s+sensor)?\\s+operator\\b"],
       "evidencePatterns": ["\\bflight\\s+line\\b", "\\b(?:on|around)\\s+aircraft\\b", "\\baircraft\\s+maintenance\\s+(?:hangar|environment)\\b"]
     },
     {
@@ -320,6 +321,7 @@
       "id": "role.management-heavy",
       "displayName": "Management-heavy Role",
       "category": "Responsibility Shape",
+      "titleEvidencePatterns": ["\\bmanager\\b", "\\bdirector\\b"],
       "evidencePatterns": [
         "\\b(?:program|project|engineering|product|people)\\s+manager\\b",
         "\\bdirector\\s+of\\b",
@@ -336,6 +338,7 @@
       "id": "responsibility.architecture-heavy",
       "displayName": "Architecture-heavy",
       "category": "Responsibility Shape",
+      "titleEvidencePatterns": ["\\barchitect(?:ure)?\\b"],
       "evidencePatterns": ["\\bdefine\\s+(?:the\\s+)?(?:technical|solution|system)\\s+architecture\\b", "\\barchitecture\\s+roadmap\\b", "\\bchief\\s+architect\\b"]
     },
     {
@@ -378,6 +381,7 @@
       "id": "responsibility.documentation-heavy",
       "displayName": "Documentation-heavy",
       "category": "Responsibility Shape",
+      "titleEvidencePatterns": ["\\btechnical\\s+writer\\b", "\\bdocumentation\\s+specialist\\b"],
       "evidencePatterns": ["\\bextensive\\s+(?:technical\\s+)?documentation\\b", "\\bdevelop\\s+and\\s+maintain\\s+(?:technical\\s+)?documentation\\b"]
     },
     {

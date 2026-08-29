@@ -10,6 +10,7 @@ public sealed class JobConceptDetector
     private static readonly Regex WhitespacePattern = new(@"\s+", Options, Timeout);
     private readonly JobConceptCatalog _catalog;
     private readonly Dictionary<string, Regex[]> _patterns;
+    private readonly Dictionary<string, Regex[]> _titlePatterns;
 
     public JobConceptDetector(JobConceptCatalog catalog)
     {
@@ -17,6 +18,12 @@ public sealed class JobConceptDetector
         _patterns = catalog.Concepts.ToDictionary(
             concept => concept.Id,
             concept => (concept.EvidencePatterns ?? [])
+                .Select(pattern => new Regex(pattern, Options, Timeout))
+                .ToArray(),
+            StringComparer.Ordinal);
+        _titlePatterns = catalog.Concepts.ToDictionary(
+            concept => concept.Id,
+            concept => (concept.TitleEvidencePatterns ?? [])
                 .Select(pattern => new Regex(pattern, Options, Timeout))
                 .ToArray(),
             StringComparer.Ordinal);
@@ -40,6 +47,18 @@ public sealed class JobConceptDetector
 
         foreach (var concept in _catalog.Concepts)
         {
+            foreach (var pattern in _titlePatterns[concept.Id])
+            {
+                var match = pattern.Match(title ?? "");
+                if (!match.Success)
+                {
+                    continue;
+                }
+
+                Add(detected, concept.Id, NormalizeEvidence(match.Value));
+                break;
+            }
+
             foreach (var pattern in _patterns[concept.Id])
             {
                 var match = pattern.Match(corpusText);
@@ -56,8 +75,9 @@ public sealed class JobConceptDetector
             {
                 var metadata = new[] { title, primaryLocation }
                     .Concat(additionalLocations ?? [])
-                    .FirstOrDefault(value => value.Contains("remote", StringComparison.OrdinalIgnoreCase) ||
-                        value.Contains("telework", StringComparison.OrdinalIgnoreCase));
+                    .FirstOrDefault(value =>
+                        value?.Contains("remote", StringComparison.OrdinalIgnoreCase) == true ||
+                        value?.Contains("telework", StringComparison.OrdinalIgnoreCase) == true);
                 Add(detected, concept.Id, string.IsNullOrWhiteSpace(metadata)
                     ? "Remote designation detected in the posting"
                     : NormalizeEvidence(metadata));

@@ -1554,7 +1554,39 @@ static Task TestJobConceptDetectionAsync()
     Assert(travelNegative.All(item => !item.ConceptId.StartsWith("work.travel.", StringComparison.Ordinal)),
         "Travel-industry experience was misclassified as a current travel obligation.");
 
-    Assert(concepts.Version == 3 && concepts.Concepts.Count == 78 &&
+    var titleCases = new[]
+    {
+        ("DDI Architect", "responsibility.architecture-heavy"),
+        ("Technical Writer", "responsibility.documentation-heavy"),
+        ("Airborne Sensor Operator", "work.aircraft-flight-line"),
+        ("Technical Manager - Data Transmission", "role.management-heavy")
+    };
+    foreach (var (title, expected) in titleCases)
+    {
+        var titleIds = detector.Analyze(title, "Remote, US", [], "<p>General duties.</p>",
+            new RemoteWorkDetector().Analyze(title, "Remote, US", [], "<p>General duties.</p>"),
+            new ExtendedLocationRequirementDetector().Analyze(
+                title, "Remote, US", [], "<p>General duties.</p>"))
+            .Select(item => item.ConceptId)
+            .ToHashSet(StringComparer.Ordinal);
+        Assert(titleIds.Contains(expected),
+            $"Title-aware concept '{expected}' was not detected for '{title}'.");
+    }
+    var titleContextNegative = detector.Analyze(
+        "Software Engineer", "Remote, US", [],
+        "<p>Collaborate with the architect, technical writer, airborne sensor operator, and manager.</p>",
+        new RemoteWorkDetector().Analyze(
+            "Software Engineer", "Remote, US", [],
+            "<p>Collaborate with the architect, technical writer, airborne sensor operator, and manager.</p>"),
+        new ExtendedLocationRequirementDetector().Analyze(
+            "Software Engineer", "Remote, US", [],
+            "<p>Collaborate with the architect, technical writer, airborne sensor operator, and manager.</p>"));
+    Assert(titleContextNegative.All(item => item.ConceptId is not
+            ("responsibility.architecture-heavy" or "responsibility.documentation-heavy" or
+             "work.aircraft-flight-line" or "role.management-heavy")),
+        "A title-only concept was inferred from a body reference to another role.");
+
+    Assert(concepts.Version == 4 && concepts.Concepts.Count == 78 &&
            concepts.Concepts.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count() == 78 &&
            concepts.Concepts.Any(item => item.Category == "Role Type / Career Direction") &&
            concepts.Concepts.Any(item => item.Category == "Responsibility Shape") &&

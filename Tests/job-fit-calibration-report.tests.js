@@ -25,7 +25,7 @@ try {
     jobFit: { enabled: true, signals: [{ conceptId: "role.systems-engineering", preference: "positive" }] }
   }));
   fs.writeFileSync(detectionsPath, JSON.stringify({
-    jobConceptCatalogVersion: 3,
+    jobConceptCatalogVersion: 4,
     jobs: [{
       requisitionId: "REQ-CALIBRATION",
       detectedConcepts: [{ conceptId: "role.systems-engineering", evidence: "Systems Engineer" }]
@@ -39,7 +39,7 @@ try {
   const report = JSON.parse(fs.readFileSync(reportPath, "utf8"));
   assert.equal(report.input.companyId, "leidos");
   assert.equal(report.input.jobCount, 1);
-  assert.equal(report.input.jobConceptCatalogVersion, 3);
+  assert.equal(report.input.jobConceptCatalogVersion, 4);
   assert.equal(report.jobs[0].score, 6);
   assert.equal(report.jobs[0].detectedConcepts[0].configuredPreference, "positive");
   assert.equal(report.jobs[0].auditMisses[0].conceptId, "responsibility.customer-facing");

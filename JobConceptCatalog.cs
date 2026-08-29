@@ -8,6 +8,7 @@ public sealed record JobConceptDefinition(
     string DisplayName,
     string Category,
     IReadOnlyList<string>? EvidencePatterns = null,
+    IReadOnlyList<string>? TitleEvidencePatterns = null,
     bool RemoteDesignation = false,
     IReadOnlyList<string>? RemoteSignalCategories = null,
     IReadOnlyList<string>? ExtendedLocationCategories = null,
@@ -114,6 +115,7 @@ public sealed class JobConceptCatalog
         }
 
         var hasEvidence = concept.EvidencePatterns is { Count: > 0 } ||
+            concept.TitleEvidencePatterns is { Count: > 0 } ||
             concept.RemoteDesignation ||
             concept.RemoteSignalCategories is { Count: > 0 } ||
             concept.ExtendedLocationCategories is { Count: > 0 };
@@ -122,7 +124,8 @@ public sealed class JobConceptCatalog
             throw new InvalidDataException($"Job concept '{concept.Id}' has no corpus evidence mapping.");
         }
 
-        foreach (var pattern in concept.EvidencePatterns ?? [])
+        foreach (var pattern in (concept.EvidencePatterns ?? [])
+            .Concat(concept.TitleEvidencePatterns ?? []))
         {
             try
             {
