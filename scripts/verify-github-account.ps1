@@ -5,7 +5,7 @@ param(
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
-$expectedLogin = "dwc5703"
+$expectedLogin = "dwcourtney"
 $gh = Get-Command $GitHubCliPath -ErrorAction SilentlyContinue
 if ($null -eq $gh) {
     throw "GitHub CLI is required for GitHub administration."

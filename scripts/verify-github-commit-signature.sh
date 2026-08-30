@@ -4,7 +4,7 @@ set -Eeuo pipefail
 repository="${1:?usage: verify-github-commit-signature.sh <owner/repository> <full-git-sha>}"
 commit_sha="${2:?usage: verify-github-commit-signature.sh <owner/repository> <full-git-sha>}"
 
-[[ "$repository" == "dwc5703/JobSearchManager" ]] || {
+[[ "$repository" == "dwcourtney/JobSearchManager" ]] || {
   echo "Refusing signature validation for non-canonical repository $repository." >&2
   exit 1
 }

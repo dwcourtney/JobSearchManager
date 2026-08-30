@@ -1,27 +1,17 @@
 # Curiosity CI/CD operations
 
-The canonical repository for Job Search Manager is the private repository
-[`dwc5703/JobSearchManager`](https://github.com/dwc5703/JobSearchManager). This is the
-one intentional exception to the separation between personal and Penn State GitHub
-identities: JSM is a personal project, not coursework, research, or university-sponsored
-work, and is hosted under `dwc5703` solely for GitHub Education/Pro private-repository
-CI/CD capabilities. Repository ownership is permanently pinned to `dwc5703`; the
-`dwcourtney` account must not own JSM or appear as its canonical repository owner.
+The canonical repository for Job Search Manager is the public personal repository
+[`dwcourtney/JobSearchManager`](https://github.com/dwcourtney/JobSearchManager).
 The canonical Git origin is exactly:
 
 ```text
-https://github.com/dwc5703/JobSearchManager.git
+https://github.com/dwcourtney/JobSearchManager.git
 ```
 
-Git repository ownership and commit authorship remain separate. Existing history is
-not rewritten, and future commits retain the repository-local identity
-`David Courtney <davidcourtney@outlook.com>`. Repository-local Git configuration
+Existing history is not rewritten, and future commits retain the repository-local
+identity `David Courtney <davidcourtney@outlook.com>`. Repository-local Git configuration
 requires SSH-signed commits and tags. `.github/allowed_signers` binds the public
 signing key to that author for local verification; no private key is committed.
-The hosting/authorship split is an intentional infrastructure decision. Do not move
-JSM back to `dwcourtney` merely to align repository ownership with the personal commit
-identity. Do not change JSM authorship or signing to a Penn State identity merely
-because `dwc5703` owns the repository.
 
 Before any GitHub administration or manual deployment dispatch from Windows, run:
 
@@ -29,7 +19,7 @@ Before any GitHub administration or manual deployment dispatch from Windows, run
 pwsh -NoLogo -NoProfile -File scripts/verify-github-account.ps1
 ```
 
-The command must report exactly `dwc5703`. If it fails or names another account,
+The command must report exactly `dwcourtney`. If it fails or names another account,
 STOP. Remote identity validation is deliberately separate in
 `scripts/verify-repository-identity.sh`, so normal compilation never requires GitHub
 CLI or network access.
@@ -57,7 +47,7 @@ curiosity. Docker build stages provide the application toolchain.
 Runner registration and service installation are deliberate approval boundaries.
 Use GitHub's repository-scoped, short-lived registration token without printing or
 persisting it elsewhere. The supported runner service should be configured only after
-the private repository exists and the runner package and checksum have been verified.
+the repository exists and the runner package and checksum have been verified.
 
 The repository-scoped runner is installed at `/home/codex/jsm-cicd/runner` with
 runner name `curiosity-jsm` and labels `self-hosted`, `linux`, `x64`, `curiosity`, and
@@ -65,7 +55,7 @@ runner name `curiosity-jsm` and labels `self-hosted`, `linux`, `x64`, `curiosity
 SHA-256 digest. Its supported service is:
 
 ```text
-actions.runner.dwc5703-JobSearchManager.curiosity-jsm.service
+actions.runner.dwcourtney-JobSearchManager.curiosity-jsm.service
 ```
 
 Read service state with `systemctl status` or `systemctl is-active`. Deliberate service
@@ -79,7 +69,7 @@ sudo ./svc.sh start
 
 Unregistration is a separate destructive approval boundary: stop and uninstall the
 service with `svc.sh`, obtain a fresh repository-scoped removal token while the active
-GitHub CLI account is exactly `dwc5703`, run `config.sh remove`, and only then remove
+GitHub CLI account is exactly `dwcourtney`, run `config.sh remove`, and only then remove
 the runner tree. Never print the removal token. The runner path is outside
 `/home/codex/jsm-lab`; unregistering or deleting runner infrastructure must not remove
 JSM data, Data Protection keys, backups, Mailpit state, or unrelated Docker resources.
@@ -221,9 +211,9 @@ advance the rules gitlink deliberately, review changed C# rules and licenses, an
 the policy self-test, initial full scan, and complete CI before promotion.
 
 Community Edition performs meaningful intrafile syntax and taint analysis but does not
-provide the paid Pro engine's cross-file/interprocedural analysis. GitHub CodeQL remains
-unavailable for this private personal repository without paid Code Security and
-organizational restructuring.
+provide the paid Pro engine's cross-file/interprocedural analysis. CodeQL configuration
+is intentionally outside this repository-ownership change; the established Semgrep and
+Trivy gates remain unchanged.
 
 ## Deployment workflow
 
@@ -245,7 +235,7 @@ commit rather than a moving branch target:
 
 ```powershell
 pwsh -NoLogo -NoProfile -File scripts/verify-github-account.ps1
-gh workflow run deploy-curiosity.yaml --repo dwc5703/JobSearchManager --ref main `
+gh workflow run deploy-curiosity.yaml --repo dwcourtney/JobSearchManager --ref main `
   -f target=commit -f commit_sha=<lowercase-full-main-sha>
 ```
 
@@ -323,7 +313,7 @@ Do not combine approval boundaries. The rollout order is:
 
 1. Commit these source changes with a clean Windows worktree.
 2. Reauthenticate GitHub CLI.
-3. Create or confirm private `dwc5703/JobSearchManager`.
+3. Create or confirm public `dwcourtney/JobSearchManager`.
 4. Add `origin`, push complete `main` history, and push
    `pre-authentication-2026-08-28`.
 5. Confirm hosted CI passes.

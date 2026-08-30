@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 repository_root="${1:-$(git rev-parse --show-toplevel)}"
-expected_repository="dwc5703/JobSearchManager"
+expected_repository="dwcourtney/JobSearchManager"
 expected_origin="https://github.com/${expected_repository}"
 
 [[ -d "$repository_root" ]] || {

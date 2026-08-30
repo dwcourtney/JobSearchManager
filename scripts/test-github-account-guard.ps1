@@ -11,11 +11,11 @@ try {
     @'
 @echo off
 if "%1"=="auth" (
-  1>&2 echo Logged in to github.com account dwc5703 ^(keyring^)
+  1>&2 echo Logged in to github.com account dwcourtney ^(keyring^)
   exit /b 0
 )
 if "%1"=="api" (
-  echo dwc5703
+  echo dwcourtney
   exit /b 0
 )
 exit /b 2
@@ -23,11 +23,11 @@ exit /b 2
     @'
 @echo off
 if "%1"=="auth" (
-  1>&2 echo Logged in to github.com account dwcourtney ^(keyring^)
+  1>&2 echo Logged in to github.com account dwc5703 ^(keyring^)
   exit /b 0
 )
 if "%1"=="api" (
-  echo dwcourtney
+  echo dwc5703
   exit /b 0
 )
 exit /b 2
@@ -43,7 +43,7 @@ exit /b 2
         $rejected = $true
     }
     if (-not $rejected) {
-        throw "GitHub account guard accepted dwcourtney."
+        throw "GitHub account guard accepted dwc5703."
     }
 
     Write-Output "GitHub account guard positive and negative tests passed."
