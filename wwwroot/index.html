@@ -608,43 +608,43 @@
 
         <div id="job-fit-settings-panel" class="settings-tab-panel" role="tabpanel"
              aria-labelledby="job-fit-settings-tab" hidden>
-          <section class="settings-section" aria-labelledby="job-fit-heading">
+          <section class="settings-section job-fit-scoring-section" aria-labelledby="job-fit-heading">
             <p class="settings-save-note">Changes on this tab are saved automatically.</p>
-            <h3 id="job-fit-heading">Optional Job Fit scoring</h3>
+            <h3 id="job-fit-heading">Job Fit Scoring</h3>
             <label class="settings-check">
               <input id="job-fit-enabled" type="checkbox">
               <span>
                 Enable Job Fit scoring for this workspace
-                <small>When disabled, no Job Fit score is shown and existing filtering, sorting, and qualification behavior is unchanged.</small>
+                <small>When disabled, Job Fit scoring and its subordinate work-arrangement filter are inactive. Stored preferences are preserved.</small>
               </span>
             </label>
-          </section>
-          <section class="settings-section" aria-labelledby="work-arrangement-filtering-heading">
-            <h3 id="work-arrangement-filtering-heading">Work Arrangement Filtering</h3>
-            <div class="settings-check-list">
-              <label class="settings-check">
-                <input id="exclude-strong-extended-location-requirements" type="checkbox">
-                <span>
-                  Exclude strong work-arrangement conflicts
-                  <small>Hide jobs with strong work-arrangement conflicts such as deployment, rotation, relocation, or extended away-from-home assignments. Ordinary business travel is not excluded.</small>
-                </span>
-              </label>
+            <div id="job-fit-configuration" class="job-fit-subordinate" aria-disabled="true">
+              <section class="job-fit-subsection" aria-labelledby="work-arrangement-filtering-heading">
+                <h3 id="work-arrangement-filtering-heading">Work Arrangement Filtering</h3>
+                <div class="settings-check-list">
+                  <label class="settings-check">
+                    <input id="exclude-strong-extended-location-requirements" type="checkbox">
+                    <span>
+                      Exclude strong work-arrangement conflicts
+                      <small>Hide jobs with strong work-arrangement conflicts such as deployment, rotation, relocation, or extended away-from-home assignments. Ordinary business travel is not excluded.</small>
+                    </span>
+                  </label>
+                </div>
+              </section>
+              <section class="job-fit-subsection" aria-labelledby="job-fit-signals-heading">
+                <h3 id="job-fit-signals-heading">Canonical Corpus Signals</h3>
+                <p class="job-fit-introduction">
+                  Rate every canonical concept from the application corpus. Neutral is the default and is not saved; custom words cannot be added here.
+                </p>
+                <label class="job-fit-search-label" for="job-fit-concept-search">Filter concepts</label>
+                <input id="job-fit-concept-search" class="job-fit-search" type="search"
+                       autocomplete="off" placeholder="Filter canonical concepts…">
+                <p id="job-fit-survey-status" class="job-fit-survey-status" aria-live="polite"></p>
+                <div id="job-fit-survey" class="job-fit-survey"
+                     aria-describedby="job-fit-survey-status"></div>
+              </section>
             </div>
           </section>
-          <div id="job-fit-configuration" hidden>
-            <section class="settings-section" aria-labelledby="job-fit-signals-heading">
-              <h3 id="job-fit-signals-heading">Canonical corpus signals</h3>
-              <p class="job-fit-introduction">
-                Rate every canonical concept from the application corpus. Neutral is the default and is not saved; custom words cannot be added here.
-              </p>
-              <label class="job-fit-search-label" for="job-fit-concept-search">Filter concepts</label>
-              <input id="job-fit-concept-search" class="job-fit-search" type="search"
-                     autocomplete="off" placeholder="Filter canonical concepts…">
-              <p id="job-fit-survey-status" class="job-fit-survey-status" aria-live="polite"></p>
-              <div id="job-fit-survey" class="job-fit-survey"
-                   aria-describedby="job-fit-survey-status"></div>
-            </section>
-          </div>
         </div>
 
         <div id="account-settings-panel" class="settings-tab-panel" role="tabpanel"

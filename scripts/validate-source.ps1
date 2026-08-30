@@ -429,10 +429,16 @@ if ($settingsPanelMarkup["Qualifications"] -notmatch 'id="qualification-basics-t
 if ($settingsPanelMarkup["Preferences"] -match 'id="exclude-strong-extended-location-requirements"' -or
     $settingsPanelMarkup["Preferences"] -match 'id="work-arrangement-filtering-heading"' -or
     $settingsPanelMarkup["Job Fit"] -notmatch
-    '(?s)id="job-fit-heading".*id="work-arrangement-filtering-heading".*id="job-fit-signals-heading"' -or
+    '(?s)id="job-fit-heading">Job Fit Scoring<.*id="job-fit-configuration" class="job-fit-subordinate".*id="work-arrangement-filtering-heading".*id="job-fit-signals-heading">Canonical Corpus Signals<' -or
     $settingsPanelMarkup["Job Fit"] -notmatch
     'extended away-from-home assignments\. Ordinary business travel is not excluded\.') {
     throw "Work Arrangement Filtering is missing, misplaced, or uses stale help text."
+}
+if ($settingsPanelMarkup["Job Fit"] -match 'id="job-fit-configuration"[^>]*\bhidden\b' -or
+    $app -notmatch 'jobFitConfiguration\.classList\.toggle\("is-inactive", !state\.jobFitEnabled\)' -or
+    $app -notmatch 'excludeStrongExtendedLocationRequirements\.disabled = !state\.jobFitEnabled' -or
+    $app -notmatch '(?s)!state\.jobFitEnabled \|\|\s*!state\.excludeStrongExtendedLocationRequirements \|\|\s*job\.extendedLocationRequirement\?\.confidence !== "strong"') {
+    throw "The Job Fit parent-child activation hierarchy is incomplete."
 }
 if ($settingsPanelMarkup["Preferences"] -match 'id="import-export-heading"' -or
     $settingsPanelMarkup["Preferences"] -match 'id="reset-workspace-heading"') {

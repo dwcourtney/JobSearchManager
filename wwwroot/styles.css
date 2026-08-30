@@ -794,6 +794,25 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 }
 .settings-check input { margin-top: .16rem; accent-color: var(--color-accent); }
 .settings-check small { display: block; margin-top: .18rem; font-weight: var(--font-weight-regular); }
+.job-fit-subordinate {
+  margin: .9rem 0 0 1.1rem;
+  border-left: var(--status-indicator-width) solid var(--color-settings-subsection-divider);
+}
+.job-fit-subordinate.is-inactive { opacity: var(--opacity-disabled-control); }
+.job-fit-subsection { padding: .9rem 1.1rem 1rem; }
+.job-fit-subsection + .job-fit-subsection {
+  border-top: var(--border-width-default) solid var(--color-settings-subsection-divider);
+}
+.job-fit-subsection h3 {
+  margin: 0 0 .72rem;
+  padding: 0;
+  border-left: 0;
+  color: var(--color-text-heading);
+  background: transparent;
+  font-size: var(--font-size-small);
+  letter-spacing: var(--letter-spacing-section);
+  text-transform: var(--text-transform-section);
+}
 .job-fit-introduction, .job-fit-empty {
   margin: 0 0 .75rem;
   color: var(--color-text-secondary);
@@ -2249,6 +2268,7 @@ mark {
   .detail-title-row { flex-direction: column; }
   .at-a-glance-panel { padding: .45rem; }
   .job-fit-detail-panel { padding: .45rem; }
+  .job-fit-subordinate { margin-left: .82rem; }
   .job-fit-category-arithmetic > div, .job-fit-final-calculation > div {
     grid-template-columns: minmax(0, 1fr) auto;
   }

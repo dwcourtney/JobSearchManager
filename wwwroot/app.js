@@ -1325,7 +1325,9 @@ function applyTheme() {
 }
 
 function updateJobFitSettingsUi() {
-  elements.jobFitConfiguration.hidden = !state.jobFitEnabled;
+  elements.jobFitConfiguration.classList.toggle("is-inactive", !state.jobFitEnabled);
+  elements.jobFitConfiguration.setAttribute("aria-disabled", String(!state.jobFitEnabled));
+  elements.excludeStrongExtendedLocationRequirements.disabled = !state.jobFitEnabled;
   elements.jobFitConceptSearch.disabled = !state.jobFitEnabled;
   renderJobFitSurvey();
 }
@@ -2558,6 +2560,7 @@ function jobsPassingGeneralFilters() {
     const passesWorkAuthorization = !state.hideStrictWorkAuthorizationMismatch ||
       !workAuthorizationStatus.hide;
     const passesExtendedLocationRequirement =
+      !state.jobFitEnabled ||
       !state.excludeStrongExtendedLocationRequirements ||
       job.extendedLocationRequirement?.confidence !== "strong";
 
