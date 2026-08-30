@@ -367,6 +367,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Legacy workspace split caches are never active storage", TestLegacyWorkspaceCacheInactiveAsync),
     ("New workspace settings are neutral", TestNeutralDefaultsAsync),
     ("Job Fit defaults off and rejects unknown concepts", TestJobFitSettingsAsync),
+    ("Travel tolerance migrates legacy preferences deterministically", TestTravelToleranceMigrationAsync),
     ("Canonical job concepts are detected during normalization", TestJobConceptDetectionAsync),
     ("Obsolete automatic-refresh settings are ignored", TestObsoleteAutomaticSettingsIgnoredAsync),
     ("Legacy applied source remains configured", TestLegacyAppliedSourceMigrationAsync),
@@ -1422,7 +1423,8 @@ static async Task TestJobFitSettingsAsync()
     var missing = JsonSerializer.Deserialize<ViewerSettings>(
         "{}", new JsonSerializerOptions(JsonSerializerDefaults.Web));
     var legacy = state.NormalizeSettings(missing!);
-    Assert(legacy.JobFit is { Enabled: false } && legacy.JobFit.Signals.Count == 0,
+    Assert(legacy.JobFit is { Enabled: false, TravelTolerance: TravelTolerance.Default } &&
+           legacy.JobFit.Signals.Count == 0,
         "An existing workspace without Job Fit fields did not behave as disabled.");
 
     var normalized = state.NormalizeSettings(ViewerSettings.Default with
@@ -1435,9 +1437,9 @@ static async Task TestJobFitSettingsAsync()
             new("work.remote", JobFitPreferenceLevels.Neutral),
             new("user.arbitrary-concept", JobFitPreferenceLevels.HardConflict),
             new("work.relocation", "unsupported")
-        ])
+        ], 2)
     });
-    Assert(normalized.JobFit is { Enabled: true } &&
+    Assert(normalized.JobFit is { Enabled: true, TravelTolerance: 2 } &&
            normalized.JobFit.Signals.Count == 3 &&
            normalized.JobFit.Signals.Any(signal =>
                signal.ConceptId == "technical.machine-learning" &&
@@ -1452,7 +1454,7 @@ static async Task TestJobFitSettingsAsync()
         "Sparse normalization did not omit Neutral, migrate legacy preference names, or reject invalid signals.");
     await state.SaveSettingsAsync(normalized);
     var reloaded = await state.LoadSettingsAsync();
-    Assert(reloaded.JobFit is { Enabled: true } &&
+    Assert(reloaded.JobFit is { Enabled: true, TravelTolerance: 2 } &&
            reloaded.JobFit.Signals.SequenceEqual(normalized.JobFit!.Signals),
         "Enabling Job Fit and selecting canonical concepts did not persist.");
 
@@ -1471,6 +1473,34 @@ static async Task TestJobFitSettingsAsync()
     {
         if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
     }
+}
+
+static Task TestTravelToleranceMigrationAsync()
+{
+    var concepts = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+    var currentWorkspace = JobFitConfiguration.Normalize(new JobFitConfiguration(true,
+    [
+        new("work.travel.frequent", JobFitPreferenceLevels.HardConflict),
+        new("work.travel.substantial", JobFitPreferenceLevels.HardConflict),
+        new("work.deployment", JobFitPreferenceLevels.HardConflict)
+    ]), concepts);
+    Assert(currentWorkspace.TravelTolerance == 3 &&
+           currentWorkspace.Signals.All(signal =>
+               !TravelTolerance.IsLegacyConcept(signal.ConceptId)) &&
+           currentWorkspace.Signals.Any(signal => signal.ConceptId == "work.deployment"),
+        "The current workspace's legacy frequent/substantial hard conflicts did not migrate to level 3 while retaining unrelated preferences.");
+
+    var negative = JobFitConfiguration.Normalize(new JobFitConfiguration(true,
+        [new("work.travel.moderate", JobFitPreferenceLevels.Negative)]), concepts);
+    var permissive = JobFitConfiguration.Normalize(new JobFitConfiguration(true,
+        [new("work.travel.frequent", JobFitPreferenceLevels.Positive)]), concepts);
+    var explicitValue = JobFitConfiguration.Normalize(new JobFitConfiguration(true,
+        [new("work.travel.substantial", JobFitPreferenceLevels.HardConflict)], 2), concepts);
+    var invalidValue = JobFitConfiguration.Normalize(new JobFitConfiguration(true, [], 7), concepts);
+    Assert(negative.TravelTolerance == 3 && permissive.TravelTolerance == 5 &&
+           explicitValue.TravelTolerance == 2 && invalidValue.TravelTolerance == TravelTolerance.Default,
+        "Legacy negative/positive migration, explicit-value precedence, or invalid-value fallback was not deterministic.");
+    return Task.CompletedTask;
 }
 
 static Task TestJobConceptDetectionAsync()
@@ -1529,10 +1559,15 @@ static Task TestJobConceptDetectionAsync()
 
     var travelBands = new[]
     {
+        ("This role requires occasional travel.", "work.travel.occasional"),
         ("This role requires up to 10% travel.", "work.travel.occasional"),
         ("This role requires 25% travel.", "work.travel.moderate"),
         ("This role requires travel 10%-40% depending on project needs.", "work.travel.moderate"),
-        ("This role requires 50% travel.", "work.travel.substantial")
+        ("This role requires 50% travel.", "work.travel.substantial"),
+        ("Travel as needed to customer sites.", "work.travel.occasional"),
+        ("Travel typically lasting no more than one week.", "work.travel.occasional"),
+        ("At most one short trip every 2-3 years.", "work.travel.occasional"),
+        ("About one short trip every 12-18 months.", "work.travel.occasional")
     };
     foreach (var (description, expected) in travelBands)
     {
@@ -1596,7 +1631,7 @@ static Task TestJobConceptDetectionAsync()
              "work.aircraft-flight-line" or "role.management-heavy")),
         "A title-only concept was inferred from a body reference to another role.");
 
-    Assert(concepts.Version == 5 && concepts.Concepts.Count == 79 &&
+    Assert(concepts.Version == 6 && concepts.Concepts.Count == 79 &&
            concepts.Concepts.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count() == 79 &&
            concepts.Concepts.Any(item => item.Category == "Role Type / Career Direction") &&
            concepts.Concepts.Any(item => item.Category == "Responsibility Shape") &&
@@ -1607,6 +1642,13 @@ static Task TestJobConceptDetectionAsync()
            concepts.Get("work.travel.substantial").Supersedes?.SequenceEqual(
                ["work.travel.frequent", "work.travel.moderate", "work.travel.occasional"]) == true,
         "Canonical correlated-signal supersedence metadata is missing.");
+    var internalTravel = concepts.Options
+        .Where(option => option.Id.StartsWith("work.travel.", StringComparison.Ordinal))
+        .ToArray();
+    Assert(internalTravel.Length == 4 && internalTravel.All(option => !option.UserConfigurable) &&
+           internalTravel.Select(option => option.TravelLevel).Order().SequenceEqual(
+               new int?[] { 3, 4, 5, 6 }),
+        "The four travel detectors were not retained as hidden, level-bearing corpus signals.");
     Assert(concepts.Options.All(option =>
             !string.IsNullOrWhiteSpace(option.Id) &&
             !string.IsNullOrWhiteSpace(option.DisplayName) &&
@@ -1969,13 +2011,13 @@ static Task TestPortableJobFitAsync()
             new("work.deployment", JobFitPreferenceLevels.HardConflict),
             new("work.onsite", JobFitPreferenceLevels.StrongNegative),
             new("work.remote", JobFitPreferenceLevels.Neutral)
-        ])
+        ], 2)
     };
 
     var exported = portable.Export(configured, JobHistoryDocument.Empty);
     var imported = portable.Import(exported, ViewerSettings.Default, JobHistoryDocument.Empty);
-    Assert(exported.Version == 4 && exported.Preferences.JobFit is { Enabled: true } &&
-           imported.Settings.JobFit is { Enabled: true } &&
+    Assert(exported.Version == 5 && exported.Preferences.JobFit is { Enabled: true, TravelTolerance: 2 } &&
+           imported.Settings.JobFit is { Enabled: true, TravelTolerance: 2 } &&
            imported.Settings.JobFit.Signals.Count == 3 &&
            exported.Preferences.JobFit.Signals.Any(signal =>
                signal.ConceptId == "technical.machine-learning" &&
@@ -1996,8 +2038,36 @@ static Task TestPortableJobFitAsync()
     };
     var legacyImported = portable.Import(legacy, configured, JobHistoryDocument.Empty);
     Assert(legacyImported.Settings.JobFit is { Enabled: false } &&
-           legacyImported.Settings.JobFit.Signals.Count == 0,
+           legacyImported.Settings.JobFit.Signals.Count == 0 &&
+           legacyImported.Settings.JobFit.TravelTolerance == TravelTolerance.Default,
         "An older workspace import without Job Fit data did not default to disabled.");
+
+    var legacyTravel = portable.Import(exported with
+    {
+        Version = 4,
+        Preferences = exported.Preferences with
+        {
+            JobFit = new JobFitConfiguration(true,
+            [
+                new("work.travel.frequent", JobFitPreferenceLevels.HardConflict),
+                new("work.travel.substantial", JobFitPreferenceLevels.HardConflict)
+            ])
+        }
+    }, ViewerSettings.Default, JobHistoryDocument.Empty);
+    Assert(legacyTravel.Settings.JobFit is { Enabled: true, TravelTolerance: 3 } &&
+           legacyTravel.Settings.JobFit.Signals.Count == 0,
+        "A version-4 portable workspace did not migrate legacy travel rows to level 3.");
+
+    AssertThrows<WorkspaceImportException>(() => portable.Import(
+        exported with
+        {
+            Preferences = exported.Preferences with
+            {
+                JobFit = new JobFitConfiguration(true, [], 7)
+            }
+        },
+        ViewerSettings.Default,
+        JobHistoryDocument.Empty));
 
     AssertThrows<WorkspaceImportException>(() => portable.Import(
         exported with
@@ -2775,7 +2845,7 @@ static async Task TestLocalReclassificationAsync()
     {
         ExtendedLocationRequirement = job.ExtendedLocationRequirement! with { AnalysisVersion = 2 },
         DetectedConcepts = [],
-        JobConceptCatalogVersion = 4
+        JobConceptCatalogVersion = 5
     }).ToArray();
     var before = handler.DetailRequests;
     var second = await client.FetchAllJobsAsync(company, query, cachedJobs: stale);
@@ -2783,7 +2853,7 @@ static async Task TestLocalReclassificationAsync()
     Assert(handler.DetailRequests == before && second.Metrics?.ReclassifiedLocally == 1 &&
            second.Jobs.Single().AnalysisVersion == JobSourceClient.CurrentAnalysisVersion &&
            second.Jobs.Single().ExtendedLocationRequirement?.AnalysisVersion == 3 &&
-           second.Jobs.Single().JobConceptCatalogVersion == 5 &&
+           second.Jobs.Single().JobConceptCatalogVersion == 6 &&
            second.Jobs.Single().DetectedConcepts?.Any(item =>
                item.ConceptId == "work.extended-away-assignment") == true,
         "Parser invalidation did not reclassify cached text locally.");
@@ -4147,7 +4217,7 @@ static Task TestExtendedAwayAssignmentAsync()
            overlap.Any(item => item.ConceptId == "work.rotation") &&
            (catalog.Get(conceptId).Supersedes?.Count ?? 0) == 0,
         "Overlapping deployment/rotation signals were duplicated or incorrectly superseded.");
-    Assert(ExtendedLocationRequirementDetector.CurrentAnalysisVersion == 3 && catalog.Version == 5,
+    Assert(ExtendedLocationRequirementDetector.CurrentAnalysisVersion == 3 && catalog.Version == 6,
         "Extended assignment changes did not invalidate cached classification versions.");
     return Task.CompletedTask;
 }

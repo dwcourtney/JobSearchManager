@@ -58,6 +58,7 @@ const state = {
   excludeStrongExtendedLocationRequirements: false,
   jobFitEnabled: false,
   jobFitSignals: [],
+  travelTolerance: 4,
   jobFitConcepts: [],
   jobFitConceptSearch: "",
   credentialOptions: [],
@@ -243,6 +244,9 @@ const elements = {
   jobFitConceptSearch: document.querySelector("#job-fit-concept-search"),
   jobFitSurveyStatus: document.querySelector("#job-fit-survey-status"),
   jobFitSurvey: document.querySelector("#job-fit-survey"),
+  travelToleranceInput: null,
+  travelToleranceSummary: null,
+  travelToleranceDescription: null,
   credentialInventoryStatus: document.querySelector("#credential-inventory-status"),
   heldCredentialsField: document.querySelector("#held-credentials-field"),
   heldCredentials: document.querySelector("#held-credentials"),
@@ -509,7 +513,22 @@ async function initialize() {
     state.jobFitConceptSearch = elements.jobFitConceptSearch.value.trim().toLocaleLowerCase();
     renderJobFitSurvey();
   });
+  elements.jobFitSurvey.addEventListener("input", event => {
+    const travelTolerance = event.target.closest('input[data-travel-tolerance]');
+    if (!travelTolerance) return;
+    state.travelTolerance = JobFit.normalizeTravelTolerance(Number(travelTolerance.value));
+    updateTravelToleranceDescription();
+    renderResults();
+  });
   elements.jobFitSurvey.addEventListener("change", event => {
+    const travelTolerance = event.target.closest('input[data-travel-tolerance]');
+    if (travelTolerance) {
+      state.travelTolerance = JobFit.normalizeTravelTolerance(Number(travelTolerance.value));
+      updateTravelToleranceDescription();
+      renderResults();
+      queueSettingsSave();
+      return;
+    }
     const radio = event.target.closest('input[type="radio"][data-job-fit-concept-id]');
     if (!radio || !JobFit.preferenceLabels[radio.value]) return;
     const conceptId = radio.dataset.jobFitConceptId;
@@ -1267,9 +1286,12 @@ function applySettings(settings) {
   state.excludeStrongExtendedLocationRequirements =
     settings.excludeStrongExtendedLocationRequirements === true;
   const jobFit = JobFit.normalizeConfiguration(settings.jobFit);
-  const validJobFitIds = new Set(state.jobFitConcepts.map(concept => concept.id));
+  const validJobFitIds = new Set(state.jobFitConcepts
+    .filter(concept => concept.userConfigurable !== false)
+    .map(concept => concept.id));
   state.jobFitEnabled = jobFit.enabled;
   state.jobFitSignals = jobFit.signals.filter(signal => validJobFitIds.has(signal.conceptId));
+  state.travelTolerance = jobFit.travelTolerance;
   state.hasConfiguredSource = settings.hasConfiguredSource === true;
   state.pendingImportedSource = settings.pendingSource || null;
   state.companyId = state.hasConfiguredSource ? settings.companyId || "" : "";
@@ -1332,10 +1354,95 @@ function updateJobFitSettingsUi() {
   renderJobFitSurvey();
 }
 
+function updateTravelToleranceDescription() {
+  const definition = JobFit.travelLevels[state.travelTolerance];
+  if (!definition || !elements.travelToleranceInput) return;
+  elements.travelToleranceInput.value = String(definition.level);
+  elements.travelToleranceInput.setAttribute(
+    "aria-valuetext",
+    `Level ${definition.level} - ${definition.shortLabel}`);
+  elements.travelToleranceInput.disabled = !state.jobFitEnabled;
+  elements.travelToleranceSummary.textContent =
+    `Level ${definition.level} - ${definition.shortLabel}`;
+  elements.travelToleranceDescription.textContent = definition.description;
+}
+
+function createTravelToleranceControl() {
+  const panel = document.createElement("section");
+  panel.className = "travel-tolerance-panel";
+  panel.setAttribute("aria-labelledby", "travel-tolerance-heading");
+
+  const heading = document.createElement("h4");
+  heading.id = "travel-tolerance-heading";
+  heading.textContent = "Travel Tolerance";
+  const introduction = document.createElement("p");
+  introduction.className = "travel-tolerance-introduction";
+  introduction.textContent = "How much ordinary business travel can you tolerate? Deployment, relocation, rotations, and extended or international assignments remain separate preferences.";
+
+  const label = document.createElement("label");
+  label.className = "travel-tolerance-label";
+  label.htmlFor = "travel-tolerance";
+  label.textContent = "Maximum ordinary business travel";
+  const input = document.createElement("input");
+  input.id = "travel-tolerance";
+  input.type = "range";
+  input.min = "0";
+  input.max = "6";
+  input.step = "1";
+  input.setAttribute("list", "travel-tolerance-detents");
+  input.setAttribute("data-travel-tolerance", "true");
+  input.setAttribute("aria-describedby", "travel-tolerance-endpoints travel-tolerance-current");
+
+  const datalist = document.createElement("datalist");
+  datalist.id = "travel-tolerance-detents";
+  JobFit.travelLevels.forEach(definition => {
+    const option = document.createElement("option");
+    option.value = String(definition.level);
+    option.label = definition.label;
+    datalist.append(option);
+  });
+
+  const ticks = document.createElement("div");
+  ticks.className = "travel-tolerance-ticks";
+  ticks.setAttribute("aria-hidden", "true");
+  JobFit.travelLevels.forEach(definition => {
+    const tick = document.createElement("span");
+    tick.textContent = String(definition.level);
+    ticks.append(tick);
+  });
+
+  const endpoints = document.createElement("div");
+  endpoints.id = "travel-tolerance-endpoints";
+  endpoints.className = "travel-tolerance-endpoints";
+  const noTravel = document.createElement("span");
+  noTravel.textContent = "No travel";
+  const travelHeavy = document.createElement("span");
+  travelHeavy.textContent = "Travel-heavy";
+  endpoints.append(noTravel, travelHeavy);
+
+  const current = document.createElement("div");
+  current.id = "travel-tolerance-current";
+  current.className = "travel-tolerance-current";
+  current.setAttribute("aria-live", "polite");
+  const summary = document.createElement("strong");
+  const description = document.createElement("span");
+  current.append(summary, description);
+  panel.append(heading, introduction, label, input, datalist, ticks, endpoints, current);
+
+  elements.travelToleranceInput = input;
+  elements.travelToleranceSummary = summary;
+  elements.travelToleranceDescription = description;
+  updateTravelToleranceDescription();
+  return panel;
+}
+
 function renderJobFitSurvey() {
   elements.jobFitSurvey.replaceChildren();
   const query = state.jobFitConceptSearch;
-  const visible = state.jobFitConcepts.filter(concept => !query ||
+  const userConfigurable = state.jobFitConcepts.filter(concept => concept.userConfigurable !== false);
+  const travelToleranceMatches = !query ||
+    "travel tolerance ordinary business travel work arrangement".includes(query);
+  const visible = userConfigurable.filter(concept => !query ||
     `${concept.displayName} ${concept.category}`.toLocaleLowerCase().includes(query));
   const configured = new Map(state.jobFitSignals.map(signal => [signal.conceptId, signal.preference]));
   const byCategory = new Map();
@@ -1343,8 +1450,10 @@ function renderJobFitSurvey() {
     if (!byCategory.has(concept.category)) byCategory.set(concept.category, []);
     byCategory.get(concept.category).push(concept);
   });
-  elements.jobFitSurveyStatus.textContent = `${visible.length} of ${state.jobFitConcepts.length} concepts shown.`;
-  if (visible.length === 0) {
+  elements.jobFitSurveyStatus.textContent =
+    `${visible.length} of ${userConfigurable.length} concepts shown.` +
+    (travelToleranceMatches ? " Travel Tolerance shown." : "");
+  if (visible.length === 0 && !travelToleranceMatches) {
     const empty = document.createElement("p");
     empty.className = "job-fit-empty";
     empty.textContent = "No canonical concepts match this filter.";
@@ -1359,6 +1468,9 @@ function renderJobFitSurvey() {
     ["ideal", "I"]
   ];
   const categoryOrder = Object.keys(JobFit.dimensionLimits);
+  if (travelToleranceMatches && !byCategory.has("Work Arrangement")) {
+    byCategory.set("Work Arrangement", []);
+  }
   const orderedCategories = Array.from(byCategory.keys()).sort((left, right) =>
     categoryOrder.indexOf(left) - categoryOrder.indexOf(right));
   for (const categoryName of orderedCategories) {
@@ -1372,6 +1484,14 @@ function renderJobFitSurvey() {
     const count = document.createElement("small");
     count.textContent = `${concepts.length} concept${concepts.length === 1 ? "" : "s"}`;
     summary.append(heading, count);
+    section.append(summary);
+    if (categoryName === "Work Arrangement" && travelToleranceMatches) {
+      section.append(createTravelToleranceControl());
+    }
+    if (concepts.length === 0) {
+      elements.jobFitSurvey.append(section);
+      continue;
+    }
     const matrix = document.createElement("div");
     matrix.className = "job-fit-matrix";
     const header = document.createElement("div");
@@ -1417,7 +1537,7 @@ function renderJobFitSurvey() {
       });
       matrix.append(row);
     });
-    section.append(summary, matrix);
+    section.append(matrix);
     elements.jobFitSurvey.append(section);
   }
 }
@@ -2493,6 +2613,7 @@ async function saveSettings() {
         excludeStrongExtendedLocationRequirements: state.excludeStrongExtendedLocationRequirements,
         jobFit: {
           enabled: state.jobFitEnabled,
+          travelTolerance: state.travelTolerance,
           signals: state.jobFitSignals
             .map(signal => ({ conceptId: signal.conceptId, preference: signal.preference }))
         }
@@ -3548,7 +3669,27 @@ function appendJobFitSignal(container, signal, options = {}) {
   heading.append(name, preference);
   row.append(heading);
 
-  if (options.supersededBy?.length) {
+  if (signal.travelComparison) {
+    const travel = signal.travelComparison;
+    const comparison = document.createElement("dl");
+    comparison.className = "job-fit-calculation job-fit-travel-comparison";
+    appendJobFitCalculationRow(
+      comparison,
+      "Detected travel requirement",
+      travel.detectedPercentage === null
+        ? "No explicit percentage"
+        : `Approximately ${travel.detectedPercentage}%`);
+    appendJobFitCalculationRow(
+      comparison,
+      "Detected travel level",
+      `${travel.detectedLevel} - ${travel.detectedLabel}`);
+    appendJobFitCalculationRow(
+      comparison,
+      "Your maximum travel tolerance",
+      `${travel.tolerance} - ${travel.toleranceLabel}`);
+    appendJobFitCalculationRow(comparison, "Result", travel.resultLabel);
+    row.append(comparison);
+  } else if (options.supersededBy?.length) {
     const note = document.createElement("p");
     note.className = "job-fit-breakdown-note";
     note.textContent = `Excluded from scoring because ${options.supersededBy.join(", ")} superseded it.`;
@@ -3566,7 +3707,7 @@ function appendJobFitSignal(container, signal, options = {}) {
     const summary = document.createElement("summary");
     summary.textContent = "Show evidence";
     const text = document.createElement("p");
-    text.textContent = `“${signal.evidence}”`;
+    text.textContent = `“${signal.travelComparison?.sourceEvidence || signal.evidence}”`;
     evidence.append(summary, text);
     row.append(evidence);
   }

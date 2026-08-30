@@ -875,6 +875,80 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   font-size: var(--font-size-caption);
   font-weight: var(--font-weight-regular);
 }
+.travel-tolerance-panel {
+  margin: .65rem;
+  padding: .8rem .9rem;
+  border: var(--border-width-default) solid var(--color-settings-subsection-divider);
+  border-left: var(--status-indicator-width) solid var(--color-accent);
+  border-radius: var(--radius-control);
+  color: var(--color-label);
+  background: var(--color-surface-secondary);
+}
+.travel-tolerance-panel h4 {
+  margin: 0 0 .3rem;
+  color: var(--color-text-heading);
+  font-size: var(--font-size-small);
+}
+.travel-tolerance-introduction {
+  margin: 0 0 .7rem;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-label);
+  line-height: var(--line-height-note);
+}
+.travel-tolerance-label {
+  display: block;
+  margin-bottom: .35rem;
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-semibold);
+}
+.travel-tolerance-panel input[type="range"] {
+  width: 100%;
+  margin: 0;
+  accent-color: var(--color-accent);
+}
+.travel-tolerance-panel input[type="range"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: var(--focus-ring-offset-compact);
+}
+.travel-tolerance-ticks,
+.travel-tolerance-endpoints {
+  display: flex;
+  justify-content: space-between;
+}
+.travel-tolerance-ticks {
+  padding: 0 .15rem;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+.travel-tolerance-ticks span {
+  display: grid;
+  min-width: 1rem;
+  justify-items: center;
+}
+.travel-tolerance-ticks span::before {
+  width: var(--border-width-default);
+  height: .28rem;
+  background: var(--color-border-strong);
+  content: "";
+}
+.travel-tolerance-endpoints {
+  margin-top: .25rem;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+}
+.travel-tolerance-current {
+  display: grid;
+  gap: .12rem;
+  margin-top: .65rem;
+  padding-top: .6rem;
+  border-top: var(--border-width-default) solid var(--color-settings-subsection-divider);
+  font-size: var(--font-size-label);
+}
+.travel-tolerance-current span {
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-note);
+}
 .job-fit-matrix { display: grid; }
 .job-fit-matrix-header, .job-fit-survey-row {
   display: grid;

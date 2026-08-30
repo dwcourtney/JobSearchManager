@@ -175,21 +175,37 @@ Requirement** section in At a Glance with the preserved posting evidence.
 Settings > Job Fit provides optional workspace-specific suitability scoring. It is
 disabled by default for new and existing workspaces. When enabled, users rate every
 canonical concept from `JobConceptCatalog.json` as Hard Conflict, Negative,
-Neutral, Positive, or Ideal; arbitrary Job Fit keywords cannot be entered. Concept evidence
+Neutral, Positive, or Ideal; arbitrary Job Fit keywords cannot be entered. Ordinary
+business travel is configured separately at the top of Work Arrangement with one
+native seven-level **Travel Tolerance** control, from No travel (0) through
+Travel-heavy (6). The four travel-band concepts remain internal detectors and no
+longer appear as independent preference rows. A detected requirement at or below the
+selected maximum is Neutral, one level above is Negative, and two or more levels
+above is a Hard Conflict. Deployment, relocation, rotations, extended-away, and
+international-assignment preferences remain independent. Concept evidence
 is detected during normal ingestion or cache reclassification and stored with each
-job. The versioned catalog currently provides 76 job-level concepts grouped as Work
+job. The versioned catalog currently provides 79 job-level concepts grouped as Work
 Arrangement, Role Type / Career Direction, Technical Domain, Work Environment, and
-Responsibility Shape. All concepts appear in a searchable radio matrix organized into
-collapsible category sections. Neutral is the default and is omitted from sparse
+Responsibility Shape. Its 75 user-configurable concepts appear in a searchable radio
+matrix organized into collapsible category sections. Neutral is the default and is omitted from sparse
 workspace settings. The retired `strongNegative` and `strongPositive` values import
 as Negative and Ideal, respectively, so older workspaces and exports remain compatible
-while new saves and exports use the current terminology.
+while new saves and exports use the current terminology. Legacy travel-row preferences
+are deterministically migrated to one tolerance value. For a legacy travel level
+`L`, Hard Conflict maps to `L-2`, Negative maps to `L-1`, and the most restrictive
+result wins; Positive or Ideal preserves at least that level when no restrictive
+travel preference exists. The former Frequent and Substantial Travel hard conflicts
+used by the existing workspace therefore become level 3 (Occasional). An already
+persisted valid `0..6` value takes precedence. New, neutral, invalid, or otherwise
+unspecified workspaces default to level 4 (Moderate), which avoids unexpectedly
+rejecting the common 10–25% band.
 
 Cards show a themed 1–10 badge. Scoring starts at 5 and bounds each category's total
 contribution, so 100% Remote Work can improve Work Arrangement by at most one point,
 and several related AI or infrastructure technologies cannot stack without limit.
-Canonical supersedence prevents 100% Remote Work from double-counting Remote Work and
-Substantial Travel from double-counting Frequent Travel. Role and environment
+Canonical supersedence prevents 100% Remote Work from double-counting Remote Work.
+Internal travel detectors instead produce one comparison signal, so multiple travel
+phrases cannot stack. Role and environment
 negatives have wider bounds than positives, and a Hard Conflict still caps the final
 score at 2. The tooltip reports each category's actual bounded contribution, any
 uncapped total, and its detected evidence. Profile-aware degree, experience,

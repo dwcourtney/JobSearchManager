@@ -21,6 +21,16 @@
     positive: "Positive",
     ideal: "Ideal"
   });
+  const TRAVEL_LEVELS = Object.freeze([
+    Object.freeze({ level: 0, label: "No travel", shortLabel: "No travel", description: "No required business travel." }),
+    Object.freeze({ level: 1, label: "Extremely rare", shortLabel: "Extremely rare travel", description: "At most one short trip every 2-3 years." }),
+    Object.freeze({ level: 2, label: "Very light", shortLabel: "Very light travel", description: "About one short trip every 12-18 months." }),
+    Object.freeze({ level: 3, label: "Occasional", shortLabel: "Occasional travel", description: "A few short trips per year; roughly up to 10% travel." }),
+    Object.freeze({ level: 4, label: "Moderate", shortLabel: "Moderate travel", description: "Travel is a recurring part of the job; roughly 10-25%." }),
+    Object.freeze({ level: 5, label: "Heavy", shortLabel: "Heavy travel", description: "Travel is substantial; roughly 25-50% of the role." }),
+    Object.freeze({ level: 6, label: "Travel-heavy", shortLabel: "Travel-heavy", description: "Frequent or extensive travel is acceptable, including roles above 50%." })
+  ]);
+  const DEFAULT_TRAVEL_TOLERANCE = 4;
   const BASELINE = 5;
   const DIMENSION_LIMITS = Object.freeze({
     "Work Arrangement": Object.freeze({ minimum: -2, maximum: 1 }),
@@ -31,6 +41,12 @@
   });
   const DEFAULT_LIMITS = Object.freeze({ minimum: -2, maximum: 1 });
   const DIMENSION_ORDER = Object.freeze(Object.keys(DIMENSION_LIMITS));
+
+  function normalizeTravelTolerance(value) {
+    return Number.isInteger(value) && value >= 0 && value <= 6
+      ? value
+      : DEFAULT_TRAVEL_TOLERANCE;
+  }
 
   function normalizeConfiguration(configuration) {
     const seen = new Set();
@@ -49,7 +65,77 @@
       if (!Object.hasOwn(WEIGHTS, preference)) continue;
       signals.push({ conceptId: signal.conceptId, preference });
     }
-    return { enabled: configuration?.enabled === true, signals };
+    return {
+      enabled: configuration?.enabled === true,
+      signals,
+      travelTolerance: normalizeTravelTolerance(configuration?.travelTolerance)
+    };
+  }
+
+  function travelLevelForPercentage(percentage) {
+    if (percentage <= 0) return 0;
+    if (percentage <= 10) return 3;
+    if (percentage <= 25) return 4;
+    if (percentage <= 50) return 5;
+    return 6;
+  }
+
+  function detectedTravelRequirement(detected, concepts) {
+    const candidates = [];
+    for (const item of detected.values()) {
+      const concept = concepts.get(item.conceptId);
+      if (!Number.isInteger(concept?.travelLevel)) continue;
+      const evidence = item.evidence || "Canonical travel requirement detected";
+      const percentages = Array.from(evidence.matchAll(/\b(\d{1,3})\s*%/g), match => Number(match[1]))
+        .filter(value => value >= 0 && value <= 100);
+      let level = percentages.length
+        ? travelLevelForPercentage(Math.max(...percentages))
+        : concept.travelLevel;
+      if (/\bone\s+(?:short\s+)?trip\s+every\s+(?:12\s*[-–—]\s*18|twelve\s+to\s+eighteen)\s+months?\b/i.test(evidence)) {
+        level = 2;
+      } else if (/\bat\s+most\s+one\s+(?:short\s+)?trip\s+every\s+(?:2\s*[-–—]\s*3|two\s+to\s+three)\s+years?\b/i.test(evidence)) {
+        level = 1;
+      }
+      candidates.push({
+        level,
+        percentage: percentages.length ? Math.max(...percentages) : null,
+        evidence,
+        conceptId: item.conceptId
+      });
+    }
+    return candidates.sort((left, right) =>
+      right.level - left.level || Number(right.percentage !== null) - Number(left.percentage !== null))[0] || null;
+  }
+
+  function travelComparisonSignal(requirement, tolerance) {
+    const difference = requirement.level - tolerance;
+    const preference = difference <= 0
+      ? "neutral"
+      : difference === 1 ? "negative" : "hardConflict";
+    const detectedDefinition = TRAVEL_LEVELS[requirement.level];
+    const toleranceDefinition = TRAVEL_LEVELS[tolerance];
+    const requirementText = requirement.percentage === null
+      ? requirement.evidence
+      : `approximately ${requirement.percentage}%`;
+    return {
+      conceptId: "work.travel.tolerance",
+      displayName: "Travel Tolerance",
+      category: "Work Arrangement",
+      preference,
+      preferenceLabel: LABELS[preference],
+      impact: preference === "neutral" ? 0 : WEIGHTS[preference],
+      evidence: `Detected ordinary business travel: ${requirementText}`,
+      travelComparison: {
+        detectedLevel: requirement.level,
+        detectedLabel: detectedDefinition.label,
+        detectedPercentage: requirement.percentage,
+        tolerance,
+        toleranceLabel: toleranceDefinition.label,
+        result: preference,
+        resultLabel: LABELS[preference],
+        sourceEvidence: requirement.evidence
+      }
+    };
   }
 
   function evaluate(detectedConcepts, configuration, conceptOptions) {
@@ -65,6 +151,7 @@
     const configured = new Map(normalized.signals.map(signal => [signal.conceptId, signal.preference]));
     const detectedSignals = Array.from(detected.values())
       .filter(item => concepts.has(item.conceptId))
+      .filter(item => !Number.isInteger(concepts.get(item.conceptId).travelLevel))
       .map(item => {
         const concept = concepts.get(item.conceptId);
         const preference = configured.get(item.conceptId) || "neutral";
@@ -78,13 +165,19 @@
           evidence: item.evidence || "Canonical concept detected"
         };
       });
+    const travelRequirement = detectedTravelRequirement(detected, concepts);
+    if (travelRequirement) {
+      detectedSignals.push(travelComparisonSignal(
+        travelRequirement,
+        normalized.travelTolerance));
+    }
     const neutralSignals = detectedSignals.filter(signal => signal.preference === "neutral");
     const candidates = detectedSignals.filter(signal => signal.preference !== "neutral");
     const candidateIds = new Set(candidates.map(signal => signal.conceptId));
     const supersededBy = new Map();
     for (const contribution of candidates) {
       const concept = concepts.get(contribution.conceptId);
-      for (const supersededId of Array.isArray(concept.supersedes) ? concept.supersedes : []) {
+      for (const supersededId of Array.isArray(concept?.supersedes) ? concept.supersedes : []) {
         if (!candidateIds.has(supersededId)) continue;
         if (!supersededBy.has(supersededId)) supersededBy.set(supersededId, []);
         supersededBy.get(supersededId).push(contribution.conceptId);
@@ -191,8 +284,15 @@
         ? ` (bounded from ${formatImpact(dimension.rawImpact)})`
         : "";
       lines.push("", `${dimension.category}: ${impact}${bounded}`);
-      dimension.signals.forEach(item => lines.push(
-        `- ${item.displayName} — ${item.preferenceLabel}: ${item.evidence}`));
+      dimension.signals.forEach(item => {
+        lines.push(`- ${item.displayName} — ${item.preferenceLabel}: ${item.evidence}`);
+        if (item.travelComparison) {
+          lines.push(
+            `  Detected level: ${item.travelComparison.detectedLevel} - ${item.travelComparison.detectedLabel}`,
+            `  Your maximum: ${item.travelComparison.tolerance} - ${item.travelComparison.toleranceLabel}`,
+            `  Result: ${item.travelComparison.resultLabel}`);
+        }
+      });
     }
     return lines.join("\n");
   }
@@ -209,6 +309,10 @@
     tooltip,
     preferenceLabels: LABELS,
     baseline: BASELINE,
-    dimensionLimits: DIMENSION_LIMITS
+    dimensionLimits: DIMENSION_LIMITS,
+    travelLevels: TRAVEL_LEVELS,
+    defaultTravelTolerance: DEFAULT_TRAVEL_TOLERANCE,
+    normalizeTravelTolerance,
+    detectedTravelRequirement
   };
 });
