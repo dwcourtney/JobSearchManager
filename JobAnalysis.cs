@@ -9,6 +9,9 @@ internal static partial class JobAnalysis
     private const string AmountRangePattern =
         @"\$\s*(?<minimum>\d[\d,]*(?:\.\d{1,2})?)\s*(?<minimumScale>[kK])?\s*(?:-|–|—|to)\s*" +
         @"\$?\s*(?<maximum>\d[\d,]*(?:\.\d{1,2})?)\s*(?<maximumScale>[kK])?";
+    private const string SummaryAmountRangePattern =
+        @"(?<minimumDollar>\$)?\s*(?<minimum>\d[\d,]*(?:\.\d{1,2})?)\s*(?<minimumScale>[kK])?\s*(?:-|–|—|to)\s*" +
+        @"(?<maximumDollar>\$)?\s*(?<maximum>\d[\d,]*(?:\.\d{1,2})?)\s*(?<maximumScale>[kK])?";
 
     private static readonly (string Category, Regex Pattern)[] LocationRules =
     [
@@ -34,6 +37,18 @@ internal static partial class JobAnalysis
         if (specificMatch.Success)
         {
             return CreateSalaryAnalysis(specificMatch, "specific-role-range");
+        }
+
+        var summaryRanges = SummaryPayRangeRegex().Matches(text)
+            .Select(match => (Match: match, Analysis: CreateSalaryAnalysis(
+                match, "summary-pay-range")))
+            .Where(candidate => IsDefensibleSummaryPayRange(
+                candidate.Match, candidate.Analysis))
+            .Select(candidate => candidate.Analysis)
+            .ToArray();
+        if (summaryRanges.Length > 0)
+        {
+            return AggregateSummaryPayRanges(summaryRanges);
         }
 
         var usdMatch = UsdSalaryRangeRegex().Match(text);
@@ -67,6 +82,44 @@ internal static partial class JobAnalysis
         }
 
         return new SalaryAnalysis(null, null, "unknown", "not-found");
+    }
+
+    private static bool IsDefensibleSummaryPayRange(
+        Match match,
+        SalaryAnalysis analysis) =>
+        match.Groups["minimumDollar"].Success ||
+        match.Groups["maximumDollar"].Success ||
+        analysis.Period != "unknown" ||
+        analysis.Maximum >= 10_000m;
+
+    private static SalaryAnalysis AggregateSummaryPayRanges(
+        IReadOnlyList<SalaryAnalysis> ranges)
+    {
+        if (ranges.Any(range => range.Minimum is null || range.Maximum is null))
+        {
+            return new SalaryAnalysis(null, null, "unknown", "unparseable");
+        }
+
+        var periods = ranges
+            .Select(range => range.Period)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        if (periods.Length != 1)
+        {
+            // Combining hourly and annual figures would produce a misleading card.
+            return new SalaryAnalysis(null, null, "unknown", "ambiguous-mixed-periods");
+        }
+
+        var minimum = ranges.Min(range => range.Minimum!.Value);
+        var maximum = ranges.Max(range => range.Maximum!.Value);
+        var parseStatus = ranges.Count == 1
+            ? ranges[0].ParseStatus
+            : periods[0] == "hourly"
+                ? "hourly-unconverted-summary-aggregate"
+                : periods[0] == "unknown"
+                    ? "ambiguous-period-summary-aggregate"
+                    : "summary-pay-range-aggregate";
+        return new SalaryAnalysis(minimum, maximum, periods[0], parseStatus);
     }
 
     public static RemoteLocationAnalysis AnalyzeRemoteLocation(
@@ -405,6 +458,13 @@ internal static partial class JobAnalysis
         AmountRangePattern + @"(?<context>.{0,100})",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex SpecificSalaryRegex();
+
+    [GeneratedRegex(
+        @"\bSummary\s+(?:Pay|Salary)\s+Ranges?" +
+        @"[^$.!?]{0,100}?" + SummaryAmountRangePattern +
+        @"(?<context>(?:(?!\bSummary\s+(?:Pay|Salary)\s+Ranges?\b)[^.!?]){0,100})",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex SummaryPayRangeRegex();
 
     [GeneratedRegex(
         @"\b(?:base\s+)?salary\s+range(?:\s+for\s+this\s+role)?\s*(?:is|:)?\s*" +

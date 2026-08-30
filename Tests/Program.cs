@@ -392,7 +392,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Repeated refresh reuses unchanged cached job details", TestRepeatedRefreshCacheReuseAsync),
     ("Recent company switches use cache while explicit and stale refreshes use providers", TestRecentSourceSwitchAsync),
     ("Changed listing metadata invalidates one cached detail", TestChangedListingInvalidationAsync),
-    ("Parser-version changes reclassify cached text without provider download", TestLocalReclassificationAsync),
+    ("Boeing parser-version changes reclassify only Boeing cached text without provider download", TestLocalReclassificationAsync),
     ("Large source hydration obeys detail and concurrency bounds", TestBoundedLargeSourceAsync),
     ("Removed source jobs remain cached without remaining available", TestRemovedJobCacheAsync),
     ("Untracked jobs missing from refresh leave the visible catalog", () => TestMissingJobWorkflowRetentionAsync(JobWorkflowStates.Normal)),
@@ -444,6 +444,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Remote detector recognizes sanitized Boeing frequent-travel language", TestBoeingRemoteFixtureAsync),
     ("New-company prose identifies remote roles without trusting generic boilerplate", TestExpandedRemoteTerminologyAsync),
     ("New-company compensation wording parses deterministically", TestExpandedSalaryTerminologyAsync),
+    ("Boeing summary pay ranges parse narrowly and aggregate compatible bands", TestBoeingSummaryPayRangesAsync),
     ("New-company credential terminology is cataloged", TestExpandedCredentialTerminologyAsync),
     ("Extended-location detector recognizes explicit assignment obligations", TestExtendedLocationPositiveAsync),
     ("Extended-location detector rejects incidental locations and ordinary travel", TestExtendedLocationNegativeAsync),
@@ -2931,15 +2932,18 @@ static async Task TestChangedListingInvalidationAsync()
 static async Task TestLocalReclassificationAsync()
 {
     var handler = CreateWorkdayHandler(() => 1, description: _ =>
-        "<p>The position will be onsite at the Customer Site in The Hague for 3 months to onboard.</p>");
+        "<p>The position will be onsite at the Customer Site in The Hague for 3 months to onboard.</p>" +
+        "<p>Summary pay range: Level 3 (Experienced): $104,550 - $141,450</p>");
     var client = CreateSourceClient(new HttpClient(handler));
-    var (company, query) = WorkdaySource();
+    var (company, query) = BoeingSource();
     var first = await client.FetchAllJobsAsync(company, query);
     var stale = first.Jobs.Select(job => job with
     {
-        ExtendedLocationRequirement = job.ExtendedLocationRequirement! with { AnalysisVersion = 2 },
-        DetectedConcepts = [],
-        JobConceptCatalogVersion = 5
+        PayMinimum = null,
+        PayMaximum = null,
+        PayPeriod = "unknown",
+        PayParseStatus = "unparseable",
+        AnalysisVersion = 5
     }).ToArray();
     var before = handler.DetailRequests;
     var second = await client.FetchAllJobsAsync(company, query, cachedJobs: stale);
@@ -2948,9 +2952,32 @@ static async Task TestLocalReclassificationAsync()
            second.Jobs.Single().AnalysisVersion == JobSourceClient.CurrentAnalysisVersion &&
            second.Jobs.Single().ExtendedLocationRequirement?.AnalysisVersion == 3 &&
            second.Jobs.Single().JobConceptCatalogVersion == 7 &&
+           second.Jobs.Single().PayMinimum == 104_550m &&
+           second.Jobs.Single().PayMaximum == 141_450m &&
+           second.Jobs.Single().PayPeriod == "annual" &&
            second.Jobs.Single().DetectedConcepts?.Any(item =>
                item.ConceptId == "work.extended-away-assignment") == true,
-        "Parser invalidation did not reclassify cached text locally.");
+        $"Parser invalidation did not reclassify cached text locally: details {before}->{handler.DetailRequests}, " +
+        $"reclassified={second.Metrics?.ReclassifiedLocally}, company={second.Jobs.Single().CompanyId}, " +
+        $"analysis={second.Jobs.Single().AnalysisVersion}, pay={second.Jobs.Single().PayMinimum}-" +
+        $"{second.Jobs.Single().PayMaximum}/{second.Jobs.Single().PayPeriod}, " +
+        $"extended={second.Jobs.Single().ExtendedLocationRequirement?.AnalysisVersion}, " +
+        $"conceptCatalog={second.Jobs.Single().JobConceptCatalogVersion}.");
+
+    var unrelatedHandler = CreateWorkdayHandler(() => 1);
+    var unrelatedClient = CreateSourceClient(new HttpClient(unrelatedHandler));
+    var (unrelatedCompany, unrelatedQuery) = WorkdaySource();
+    var unrelatedFirst = await unrelatedClient.FetchAllJobsAsync(
+        unrelatedCompany, unrelatedQuery);
+    var unrelatedVersionFive = unrelatedFirst.Jobs
+        .Select(job => job with { AnalysisVersion = 5 })
+        .ToArray();
+    var unrelatedBefore = unrelatedHandler.DetailRequests;
+    var unrelatedSecond = await unrelatedClient.FetchAllJobsAsync(
+        unrelatedCompany, unrelatedQuery, cachedJobs: unrelatedVersionFive);
+    Assert(unrelatedHandler.DetailRequests == unrelatedBefore &&
+           unrelatedSecond.Metrics?.ReclassifiedLocally == 0,
+        "The Boeing-only parser migration rewrote an unrelated source cache.");
 }
 
 static async Task TestBoundedLargeSourceAsync()
@@ -4109,6 +4136,128 @@ static Task TestExpandedSalaryTerminologyAsync()
     return Task.CompletedTask;
 }
 
+static Task TestBoeingSummaryPayRangesAsync()
+{
+    var parsedCases = new[]
+    {
+        ("level after heading", "<p>Summary pay range:</p><p>Level 3 (Experienced): $104,550 - $141,450</p>", 104_550m, 141_450m, "annual"),
+        ("parenthetical level", "<p>Summary pay range (Experienced, Level 3): $104,550 - $141,450</p>", 104_550m, 141_450m, "annual"),
+        ("plain range", "<p>Summary Pay Range: $184,450 - $249,550</p>", 184_450m, 249_550m, "annual"),
+        ("decimal amounts", "<p>Summary pay range: Experienced Engineer: $96,050.00 - $129,950.00.</p>", 96_050m, 129_950m, "annual"),
+        ("en dash", "<p>SUMMARY PAY RANGE: $120,000 – $160,000;</p>", 120_000m, 160_000m, "annual"),
+        ("em dash", "<p>summary salary range: $130,000—$175,000.</p>", 130_000m, 175_000m, "annual"),
+        ("compact hyphen", "<p>Summary Pay Range:$88,000-$112,000,</p>", 88_000m, 112_000m, "annual"),
+        ("optional second dollar", "<p>Summary Pay Range: $91,500 - 123,500 USD.</p>", 91_500m, 123_500m, "annual"),
+        ("optional dollar signs", "<p>Summary Pay Range: 97,750 - 132,250 USD.</p>", 97_750m, 132_250m, "annual"),
+        ("for label", "<p>Summary pay range for Senior Engineer: $142,800 to $193,200.</p>", 142_800m, 193_200m, "annual"),
+        ("bare level label", "<p>Summary pay range Level 3: $96,900 – $131,100.</p>", 96_900m, 131_100m, "annual"),
+        ("slash level label", "<p>Summary Pay Range / level 2 - Associate: $106,250 - $143,750.</p>", 106_250m, 143_750m, "annual"),
+        ("label without colon", "<p>Summary Pay Range for Associate Level $98,600 - $133,400.</p>", 98_600m, 133_400m, "annual"),
+        ("location after heading", "<p>Summary pay range:</p><p>Tukwila, WA: $126,650 - $171,350.</p>", 126_650m, 171_350m, "annual"),
+        ("hourly", "<p>Summary pay range: $42.25 - $58.75 per hour.</p>", 42.25m, 58.75m, "hourly")
+    };
+    foreach (var (name, fixture, minimum, maximum, period) in parsedCases)
+    {
+        var salary = JobAnalysis.AnalyzeSalary(fixture);
+        Assert(salary.Minimum == minimum && salary.Maximum == maximum && salary.Period == period,
+            $"Boeing {name} fixture parsed as {salary.Minimum}-{salary.Maximum}/{salary.Period} ({salary.ParseStatus}).");
+    }
+
+    var levels = JobAnalysis.AnalyzeSalary("""
+        <p>Summary pay range for Mid-Level: $104,550 – $162,150</p>
+        <p>Summary pay range for Senior: $127,500 – $197,800</p>
+        <p>Summary pay range for Lead: $153,000 – $239,200</p>
+        """);
+    Assert(levels.Minimum == 104_550m && levels.Maximum == 239_200m &&
+           levels.Period == "annual" && levels.ParseStatus == "summary-pay-range-aggregate",
+        $"Boeing level bands did not aggregate to their safe outer bounds: {levels}.");
+
+    var engineerLevels = JobAnalysis.AnalyzeSalary("""
+        <p>Summary pay range for Experienced Engineer: $118,150.00 - $159,850.00.</p>
+        <p>Summary pay range for Senior Engineer: $149,600.00 - $202,400.00.</p>
+        """);
+    Assert(engineerLevels.Minimum == 118_150m && engineerLevels.Maximum == 202_400m &&
+           engineerLevels.Period == "annual" &&
+           engineerLevels.ParseStatus == "summary-pay-range-aggregate",
+        $"Boeing Experienced/Senior bands did not aggregate correctly: {engineerLevels}.");
+
+    var geography = JobAnalysis.AnalyzeSalary("""
+        <p>Summary Pay Range for Mesa, Arizona: $96,050 - $129,950</p>
+        <p>Summary Pay Range for Berkeley, Missouri: $104,550 - $141,450</p>
+        """);
+    Assert(geography.Minimum == 96_050m && geography.Maximum == 141_450m &&
+           geography.Period == "annual",
+        $"Boeing geography bands did not retain a defensible overall range: {geography}.");
+
+    var hourlyBands = JobAnalysis.AnalyzeSalary("""
+        <p>Summary Pay Range for Grade A: $31.50 - $42.25 hourly</p>
+        <p>Summary Pay Range for Grade B: $39.75 - $55.00 hourly</p>
+        """);
+    Assert(hourlyBands.Minimum == 31.50m && hourlyBands.Maximum == 55m &&
+           hourlyBands.Period == "hourly" &&
+           hourlyBands.ParseStatus == "hourly-unconverted-summary-aggregate",
+        $"Hourly Boeing bands were annualized or aggregated incorrectly: {hourlyBands}.");
+
+    var mixedPeriods = JobAnalysis.AnalyzeSalary("""
+        <p>Summary Pay Range for salaried employees: $104,550 - $141,450 annually</p>
+        <p>Summary Pay Range for hourly employees: $42.25 - $58.75 per hour</p>
+        """);
+    Assert(mixedPeriods.Minimum is null && mixedPeriods.Maximum is null &&
+           mixedPeriods.Period == "unknown" && mixedPeriods.ParseStatus == "ambiguous-mixed-periods",
+        $"Mixed annual/hourly Boeing bands produced a misleading combined range: {mixedPeriods}.");
+
+    var unrelatedMoneyCases = new[]
+    {
+        "<p>Eligible for a $10,000 signing bonus and $5,000 relocation assistance.</p>",
+        "<p>Benefits include up to $25,000 in tuition reimbursement.</p>",
+        "<p>Annual incentive target is $20,000 - $30,000 and stock awards may apply.</p>",
+        "<p>Summary bonus range: $15,000 - $25,000.</p>",
+        "<p>Summary pay range depends on grade. For example, levels 3 - 5 require increasing experience.</p>"
+    };
+    foreach (var fixture in unrelatedMoneyCases)
+    {
+        var salary = JobAnalysis.AnalyzeSalary(fixture);
+        Assert(salary.Minimum is null && salary.Maximum is null,
+            $"Unrelated Boeing compensation was misidentified as base pay: {fixture} => {salary}.");
+    }
+
+    var noSalary = JobAnalysis.AnalyzeSalary(
+        "<p>This position offers comprehensive benefits and professional development.</p>");
+    Assert(noSalary.Minimum is null && noSalary.Maximum is null &&
+           noSalary.ParseStatus == "not-found",
+        $"A posting without salary language did not remain Unknown: {noSalary}.");
+
+    var salaryWithIncentives = JobAnalysis.AnalyzeSalary("""
+        <p>Summary Pay Range: $184,450 - $249,550.</p>
+        <p>A $20,000 signing bonus and relocation assistance up to $8,000 may be available.</p>
+        """);
+    Assert(salaryWithIncentives.Minimum == 184_450m &&
+           salaryWithIncentives.Maximum == 249_550m &&
+           salaryWithIncentives.Period == "annual",
+        $"Signing-bonus or relocation prose contaminated the labeled salary range: {salaryWithIncentives}.");
+
+    var malformed = JobAnalysis.AnalyzeSalary(
+        "<p>Summary pay range for Senior Engineer: $149,600 - pending approval.</p>");
+    Assert(malformed.Minimum is null && malformed.Maximum is null &&
+           malformed.ParseStatus == "unparseable",
+        $"An incomplete Boeing pay range did not fail safely: {malformed}.");
+
+    var regressions = new[]
+    {
+        ("Leidos", "<p>Pay Range: $101,400 - $183,300 annually.</p>", 101_400m, 183_300m),
+        ("Northrop", "<p>Salary Range: $133,100 - $199,700 per year.</p>", 133_100m, 199_700m),
+        ("Parsons", "<p>Minimum Annual Salary: $90,000. Maximum Annual Salary: $162,000.</p>", 90_000m, 162_000m),
+        ("NVIDIA", "<p>The base salary range is 184,000 USD - 287,500 USD for this level.</p>", 184_000m, 287_500m)
+    };
+    foreach (var (source, fixture, minimum, maximum) in regressions)
+    {
+        var salary = JobAnalysis.AnalyzeSalary(fixture);
+        Assert(salary.Minimum == minimum && salary.Maximum == maximum && salary.Period == "annual",
+            $"{source} salary regression fixture parsed as {salary}.");
+    }
+    return Task.CompletedTask;
+}
+
 static Task TestExpandedCredentialTerminologyAsync()
 {
     const string fixture = """
@@ -4605,6 +4754,19 @@ static (CompanyDefinition Company, JobSourceQuery Query) WorkdaySource()
 {
     var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
     var company = companies.Get("leidos");
+    return (company, new JobSourceQuery(
+        FacetDefaults.UnitedStatesCountryId,
+        FacetDefaults.UnitedStatesCountryLabel,
+        true,
+        true,
+        [],
+        CompanyId: company.Id));
+}
+
+static (CompanyDefinition Company, JobSourceQuery Query) BoeingSource()
+{
+    var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+    var company = companies.Get("boeing");
     return (company, new JobSourceQuery(
         FacetDefaults.UnitedStatesCountryId,
         FacetDefaults.UnitedStatesCountryLabel,
