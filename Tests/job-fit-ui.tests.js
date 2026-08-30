@@ -16,7 +16,7 @@ const preferences = index.slice(preferencesStart, jobFitStart);
 const jobFit = index.slice(jobFitStart, accountStart);
 
 assert.match(index, /id="job-fit-settings-tab"[\s\S]*?>\s*Job Fit\s*</);
-assert.match(index, /src="\/job-fit\.js\?v=8"/,
+assert.match(index, /src="\/job-fit\.js\?v=9"/,
   "The revised Job Fit runtime must use a new cache-busting asset version.");
 assert.match(index, /id="job-fit-settings-panel"/);
 assert.match(preferences, /id="compensation-heading"[\s\S]*?id="appearance-heading"/);
@@ -41,6 +41,9 @@ assert.match(index, /id="job-fit-survey"/,
   "Job Fit must expose the canonical-concept survey.");
 assert.match(index, /id="job-fit-survey-status"[^>]*aria-live="polite"/);
 assert.match(index, /id="job-fit-tab-list"[^>]*role="tablist"[^>]*aria-label="Job Fit preference categories"/);
+assert.match(index,
+  /<label for="job-fit-section-select">Job Fit section<\/label>[\s\S]*?<select id="job-fit-section-select"><\/select>/,
+  "Narrow layouts must expose a labeled native section chooser.");
 assert.doesNotMatch(index, /id="job-fit-(?:category-filter|concept-select|preference-select|add-signal|signal-list)"/,
   "The former add/configure/remove workflow must not remain in the survey UI.");
 assert.doesNotMatch(index, />\s*(?:Add Signal|Remove)\s*</,
@@ -70,8 +73,9 @@ assert.match(app, /state\.preferredWorkLocation = jobFit\.preferredWorkLocation/
   "Persisted preferred work location must hydrate into the UI.");
 assert.match(app, /preferredWorkLocation: state\.preferredWorkLocation/,
   "Preferred work location must be included when settings are saved.");
-assert.match(app, /state\.jobFitConcepts\.filter\(concept => concept\.userConfigurable !== false\)/,
-  "Detector-only travel concepts must not render as survey rows.");
+assert.match(app,
+  /state\.jobFitConcepts\.filter\(concept =>[\s\S]*?concept\.userConfigurable !== false && !hiddenSurveyConcepts\.has\(concept\.id\)\)/,
+  "Detector-only and explicitly duplicated concepts must not render as survey rows.");
 assert.match(app,
   /panel\.append\(createTravelToleranceControl\(\)\)[\s\S]*?panel\.append\(createPreferredWorkLocationControl\(\)\)[\s\S]*?section\.append\(createAssignmentLocationIntroduction\(\)\)/,
   "Work Arrangement must order Travel Tolerance, Normal Work Location, then Assignment / Location Constraints.");
@@ -82,6 +86,12 @@ assert.match(app, /tabButton\.role = "tab"[\s\S]*?panel\.role = "tabpanel"/,
   "Job Fit navigation must use semantic tabs and tabpanels.");
 assert.match(app, /ArrowRight[\s\S]*?ArrowLeft[\s\S]*?Home[\s\S]*?End/,
   "Job Fit tabs must support conventional keyboard navigation.");
+assert.match(app,
+  /jobFitSectionSelect\.addEventListener\("change"[\s\S]*?state\.activeJobFitTab = elements\.jobFitSectionSelect\.value[\s\S]*?renderJobFitSurvey\(\)/,
+  "The native chooser must update the same session-only active-section state as the tabs.");
+assert.match(app,
+  /selectOption\.value = tab\.id;[\s\S]*?selectOption\.selected = selected;[\s\S]*?jobFitSectionSelect\.append\(selectOption\)/,
+  "The responsive chooser must stay synchronized with the active tab.");
 assert.match(app, /row\.setAttribute\("role", "radiogroup"\)/);
 assert.match(app, /radio\.name = `job-fit-\$\{concept\.id\}`/,
   "Every concept must have an independent radio group.");
@@ -211,8 +221,13 @@ for (const [category, expectedGroups] of []) {
 assert.deepEqual(JobFit.surveyTabs.map(tab => tab.title), [
   "Work Arrangement", "Career Direction", "Software / AI / Data",
   "Cloud / Infrastructure / IT", "Hardware / Field", "Work Environment",
-  "Responsibility Shape", "Management / Delivery", "External / Business"
+  "Responsibility Shape", "Management / Delivery"
 ]);
+assert.deepEqual(
+  JobFit.surveyTabs.find(tab => tab.id === "management-delivery")
+    .sections.find(section => section.id === "external-business-responsibility")?.conceptIds,
+  ["responsibility.customer-facing", "responsibility.proposal-capture"],
+  "External / Business concepts must remain reachable in Management / Delivery.");
 const organizedIds = JobFit.surveyTabs.flatMap(tab =>
   tab.sections.flatMap(section => [...section.conceptIds]));
 const configurableIds = catalog.concepts
@@ -222,6 +237,23 @@ assert.equal(organizedIds.length, new Set(organizedIds).size,
   "Every user-facing concept must have exactly one UI owner.");
 assert.deepEqual(organizedIds.slice().sort(), configurableIds.slice().sort(),
   "Tabbed organization must neither lose nor add canonical concepts.");
+assert.deepEqual([...JobFit.surveyHiddenConceptIds], ["role.network-engineering"],
+  "Only the redundant role-level Network Engineering row may be hidden from the survey.");
+const hiddenSurveyIds = new Set(JobFit.surveyHiddenConceptIds);
+const renderedConcepts = organizedIds
+  .filter(conceptId => !hiddenSurveyIds.has(conceptId))
+  .map(conceptId => catalog.concepts.find(concept => concept.id === conceptId))
+  .filter(Boolean);
+assert.equal(renderedConcepts.length, new Set(renderedConcepts.map(concept => concept.id)).size,
+  "Every rendered Job Fit concept ID must have exactly one tab/group owner.");
+assert.equal(renderedConcepts.length,
+  new Set(renderedConcepts.map(concept => concept.displayName.toLocaleLowerCase())).size,
+  "Every user-facing concept name must render exactly once across all Job Fit tabs/groups.");
+assert.equal(renderedConcepts.filter(concept => concept.displayName === "Network Engineering").length, 1,
+  "Network Engineering must render exactly once.");
+assert.equal(JobFit.groupOverrideByConcept["role.network-engineering"],
+  "network-physical-infrastructure",
+  "The hidden duplicate detector must retain its existing group Hard Conflict behavior.");
 assert.deepEqual([...JobFit.groupHardConflictIds], [
   "software-development", "ai-data", "cloud-platform-automation",
   "systems-administration", "network-physical-infrastructure"
@@ -239,6 +271,7 @@ const matchingTabIds = query => {
     : text.toLocaleLowerCase().includes(normalized);
   return JobFit.surveyTabs
     .filter(tab => tab.sections.some(section => section.conceptIds.some(conceptId => {
+      if (hiddenSurveyIds.has(conceptId)) return false;
       const concept = catalog.concepts.find(item => item.id === conceptId);
       return matches(`${concept?.displayName || ""} ${concept?.category || ""} ${section.title} ${JobFit.surveyConceptDescriptions[conceptId] || ""}`);
     })))
@@ -248,8 +281,12 @@ assert.deepEqual(matchingTabIds("Linux"), ["cloud-infrastructure-it"]);
 assert.deepEqual(matchingTabIds("AI"), ["software-ai-data"]);
 assert.deepEqual(matchingTabIds("management"), ["management-delivery"]);
 assert.deepEqual(matchingTabIds("SCUBA"), ["work-environment"]);
+assert.deepEqual(matchingTabIds("proposal"), ["management-delivery"]);
 assert.match(app, /function matchesJobFitSearch\(text, query\)/,
   "Short searches such as AI must use token matching instead of incidental substrings.");
+assert.match(app,
+  /new Set\(JobFit\.surveyHiddenConceptIds\)[\s\S]*?!hiddenSurveyConcepts\.has\(concept\.id\)/,
+  "Rendering must exclude only explicitly identified duplicate survey concepts.");
 assert.equal(Object.keys(JobFit.surveyConceptDescriptions).length, 66,
   "Exactly the four requested non-slider sections must receive descriptions.");
 assert.match(JobFit.surveyConceptDescriptions["technical.linux"], /Linux environments/);
@@ -309,5 +346,21 @@ assert.ok(travelStyles.includes(".normal-work-location-panel") &&
 "Both special controls and the assignment grouping must share theme-safe hierarchy styling.");
 assert.match(styles, /@media \(max-width: 560px\)[\s\S]*?\.job-fit-survey-row/,
   "The radio matrix must include a compact small-screen layout.");
+const navigationStart = styles.indexOf(".detail-tabs.job-fit-tabs {");
+const navigationEnd = styles.indexOf(".job-fit-tab-panel", navigationStart);
+const navigationStyles = styles.slice(navigationStart, navigationEnd);
+assert.match(navigationStyles, /display:\s*grid/,
+  "Desktop Job Fit navigation must use a wrapped multi-row grid.");
+assert.match(navigationStyles, /grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\)/,
+  "Eight desktop sections must form two compact rows.");
+assert.doesNotMatch(navigationStyles, /overflow-x:\s*(?:auto|scroll)/,
+  "Job Fit navigation must never require horizontal scrolling.");
+assert.doesNotMatch(navigationStyles, /white-space:\s*nowrap/,
+  "Long Job Fit section names must be allowed to wrap.");
+assert.match(styles,
+  /@media \(max-width: 900px\)[\s\S]*?\.detail-tabs\.job-fit-tabs\s*\{\s*display:\s*none;\s*\}[\s\S]*?\.job-fit-section-chooser\s*\{\s*display:\s*block;\s*\}/,
+  "The existing 900px responsive boundary must replace tabs with the native chooser.");
+assert.doesNotMatch(navigationStyles, /#[0-9a-f]{3,8}|rgba?\(/i,
+  "Responsive Job Fit navigation must use semantic theme tokens.");
 
 console.log("All Job Fit UI integration tests passed.");

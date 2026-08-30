@@ -850,14 +850,38 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   display: grid;
   gap: .55rem;
 }
-.job-fit-tabs {
+.detail-tabs.job-fit-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .2rem .25rem;
   margin: .2rem 0 .65rem;
-  overflow-x: auto;
-  border-bottom-color: var(--color-border-strong);
+  border-bottom: var(--border-width-default) solid var(--color-border-strong);
 }
 .job-fit-tabs .job-fit-tab {
-  flex: 0 0 auto;
-  white-space: nowrap;
+  min-width: 0;
+  white-space: normal;
+  line-height: var(--line-height-control);
+}
+.job-fit-section-chooser {
+  display: none;
+  margin: .2rem 0 .65rem;
+}
+.job-fit-section-chooser label {
+  display: block;
+  margin-bottom: .3rem;
+  color: var(--color-label);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-semibold);
+}
+.job-fit-section-chooser select {
+  width: min(100%, 32rem);
+  min-width: 0;
+  min-height: 2.25rem;
+  padding: .48rem 2rem .48rem .6rem;
+  border: var(--border-width-default) solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  color: var(--color-input-text);
+  background: var(--color-input-background);
 }
 .job-fit-tab-panel {
   display: grid;
@@ -2417,6 +2441,8 @@ mark {
   .detail-pane { min-height: 55vh; overflow: visible; }
   .detail-header { position: static; }
   .filter-summary { display: none; }
+  .detail-tabs.job-fit-tabs { display: none; }
+  .job-fit-section-chooser { display: block; }
 }
 
 @media (max-width: 560px) {

@@ -10,7 +10,7 @@
   <link rel="manifest" href="/site.webmanifest?v=1">
   <script src="/theme-bootstrap.js"></script>
   <link rel="stylesheet" href="/theme.css?v=10">
-  <link rel="stylesheet" href="/styles.css?v=26">
+  <link rel="stylesheet" href="/styles.css?v=27">
   <script src="/vendor/purify.min.js" defer></script>
   <script src="/country-ordering.js?v=2" defer></script>
   <script src="/company-selector.js?v=1" defer></script>
@@ -22,9 +22,9 @@
   <script src="/clearance-fit.js?v=1" defer></script>
   <script src="/extended-location-ui.js?v=5" defer></script>
   <script src="/education-fit.js?v=2" defer></script>
-  <script src="/job-fit.js?v=8" defer></script>
+  <script src="/job-fit.js?v=9" defer></script>
   <script src="/clipboard-text.js?v=1" defer></script>
-  <script src="/app.js?v=31" defer></script>
+  <script src="/app.js?v=32" defer></script>
 </head>
 <body>
   <main id="app-shell" class="app-shell" aria-busy="true" inert>
@@ -641,6 +641,10 @@
                 <input id="job-fit-concept-search" class="job-fit-search" type="search"
                        autocomplete="off" placeholder="Try Linux, AI, management, or SCUBA…">
                 <p id="job-fit-survey-status" class="job-fit-survey-status" aria-live="polite"></p>
+                <div class="job-fit-section-chooser">
+                  <label for="job-fit-section-select">Job Fit section</label>
+                  <select id="job-fit-section-select"></select>
+                </div>
                 <div id="job-fit-tab-list" class="detail-tabs job-fit-tabs" role="tablist"
                      aria-label="Job Fit preference categories"></div>
                 <div id="job-fit-survey" class="job-fit-survey"

@@ -247,6 +247,7 @@ const elements = {
   workArrangementFiltering: document.querySelector("#work-arrangement-filtering"),
   jobFitConceptSearch: document.querySelector("#job-fit-concept-search"),
   jobFitSurveyStatus: document.querySelector("#job-fit-survey-status"),
+  jobFitSectionSelect: document.querySelector("#job-fit-section-select"),
   jobFitTabList: document.querySelector("#job-fit-tab-list"),
   jobFitSurvey: document.querySelector("#job-fit-survey"),
   travelToleranceInput: null,
@@ -520,6 +521,11 @@ async function initialize() {
   elements.jobFitConceptSearch.addEventListener("input", () => {
     state.jobFitConceptSearch = elements.jobFitConceptSearch.value.trim().toLocaleLowerCase();
     renderJobFitSurvey();
+  });
+  elements.jobFitSectionSelect.addEventListener("change", () => {
+    state.activeJobFitTab = elements.jobFitSectionSelect.value;
+    renderJobFitSurvey();
+    elements.jobFitSectionSelect.focus();
   });
   elements.jobFitSurvey.addEventListener("input", event => {
     const travelTolerance = event.target.closest('input[data-travel-tolerance]');
@@ -1587,8 +1593,11 @@ const ASSIGNMENT_LOCATION_DESCRIPTIONS = Object.freeze({
 function renderJobFitSurvey() {
   elements.jobFitSurvey.replaceChildren();
   elements.jobFitTabList.replaceChildren();
+  elements.jobFitSectionSelect.replaceChildren();
   const query = state.jobFitConceptSearch;
-  const userConfigurable = state.jobFitConcepts.filter(concept => concept.userConfigurable !== false);
+  const hiddenSurveyConcepts = new Set(JobFit.surveyHiddenConceptIds);
+  const userConfigurable = state.jobFitConcepts.filter(concept =>
+    concept.userConfigurable !== false && !hiddenSurveyConcepts.has(concept.id));
   const available = new Map(userConfigurable.map(concept => [concept.id, concept]));
   const configured = new Map(state.jobFitSignals.map(signal => [signal.conceptId, signal.preference]));
   const overriddenGroups = new Set(state.jobFitGroupHardConflicts);
@@ -1641,6 +1650,11 @@ function renderJobFitSurvey() {
   for (const tabView of tabViews) {
     const tab = tabView.definition;
     const selected = tab.id === state.activeJobFitTab;
+    const selectOption = document.createElement("option");
+    selectOption.value = tab.id;
+    selectOption.selected = selected;
+    selectOption.textContent = query ? `${tab.title} (${tabView.conceptCount})` : tab.title;
+    elements.jobFitSectionSelect.append(selectOption);
     const tabButton = document.createElement("button");
     tabButton.id = `job-fit-tab-${tab.id}`;
     tabButton.className = "detail-tab job-fit-tab";
