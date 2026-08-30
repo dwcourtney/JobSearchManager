@@ -58,10 +58,12 @@ const state = {
   excludeStrongExtendedLocationRequirements: false,
   jobFitEnabled: false,
   jobFitSignals: [],
+  jobFitGroupHardConflicts: [],
   travelTolerance: 4,
   preferredWorkLocation: 3,
   jobFitConcepts: [],
   jobFitConceptSearch: "",
+  activeJobFitTab: "work-arrangement",
   credentialOptions: [],
   credentialInventoryStatus: "notConfigured",
   heldCredentialIds: new Set(),
@@ -242,8 +244,10 @@ const elements = {
   excludeStrongExtendedLocationRequirements: document.querySelector("#exclude-strong-extended-location-requirements"),
   jobFitEnabled: document.querySelector("#job-fit-enabled"),
   jobFitConfiguration: document.querySelector("#job-fit-configuration"),
+  workArrangementFiltering: document.querySelector("#work-arrangement-filtering"),
   jobFitConceptSearch: document.querySelector("#job-fit-concept-search"),
   jobFitSurveyStatus: document.querySelector("#job-fit-survey-status"),
+  jobFitTabList: document.querySelector("#job-fit-tab-list"),
   jobFitSurvey: document.querySelector("#job-fit-survey"),
   travelToleranceInput: null,
   travelToleranceSummary: null,
@@ -544,6 +548,17 @@ async function initialize() {
     if (workLocation) {
       state.preferredWorkLocation = JobFit.normalizePreferredWorkLocation(Number(workLocation.value));
       updatePreferredWorkLocationDescription();
+      renderResults();
+      queueSettingsSave();
+      return;
+    }
+    const groupOverride = event.target.closest('input[data-job-fit-group-hard-conflict]');
+    if (groupOverride) {
+      const groupId = groupOverride.dataset.jobFitGroupHardConflict;
+      state.jobFitGroupHardConflicts = state.jobFitGroupHardConflicts
+        .filter(configuredGroupId => configuredGroupId !== groupId);
+      if (groupOverride.checked) state.jobFitGroupHardConflicts.push(groupId);
+      renderJobFitSurvey();
       renderResults();
       queueSettingsSave();
       return;
@@ -1310,6 +1325,7 @@ function applySettings(settings) {
     .map(concept => concept.id));
   state.jobFitEnabled = jobFit.enabled;
   state.jobFitSignals = jobFit.signals.filter(signal => validJobFitIds.has(signal.conceptId));
+  state.jobFitGroupHardConflicts = jobFit.groupHardConflicts;
   state.travelTolerance = jobFit.travelTolerance;
   state.preferredWorkLocation = jobFit.preferredWorkLocation;
   state.hasConfiguredSource = settings.hasConfiguredSource === true;
@@ -1551,6 +1567,15 @@ function createAssignmentLocationIntroduction() {
   return introduction;
 }
 
+function matchesJobFitSearch(text, query) {
+  if (!query) return true;
+  const normalized = text.toLocaleLowerCase();
+  if (query.length <= 2) {
+    return normalized.split(/[^a-z0-9]+/u).includes(query);
+  }
+  return normalized.includes(query);
+}
+
 const ASSIGNMENT_LOCATION_DESCRIPTIONS = Object.freeze({
   "work.deployment": "A temporary assignment away from the normal work location.",
   "work.extended-away-assignment": "A required continuous stay away from home for several weeks or longer.",
@@ -1559,54 +1584,53 @@ const ASSIGNMENT_LOCATION_DESCRIPTIONS = Object.freeze({
   "work.relocation": "A permanent or indefinite move of the normal home or work location."
 });
 
-function groupedSurveyConcepts(categoryName, concepts) {
-  const groups = JobFit.surveyGroups[categoryName];
-  if (!groups) {
-    return [{ title: "", concepts: concepts.slice().sort((left, right) =>
-      left.displayName.localeCompare(right.displayName)) }];
-  }
-  const available = new Map(concepts.map(concept => [concept.id, concept]));
-  const result = groups.map(group => ({
-    title: group.title,
-    concepts: group.conceptIds
-      .map(conceptId => available.get(conceptId))
-      .filter(Boolean)
-  })).filter(group => group.concepts.length > 0);
-  const groupedIds = new Set(groups.flatMap(group => group.conceptIds));
-  const ungrouped = concepts
-    .filter(concept => !groupedIds.has(concept.id))
-    .sort((left, right) => left.displayName.localeCompare(right.displayName));
-  if (ungrouped.length > 0) result.push({ title: "Other", concepts: ungrouped });
-  return result;
-}
-
 function renderJobFitSurvey() {
   elements.jobFitSurvey.replaceChildren();
+  elements.jobFitTabList.replaceChildren();
   const query = state.jobFitConceptSearch;
   const userConfigurable = state.jobFitConcepts.filter(concept => concept.userConfigurable !== false);
-  const travelToleranceMatches = !query ||
-    "travel tolerance ordinary business travel work arrangement".includes(query);
-  const workLocationMatches = !query ||
-    "normal work location preferred remote hybrid onsite office work arrangement".includes(query);
-  const visible = userConfigurable.filter(concept => !query ||
-    `${concept.displayName} ${concept.category}`.toLocaleLowerCase().includes(query));
+  const available = new Map(userConfigurable.map(concept => [concept.id, concept]));
   const configured = new Map(state.jobFitSignals.map(signal => [signal.conceptId, signal.preference]));
-  const byCategory = new Map();
-  visible.forEach(concept => {
-    if (!byCategory.has(concept.category)) byCategory.set(concept.category, []);
-    byCategory.get(concept.category).push(concept);
+  const overriddenGroups = new Set(state.jobFitGroupHardConflicts);
+  const specialSearch = {
+    "travel-tolerance": "travel tolerance ordinary business travel",
+    "normal-work-location": "normal work location preferred remote hybrid onsite office",
+    "work-arrangement-filtering": "exclude strong work arrangement conflicts deployment rotation relocation extended away"
+  };
+  const tabViews = JobFit.surveyTabs.map(tab => {
+    const sections = tab.sections.map(section => ({
+      definition: section,
+      concepts: section.conceptIds
+        .map(conceptId => available.get(conceptId))
+        .filter(Boolean)
+        .filter(concept => matchesJobFitSearch(
+          `${concept.displayName} ${concept.category} ${section.title} ${JobFit.surveyConceptDescriptions[concept.id] || ""}`,
+          query))
+    })).filter(section => section.concepts.length > 0);
+    const specialControls = tab.specialControls.filter(controlId =>
+      matchesJobFitSearch(`${tab.title} ${specialSearch[controlId] || ""}`, query));
+    return {
+      definition: tab,
+      sections,
+      specialControls,
+      conceptCount: sections.reduce((count, section) => count + section.concepts.length, 0),
+      hasMatches: sections.length > 0 || specialControls.length > 0
+    };
   });
-  elements.jobFitSurveyStatus.textContent =
-    `${visible.length} of ${userConfigurable.length} concepts shown.` +
-    (travelToleranceMatches ? " Travel Tolerance shown." : "") +
-    (workLocationMatches ? " Normal Work Location shown." : "");
-  if (visible.length === 0 && !travelToleranceMatches && !workLocationMatches) {
-    const empty = document.createElement("p");
-    empty.className = "job-fit-empty";
-    empty.textContent = "No canonical concepts match this filter.";
-    elements.jobFitSurvey.append(empty);
-    return;
+  if (!JobFit.surveyTabs.some(tab => tab.id === state.activeJobFitTab)) {
+    state.activeJobFitTab = JobFit.surveyTabs[0].id;
   }
+  if (query && !tabViews.find(tab => tab.definition.id === state.activeJobFitTab)?.hasMatches) {
+    state.activeJobFitTab = tabViews.find(tab => tab.hasMatches)?.definition.id || JobFit.surveyTabs[0].id;
+  }
+  const totalVisible = tabViews.reduce((count, tab) => count + tab.conceptCount, 0);
+  const matchingTabs = tabViews.filter(tab => tab.hasMatches).length;
+  elements.jobFitSurveyStatus.textContent = query
+    ? totalVisible === 0 && matchingTabs === 0
+      ? `No Job Fit preferences match “${elements.jobFitConceptSearch.value.trim()}”.`
+      : `${totalVisible} concept${totalVisible === 1 ? "" : "s"} match across ${matchingTabs} tab${matchingTabs === 1 ? "" : "s"}. Matching counts appear on each tab.`
+    : `${userConfigurable.length} concepts are organized across ${JobFit.surveyTabs.length} tabs.`;
+
   const preferences = [
     ["hardConflict", "HC"],
     ["negative", "NEG"],
@@ -1614,38 +1638,87 @@ function renderJobFitSurvey() {
     ["positive", "P"],
     ["ideal", "I"]
   ];
-  const categoryOrder = Object.keys(JobFit.dimensionLimits);
-  if ((travelToleranceMatches || workLocationMatches) && !byCategory.has("Work Arrangement")) {
-    byCategory.set("Work Arrangement", []);
-  }
-  const orderedCategories = Array.from(byCategory.keys()).sort((left, right) =>
-    categoryOrder.indexOf(left) - categoryOrder.indexOf(right));
-  for (const categoryName of orderedCategories) {
-    const concepts = byCategory.get(categoryName);
-    const section = document.createElement("details");
-    section.className = "job-fit-survey-category";
-    section.open = true;
-    const summary = document.createElement("summary");
-    const heading = document.createElement("span");
-    heading.textContent = categoryName;
-    const count = document.createElement("small");
-    count.textContent = `${concepts.length} concept${concepts.length === 1 ? "" : "s"}`;
-    summary.append(heading, count);
-    section.append(summary);
-    if (categoryName === "Work Arrangement" && travelToleranceMatches) {
-      section.append(createTravelToleranceControl());
+  for (const tabView of tabViews) {
+    const tab = tabView.definition;
+    const selected = tab.id === state.activeJobFitTab;
+    const tabButton = document.createElement("button");
+    tabButton.id = `job-fit-tab-${tab.id}`;
+    tabButton.className = "detail-tab job-fit-tab";
+    tabButton.type = "button";
+    tabButton.role = "tab";
+    tabButton.setAttribute("aria-controls", `job-fit-panel-${tab.id}`);
+    tabButton.setAttribute("aria-selected", String(selected));
+    tabButton.tabIndex = selected ? 0 : -1;
+    tabButton.classList.toggle("active", selected);
+    tabButton.textContent = query ? `${tab.title} (${tabView.conceptCount})` : tab.title;
+    tabButton.addEventListener("click", () => {
+      state.activeJobFitTab = tab.id;
+      renderJobFitSurvey();
+      document.querySelector(`#job-fit-tab-${tab.id}`)?.focus();
+    });
+    tabButton.addEventListener("keydown", handleJobFitTabKeydown);
+    elements.jobFitTabList.append(tabButton);
+
+    const panel = document.createElement("section");
+    panel.id = `job-fit-panel-${tab.id}`;
+    panel.className = "job-fit-tab-panel";
+    panel.role = "tabpanel";
+    panel.setAttribute("aria-labelledby", tabButton.id);
+    panel.hidden = !selected;
+    if (!tabView.hasMatches) {
+      const empty = document.createElement("p");
+      empty.className = "job-fit-empty";
+      empty.textContent = "No search matches appear on this tab.";
+      panel.append(empty);
     }
-    if (categoryName === "Work Arrangement" && workLocationMatches) {
-      section.append(createPreferredWorkLocationControl());
+    if (tabView.specialControls.includes("work-arrangement-filtering")) {
+      elements.workArrangementFiltering.hidden = false;
+      panel.append(elements.workArrangementFiltering);
+    } else if (tab.id === "work-arrangement") {
+      elements.workArrangementFiltering.hidden = true;
     }
-    if (concepts.length === 0) {
-      elements.jobFitSurvey.append(section);
-      continue;
+    if (tabView.specialControls.includes("travel-tolerance")) {
+      panel.append(createTravelToleranceControl());
     }
+    if (tabView.specialControls.includes("normal-work-location")) {
+      panel.append(createPreferredWorkLocationControl());
+    }
+    for (const sectionView of tabView.sections) {
+      const sectionDefinition = sectionView.definition;
+      const section = document.createElement("section");
+      section.className = "job-fit-tab-section";
+      if (sectionDefinition.id === "assignment-location") {
+        section.setAttribute("aria-labelledby", "assignment-location-heading");
+        section.append(createAssignmentLocationIntroduction());
+      } else {
+        section.setAttribute("aria-labelledby", `job-fit-section-${sectionDefinition.id}`);
+        const sectionHeading = document.createElement("h4");
+        sectionHeading.id = `job-fit-section-${sectionDefinition.id}`;
+        sectionHeading.className = "job-fit-survey-subgroup";
+        sectionHeading.textContent = sectionDefinition.title;
+        section.append(sectionHeading);
+      }
+      const groupOverrideActive = sectionDefinition.hardConflictId &&
+        overriddenGroups.has(sectionDefinition.hardConflictId);
+      if (sectionDefinition.hardConflictId) {
+        const groupChoice = document.createElement("label");
+        groupChoice.className = "settings-check job-fit-group-hard-conflict";
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = groupOverrideActive;
+        checkbox.disabled = !state.jobFitEnabled;
+        checkbox.dataset.jobFitGroupHardConflict = sectionDefinition.hardConflictId;
+        const copy = document.createElement("span");
+        copy.textContent = "Treat this entire section as a Hard Conflict";
+        const detail = document.createElement("small");
+        detail.textContent = "Detected concepts in this section use the existing Hard Conflict behavior. Individual choices remain stored and return when this override is removed.";
+        copy.append(detail);
+        groupChoice.append(checkbox, copy);
+        section.append(groupChoice);
+      }
     const matrix = document.createElement("div");
     matrix.className = "job-fit-matrix";
-    if (categoryName === "Work Arrangement") {
-      section.append(createAssignmentLocationIntroduction());
+      if (sectionDefinition.id === "assignment-location") {
       matrix.classList.add("assignment-location-matrix");
     }
     const header = document.createElement("div");
@@ -1659,14 +1732,7 @@ function renderJobFitSurvey() {
     });
     header.prepend(blank);
     matrix.append(header);
-    groupedSurveyConcepts(categoryName, concepts).forEach(group => {
-      if (group.title) {
-        const subgroupHeading = document.createElement("h4");
-        subgroupHeading.className = "job-fit-survey-subgroup";
-        subgroupHeading.textContent = group.title;
-        matrix.append(subgroupHeading);
-      }
-      group.concepts.forEach(concept => {
+      sectionView.concepts.forEach(concept => {
         const row = document.createElement("div");
         row.className = "job-fit-survey-row";
         row.setAttribute("role", "radiogroup");
@@ -1700,7 +1766,7 @@ function renderJobFitSurvey() {
           radio.value = value;
           radio.dataset.jobFitConceptId = concept.id;
           radio.checked = (configured.get(concept.id) || "neutral") === value;
-          radio.disabled = !state.jobFitEnabled;
+          radio.disabled = !state.jobFitEnabled || groupOverrideActive;
           radio.setAttribute("aria-label", `${concept.displayName}: ${JobFit.preferenceLabels[value]}`);
           const short = document.createElement("span");
           short.className = "job-fit-choice-short";
@@ -1711,10 +1777,25 @@ function renderJobFitSurvey() {
         });
         matrix.append(row);
       });
-    });
     section.append(matrix);
-    elements.jobFitSurvey.append(section);
+      panel.append(section);
+    }
+    elements.jobFitSurvey.append(panel);
   }
+}
+
+function handleJobFitTabKeydown(event) {
+  if (!event.target.matches('[role="tab"]')) return;
+  const tabs = Array.from(elements.jobFitTabList.querySelectorAll('[role="tab"]'));
+  const currentIndex = tabs.indexOf(event.target);
+  let nextIndex = currentIndex;
+  if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % tabs.length;
+  else if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+  else if (event.key === "Home") nextIndex = 0;
+  else if (event.key === "End") nextIndex = tabs.length - 1;
+  else return;
+  event.preventDefault();
+  tabs[nextIndex].click();
 }
 
 function updateEducationSettingsUi() {
@@ -2790,6 +2871,7 @@ async function saveSettings() {
           enabled: state.jobFitEnabled,
           travelTolerance: state.travelTolerance,
           preferredWorkLocation: state.preferredWorkLocation,
+          groupHardConflicts: state.jobFitGroupHardConflicts.slice().sort(),
           signals: state.jobFitSignals
             .map(signal => ({ conceptId: signal.conceptId, preference: signal.preference }))
         }
@@ -3264,7 +3346,11 @@ function createAgeGroup(group, jobs) {
 function evaluateJobFit(job) {
   return JobFit.evaluate(
     job?.detectedConcepts,
-    { enabled: state.jobFitEnabled, signals: state.jobFitSignals },
+    {
+      enabled: state.jobFitEnabled,
+      signals: state.jobFitSignals,
+      groupHardConflicts: state.jobFitGroupHardConflicts
+    },
     state.jobFitConcepts);
 }
 

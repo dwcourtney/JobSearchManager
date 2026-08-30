@@ -259,9 +259,9 @@ $sourceStateScript = $index.IndexOf('src="/job-source-state.js"')
 $unseenStateScript = $index.IndexOf('src="/job-unseen-state.js?v=1"')
 $credentialFitScript = $index.IndexOf('src="/credential-fit.js?v=2"')
 $clearanceFitScript = $index.IndexOf('src="/clearance-fit.js?v=1"')
-$jobFitScript = $index.IndexOf('src="/job-fit.js?v=7"')
+$jobFitScript = $index.IndexOf('src="/job-fit.js?v=8"')
 $clipboardTextScript = $index.IndexOf('src="/clipboard-text.js?v=1"')
-$appScript = $index.IndexOf('src="/app.js?v=30"')
+$appScript = $index.IndexOf('src="/app.js?v=31"')
 if ($countryOrderingScript -lt 0 -or $appScript -le $countryOrderingScript) {
     throw "The versioned country-ordering.js asset must load before app.js."
 }
@@ -443,7 +443,7 @@ if ($settingsPanelMarkup["Qualifications"] -notmatch 'id="qualification-basics-t
 if ($settingsPanelMarkup["Preferences"] -match 'id="exclude-strong-extended-location-requirements"' -or
     $settingsPanelMarkup["Preferences"] -match 'id="work-arrangement-filtering-heading"' -or
     $settingsPanelMarkup["Job Fit"] -notmatch
-    '(?s)id="job-fit-heading">Job Fit Scoring<.*id="job-fit-configuration" class="job-fit-subordinate".*id="work-arrangement-filtering-heading".*id="job-fit-signals-heading">Canonical Corpus Signals<' -or
+    '(?s)id="job-fit-heading">Job Fit Scoring<.*id="job-fit-configuration" class="job-fit-subordinate".*id="work-arrangement-filtering-heading".*id="job-fit-signals-heading">Job Fit Preferences<' -or
     $settingsPanelMarkup["Job Fit"] -notmatch
     'extended away-from-home assignments\. Ordinary business travel is not excluded\.') {
     throw "Work Arrangement Filtering is missing, misplaced, or uses stale help text."
