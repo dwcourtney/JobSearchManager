@@ -11,6 +11,7 @@ public sealed class JobConceptDetector
     private readonly JobConceptCatalog _catalog;
     private readonly Dictionary<string, Regex[]> _patterns;
     private readonly Dictionary<string, Regex[]> _titlePatterns;
+    private readonly Dictionary<string, Regex[][]> _contextRules;
 
     public JobConceptDetector(JobConceptCatalog catalog)
     {
@@ -25,6 +26,14 @@ public sealed class JobConceptDetector
             concept => concept.Id,
             concept => (concept.TitleEvidencePatterns ?? [])
                 .Select(pattern => new Regex(pattern, Options, Timeout))
+                .ToArray(),
+            StringComparer.Ordinal);
+        _contextRules = catalog.Concepts.ToDictionary(
+            concept => concept.Id,
+            concept => (concept.ContextRules ?? [])
+                .Select(rule => rule.RequiredPatterns
+                    .Select(pattern => new Regex(pattern, Options, Timeout))
+                    .ToArray())
                 .ToArray(),
             StringComparer.Ordinal);
     }
@@ -69,6 +78,18 @@ public sealed class JobConceptDetector
 
                 Add(detected, concept.Id, NormalizeEvidence(match.Value));
                 break;
+            }
+
+            foreach (var rule in _contextRules[concept.Id])
+            {
+                var matches = rule.Select(pattern => pattern.Match(corpusText)).ToArray();
+                if (matches.All(match => match.Success))
+                {
+                    Add(detected, concept.Id, string.Join("; ", matches
+                        .Select(match => NormalizeEvidence(match.Value))
+                        .Distinct(StringComparer.OrdinalIgnoreCase)));
+                    break;
+                }
             }
 
             if (concept.RemoteDesignation && remoteWork?.IsRemoteDesignated == true)

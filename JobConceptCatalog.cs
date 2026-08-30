@@ -15,7 +15,11 @@ public sealed record JobConceptDefinition(
     IReadOnlyList<string>? Supersedes = null,
     bool UserConfigurable = true,
     int? TravelLevel = null,
-    int? WorkLocationLevel = null);
+    int? WorkLocationLevel = null,
+    IReadOnlyList<JobConceptContextRule>? ContextRules = null);
+
+public sealed record JobConceptContextRule(
+    IReadOnlyList<string> RequiredPatterns);
 
 public sealed record JobConceptOption(
     string Id,
@@ -127,6 +131,7 @@ public sealed class JobConceptCatalog
 
         var hasEvidence = concept.EvidencePatterns is { Count: > 0 } ||
             concept.TitleEvidencePatterns is { Count: > 0 } ||
+            concept.ContextRules is { Count: > 0 } ||
             concept.RemoteDesignation ||
             concept.RemoteSignalCategories is { Count: > 0 } ||
             concept.ExtendedLocationCategories is { Count: > 0 };
@@ -136,7 +141,8 @@ public sealed class JobConceptCatalog
         }
 
         foreach (var pattern in (concept.EvidencePatterns ?? [])
-            .Concat(concept.TitleEvidencePatterns ?? []))
+            .Concat(concept.TitleEvidencePatterns ?? [])
+            .Concat((concept.ContextRules ?? []).SelectMany(rule => rule.RequiredPatterns ?? [])))
         {
             try
             {
@@ -148,6 +154,14 @@ public sealed class JobConceptCatalog
                 throw new InvalidDataException(
                     $"Job concept '{concept.Id}' contains an invalid evidence pattern.", ex);
             }
+        }
+
+        if ((concept.ContextRules ?? []).Any(rule =>
+                rule.RequiredPatterns is null || rule.RequiredPatterns.Count < 2 ||
+                rule.RequiredPatterns.Any(string.IsNullOrWhiteSpace)))
+        {
+            throw new InvalidDataException(
+                $"Job concept '{concept.Id}' contains an invalid contextual evidence rule.");
         }
 
         if ((concept.Supersedes ?? []).Any(id =>

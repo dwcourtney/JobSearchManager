@@ -35,6 +35,8 @@ const state = {
   workspaceIdentity: null,
   accountLinkToken: null,
   adminStatusLoaded: false,
+  detectorEvaluationLoaded: false,
+  activeAdminTab: "overview",
   activeQualificationTab: "basics",
   jobs: [],
   inclusions: [],
@@ -134,6 +136,12 @@ const elements = {
   settingsView: document.querySelector("#settings-view"),
   adminView: null,
   adminStatus: null,
+  adminOverviewTab: null,
+  adminEvaluationTab: null,
+  adminOverviewPanel: null,
+  adminEvaluationPanel: null,
+  adminEvaluationStatus: null,
+  adminEvaluationContent: null,
   jobSearchSettingsTab: document.querySelector("#job-search-settings-tab"),
   qualificationsSettingsTab: document.querySelector("#qualifications-settings-tab"),
   preferencesSettingsTab: document.querySelector("#preferences-settings-tab"),
@@ -960,7 +968,15 @@ function synchronizeAdminNavigation(isAdmin) {
     elements.adminTab = null;
     elements.adminView = null;
     elements.adminStatus = null;
+    elements.adminOverviewTab = null;
+    elements.adminEvaluationTab = null;
+    elements.adminOverviewPanel = null;
+    elements.adminEvaluationPanel = null;
+    elements.adminEvaluationStatus = null;
+    elements.adminEvaluationContent = null;
     state.adminStatusLoaded = false;
+    state.detectorEvaluationLoaded = false;
+    state.activeAdminTab = "overview";
     return;
   }
   if (elements.adminTab) return;
@@ -993,27 +1009,93 @@ function synchronizeAdminNavigation(isAdmin) {
 
   const surface = document.createElement("div");
   surface.className = "settings-surface";
+
+  const tabs = document.createElement("div");
+  tabs.className = "settings-tabs admin-subtabs";
+  tabs.setAttribute("role", "tablist");
+  tabs.setAttribute("aria-label", "Administration categories");
+  const overviewTab = document.createElement("button");
+  overviewTab.id = "admin-overview-tab";
+  overviewTab.className = "detail-tab active";
+  overviewTab.type = "button";
+  overviewTab.setAttribute("role", "tab");
+  overviewTab.setAttribute("aria-selected", "true");
+  overviewTab.setAttribute("aria-controls", "admin-overview-panel");
+  overviewTab.textContent = "Overview";
+  const evaluationTab = document.createElement("button");
+  evaluationTab.id = "admin-detector-evaluation-tab";
+  evaluationTab.className = "detail-tab";
+  evaluationTab.type = "button";
+  evaluationTab.setAttribute("role", "tab");
+  evaluationTab.setAttribute("aria-selected", "false");
+  evaluationTab.setAttribute("aria-controls", "admin-detector-evaluation-panel");
+  evaluationTab.tabIndex = -1;
+  evaluationTab.textContent = "Detector Evaluation";
+  overviewTab.addEventListener("click", () => showAdminSection("overview"));
+  evaluationTab.addEventListener("click", () => showAdminSection("detector-evaluation"));
+  tabs.append(overviewTab, evaluationTab);
+
   const section = document.createElement("section");
-  section.className = "settings-section account-section";
+  section.id = "admin-overview-panel";
+  section.className = "settings-section account-section admin-subtab-panel";
+  section.setAttribute("role", "tabpanel");
+  section.setAttribute("aria-labelledby", "admin-overview-tab");
   const title = document.createElement("h3");
   title.textContent = "Administrator Access";
   const message = document.createElement("p");
   message.textContent = "Administrator access is active for this account.";
   const future = document.createElement("p");
   future.className = "account-help";
-  future.textContent = "Administrative workspace and account management tools will be added here in future versions.";
+  future.textContent = "Administrative access is server-authorized. Account and workspace management will appear only when those capabilities are implemented.";
   const status = document.createElement("p");
   status.className = "settings-status";
   status.setAttribute("role", "status");
   status.setAttribute("aria-live", "polite");
   section.append(title, message, future, status);
-  surface.append(section);
+  const evaluationPanel = document.createElement("section");
+  evaluationPanel.id = "admin-detector-evaluation-panel";
+  evaluationPanel.className = "settings-section admin-subtab-panel detector-evaluation-panel";
+  evaluationPanel.setAttribute("role", "tabpanel");
+  evaluationPanel.setAttribute("aria-labelledby", "admin-detector-evaluation-tab");
+  evaluationPanel.hidden = true;
+  const evaluationTitle = document.createElement("h3");
+  evaluationTitle.textContent = "Detector Evaluation";
+  const evaluationIntro = document.createElement("p");
+  evaluationIntro.textContent = "Production detector predictions are compared with independent, explicitly labeled fixtures. These metrics describe only this small review corpus—not unlabeled production postings.";
+  const evaluationStatus = document.createElement("p");
+  evaluationStatus.className = "settings-status";
+  evaluationStatus.setAttribute("role", "status");
+  evaluationStatus.setAttribute("aria-live", "polite");
+  const evaluationContent = document.createElement("div");
+  evaluationContent.className = "detector-evaluation-content";
+  evaluationPanel.append(evaluationTitle, evaluationIntro, evaluationStatus, evaluationContent);
+  surface.append(tabs, section, evaluationPanel);
   view.append(header, surface);
   elements.settingsView.after(view);
 
   elements.adminTab = tab;
   elements.adminView = view;
   elements.adminStatus = status;
+  elements.adminOverviewTab = overviewTab;
+  elements.adminEvaluationTab = evaluationTab;
+  elements.adminOverviewPanel = section;
+  elements.adminEvaluationPanel = evaluationPanel;
+  elements.adminEvaluationStatus = evaluationStatus;
+  elements.adminEvaluationContent = evaluationContent;
+}
+
+function showAdminSection(section) {
+  const evaluationSelected = section === "detector-evaluation";
+  state.activeAdminTab = evaluationSelected ? "detector-evaluation" : "overview";
+  elements.adminOverviewPanel.hidden = evaluationSelected;
+  elements.adminEvaluationPanel.hidden = !evaluationSelected;
+  elements.adminOverviewTab.classList.toggle("active", !evaluationSelected);
+  elements.adminEvaluationTab.classList.toggle("active", evaluationSelected);
+  elements.adminOverviewTab.setAttribute("aria-selected", String(!evaluationSelected));
+  elements.adminEvaluationTab.setAttribute("aria-selected", String(evaluationSelected));
+  elements.adminOverviewTab.tabIndex = evaluationSelected ? -1 : 0;
+  elements.adminEvaluationTab.tabIndex = evaluationSelected ? 0 : -1;
+  if (evaluationSelected) void loadDetectorEvaluation();
 }
 
 async function loadAdminStatus() {
@@ -1028,6 +1110,131 @@ async function loadAdminStatus() {
     elements.adminStatus.textContent = status.email ? `Signed in as: ${status.email}` : "";
   } catch (error) {
     elements.adminStatus.textContent = error.message || String(error);
+  }
+}
+
+function formatDetectorMetric(value) {
+  return typeof value === "number" && Number.isFinite(value) ? value.toFixed(2) : "N/A";
+}
+
+function appendDetectorErrors(container, label, errors) {
+  const details = document.createElement("details");
+  details.className = "detector-error-details";
+  const summary = document.createElement("summary");
+  summary.textContent = `${label} (${errors.length})`;
+  details.append(summary);
+  if (errors.length === 0) {
+    const empty = document.createElement("p");
+    empty.textContent = "None in the labeled fixture corpus.";
+    details.append(empty);
+  } else {
+    const list = document.createElement("ul");
+    errors.forEach(error => {
+      const item = document.createElement("li");
+      const heading = document.createElement("strong");
+      heading.textContent = `${error.fixtureId} — ${error.title}`;
+      const outcome = document.createElement("span");
+      outcome.textContent = `Expected ${error.expectedPresent ? "present" : "absent"}; predicted ${error.predictedPresent ? "present" : "absent"}.`;
+      const evidence = document.createElement("small");
+      evidence.textContent = `Evidence: ${error.evidence}`;
+      item.append(heading, outcome, evidence);
+      list.append(item);
+    });
+    details.append(list);
+  }
+  container.append(details);
+}
+
+function renderDetectorEvaluation(report) {
+  const container = elements.adminEvaluationContent;
+  container.replaceChildren();
+
+  const aggregate = document.createElement("div");
+  aggregate.className = "detector-aggregate-grid";
+  [["Macro", report.macro, "Each concept contributes equally."],
+   ["Micro", report.micro, "TP, FP, and FN are pooled, so common concepts contribute more."]]
+    .forEach(([label, metric, explanation]) => {
+      const card = document.createElement("section");
+      card.className = "detector-aggregate-card";
+      const title = document.createElement("h4");
+      title.textContent = `${label} metrics`;
+      const values = document.createElement("p");
+      values.textContent = `Precision ${formatDetectorMetric(metric.precision)} · Recall ${formatDetectorMetric(metric.recall)} · F1 ${formatDetectorMetric(metric.f1)}`;
+      const note = document.createElement("small");
+      note.textContent = explanation;
+      card.append(title, values, note);
+      aggregate.append(card);
+    });
+  container.append(aggregate);
+
+  const tableWrap = document.createElement("div");
+  tableWrap.className = "detector-metrics-table-wrap";
+  const table = document.createElement("table");
+  table.className = "detector-metrics-table";
+  const head = document.createElement("thead");
+  const headRow = document.createElement("tr");
+  ["Concept", "Support", "TP", "FP", "FN", "TN", "Precision", "Recall", "F1"].forEach(label => {
+    const cell = document.createElement("th");
+    cell.scope = "col";
+    cell.textContent = label;
+    headRow.append(cell);
+  });
+  head.append(headRow);
+  const body = document.createElement("tbody");
+  report.concepts.forEach(metric => {
+    const row = document.createElement("tr");
+    const concept = document.createElement("th");
+    concept.scope = "row";
+    concept.textContent = metric.concept;
+    if (metric.positiveSupport < 5) {
+      const warning = document.createElement("small");
+      warning.textContent = "Small labeled sample";
+      concept.append(warning);
+    }
+    const values = [metric.positiveSupport, metric.truePositive, metric.falsePositive,
+      metric.falseNegative, metric.trueNegative, formatDetectorMetric(metric.precision),
+      formatDetectorMetric(metric.recall), formatDetectorMetric(metric.f1)];
+    row.append(concept);
+    values.forEach(value => {
+      const cell = document.createElement("td");
+      cell.textContent = String(value);
+      row.append(cell);
+    });
+    body.append(row);
+  });
+  table.append(head, body);
+  tableWrap.append(table);
+  container.append(tableWrap);
+
+  const errors = document.createElement("section");
+  errors.className = "detector-error-review";
+  const errorTitle = document.createElement("h4");
+  errorTitle.textContent = "Error review";
+  errors.append(errorTitle);
+  report.concepts.forEach(metric => {
+    const concept = document.createElement("section");
+    const heading = document.createElement("h5");
+    heading.textContent = metric.concept;
+    concept.append(heading);
+    appendDetectorErrors(concept, "False positives", metric.falsePositives);
+    appendDetectorErrors(concept, "False negatives", metric.falseNegatives);
+    errors.append(concept);
+  });
+  container.append(errors);
+}
+
+async function loadDetectorEvaluation() {
+  if (!elements.adminEvaluationStatus || state.detectorEvaluationLoaded) return;
+  elements.adminEvaluationStatus.textContent = "Evaluating labeled detector fixtures…";
+  try {
+    const response = await fetch("/api/admin/detector-evaluation", { cache: "no-store" });
+    if (!response.ok) throw new Error("Detector evaluation could not be loaded.");
+    const report = await response.json();
+    renderDetectorEvaluation(report);
+    state.detectorEvaluationLoaded = true;
+    elements.adminEvaluationStatus.textContent = `${report.fixtureCount} labeled concept/posting examples evaluated.`;
+  } catch (error) {
+    elements.adminEvaluationStatus.textContent = error.message || String(error);
   }
 }
 
