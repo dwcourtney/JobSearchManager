@@ -252,6 +252,45 @@ assert.equal(hardConflict.hardConflictCap.maximum, 2);
 assert.deepEqual(hardConflict.hardConflictCap.signals.map(item => item.conceptId), [deployment.id],
   "The explanation result must identify the signal imposing the global cap.");
 
+const individualSoftwarePreference = configuration([signal(softwareRole, "ideal")]);
+const softwareBeforeOverride = JobFit.evaluate(
+  detected([softwareRole]), individualSoftwarePreference, [softwareRole]);
+const softwareWithOverride = JobFit.evaluate(
+  detected([softwareRole]),
+  { ...individualSoftwarePreference, groupHardConflicts: ["software-development"] },
+  [softwareRole]);
+const softwareAfterOverride = JobFit.evaluate(
+  detected([softwareRole]), individualSoftwarePreference, [softwareRole]);
+assert.equal(softwareBeforeOverride.contributions[0].preference, "ideal");
+assert.equal(softwareWithOverride.score, 2,
+  "A section override must invoke the existing Hard Conflict score cap.");
+assert.equal(softwareWithOverride.contributions[0].preference, "hardConflict");
+assert.equal(softwareWithOverride.contributions[0].groupOverrideId, "software-development");
+assert.deepEqual(softwareAfterOverride.contributions, softwareBeforeOverride.contributions,
+  "Removing a section override must restore the preserved individual preference exactly.");
+const simultaneousOverrides = JobFit.evaluate(
+  detected([softwareRole, ai]),
+  {
+    ...configuration([signal(softwareRole, "positive"), signal(ai, "negative")]),
+    groupHardConflicts: ["software-development", "ai-data"]
+  },
+  [softwareRole, ai]);
+assert.equal(simultaneousOverrides.hardConflictCap.maximum, 2);
+assert.equal(simultaneousOverrides.hardConflictCap.signals.length, 2,
+  "Multiple section overrides must coexist in the existing Hard Conflict cap explanation.");
+assert.deepEqual(
+  simultaneousOverrides.contributions.map(item => [item.conceptId, item.groupOverrideId]),
+  [[softwareRole.id, "software-development"], [ai.id, "ai-data"]],
+  "Each simultaneous section override must retain its deterministic section owner.");
+const normalizedOverrides = JobFit.normalizeConfiguration({
+  ...individualSoftwarePreference,
+  groupHardConflicts: ["systems-administration", "software-development",
+    "software-development", "not-a-real-group"]
+});
+assert.deepEqual(normalizedOverrides.groupHardConflicts,
+  ["software-development", "systems-administration"],
+  "Section overrides must be validated, deduplicated, and normalized deterministically.");
+
 const neutralDetection = JobFit.evaluate(
   detected([cloud, linux]),
   configuration([signal(cloud, "positive")]),

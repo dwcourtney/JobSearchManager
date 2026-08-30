@@ -1441,7 +1441,8 @@ static async Task TestJobFitSettingsAsync()
             new("work.remote", JobFitPreferenceLevels.Neutral),
             new("user.arbitrary-concept", JobFitPreferenceLevels.HardConflict),
             new("work.relocation", "unsupported")
-        ], 2)
+        ], 2, null, [JobFitGroupHardConflicts.SoftwareDevelopment,
+            JobFitGroupHardConflicts.AiData])
     });
     Assert(normalized.JobFit is
                { Enabled: true, TravelTolerance: 2, PreferredWorkLocation: 0 } &&
@@ -1452,13 +1453,18 @@ static async Task TestJobFitSettingsAsync()
            normalized.JobFit.Signals.Any(signal =>
                signal.ConceptId == "work.deployment" &&
                signal.Preference == JobFitPreferenceLevels.Negative) &&
-           normalized.JobFit.Signals.All(signal => signal.ConceptId != "work.remote"),
+           normalized.JobFit.Signals.All(signal => signal.ConceptId != "work.remote") &&
+           normalized.JobFit.GroupHardConflicts?.SequenceEqual(
+               [JobFitGroupHardConflicts.AiData,
+                JobFitGroupHardConflicts.SoftwareDevelopment]) == true,
         "Sparse normalization did not omit Neutral, migrate legacy preference names, or reject invalid signals.");
     await state.SaveSettingsAsync(normalized);
     var reloaded = await state.LoadSettingsAsync();
     Assert(reloaded.JobFit is
                { Enabled: true, TravelTolerance: 2, PreferredWorkLocation: 0 } &&
-           reloaded.JobFit.Signals.SequenceEqual(normalized.JobFit!.Signals),
+           reloaded.JobFit.Signals.SequenceEqual(normalized.JobFit!.Signals) &&
+           reloaded.JobFit.GroupHardConflicts?.SequenceEqual(
+               normalized.JobFit.GroupHardConflicts ?? []) == true,
         "Enabling Job Fit and selecting canonical concepts did not persist.");
 
     var cleared = state.NormalizeSettings(reloaded with
@@ -2076,12 +2082,13 @@ static Task TestPortableJobFitAsync()
             new("work.deployment", JobFitPreferenceLevels.HardConflict),
             new("work.onsite", JobFitPreferenceLevels.StrongNegative),
             new("work.remote", JobFitPreferenceLevels.Neutral)
-        ], 2)
+        ], 2, null, [JobFitGroupHardConflicts.SoftwareDevelopment,
+            JobFitGroupHardConflicts.AiData])
     };
 
     var exported = portable.Export(configured, JobHistoryDocument.Empty);
     var imported = portable.Import(exported, ViewerSettings.Default, JobHistoryDocument.Empty);
-    Assert(exported.Version == 6 && exported.Preferences.JobFit is
+    Assert(exported.Version == 7 && exported.Preferences.JobFit is
                { Enabled: true, TravelTolerance: 2, PreferredWorkLocation: 0 } &&
            imported.Settings.JobFit is
                { Enabled: true, TravelTolerance: 2, PreferredWorkLocation: 0 } &&
@@ -2092,6 +2099,9 @@ static Task TestPortableJobFitAsync()
            imported.Settings.JobFit.Signals.All(signal =>
                signal.Preference is not JobFitPreferenceLevels.StrongPositive and
                    not JobFitPreferenceLevels.StrongNegative) &&
+           imported.Settings.JobFit.GroupHardConflicts?.SequenceEqual(
+               [JobFitGroupHardConflicts.AiData,
+                JobFitGroupHardConflicts.SoftwareDevelopment]) == true &&
            imported.Settings.JobFit.Signals.All(signal => signal.ConceptId != "work.remote"),
         "New canonical Job Fit names or legacy-name migration did not round-trip through portable settings.");
 
@@ -2104,8 +2114,22 @@ static Task TestPortableJobFitAsync()
     Assert(legacyImported.Settings.JobFit is { Enabled: false } &&
            legacyImported.Settings.JobFit.Signals.Count == 0 &&
            legacyImported.Settings.JobFit.TravelTolerance == TravelTolerance.Default &&
-           legacyImported.Settings.JobFit.PreferredWorkLocation == WorkLocationPreference.Default,
+           legacyImported.Settings.JobFit.PreferredWorkLocation == WorkLocationPreference.Default &&
+           legacyImported.Settings.JobFit.GroupHardConflicts?.Count == 0,
         "An older workspace import without Job Fit data did not default to disabled.");
+
+    var versionSixImported = portable.Import(exported with
+    {
+        Version = 6,
+        Preferences = exported.Preferences with
+        {
+            JobFit = new JobFitConfiguration(true,
+                [new("technical.machine-learning", JobFitPreferenceLevels.Ideal)], 4, 3)
+        }
+    }, ViewerSettings.Default, JobHistoryDocument.Empty);
+    Assert(versionSixImported.Settings.JobFit is { Enabled: true } &&
+           versionSixImported.Settings.JobFit.GroupHardConflicts?.Count == 0,
+        "A version-6 workspace without section overrides did not default every override to off.");
 
     var legacyTravel = portable.Import(exported with
     {
@@ -2171,6 +2195,18 @@ static Task TestPortableJobFitAsync()
             {
                 JobFit = new JobFitConfiguration(true,
                 [new("arbitrary.user.phrase", JobFitPreferenceLevels.Positive)])
+            }
+        },
+        ViewerSettings.Default,
+        JobHistoryDocument.Empty));
+
+    AssertThrows<WorkspaceImportException>(() => portable.Import(
+        exported with
+        {
+            Preferences = exported.Preferences with
+            {
+                JobFit = new JobFitConfiguration(
+                    true, [], 4, 3, ["unsupported-group"])
             }
         },
         ViewerSettings.Default,

@@ -446,6 +446,32 @@ public static class JobFitPreferenceLevels
 
 public sealed record JobFitSignalPreference(string ConceptId, string Preference);
 
+public static class JobFitGroupHardConflicts
+{
+    public const string SoftwareDevelopment = "software-development";
+    public const string AiData = "ai-data";
+    public const string CloudPlatformAutomation = "cloud-platform-automation";
+    public const string SystemsAdministration = "systems-administration";
+    public const string NetworkPhysicalInfrastructure = "network-physical-infrastructure";
+
+    public static IReadOnlySet<string> Supported { get; } = new HashSet<string>(
+        [
+            SoftwareDevelopment,
+            AiData,
+            CloudPlatformAutomation,
+            SystemsAdministration,
+            NetworkPhysicalInfrastructure
+        ],
+        StringComparer.Ordinal);
+
+    public static IReadOnlyList<string> Normalize(IEnumerable<string>? values) =>
+        (values ?? [])
+            .Where(value => value is not null && Supported.Contains(value))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(value => value, StringComparer.Ordinal)
+            .ToArray();
+}
+
 public static class TravelTolerance
 {
     public const int Minimum = 0;
@@ -583,10 +609,11 @@ public sealed record JobFitConfiguration(
     bool Enabled,
     IReadOnlyList<JobFitSignalPreference> Signals,
     int? TravelTolerance = null,
-    int? PreferredWorkLocation = null)
+    int? PreferredWorkLocation = null,
+    IReadOnlyList<string>? GroupHardConflicts = null)
 {
     public static JobFitConfiguration Disabled { get; } = new(
-        false, [], JobSearchManager.TravelTolerance.Default, WorkLocationPreference.Default);
+        false, [], JobSearchManager.TravelTolerance.Default, WorkLocationPreference.Default, []);
 
     public static JobFitConfiguration Normalize(
         JobFitConfiguration? configuration,
@@ -620,7 +647,11 @@ public sealed record JobFitConfiguration(
             .Take(100)
             .ToArray();
         return new JobFitConfiguration(
-            configuration.Enabled, signals, travelTolerance, preferredWorkLocation);
+            configuration.Enabled,
+            signals,
+            travelTolerance,
+            preferredWorkLocation,
+            JobFitGroupHardConflicts.Normalize(configuration.GroupHardConflicts));
     }
 }
 

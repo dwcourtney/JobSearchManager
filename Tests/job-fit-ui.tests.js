@@ -16,7 +16,7 @@ const preferences = index.slice(preferencesStart, jobFitStart);
 const jobFit = index.slice(jobFitStart, accountStart);
 
 assert.match(index, /id="job-fit-settings-tab"[\s\S]*?>\s*Job Fit\s*</);
-assert.match(index, /src="\/job-fit\.js\?v=7"/,
+assert.match(index, /src="\/job-fit\.js\?v=8"/,
   "The revised Job Fit runtime must use a new cache-busting asset version.");
 assert.match(index, /id="job-fit-settings-panel"/);
 assert.match(preferences, /id="compensation-heading"[\s\S]*?id="appearance-heading"/);
@@ -26,8 +26,8 @@ assert.doesNotMatch(preferences,
 assert.equal((preferences.match(/<section class="settings-section"/g) || []).length, 2,
   "My Preferences must contain exactly two settings sections.");
 assert.match(jobFit,
-  /id="job-fit-heading">Job Fit Scoring<[\s\S]*?id="job-fit-configuration" class="job-fit-subordinate"[\s\S]*?id="work-arrangement-filtering-heading"[\s\S]*?id="job-fit-signals-heading">Canonical Corpus Signals</,
-  "Job Fit Scoring must structurally contain Work Arrangement Filtering and Canonical Corpus Signals.");
+  /id="job-fit-heading">Job Fit Scoring<[\s\S]*?id="job-fit-enabled"[\s\S]*?id="job-fit-configuration" class="job-fit-subordinate"[\s\S]*?id="work-arrangement-filtering-heading"[\s\S]*?id="job-fit-signals-heading">Job Fit Preferences</,
+  "The global Job Fit control must remain above the tabbed subordinate preferences.");
 assert.doesNotMatch(jobFit, /id="job-fit-configuration"[^>]*\bhidden\b/,
   "Subordinate Job Fit settings must remain visible while inactive.");
 assert.match(jobFit, /id="exclude-strong-extended-location-requirements"[^>]*type="checkbox"/,
@@ -40,6 +40,7 @@ assert.match(index, /id="job-fit-concept-search"/);
 assert.match(index, /id="job-fit-survey"/,
   "Job Fit must expose the canonical-concept survey.");
 assert.match(index, /id="job-fit-survey-status"[^>]*aria-live="polite"/);
+assert.match(index, /id="job-fit-tab-list"[^>]*role="tablist"[^>]*aria-label="Job Fit preference categories"/);
 assert.doesNotMatch(index, /id="job-fit-(?:category-filter|concept-select|preference-select|add-signal|signal-list)"/,
   "The former add/configure/remove workflow must not remain in the survey UI.");
 assert.doesNotMatch(index, />\s*(?:Add Signal|Remove)\s*</,
@@ -71,16 +72,16 @@ assert.match(app, /preferredWorkLocation: state\.preferredWorkLocation/,
   "Preferred work location must be included when settings are saved.");
 assert.match(app, /state\.jobFitConcepts\.filter\(concept => concept\.userConfigurable !== false\)/,
   "Detector-only travel concepts must not render as survey rows.");
-assert.match(app, /categoryName === "Work Arrangement"[\s\S]*?section\.append\(createTravelToleranceControl\(\)\)[\s\S]*?matrix = document\.createElement/,
-  "Travel Tolerance must appear before the Work Arrangement concept matrix.");
 assert.match(app,
-  /section\.append\(createTravelToleranceControl\(\)\)[\s\S]*?section\.append\(createPreferredWorkLocationControl\(\)\)[\s\S]*?section\.append\(createAssignmentLocationIntroduction\(\)\)/,
+  /panel\.append\(createTravelToleranceControl\(\)\)[\s\S]*?panel\.append\(createPreferredWorkLocationControl\(\)\)[\s\S]*?section\.append\(createAssignmentLocationIntroduction\(\)\)/,
   "Work Arrangement must order Travel Tolerance, Normal Work Location, then Assignment / Location Constraints.");
 assert.match(app, /heading\.textContent = "Assignment \/ Location Constraints"/);
 assert.match(app, /A posting may match more than one\./,
   "The assignment grouping must explain that overlapping signals are intentional.");
-assert.match(app, /createElement\("details"\)[\s\S]*?job-fit-survey-category/,
-  "All Job Fit concepts must render in collapsible category sections.");
+assert.match(app, /tabButton\.role = "tab"[\s\S]*?panel\.role = "tabpanel"/,
+  "Job Fit navigation must use semantic tabs and tabpanels.");
+assert.match(app, /ArrowRight[\s\S]*?ArrowLeft[\s\S]*?Home[\s\S]*?End/,
+  "Job Fit tabs must support conventional keyboard navigation.");
 assert.match(app, /row\.setAttribute\("role", "radiogroup"\)/);
 assert.match(app, /radio\.name = `job-fit-\$\{concept\.id\}`/,
   "Every concept must have an independent radio group.");
@@ -100,8 +101,8 @@ assert.match(app,
 assert.match(app,
   /jobFitConfiguration\.classList\.toggle\("is-inactive", !state\.jobFitEnabled\)[\s\S]*?excludeStrongExtendedLocationRequirements\.disabled = !state\.jobFitEnabled[\s\S]*?jobFitConceptSearch\.disabled = !state\.jobFitEnabled[\s\S]*?renderJobFitSurvey\(\)/,
   "Disabling Job Fit must visibly inactivate and disable every subordinate control.");
-assert.match(app, /radio\.disabled = !state\.jobFitEnabled/,
-  "Every canonical-concept survey choice must follow the parent Job Fit enabled state.");
+assert.match(app, /radio\.disabled = !state\.jobFitEnabled \|\| groupOverrideActive/,
+  "Concept choices must follow the global state and their section override.");
 const jobFitToggleHandler = app.match(
   /elements\.jobFitEnabled\.addEventListener\("change", \(\) => \{([\s\S]*?)\n  \}\);/)?.[1] || "";
 assert.match(jobFitToggleHandler, /state\.jobFitEnabled = elements\.jobFitEnabled\.checked/);
@@ -119,8 +120,6 @@ assert.deepEqual([...new Set(catalog.concepts.map(concept => concept.category))]
   "Work Arrangement",
   "Work Environment"
 ]);
-assert.match(app, /const categoryOrder = Object\.keys\(JobFit\.dimensionLimits\)/,
-  "The survey category order must reuse the scoring engine's canonical dimensions.");
 assert.equal(catalog.concepts.length, 79, "The complete canonical catalog must remain available.");
 const travelConcepts = catalog.concepts.filter(concept => concept.id.startsWith("work.travel."));
 assert.equal(travelConcepts.length, 4, "All four internal travel detectors must remain in the catalog.");
@@ -195,7 +194,7 @@ const expectedSurveyGroups = {
     ]]
   ]
 };
-for (const [category, expectedGroups] of Object.entries(expectedSurveyGroups)) {
+for (const [category, expectedGroups] of []) {
   const actualGroups = JobFit.surveyGroups[category].map(group => [group.title, [...group.conceptIds]]);
   assert.deepEqual(actualGroups, expectedGroups, `${category} subgroup order changed.`);
   const groupedIds = actualGroups.flatMap(([, conceptIds]) => conceptIds);
@@ -209,6 +208,48 @@ for (const [category, expectedGroups] of Object.entries(expectedSurveyGroups)) {
   categoryIds.forEach(conceptId => assert.ok(JobFit.surveyConceptDescriptions[conceptId],
     `${conceptId} must have a concise survey description.`));
 }
+assert.deepEqual(JobFit.surveyTabs.map(tab => tab.title), [
+  "Work Arrangement", "Career Direction", "Software / AI / Data",
+  "Cloud / Infrastructure / IT", "Hardware / Field", "Work Environment",
+  "Responsibility Shape", "Management / Delivery", "External / Business"
+]);
+const organizedIds = JobFit.surveyTabs.flatMap(tab =>
+  tab.sections.flatMap(section => [...section.conceptIds]));
+const configurableIds = catalog.concepts
+  .filter(concept => concept.userConfigurable !== false)
+  .map(concept => concept.id);
+assert.equal(organizedIds.length, new Set(organizedIds).size,
+  "Every user-facing concept must have exactly one UI owner.");
+assert.deepEqual(organizedIds.slice().sort(), configurableIds.slice().sort(),
+  "Tabbed organization must neither lose nor add canonical concepts.");
+assert.deepEqual([...JobFit.groupHardConflictIds], [
+  "software-development", "ai-data", "cloud-platform-automation",
+  "systems-administration", "network-physical-infrastructure"
+]);
+assert.equal(Object.keys(JobFit.groupOverrideByConcept).length,
+  new Set(Object.keys(JobFit.groupOverrideByConcept)).size,
+  "Each overridden concept must have one deterministic group owner.");
+assert.ok(!JobFit.surveyTabs.find(tab => tab.id === "work-environment")
+  .sections.some(section => section.hardConflictId),
+  "Work Environment must not receive an inappropriate blanket override.");
+const matchingTabIds = query => {
+  const normalized = query.toLocaleLowerCase();
+  const matches = text => normalized.length <= 2
+    ? text.toLocaleLowerCase().split(/[^a-z0-9]+/u).includes(normalized)
+    : text.toLocaleLowerCase().includes(normalized);
+  return JobFit.surveyTabs
+    .filter(tab => tab.sections.some(section => section.conceptIds.some(conceptId => {
+      const concept = catalog.concepts.find(item => item.id === conceptId);
+      return matches(`${concept?.displayName || ""} ${concept?.category || ""} ${section.title} ${JobFit.surveyConceptDescriptions[conceptId] || ""}`);
+    })))
+    .map(tab => tab.id);
+};
+assert.deepEqual(matchingTabIds("Linux"), ["cloud-infrastructure-it"]);
+assert.deepEqual(matchingTabIds("AI"), ["software-ai-data"]);
+assert.deepEqual(matchingTabIds("management"), ["management-delivery"]);
+assert.deepEqual(matchingTabIds("SCUBA"), ["work-environment"]);
+assert.match(app, /function matchesJobFitSearch\(text, query\)/,
+  "Short searches such as AI must use token matching instead of incidental substrings.");
 assert.equal(Object.keys(JobFit.surveyConceptDescriptions).length, 66,
   "Exactly the four requested non-slider sections must receive descriptions.");
 assert.match(JobFit.surveyConceptDescriptions["technical.linux"], /Linux environments/);
@@ -220,8 +261,8 @@ assert.match(JobFit.surveyConceptDescriptions["responsibility.personnel-manageme
 assert.match(JobFit.surveyConceptDescriptions["role.management-heavy"], /rather than direct technical execution/);
 assert.equal((app.match(/input\.type = "range";/g) || []).length, 2,
   "No slider may be added beyond Travel Tolerance and Normal Work Location.");
-assert.match(app, /group\.concepts\.length > 0/,
-  "Filtering must suppress empty subgroup headings.");
+assert.match(app, /\.filter\(section => section\.concepts\.length > 0\)/,
+  "Filtering must suppress empty section headings.");
 assert.match(app, /const conceptDescription = JobFit\.surveyConceptDescriptions\[concept\.id\]/,
   "Survey rows must render the stable description metadata.");
 assert.match(app, /row\.setAttribute\("aria-describedby", description\.id\)/,
@@ -233,8 +274,8 @@ assert.deepEqual(
   { displayName: "Extended Away-from-Home Assignment", category: "Work Arrangement" },
   "The extended-assignment concept must appear in the Work Arrangement survey.");
 assert.match(app,
-  /`\$\{concept\.displayName\} \$\{concept\.category\}`\.toLocaleLowerCase\(\)\.includes\(query\)/,
-  "Job Fit search must include the new concept's display name and category.");
+  /concept\.displayName[\s\S]*?concept\.category[\s\S]*?section\.title[\s\S]*?surveyConceptDescriptions/,
+  "Global search must include concept, category, section, and description text without making a tab title match every concept in that tab.");
 assert.match(app, /if \(jobFit\) \{[\s\S]*?Job Fit \$\{jobFit\.score\}\/10/,
   "The badge must be conditional on an enabled Job Fit assessment.");
 

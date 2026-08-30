@@ -65,7 +65,7 @@ internal sealed partial class PortableWorkspaceService
 {
     public const string FormatIdentifier = "JobSearchManagerBackup";
     internal const string LegacyFormatIdentifier = "WorkdayJobManagerWorkspace";
-    public const int CurrentVersion = 6;
+    public const int CurrentVersion = 7;
     public const int MaximumImportBytes = 1_000_000;
     private readonly CompanyCatalog _companies;
     private readonly JobConceptCatalog _jobConcepts;
@@ -167,7 +167,7 @@ internal sealed partial class PortableWorkspaceService
             throw new WorkspaceImportException(
                 "The selected file is not a Job Search Manager workspace export.");
         }
-        if (document.Version is not (1 or 2 or 3 or 4 or 5 or CurrentVersion))
+        if (document.Version is not (1 or 2 or 3 or 4 or 5 or 6 or CurrentVersion))
         {
             throw new WorkspaceImportException($"Workspace version {document.Version} is not supported.");
         }
@@ -367,6 +367,16 @@ internal sealed partial class PortableWorkspaceService
         {
             throw new WorkspaceImportException(
                 "The workspace file contains an invalid number of Job Fit signals.");
+        }
+
+        if (configuration.GroupHardConflicts is { Count: > 20 } ||
+            configuration.GroupHardConflicts?.Any(groupId =>
+                !JobFitGroupHardConflicts.Supported.Contains(groupId)) == true ||
+            configuration.GroupHardConflicts?.Distinct(StringComparer.Ordinal).Count() !=
+                configuration.GroupHardConflicts?.Count)
+        {
+            throw new WorkspaceImportException(
+                "The workspace file contains an invalid Job Fit section Hard Conflict override.");
         }
 
         var ids = new HashSet<string>(StringComparer.Ordinal);

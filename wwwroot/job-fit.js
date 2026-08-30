@@ -50,111 +50,108 @@
   });
   const DEFAULT_LIMITS = Object.freeze({ minimum: -2, maximum: 1 });
   const DIMENSION_ORDER = Object.freeze(Object.keys(DIMENSION_LIMITS));
-  const SURVEY_GROUPS = Object.freeze({
-    "Role Type / Career Direction": Object.freeze([
-      Object.freeze({
-        title: "Technical Engineering",
-        conceptIds: Object.freeze([
-          "role.ai-ml-engineering", "role.cloud-engineering", "role.cybersecurity",
-          "role.data-engineering", "role.data-science", "role.devops-platform",
-          "role.hardware-engineering", "role.infrastructure-engineering",
-          "role.network-engineering", "role.software-engineering", "role.systems-engineering",
-          "role.test-validation-engineering"
-        ])
-      }),
-      Object.freeze({
-        title: "Work Shape / Leadership",
-        conceptIds: Object.freeze(["role.individual-contributor", "role.people-management"])
-      }),
-      Object.freeze({
-        title: "Delivery / Management",
-        conceptIds: Object.freeze(["role.program-management", "role.project-management"])
-      }),
-      Object.freeze({ title: "Field-Based", conceptIds: Object.freeze(["role.field-service"]) })
-    ]),
-    "Technical Domain": Object.freeze([
-      Object.freeze({
-        title: "Software Development",
-        conceptIds: Object.freeze([
-          "technical.api-development", "technical.application-development",
-          "technical.backend-development", "technical.frontend-development",
-          "technical.software-development", "technical.embedded-systems"
-        ])
-      }),
-      Object.freeze({
-        title: "AI / Data",
-        conceptIds: Object.freeze([
-          "technical.artificial-intelligence", "technical.machine-learning",
-          "technical.large-language-models", "technical.nlp"
-        ])
-      }),
-      Object.freeze({
-        title: "Cloud / Platform / Automation",
-        conceptIds: Object.freeze([
-          "technical.cloud", "technical.cicd", "technical.infrastructure-as-code",
-          "technical.containers", "technical.automation-scripting", "technical.virtualization"
-        ])
-      }),
-      Object.freeze({
-        title: "Systems / Administration",
-        conceptIds: Object.freeze([
-          "technical.linux", "technical.linux-administration",
-          "technical.windows-administration", "technical.storage"
-        ])
-      }),
-      Object.freeze({
-        title: "Network / Physical Infrastructure",
-        conceptIds: Object.freeze([
-          "technical.networking", "technical.cisco-networking",
-          "technical.cabling-racking", "technical.power-facilities"
-        ])
-      })
-    ]),
-    "Work Environment": Object.freeze([
-      Object.freeze({
-        title: "Physical / Field Environments",
-        conceptIds: Object.freeze([
-          "work.aircraft-flight-line", "work.customer-site", "work.data-center",
-          "work.field-engineering", "work.lab-environment", "work.manufacturing-floor",
-          "work.outdoor-field", "work.physical-infrastructure"
-        ])
-      }),
-      Object.freeze({
-        title: "Restricted / Special Facilities",
-        conceptIds: Object.freeze(["work.classified-facility"])
-      }),
-      Object.freeze({
-        title: "High-Risk / Special Conditions",
-        conceptIds: Object.freeze([
-          "work.confined-spaces", "work.scuba", "work.shipboard", "work.heights"
-        ])
-      })
-    ]),
-    "Responsibility Shape": Object.freeze([
-      Object.freeze({
-        title: "Technical Work Shape",
-        conceptIds: Object.freeze([
-          "responsibility.architecture-heavy", "responsibility.hands-on-implementation",
-          "responsibility.research-oriented", "responsibility.operations-sustainment",
-          "responsibility.documentation-heavy"
-        ])
-      }),
-      Object.freeze({
-        title: "Leadership / Ownership",
-        conceptIds: Object.freeze([
-          "responsibility.team-leadership", "responsibility.personnel-management",
-          "role.management-heavy", "responsibility.budget-ownership",
-          "responsibility.schedule-ownership"
-        ])
-      }),
-      Object.freeze({
-        title: "External / Business Responsibility",
-        conceptIds: Object.freeze([
-          "responsibility.customer-facing", "responsibility.proposal-capture"
-        ])
-      })
-    ])
+  const section = (id, title, conceptIds, hardConflictId = null) => Object.freeze({
+    id,
+    title,
+    hardConflictId,
+    conceptIds: Object.freeze(conceptIds)
   });
+  const tab = (id, title, sections, options = {}) => Object.freeze({
+    id,
+    title,
+    specialControls: Object.freeze(options.specialControls || []),
+    sections: Object.freeze(sections)
+  });
+  const SURVEY_TABS = Object.freeze([
+    tab("work-arrangement", "Work Arrangement", [
+      section("assignment-location", "Assignment / Location Constraints", [
+        "work.deployment", "work.extended-away-assignment", "work.international-assignment",
+        "work.rotation", "work.relocation"
+      ])
+    ], { specialControls: ["travel-tolerance", "normal-work-location", "work-arrangement-filtering"] }),
+    tab("career-direction", "Career Direction", [
+      section("technical-career-direction", "Technical Engineering", [
+        "role.individual-contributor", "role.systems-engineering", "role.cybersecurity"
+      ])
+    ]),
+    tab("software-ai-data", "Software / AI / Data", [
+      section("software-development", "Software Development", [
+        "role.software-engineering", "technical.api-development",
+        "technical.application-development", "technical.backend-development",
+        "technical.frontend-development", "technical.software-development",
+        "technical.embedded-systems"
+      ], "software-development"),
+      section("ai-data", "AI / Data", [
+        "role.ai-ml-engineering", "role.data-engineering", "role.data-science",
+        "technical.artificial-intelligence", "technical.machine-learning",
+        "technical.large-language-models", "technical.nlp"
+      ], "ai-data")
+    ]),
+    tab("cloud-infrastructure-it", "Cloud / Infrastructure / IT", [
+      section("cloud-platform-automation", "Cloud / Platform / Automation", [
+        "role.cloud-engineering", "role.devops-platform", "technical.cloud",
+        "technical.cicd", "technical.infrastructure-as-code", "technical.containers",
+        "technical.automation-scripting", "technical.virtualization"
+      ], "cloud-platform-automation"),
+      section("systems-administration", "Systems / Administration", [
+        "role.infrastructure-engineering", "technical.linux",
+        "technical.linux-administration", "technical.windows-administration",
+        "technical.storage"
+      ], "systems-administration"),
+      section("network-physical-infrastructure", "Network / Physical Infrastructure", [
+        "role.network-engineering", "technical.networking", "technical.cisco-networking",
+        "technical.cabling-racking", "technical.power-facilities"
+      ], "network-physical-infrastructure")
+    ]),
+    tab("hardware-field", "Hardware / Field", [
+      section("hardware-field-engineering", "Hardware / Field Engineering", [
+        "role.hardware-engineering", "role.field-service", "role.test-validation-engineering"
+      ]),
+      section("physical-field-environments", "Physical / Field Environments", [
+        "work.aircraft-flight-line", "work.customer-site", "work.data-center",
+        "work.field-engineering", "work.lab-environment", "work.manufacturing-floor",
+        "work.outdoor-field", "work.physical-infrastructure"
+      ])
+    ]),
+    tab("work-environment", "Work Environment", [
+      section("restricted-special-facilities", "Restricted / Special Facilities", [
+        "work.classified-facility"
+      ]),
+      section("high-risk-special-conditions", "High-Risk / Special Conditions", [
+        "work.confined-spaces", "work.scuba", "work.shipboard", "work.heights"
+      ])
+    ]),
+    tab("responsibility-shape", "Responsibility Shape", [
+      section("technical-work-shape", "Technical Work Shape", [
+        "responsibility.architecture-heavy", "responsibility.hands-on-implementation",
+        "responsibility.research-oriented", "responsibility.operations-sustainment",
+        "responsibility.documentation-heavy"
+      ])
+    ]),
+    tab("management-delivery", "Management / Delivery", [
+      section("delivery-management", "Delivery / Management", [
+        "role.program-management", "role.project-management", "role.people-management"
+      ]),
+      section("leadership-ownership", "Leadership / Ownership", [
+        "role.management-heavy", "responsibility.team-leadership",
+        "responsibility.personnel-management", "responsibility.budget-ownership",
+        "responsibility.schedule-ownership"
+      ])
+    ]),
+    tab("external-business", "External / Business", [
+      section("external-business-responsibility", "External / Business Responsibility", [
+        "responsibility.customer-facing", "responsibility.proposal-capture"
+      ])
+    ])
+  ]);
+  const GROUP_HARD_CONFLICT_SECTIONS = Object.freeze(SURVEY_TABS
+    .flatMap(item => item.sections)
+    .filter(item => item.hardConflictId));
+  const GROUP_HARD_CONFLICT_IDS = Object.freeze(
+    GROUP_HARD_CONFLICT_SECTIONS.map(item => item.hardConflictId));
+  const GROUP_OVERRIDE_BY_CONCEPT = Object.freeze(Object.fromEntries(
+    GROUP_HARD_CONFLICT_SECTIONS.flatMap(item =>
+      item.conceptIds.map(conceptId => [conceptId, item.hardConflictId]))));
   const SURVEY_CONCEPT_DESCRIPTIONS = Object.freeze({
     "role.ai-ml-engineering": "Building, integrating, or operationalizing machine-learning and AI systems.",
     "role.cloud-engineering": "Designing and operating cloud infrastructure, services, and platforms.",
@@ -253,11 +250,16 @@
       if (!Object.hasOwn(WEIGHTS, preference)) continue;
       signals.push({ conceptId: signal.conceptId, preference });
     }
+    const groupHardConflicts = Array.from(new Set(
+      (Array.isArray(configuration?.groupHardConflicts) ? configuration.groupHardConflicts : [])
+        .filter(groupId => GROUP_HARD_CONFLICT_IDS.includes(groupId))))
+      .sort((left, right) => left.localeCompare(right));
     return {
       enabled: configuration?.enabled === true,
       signals,
       travelTolerance: normalizeTravelTolerance(configuration?.travelTolerance),
-      preferredWorkLocation: normalizePreferredWorkLocation(configuration?.preferredWorkLocation)
+      preferredWorkLocation: normalizePreferredWorkLocation(configuration?.preferredWorkLocation),
+      groupHardConflicts
     };
   }
 
@@ -406,13 +408,17 @@
       .filter(item => item && typeof item.id === "string")
       .map(item => [item.id, item]));
     const configured = new Map(normalized.signals.map(signal => [signal.conceptId, signal.preference]));
+    const groupHardConflicts = new Set(normalized.groupHardConflicts);
     const detectedSignals = Array.from(detected.values())
       .filter(item => concepts.has(item.conceptId))
       .filter(item => !Number.isInteger(concepts.get(item.conceptId).travelLevel))
       .filter(item => !Number.isInteger(concepts.get(item.conceptId).workLocationLevel))
       .map(item => {
         const concept = concepts.get(item.conceptId);
-        const preference = configured.get(item.conceptId) || "neutral";
+        const groupOverrideId = GROUP_OVERRIDE_BY_CONCEPT[item.conceptId];
+        const preference = groupOverrideId && groupHardConflicts.has(groupOverrideId)
+          ? "hardConflict"
+          : configured.get(item.conceptId) || "neutral";
         return {
           conceptId: item.conceptId,
           displayName: concept.displayName,
@@ -420,7 +426,10 @@
           preference,
           preferenceLabel: LABELS[preference],
           impact: preference === "neutral" ? 0 : WEIGHTS[preference],
-          evidence: item.evidence || "Canonical concept detected"
+          evidence: item.evidence || "Canonical concept detected",
+          groupOverrideId: groupOverrideId && groupHardConflicts.has(groupOverrideId)
+            ? groupOverrideId
+            : null
         };
       });
     const travelRequirement = detectedTravelRequirement(detected, concepts);
@@ -588,7 +597,9 @@
     normalizePreferredWorkLocation,
     detectedWorkLocation,
     detectedTravelRequirement,
-    surveyGroups: SURVEY_GROUPS,
+    surveyTabs: SURVEY_TABS,
+    groupHardConflictIds: GROUP_HARD_CONFLICT_IDS,
+    groupOverrideByConcept: GROUP_OVERRIDE_BY_CONCEPT,
     surveyConceptDescriptions: SURVEY_CONCEPT_DESCRIPTIONS
   };
 });

@@ -10,7 +10,7 @@
   <link rel="manifest" href="/site.webmanifest?v=1">
   <script src="/theme-bootstrap.js"></script>
   <link rel="stylesheet" href="/theme.css?v=10">
-  <link rel="stylesheet" href="/styles.css?v=25">
+  <link rel="stylesheet" href="/styles.css?v=26">
   <script src="/vendor/purify.min.js" defer></script>
   <script src="/country-ordering.js?v=2" defer></script>
   <script src="/company-selector.js?v=1" defer></script>
@@ -22,9 +22,9 @@
   <script src="/clearance-fit.js?v=1" defer></script>
   <script src="/extended-location-ui.js?v=5" defer></script>
   <script src="/education-fit.js?v=2" defer></script>
-  <script src="/job-fit.js?v=7" defer></script>
+  <script src="/job-fit.js?v=8" defer></script>
   <script src="/clipboard-text.js?v=1" defer></script>
-  <script src="/app.js?v=30" defer></script>
+  <script src="/app.js?v=31" defer></script>
 </head>
 <body>
   <main id="app-shell" class="app-shell" aria-busy="true" inert>
@@ -619,7 +619,8 @@
               </span>
             </label>
             <div id="job-fit-configuration" class="job-fit-subordinate" aria-disabled="true">
-              <section class="job-fit-subsection" aria-labelledby="work-arrangement-filtering-heading">
+              <section id="work-arrangement-filtering" class="job-fit-subsection"
+                       aria-labelledby="work-arrangement-filtering-heading">
                 <h3 id="work-arrangement-filtering-heading">Work Arrangement Filtering</h3>
                 <div class="settings-check-list">
                   <label class="settings-check">
@@ -632,14 +633,16 @@
                 </div>
               </section>
               <section class="job-fit-subsection" aria-labelledby="job-fit-signals-heading">
-                <h3 id="job-fit-signals-heading">Canonical Corpus Signals</h3>
+                <h3 id="job-fit-signals-heading">Job Fit Preferences</h3>
                 <p class="job-fit-introduction">
-                  Set ordinary-business-travel tolerance and ideal normal work location, then rate the remaining user-facing corpus concepts. Neutral is the default and is not saved; custom words cannot be added here.
+                  Preferences are organized by the work they describe. Neutral is the default and is not saved; custom words cannot be added here.
                 </p>
-                <label class="job-fit-search-label" for="job-fit-concept-search">Filter concepts</label>
+                <label class="job-fit-search-label" for="job-fit-concept-search">Search all Job Fit preferences</label>
                 <input id="job-fit-concept-search" class="job-fit-search" type="search"
-                       autocomplete="off" placeholder="Filter canonical concepts…">
+                       autocomplete="off" placeholder="Try Linux, AI, management, or SCUBA…">
                 <p id="job-fit-survey-status" class="job-fit-survey-status" aria-live="polite"></p>
+                <div id="job-fit-tab-list" class="detail-tabs job-fit-tabs" role="tablist"
+                     aria-label="Job Fit preference categories"></div>
                 <div id="job-fit-survey" class="job-fit-survey"
                      aria-describedby="job-fit-survey-status"></div>
               </section>
