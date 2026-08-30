@@ -50,6 +50,179 @@
   });
   const DEFAULT_LIMITS = Object.freeze({ minimum: -2, maximum: 1 });
   const DIMENSION_ORDER = Object.freeze(Object.keys(DIMENSION_LIMITS));
+  const SURVEY_GROUPS = Object.freeze({
+    "Role Type / Career Direction": Object.freeze([
+      Object.freeze({
+        title: "Technical Engineering",
+        conceptIds: Object.freeze([
+          "role.ai-ml-engineering", "role.cloud-engineering", "role.cybersecurity",
+          "role.data-engineering", "role.data-science", "role.devops-platform",
+          "role.hardware-engineering", "role.infrastructure-engineering",
+          "role.network-engineering", "role.software-engineering", "role.systems-engineering",
+          "role.test-validation-engineering"
+        ])
+      }),
+      Object.freeze({
+        title: "Work Shape / Leadership",
+        conceptIds: Object.freeze(["role.individual-contributor", "role.people-management"])
+      }),
+      Object.freeze({
+        title: "Delivery / Management",
+        conceptIds: Object.freeze(["role.program-management", "role.project-management"])
+      }),
+      Object.freeze({ title: "Field-Based", conceptIds: Object.freeze(["role.field-service"]) })
+    ]),
+    "Technical Domain": Object.freeze([
+      Object.freeze({
+        title: "Software Development",
+        conceptIds: Object.freeze([
+          "technical.api-development", "technical.application-development",
+          "technical.backend-development", "technical.frontend-development",
+          "technical.software-development", "technical.embedded-systems"
+        ])
+      }),
+      Object.freeze({
+        title: "AI / Data",
+        conceptIds: Object.freeze([
+          "technical.artificial-intelligence", "technical.machine-learning",
+          "technical.large-language-models", "technical.nlp"
+        ])
+      }),
+      Object.freeze({
+        title: "Cloud / Platform / Automation",
+        conceptIds: Object.freeze([
+          "technical.cloud", "technical.cicd", "technical.infrastructure-as-code",
+          "technical.containers", "technical.automation-scripting", "technical.virtualization"
+        ])
+      }),
+      Object.freeze({
+        title: "Systems / Administration",
+        conceptIds: Object.freeze([
+          "technical.linux", "technical.linux-administration",
+          "technical.windows-administration", "technical.storage"
+        ])
+      }),
+      Object.freeze({
+        title: "Network / Physical Infrastructure",
+        conceptIds: Object.freeze([
+          "technical.networking", "technical.cisco-networking",
+          "technical.cabling-racking", "technical.power-facilities"
+        ])
+      })
+    ]),
+    "Work Environment": Object.freeze([
+      Object.freeze({
+        title: "Physical / Field Environments",
+        conceptIds: Object.freeze([
+          "work.aircraft-flight-line", "work.customer-site", "work.data-center",
+          "work.field-engineering", "work.lab-environment", "work.manufacturing-floor",
+          "work.outdoor-field", "work.physical-infrastructure"
+        ])
+      }),
+      Object.freeze({
+        title: "Restricted / Special Facilities",
+        conceptIds: Object.freeze(["work.classified-facility"])
+      }),
+      Object.freeze({
+        title: "High-Risk / Special Conditions",
+        conceptIds: Object.freeze([
+          "work.confined-spaces", "work.scuba", "work.shipboard", "work.heights"
+        ])
+      })
+    ]),
+    "Responsibility Shape": Object.freeze([
+      Object.freeze({
+        title: "Technical Work Shape",
+        conceptIds: Object.freeze([
+          "responsibility.architecture-heavy", "responsibility.hands-on-implementation",
+          "responsibility.research-oriented", "responsibility.operations-sustainment",
+          "responsibility.documentation-heavy"
+        ])
+      }),
+      Object.freeze({
+        title: "Leadership / Ownership",
+        conceptIds: Object.freeze([
+          "responsibility.team-leadership", "responsibility.personnel-management",
+          "role.management-heavy", "responsibility.budget-ownership",
+          "responsibility.schedule-ownership"
+        ])
+      }),
+      Object.freeze({
+        title: "External / Business Responsibility",
+        conceptIds: Object.freeze([
+          "responsibility.customer-facing", "responsibility.proposal-capture"
+        ])
+      })
+    ])
+  });
+  const SURVEY_CONCEPT_DESCRIPTIONS = Object.freeze({
+    "role.ai-ml-engineering": "Building, integrating, or operationalizing machine-learning and AI systems.",
+    "role.cloud-engineering": "Designing and operating cloud infrastructure, services, and platforms.",
+    "role.cybersecurity": "Security engineering, analysis, architecture, or other cybersecurity work.",
+    "role.data-engineering": "Building data pipelines, storage, transformation, and data-platform systems.",
+    "role.data-science": "Statistical analysis, experimentation, predictive modeling, and analytical modeling.",
+    "role.devops-platform": "CI/CD, developer platforms, infrastructure automation, and operational tooling.",
+    "role.field-service": "Hands-on technical work performed at customer, equipment, or operational sites.",
+    "role.hardware-engineering": "Design, integration, testing, or support of hardware and physical electronic systems.",
+    "role.individual-contributor": "Primarily responsible for direct technical work rather than managing people.",
+    "role.infrastructure-engineering": "Systems, servers, virtualization, storage, operating platforms, and related infrastructure.",
+    "role.network-engineering": "Network architecture, routing, switching, connectivity, and related systems.",
+    "role.people-management": "Formal responsibility for employees, staffing, performance, development, or hiring.",
+    "role.program-management": "Coordinating broad programs, budgets, schedules, stakeholders, and delivery across projects.",
+    "role.project-management": "Planning and coordinating defined projects, schedules, resources, risks, and deliverables.",
+    "role.software-engineering": "Designing, implementing, testing, and maintaining software systems.",
+    "role.systems-engineering": "Requirements, architecture, integration, interfaces, verification, and whole-system behavior.",
+    "role.test-validation-engineering": "Verification, validation, test design, automation, and proving systems meet requirements.",
+    "technical.api-development": "Designing and implementing programmatic service interfaces.",
+    "technical.application-development": "Building user-facing or business-facing applications.",
+    "technical.artificial-intelligence": "Broad AI systems, techniques, and AI-enabled capabilities.",
+    "technical.automation-scripting": "Automating workflows, operations, or repetitive tasks with scripts or tooling.",
+    "technical.backend-development": "Server-side services, business logic, databases, and APIs.",
+    "technical.cabling-racking": "Physical installation, cabling, rack-mounted equipment, and related infrastructure work.",
+    "technical.cicd": "Automated build, test, release, and deployment pipelines.",
+    "technical.cisco-networking": "Cisco-specific networking technologies, platforms, and tooling.",
+    "technical.cloud": "AWS, Azure, GCP, and related cloud-native services.",
+    "technical.embedded-systems": "Software and systems running on embedded or device-level hardware.",
+    "technical.frontend-development": "Client-side application interfaces and user-facing web or UI development.",
+    "technical.infrastructure-as-code": "Declarative infrastructure using tools such as Terraform or CloudFormation.",
+    "technical.containers": "Containerization, orchestration, Docker, Kubernetes, and related platforms.",
+    "technical.large-language-models": "Transformer and LLM-based systems for language understanding, generation, or reasoning.",
+    "technical.linux": "Developing or operating in Linux environments.",
+    "technical.linux-administration": "Administration, configuration, maintenance, and troubleshooting of Linux systems.",
+    "technical.machine-learning": "Statistical or learned models trained from data.",
+    "technical.nlp": "Processing, understanding, or generating human language.",
+    "technical.networking": "Network architecture, routing, switching, connectivity, and related technologies.",
+    "technical.power-facilities": "Electrical power, cooling, facilities, or other physical infrastructure systems.",
+    "technical.software-development": "General implementation and maintenance of software systems.",
+    "technical.storage": "Storage systems, platforms, capacity, performance, and related administration.",
+    "technical.virtualization": "Virtual machines, hypervisors, virtual infrastructure, and related platforms.",
+    "technical.windows-administration": "Administration, configuration, maintenance, and troubleshooting of Windows systems.",
+    "work.aircraft-flight-line": "Work around aircraft, hangars, ramps, or flight-line operations.",
+    "work.classified-facility": "Routine work inside secure classified facilities with access or device restrictions.",
+    "work.confined-spaces": "Work requiring entry into restricted spaces such as tanks, shafts, or crawlspaces.",
+    "work.customer-site": "Routine work performed at customer-controlled facilities rather than your normal office or home.",
+    "work.data-center": "Hands-on or operational work inside data-center environments.",
+    "work.field-engineering": "Engineering work performed at operational, customer, or equipment sites.",
+    "work.lab-environment": "Work regularly performed in engineering, research, test, or hardware laboratories.",
+    "work.manufacturing-floor": "Work performed in production, assembly, or manufacturing environments.",
+    "work.outdoor-field": "Regular work outdoors at operational, test, construction, or equipment sites.",
+    "work.physical-infrastructure": "Hands-on interaction with racks, equipment, cabling, power, or facilities systems.",
+    "work.scuba": "Work requiring underwater or diving activities.",
+    "work.shipboard": "Work aboard ships or vessels, potentially including time underway.",
+    "work.heights": "Work requiring ladders, lifts, towers, rooftops, or elevated platforms.",
+    "responsibility.architecture-heavy": "Significant responsibility for architecture, design direction, interfaces, and technical decisions.",
+    "responsibility.budget-ownership": "Accountability for budgets, cost performance, or financial planning.",
+    "responsibility.customer-facing": "Regular direct interaction with customers, stakeholders, or external users.",
+    "responsibility.documentation-heavy": "A substantial portion of the role involves formal documentation or compliance artifacts.",
+    "responsibility.hands-on-implementation": "Significant direct building, coding, configuring, testing, or troubleshooting.",
+    "role.management-heavy": "A large portion of the job is coordination, planning, or management rather than direct technical execution.",
+    "responsibility.operations-sustainment": "Ongoing support, maintenance, monitoring, incident response, or lifecycle sustainment.",
+    "responsibility.personnel-management": "Formal employee responsibility including hiring, reviews, staffing, or development.",
+    "responsibility.proposal-capture": "Business-development work involving proposals, bids, capture strategy, or winning new work.",
+    "responsibility.research-oriented": "Investigation, experimentation, prototyping, or evaluation of new techniques.",
+    "responsibility.schedule-ownership": "Accountability for schedules, milestones, dependencies, or delivery performance.",
+    "responsibility.team-leadership": "Leading a technical team without necessarily having formal personnel authority."
+  });
 
   function normalizeTravelTolerance(value) {
     return Number.isInteger(value) && value >= 0 && value <= 6
@@ -414,6 +587,8 @@
     defaultPreferredWorkLocation: DEFAULT_PREFERRED_WORK_LOCATION,
     normalizePreferredWorkLocation,
     detectedWorkLocation,
-    detectedTravelRequirement
+    detectedTravelRequirement,
+    surveyGroups: SURVEY_GROUPS,
+    surveyConceptDescriptions: SURVEY_CONCEPT_DESCRIPTIONS
   };
 });

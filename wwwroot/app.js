@@ -1559,6 +1559,27 @@ const ASSIGNMENT_LOCATION_DESCRIPTIONS = Object.freeze({
   "work.relocation": "A permanent or indefinite move of the normal home or work location."
 });
 
+function groupedSurveyConcepts(categoryName, concepts) {
+  const groups = JobFit.surveyGroups[categoryName];
+  if (!groups) {
+    return [{ title: "", concepts: concepts.slice().sort((left, right) =>
+      left.displayName.localeCompare(right.displayName)) }];
+  }
+  const available = new Map(concepts.map(concept => [concept.id, concept]));
+  const result = groups.map(group => ({
+    title: group.title,
+    concepts: group.conceptIds
+      .map(conceptId => available.get(conceptId))
+      .filter(Boolean)
+  })).filter(group => group.concepts.length > 0);
+  const groupedIds = new Set(groups.flatMap(group => group.conceptIds));
+  const ungrouped = concepts
+    .filter(concept => !groupedIds.has(concept.id))
+    .sort((left, right) => left.displayName.localeCompare(right.displayName));
+  if (ungrouped.length > 0) result.push({ title: "Other", concepts: ungrouped });
+  return result;
+}
+
 function renderJobFitSurvey() {
   elements.jobFitSurvey.replaceChildren();
   const query = state.jobFitConceptSearch;
@@ -1638,46 +1659,58 @@ function renderJobFitSurvey() {
     });
     header.prepend(blank);
     matrix.append(header);
-    concepts.sort((left, right) => left.displayName.localeCompare(right.displayName)).forEach(concept => {
-      const row = document.createElement("div");
-      row.className = "job-fit-survey-row";
-      row.setAttribute("role", "radiogroup");
-      const labelId = `job-fit-concept-${concept.id.replace(/[^a-z0-9_-]/gi, "-")}`;
-      row.setAttribute("aria-labelledby", labelId);
-      const name = document.createElement("strong");
-      name.id = labelId;
-      name.className = "job-fit-survey-concept";
-      name.textContent = concept.displayName;
-      if (categoryName === "Work Arrangement" && ASSIGNMENT_LOCATION_DESCRIPTIONS[concept.id]) {
-        const conceptCopy = document.createElement("div");
-        conceptCopy.className = "job-fit-survey-concept-copy";
-        const description = document.createElement("small");
-        description.textContent = ASSIGNMENT_LOCATION_DESCRIPTIONS[concept.id];
-        conceptCopy.append(name, description);
-        row.append(conceptCopy);
-      } else {
-        row.append(name);
+    groupedSurveyConcepts(categoryName, concepts).forEach(group => {
+      if (group.title) {
+        const subgroupHeading = document.createElement("h4");
+        subgroupHeading.className = "job-fit-survey-subgroup";
+        subgroupHeading.textContent = group.title;
+        matrix.append(subgroupHeading);
       }
-      preferences.forEach(([value, abbreviation]) => {
-        const choice = document.createElement("label");
-        choice.className = "job-fit-survey-choice";
-        choice.title = JobFit.preferenceLabels[value];
-        const radio = document.createElement("input");
-        radio.type = "radio";
-        radio.name = `job-fit-${concept.id}`;
-        radio.value = value;
-        radio.dataset.jobFitConceptId = concept.id;
-        radio.checked = (configured.get(concept.id) || "neutral") === value;
-        radio.disabled = !state.jobFitEnabled;
-        radio.setAttribute("aria-label", `${concept.displayName}: ${JobFit.preferenceLabels[value]}`);
-        const short = document.createElement("span");
-        short.className = "job-fit-choice-short";
-        short.setAttribute("aria-hidden", "true");
-        short.textContent = abbreviation;
-        choice.append(radio, short);
-        row.append(choice);
+      group.concepts.forEach(concept => {
+        const row = document.createElement("div");
+        row.className = "job-fit-survey-row";
+        row.setAttribute("role", "radiogroup");
+        const labelId = `job-fit-concept-${concept.id.replace(/[^a-z0-9_-]/gi, "-")}`;
+        row.setAttribute("aria-labelledby", labelId);
+        const name = document.createElement("strong");
+        name.id = labelId;
+        name.className = "job-fit-survey-concept";
+        name.textContent = concept.displayName;
+        const conceptDescription = JobFit.surveyConceptDescriptions[concept.id] ||
+          ASSIGNMENT_LOCATION_DESCRIPTIONS[concept.id];
+        if (conceptDescription) {
+          const conceptCopy = document.createElement("div");
+          conceptCopy.className = "job-fit-survey-concept-copy";
+          const description = document.createElement("small");
+          description.id = `${labelId}-description`;
+          description.textContent = conceptDescription;
+          row.setAttribute("aria-describedby", description.id);
+          conceptCopy.append(name, description);
+          row.append(conceptCopy);
+        } else {
+          row.append(name);
+        }
+        preferences.forEach(([value, abbreviation]) => {
+          const choice = document.createElement("label");
+          choice.className = "job-fit-survey-choice";
+          choice.title = JobFit.preferenceLabels[value];
+          const radio = document.createElement("input");
+          radio.type = "radio";
+          radio.name = `job-fit-${concept.id}`;
+          radio.value = value;
+          radio.dataset.jobFitConceptId = concept.id;
+          radio.checked = (configured.get(concept.id) || "neutral") === value;
+          radio.disabled = !state.jobFitEnabled;
+          radio.setAttribute("aria-label", `${concept.displayName}: ${JobFit.preferenceLabels[value]}`);
+          const short = document.createElement("span");
+          short.className = "job-fit-choice-short";
+          short.setAttribute("aria-hidden", "true");
+          short.textContent = abbreviation;
+          choice.append(radio, short);
+          row.append(choice);
+        });
+        matrix.append(row);
       });
-      matrix.append(row);
     });
     section.append(matrix);
     elements.jobFitSurvey.append(section);
