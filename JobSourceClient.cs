@@ -12,7 +12,7 @@ namespace JobSearchManager;
 
 public sealed class JobSourceClient
 {
-    public const int CurrentAnalysisVersion = 5;
+    public const int CurrentAnalysisVersion = 6;
 
     private sealed record ListingBatch(IReadOnlyList<ListingPosting> Listings, bool Truncated);
     private sealed record SmartSummaryBatch(IReadOnlyList<SmartRecruitersPosting> Postings, bool Truncated);
@@ -622,7 +622,7 @@ public sealed class JobSourceClient
     }
 
     internal bool IsAnalysisCurrent(JobRecord job) =>
-        job.AnalysisVersion == CurrentAnalysisVersion &&
+        IsPrimaryAnalysisCurrent(job) &&
         job.CredentialCatalogVersion == _credentialDetector.CatalogVersion &&
         job.Credentials is not null &&
         job.UnrecognizedCredentialMentions is not null &&
@@ -634,6 +634,19 @@ public sealed class JobSourceClient
             ExtendedLocationRequirementDetector.CurrentAnalysisVersion &&
         job.DetectedConcepts is not null &&
         job.JobConceptCatalogVersion == _jobConceptDetector.CatalogVersion;
+
+    private static bool IsPrimaryAnalysisCurrent(JobRecord job)
+    {
+        if (job.AnalysisVersion == CurrentAnalysisVersion)
+        {
+            return true;
+        }
+
+        // Version 6 changes only Boeing summary-pay parsing. Preserve version-5
+        // caches for other companies so their persisted derived data is untouched.
+        return job.AnalysisVersion == 5 &&
+            !string.Equals(job.CompanyId, "boeing", StringComparison.OrdinalIgnoreCase);
+    }
 
     internal JobRecord Reclassify(JobRecord job)
     {
