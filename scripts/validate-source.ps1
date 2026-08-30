@@ -426,9 +426,13 @@ if ($settingsPanelMarkup["Qualifications"] -notmatch 'id="qualification-basics-t
     $settingsPanelMarkup["Preferences"] -notmatch 'id="compensation-heading"') {
     throw "Qualification subtabs or Compensation placement is incomplete."
 }
-if ($settingsPanelMarkup["Preferences"] -notmatch
-    'locations such as Antarctica, Guam, or Ramstein AFB in Germany') {
-    throw "Deployment Filtering help is missing verified corpus examples."
+if ($settingsPanelMarkup["Preferences"] -match 'id="exclude-strong-extended-location-requirements"' -or
+    $settingsPanelMarkup["Preferences"] -match 'id="work-arrangement-filtering-heading"' -or
+    $settingsPanelMarkup["Job Fit"] -notmatch
+    '(?s)id="job-fit-heading".*id="work-arrangement-filtering-heading".*id="job-fit-signals-heading"' -or
+    $settingsPanelMarkup["Job Fit"] -notmatch
+    'extended away-from-home assignments\. Ordinary business travel is not excluded\.') {
+    throw "Work Arrangement Filtering is missing, misplaced, or uses stale help text."
 }
 if ($settingsPanelMarkup["Preferences"] -match 'id="import-export-heading"' -or
     $settingsPanelMarkup["Preferences"] -match 'id="reset-workspace-heading"') {

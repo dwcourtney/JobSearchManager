@@ -8,11 +8,30 @@ const index = fs.readFileSync(path.join(root, "wwwroot", "index.html"), "utf8");
 const app = fs.readFileSync(path.join(root, "wwwroot", "app.js"), "utf8");
 const styles = fs.readFileSync(path.join(root, "wwwroot", "styles.css"), "utf8");
 const catalog = JSON.parse(fs.readFileSync(path.join(root, "JobConceptCatalog.json"), "utf8"));
+const preferencesStart = index.indexOf('id="preferences-settings-panel"');
+const jobFitStart = index.indexOf('id="job-fit-settings-panel"');
+const accountStart = index.indexOf('id="account-settings-panel"');
+const preferences = index.slice(preferencesStart, jobFitStart);
+const jobFit = index.slice(jobFitStart, accountStart);
 
 assert.match(index, /id="job-fit-settings-tab"[\s\S]*?>\s*Job Fit\s*</);
 assert.match(index, /src="\/job-fit\.js\?v=4"/,
   "The revised Job Fit runtime must use a new cache-busting asset version.");
 assert.match(index, /id="job-fit-settings-panel"/);
+assert.match(preferences, /id="compensation-heading"[\s\S]*?id="appearance-heading"/);
+assert.doesNotMatch(preferences,
+  /work-arrangement-filtering-heading|deployment-filtering-heading|exclude-strong-extended-location-requirements/,
+  "My Preferences must contain only Compensation and Appearance.");
+assert.equal((preferences.match(/<section class="settings-section"/g) || []).length, 2,
+  "My Preferences must contain exactly two settings sections.");
+assert.match(jobFit,
+  /id="job-fit-heading"[\s\S]*?id="work-arrangement-filtering-heading"[\s\S]*?id="job-fit-signals-heading"/,
+  "Job Fit sections must be Optional Job Fit Scoring, Work Arrangement Filtering, then Canonical Corpus Signals.");
+assert.match(jobFit, /id="exclude-strong-extended-location-requirements"[^>]*type="checkbox"/,
+  "Job Fit must contain the existing work-arrangement filtering checkbox.");
+assert.match(jobFit,
+  /Hide jobs with strong work-arrangement conflicts such as deployment, rotation, relocation, or extended away-from-home assignments\. Ordinary business travel is not excluded\./,
+  "Work Arrangement Filtering must explain its broader detector semantics.");
 assert.match(index, /id="job-fit-enabled"/);
 assert.match(index, /id="job-fit-concept-search"/);
 assert.match(index, /id="job-fit-survey"/,
@@ -34,6 +53,15 @@ assert.match(app, /radio\.checked = \(configured\.get\(concept\.id\) \|\| "neutr
   "Absence from sparse configuration must render as Neutral.");
 assert.match(app, /if \(radio\.value !== "neutral"\)/,
   "Returning a concept to Neutral must omit it from the sparse settings array.");
+assert.match(app,
+  /state\.excludeStrongExtendedLocationRequirements =\s*settings\.excludeStrongExtendedLocationRequirements === true;/,
+  "The persisted filtering setting must hydrate without migration or renaming.");
+assert.match(app,
+  /excludeStrongExtendedLocationRequirements: state\.excludeStrongExtendedLocationRequirements/,
+  "The existing filtering setting must save under its unchanged persisted name.");
+assert.match(app,
+  /!state\.excludeStrongExtendedLocationRequirements \|\|\s*job\.extendedLocationRequirement\?\.confidence !== "strong"/,
+  "Moving the control must not change its strong-detection filtering predicate.");
 assert.match(app, /\["negative", "NEG"\][\s\S]*?\["ideal", "I"\]/,
   "The survey must use the balanced Hard Conflict, Negative, Neutral, Positive, Ideal scale.");
 assert.doesNotMatch(app, /\["strong(?:Negative|Positive)"/,

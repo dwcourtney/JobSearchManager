@@ -588,19 +588,6 @@
           </div>
         </section>
 
-        <section class="settings-section" aria-labelledby="deployment-filtering-heading">
-          <h3 id="deployment-filtering-heading">Deployment Filtering</h3>
-          <div class="settings-check-list">
-            <label class="settings-check">
-              <input id="exclude-strong-extended-location-requirements" type="checkbox">
-              <span>
-                Exclude deployment / remote-assignment jobs
-                <small>Hide Strong detections that explicitly require deployment, rotation, relocation, or extended work at locations such as Antarctica, Guam, or Ramstein AFB in Germany. Ordinary business travel is not excluded.</small>
-              </span>
-            </label>
-          </div>
-        </section>
-
         <section class="settings-section" aria-labelledby="appearance-heading">
           <h3 id="appearance-heading">Appearance</h3>
           <div class="settings-row">
@@ -631,6 +618,18 @@
                 <small>When disabled, no Job Fit score is shown and existing filtering, sorting, and qualification behavior is unchanged.</small>
               </span>
             </label>
+          </section>
+          <section class="settings-section" aria-labelledby="work-arrangement-filtering-heading">
+            <h3 id="work-arrangement-filtering-heading">Work Arrangement Filtering</h3>
+            <div class="settings-check-list">
+              <label class="settings-check">
+                <input id="exclude-strong-extended-location-requirements" type="checkbox">
+                <span>
+                  Exclude strong work-arrangement conflicts
+                  <small>Hide jobs with strong work-arrangement conflicts such as deployment, rotation, relocation, or extended away-from-home assignments. Ordinary business travel is not excluded.</small>
+                </span>
+              </label>
+            </div>
           </section>
           <div id="job-fit-configuration" hidden>
             <section class="settings-section" aria-labelledby="job-fit-signals-heading">

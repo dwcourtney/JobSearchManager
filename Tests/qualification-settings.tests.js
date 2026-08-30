@@ -13,8 +13,10 @@ const theme = fs.readFileSync(path.join(root, "wwwroot", "theme.css"), "utf8");
 const qualificationsStart = index.indexOf('id="qualifications-settings-panel"');
 const preferencesStart = index.indexOf('id="preferences-settings-panel"');
 const jobFitStart = index.indexOf('id="job-fit-settings-panel"');
+const accountStart = index.indexOf('id="account-settings-panel"');
 const qualifications = index.slice(qualificationsStart, preferencesStart);
 const preferences = index.slice(preferencesStart, jobFitStart);
+const jobFit = index.slice(jobFitStart, accountStart);
 
 assert.match(qualifications, /id="qualification-basics-tab"[\s\S]*?>\s*Basics\s*</);
 assert.match(qualifications, /id="qualification-credentials-tab"[\s\S]*?Certifications &amp; Licenses/);
@@ -25,7 +27,10 @@ assert.match(qualifications,
   /id="credential-selection-summary"[^>]*selected-location-summary[^>]*aria-live="polite"/);
 assert.doesNotMatch(qualifications, /id="minimum-pay"/);
 assert.match(preferences, /id="compensation-heading"[\s\S]*?id="minimum-pay"/);
-assert.match(preferences, /Antarctica, Guam, or Ramstein AFB in Germany/);
+assert.doesNotMatch(preferences, /exclude-strong-extended-location-requirements/);
+assert.match(jobFit,
+  /id="work-arrangement-filtering-heading"[\s\S]*?id="exclude-strong-extended-location-requirements"/);
+assert.match(jobFit, /extended away-from-home assignments\. Ordinary business travel is not excluded\./);
 assert.doesNotMatch(preferences, /id="import-export-heading"|id="import-workspace-button"|id="export-workspace-button"/);
 assert.doesNotMatch(preferences, /id="reset-workspace-heading"|id="reset-workspace-button"|id="workspace-id"/);
 assert.match(app, /fetch\("\/api\/workspace\/identity", \{ cache: "no-store" \}\)/);
