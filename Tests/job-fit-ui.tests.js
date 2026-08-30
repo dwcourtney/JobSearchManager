@@ -7,6 +7,7 @@ const root = path.resolve(__dirname, "..");
 const index = fs.readFileSync(path.join(root, "wwwroot", "index.html"), "utf8");
 const app = fs.readFileSync(path.join(root, "wwwroot", "app.js"), "utf8");
 const styles = fs.readFileSync(path.join(root, "wwwroot", "styles.css"), "utf8");
+const JobFit = require(path.join(root, "wwwroot", "job-fit.js"));
 const catalog = JSON.parse(fs.readFileSync(path.join(root, "JobConceptCatalog.json"), "utf8"));
 const preferencesStart = index.indexOf('id="preferences-settings-panel"');
 const jobFitStart = index.indexOf('id="job-fit-settings-panel"');
@@ -15,7 +16,7 @@ const preferences = index.slice(preferencesStart, jobFitStart);
 const jobFit = index.slice(jobFitStart, accountStart);
 
 assert.match(index, /id="job-fit-settings-tab"[\s\S]*?>\s*Job Fit\s*</);
-assert.match(index, /src="\/job-fit\.js\?v=6"/,
+assert.match(index, /src="\/job-fit\.js\?v=7"/,
   "The revised Job Fit runtime must use a new cache-busting asset version.");
 assert.match(index, /id="job-fit-settings-panel"/);
 assert.match(preferences, /id="compensation-heading"[\s\S]*?id="appearance-heading"/);
@@ -133,6 +134,98 @@ assert.ok(locationConcepts.every(concept => concept.userConfigurable === false),
   "Internal normal-work-location detectors must be hidden from user configuration.");
 assert.equal(catalog.concepts.filter(concept => concept.userConfigurable !== false).length, 71,
   "Only the four travel and four normal-location detector rows may be hidden from the survey.");
+const expectedSurveyGroups = {
+  "Role Type / Career Direction": [
+    ["Technical Engineering", [
+      "role.ai-ml-engineering", "role.cloud-engineering", "role.cybersecurity",
+      "role.data-engineering", "role.data-science", "role.devops-platform",
+      "role.hardware-engineering", "role.infrastructure-engineering", "role.network-engineering",
+      "role.software-engineering", "role.systems-engineering", "role.test-validation-engineering"
+    ]],
+    ["Work Shape / Leadership", ["role.individual-contributor", "role.people-management"]],
+    ["Delivery / Management", ["role.program-management", "role.project-management"]],
+    ["Field-Based", ["role.field-service"]]
+  ],
+  "Technical Domain": [
+    ["Software Development", [
+      "technical.api-development", "technical.application-development", "technical.backend-development",
+      "technical.frontend-development", "technical.software-development", "technical.embedded-systems"
+    ]],
+    ["AI / Data", [
+      "technical.artificial-intelligence", "technical.machine-learning",
+      "technical.large-language-models", "technical.nlp"
+    ]],
+    ["Cloud / Platform / Automation", [
+      "technical.cloud", "technical.cicd", "technical.infrastructure-as-code",
+      "technical.containers", "technical.automation-scripting", "technical.virtualization"
+    ]],
+    ["Systems / Administration", [
+      "technical.linux", "technical.linux-administration",
+      "technical.windows-administration", "technical.storage"
+    ]],
+    ["Network / Physical Infrastructure", [
+      "technical.networking", "technical.cisco-networking",
+      "technical.cabling-racking", "technical.power-facilities"
+    ]]
+  ],
+  "Work Environment": [
+    ["Physical / Field Environments", [
+      "work.aircraft-flight-line", "work.customer-site", "work.data-center", "work.field-engineering",
+      "work.lab-environment", "work.manufacturing-floor", "work.outdoor-field",
+      "work.physical-infrastructure"
+    ]],
+    ["Restricted / Special Facilities", ["work.classified-facility"]],
+    ["High-Risk / Special Conditions", [
+      "work.confined-spaces", "work.scuba", "work.shipboard", "work.heights"
+    ]]
+  ],
+  "Responsibility Shape": [
+    ["Technical Work Shape", [
+      "responsibility.architecture-heavy", "responsibility.hands-on-implementation",
+      "responsibility.research-oriented", "responsibility.operations-sustainment",
+      "responsibility.documentation-heavy"
+    ]],
+    ["Leadership / Ownership", [
+      "responsibility.team-leadership", "responsibility.personnel-management",
+      "role.management-heavy", "responsibility.budget-ownership",
+      "responsibility.schedule-ownership"
+    ]],
+    ["External / Business Responsibility", [
+      "responsibility.customer-facing", "responsibility.proposal-capture"
+    ]]
+  ]
+};
+for (const [category, expectedGroups] of Object.entries(expectedSurveyGroups)) {
+  const actualGroups = JobFit.surveyGroups[category].map(group => [group.title, [...group.conceptIds]]);
+  assert.deepEqual(actualGroups, expectedGroups, `${category} subgroup order changed.`);
+  const groupedIds = actualGroups.flatMap(([, conceptIds]) => conceptIds);
+  const categoryIds = catalog.concepts
+    .filter(concept => concept.category === category && concept.userConfigurable !== false)
+    .map(concept => concept.id);
+  assert.equal(groupedIds.length, new Set(groupedIds).size,
+    `${category} contains a duplicate grouped concept.`);
+  assert.deepEqual(groupedIds.slice().sort(), categoryIds.slice().sort(),
+    `${category} grouping lost or added a canonical concept.`);
+  categoryIds.forEach(conceptId => assert.ok(JobFit.surveyConceptDescriptions[conceptId],
+    `${conceptId} must have a concise survey description.`));
+}
+assert.equal(Object.keys(JobFit.surveyConceptDescriptions).length, 66,
+  "Exactly the four requested non-slider sections must receive descriptions.");
+assert.match(JobFit.surveyConceptDescriptions["technical.linux"], /Linux environments/);
+assert.match(JobFit.surveyConceptDescriptions["technical.linux-administration"], /Administration/);
+assert.match(JobFit.surveyConceptDescriptions["technical.networking"], /architecture, routing, switching/);
+assert.match(JobFit.surveyConceptDescriptions["technical.cisco-networking"], /Cisco-specific/);
+assert.match(JobFit.surveyConceptDescriptions["responsibility.team-leadership"], /without necessarily having formal personnel authority/);
+assert.match(JobFit.surveyConceptDescriptions["responsibility.personnel-management"], /Formal employee responsibility/);
+assert.match(JobFit.surveyConceptDescriptions["role.management-heavy"], /rather than direct technical execution/);
+assert.equal((app.match(/input\.type = "range";/g) || []).length, 2,
+  "No slider may be added beyond Travel Tolerance and Normal Work Location.");
+assert.match(app, /group\.concepts\.length > 0/,
+  "Filtering must suppress empty subgroup headings.");
+assert.match(app, /const conceptDescription = JobFit\.surveyConceptDescriptions\[concept\.id\]/,
+  "Survey rows must render the stable description metadata.");
+assert.match(app, /row\.setAttribute\("aria-describedby", description\.id\)/,
+  "Survey descriptions must be associated with their radio groups.");
 const extendedAway = catalog.concepts.find(concept =>
   concept.id === "work.extended-away-assignment");
 assert.deepEqual(

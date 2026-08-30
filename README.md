@@ -199,7 +199,11 @@ is detected during normal ingestion or cache reclassification and stored with ea
 job. The versioned catalog currently provides 79 job-level concepts grouped as Work
 Arrangement, Role Type / Career Direction, Technical Domain, Work Environment, and
 Responsibility Shape. Its 71 user-configurable concepts appear in a searchable radio
-matrix organized into collapsible category sections. Neutral is the default and is omitted from sparse
+matrix organized into collapsible category sections. Role Type, Technical Domain,
+Work Environment, and Responsibility Shape retain independent preference rows while
+using labeled subgroups and concise detector-aligned descriptions for easier scanning.
+Individual Contributor and People Management remain separate because their explicit
+detectors do not support a reliable mentoring-to-management continuum. Neutral is the default and is omitted from sparse
 workspace settings. The retired `strongNegative` and `strongPositive` values import
 as Negative and Ideal, respectively, so older workspaces and exports remain compatible
 while new saves and exports use the current terminology. Legacy travel-row preferences

@@ -982,6 +982,20 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   line-height: var(--line-height-note);
 }
 .job-fit-matrix { display: grid; }
+.job-fit-survey-subgroup {
+  margin: .55rem 0 0;
+  padding: .48rem .55rem .28rem;
+  border-top: var(--border-width-default) solid var(--color-settings-subsection-divider);
+  color: var(--color-text-heading);
+  background: var(--color-surface-secondary);
+  font-size: var(--font-size-caption);
+  letter-spacing: .035em;
+  text-transform: uppercase;
+}
+.job-fit-matrix-header + .job-fit-survey-subgroup {
+  margin-top: 0;
+  border-top: 0;
+}
 .job-fit-matrix-header, .job-fit-survey-row {
   display: grid;
   grid-template-columns: minmax(12rem, 1fr) repeat(5, minmax(4.6rem, 5.8rem));
@@ -2396,7 +2410,7 @@ mark {
   .settings-row > label, .settings-row > .settings-row-label { padding-top: 0; }
   .job-fit-matrix-header { display: none; }
   .job-fit-survey-row { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .12rem; padding: .45rem; }
-  .job-fit-survey-concept { grid-column: 1 / -1; padding: 0 .15rem .25rem; }
+  .job-fit-survey-concept, .job-fit-survey-concept-copy { grid-column: 1 / -1; padding: 0 .15rem .25rem; }
   .job-fit-survey-choice { gap: .22rem; }
   .job-fit-choice-short { display: inline; }
   .confirmation-actions {
