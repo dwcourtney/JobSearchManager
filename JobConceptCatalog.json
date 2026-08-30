@@ -1,11 +1,19 @@
 {
-  "version": 6,
+  "version": 7,
   "concepts": [
     {
       "id": "work.remote",
       "displayName": "Remote Work",
       "category": "Work Arrangement",
-      "remoteDesignation": true
+      "evidencePatterns": [
+        "\\b(?:mostly\\s+remote|remote[- ]first)\\b",
+        "\\bremote\\b[^.!?]{0,120}\\b(?:quarterly|once|twice)\\b[^.!?]{0,70}\\b(?:office|on[- ]?site|in[- ]person|facility|visits?)\\b",
+        "\\bremote\\b[^.!?]{0,120}\\b(?:occasional(?:ly)?|periodic(?:ally)?|as[- ]needed)\\b[^.!?]{0,70}\\b(?:office|on[- ]?site|in[- ]person|facility|visits?)\\b",
+        "\\b(?:currently|initially)\\s+remote\\b[^.!?]{0,140}\\b(?:transition|return|move)\\b[^.!?]{0,80}\\bon[- ]?site\\b"
+      ],
+      "remoteDesignation": true,
+      "userConfigurable": false,
+      "workLocationLevel": 2
     },
     {
       "id": "work.remote.full",
@@ -15,22 +23,28 @@
         "\\b(?:100\\s*%|fully|completely)\\s+remote\\b",
         "\\bremote[- ]only\\b"
       ],
-      "supersedes": ["work.remote"]
+      "supersedes": ["work.remote"],
+      "userConfigurable": false,
+      "workLocationLevel": 0
     },
     {
       "id": "work.hybrid",
       "displayName": "Hybrid Work",
       "category": "Work Arrangement",
       "evidencePatterns": [
+        "\\bhybrid\\b[^.!?]{0,100}\\b(?:one|two|three|four|five|[1-5])\\s*(?:-|–)?\\s*days?\\b[^.!?]{0,70}\\b(?:on[- ]?site|in[- ]person|office|facility)\\b",
         "\\bhybrid\\s+(?:work|role|position|schedule)\\b",
         "\\bhybrid[- ]remote\\b"
-      ]
+      ],
+      "userConfigurable": false,
+      "workLocationLevel": 3
     },
     {
       "id": "work.onsite",
       "displayName": "Onsite Work",
       "category": "Work Arrangement",
       "evidencePatterns": [
+        "\\bmostly\\s+on[- ]?site\\b",
         "\\b(?:fully|100\\s*%)\\s+on[- ]?site\\b",
         "\\bno\\s+remote\\s+work\\b"
       ],
@@ -39,7 +53,9 @@
         "onsite-duty",
         "operational-site",
         "physical-installation"
-      ]
+      ],
+      "userConfigurable": false,
+      "workLocationLevel": 5
     },
     {
       "id": "work.travel.occasional",

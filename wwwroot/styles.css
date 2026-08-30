@@ -875,7 +875,7 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   font-size: var(--font-size-caption);
   font-weight: var(--font-weight-regular);
 }
-.travel-tolerance-panel {
+.job-fit-scale-panel {
   margin: .65rem;
   padding: .8rem .9rem;
   border: var(--border-width-default) solid var(--color-settings-subsection-divider);
@@ -884,7 +884,7 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   color: var(--color-label);
   background: var(--color-surface-secondary);
 }
-.travel-tolerance-panel h4 {
+.job-fit-scale-panel h4 {
   margin: 0 0 .3rem;
   color: var(--color-text-heading);
   font-size: var(--font-size-small);
@@ -901,12 +901,12 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   font-size: var(--font-size-label);
   font-weight: var(--font-weight-semibold);
 }
-.travel-tolerance-panel input[type="range"] {
+.job-fit-scale-panel input[type="range"] {
   width: 100%;
   margin: 0;
   accent-color: var(--color-accent);
 }
-.travel-tolerance-panel input[type="range"]:focus-visible {
+.job-fit-scale-panel input[type="range"]:focus-visible {
   outline: var(--focus-ring-width) solid var(--color-focus-ring);
   outline-offset: var(--focus-ring-offset-compact);
 }
@@ -947,6 +947,38 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 }
 .travel-tolerance-current span {
   color: var(--color-text-secondary);
+  line-height: var(--line-height-note);
+}
+.normal-work-location-panel {
+  margin-top: 0;
+}
+.assignment-location-introduction {
+  margin: .8rem .65rem .45rem;
+  padding-top: .75rem;
+  border-top: var(--border-width-default) solid var(--color-settings-subsection-divider);
+}
+.assignment-location-introduction h4 {
+  margin: 0 0 .25rem;
+  color: var(--color-text-heading);
+  font-size: var(--font-size-small);
+}
+.assignment-location-introduction p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-label);
+  line-height: var(--line-height-note);
+}
+.assignment-location-matrix {
+  margin-top: .35rem;
+}
+.job-fit-survey-concept-copy {
+  display: grid;
+  gap: .08rem;
+}
+.job-fit-survey-concept-copy small {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-regular);
   line-height: var(--line-height-note);
 }
 .job-fit-matrix { display: grid; }

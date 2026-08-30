@@ -14,7 +14,8 @@ public sealed record JobConceptDefinition(
     IReadOnlyList<string>? ExtendedLocationCategories = null,
     IReadOnlyList<string>? Supersedes = null,
     bool UserConfigurable = true,
-    int? TravelLevel = null);
+    int? TravelLevel = null,
+    int? WorkLocationLevel = null);
 
 public sealed record JobConceptOption(
     string Id,
@@ -22,7 +23,8 @@ public sealed record JobConceptOption(
     string Category,
     IReadOnlyList<string> Supersedes,
     bool UserConfigurable,
-    int? TravelLevel);
+    int? TravelLevel,
+    int? WorkLocationLevel);
 
 internal sealed record JobConceptCatalogDocument(
     int Version,
@@ -86,7 +88,8 @@ public sealed class JobConceptCatalog
             concept.Category,
             concept.Supersedes ?? [],
             concept.UserConfigurable,
-            concept.TravelLevel))
+            concept.TravelLevel,
+            concept.WorkLocationLevel))
         .ToArray();
 
     public bool Contains(string? id) => id is not null && _byId.ContainsKey(id);
@@ -116,7 +119,8 @@ public sealed class JobConceptCatalog
         if (string.IsNullOrWhiteSpace(concept.Id) || !IdPattern.IsMatch(concept.Id) ||
             string.IsNullOrWhiteSpace(concept.DisplayName) ||
             string.IsNullOrWhiteSpace(concept.Category) ||
-            concept.TravelLevel is < TravelTolerance.Minimum or > TravelTolerance.Maximum)
+            concept.TravelLevel is < TravelTolerance.Minimum or > TravelTolerance.Maximum ||
+            concept.WorkLocationLevel is < WorkLocationPreference.Minimum or > WorkLocationPreference.Maximum)
         {
             throw new InvalidDataException("A canonical job concept has invalid identity or display metadata.");
         }

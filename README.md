@@ -181,12 +181,24 @@ native seven-level **Travel Tolerance** control, from No travel (0) through
 Travel-heavy (6). The four travel-band concepts remain internal detectors and no
 longer appear as independent preference rows. A detected requirement at or below the
 selected maximum is Neutral, one level above is Negative, and two or more levels
-above is a Hard Conflict. Deployment, relocation, rotations, extended-away, and
-international-assignment preferences remain independent. Concept evidence
+above is a Hard Conflict. Immediately below it, **Normal Work Location** records the
+user's ideal on a six-level scale: 100% Remote (0), Remote with rare office visits
+(1), Mostly remote (2), Hybrid (3), Mostly onsite (4), and Fully onsite (5). Its four
+legacy location concepts remain internal corpus detectors rather than independent
+preference rows. Generic Remote Work maps conservatively to Mostly remote when no
+cadence is stated. Explicit future requirements and weekly onsite cadence outrank
+generic designations; rare visits, mostly-remote/onsite language, explicit fully
+remote/onsite wording, and canonical signals then follow in that order. Same-priority
+conflicts choose the more onsite required arrangement. Location contributes by
+absolute distance from the ideal: `0 => +1`, `1 => 0`, `2 => -1`, `3 => -2`,
+`4 => -3`, and `5 => -4`; it never creates a Hard Conflict by itself and remains
+subject to the existing Work Arrangement bound. Deployment, relocation, rotations,
+extended-away, and international-assignment preferences remain independent and are
+grouped as overlapping **Assignment / Location Constraints**. Concept evidence
 is detected during normal ingestion or cache reclassification and stored with each
 job. The versioned catalog currently provides 79 job-level concepts grouped as Work
 Arrangement, Role Type / Career Direction, Technical Domain, Work Environment, and
-Responsibility Shape. Its 75 user-configurable concepts appear in a searchable radio
+Responsibility Shape. Its 71 user-configurable concepts appear in a searchable radio
 matrix organized into collapsible category sections. Neutral is the default and is omitted from sparse
 workspace settings. The retired `strongNegative` and `strongPositive` values import
 as Negative and Ideal, respectively, so older workspaces and exports remain compatible
@@ -198,13 +210,20 @@ travel preference exists. The former Frequent and Substantial Travel hard confli
 used by the existing workspace therefore become level 3 (Occasional). An already
 persisted valid `0..6` value takes precedence. New, neutral, invalid, or otherwise
 unspecified workspaces default to level 4 (Moderate), which avoids unexpectedly
-rejecting the common 10–25% band.
+rejecting the common 10–25% band. Preferred normal work location persists as an
+integer `0..5`; a valid explicit value wins. Legacy Ideal and Positive location rows
+pull toward their detector levels while Negative and Hard Conflict rows push away,
+with stronger preferences weighted more heavily. The specific 100% Remote signal
+supersedes generic Remote during migration. Ties prefer the level nearest the neutral
+Hybrid default, then the lower level. Thus the existing workspace's 100% Remote Ideal,
+Remote Ideal, Hybrid Negative, and Onsite Negative settings migrate to level 0 without
+double-counting the generic Remote row. Unconfigured workspaces default to Hybrid (3),
+the center of the corpus scale, avoiding an assumed remote-only or onsite-only bias.
 
 Cards show a themed 1–10 badge. Scoring starts at 5 and bounds each category's total
-contribution, so 100% Remote Work can improve Work Arrangement by at most one point,
+contribution, so aligned normal-location evidence can improve Work Arrangement by at most one point,
 and several related AI or infrastructure technologies cannot stack without limit.
-Canonical supersedence prevents 100% Remote Work from double-counting Remote Work.
-Internal travel detectors instead produce one comparison signal, so multiple travel
+Internal location and travel detectors each produce one comparison signal, so related location or travel
 phrases cannot stack. Role and environment
 negatives have wider bounds than positives, and a Hard Conflict still caps the final
 score at 2. The tooltip reports each category's actual bounded contribution, any

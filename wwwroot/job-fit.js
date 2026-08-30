@@ -31,6 +31,15 @@
     Object.freeze({ level: 6, label: "Travel-heavy", shortLabel: "Travel-heavy", description: "Frequent or extensive travel is acceptable, including roles above 50%." })
   ]);
   const DEFAULT_TRAVEL_TOLERANCE = 4;
+  const WORK_LOCATION_LEVELS = Object.freeze([
+    Object.freeze({ level: 0, label: "100% Remote", description: "Work is fully remote with no routine onsite requirement." }),
+    Object.freeze({ level: 1, label: "Remote with rare office visits", description: "Remote is the norm; occasional in-person visits may be required, perhaps once or twice per year." }),
+    Object.freeze({ level: 2, label: "Mostly remote", description: "Remote most of the time with occasional onsite work." }),
+    Object.freeze({ level: 3, label: "Hybrid", description: "A regular mix of remote and onsite work." }),
+    Object.freeze({ level: 4, label: "Mostly onsite", description: "Onsite work is the norm with some remote flexibility." }),
+    Object.freeze({ level: 5, label: "Fully onsite", description: "Routine work is performed onsite." })
+  ]);
+  const DEFAULT_PREFERRED_WORK_LOCATION = 3;
   const BASELINE = 5;
   const DIMENSION_LIMITS = Object.freeze({
     "Work Arrangement": Object.freeze({ minimum: -2, maximum: 1 }),
@@ -46,6 +55,12 @@
     return Number.isInteger(value) && value >= 0 && value <= 6
       ? value
       : DEFAULT_TRAVEL_TOLERANCE;
+  }
+
+  function normalizePreferredWorkLocation(value) {
+    return Number.isInteger(value) && value >= 0 && value <= 5
+      ? value
+      : DEFAULT_PREFERRED_WORK_LOCATION;
   }
 
   function normalizeConfiguration(configuration) {
@@ -68,7 +83,8 @@
     return {
       enabled: configuration?.enabled === true,
       signals,
-      travelTolerance: normalizeTravelTolerance(configuration?.travelTolerance)
+      travelTolerance: normalizeTravelTolerance(configuration?.travelTolerance),
+      preferredWorkLocation: normalizePreferredWorkLocation(configuration?.preferredWorkLocation)
     };
   }
 
@@ -138,6 +154,74 @@
     };
   }
 
+  function detectedWorkLocation(detected, concepts) {
+    const candidates = [];
+    const add = (level, priority, evidence, conceptId, rule) => candidates.push({
+      level, priority, evidence, conceptId, rule
+    });
+    for (const item of detected.values()) {
+      const concept = concepts.get(item.conceptId);
+      if (!Number.isInteger(concept?.workLocationLevel)) continue;
+      const evidence = item.evidence || "Canonical work-location signal detected";
+      const normalized = evidence.toLocaleLowerCase();
+      if (/\b(?:currently|initially)\s+remote\b.{0,140}\b(?:transition|return|move)\b.{0,80}\bon[- ]?site\b/i.test(evidence)) {
+        add(5, 100, evidence, item.conceptId, "future required onsite arrangement");
+        continue;
+      }
+      const cadence = evidence.match(/\b(one|two|three|four|five|[1-5])\s*(?:-|–)?\s*days?\b.{0,70}\b(?:on[- ]?site|in[- ]person|office|facility)\b/i) ||
+        evidence.match(/\b(?:on[- ]?site|in[- ]person|office|facility)\b.{0,70}\b(one|two|three|four|five|[1-5])\s*(?:-|–)?\s*days?\b/i);
+      if (cadence) {
+        const days = { one: 1, two: 2, three: 3, four: 4, five: 5 }[cadence[1].toLocaleLowerCase()] || Number(cadence[1]);
+        const level = days <= 1 ? 2 : days <= 3 ? 3 : days === 4 ? 4 : 5;
+        add(level, 90, evidence, item.conceptId, `${days} required onsite day${days === 1 ? "" : "s"} per week`);
+        continue;
+      }
+      if (/\b(?:quarterly|once|twice)\b.{0,70}\b(?:office|on[- ]?site|in[- ]person|facility|visits?)\b/i.test(evidence)) {
+        add(1, 85, evidence, item.conceptId, "explicit rare office cadence");
+        continue;
+      }
+      if (/\bmostly\s+on[- ]?site\b/i.test(evidence)) {
+        add(4, 80, evidence, item.conceptId, "explicit mostly-onsite arrangement");
+        continue;
+      }
+      if (/\bmostly\s+remote\b|\bremote[- ]first\b|\b(?:occasional(?:ly)?|periodic(?:ally)?|as[- ]needed)\b.{0,70}\b(?:office|on[- ]?site|in[- ]person|facility|visits?)\b/i.test(evidence)) {
+        add(2, 80, evidence, item.conceptId, "explicit mostly-remote or occasional-onsite arrangement");
+        continue;
+      }
+      const explicit = /\b(?:100\s*%|fully|completely)\s+(?:remote|on[- ]?site)\b|\bremote[- ]only\b|\bno\s+remote\s+work\b/i.test(normalized);
+      add(concept.workLocationLevel, explicit ? 70 : item.conceptId === "work.hybrid" ? 60 : 40,
+        evidence, item.conceptId, explicit ? "explicit arrangement wording" : "canonical location signal");
+    }
+    return candidates.sort((left, right) =>
+      right.priority - left.priority || right.level - left.level || left.conceptId.localeCompare(right.conceptId))[0] || null;
+  }
+
+  function workLocationComparisonSignal(requirement, preferredLevel) {
+    const distance = Math.abs(requirement.level - preferredLevel);
+    const impacts = [1, 0, -1, -2, -3, -4];
+    const preference = distance === 0 ? "ideal" : distance === 1 ? "neutral" : "negative";
+    return {
+      conceptId: "work.location.preference",
+      displayName: "Normal Work Location",
+      category: "Work Arrangement",
+      preference,
+      preferenceLabel: LABELS[preference],
+      impact: impacts[distance],
+      evidence: requirement.evidence,
+      locationComparison: {
+        detectedLevel: requirement.level,
+        detectedLabel: WORK_LOCATION_LEVELS[requirement.level].label,
+        preferredLevel,
+        preferredLabel: WORK_LOCATION_LEVELS[preferredLevel].label,
+        distance,
+        impact: impacts[distance],
+        precedence: requirement.rule,
+        sourceEvidence: requirement.evidence,
+        sourceConceptId: requirement.conceptId
+      }
+    };
+  }
+
   function evaluate(detectedConcepts, configuration, conceptOptions) {
     const normalized = normalizeConfiguration(configuration);
     if (!normalized.enabled) return null;
@@ -152,6 +236,7 @@
     const detectedSignals = Array.from(detected.values())
       .filter(item => concepts.has(item.conceptId))
       .filter(item => !Number.isInteger(concepts.get(item.conceptId).travelLevel))
+      .filter(item => !Number.isInteger(concepts.get(item.conceptId).workLocationLevel))
       .map(item => {
         const concept = concepts.get(item.conceptId);
         const preference = configured.get(item.conceptId) || "neutral";
@@ -170,6 +255,12 @@
       detectedSignals.push(travelComparisonSignal(
         travelRequirement,
         normalized.travelTolerance));
+    }
+    const workLocation = detectedWorkLocation(detected, concepts);
+    if (workLocation) {
+      detectedSignals.push(workLocationComparisonSignal(
+        workLocation,
+        normalized.preferredWorkLocation));
     }
     const neutralSignals = detectedSignals.filter(signal => signal.preference === "neutral");
     const candidates = detectedSignals.filter(signal => signal.preference !== "neutral");
@@ -291,6 +382,12 @@
             `  Detected level: ${item.travelComparison.detectedLevel} - ${item.travelComparison.detectedLabel}`,
             `  Your maximum: ${item.travelComparison.tolerance} - ${item.travelComparison.toleranceLabel}`,
             `  Result: ${item.travelComparison.resultLabel}`);
+        } else if (item.locationComparison) {
+          lines.push(
+            `  Detected location: ${item.locationComparison.detectedLevel} - ${item.locationComparison.detectedLabel}`,
+            `  Your preferred location: ${item.locationComparison.preferredLevel} - ${item.locationComparison.preferredLabel}`,
+            `  Distance: ${item.locationComparison.distance} level${item.locationComparison.distance === 1 ? "" : "s"}`,
+            `  Impact: ${formatImpact(item.locationComparison.impact)}`);
         }
       });
     }
@@ -313,6 +410,10 @@
     travelLevels: TRAVEL_LEVELS,
     defaultTravelTolerance: DEFAULT_TRAVEL_TOLERANCE,
     normalizeTravelTolerance,
+    workLocationLevels: WORK_LOCATION_LEVELS,
+    defaultPreferredWorkLocation: DEFAULT_PREFERRED_WORK_LOCATION,
+    normalizePreferredWorkLocation,
+    detectedWorkLocation,
     detectedTravelRequirement
   };
 });

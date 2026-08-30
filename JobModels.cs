@@ -510,12 +510,83 @@ public static class TravelTolerance
     }
 }
 
+public static class WorkLocationPreference
+{
+    public const int Minimum = 0;
+    public const int Maximum = 5;
+    public const int Default = 3;
+
+    private static readonly IReadOnlyDictionary<string, int> LegacyConceptLevels =
+        new Dictionary<string, int>(StringComparer.Ordinal)
+        {
+            ["work.remote.full"] = 0,
+            ["work.remote"] = 2,
+            ["work.hybrid"] = 3,
+            ["work.onsite"] = 5
+        };
+
+    public static bool IsSupported(int? value) => value is >= Minimum and <= Maximum;
+
+    public static bool IsLegacyConcept(string? conceptId) =>
+        conceptId is not null && LegacyConceptLevels.ContainsKey(conceptId);
+
+    public static int Normalize(
+        int? value,
+        IEnumerable<JobFitSignalPreference>? legacySignals = null)
+    {
+        if (IsSupported(value))
+        {
+            return value!.Value;
+        }
+
+        var signals = (legacySignals ?? [])
+            .Where(signal => signal is not null && LegacyConceptLevels.ContainsKey(signal.ConceptId))
+            .GroupBy(signal => signal.ConceptId, StringComparer.Ordinal)
+            .Select(group => group.First())
+            .ToList();
+        // 100% Remote is the specific form of the generic Remote signal. Treating both
+        // as separate votes would double-count one stated preference during migration.
+        if (signals.Any(signal => signal.ConceptId == "work.remote.full"))
+        {
+            signals.RemoveAll(signal => signal.ConceptId == "work.remote");
+        }
+        if (signals.Count == 0)
+        {
+            return Default;
+        }
+
+        static int Utility(string? preference, int distance) => preference switch
+        {
+            JobFitPreferenceLevels.Ideal => -4 * distance * distance,
+            JobFitPreferenceLevels.Positive => -2 * distance * distance,
+            JobFitPreferenceLevels.Negative => distance,
+            JobFitPreferenceLevels.HardConflict => 2 * distance,
+            _ => 0
+        };
+
+        return Enumerable.Range(Minimum, Maximum - Minimum + 1)
+            .Select(candidate => new
+            {
+                Level = candidate,
+                Score = signals.Sum(signal => Utility(
+                    JobFitPreferenceLevels.Normalize(signal.Preference),
+                    Math.Abs(candidate - LegacyConceptLevels[signal.ConceptId])))
+            })
+            .OrderByDescending(candidate => candidate.Score)
+            .ThenBy(candidate => Math.Abs(candidate.Level - Default))
+            .ThenBy(candidate => candidate.Level)
+            .First().Level;
+    }
+}
+
 public sealed record JobFitConfiguration(
     bool Enabled,
     IReadOnlyList<JobFitSignalPreference> Signals,
-    int? TravelTolerance = null)
+    int? TravelTolerance = null,
+    int? PreferredWorkLocation = null)
 {
-    public static JobFitConfiguration Disabled { get; } = new(false, [], JobSearchManager.TravelTolerance.Default);
+    public static JobFitConfiguration Disabled { get; } = new(
+        false, [], JobSearchManager.TravelTolerance.Default, WorkLocationPreference.Default);
 
     public static JobFitConfiguration Normalize(
         JobFitConfiguration? configuration,
@@ -530,9 +601,13 @@ public sealed record JobFitConfiguration(
         var travelTolerance = JobSearchManager.TravelTolerance.Normalize(
             configuration.TravelTolerance,
             sourceSignals);
+        var preferredWorkLocation = WorkLocationPreference.Normalize(
+            configuration.PreferredWorkLocation,
+            sourceSignals);
         var signals = sourceSignals
             .Where(signal => signal is not null && concepts.Contains(signal.ConceptId))
             .Where(signal => !JobSearchManager.TravelTolerance.IsLegacyConcept(signal.ConceptId))
+            .Where(signal => !WorkLocationPreference.IsLegacyConcept(signal.ConceptId))
             .Select(signal => new
             {
                 signal.ConceptId,
@@ -544,7 +619,8 @@ public sealed record JobFitConfiguration(
             .OrderBy(signal => signal.ConceptId, StringComparer.Ordinal)
             .Take(100)
             .ToArray();
-        return new JobFitConfiguration(configuration.Enabled, signals, travelTolerance);
+        return new JobFitConfiguration(
+            configuration.Enabled, signals, travelTolerance, preferredWorkLocation);
     }
 }
 
