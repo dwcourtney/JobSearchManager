@@ -2,6 +2,17 @@
 set -Eeuo pipefail
 
 expected_sha="${1:?usage: ci-validate.sh <full-git-sha>}"
+security_cache="$(mktemp -d)"
+temporary_root=""
+container=""
+
+cleanup() {
+  [[ -z "$container" ]] || docker rm -f "$container" >/dev/null 2>&1 || true
+  [[ -z "$temporary_root" ]] || rm -rf -- "$temporary_root"
+  rm -rf -- "$security_cache"
+}
+trap cleanup EXIT
+
 if [[ ! "$expected_sha" =~ ^[0-9a-f]{40}$ ]]; then
   echo "Expected a lowercase full Git SHA." >&2
   exit 2
@@ -22,6 +33,8 @@ dotnet build JobSearchManager.csproj --configuration Release --no-restore
 dotnet run --project Tests/JobSearchManager.Tests.csproj --configuration Release --no-restore
 pwsh -NoLogo -NoProfile -File scripts/validate-source.ps1
 pwsh -NoLogo -NoProfile -File scripts/audit-repository.ps1
+bash scripts/security-scan.sh source "$(pwd)" "$security_cache"
+bash scripts/security-scan.sh policy-test unused "$security_cache"
 git diff --check
 
 if [[ -n "$(git status --porcelain --untracked-files=all)" ]]; then
@@ -36,12 +49,6 @@ temporary_root="$(mktemp -d)"
 mkdir -p "$temporary_root/app" "$temporary_root/dataprotection"
 chmod 0777 "$temporary_root/app" "$temporary_root/dataprotection"
 
-cleanup() {
-  docker rm -f "$container" >/dev/null 2>&1 || true
-  rm -rf -- "$temporary_root"
-}
-trap cleanup EXIT
-
 docker build \
   --platform linux/amd64 \
   --build-arg "JSM_GIT_SHA=$expected_sha" \
@@ -53,6 +60,8 @@ if [[ "$image_revision" != "$expected_sha" ]]; then
   echo "Image revision $image_revision does not match $expected_sha." >&2
   exit 1
 fi
+
+bash scripts/security-scan.sh image "$image" "$security_cache"
 
 docker run --detach \
   --name "$container" \

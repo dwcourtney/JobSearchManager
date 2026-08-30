@@ -5,6 +5,7 @@ target_sha="${1:?usage: deploy-curiosity.sh <full-git-sha> [repository-root]}"
 repository_root="${2:-$(pwd)}"
 lab_root="/home/codex/jsm-lab"
 state_root="/home/codex/jsm-cicd"
+security_cache="$state_root/trivy-cache"
 manifest_source="$repository_root/deploy/compose.curiosity.yaml"
 active_manifest="$state_root/compose.curiosity.yaml"
 previous_manifest="$state_root/compose.curiosity.previous.yaml"
@@ -36,6 +37,7 @@ actual_sha="$(git -C "$repository_root" rev-parse HEAD)"
 }
 
 mkdir -p "$state_root"
+mkdir -p "$security_cache"
 exec 9>"$state_root/deploy.lock"
 flock -n 9 || {
   echo "Another JSM deployment is active." >&2
@@ -74,6 +76,9 @@ image_revision="$(docker image inspect --format '{{ index .Config.Labels "org.op
   echo "Image revision $image_revision does not match deployment SHA $target_sha." >&2
   exit 1
 }
+
+# Scan the exact locally built artifact before any manifest or running container changes.
+bash "$repository_root/scripts/security-scan.sh" image "jsm:$target_sha" "$security_cache"
 
 if [[ -f "$active_manifest" ]]; then
   cp -- "$active_manifest" "$previous_manifest.tmp"

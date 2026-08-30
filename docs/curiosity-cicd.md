@@ -111,16 +111,65 @@ lightweight exact-SHA signal. `scripts/ci-validate.sh` enforces:
 4. Release build and the complete deterministic .NET suite;
 5. JavaScript runtime tests and centralized theme/source checks;
 6. `git diff --check` and a clean generated-file check;
-7. a linux/amd64 image tagged by full SHA;
-8. an OCI revision label equal to that SHA;
-9. an ephemeral non-root, read-only container with temporary isolated storage;
-10. Docker health plus HTTP 200 and `Healthy` from `/healthz`; and
-11. an exact SHA match from `/version`, whose response is limited to `commit`,
+7. independent Trivy source dependency, secret, and Dockerfile configuration scans;
+8. a linux/amd64 image tagged by full SHA;
+9. an OCI revision label equal to that SHA;
+10. an independent Trivy scan of the exact candidate image archive;
+11. an ephemeral non-root, read-only container with temporary isolated storage;
+12. Docker health plus HTTP 200 and `Healthy` from `/healthz`; and
+13. an exact SHA match from `/version`, whose response is limited to `commit`,
     `version`, and `hostingMode`.
 
 The workflow has read-only repository permissions and pins third-party Actions by
 immutable commit. CI is independent of curiosity and completes normally while the
 lab machine is offline.
+
+## Independent security scanning
+
+Trivy 0.74.0 runs as a short-lived container pinned to the immutable linux/amd64
+digest `sha256:ee940acbf1f58ebadb42d01434ce4609530bf1b52536afbd1eee66cd7123c5c9`.
+There is no host Trivy installation, daemon, GitHub token, Azure credential, or
+Cloudflare credential. The scanner container is non-root, read-only, has all Linux
+capabilities dropped, has telemetry disabled, and never receives the Docker socket.
+Images are exported to a temporary archive with `docker save`, scanned through
+Trivy's `--input` path, and deleted by an exit trap.
+
+Hosted CI scans the checked-out source before building and scans the exact
+`jsm-ci:<full-sha>` candidate image before executing it. The curiosity deployment
+then scans the independently built exact `jsm:<full-sha>` image before changing the
+active manifest or running JSM container. A failed deployment scan therefore leaves
+the running release untouched. Scanner input is limited to the checkout or temporary
+image archive; JSM workspace data, account state, Data Protection keys, Mailpit, and
+unrelated Docker resources such as ai801 are not mounted or inspected.
+
+The initial enforcement policy is deliberately actionable:
+
+- fixed High or Critical dependency/image vulnerabilities fail the job;
+- any detected secret fails the job;
+- High or Critical source configuration findings fail the job; and
+- Unknown, Low, and Medium findings are reported but do not block.
+
+Vulnerability reports and gates use `--ignore-unfixed`, so upstream findings with no
+available remediation do not create an unresolvable release failure. There are no
+ignore-file suppressions. A runtime-only synthetic secret and intentionally unsafe
+temporary Dockerfile prove in every hosted CI run that the secret and configuration
+gates fail closed; neither fixture is tracked or included in the application image.
+
+Hosted CI uses one job-local temporary cache, which prevents cross-run cache poisoning
+and is removed after validation. Curiosity uses
+`/home/codex/jsm-cicd/trivy-cache`, outside JSM persistent storage, to retain only the
+scanner vulnerability/check databases between serialized deployments. Trivy performs
+its normal database freshness check on each run. To update Trivy, change both its
+explicit version and verified linux/amd64 digest in `scripts/security-scan.sh`, rerun
+the policy self-test and full CI, and review release notes before promoting the change.
+
+Results remain in the normal CI/deployment logs. SARIF upload is not enabled because
+it would require broader `security-events` token permission, and the exact deployed
+artifact is currently built locally rather than promoted from hosted CI. For the same
+reason, an SBOM of the hosted candidate would not be authoritative for the curiosity
+artifact. License scanning is also deferred to avoid conflating legal inventory with
+the vulnerability release gate. Trivy is not .NET-aware SAST; GitHub CodeQL is the
+most useful distinct future layer if deeper application data-flow analysis is desired.
 
 ## Deployment workflow
 
@@ -150,7 +199,8 @@ gh workflow run deploy-curiosity.yaml --repo dwc5703/JobSearchManager --ref main
 bootstrap validation.
 
 The deploy job runs only on `[self-hosted, linux, x64, curiosity, jsm]`. It checks out
-the exact SHA, builds `jsm:<full-sha>`, confirms the OCI revision, and invokes
+the exact SHA, builds `jsm:<full-sha>`, confirms the OCI revision, scans that exact
+local image, and invokes
 `scripts/deploy-curiosity.sh`. A host-side file lock plus GitHub's concurrency group
 allows only one active deployment. GitHub's concurrency behavior retains at most one
 pending run for the group, so a newer pending deployment can supersede an older one;

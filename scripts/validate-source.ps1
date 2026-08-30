@@ -41,6 +41,7 @@ $jobFitUiTestsPath = Join-Path $repo "Tests\job-fit-ui.tests.js"
 $jobFitDetailUiTestsPath = Join-Path $repo "Tests\job-fit-detail-ui.tests.js"
 $accountUiTestsPath = Join-Path $repo "Tests\account-ui.tests.js"
 $adminUiTestsPath = Join-Path $repo "Tests\admin-ui.tests.js"
+$securityScanningTestsPath = Join-Path $repo "Tests\security-scanning.tests.js"
 
 foreach ($scriptPath in @(
     $appPath,
@@ -73,7 +74,8 @@ foreach ($scriptPath in @(
     $jobFitUiTestsPath,
     $jobFitDetailUiTestsPath,
     $accountUiTestsPath,
-    $adminUiTestsPath)) {
+    $adminUiTestsPath,
+    $securityScanningTestsPath)) {
     & $NodePath --check $scriptPath
     if ($LASTEXITCODE -ne 0) {
         throw "JavaScript syntax validation failed for $scriptPath."
@@ -178,6 +180,11 @@ if ($LASTEXITCODE -ne 0) {
 & $NodePath $adminUiTestsPath
 if ($LASTEXITCODE -ne 0) {
     throw "Admin role/bootstrap UI integration tests failed."
+}
+
+& $NodePath $securityScanningTestsPath
+if ($LASTEXITCODE -ne 0) {
+    throw "Security scanning integration tests failed."
 }
 
 $styles = Get-Content -LiteralPath $stylesPath -Raw -Encoding UTF8
