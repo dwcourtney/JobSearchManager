@@ -2560,7 +2560,6 @@ function jobsPassingGeneralFilters() {
     const passesWorkAuthorization = !state.hideStrictWorkAuthorizationMismatch ||
       !workAuthorizationStatus.hide;
     const passesExtendedLocationRequirement =
-      !state.jobFitEnabled ||
       !state.excludeStrongExtendedLocationRequirements ||
       job.extendedLocationRequirement?.confidence !== "strong";
 

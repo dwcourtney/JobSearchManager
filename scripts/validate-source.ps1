@@ -436,9 +436,11 @@ if ($settingsPanelMarkup["Preferences"] -match 'id="exclude-strong-extended-loca
 }
 if ($settingsPanelMarkup["Job Fit"] -match 'id="job-fit-configuration"[^>]*\bhidden\b' -or
     $app -notmatch 'jobFitConfiguration\.classList\.toggle\("is-inactive", !state\.jobFitEnabled\)' -or
-    $app -notmatch 'excludeStrongExtendedLocationRequirements\.disabled = !state\.jobFitEnabled' -or
-    $app -notmatch '(?s)!state\.jobFitEnabled \|\|\s*!state\.excludeStrongExtendedLocationRequirements \|\|\s*job\.extendedLocationRequirement\?\.confidence !== "strong"') {
+    $app -notmatch 'excludeStrongExtendedLocationRequirements\.disabled = !state\.jobFitEnabled') {
     throw "The Job Fit parent-child activation hierarchy is incomplete."
+}
+if ($app -notmatch '(?s)!state\.excludeStrongExtendedLocationRequirements \|\|\s*job\.extendedLocationRequirement\?\.confidence !== "strong"') {
+    throw "The Job Fit organization change altered work-arrangement filtering semantics."
 }
 if ($settingsPanelMarkup["Preferences"] -match 'id="import-export-heading"' -or
     $settingsPanelMarkup["Preferences"] -match 'id="reset-workspace-heading"') {
