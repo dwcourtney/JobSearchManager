@@ -41,8 +41,8 @@ assert.match(project, /<Compile Remove="security\\semgrep-rules\\\*\*\\\*\.cs" \
   "The rules repository fixtures must not be compiled into the application.");
 assert.ok(!scan.includes("/var/run/docker.sock"));
 assert.ok(!scan.includes("SEMGREP_APP_TOKEN"));
-assert.ok(!workflow.includes("security-events: write"));
-assert.match(workflow, /permissions:\s*\r?\n\s+contents: read/);
+assert.match(workflow, /security-events: write/,
+  "The transitional CodeQL proof requires code-scanning upload permission.");
 
 const trivySource = ci.indexOf("security-scan.sh source");
 const submoduleInit = ci.indexOf("git submodule update");

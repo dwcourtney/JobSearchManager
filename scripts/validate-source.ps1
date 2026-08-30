@@ -43,6 +43,7 @@ $accountUiTestsPath = Join-Path $repo "Tests\account-ui.tests.js"
 $adminUiTestsPath = Join-Path $repo "Tests\admin-ui.tests.js"
 $securityScanningTestsPath = Join-Path $repo "Tests\security-scanning.tests.js"
 $sastScanningTestsPath = Join-Path $repo "Tests\sast-scanning.tests.js"
+$codeqlScanningTestsPath = Join-Path $repo "Tests\codeql-scanning.tests.js"
 
 foreach ($scriptPath in @(
     $appPath,
@@ -77,7 +78,8 @@ foreach ($scriptPath in @(
     $accountUiTestsPath,
     $adminUiTestsPath,
     $securityScanningTestsPath,
-    $sastScanningTestsPath)) {
+    $sastScanningTestsPath,
+    $codeqlScanningTestsPath)) {
     & $NodePath --check $scriptPath
     if ($LASTEXITCODE -ne 0) {
         throw "JavaScript syntax validation failed for $scriptPath."
@@ -192,6 +194,11 @@ if ($LASTEXITCODE -ne 0) {
 & $NodePath $sastScanningTestsPath
 if ($LASTEXITCODE -ne 0) {
     throw "Semgrep SAST integration tests failed."
+}
+
+& $NodePath $codeqlScanningTestsPath
+if ($LASTEXITCODE -ne 0) {
+    throw "CodeQL integration tests failed."
 }
 
 $styles = Get-Content -LiteralPath $stylesPath -Raw -Encoding UTF8
