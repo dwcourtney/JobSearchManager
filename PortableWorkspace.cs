@@ -59,7 +59,13 @@ internal sealed record PortableWorkspaceImport(
     ViewerSettings Settings,
     JobHistoryDocument History);
 
-internal sealed class WorkspaceImportException(string message) : Exception(message);
+internal sealed class WorkspaceImportException : Exception
+{
+    public WorkspaceImportException(string message)
+        : base(message)
+    {
+    }
+}
 
 internal sealed partial class PortableWorkspaceService
 {

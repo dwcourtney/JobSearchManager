@@ -112,12 +112,13 @@ lightweight exact-SHA signal. `scripts/ci-validate.sh` enforces:
 5. JavaScript runtime tests and centralized theme/source checks;
 6. `git diff --check` and a clean generated-file check;
 7. independent Trivy source dependency, secret, and Dockerfile configuration scans;
-8. a linux/amd64 image tagged by full SHA;
-9. an OCI revision label equal to that SHA;
-10. an independent Trivy scan of the exact candidate image archive;
-11. an ephemeral non-root, read-only container with temporary isolated storage;
-12. Docker health plus HTTP 200 and `Healthy` from `/healthz`; and
-13. an exact SHA match from `/version`, whose response is limited to `commit`,
+8. independent Semgrep Community C# static application-security analysis;
+9. a linux/amd64 image tagged by full SHA;
+10. an OCI revision label equal to that SHA;
+11. an independent Trivy scan of the exact candidate image archive;
+12. an ephemeral non-root, read-only container with temporary isolated storage;
+13. Docker health plus HTTP 200 and `Healthy` from `/healthz`; and
+14. an exact SHA match from `/version`, whose response is limited to `commit`,
     `version`, and `hostingMode`.
 
 The workflow has read-only repository permissions and pins third-party Actions by
@@ -168,8 +169,61 @@ it would require broader `security-events` token permission, and the exact deplo
 artifact is currently built locally rather than promoted from hosted CI. For the same
 reason, an SBOM of the hosted candidate would not be authoritative for the curiosity
 artifact. License scanning is also deferred to avoid conflating legal inventory with
-the vulnerability release gate. Trivy is not .NET-aware SAST; GitHub CodeQL is the
-most useful distinct future layer if deeper application data-flow analysis is desired.
+the vulnerability release gate. Trivy is not .NET-aware SAST; Semgrep provides the
+separate application-source layer described below.
+
+## Static application-security analysis
+
+Semgrep Community Edition 1.175.0 analyzes application C# only on the GitHub-hosted
+runner. Its official linux/amd64 container is pinned to
+`sha256:1623685c0f6388b0bc8d577a712bf92b88252aaa09d6d7e38943dafa10ed978c`.
+The official Community rules are a public Git submodule pinned to commit
+`40b8c63f75dc7c22c8a77482d73bfb864b146f7e`; CI initializes that exact gitlink only
+after Trivy has scanned the application checkout. The rules submodule is excluded
+from the JSM Docker build context.
+
+The scanner container runs non-root, read-only, without capabilities or a Docker
+socket, and with network access disabled. Metrics and version checks are disabled,
+the open-source engine is forced, and no Semgrep account or token exists. Image and
+rule acquisition contact only Docker Hub and the public GitHub rules repository before
+the scan; private JSM source and findings remain on the GitHub-hosted runner. The
+workflow retains only `contents: read` permission and does not use GitHub's unavailable
+private-repository code-scanning/SARIF service.
+
+The scan loads the C# .NET, language-security, and Razor-security directories. The
+upstream rules plus one local replacement are validated and 44 apply to the current
+C# files. Coverage includes common
+injection, command execution, path handling, deserialization, SSRF, XXE,
+authentication-token, cryptography, TLS, and response-handling patterns. `bin`, `obj`,
+tests, third-party rules, JavaScript, and generated output are excluded. JavaScript is
+not included initially because the browser pack produced duplicate false positives for
+the explicitly DOMPurify-sanitized description assignment already protected by focused
+runtime/source-order tests.
+
+Semgrep writes readable findings to the CI log and a temporary JSON report consumed by
+the local policy evaluator. The JSON is deleted at job exit and is not uploaded.
+Scanner or rule errors, partial parsing, a missing/wrong rules commit, High-confidence
+findings, and Medium-confidence `ERROR` findings fail CI. Other findings remain
+advisory in the log. The upstream fully qualified `xpath-injection` audit rule is the sole narrow rule
+exclusion: it exhausts the Community engine's intrafile fixpoint on unrelated JSM
+methods. `security/semgrep-jsm-rules/csharp-xpath-injection.yaml` replaces it with
+deterministic direct concatenation/interpolation coverage. Analysis timeouts and skipped
+rules fail CI, so this exception cannot silently reduce the rest of the scan. No finding
+suppression or broad ignore file exists. Runtime-only safe and
+weak-RNG C# fixtures prove both pass and block paths; an invalid runtime-only rule proves
+scanner failure is fail-closed. These fixtures never enter the repository or image.
+
+Developers should fix a blocking finding and add focused regression coverage. A false
+positive should be demonstrated with evidence before considering a narrowly scoped,
+documented rule exclusion; inline or broad suppressions are not the default. To update
+Semgrep, verify a new official release and linux/amd64 digest, inspect release notes,
+advance the rules gitlink deliberately, review changed C# rules and licenses, and run
+the policy self-test, initial full scan, and complete CI before promotion.
+
+Community Edition performs meaningful intrafile syntax and taint analysis but does not
+provide the paid Pro engine's cross-file/interprocedural analysis. GitHub CodeQL remains
+unavailable for this private personal repository without paid Code Security and
+organizational restructuring.
 
 ## Deployment workflow
 
