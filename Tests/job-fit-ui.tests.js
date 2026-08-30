@@ -25,8 +25,10 @@ assert.doesNotMatch(preferences,
 assert.equal((preferences.match(/<section class="settings-section"/g) || []).length, 2,
   "My Preferences must contain exactly two settings sections.");
 assert.match(jobFit,
-  /id="job-fit-heading"[\s\S]*?id="work-arrangement-filtering-heading"[\s\S]*?id="job-fit-signals-heading"/,
-  "Job Fit sections must be Optional Job Fit Scoring, Work Arrangement Filtering, then Canonical Corpus Signals.");
+  /id="job-fit-heading">Job Fit Scoring<[\s\S]*?id="job-fit-configuration" class="job-fit-subordinate"[\s\S]*?id="work-arrangement-filtering-heading"[\s\S]*?id="job-fit-signals-heading">Canonical Corpus Signals</,
+  "Job Fit Scoring must structurally contain Work Arrangement Filtering and Canonical Corpus Signals.");
+assert.doesNotMatch(jobFit, /id="job-fit-configuration"[^>]*\bhidden\b/,
+  "Subordinate Job Fit settings must remain visible while inactive.");
 assert.match(jobFit, /id="exclude-strong-extended-location-requirements"[^>]*type="checkbox"/,
   "Job Fit must contain the existing work-arrangement filtering checkbox.");
 assert.match(jobFit,
@@ -60,8 +62,19 @@ assert.match(app,
   /excludeStrongExtendedLocationRequirements: state\.excludeStrongExtendedLocationRequirements/,
   "The existing filtering setting must save under its unchanged persisted name.");
 assert.match(app,
-  /!state\.excludeStrongExtendedLocationRequirements \|\|\s*job\.extendedLocationRequirement\?\.confidence !== "strong"/,
-  "Moving the control must not change its strong-detection filtering predicate.");
+  /!state\.jobFitEnabled \|\|\s*!state\.excludeStrongExtendedLocationRequirements \|\|\s*job\.extendedLocationRequirement\?\.confidence !== "strong"/,
+  "The existing strong-detection predicate must be suspended only while its parent Job Fit setting is disabled.");
+assert.match(app,
+  /jobFitConfiguration\.classList\.toggle\("is-inactive", !state\.jobFitEnabled\)[\s\S]*?excludeStrongExtendedLocationRequirements\.disabled = !state\.jobFitEnabled[\s\S]*?jobFitConceptSearch\.disabled = !state\.jobFitEnabled/,
+  "Disabling Job Fit must visibly inactivate and disable every subordinate control.");
+assert.match(app, /radio\.disabled = !state\.jobFitEnabled/,
+  "Every canonical-concept survey choice must follow the parent Job Fit enabled state.");
+const jobFitToggleHandler = app.match(
+  /elements\.jobFitEnabled\.addEventListener\("change", \(\) => \{([\s\S]*?)\n  \}\);/)?.[1] || "";
+assert.match(jobFitToggleHandler, /state\.jobFitEnabled = elements\.jobFitEnabled\.checked/);
+assert.doesNotMatch(jobFitToggleHandler,
+  /state\.(?:jobFitSignals|excludeStrongExtendedLocationRequirements)\s*=/,
+  "Toggling Job Fit must preserve subordinate values for later re-enable.");
 assert.match(app, /\["negative", "NEG"\][\s\S]*?\["ideal", "I"\]/,
   "The survey must use the balanced Hard Conflict, Negative, Neutral, Positive, Ideal scale.");
 assert.doesNotMatch(app, /\["strong(?:Negative|Positive)"/,
@@ -100,6 +113,13 @@ const categoryStyles = styles.slice(categoryStart, categoryEnd);
 assert.ok(categoryStart >= 0 && categoryStyles.includes("var(--color-accordion-header-background)"));
 assert.doesNotMatch(categoryStyles, /#[0-9a-f]{3,8}|rgba?\(/i,
   "Job Fit category sections must use existing theme tokens.");
+const hierarchyStart = styles.indexOf(".job-fit-subordinate");
+const hierarchyEnd = styles.indexOf(".job-fit-introduction", hierarchyStart);
+const hierarchyStyles = styles.slice(hierarchyStart, hierarchyEnd);
+assert.ok(hierarchyStart >= 0 && hierarchyStyles.includes("var(--color-settings-subsection-divider)"));
+assert.ok(hierarchyStyles.includes("var(--opacity-disabled-control)"));
+assert.doesNotMatch(hierarchyStyles, /#[0-9a-f]{3,8}|rgba?\(/i,
+  "The Job Fit hierarchy and inactive treatment must use semantic theme tokens.");
 assert.match(styles, /@media \(max-width: 560px\)[\s\S]*?\.job-fit-survey-row/,
   "The radio matrix must include a compact small-screen layout.");
 
