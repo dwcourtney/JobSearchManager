@@ -16,7 +16,7 @@ const preferences = index.slice(preferencesStart, jobFitStart);
 const jobFit = index.slice(jobFitStart, accountStart);
 
 assert.match(index, /id="job-fit-settings-tab"[\s\S]*?>\s*Job Fit\s*</);
-assert.match(index, /src="\/job-fit\.js\?v=9"/,
+assert.match(index, /src="\/job-fit\.js\?v=10"/,
   "The revised Job Fit runtime must use a new cache-busting asset version.");
 assert.match(index, /id="job-fit-settings-panel"/);
 assert.match(preferences, /id="compensation-heading"[\s\S]*?id="appearance-heading"/);
@@ -130,7 +130,7 @@ assert.deepEqual([...new Set(catalog.concepts.map(concept => concept.category))]
   "Work Arrangement",
   "Work Environment"
 ]);
-assert.equal(catalog.concepts.length, 79, "The complete canonical catalog must remain available.");
+assert.equal(catalog.concepts.length, 85, "The complete canonical catalog must remain available.");
 const travelConcepts = catalog.concepts.filter(concept => concept.id.startsWith("work.travel."));
 assert.equal(travelConcepts.length, 4, "All four internal travel detectors must remain in the catalog.");
 assert.deepEqual(travelConcepts.map(concept => concept.travelLevel).sort(), [3, 4, 5, 6]);
@@ -141,13 +141,16 @@ const locationConcepts = catalog.concepts.filter(concept =>
 assert.deepEqual(locationConcepts.map(concept => concept.workLocationLevel).sort(), [0, 2, 3, 5]);
 assert.ok(locationConcepts.every(concept => concept.userConfigurable === false),
   "Internal normal-work-location detectors must be hidden from user configuration.");
-assert.equal(catalog.concepts.filter(concept => concept.userConfigurable !== false).length, 71,
+assert.equal(catalog.concepts.filter(concept => concept.userConfigurable !== false).length, 77,
   "Only the four travel and four normal-location detector rows may be hidden from the survey.");
 const expectedSurveyGroups = {
   "Role Type / Career Direction": [
     ["Technical Engineering", [
       "role.ai-ml-engineering", "role.cloud-engineering", "role.cybersecurity",
       "role.data-engineering", "role.data-science", "role.devops-platform",
+      "role.fabrication-assembly-machining", "role.lab-test-technician",
+      "role.manufacturing-production-operations", "role.mechanical-maintenance-repair",
+      "role.physical-inspection-quality-control", "role.warehouse-material-handling",
       "role.hardware-engineering", "role.infrastructure-engineering", "role.network-engineering",
       "role.software-engineering", "role.systems-engineering", "role.test-validation-engineering"
     ]],
@@ -228,6 +231,20 @@ assert.deepEqual(
     .sections.find(section => section.id === "external-business-responsibility")?.conceptIds,
   ["responsibility.customer-facing", "responsibility.proposal-capture"],
   "External / Business concepts must remain reachable in Management / Delivery.");
+assert.deepEqual(
+  JobFit.surveyTabs.find(tab => tab.id === "hardware-field")
+    .sections.filter(section => ["trades-technician-work", "physical-operations"].includes(section.id))
+    .map(section => [section.title, [...section.conceptIds]]),
+  [
+    ["Trades / Technician Work", [
+      "role.mechanical-maintenance-repair", "role.fabrication-assembly-machining",
+      "role.physical-inspection-quality-control", "role.lab-test-technician"
+    ]],
+    ["Physical Operations", [
+      "role.warehouse-material-handling", "role.manufacturing-production-operations"
+    ]]
+  ],
+  "New work-type concepts must have one coherent Hardware / Field owner.");
 const organizedIds = JobFit.surveyTabs.flatMap(tab =>
   tab.sections.flatMap(section => [...section.conceptIds]));
 const configurableIds = catalog.concepts
@@ -287,8 +304,8 @@ assert.match(app, /function matchesJobFitSearch\(text, query\)/,
 assert.match(app,
   /new Set\(JobFit\.surveyHiddenConceptIds\)[\s\S]*?!hiddenSurveyConcepts\.has\(concept\.id\)/,
   "Rendering must exclude only explicitly identified duplicate survey concepts.");
-assert.equal(Object.keys(JobFit.surveyConceptDescriptions).length, 66,
-  "Exactly the four requested non-slider sections must receive descriptions.");
+assert.equal(Object.keys(JobFit.surveyConceptDescriptions).length, 72,
+  "Every rendered non-slider concept must receive one description.");
 assert.match(JobFit.surveyConceptDescriptions["technical.linux"], /Linux environments/);
 assert.match(JobFit.surveyConceptDescriptions["technical.linux-administration"], /Administration/);
 assert.match(JobFit.surveyConceptDescriptions["technical.networking"], /architecture, routing, switching/);

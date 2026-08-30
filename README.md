@@ -196,9 +196,9 @@ subject to the existing Work Arrangement bound. Deployment, relocation, rotation
 extended-away, and international-assignment preferences remain independent and are
 grouped as overlapping **Assignment / Location Constraints**. Concept evidence
 is detected during normal ingestion or cache reclassification and stored with each
-job. The versioned catalog currently provides 79 job-level concepts grouped as Work
+job. The versioned catalog currently provides 85 job-level concepts grouped as Work
 Arrangement, Role Type / Career Direction, Technical Domain, Work Environment, and
-Responsibility Shape. Its 71 user-configurable concepts appear in a searchable radio
+Responsibility Shape. Its 77 user-configurable concepts appear in a searchable radio
 matrix organized into collapsible category sections. Role Type, Technical Domain,
 Work Environment, and Responsibility Shape retain independent preference rows while
 using labeled subgroups and concise detector-aligned descriptions for easier scanning.
@@ -236,11 +236,31 @@ clearance, license, and credential mismatches remain in Qualification Fit rather
 being duplicated as description-only Job Fit concepts. Job Fit does not change
 filtering, sorting, or qualification behavior.
 
+The Hardware / Field tab also owns six context-sensitive work-type concepts:
+Mechanical Maintenance / Repair, Fabrication / Assembly / Machining, Physical
+Inspection / Quality Control, Laboratory / Test Technician Work, Warehouse / Material
+Handling Operations, and Manufacturing / Production Operations. These belong to Role
+Type / Career Direction because they describe the work performed, not the employer's
+industry. Laboratory and manufacturing work-type detections supersede their matching
+environment signal during scoring to avoid counting the same evidence twice. Their
+multi-signal rules require physical actions and occupational/equipment context, which
+keeps automotive software, data warehouses, manufacturing software, software QA, and
+software test automation from becoming hands-on work-type matches.
+
 When Job Fit is enabled, each job detail includes a Job Fit tab between At a Glance
 and Full Posting. It renders the scoring engine's structured result: the final score,
 raw and bounded category contributions, contributing and Neutral detections, evidence,
 superseded concepts, Hard Conflict cap behavior, and the final arithmetic. The tab is
 hidden when Job Fit is disabled and does not independently recalculate the score.
+
+Confirmed administrators receive an Admin area with Overview and Detector Evaluation
+tabs. Detector Evaluation compares the production Job Concept detector with independent,
+explicit yes/no labels in `DetectorEvaluationFixtures.json`; raw unlabeled job data is
+never treated as ground truth. It reports per-concept confusion counts, positive support,
+precision, recall, F1, macro/micro summaries, and false-positive/false-negative details.
+Undefined zero-denominator metrics are shown as unavailable rather than NaN, and small
+fixture support is called out. CI validates the corpus and publishes a deterministic JSON
+report without enforcing an arbitrary F1 threshold.
 
 ## Optional accounts
 

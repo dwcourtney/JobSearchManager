@@ -1,5 +1,5 @@
 {
-  "version": 7,
+  "version": 8,
   "concepts": [
     {
       "id": "work.remote",
@@ -355,6 +355,57 @@
       "displayName": "Hardware Engineering",
       "category": "Role Type / Career Direction",
       "evidencePatterns": ["\\bhardware\\s+engineer(?:ing)?\\b", "\\belectrical\\s+hardware\\s+(?:design|development)\\b"]
+    },
+    {
+      "id": "role.mechanical-maintenance-repair",
+      "displayName": "Mechanical Maintenance / Repair",
+      "category": "Role Type / Career Direction",
+      "titleEvidencePatterns": ["\\bfleet\\s+technician\\b", "\\b(?:fleet|automotive|aircraft|industrial|maintenance|process|flight operations)\\s+(?:mechanic|maintenance technician)\\b", "\\bmechanical\\s+(?:maintenance|repair)\\s+technician\\b"],
+      "evidencePatterns": ["\\bpreventive\\s+maintenance\\s+(?:and|/)\\s+repair\\b", "\\binspect,?\\s+maintain,?\\s+and\\s+repair\\s+(?:vehicles?|machinery|equipment)\\b", "\\b(?:repair(?:ing)?|maintain(?:ing)?|service|servicing|overhaul(?:ing)?|mechanical\\s+troubleshooting)\\b[^.!?]{0,80}\\b(?:machinery|engines?|hydraulic|pneumatic|mechanical\\s+(?:equipment|systems?)|industrial\\s+equipment)\\b"]
+    },
+    {
+      "id": "role.fabrication-assembly-machining",
+      "displayName": "Fabrication / Assembly / Machining",
+      "category": "Role Type / Career Direction",
+      "titleEvidencePatterns": ["\\b(?:manufacturing\\s+)?machinist\\b", "\\b(?:assembly\\s+mechanic|fabricator|welder|production\\s+assembler)\\b"],
+      "evidencePatterns": ["\\blarge\\s+structure\\s+fabrication\\b", "\\bmachine\\s+parts\\s+to\\s+(?:drawing|blueprint|specification)\\b", "\\b(?:fabricat(?:e|es|ing|ion)|machin(?:e|es|ing)|weld(?:ing)?|assembl(?:e|es|ing|y))\\b[^.!?]{0,70}\\b(?:physical\\s+)?(?:parts?|structures?|components?|assemblies|equipment|sheet\\s+metal|composites?|workpieces?)\\b"]
+    },
+    {
+      "id": "role.physical-inspection-quality-control",
+      "displayName": "Physical Inspection / Quality Control",
+      "category": "Role Type / Career Direction",
+      "titleEvidencePatterns": ["\\b(?:electrical|production|manufacturing|quality|test)\\s+inspector\\b", "\\bquality\\s+inspections?\\s+(?:manager|specialist)\\b"],
+      "evidencePatterns": ["\\bphysical\\s+inspection\\s+(?:and|/)\\s+acceptance\\b", "\\b(?:inspect(?:ion|ing|s)?|verify\\s+workmanship)\\b[^.!?]{0,70}\\b(?:assemblies|parts?|equipment|installations?|workmanship|materials?|welds?|hardware|aircraft|fleet\\s+vehicles?|vehicles?)\\b", "\\b(?:quality[- ]control|acceptance)\\s+inspection\\b[^.!?]{0,70}\\b(?:assemblies|parts?|equipment|installations?|materials?|welds?|hardware|aircraft)\\b"]
+    },
+    {
+      "id": "role.lab-test-technician",
+      "displayName": "Laboratory / Test Technician Work",
+      "category": "Role Type / Career Direction",
+      "titleEvidencePatterns": ["\\b(?:laboratory|lab)\\s+technician\\b", "\\benvironmental\\s+test\\s+technician\\b"],
+      "evidencePatterns": ["\\boperate\\s+(?:laboratory|test)\\s+instrumentation\\b"],
+      "contextRules": [
+        { "requiredPatterns": ["\\b(?:test|laboratory|lab)\\s+technician\\b", "\\b(?:instrumentation|test\\s+equipment|laboratory|specimens?|measurements?|data\\s+acquisition)\\b"] },
+        { "requiredPatterns": ["\\b(?:set\\s*up|operate|calibrat(?:e|es|ing))\\b", "\\b(?:laboratory|lab)\\s+(?:instrumentation|equipment|apparatus)\\b"] }
+      ],
+      "supersedes": ["work.lab-environment"]
+    },
+    {
+      "id": "role.warehouse-material-handling",
+      "displayName": "Warehouse / Material Handling Operations",
+      "category": "Role Type / Career Direction",
+      "titleEvidencePatterns": ["\\bwarehouse\\s+(?:associate|operator|specialist|worker)\\b", "\\bmaterial\\s+handler\\b", "\\b(?:MRO(?:&U)?\\s+)?inventory\\s+specialist\\b"],
+      "evidencePatterns": ["\\bshipping\\s+(?:and|/)\\s+receiving\\b", "\\bwarehouse\\s+operations\\b", "\\bmaterial\\s+handling\\s+(?:operations|equipment)\\b", "\\breceiv(?:e|es|ing)\\b[^.!?]{0,80}\\b(?:stock(?:ing)?|pick(?:ing)?|pack(?:ing)?)\\b[^.!?]{0,80}\\b(?:inventory|materials?|shipments?|parts?)\\b", "\\b(?:stock(?:ing)?|pick(?:ing)?)\\b[^.!?]{0,60}\\b(?:warehouse|physical)\\s+inventory\\b"]
+    },
+    {
+      "id": "role.manufacturing-production-operations",
+      "displayName": "Manufacturing / Production Operations",
+      "category": "Role Type / Career Direction",
+      "titleEvidencePatterns": ["\\b(?:manufacturing|production)\\s+(?:operator|technician|associate|worker)\\b", "\\bassembly[- ]line\\s+(?:operator|worker)\\b"],
+      "evidencePatterns": ["\\b(?:assembly|production)\\s+line\\s+operations?\\b", "\\bdirect\\s+production\\s+operations\\b", "\\bplant[- ]floor\\s+operations?\\b"],
+      "contextRules": [
+        { "requiredPatterns": ["\\b(?:operate|run|monitor|staff)\\b", "\\b(?:production|manufacturing)\\s+(?:line|equipment|machinery|cell)\\b"] }
+      ],
+      "supersedes": ["work.manufacturing-floor"]
     },
     {
       "id": "role.management-heavy",

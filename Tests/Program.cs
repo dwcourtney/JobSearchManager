@@ -13,6 +13,19 @@ using System.Net.Mail;
 using System.Security.Claims;
 using JobSearchManager;
 
+if (args.Length is 2 or 3 && args[0] == "--detector-evaluation")
+{
+    var catalog = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+    var detector = new JobConceptDetector(catalog);
+    var evaluation = new DetectorEvaluationService(
+        new TestHostEnvironment(AppContext.BaseDirectory), catalog, detector);
+    var report = evaluation.Evaluate(args.Length == 3 ? args[2] : null);
+    await File.WriteAllTextAsync(args[1], JsonSerializer.Serialize(report,
+        new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true }));
+    Console.WriteLine($"DETECTOR EVALUATION fixtures={report.FixtureCount} concepts={report.Concepts.Count}");
+    return;
+}
+
 if (args.Length == 3 && args[0] == "--job-fit-calibration-detect")
 {
     using var document = JsonDocument.Parse(await File.ReadAllTextAsync(args[1]));
@@ -370,6 +383,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Travel tolerance migrates legacy preferences deterministically", TestTravelToleranceMigrationAsync),
     ("Preferred work location migrates legacy preferences deterministically", TestWorkLocationMigrationAsync),
     ("Canonical job concepts are detected during normalization", TestJobConceptDetectionAsync),
+    ("Detector evaluation uses independent labels and valid deterministic metrics", TestDetectorEvaluationAsync),
     ("Obsolete automatic-refresh settings are ignored", TestObsoleteAutomaticSettingsIgnoredAsync),
     ("Legacy applied source remains configured", TestLegacyAppliedSourceMigrationAsync),
     ("Legacy cached posting URLs migrate to the canonical field", TestLegacyCacheUrlMigrationAsync),
@@ -1695,8 +1709,54 @@ static Task TestJobConceptDetectionAsync()
              "work.aircraft-flight-line" or "role.management-heavy")),
         "A title-only concept was inferred from a body reference to another role.");
 
-    Assert(concepts.Version == 7 && concepts.Concepts.Count == 79 &&
-           concepts.Concepts.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count() == 79 &&
+    HashSet<string> DetectWorkType(string title, string description) => detector.Analyze(
+        title, "United States", [], $"<p>{description}</p>",
+        new RemoteWorkDetector().Analyze(title, "United States", [], $"<p>{description}</p>"),
+        new ExtendedLocationRequirementDetector().Analyze(
+            title, "United States", [], $"<p>{description}</p>"))
+        .Select(item => item.ConceptId).ToHashSet(StringComparer.Ordinal);
+    var workTypeCases = new[]
+    {
+        ("Fleet Technician/Auditor", "Inspect, maintain, troubleshoot, and repair fleet vehicles.",
+            new[] { "role.mechanical-maintenance-repair", "role.physical-inspection-quality-control" }),
+        ("Manufacturing Machinist", "Machine metal parts to blueprint specifications.",
+            new[] { "role.fabrication-assembly-machining" }),
+        ("Electrical Test Inspector", "Inspect electrical assemblies and verify hardware workmanship.",
+            new[] { "role.physical-inspection-quality-control" }),
+        ("Laboratory Technician", "Operate laboratory instrumentation and record physical measurements.",
+            new[] { "role.lab-test-technician" }),
+        ("Warehouse Associate", "Receive shipments, stock parts, pick inventory, and move pallets.",
+            new[] { "role.warehouse-material-handling" }),
+        ("Production Technician", "Operate manufacturing equipment and monitor a production line.",
+            new[] { "role.manufacturing-production-operations" })
+    };
+    foreach (var (title, description, expected) in workTypeCases)
+    {
+        var workTypeIds = DetectWorkType(title, description);
+        Assert(workTypeIds.IsSupersetOf(expected),
+            $"Reusable work-type concepts were missed for '{title}': {string.Join(", ", workTypeIds)}");
+    }
+    var hardNegatives = new[]
+    {
+        ("Software Engineer, Automotive Platform", "Develop cloud software for automotive telemetry APIs."),
+        ("Manufacturing Software Engineer", "Develop manufacturing execution software and assembly scheduling systems."),
+        ("Software QA Engineer", "Inspect application logs and review automated test results."),
+        ("Software Test Engineer", "Write automated tests in Python for the CI test framework."),
+        ("Data Warehouse Developer", "Build ETL pipelines for an enterprise data warehouse.")
+    };
+    var newWorkTypeIds = new HashSet<string>([
+        "role.mechanical-maintenance-repair", "role.fabrication-assembly-machining",
+        "role.physical-inspection-quality-control", "role.lab-test-technician",
+        "role.warehouse-material-handling", "role.manufacturing-production-operations"
+    ], StringComparer.Ordinal);
+    foreach (var (title, description) in hardNegatives)
+    {
+        Assert(!DetectWorkType(title, description).Overlaps(newWorkTypeIds),
+            $"Industry or software context produced a work-type false positive for '{title}'.");
+    }
+
+    Assert(concepts.Version == 8 && concepts.Concepts.Count == 85 &&
+           concepts.Concepts.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count() == 85 &&
            concepts.Concepts.Any(item => item.Category == "Role Type / Career Direction") &&
            concepts.Concepts.Any(item => item.Category == "Responsibility Shape") &&
            concepts.Concepts.All(item => !item.Id.StartsWith("qualification.", StringComparison.Ordinal)),
@@ -1706,6 +1766,11 @@ static Task TestJobConceptDetectionAsync()
            concepts.Get("work.travel.substantial").Supersedes?.SequenceEqual(
                ["work.travel.frequent", "work.travel.moderate", "work.travel.occasional"]) == true,
         "Canonical correlated-signal supersedence metadata is missing.");
+    Assert(concepts.Get("role.lab-test-technician").Supersedes?.SequenceEqual(
+               ["work.lab-environment"]) == true &&
+           concepts.Get("role.manufacturing-production-operations").Supersedes?.SequenceEqual(
+               ["work.manufacturing-floor"]) == true,
+        "New work-type concepts must suppress duplicate environment scoring when both detect.");
     var internalTravel = concepts.Options
         .Where(option => option.Id.StartsWith("work.travel.", StringComparison.Ordinal))
         .ToArray();
@@ -1726,6 +1791,56 @@ static Task TestJobConceptDetectionAsync()
             !string.IsNullOrWhiteSpace(option.Category) &&
             option.Supersedes is not null),
         "A selectable canonical concept lacks a stable ID or display metadata.");
+    return Task.CompletedTask;
+}
+
+static Task TestDetectorEvaluationAsync()
+{
+    var catalog = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+    var detector = new JobConceptDetector(catalog);
+    var service = new DetectorEvaluationService(
+        new TestHostEnvironment(AppContext.BaseDirectory), catalog, detector);
+    var report = service.Evaluate("0123456789abcdef0123456789abcdef01234567");
+    var expectedConcepts = new HashSet<string>([
+        "role.mechanical-maintenance-repair", "role.fabrication-assembly-machining",
+        "role.physical-inspection-quality-control", "role.lab-test-technician",
+        "role.warehouse-material-handling", "role.manufacturing-production-operations"
+    ], StringComparer.Ordinal);
+    Assert(report.FixtureVersion == 1 && report.FixtureCount == 36 &&
+           report.Concepts.Select(item => item.ConceptId).ToHashSet(StringComparer.Ordinal)
+               .SetEquals(expectedConcepts) &&
+           report.Concepts.All(item => item.PositiveSupport == 3 && item.NegativeExamples == 3) &&
+           report.BuildSha == "0123456789abcdef0123456789abcdef01234567",
+        "The independent labeled evaluation corpus changed identity, support, or SHA metadata.");
+    Assert(report.Concepts.All(item =>
+               item.TruePositive + item.FalseNegative == item.PositiveSupport &&
+               item.FalsePositive + item.TrueNegative == item.NegativeExamples &&
+               item.Precision is >= 0 and <= 1 && item.Recall is >= 0 and <= 1 &&
+               item.F1 is >= 0 and <= 1) &&
+           report.Macro.Precision is >= 0 and <= 1 &&
+           report.Macro.Recall is >= 0 and <= 1 && report.Macro.F1 is >= 0 and <= 1 &&
+           report.Micro.Precision is >= 0 and <= 1 &&
+           report.Micro.Recall is >= 0 and <= 1 && report.Micro.F1 is >= 0 and <= 1,
+        "Detector confusion counts, support, or macro/micro metrics are invalid.");
+
+    var concept = catalog.Get("role.mechanical-maintenance-repair");
+    var fixture = new DetectorEvaluationFixture(
+        "metric", "Synthetic", "Metric case", "Evidence", concept.Id, true);
+    DetectorEvaluationService.Observation Observation(bool expected, bool predicted) => new(
+        fixture with { Id = $"metric-{expected}-{predicted}", ExpectedPresent = expected },
+        predicted ? new DetectedJobConcept(concept.Id, "Production evidence") : null);
+    var matrix = DetectorEvaluationService.CalculateConcept(concept,
+        [Observation(true, true), Observation(false, true),
+         Observation(true, false), Observation(false, false)]);
+    Assert(matrix.TruePositive == 1 && matrix.FalsePositive == 1 &&
+           matrix.FalseNegative == 1 && matrix.TrueNegative == 1 &&
+           matrix.Precision == 0.5 && matrix.Recall == 0.5 && matrix.F1 == 0.5 &&
+           matrix.FalsePositives.Count == 1 && matrix.FalseNegatives.Count == 1,
+        "TP/FP/FN/TN, precision, recall, F1, or error details were calculated incorrectly.");
+    Assert(DetectorEvaluationService.Divide(0, 0) is null &&
+           DetectorEvaluationService.HarmonicMean(null, 1) is null &&
+           DetectorEvaluationService.AverageDefined([null, null]) is null,
+        "Zero-denominator detector metrics must be explicitly undefined rather than NaN.");
     return Task.CompletedTask;
 }
 
@@ -2987,7 +3102,7 @@ static async Task TestLocalReclassificationAsync()
     Assert(handler.DetailRequests == before && second.Metrics?.ReclassifiedLocally == 1 &&
            second.Jobs.Single().AnalysisVersion == JobSourceClient.CurrentAnalysisVersion &&
            second.Jobs.Single().ExtendedLocationRequirement?.AnalysisVersion == 3 &&
-           second.Jobs.Single().JobConceptCatalogVersion == 7 &&
+           second.Jobs.Single().JobConceptCatalogVersion == 8 &&
            second.Jobs.Single().PayMinimum == 104_550m &&
            second.Jobs.Single().PayMaximum == 141_450m &&
            second.Jobs.Single().PayPeriod == "annual" &&
@@ -4507,7 +4622,7 @@ static Task TestExtendedAwayAssignmentAsync()
            overlap.Any(item => item.ConceptId == "work.rotation") &&
            (catalog.Get(conceptId).Supersedes?.Count ?? 0) == 0,
         "Overlapping deployment/rotation signals were duplicated or incorrectly superseded.");
-    Assert(ExtendedLocationRequirementDetector.CurrentAnalysisVersion == 3 && catalog.Version == 7,
+    Assert(ExtendedLocationRequirementDetector.CurrentAnalysisVersion == 3 && catalog.Version == 8,
         "Extended assignment changes did not invalidate cached classification versions.");
     return Task.CompletedTask;
 }

@@ -71,6 +71,7 @@ builder.Services.AddSingleton<RemoteWorkDetector>();
 builder.Services.AddSingleton<ExtendedLocationRequirementDetector>();
 builder.Services.AddSingleton<JobConceptCatalog>();
 builder.Services.AddSingleton<JobConceptDetector>();
+builder.Services.AddSingleton<DetectorEvaluationService>();
 builder.Services.AddSingleton<PortableWorkspaceService>();
 builder.Services.AddSingleton<SharedSourceRefreshCoordinator>();
 // Preserve the established data-protection discriminator so existing Azure
@@ -442,6 +443,10 @@ app.MapGet("/api/admin/status", (HttpContext context) =>
         email = account?.Email ?? context.User.FindFirstValue(ClaimTypes.Name)
     });
 }).RequireAuthorization(AdminAuthorization.Policy);
+
+app.MapGet("/api/admin/detector-evaluation", (DetectorEvaluationService evaluation) =>
+    Results.Ok(evaluation.Evaluate(Environment.GetEnvironmentVariable("JOBSEARCHMANAGER_COMMIT_SHA"))))
+    .RequireAuthorization(AdminAuthorization.Policy);
 
 app.MapPost("/api/account/create", async Task<IResult> (
     CreateAccountRequest request,

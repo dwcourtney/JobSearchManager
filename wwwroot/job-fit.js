@@ -111,6 +111,13 @@
       section("hardware-field-engineering", "Hardware / Field Engineering", [
         "role.hardware-engineering", "role.field-service", "role.test-validation-engineering"
       ]),
+      section("trades-technician-work", "Trades / Technician Work", [
+        "role.mechanical-maintenance-repair", "role.fabrication-assembly-machining",
+        "role.physical-inspection-quality-control", "role.lab-test-technician"
+      ]),
+      section("physical-operations", "Physical Operations", [
+        "role.warehouse-material-handling", "role.manufacturing-production-operations"
+      ]),
       section("physical-field-environments", "Physical / Field Environments", [
         "work.aircraft-flight-line", "work.customer-site", "work.data-center",
         "work.field-engineering", "work.lab-environment", "work.manufacturing-floor",
@@ -215,6 +222,12 @@
     "responsibility.documentation-heavy": "A substantial portion of the role involves formal documentation or compliance artifacts.",
     "responsibility.hands-on-implementation": "Significant direct building, coding, configuring, testing, or troubleshooting.",
     "role.management-heavy": "A large portion of the job is coordination, planning, or management rather than direct technical execution.",
+    "role.mechanical-maintenance-repair": "Hands-on maintenance, repair, servicing, and mechanical troubleshooting of vehicles, machinery, equipment, or physical systems.",
+    "role.fabrication-assembly-machining": "Producing, assembling, machining, welding, or fabricating physical parts, structures, equipment, or assemblies.",
+    "role.physical-inspection-quality-control": "Hands-on inspection, acceptance, and quality-control verification of physical equipment, parts, installations, materials, or workmanship.",
+    "role.lab-test-technician": "Technician-level hands-on setup, instrumentation, measurement, test execution, and laboratory support.",
+    "role.warehouse-material-handling": "Physical receiving, stocking, picking, shipping, inventory movement, warehouse operations, and material handling.",
+    "role.manufacturing-production-operations": "Direct plant-floor production, assembly-line, manufacturing, or production-equipment operations.",
     "responsibility.operations-sustainment": "Ongoing support, maintenance, monitoring, incident response, or lifecycle sustainment.",
     "responsibility.personnel-management": "Formal employee responsibility including hiring, reviews, staffing, or development.",
     "responsibility.proposal-capture": "Business-development work involving proposals, bids, capture strategy, or winning new work.",
