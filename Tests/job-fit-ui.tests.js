@@ -62,8 +62,8 @@ assert.match(app,
   /excludeStrongExtendedLocationRequirements: state\.excludeStrongExtendedLocationRequirements/,
   "The existing filtering setting must save under its unchanged persisted name.");
 assert.match(app,
-  /!state\.jobFitEnabled \|\|\s*!state\.excludeStrongExtendedLocationRequirements \|\|\s*job\.extendedLocationRequirement\?\.confidence !== "strong"/,
-  "The existing strong-detection predicate must be suspended only while its parent Job Fit setting is disabled.");
+  /!state\.excludeStrongExtendedLocationRequirements \|\|\s*job\.extendedLocationRequirement\?\.confidence !== "strong"/,
+  "The Job Fit hierarchy must not change the existing strong-detection filtering predicate.");
 assert.match(app,
   /jobFitConfiguration\.classList\.toggle\("is-inactive", !state\.jobFitEnabled\)[\s\S]*?excludeStrongExtendedLocationRequirements\.disabled = !state\.jobFitEnabled[\s\S]*?jobFitConceptSearch\.disabled = !state\.jobFitEnabled/,
   "Disabling Job Fit must visibly inactivate and disable every subordinate control.");
