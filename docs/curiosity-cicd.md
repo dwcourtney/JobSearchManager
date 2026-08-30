@@ -102,7 +102,7 @@ lightweight exact-SHA signal. `scripts/ci-validate.sh` enforces:
 5. JavaScript runtime tests and centralized theme/source checks;
 6. `git diff --check` and a clean generated-file check;
 7. independent Trivy source dependency, secret, and Dockerfile configuration scans;
-8. independent Semgrep Community C# static application-security analysis;
+8. independent CodeQL `security-extended` analysis for C# and JavaScript;
 9. a linux/amd64 image tagged by full SHA;
 10. an OCI revision label equal to that SHA;
 11. an independent Trivy scan of the exact candidate image archive;
@@ -155,65 +155,48 @@ explicit version and verified linux/amd64 digest in `scripts/security-scan.sh`, 
 the policy self-test and full CI, and review release notes before promoting the change.
 
 Results remain in the normal CI/deployment logs. SARIF upload is not enabled because
-it would require broader `security-events` token permission, and the exact deployed
+Trivy SARIF upload is not enabled because it would require broader `security-events`
+token permission in the non-CodeQL validation path, and the exact deployed
 artifact is currently built locally rather than promoted from hosted CI. For the same
 reason, an SBOM of the hosted candidate would not be authoritative for the curiosity
 artifact. License scanning is also deferred to avoid conflating legal inventory with
-the vulnerability release gate. Trivy is not .NET-aware SAST; Semgrep provides the
-separate application-source layer described below.
+the vulnerability release gate. Trivy is not .NET-aware application SAST; CodeQL
+provides the separate source-analysis layer described below.
 
 ## Static application-security analysis
 
-Semgrep Community Edition 1.175.0 analyzes application C# only on the GitHub-hosted
-runner. Its official linux/amd64 container is pinned to
-`sha256:1623685c0f6388b0bc8d577a712bf92b88252aaa09d6d7e38943dafa10ed978c`.
-The official Community rules are a public Git submodule pinned to commit
-`40b8c63f75dc7c22c8a77482d73bfb864b146f7e`; CI initializes that exact gitlink only
-after Trivy has scanned the application checkout. The rules submodule is excluded
-from the JSM Docker build context.
+GitHub CodeQL Action 4.37.9 is pinned to immutable commit
+`cdf488f595d80d6e07e03d4674febd5ab45fa938`. It currently resolves CodeQL bundle
+2.26.4. C# uses manual build mode so extraction observes the same locked restore,
+Release build, and deterministic validation JSM already trusts. JavaScript/TypeScript
+uses build mode `none`; JSM's meaningful browser JavaScript needs no package install or
+separate build, so the second analysis adds coverage without duplicating the .NET build.
+Both languages use the official `security-extended` suite. The initial JSM analysis
+exposed 63 C# rules and 103 JavaScript rules through GitHub's analysis API.
 
-The scanner container runs non-root, read-only, without capabilities or a Docker
-socket, and with network access disabled. Metrics and version checks are disabled,
-the open-source engine is forced, and no Semgrep account or token exists. Image and
-rule acquisition contact only Docker Hub and the public GitHub rules repository before
-the scan; private JSM source and findings remain on the GitHub-hosted runner. The
-workflow retains only `contents: read` permission and does not use GitHub's unavailable
-private-repository code-scanning/SARIF service.
+The workflow defaults to no token permissions. Only the two CodeQL jobs receive
+`contents: read` and `security-events: write`; no deployment environment, self-hosted
+runner, curiosity credential, application data, Azure credential, or Cloudflare
+credential is available to them. Results are uploaded to GitHub code scanning under
+the C# and JavaScript categories and are reviewed at the repository's Security and
+quality code-scanning page.
 
-The scan loads the C# .NET, language-security, and Razor-security directories. The
-upstream rules plus one local replacement are validated and 44 apply to the current
-C# files. Coverage includes common
-injection, command execution, path handling, deserialization, SSRF, XXE,
-authentication-token, cryptography, TLS, and response-handling patterns. `bin`, `obj`,
-tests, third-party rules, JavaScript, and generated output are excluded. JavaScript is
-not included initially because the browser pack produced duplicate false positives for
-the explicitly DOMPurify-sanitized description assignment already protected by focused
-runtime/source-order tests.
+The C# job performs the full exact-SHA validation before analysis. The parallel
+JavaScript job analyzes the same exact event SHA. A final `Validate exact commit` job
+fails unless both analysis jobs succeed, preserving the existing protected-main check,
+and automatic deployment still requires the entire `CI` workflow to succeed. CodeQL
+initialization, extraction, query, or upload failures therefore block promotion and
+deployment. The repository ruleset also requires CodeQL results and blocks high or
+critical security alerts through GitHub's native code-scanning protection. Lower
+severity alerts remain visible for review rather than being interpreted by a custom
+SARIF parser.
 
-Semgrep writes readable findings to the CI log and a temporary JSON report consumed by
-the local policy evaluator. The JSON is deleted at job exit and is not uploaded.
-Scanner or rule errors, partial parsing, a missing/wrong rules commit, High-confidence
-findings, and Medium-confidence `ERROR` findings fail CI. Other findings remain
-advisory in the log. The upstream fully qualified `xpath-injection` audit rule is the sole narrow rule
-exclusion: it exhausts the Community engine's intrafile fixpoint on unrelated JSM
-methods. `security/semgrep-jsm-rules/csharp-xpath-injection.yaml` replaces it with
-deterministic direct concatenation/interpolation coverage. Analysis timeouts and skipped
-rules fail CI, so this exception cannot silently reduce the rest of the scan. No finding
-suppression or broad ignore file exists. Runtime-only safe and
-weak-RNG C# fixtures prove both pass and block paths; an invalid runtime-only rule proves
-scanner failure is fail-closed. These fixtures never enter the repository or image.
-
-Developers should fix a blocking finding and add focused regression coverage. A false
-positive should be demonstrated with evidence before considering a narrowly scoped,
-documented rule exclusion; inline or broad suppressions are not the default. To update
-Semgrep, verify a new official release and linux/amd64 digest, inspect release notes,
-advance the rules gitlink deliberately, review changed C# rules and licenses, and run
-the policy self-test, initial full scan, and complete CI before promotion.
-
-Community Edition performs meaningful intrafile syntax and taint analysis but does not
-provide the paid Pro engine's cross-file/interprocedural analysis. CodeQL configuration
-is intentionally outside this repository-ownership change; the established Semgrep and
-Trivy gates remain unchanged.
+The CodeQL Action pin and resolved bundle should be updated deliberately: review the
+official release and CodeQL changelog, replace both `init` and `analyze` pins with the
+same immutable commit, run deterministic workflow assertions, and prove clean topic
+and main analyses before promotion. Real findings are fixed with regression coverage;
+any false-positive dismissal requires evidence in GitHub rather than a broad source
+suppression.
 
 ## Deployment workflow
 

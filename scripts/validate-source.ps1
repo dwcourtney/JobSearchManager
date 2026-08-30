@@ -42,7 +42,6 @@ $jobFitDetailUiTestsPath = Join-Path $repo "Tests\job-fit-detail-ui.tests.js"
 $accountUiTestsPath = Join-Path $repo "Tests\account-ui.tests.js"
 $adminUiTestsPath = Join-Path $repo "Tests\admin-ui.tests.js"
 $securityScanningTestsPath = Join-Path $repo "Tests\security-scanning.tests.js"
-$sastScanningTestsPath = Join-Path $repo "Tests\sast-scanning.tests.js"
 $codeqlScanningTestsPath = Join-Path $repo "Tests\codeql-scanning.tests.js"
 
 foreach ($scriptPath in @(
@@ -78,7 +77,6 @@ foreach ($scriptPath in @(
     $accountUiTestsPath,
     $adminUiTestsPath,
     $securityScanningTestsPath,
-    $sastScanningTestsPath,
     $codeqlScanningTestsPath)) {
     & $NodePath --check $scriptPath
     if ($LASTEXITCODE -ne 0) {
@@ -189,11 +187,6 @@ if ($LASTEXITCODE -ne 0) {
 & $NodePath $securityScanningTestsPath
 if ($LASTEXITCODE -ne 0) {
     throw "Security scanning integration tests failed."
-}
-
-& $NodePath $sastScanningTestsPath
-if ($LASTEXITCODE -ne 0) {
-    throw "Semgrep SAST integration tests failed."
 }
 
 & $NodePath $codeqlScanningTestsPath

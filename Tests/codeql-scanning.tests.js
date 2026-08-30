@@ -9,6 +9,12 @@ const workflow = fs.readFileSync(
   path.join(repo, ".github", "workflows", "ci.yaml"), "utf8");
 const deploy = fs.readFileSync(
   path.join(repo, ".github", "workflows", "deploy-curiosity.yaml"), "utf8");
+const ci = fs.readFileSync(path.join(repo, "scripts", "ci-validate.sh"), "utf8");
+const trivy = fs.readFileSync(path.join(repo, "scripts", "security-scan.sh"), "utf8");
+const curiosityDeploy = fs.readFileSync(path.join(repo, "scripts", "deploy-curiosity.sh"), "utf8");
+const dockerignore = fs.readFileSync(path.join(repo, ".dockerignore"), "utf8");
+const project = fs.readFileSync(path.join(repo, "JobSearchManager.csproj"), "utf8");
+const securityDocs = fs.readFileSync(path.join(repo, "docs", "curiosity-cicd.md"), "utf8");
 
 const checkoutPin = "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1";
 const dotnetPin = "actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68";
@@ -44,5 +50,26 @@ assert.match(deploy, /workflows: \[CI\]/);
 assert.match(deploy, /RUN_CONCLUSION/);
 assert.match(deploy, /\$RUN_CONCLUSION.*success/,
   "Automatic deployment must still require the complete CI workflow to succeed.");
+
+assert.match(ci, /security-scan\.sh source/);
+assert.match(ci, /security-scan\.sh policy-test/);
+assert.match(trivy, /ghcr\.io\/aquasecurity\/trivy:/, "Trivy must remain pinned and active.");
+assert.match(curiosityDeploy, /security-scan\.sh" image/,
+  "Curiosity must still scan the exact deployable image with Trivy.");
+
+const retiredScanner = ["sem", "grep"].join("");
+for (const retiredPath of [
+  path.join(repo, ".gitmodules"),
+  path.join(repo, "scripts", `${retiredScanner === "" ? "" : "sast-scan"}.sh`),
+  path.join(repo, "scripts", `evaluate-${retiredScanner}.py`),
+  path.join(repo, "security", `${retiredScanner}-rules`),
+  path.join(repo, "security", `${retiredScanner}-jsm-rules`)
+]) {
+  assert.ok(!fs.existsSync(retiredPath), `Retired SAST artifact remains: ${retiredPath}`);
+}
+for (const [name, source] of Object.entries({ ci, dockerignore, project, securityDocs })) {
+  assert.ok(!source.toLowerCase().includes(retiredScanner),
+    `${name} retains an active dependency on the retired scanner.`);
+}
 
 console.log("CodeQL integration tests passed.");

@@ -333,6 +333,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Container workspaces are browser-isolated with non-secure LAN cookies", TestContainerWorkspaceMiddlewareAsync),
     ("Configured Data Protection keys persist to the requested directory", TestDataProtectionPersistenceAsync),
     ("Health endpoint is lightweight and returns HTTP 200", TestHealthEndpointAsync),
+    ("Log fields cannot forge additional lines", TestLogValueSanitizationAsync),
     ("Version endpoint exposes only immutable deployment identity", TestVersionEndpointAsync),
     ("Azure mode requires explicit storage configuration", TestAzureValidationAsync),
     ("Legacy Azure settings migrate without overriding canonical settings", TestLegacyAzureConfigurationAsync),
@@ -487,6 +488,14 @@ static Task TestLocalDefaultAsync()
     Assert(hosting.IsLocal, "Hosting must default to Local.");
     Assert(hosting.StorageAccount is null && hosting.StorageContainer is null,
         "Local mode must not require Azure storage.");
+    return Task.CompletedTask;
+}
+
+static Task TestLogValueSanitizationAsync()
+{
+    var sanitized = JobCatalog.SanitizeLogValue("United States\r\nforged\u2028entry\u2029tail");
+    Assert(sanitized == "United States  forged entry tail",
+        "Log sanitization did not neutralize every supported line separator.");
     return Task.CompletedTask;
 }
 

@@ -541,7 +541,7 @@ public sealed class AppStateStore
         includeRemote = hasConfiguredSource && company.RemoteLocationIds.Count > 0 &&
             (includeAllLocations || includeRemote);
         var physicalLocations = includeAllLocations
-            ? Array.Empty<FacetSelection>()
+            ? []
             : selectedPhysicalLocations
                 .Where(location => !string.IsNullOrWhiteSpace(location?.Id) &&
                     !company.IsRemoteLocation(location.Id))
@@ -688,7 +688,7 @@ public sealed class AppStateStore
         var includeRemote = company.RemoteLocationIds.Count > 0 &&
             (includeAll || source.IncludeRemote);
         var physical = includeAll
-            ? Array.Empty<FacetSelection>()
+            ? []
             : (source.SelectedPhysicalLocations ?? [])
                 .Where(location => !string.IsNullOrWhiteSpace(location?.Id) &&
                     !company.IsRemoteLocation(location.Id))

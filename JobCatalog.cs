@@ -625,7 +625,7 @@ public sealed class JobCatalog
             _logger.LogInformation(
                 "Refreshing the {Company} job snapshot for country {Country} and locations {Locations}.",
                 company.DisplayName,
-                query.CountryLabel,
+                SanitizeLogValue(query.CountryLabel),
                 DescribeLocations(query));
             var cachedDocument = await _stateStore.LoadJobsCacheAsync(query);
             var cacheWasPresent = cachedDocument?.Query?.IsEquivalentTo(query, _companyCatalog) == true;
@@ -751,6 +751,13 @@ public sealed class JobCatalog
             _sourceOperationGate.Release();
         }
     }
+
+    internal static string SanitizeLogValue(string? value) =>
+        (value ?? string.Empty)
+            .Replace('\r', ' ')
+            .Replace('\n', ' ')
+            .Replace('\u2028', ' ')
+            .Replace('\u2029', ' ');
 
     private async Task<JobsSnapshot> ApplySharedCacheAfterConcurrentRefreshAsync(
         JobSourceQuery query,

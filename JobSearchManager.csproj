@@ -32,11 +32,8 @@
 
   <ItemGroup>
     <Compile Remove="Tests\**\*.cs" />
-    <Compile Remove="security\semgrep-rules\**\*.cs" />
     <Content Remove="Tests\**\*" />
-    <Content Remove="security\semgrep-rules\**\*" />
     <None Remove="Tests\**\*" />
-    <None Remove="security\semgrep-rules\**\*" />
     <Content Remove="azure-deploy-*\**\*;publish\**\*" />
     <None Remove="azure-deploy-*\**\*;publish\**\*" />
   </ItemGroup>
