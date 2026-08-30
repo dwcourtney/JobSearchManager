@@ -446,11 +446,76 @@ public static class JobFitPreferenceLevels
 
 public sealed record JobFitSignalPreference(string ConceptId, string Preference);
 
+public static class TravelTolerance
+{
+    public const int Minimum = 0;
+    public const int Maximum = 6;
+    public const int Default = 4;
+
+    private static readonly IReadOnlyDictionary<string, int> LegacyConceptLevels =
+        new Dictionary<string, int>(StringComparer.Ordinal)
+        {
+            ["work.travel.occasional"] = 3,
+            ["work.travel.moderate"] = 4,
+            ["work.travel.frequent"] = 5,
+            ["work.travel.substantial"] = 6
+        };
+
+    public static bool IsSupported(int? value) => value is >= Minimum and <= Maximum;
+
+    public static bool IsLegacyConcept(string? conceptId) =>
+        conceptId is not null && LegacyConceptLevels.ContainsKey(conceptId);
+
+    public static int Normalize(
+        int? value,
+        IEnumerable<JobFitSignalPreference>? legacySignals = null)
+    {
+        if (IsSupported(value))
+        {
+            return value!.Value;
+        }
+
+        var restrictive = new List<int>();
+        var permissive = new List<int>();
+        foreach (var signal in legacySignals ?? [])
+        {
+            if (signal is null || !LegacyConceptLevels.TryGetValue(signal.ConceptId, out var level))
+            {
+                continue;
+            }
+
+            var preference = JobFitPreferenceLevels.Normalize(signal.Preference);
+            if (preference == JobFitPreferenceLevels.HardConflict)
+            {
+                restrictive.Add(level - 2);
+            }
+            else if (preference == JobFitPreferenceLevels.Negative)
+            {
+                restrictive.Add(level - 1);
+            }
+            else if (preference is JobFitPreferenceLevels.Positive or JobFitPreferenceLevels.Ideal)
+            {
+                permissive.Add(level);
+            }
+        }
+
+        if (restrictive.Count > 0)
+        {
+            return Math.Clamp(restrictive.Min(), Minimum, Maximum);
+        }
+
+        return permissive.Count > 0
+            ? Math.Clamp(Math.Max(Default, permissive.Max()), Minimum, Maximum)
+            : Default;
+    }
+}
+
 public sealed record JobFitConfiguration(
     bool Enabled,
-    IReadOnlyList<JobFitSignalPreference> Signals)
+    IReadOnlyList<JobFitSignalPreference> Signals,
+    int? TravelTolerance = null)
 {
-    public static JobFitConfiguration Disabled { get; } = new(false, []);
+    public static JobFitConfiguration Disabled { get; } = new(false, [], JobSearchManager.TravelTolerance.Default);
 
     public static JobFitConfiguration Normalize(
         JobFitConfiguration? configuration,
@@ -461,8 +526,13 @@ public sealed record JobFitConfiguration(
             return Disabled;
         }
 
-        var signals = (configuration.Signals ?? [])
+        var sourceSignals = configuration.Signals ?? [];
+        var travelTolerance = JobSearchManager.TravelTolerance.Normalize(
+            configuration.TravelTolerance,
+            sourceSignals);
+        var signals = sourceSignals
             .Where(signal => signal is not null && concepts.Contains(signal.ConceptId))
+            .Where(signal => !JobSearchManager.TravelTolerance.IsLegacyConcept(signal.ConceptId))
             .Select(signal => new
             {
                 signal.ConceptId,
@@ -474,7 +544,7 @@ public sealed record JobFitConfiguration(
             .OrderBy(signal => signal.ConceptId, StringComparer.Ordinal)
             .Take(100)
             .ToArray();
-        return new JobFitConfiguration(configuration.Enabled, signals);
+        return new JobFitConfiguration(configuration.Enabled, signals, travelTolerance);
     }
 }
 

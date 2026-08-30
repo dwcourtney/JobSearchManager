@@ -3,11 +3,13 @@
 const assert = require("node:assert/strict");
 const JobFit = require("../wwwroot/job-fit.js");
 
-const concept = (id, displayName, category, supersedes = []) =>
-  ({ id, displayName, category, supersedes });
+const concept = (id, displayName, category, supersedes = [], options = {}) =>
+  ({ id, displayName, category, supersedes, ...options });
 const detected = concepts => concepts.map(item =>
   ({ conceptId: item.id, evidence: `Evidence for ${item.displayName}` }));
-const configuration = signals => ({ enabled: true, signals });
+const detectedWithEvidence = (item, evidence) => ({ conceptId: item.id, evidence });
+const configuration = (signals, travelTolerance = 4) =>
+  ({ enabled: true, signals, travelTolerance });
 const signal = (item, preference) => ({ conceptId: item.id, preference });
 
 const remote = concept("work.remote", "Remote Work", "Work Arrangement");
@@ -20,6 +22,18 @@ const dataCenter = concept("work.data-center", "Data Center", "Work Environment"
 const physical = concept("work.physical-infrastructure", "Physical Infrastructure", "Work Environment");
 const deployment = concept("work.deployment", "Deployment", "Work Arrangement");
 const extendedAway = concept("work.extended-away-assignment", "Extended Away-from-Home Assignment", "Work Arrangement");
+const international = concept("work.international-assignment", "International / OCONUS Assignment", "Work Arrangement");
+const rotation = concept("work.rotation", "Rotational Assignment", "Work Arrangement");
+const relocation = concept("work.relocation", "Relocation", "Work Arrangement");
+const occasionalTravel = concept("work.travel.occasional", "Occasional Travel", "Work Arrangement", [],
+  { userConfigurable: false, travelLevel: 3 });
+const moderateTravel = concept("work.travel.moderate", "Moderate Travel", "Work Arrangement", [occasionalTravel.id],
+  { userConfigurable: false, travelLevel: 4 });
+const frequentTravel = concept("work.travel.frequent", "Frequent Travel", "Work Arrangement", [],
+  { userConfigurable: false, travelLevel: 5 });
+const substantialTravel = concept("work.travel.substantial", "Substantial Travel", "Work Arrangement",
+  [frequentTravel.id, moderateTravel.id, occasionalTravel.id],
+  { userConfigurable: false, travelLevel: 6 });
 const handsOn = concept("responsibility.hands-on-implementation", "Hands-on Implementation", "Responsibility Shape");
 const ai = concept("technical.artificial-intelligence", "Artificial Intelligence", "Technical Domain");
 const ml = concept("technical.machine-learning", "Machine Learning", "Technical Domain");
@@ -50,6 +64,78 @@ assert.equal(JobFit.preferenceLabels.strongPositive, undefined,
   "Legacy names must not remain available as extra UI states.");
 assert.equal(JobFit.preferenceLabels.negative, "Negative");
 assert.equal(JobFit.preferenceLabels.ideal, "Ideal");
+assert.equal(sparse.travelTolerance, 4, "New configurations must use the non-rejecting moderate default.");
+assert.equal(JobFit.normalizeTravelTolerance(2.5), 4, "Intermediate travel values must not be accepted.");
+assert.deepEqual(JobFit.travelLevels.map(item => item.level), [0, 1, 2, 3, 4, 5, 6]);
+assert.deepEqual(JobFit.travelLevels.map(item => item.label), [
+  "No travel", "Extremely rare", "Very light", "Occasional", "Moderate", "Heavy", "Travel-heavy"
+]);
+
+const travelConcepts = [occasionalTravel, moderateTravel, frequentTravel, substantialTravel];
+const travelCases = [
+  [occasionalTravel, "This role requires occasional travel.", 3],
+  [occasionalTravel, "This role requires up to 10% travel.", 3],
+  [moderateTravel, "This role requires 25% travel.", 4],
+  [moderateTravel, "This role requires 40% travel.", 5],
+  [substantialTravel, "This role requires 50% travel.", 5],
+  [substantialTravel, "This role requires 75% travel.", 6],
+  [frequentTravel, "Frequent travel is required.", 5],
+  [frequentTravel, "Extensive travel is required.", 5],
+  [occasionalTravel, "Travel, as needed, for client meetings.", 3],
+  [occasionalTravel, "Travel typically lasting no more than one week may be required.", 3],
+  [occasionalTravel, "At most one short trip every 2-3 years.", 1],
+  [occasionalTravel, "One short trip every 12-18 months.", 2]
+];
+for (const [travelConcept, evidence, expectedLevel] of travelCases) {
+  const result = JobFit.evaluate(
+    [detectedWithEvidence(travelConcept, evidence)],
+    configuration([], 6),
+    travelConcepts);
+  const comparison = result.neutralSignals[0].travelComparison;
+  assert.equal(comparison.detectedLevel, expectedLevel, evidence);
+  assert.equal(comparison.tolerance, 6);
+  assert.equal(comparison.result, "neutral");
+}
+
+const atTolerance = JobFit.evaluate(
+  [detectedWithEvidence(moderateTravel, "This role requires 25% travel.")],
+  configuration([], 4), travelConcepts);
+assert.equal(atTolerance.score, 5);
+assert.equal(atTolerance.neutralSignals[0].conceptId, "work.travel.tolerance");
+assert.ok(!atTolerance.neutralSignals.some(item =>
+  item.conceptId !== "work.travel.tolerance" && item.conceptId.startsWith("work.travel.")),
+  "Internal travel concepts must not appear as legacy preference rows in scoring output.");
+
+const oneAboveTolerance = JobFit.evaluate(
+  [detectedWithEvidence(moderateTravel, "This role requires 40% travel.")],
+  configuration([], 4), travelConcepts);
+assert.equal(oneAboveTolerance.contributions[0].preference, "negative");
+assert.equal(oneAboveTolerance.dimensions[0].rawImpact, -3);
+assert.equal(oneAboveTolerance.dimensions[0].impact, -2,
+  "Travel must retain the existing Work Arrangement category bound.");
+
+const twoAboveTolerance = JobFit.evaluate(
+  [detectedWithEvidence(frequentTravel, "Frequent travel is required.")],
+  configuration([], 3), [...travelConcepts, deployment]);
+assert.equal(twoAboveTolerance.contributions[0].preference, "hardConflict");
+assert.equal(twoAboveTolerance.score, 2);
+assert.equal(twoAboveTolerance.hardConflictCap.applied, true);
+assert.match(JobFit.tooltip(twoAboveTolerance), /Detected level: 5 - Heavy/);
+assert.match(JobFit.tooltip(twoAboveTolerance), /Your maximum: 3 - Occasional/);
+
+const separateArrangementConcepts = [deployment, extendedAway, international, rotation, relocation];
+const travelAndDeployment = JobFit.evaluate(
+  [
+    detectedWithEvidence(occasionalTravel, "Occasional travel is required."),
+    ...separateArrangementConcepts.map(item =>
+      detectedWithEvidence(item, `Evidence for ${item.displayName}`))
+  ],
+  configuration(separateArrangementConcepts.map(item => signal(item, "hardConflict")), 3),
+  [...travelConcepts, ...separateArrangementConcepts]);
+assert.equal(travelAndDeployment.neutralSignals[0].conceptId, "work.travel.tolerance");
+assert.deepEqual(travelAndDeployment.hardConflictCap.signals.map(item => item.conceptId).sort(),
+  separateArrangementConcepts.map(item => item.id).sort(),
+  "Deployment, extended-away, OCONUS, rotation, and relocation must remain independent from ordinary business-travel tolerance.");
 
 const remoteOnly = JobFit.evaluate(detected([fullRemote]),
   configuration([signal(fullRemote, "ideal")]), [fullRemote]);

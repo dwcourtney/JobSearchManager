@@ -15,7 +15,7 @@ const preferences = index.slice(preferencesStart, jobFitStart);
 const jobFit = index.slice(jobFitStart, accountStart);
 
 assert.match(index, /id="job-fit-settings-tab"[\s\S]*?>\s*Job Fit\s*</);
-assert.match(index, /src="\/job-fit\.js\?v=4"/,
+assert.match(index, /src="\/job-fit\.js\?v=5"/,
   "The revised Job Fit runtime must use a new cache-busting asset version.");
 assert.match(index, /id="job-fit-settings-panel"/);
 assert.match(preferences, /id="compensation-heading"[\s\S]*?id="appearance-heading"/);
@@ -46,6 +46,22 @@ assert.doesNotMatch(index, />\s*(?:Add Signal|Remove)\s*</,
 assert.doesNotMatch(index, /id="job-fit-(?:keyword|phrase|custom-concept)"/,
   "Job Fit must not expose arbitrary concept entry.");
 assert.match(app, /fetch\("\/api\/job-fit\/concepts"/);
+assert.match(app, /input\.type = "range";[\s\S]*?input\.min = "0";[\s\S]*?input\.max = "6";[\s\S]*?input\.step = "1";/,
+  "Travel Tolerance must be a native seven-detent range control.");
+assert.match(app, /JobFit\.travelLevels\.forEach\(definition => \{[\s\S]*?datalist\.append\(option\)/,
+  "The range must expose every frozen travel level through a datalist.");
+assert.match(app, /noTravel\.textContent = "No travel"[\s\S]*?travelHeavy\.textContent = "Travel-heavy"/,
+  "The range must label both endpoints plainly.");
+assert.match(app, /aria-valuetext[\s\S]*?aria-live/,
+  "The current level must be announced accessibly.");
+assert.match(app, /state\.travelTolerance = jobFit\.travelTolerance/,
+  "Persisted travel tolerance must hydrate into the UI.");
+assert.match(app, /travelTolerance: state\.travelTolerance/,
+  "Travel tolerance must be included when settings are saved.");
+assert.match(app, /state\.jobFitConcepts\.filter\(concept => concept\.userConfigurable !== false\)/,
+  "Detector-only travel concepts must not render as survey rows.");
+assert.match(app, /categoryName === "Work Arrangement"[\s\S]*?section\.append\(createTravelToleranceControl\(\)\)[\s\S]*?matrix = document\.createElement/,
+  "Travel Tolerance must appear before the Work Arrangement concept matrix.");
 assert.match(app, /createElement\("details"\)[\s\S]*?job-fit-survey-category/,
   "All Job Fit concepts must render in collapsible category sections.");
 assert.match(app, /row\.setAttribute\("role", "radiogroup"\)/);
@@ -65,7 +81,7 @@ assert.match(app,
   /!state\.excludeStrongExtendedLocationRequirements \|\|\s*job\.extendedLocationRequirement\?\.confidence !== "strong"/,
   "The Job Fit hierarchy must not change the existing strong-detection filtering predicate.");
 assert.match(app,
-  /jobFitConfiguration\.classList\.toggle\("is-inactive", !state\.jobFitEnabled\)[\s\S]*?excludeStrongExtendedLocationRequirements\.disabled = !state\.jobFitEnabled[\s\S]*?jobFitConceptSearch\.disabled = !state\.jobFitEnabled/,
+  /jobFitConfiguration\.classList\.toggle\("is-inactive", !state\.jobFitEnabled\)[\s\S]*?excludeStrongExtendedLocationRequirements\.disabled = !state\.jobFitEnabled[\s\S]*?jobFitConceptSearch\.disabled = !state\.jobFitEnabled[\s\S]*?renderJobFitSurvey\(\)/,
   "Disabling Job Fit must visibly inactivate and disable every subordinate control.");
 assert.match(app, /radio\.disabled = !state\.jobFitEnabled/,
   "Every canonical-concept survey choice must follow the parent Job Fit enabled state.");
@@ -73,7 +89,7 @@ const jobFitToggleHandler = app.match(
   /elements\.jobFitEnabled\.addEventListener\("change", \(\) => \{([\s\S]*?)\n  \}\);/)?.[1] || "";
 assert.match(jobFitToggleHandler, /state\.jobFitEnabled = elements\.jobFitEnabled\.checked/);
 assert.doesNotMatch(jobFitToggleHandler,
-  /state\.(?:jobFitSignals|excludeStrongExtendedLocationRequirements)\s*=/,
+  /state\.(?:jobFitSignals|travelTolerance|excludeStrongExtendedLocationRequirements)\s*=/,
   "Toggling Job Fit must preserve subordinate values for later re-enable.");
 assert.match(app, /\["negative", "NEG"\][\s\S]*?\["ideal", "I"\]/,
   "The survey must use the balanced Hard Conflict, Negative, Neutral, Positive, Ideal scale.");
@@ -89,6 +105,13 @@ assert.deepEqual([...new Set(catalog.concepts.map(concept => concept.category))]
 assert.match(app, /const categoryOrder = Object\.keys\(JobFit\.dimensionLimits\)/,
   "The survey category order must reuse the scoring engine's canonical dimensions.");
 assert.equal(catalog.concepts.length, 79, "The complete canonical catalog must remain available.");
+const travelConcepts = catalog.concepts.filter(concept => concept.id.startsWith("work.travel."));
+assert.equal(travelConcepts.length, 4, "All four internal travel detectors must remain in the catalog.");
+assert.deepEqual(travelConcepts.map(concept => concept.travelLevel).sort(), [3, 4, 5, 6]);
+assert.ok(travelConcepts.every(concept => concept.userConfigurable === false),
+  "Internal travel detectors must be hidden from user configuration.");
+assert.equal(catalog.concepts.filter(concept => concept.userConfigurable !== false).length, 75,
+  "The four removed travel rows must be the only concepts hidden from the survey.");
 const extendedAway = catalog.concepts.find(concept =>
   concept.id === "work.extended-away-assignment");
 assert.deepEqual(
@@ -120,6 +143,12 @@ assert.ok(hierarchyStart >= 0 && hierarchyStyles.includes("var(--color-settings-
 assert.ok(hierarchyStyles.includes("var(--opacity-disabled-control)"));
 assert.doesNotMatch(hierarchyStyles, /#[0-9a-f]{3,8}|rgba?\(/i,
   "The Job Fit hierarchy and inactive treatment must use semantic theme tokens.");
+const travelStart = styles.indexOf(".travel-tolerance-panel");
+const travelEnd = styles.indexOf(".job-fit-matrix", travelStart);
+const travelStyles = styles.slice(travelStart, travelEnd);
+assert.ok(travelStart >= 0 && travelStyles.includes("var(--color-surface-secondary)"));
+assert.doesNotMatch(travelStyles, /#[0-9a-f]{3,8}|rgba?\(/i,
+  "Travel Tolerance must remain theme-safe and use semantic tokens only.");
 assert.match(styles, /@media \(max-width: 560px\)[\s\S]*?\.job-fit-survey-row/,
   "The radio matrix must include a compact small-screen layout.");
 

@@ -1,5 +1,5 @@
 {
-  "version": 5,
+  "version": 6,
   "concepts": [
     {
       "id": "work.remote",
@@ -47,10 +47,16 @@
       "category": "Work Arrangement",
       "evidencePatterns": [
         "\\b(?:occasional|limited)\\s+travel\\b",
+        "\\btravel\\s*,?\\s+as\\s+needed\\b",
+        "\\btravel\\b[^.!?]{0,80}\\btypically\\s+lasting\\s+no\\s+more\\s+than\\s+one\\s+week\\b",
+        "\\bat\\s+most\\s+one\\s+(?:short\\s+)?trip\\s+every\\s+(?:2\\s*[-–—]\\s*3|two\\s+to\\s+three)\\s+years?\\b",
+        "\\b(?:one|1)\\s+(?:short\\s+)?trip\\s+every\\s+(?:12\\s*[-–—]\\s*18|twelve\\s+to\\s+eighteen)\\s+months?\\b",
         "\\b(?:[0-9]|10)\\s*%(?!\\s*(?:-|–|—|to)\\s*\\d)\\s+travel\\b",
         "\\btravel\\b[^.!?]{0,30}\\b(?:[0-9]|10)\\s*%(?!\\s*(?:-|–|—|to)\\s*\\d)"
       ],
-      "remoteSignalCategories": ["occasional-travel"]
+      "remoteSignalCategories": ["occasional-travel"],
+      "userConfigurable": false,
+      "travelLevel": 3
     },
     {
       "id": "work.travel.moderate",
@@ -61,7 +67,9 @@
         "\\btravel\\b[^.!?]{0,30}\\b(?:1[1-9]|[2-4]\\d)\\s*%"
       ],
       "remoteSignalCategories": ["moderate-travel"],
-      "supersedes": ["work.travel.occasional"]
+      "supersedes": ["work.travel.occasional"],
+      "userConfigurable": false,
+      "travelLevel": 4
     },
     {
       "id": "work.travel.frequent",
@@ -71,7 +79,9 @@
         "\\b(?:frequent|extensive)\\s+travel\\b",
         "\\btravel\\s+frequently\\b"
       ],
-      "remoteSignalCategories": ["frequent-travel"]
+      "remoteSignalCategories": ["frequent-travel"],
+      "userConfigurable": false,
+      "travelLevel": 5
     },
     {
       "id": "work.travel.substantial",
@@ -82,7 +92,9 @@
         "\\btravel\\b[^.!?]{0,30}\\b(?:[5-9]\\d|100)\\s*%"
       ],
       "remoteSignalCategories": ["substantial-travel"],
-      "supersedes": ["work.travel.frequent", "work.travel.moderate", "work.travel.occasional"]
+      "supersedes": ["work.travel.frequent", "work.travel.moderate", "work.travel.occasional"],
+      "userConfigurable": false,
+      "travelLevel": 6
     },
     {
       "id": "work.deployment",

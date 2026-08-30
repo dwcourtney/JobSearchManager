@@ -25,7 +25,9 @@ const options = catalog.concepts.map(concept => ({
   id: concept.id,
   displayName: concept.displayName,
   category: concept.category,
-  supersedes: concept.supersedes || []
+  supersedes: concept.supersedes || [],
+  userConfigurable: concept.userConfigurable !== false,
+  travelLevel: Number.isInteger(concept.travelLevel) ? concept.travelLevel : null
 }));
 const byId = new Map(options.map(option => [option.id, option]));
 const preferences = new Map((settings.jobFit?.signals || []).map(signal => [signal.conceptId, signal.preference]));
