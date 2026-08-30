@@ -18,7 +18,7 @@ try {
     jobs: [{
       requisitionId: "REQ-CALIBRATION",
       title: "Systems Engineer",
-      descriptionHtml: "<p>Serve as the primary interface with the customer.</p>"
+      descriptionHtml: "<p>Serve as the primary interface with the customer. Preserve &amp;quot;literal&amp;quot; once.</p>"
     }]
   }));
   fs.writeFileSync(settingsPath, JSON.stringify({
@@ -43,6 +43,10 @@ try {
   assert.equal(report.jobs[0].score, 6);
   assert.equal(report.jobs[0].detectedConcepts[0].configuredPreference, "positive");
   assert.equal(report.jobs[0].auditMisses[0].conceptId, "responsibility.customer-facing");
+  assert.match(report.jobs[0].auditMisses[0].evidence, /&quot;literal&quot;/,
+    "The report must decode exactly one HTML-entity layer.");
+  assert.ok(!report.jobs[0].auditMisses[0].evidence.includes('"literal"'),
+    "The report must not double-unescape nested entities.");
   assert.equal(report.scoreDistribution[6], 1);
 } finally {
   fs.rmSync(directory, { recursive: true, force: true });

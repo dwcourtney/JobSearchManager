@@ -5,8 +5,7 @@ on:
     branches: [main]
   push:
 
-permissions:
-  contents: read
+permissions: {}
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -14,9 +13,12 @@ concurrency:
 
 jobs:
   validate:
-    name: Validate exact commit
+    name: Validate source, tests, and C# CodeQL
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 40
+    permissions:
+      contents: read
+      security-events: write
     env:
       EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
@@ -46,6 +48,67 @@ jobs:
           node-version: '24.x'
           check-latest: false
 
+      - name: Initialize C# CodeQL
+        uses: github/codeql-action/init@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+        with:
+          languages: csharp
+          build-mode: manual
+          queries: security-extended
+
       - name: Validate source, tests, image, health, and version identity
         shell: bash
         run: bash scripts/ci-validate.sh "$EXPECTED_SHA"
+
+      - name: Analyze C# with CodeQL
+        uses: github/codeql-action/analyze@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+        with:
+          category: /language:csharp
+
+  javascript-codeql:
+    name: Analyze JavaScript with CodeQL
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      security-events: write
+    env:
+      EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - name: Check out exact event commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.EXPECTED_SHA }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Initialize JavaScript CodeQL
+        uses: github/codeql-action/init@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+        with:
+          languages: javascript-typescript
+          build-mode: none
+          queries: security-extended
+
+      - name: Analyze JavaScript with CodeQL
+        uses: github/codeql-action/analyze@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+        with:
+          category: /language:javascript-typescript
+
+  exact-commit:
+    name: Validate exact commit
+    if: ${{ always() }}
+    needs:
+      - validate
+      - javascript-codeql
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Require every exact-SHA validation job
+        shell: bash
+        env:
+          CSHARP_RESULT: ${{ needs.validate.result }}
+          JAVASCRIPT_RESULT: ${{ needs.javascript-codeql.result }}
+        run: |
+          set -Eeuo pipefail
+          [[ "$CSHARP_RESULT" == 'success' ]]
+          [[ "$JAVASCRIPT_RESULT" == 'success' ]]

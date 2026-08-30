@@ -94,7 +94,7 @@ public sealed record JobSourceQuery(
 
         includeRemote = company.RemoteLocationIds.Count > 0 && (includeAll || includeRemote);
         var normalizedPhysical = includeAll
-            ? Array.Empty<FacetSelection>()
+            ? []
             : physical
                 .Where(location => !string.IsNullOrWhiteSpace(location?.Id) &&
                     !company.IsRemoteLocation(location.Id))

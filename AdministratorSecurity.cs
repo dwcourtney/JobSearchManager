@@ -17,19 +17,11 @@ public static class AdminAuthorization
                 : StatusCodes.Status403Forbidden;
 }
 
-public sealed class AdminRequirement : IAuthorizationRequirement
+public sealed class AdminRequirement : IAuthorizationRequirement;
+
+public sealed class AdminAuthorizationHandler(AccountService accounts)
+    : AuthorizationHandler<AdminRequirement>
 {
-}
-
-public sealed class AdminAuthorizationHandler : AuthorizationHandler<AdminRequirement>
-{
-    private readonly AccountService _accounts;
-
-    public AdminAuthorizationHandler(AccountService accounts)
-    {
-        _accounts = accounts;
-    }
-
     protected override async Task HandleRequirementAsync(
         AuthorizationHandlerContext context,
         AdminRequirement requirement)
@@ -42,7 +34,7 @@ public sealed class AdminAuthorizationHandler : AuthorizationHandler<AdminRequir
         var account = httpContext.Items[AccountAuthentication.ResolvedAccountItem] as AccountRecord;
         if (account is null)
         {
-            account = await _accounts.GetByIdAsync(
+            account = await accounts.GetByIdAsync(
                 context.User.FindFirstValue(ClaimTypes.NameIdentifier),
                 httpContext.RequestAborted);
         }

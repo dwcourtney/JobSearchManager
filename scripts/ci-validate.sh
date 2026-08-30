@@ -35,9 +35,6 @@ pwsh -NoLogo -NoProfile -File scripts/validate-source.ps1
 pwsh -NoLogo -NoProfile -File scripts/audit-repository.ps1
 bash scripts/security-scan.sh source "$(pwd)" "$security_cache"
 bash scripts/security-scan.sh policy-test unused "$security_cache"
-git submodule update --init --depth 1 -- security/semgrep-rules
-bash scripts/sast-scan.sh source "$(pwd)"
-bash scripts/sast-scan.sh policy-test "$(pwd)"
 git diff --check
 
 if [[ -n "$(git status --porcelain --untracked-files=all)" ]]; then

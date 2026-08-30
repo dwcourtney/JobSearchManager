@@ -7,7 +7,6 @@ Tests
 scripts
 deploy
 docs
-security/semgrep-rules
 data
 .actions-runner
 actions-runner
