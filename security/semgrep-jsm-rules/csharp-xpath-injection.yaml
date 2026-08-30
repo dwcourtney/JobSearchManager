@@ -1,0 +1,25 @@
+rules:
+  - id: jsm-csharp-xpath-injection
+    message: >-
+      An XPath expression is constructed from dynamic input. Use a fixed expression
+      with validated values rather than concatenating or interpolating XPath text.
+    severity: ERROR
+    languages:
+      - csharp
+    metadata:
+      category: security
+      confidence: MEDIUM
+      likelihood: MEDIUM
+      impact: MEDIUM
+      cwe:
+        - "CWE-643: Improper Neutralization of Data within XPath Expressions ('XPath Injection')"
+      technology:
+        - .net
+    patterns:
+      - pattern-either:
+          - pattern: $NAV.Compile($LEFT + $INPUT + $RIGHT)
+          - pattern: $NAV.Select($LEFT + $INPUT + $RIGHT)
+          - pattern: $NAV.Evaluate($LEFT + $INPUT + $RIGHT)
+          - pattern: $NAV.Compile($"...{$INPUT}...")
+          - pattern: $NAV.Select($"...{$INPUT}...")
+          - pattern: $NAV.Evaluate($"...{$INPUT}...")
