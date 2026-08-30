@@ -2943,7 +2943,7 @@ static async Task TestLocalReclassificationAsync()
         PayMaximum = null,
         PayPeriod = "unknown",
         PayParseStatus = "unparseable",
-        AnalysisVersion = 5
+        AnalysisVersion = 6
     }).ToArray();
     var before = handler.DetailRequests;
     var second = await client.FetchAllJobsAsync(company, query, cachedJobs: stale);
@@ -2969,12 +2969,12 @@ static async Task TestLocalReclassificationAsync()
     var (unrelatedCompany, unrelatedQuery) = WorkdaySource();
     var unrelatedFirst = await unrelatedClient.FetchAllJobsAsync(
         unrelatedCompany, unrelatedQuery);
-    var unrelatedVersionFive = unrelatedFirst.Jobs
-        .Select(job => job with { AnalysisVersion = 5 })
+    var unrelatedVersionSix = unrelatedFirst.Jobs
+        .Select(job => job with { AnalysisVersion = 6 })
         .ToArray();
     var unrelatedBefore = unrelatedHandler.DetailRequests;
     var unrelatedSecond = await unrelatedClient.FetchAllJobsAsync(
-        unrelatedCompany, unrelatedQuery, cachedJobs: unrelatedVersionFive);
+        unrelatedCompany, unrelatedQuery, cachedJobs: unrelatedVersionSix);
     Assert(unrelatedHandler.DetailRequests == unrelatedBefore &&
            unrelatedSecond.Metrics?.ReclassifiedLocally == 0,
         "The Boeing-only parser migration rewrote an unrelated source cache.");
@@ -4180,6 +4180,17 @@ static Task TestBoeingSummaryPayRangesAsync()
            engineerLevels.Period == "annual" &&
            engineerLevels.ParseStatus == "summary-pay-range-aggregate",
         $"Boeing Experienced/Senior bands did not aggregate correctly: {engineerLevels}.");
+
+    var sharedHeadingLevels = JobAnalysis.AnalyzeSalary("""
+        <p>Summary pay range:</p>
+        <p>Level 1: $76,500 - $112, 500</p>
+        <p>Level 2: $90,950 - $133,750</p>
+        """);
+    Assert(sharedHeadingLevels.Minimum == 76_500m &&
+           sharedHeadingLevels.Maximum == 133_750m &&
+           sharedHeadingLevels.Period == "annual" &&
+           sharedHeadingLevels.ParseStatus == "summary-pay-range-aggregate",
+        $"Boeing ranges under one heading or with a spaced thousands separator failed: {sharedHeadingLevels}.");
 
     var geography = JobAnalysis.AnalyzeSalary("""
         <p>Summary Pay Range for Mesa, Arizona: $96,050 - $129,950</p>

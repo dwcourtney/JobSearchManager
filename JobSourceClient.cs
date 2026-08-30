@@ -12,7 +12,7 @@ namespace JobSearchManager;
 
 public sealed class JobSourceClient
 {
-    public const int CurrentAnalysisVersion = 6;
+    public const int CurrentAnalysisVersion = 7;
 
     private sealed record ListingBatch(IReadOnlyList<ListingPosting> Listings, bool Truncated);
     private sealed record SmartSummaryBatch(IReadOnlyList<SmartRecruitersPosting> Postings, bool Truncated);
@@ -642,9 +642,10 @@ public sealed class JobSourceClient
             return true;
         }
 
-        // Version 6 changes only Boeing summary-pay parsing. Preserve version-5
-        // caches for other companies so their persisted derived data is untouched.
-        return job.AnalysisVersion == 5 &&
+        // Versions 6 and 7 change only Boeing summary-pay parsing. Preserve
+        // version-5/6 caches for other companies so their persisted derived data
+        // is untouched.
+        return job.AnalysisVersion is 5 or 6 &&
             !string.Equals(job.CompanyId, "boeing", StringComparison.OrdinalIgnoreCase);
     }
 

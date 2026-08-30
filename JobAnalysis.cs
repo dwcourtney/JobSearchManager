@@ -10,8 +10,8 @@ internal static partial class JobAnalysis
         @"\$\s*(?<minimum>\d[\d,]*(?:\.\d{1,2})?)\s*(?<minimumScale>[kK])?\s*(?:-|–|—|to)\s*" +
         @"\$?\s*(?<maximum>\d[\d,]*(?:\.\d{1,2})?)\s*(?<maximumScale>[kK])?";
     private const string SummaryAmountRangePattern =
-        @"(?<minimumDollar>\$)?\s*(?<minimum>\d[\d,]*(?:\.\d{1,2})?)\s*(?<minimumScale>[kK])?\s*(?:-|–|—|to)\s*" +
-        @"(?<maximumDollar>\$)?\s*(?<maximum>\d[\d,]*(?:\.\d{1,2})?)\s*(?<maximumScale>[kK])?";
+        @"(?<minimumDollar>\$)?\s*(?<minimum>\d+(?:,\s*\d{3})*(?:\.\d{1,2})?)\s*(?<minimumScale>[kK])?\s*(?:-|–|—|to)\s*" +
+        @"(?<maximumDollar>\$)?\s*(?<maximum>\d+(?:,\s*\d{3})*(?:\.\d{1,2})?)\s*(?<maximumScale>[kK])?";
 
     private static readonly (string Category, Regex Pattern)[] LocationRules =
     [
@@ -39,13 +39,7 @@ internal static partial class JobAnalysis
             return CreateSalaryAnalysis(specificMatch, "specific-role-range");
         }
 
-        var summaryRanges = SummaryPayRangeRegex().Matches(text)
-            .Select(match => (Match: match, Analysis: CreateSalaryAnalysis(
-                match, "summary-pay-range")))
-            .Where(candidate => IsDefensibleSummaryPayRange(
-                candidate.Match, candidate.Analysis))
-            .Select(candidate => candidate.Analysis)
-            .ToArray();
+        var summaryRanges = AnalyzeSummaryPayRanges(descriptionHtml);
         if (summaryRanges.Length > 0)
         {
             return AggregateSummaryPayRanges(summaryRanges);
@@ -91,6 +85,50 @@ internal static partial class JobAnalysis
         match.Groups["maximumDollar"].Success ||
         analysis.Period != "unknown" ||
         analysis.Maximum >= 10_000m;
+
+    private static SalaryAnalysis[] AnalyzeSummaryPayRanges(string descriptionHtml)
+    {
+        var lines = HtmlToTextLines(descriptionHtml);
+        var ranges = new List<SalaryAnalysis>();
+        for (var index = 0; index < lines.Length; index++)
+        {
+            if (!SummaryPayHeadingRegex().IsMatch(lines[index]))
+            {
+                continue;
+            }
+
+            AddSummaryPayRange(SummaryPayRangeRegex().Match(lines[index]), ranges);
+            for (var next = index + 1; next < lines.Length; next++)
+            {
+                if (SummaryPayHeadingRegex().IsMatch(lines[next]))
+                {
+                    break;
+                }
+
+                var match = SummarySectionRangeRegex().Match(lines[next]);
+                if (!match.Success)
+                {
+                    break;
+                }
+                AddSummaryPayRange(match, ranges);
+                index = next;
+            }
+        }
+        return ranges.ToArray();
+    }
+
+    private static void AddSummaryPayRange(Match match, List<SalaryAnalysis> ranges)
+    {
+        if (!match.Success)
+        {
+            return;
+        }
+        var analysis = CreateSalaryAnalysis(match, "summary-pay-range");
+        if (IsDefensibleSummaryPayRange(match, analysis))
+        {
+            ranges.Add(analysis);
+        }
+    }
 
     private static SalaryAnalysis AggregateSummaryPayRanges(
         IReadOnlyList<SalaryAnalysis> ranges)
@@ -242,15 +280,26 @@ internal static partial class JobAnalysis
         return WhitespaceRegex().Replace(WebUtility.HtmlDecode(withoutTags), " ").Trim();
     }
 
+    private static string[] HtmlToTextLines(string html)
+    {
+        var withSeparators = BlockTagRegex().Replace(html, "\n");
+        var withoutTags = AnyTagRegex().Replace(withSeparators, " ");
+        return WebUtility.HtmlDecode(withoutTags)
+            .Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => WhitespaceRegex().Replace(line, " ").Trim())
+            .Where(line => line.Length > 0)
+            .ToArray();
+    }
+
     private static SalaryAnalysis CreateSalaryAnalysis(Match match, string parsedStatus)
     {
         if (!decimal.TryParse(
-                match.Groups["minimum"].Value,
+                RemoveWhitespace(match.Groups["minimum"].Value),
                 NumberStyles.AllowThousands | NumberStyles.AllowDecimalPoint,
                 CultureInfo.InvariantCulture,
                 out var minimum) ||
             !decimal.TryParse(
-                match.Groups["maximum"].Value,
+                RemoveWhitespace(match.Groups["maximum"].Value),
                 NumberStyles.AllowThousands | NumberStyles.AllowDecimalPoint,
                 CultureInfo.InvariantCulture,
                 out var maximum))
@@ -281,6 +330,9 @@ internal static partial class JobAnalysis
         // A small range without an explicit period is deliberately not assumed annual.
         return new SalaryAnalysis(minimum, maximum, "unknown", "ambiguous-period");
     }
+
+    private static string RemoveWhitespace(string value) =>
+        new(value.Where(character => !char.IsWhiteSpace(character)).ToArray());
 
     private static string CreateSnippet(string sentence, int matchIndex)
     {
@@ -462,9 +514,19 @@ internal static partial class JobAnalysis
     [GeneratedRegex(
         @"\bSummary\s+(?:Pay|Salary)\s+Ranges?" +
         @"[^$.!?]{0,100}?" + SummaryAmountRangePattern +
-        @"(?<context>(?:(?!\bSummary\s+(?:Pay|Salary)\s+Ranges?\b)[^.!?]){0,100})",
+        @"(?<context>[^.!?]{0,100})",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex SummaryPayRangeRegex();
+
+    [GeneratedRegex(
+        @"\bSummary\s+(?:Pay|Salary)\s+Ranges?\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex SummaryPayHeadingRegex();
+
+    [GeneratedRegex(
+        @"^[^$.!?]{0,100}?" + SummaryAmountRangePattern + @"(?<context>[^.!?]{0,100})",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex SummarySectionRangeRegex();
 
     [GeneratedRegex(
         @"\b(?:base\s+)?salary\s+range(?:\s+for\s+this\s+role)?\s*(?:is|:)?\s*" +
