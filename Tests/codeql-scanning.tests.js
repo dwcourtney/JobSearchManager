@@ -53,7 +53,7 @@ assert.match(deploy, /\$RUN_CONCLUSION.*success/,
 
 assert.match(ci, /security-scan\.sh source/);
 assert.match(ci, /security-scan\.sh policy-test/);
-assert.match(trivy, /ghcr\.io\/aquasecurity\/trivy:/, "Trivy must remain pinned and active.");
+assert.ok(trivy.includes("ghcr.io/aquasecurity/trivy:"), "Trivy must remain pinned and active.");
 assert.match(curiosityDeploy, /security-scan\.sh" image/,
   "Curiosity must still scan the exact deployable image with Trivy.");
 
