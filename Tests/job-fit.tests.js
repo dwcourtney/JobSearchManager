@@ -8,13 +8,18 @@ const concept = (id, displayName, category, supersedes = [], options = {}) =>
 const detected = concepts => concepts.map(item =>
   ({ conceptId: item.id, evidence: `Evidence for ${item.displayName}` }));
 const detectedWithEvidence = (item, evidence) => ({ conceptId: item.id, evidence });
-const configuration = (signals, travelTolerance = 4) =>
-  ({ enabled: true, signals, travelTolerance });
+const configuration = (signals, travelTolerance = 4, preferredWorkLocation = 3) =>
+  ({ enabled: true, signals, travelTolerance, preferredWorkLocation });
 const signal = (item, preference) => ({ conceptId: item.id, preference });
 
-const remote = concept("work.remote", "Remote Work", "Work Arrangement");
-const fullRemote = concept("work.remote.full", "100% Remote Work", "Work Arrangement", ["work.remote"]);
-const hybrid = concept("work.hybrid", "Hybrid Work", "Work Arrangement");
+const remote = concept("work.remote", "Remote Work", "Work Arrangement", [],
+  { userConfigurable: false, workLocationLevel: 2 });
+const fullRemote = concept("work.remote.full", "100% Remote Work", "Work Arrangement", ["work.remote"],
+  { userConfigurable: false, workLocationLevel: 0 });
+const hybrid = concept("work.hybrid", "Hybrid Work", "Work Arrangement", [],
+  { userConfigurable: false, workLocationLevel: 3 });
+const onsite = concept("work.onsite", "Onsite Work", "Work Arrangement", [],
+  { userConfigurable: false, workLocationLevel: 5 });
 const softwareRole = concept("role.software-engineering", "Software Engineering", "Role Type / Career Direction");
 const infrastructureRole = concept("role.infrastructure-engineering", "Infrastructure Engineering", "Role Type / Career Direction");
 const devopsRole = concept("role.devops-platform", "DevOps / Platform Engineering", "Role Type / Career Direction");
@@ -70,6 +75,55 @@ assert.deepEqual(JobFit.travelLevels.map(item => item.level), [0, 1, 2, 3, 4, 5,
 assert.deepEqual(JobFit.travelLevels.map(item => item.label), [
   "No travel", "Extremely rare", "Very light", "Occasional", "Moderate", "Heavy", "Travel-heavy"
 ]);
+assert.equal(sparse.preferredWorkLocation, 3,
+  "New configurations must default to the neutral corpus center, Hybrid.");
+assert.equal(JobFit.normalizePreferredWorkLocation(2.5), 3,
+  "Intermediate work-location values must not be accepted.");
+assert.deepEqual(JobFit.workLocationLevels.map(item => item.level), [0, 1, 2, 3, 4, 5]);
+
+const locationConcepts = [fullRemote, remote, hybrid, onsite];
+const locationCases = [
+  [fullRemote, "This position is 100% remote.", 0],
+  [remote, "Remote role with quarterly office visits.", 1],
+  [remote, "This is a mostly remote position.", 2],
+  [hybrid, "This is a hybrid role.", 3],
+  [onsite, "This role is mostly onsite with limited flexibility.", 4],
+  [onsite, "This role is fully onsite.", 5],
+  [onsite, "Work onsite 2 days per week and remote 3 days.", 3],
+  [onsite, "Work onsite 4 days per week with one remote day.", 4],
+  [onsite, "This position is currently remote but will transition onsite.", 5]
+];
+for (const [locationConcept, evidence, expectedLevel] of locationCases) {
+  const result = JobFit.evaluate(
+    [detectedWithEvidence(locationConcept, evidence)],
+    configuration([], 4, expectedLevel),
+    locationConcepts);
+  const comparison = [...result.contributions, ...result.neutralSignals]
+    .find(item => item.locationComparison)?.locationComparison;
+  assert.equal(comparison.detectedLevel, expectedLevel, evidence);
+  assert.equal(comparison.distance, 0);
+  assert.equal(comparison.impact, 1);
+}
+
+const locationDistanceImpacts = [1, 0, -1, -2, -3, -4];
+for (let preferred = 0; preferred <= 5; preferred += 1) {
+  const result = JobFit.evaluate(
+    [detectedWithEvidence(fullRemote, "This position is 100% remote.")],
+    configuration([], 4, preferred), locationConcepts);
+  const contribution = [...result.contributions, ...result.neutralSignals]
+    .find(item => item.locationComparison);
+  assert.equal(contribution.locationComparison.distance, preferred);
+  assert.equal(contribution.impact, locationDistanceImpacts[preferred]);
+  assert.notEqual(contribution.preference, "hardConflict",
+    "Normal-location distance must never create a Hard Conflict by itself.");
+}
+const conflictResolution = JobFit.evaluate([
+  detectedWithEvidence(remote, "Remote role"),
+  detectedWithEvidence(onsite, "Currently remote but will transition onsite after integration.")
+], configuration([], 4, 5), locationConcepts);
+assert.equal(conflictResolution.contributions[0].locationComparison.detectedLevel, 5);
+assert.equal(conflictResolution.contributions[0].locationComparison.precedence,
+  "future required onsite arrangement");
 
 const travelConcepts = [occasionalTravel, moderateTravel, frequentTravel, substantialTravel];
 const travelCases = [
@@ -138,31 +192,25 @@ assert.deepEqual(travelAndDeployment.hardConflictCap.signals.map(item => item.co
   "Deployment, extended-away, OCONUS, rotation, and relocation must remain independent from ordinary business-travel tolerance.");
 
 const remoteOnly = JobFit.evaluate(detected([fullRemote]),
-  configuration([signal(fullRemote, "ideal")]), [fullRemote]);
+  configuration([], 4, 0), [fullRemote]);
 assert.equal(remoteOnly.score, 6,
   "100% Remote Work alone must not produce a high overall score.");
 assert.equal(remoteOnly.dimensions[0].impact, 1,
   "Work Arrangement positives must respect their category maximum.");
 
-const boundedArrangement = JobFit.evaluate(detected([remote, fullRemote, hybrid]),
-  configuration([
-    signal(remote, "ideal"),
-    signal(fullRemote, "ideal"),
-    signal(hybrid, "ideal")
-  ]), [remote, fullRemote, hybrid]);
+const boundedArrangement = JobFit.evaluate([
+  detectedWithEvidence(remote, "Remote role"),
+  detectedWithEvidence(fullRemote, "This position is 100% remote."),
+  detectedWithEvidence(hybrid, "Hybrid role")
+], configuration([], 4, 0), [remote, fullRemote, hybrid]);
 assert.equal(boundedArrangement.dimensions[0].impact, 1);
-assert.equal(boundedArrangement.dimensions[0].rawImpact, 4,
-  "The superseded Remote Work signal must be removed before category scoring.");
-assert.deepEqual(boundedArrangement.contributions.map(item => item.conceptId).sort(),
-  [fullRemote.id, hybrid.id].sort(),
-  "100% Remote Work must supersede plain Remote Work without hiding other concepts.");
-assert.deepEqual(boundedArrangement.supersededSignals.map(item => item.conceptId), [remote.id]);
-assert.deepEqual(boundedArrangement.supersededSignals[0].supersededBy, [fullRemote.displayName],
-  "The explanation result must identify which detected concept caused supersession.");
-assert.equal(boundedArrangement.dimensionBreakdown[0].rawImpact, 4);
+assert.equal(boundedArrangement.dimensions[0].rawImpact, 1,
+  "Location detectors must collapse to one distance contribution without double-counting.");
+assert.deepEqual(boundedArrangement.contributions.map(item => item.conceptId),
+  ["work.location.preference"]);
+assert.equal(boundedArrangement.dimensionBreakdown[0].rawImpact, 1);
 assert.equal(boundedArrangement.dimensionBreakdown[0].impact, 1);
-assert.equal(boundedArrangement.dimensionBreakdown[0].capped, true,
-  "The explanation result must preserve raw and bounded category contributions.");
+assert.equal(boundedArrangement.dimensionBreakdown[0].capped, false);
 
 const boundedExtendedAssignment = JobFit.evaluate(detected([deployment, extendedAway]),
   configuration([signal(deployment, "negative"), signal(extendedAway, "negative")]),
@@ -182,11 +230,10 @@ assert.equal(aiCluster.score, 7,
 const wrongRole = JobFit.evaluate(
   detected([fullRemote, infrastructureRole, linux, cloud, cicd, dataCenter, physical]),
   configuration([
-    signal(fullRemote, "ideal"),
     signal(infrastructureRole, "negative"),
     signal(linux, "positive"), signal(cloud, "positive"), signal(cicd, "positive"),
     signal(dataCenter, "negative"), signal(physical, "negative")
-  ]),
+  ], 4, 0),
   [fullRemote, infrastructureRole, linux, cloud, cicd, dataCenter, physical]);
 assert.equal(wrongRole.score, 2,
   "Role and environment incompatibility must outweigh incidental technology overlap.");
@@ -195,10 +242,9 @@ assert.equal(wrongRole.dimensions.find(item => item.category === "Work Environme
 
 const hardConflict = JobFit.evaluate(detected([fullRemote, softwareRole, deployment]),
   configuration([
-    signal(fullRemote, "ideal"),
     signal(softwareRole, "ideal"),
     signal(deployment, "hardConflict")
-  ]), [fullRemote, softwareRole, deployment]);
+  ], 4, 0), [fullRemote, softwareRole, deployment]);
 assert.equal(hardConflict.score, 2, "A hard conflict must still cap the overall score.");
 assert.equal(hardConflict.scoreBeforeHardConflictCap, 5);
 assert.equal(hardConflict.hardConflictCap.applied, true);
@@ -222,11 +268,10 @@ assert.equal(neutralDetection.dimensionBreakdown.length, 5,
 const aligned = JobFit.evaluate(
   detected([fullRemote, softwareRole, devopsRole, cloud, cicd, linux, handsOn]),
   configuration([
-    signal(fullRemote, "ideal"),
     signal(softwareRole, "ideal"), signal(devopsRole, "ideal"),
     signal(cloud, "ideal"), signal(cicd, "positive"), signal(linux, "positive"),
     signal(handsOn, "ideal")
-  ]), [fullRemote, softwareRole, devopsRole, cloud, cicd, linux, handsOn]);
+  ], 4, 0), [fullRemote, softwareRole, devopsRole, cloud, cicd, linux, handsOn]);
 assert.equal(aligned.score, 10, "A genuinely aligned software/cloud role should still score highly.");
 
 const lowerBound = JobFit.evaluate(
@@ -239,7 +284,9 @@ assert.equal(lowerBound.score, 1, "The final score must remain bounded at 1.");
 assert.ok(aligned.score <= 10, "The final score must remain bounded at 10.");
 
 const explanation = JobFit.tooltip(wrongRole);
-assert.match(explanation, /Work Arrangement: \+1 \(bounded from \+2\)/);
+assert.match(explanation, /Work Arrangement: \+1/);
+assert.match(explanation, /Normal Work Location — Ideal/);
+assert.match(explanation, /Distance: 0 levels/);
 assert.match(explanation, /Role Type \/ Career Direction: -3/);
 assert.match(explanation, /Technical Domain: \+1\.5 \(bounded from \+3\)/);
 assert.match(explanation, /Work Environment: -3 \(bounded from -6\)/);

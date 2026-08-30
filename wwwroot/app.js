@@ -59,6 +59,7 @@ const state = {
   jobFitEnabled: false,
   jobFitSignals: [],
   travelTolerance: 4,
+  preferredWorkLocation: 3,
   jobFitConcepts: [],
   jobFitConceptSearch: "",
   credentialOptions: [],
@@ -247,6 +248,9 @@ const elements = {
   travelToleranceInput: null,
   travelToleranceSummary: null,
   travelToleranceDescription: null,
+  preferredWorkLocationInput: null,
+  preferredWorkLocationSummary: null,
+  preferredWorkLocationDescription: null,
   credentialInventoryStatus: document.querySelector("#credential-inventory-status"),
   heldCredentialsField: document.querySelector("#held-credentials-field"),
   heldCredentials: document.querySelector("#held-credentials"),
@@ -515,9 +519,16 @@ async function initialize() {
   });
   elements.jobFitSurvey.addEventListener("input", event => {
     const travelTolerance = event.target.closest('input[data-travel-tolerance]');
-    if (!travelTolerance) return;
-    state.travelTolerance = JobFit.normalizeTravelTolerance(Number(travelTolerance.value));
-    updateTravelToleranceDescription();
+    if (travelTolerance) {
+      state.travelTolerance = JobFit.normalizeTravelTolerance(Number(travelTolerance.value));
+      updateTravelToleranceDescription();
+      renderResults();
+      return;
+    }
+    const workLocation = event.target.closest('input[data-preferred-work-location]');
+    if (!workLocation) return;
+    state.preferredWorkLocation = JobFit.normalizePreferredWorkLocation(Number(workLocation.value));
+    updatePreferredWorkLocationDescription();
     renderResults();
   });
   elements.jobFitSurvey.addEventListener("change", event => {
@@ -525,6 +536,14 @@ async function initialize() {
     if (travelTolerance) {
       state.travelTolerance = JobFit.normalizeTravelTolerance(Number(travelTolerance.value));
       updateTravelToleranceDescription();
+      renderResults();
+      queueSettingsSave();
+      return;
+    }
+    const workLocation = event.target.closest('input[data-preferred-work-location]');
+    if (workLocation) {
+      state.preferredWorkLocation = JobFit.normalizePreferredWorkLocation(Number(workLocation.value));
+      updatePreferredWorkLocationDescription();
       renderResults();
       queueSettingsSave();
       return;
@@ -1292,6 +1311,7 @@ function applySettings(settings) {
   state.jobFitEnabled = jobFit.enabled;
   state.jobFitSignals = jobFit.signals.filter(signal => validJobFitIds.has(signal.conceptId));
   state.travelTolerance = jobFit.travelTolerance;
+  state.preferredWorkLocation = jobFit.preferredWorkLocation;
   state.hasConfiguredSource = settings.hasConfiguredSource === true;
   state.pendingImportedSource = settings.pendingSource || null;
   state.companyId = state.hasConfiguredSource ? settings.companyId || "" : "";
@@ -1369,7 +1389,7 @@ function updateTravelToleranceDescription() {
 
 function createTravelToleranceControl() {
   const panel = document.createElement("section");
-  panel.className = "travel-tolerance-panel";
+  panel.className = "job-fit-scale-panel travel-tolerance-panel";
   panel.setAttribute("aria-labelledby", "travel-tolerance-heading");
 
   const heading = document.createElement("h4");
@@ -1436,12 +1456,117 @@ function createTravelToleranceControl() {
   return panel;
 }
 
+function updatePreferredWorkLocationDescription() {
+  const definition = JobFit.workLocationLevels[state.preferredWorkLocation];
+  if (!definition || !elements.preferredWorkLocationInput) return;
+  elements.preferredWorkLocationInput.value = String(definition.level);
+  elements.preferredWorkLocationInput.setAttribute(
+    "aria-valuetext",
+    `Level ${definition.level} - ${definition.label}`);
+  elements.preferredWorkLocationInput.disabled = !state.jobFitEnabled;
+  elements.preferredWorkLocationSummary.textContent =
+    `Level ${definition.level} - ${definition.label}`;
+  elements.preferredWorkLocationDescription.textContent = definition.description;
+}
+
+function createPreferredWorkLocationControl() {
+  const panel = document.createElement("section");
+  panel.className = "job-fit-scale-panel normal-work-location-panel";
+  panel.setAttribute("aria-labelledby", "preferred-work-location-heading");
+
+  const heading = document.createElement("h4");
+  heading.id = "preferred-work-location-heading";
+  heading.textContent = "Normal Work Location";
+  const introduction = document.createElement("p");
+  introduction.className = "travel-tolerance-introduction";
+  introduction.textContent = "Choose your ideal routine balance between remote and onsite work. Distance in either direction reduces alignment; it does not create a Hard Conflict by itself.";
+
+  const label = document.createElement("label");
+  label.className = "travel-tolerance-label";
+  label.htmlFor = "preferred-work-location";
+  label.textContent = "Ideal normal work location";
+  const input = document.createElement("input");
+  input.id = "preferred-work-location";
+  input.type = "range";
+  input.min = "0";
+  input.max = "5";
+  input.step = "1";
+  input.setAttribute("list", "preferred-work-location-detents");
+  input.setAttribute("data-preferred-work-location", "true");
+  input.setAttribute("aria-describedby", "preferred-work-location-endpoints preferred-work-location-current");
+
+  const datalist = document.createElement("datalist");
+  datalist.id = "preferred-work-location-detents";
+  JobFit.workLocationLevels.forEach(definition => {
+    const option = document.createElement("option");
+    option.value = String(definition.level);
+    option.label = definition.label;
+    datalist.append(option);
+  });
+
+  const ticks = document.createElement("div");
+  ticks.className = "travel-tolerance-ticks work-location-ticks";
+  ticks.setAttribute("aria-hidden", "true");
+  JobFit.workLocationLevels.forEach(definition => {
+    const tick = document.createElement("span");
+    tick.textContent = String(definition.level);
+    ticks.append(tick);
+  });
+
+  const endpoints = document.createElement("div");
+  endpoints.id = "preferred-work-location-endpoints";
+  endpoints.className = "travel-tolerance-endpoints";
+  const remote = document.createElement("span");
+  remote.textContent = "100% Remote";
+  const onsite = document.createElement("span");
+  onsite.textContent = "Fully onsite";
+  endpoints.append(remote, onsite);
+
+  const current = document.createElement("div");
+  current.id = "preferred-work-location-current";
+  current.className = "travel-tolerance-current";
+  current.setAttribute("aria-live", "polite");
+  const summary = document.createElement("strong");
+  const description = document.createElement("span");
+  current.append(summary, description);
+  panel.append(heading, introduction, label, input, datalist, ticks, endpoints, current);
+
+  elements.preferredWorkLocationInput = input;
+  elements.preferredWorkLocationSummary = summary;
+  elements.preferredWorkLocationDescription = description;
+  updatePreferredWorkLocationDescription();
+  return panel;
+}
+
+function createAssignmentLocationIntroduction() {
+  const introduction = document.createElement("section");
+  introduction.className = "assignment-location-introduction";
+  introduction.setAttribute("aria-labelledby", "assignment-location-heading");
+  const heading = document.createElement("h4");
+  heading.id = "assignment-location-heading";
+  heading.textContent = "Assignment / Location Constraints";
+  const copy = document.createElement("p");
+  copy.textContent = "These signals describe different kinds of required work away from your normal work location. A posting may match more than one.";
+  introduction.append(heading, copy);
+  return introduction;
+}
+
+const ASSIGNMENT_LOCATION_DESCRIPTIONS = Object.freeze({
+  "work.deployment": "A temporary assignment away from the normal work location.",
+  "work.extended-away-assignment": "A required continuous stay away from home for several weeks or longer.",
+  "work.international-assignment": "Required work outside the continental United States.",
+  "work.rotation": "Repeated work rotations such as 30/30, 90/30, or similar schedules.",
+  "work.relocation": "A permanent or indefinite move of the normal home or work location."
+});
+
 function renderJobFitSurvey() {
   elements.jobFitSurvey.replaceChildren();
   const query = state.jobFitConceptSearch;
   const userConfigurable = state.jobFitConcepts.filter(concept => concept.userConfigurable !== false);
   const travelToleranceMatches = !query ||
     "travel tolerance ordinary business travel work arrangement".includes(query);
+  const workLocationMatches = !query ||
+    "normal work location preferred remote hybrid onsite office work arrangement".includes(query);
   const visible = userConfigurable.filter(concept => !query ||
     `${concept.displayName} ${concept.category}`.toLocaleLowerCase().includes(query));
   const configured = new Map(state.jobFitSignals.map(signal => [signal.conceptId, signal.preference]));
@@ -1452,8 +1577,9 @@ function renderJobFitSurvey() {
   });
   elements.jobFitSurveyStatus.textContent =
     `${visible.length} of ${userConfigurable.length} concepts shown.` +
-    (travelToleranceMatches ? " Travel Tolerance shown." : "");
-  if (visible.length === 0 && !travelToleranceMatches) {
+    (travelToleranceMatches ? " Travel Tolerance shown." : "") +
+    (workLocationMatches ? " Normal Work Location shown." : "");
+  if (visible.length === 0 && !travelToleranceMatches && !workLocationMatches) {
     const empty = document.createElement("p");
     empty.className = "job-fit-empty";
     empty.textContent = "No canonical concepts match this filter.";
@@ -1468,7 +1594,7 @@ function renderJobFitSurvey() {
     ["ideal", "I"]
   ];
   const categoryOrder = Object.keys(JobFit.dimensionLimits);
-  if (travelToleranceMatches && !byCategory.has("Work Arrangement")) {
+  if ((travelToleranceMatches || workLocationMatches) && !byCategory.has("Work Arrangement")) {
     byCategory.set("Work Arrangement", []);
   }
   const orderedCategories = Array.from(byCategory.keys()).sort((left, right) =>
@@ -1488,12 +1614,19 @@ function renderJobFitSurvey() {
     if (categoryName === "Work Arrangement" && travelToleranceMatches) {
       section.append(createTravelToleranceControl());
     }
+    if (categoryName === "Work Arrangement" && workLocationMatches) {
+      section.append(createPreferredWorkLocationControl());
+    }
     if (concepts.length === 0) {
       elements.jobFitSurvey.append(section);
       continue;
     }
     const matrix = document.createElement("div");
     matrix.className = "job-fit-matrix";
+    if (categoryName === "Work Arrangement") {
+      section.append(createAssignmentLocationIntroduction());
+      matrix.classList.add("assignment-location-matrix");
+    }
     const header = document.createElement("div");
     header.className = "job-fit-matrix-header";
     header.setAttribute("aria-hidden", "true");
@@ -1515,7 +1648,16 @@ function renderJobFitSurvey() {
       name.id = labelId;
       name.className = "job-fit-survey-concept";
       name.textContent = concept.displayName;
-      row.append(name);
+      if (categoryName === "Work Arrangement" && ASSIGNMENT_LOCATION_DESCRIPTIONS[concept.id]) {
+        const conceptCopy = document.createElement("div");
+        conceptCopy.className = "job-fit-survey-concept-copy";
+        const description = document.createElement("small");
+        description.textContent = ASSIGNMENT_LOCATION_DESCRIPTIONS[concept.id];
+        conceptCopy.append(name, description);
+        row.append(conceptCopy);
+      } else {
+        row.append(name);
+      }
       preferences.forEach(([value, abbreviation]) => {
         const choice = document.createElement("label");
         choice.className = "job-fit-survey-choice";
@@ -2614,6 +2756,7 @@ async function saveSettings() {
         jobFit: {
           enabled: state.jobFitEnabled,
           travelTolerance: state.travelTolerance,
+          preferredWorkLocation: state.preferredWorkLocation,
           signals: state.jobFitSignals
             .map(signal => ({ conceptId: signal.conceptId, preference: signal.preference }))
         }
@@ -3689,6 +3832,28 @@ function appendJobFitSignal(container, signal, options = {}) {
       `${travel.tolerance} - ${travel.toleranceLabel}`);
     appendJobFitCalculationRow(comparison, "Result", travel.resultLabel);
     row.append(comparison);
+  } else if (signal.locationComparison) {
+    const location = signal.locationComparison;
+    const comparison = document.createElement("dl");
+    comparison.className = "job-fit-calculation job-fit-location-comparison";
+    appendJobFitCalculationRow(
+      comparison,
+      "Detected normal work location",
+      `Level ${location.detectedLevel} - ${location.detectedLabel}`);
+    appendJobFitCalculationRow(
+      comparison,
+      "Your preferred normal work location",
+      `Level ${location.preferredLevel} - ${location.preferredLabel}`);
+    appendJobFitCalculationRow(
+      comparison,
+      "Distance",
+      `${location.distance} level${location.distance === 1 ? "" : "s"}`);
+    appendJobFitCalculationRow(
+      comparison,
+      "Work Arrangement impact",
+      formatJobFitImpact(location.impact));
+    appendJobFitCalculationRow(comparison, "Evidence precedence", location.precedence);
+    row.append(comparison);
   } else if (options.supersededBy?.length) {
     const note = document.createElement("p");
     note.className = "job-fit-breakdown-note";
@@ -3707,7 +3872,7 @@ function appendJobFitSignal(container, signal, options = {}) {
     const summary = document.createElement("summary");
     summary.textContent = "Show evidence";
     const text = document.createElement("p");
-    text.textContent = `“${signal.travelComparison?.sourceEvidence || signal.evidence}”`;
+    text.textContent = `“${signal.travelComparison?.sourceEvidence || signal.locationComparison?.sourceEvidence || signal.evidence}”`;
     evidence.append(summary, text);
     row.append(evidence);
   }

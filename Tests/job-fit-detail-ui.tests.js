@@ -31,10 +31,12 @@ assert.match(app, /result\.hardConflictCap\.applied[\s\S]*?result\.scoreBeforeHa
   "Hard-conflict cap state must be rendered from engine output.");
 assert.match(app, /Superseded — not counted[\s\S]*?dimension\.supersededSignals/);
 assert.match(app, /Detected but Neutral[\s\S]*?dimension\.neutralSignals/);
-assert.match(app, /text\.textContent = `“\$\{signal\.travelComparison\?\.sourceEvidence \|\| signal\.evidence\}”`/,
+assert.match(app, /text\.textContent = `“\$\{signal\.travelComparison\?\.sourceEvidence \|\| signal\.locationComparison\?\.sourceEvidence \|\| signal\.evidence\}”`/,
   "Evidence shown in the detail tab must come from the detected signal.");
 assert.match(app, /signal\.travelComparison[\s\S]*?"Detected travel requirement"[\s\S]*?"Detected travel level"[\s\S]*?"Your maximum travel tolerance"[\s\S]*?"Result"/,
   "Travel explanations must show the detected requirement, level, configured maximum, and comparison result.");
+assert.match(app, /signal\.locationComparison[\s\S]*?"Detected normal work location"[\s\S]*?"Your preferred normal work location"[\s\S]*?"Distance"[\s\S]*?"Work Arrangement impact"/,
+  "Normal-location explanations must expose detected level, preference, distance, and bounded contribution input.");
 assert.match(app, /elements\.jobFitDetailTab\.hidden = !result/,
   "The Job Fit tab must be hidden when scoring is disabled.");
 assert.match(app, /const tabs = elements\.jobFitDetailTab\.hidden[\s\S]*?\["glance", "fit", "posting"\]/,
