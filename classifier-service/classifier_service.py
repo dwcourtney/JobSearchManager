@@ -8,11 +8,11 @@ from pathlib import Path
 from typing import Any
 
 SERVICE_VERSION, PROTOCOL_VERSION = "0.2.0", "2"
-MODEL_ID = "cross-encoder/nli-distilroberta-base"
-MODEL_REVISION = "b14d131f9d32668a5e6a982729b57ff6ed5dfcbd"
-MODEL_SHA256 = "9df3eb5d37118f952f4ba4fb46fde6889e3a9ccedeee0bad09b0110fc64c5c29"
-CONFIG_SHA256 = "901e9df7328199db94c0ff94013d14d49cc09878d2d4ee19326a8b8686e2e499"
-MODEL_ROOT = Path(os.environ.get("CLASSIFIER_MODEL_ROOT", "/models/nli-distilroberta-base"))
+MODEL_ID = "cross-encoder/nli-deberta-v3-base"
+MODEL_REVISION = "6c749ce3425cd33b46d187e45b92bbf96ee12ec7"
+MODEL_SHA256 = "d8148c6d49e0a7925134294c56326c71fe0ab1dc390e37355e00c7efbb488afa"
+CONFIG_SHA256 = "897e756eb59d3183adb505952e7910e7cbc7750a43f3b3747a96b688d2b02a47"
+MODEL_ROOT = Path(os.environ.get("CLASSIFIER_MODEL_ROOT", "/models/nli-deberta-v3-base"))
 MAX_BODY_BYTES, MAX_TEXT_CHARACTERS = 2_000_000, 500_000
 CHUNK_TOKENS, CHUNK_OVERLAP = 384, 64
 INFERENCE_LOCK = threading.Lock()
@@ -162,7 +162,7 @@ def download_model() -> None:
     MODEL_ROOT.mkdir(parents=True, exist_ok=True)
     snapshot_download(repo_id=MODEL_ID, revision=MODEL_REVISION, local_dir=MODEL_ROOT,
         allow_patterns=["config.json", "model.safetensors", "tokenizer.json", "tokenizer_config.json",
-                        "special_tokens_map.json", "vocab.json", "merges.txt"])
+                        "special_tokens_map.json", "spm.model", "added_tokens.json"])
     (MODEL_ROOT / ".phase2-model.json").write_text(json.dumps({"modelId": MODEL_ID, "revision": MODEL_REVISION}) + "\n")
     if not model_cache_valid(full=True): raise RuntimeError("Downloaded model cache failed validation.")
 
