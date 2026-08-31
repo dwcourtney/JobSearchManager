@@ -109,8 +109,8 @@ command -v nvidia-ctk >/dev/null || {
   exit 1
 }
 docker info --format 'Docker runtimes: {{json .Runtimes}}'
-docker run --rm --gpus all --entrypoint python "jsm-classifier:$target_sha" -c \
-  'import subprocess; subprocess.run(["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"], check=True)'
+docker run --rm --gpus all --entrypoint nvidia-smi "jsm-classifier:$target_sha" \
+  --query-gpu=name --format=csv,noheader
 
 if [[ -f "$active_manifest" ]]; then
   cp -- "$active_manifest" "$previous_manifest.tmp"
@@ -148,14 +148,7 @@ verify_deployment() {
     sleep 1
   done
   [[ "$classifier_health" == "healthy" ]] || return 1
-  docker exec "$classifier_container" python -c '
-import json, urllib.request
-payload=json.load(urllib.request.urlopen("http://127.0.0.1:8081/healthz", timeout=5))
-assert payload["status"] == "healthy"
-assert payload["gpuAvailable"] is True
-assert payload["deviceCount"] == 1
-assert payload["deviceName"] == "NVIDIA GeForce GTX 1070"
-' || return 1
+  docker exec "$classifier_container" dotnet JsmClassifier.dll --gpu-diagnostic || return 1
 
   local jsm_container=""
   jsm_container="$(docker ps -q --filter label=com.docker.compose.project=jsm-lab \

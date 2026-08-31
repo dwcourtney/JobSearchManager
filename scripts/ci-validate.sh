@@ -33,7 +33,9 @@ dotnet restore JobSearchManager.csproj --locked-mode
 dotnet restore Tests/JobSearchManager.Tests.csproj --locked-mode
 dotnet build JobSearchManager.csproj --configuration Release --no-restore
 dotnet run --project Tests/JobSearchManager.Tests.csproj --configuration Release --no-restore
-python3 -m unittest discover -s classifier-service -p 'test_*.py'
+dotnet restore classifier-service/ClassifierService.csproj --locked-mode
+dotnet build classifier-service/ClassifierService.csproj --configuration Release --no-restore
+dotnet run --project classifier-service/ClassifierService.csproj --configuration Release --no-build -- --self-test
 pwsh -NoLogo -NoProfile -File scripts/validate-source.ps1
 pwsh -NoLogo -NoProfile -File scripts/audit-repository.ps1
 bash scripts/security-scan.sh source "$(pwd)" "$security_cache"
@@ -101,6 +103,14 @@ classifier_response="$(curl --fail --silent --show-error \
   --header 'Content-Type: application/json' \
   --data '{"jobId":"R180395","title":"Senior Software Developer","description":"phase one"}' \
   "http://127.0.0.1:${classifier_port}/classify")"
+malformed_status="$(curl --silent --output /dev/null --write-out '%{http_code}' \
+  --header 'Content-Type: application/json' --data '{' \
+  "http://127.0.0.1:${classifier_port}/classify")"
+missing_id_status="$(curl --silent --output /dev/null --write-out '%{http_code}' \
+  --header 'Content-Type: application/json' \
+  --data '{"title":"Senior Software Developer","description":"phase one"}' \
+  "http://127.0.0.1:${classifier_port}/classify")"
+[[ "$malformed_status" == "400" && "$missing_id_status" == "400" ]]
 node -e '
 const health = JSON.parse(process.argv[1]);
 const result = JSON.parse(process.argv[2]);

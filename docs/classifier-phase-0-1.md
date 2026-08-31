@@ -17,8 +17,8 @@ service.
   keys, Mailpit route, or ai801 route.
 - Both containers remain non-root, read-only, capability-free, and protected by
   `no-new-privileges`. The classifier receives only the JSON supplied to the explicit diagnostic.
-- The service uses Python's standard-library HTTP server. No Python package, CUDA SDK, ML
-  runtime, or model weight is installed. NVIDIA Container Toolkit injects only the driver's
+- The service uses the dependency-free ASP.NET runtime already used by JSM. No application
+  package, CUDA SDK, ML runtime, or model weight is installed. NVIDIA Container Toolkit injects only the driver's
   `utility` capability and `nvidia-smi`; the probe therefore consumes no model/runtime VRAM.
 
 ## Contract
