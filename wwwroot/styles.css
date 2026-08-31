@@ -742,6 +742,13 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 }
 .detector-aggregate-card h4,
 .detector-aggregate-card p { margin: 0 0 0.35rem; }
+.detector-sample-caveat {
+  padding: .65rem .75rem;
+  border-left: var(--status-indicator-width) solid var(--color-incomplete-border);
+  color: var(--color-incomplete-text);
+  background: var(--color-incomplete-background);
+}
+.detector-metric-definitions { color: var(--color-text-secondary); }
 .detector-metrics-table-wrap { overflow-x: auto; }
 .detector-metrics-table {
   width: 100%;
@@ -885,7 +892,8 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   background: var(--color-input-background);
   font: inherit;
 }
-.job-fit-search:focus-visible, .job-fit-survey-choice input:focus-visible {
+.job-fit-search:focus-visible, .job-fit-survey-choice input:focus-visible,
+.job-fit-clear-action:focus-visible {
   outline: var(--focus-ring-width) solid var(--color-focus-ring);
   outline-offset: var(--focus-ring-offset-compact);
 }
@@ -909,6 +917,58 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   min-width: 0;
   white-space: normal;
   line-height: var(--line-height-control);
+}
+.detector-example-review { margin-top: 1.25rem; }
+.detector-example-review > p { color: var(--color-text-secondary); }
+.detector-concept-examples {
+  margin: .55rem 0;
+  border: var(--border-width-default) solid var(--color-border);
+  border-radius: var(--radius-control);
+}
+.detector-concept-examples > summary {
+  padding: .6rem .7rem;
+  color: var(--color-label);
+  background: var(--color-surface-secondary);
+  cursor: pointer;
+  font-weight: var(--font-weight-semibold);
+}
+.detector-example-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+  padding: .65rem .7rem 0;
+}
+.detector-filter-button {
+  padding: .3rem .55rem;
+  border: var(--border-width-default) solid var(--color-secondary-button-border);
+  border-radius: var(--radius-control);
+  color: var(--color-secondary-button-text);
+  background: var(--color-secondary-button-background);
+  cursor: pointer;
+}
+.detector-filter-button[aria-pressed="true"] {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+.detector-filter-button:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: var(--focus-ring-offset-compact);
+}
+.detector-example-list { padding: .7rem; }
+.detector-example {
+  display: grid;
+  gap: .18rem;
+  padding: .6rem .7rem;
+  border-left: var(--status-indicator-width) solid var(--color-summary-status-border);
+  background: var(--color-surface-secondary);
+}
+.detector-example + .detector-example { margin-top: .45rem; }
+.detector-example span,
+.detector-example small { color: var(--color-text-secondary); }
+.detector-example.detector-result-fp,
+.detector-example.detector-result-fn { border-left-color: var(--color-fit-review-border); }
+.job-fit-tabs .job-fit-tab.is-incomplete {
+  color: var(--color-incomplete-text);
 }
 .job-fit-section-chooser {
   display: none;
@@ -942,6 +1002,9 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   border: var(--border-width-default) solid var(--color-border);
   border-radius: var(--radius-control);
   background: var(--color-accordion-body-background);
+}
+.job-fit-tab-section.is-incomplete {
+  border-left: var(--status-indicator-width) solid var(--color-incomplete-border);
 }
 .job-fit-tab-section > .job-fit-survey-subgroup {
   margin-top: 0;
@@ -997,6 +1060,13 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   border-radius: var(--radius-control);
   color: var(--color-label);
   background: var(--color-surface-secondary);
+}
+.job-fit-scale-panel.is-unset {
+  border-left-color: var(--color-incomplete-border);
+  background: var(--color-incomplete-background);
+}
+.job-fit-scale-panel.is-unset input[type="range"] {
+  opacity: var(--opacity-disabled-control);
 }
 .job-fit-scale-panel h4 {
   margin: 0 0 .3rem;
@@ -1063,6 +1133,19 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   color: var(--color-text-secondary);
   line-height: var(--line-height-note);
 }
+.job-fit-scale-actions { margin-top: .55rem; }
+.job-fit-clear-action {
+  padding: .18rem .38rem;
+  border: var(--border-width-default) solid var(--color-secondary-button-border);
+  border-radius: var(--radius-control);
+  color: var(--color-secondary-button-text);
+  background: var(--color-secondary-button-background);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--font-size-caption);
+}
+.job-fit-clear-action:hover:not(:disabled) { background: var(--color-secondary-button-hover); }
+.job-fit-clear-action:disabled { cursor: default; opacity: var(--opacity-disabled-control); }
 .normal-work-location-panel {
   margin-top: 0;
 }
@@ -1075,6 +1158,14 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   margin: 0 0 .25rem;
   color: var(--color-text-heading);
   font-size: var(--font-size-small);
+}
+.job-fit-completeness-count {
+  margin-left: .55rem;
+  color: var(--color-incomplete-text);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-regular);
+  letter-spacing: var(--letter-spacing-normal);
+  text-transform: var(--text-transform-normal);
 }
 .assignment-location-introduction p {
   margin: 0;
@@ -1094,6 +1185,12 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   font-size: var(--font-size-caption);
   font-weight: var(--font-weight-regular);
   line-height: var(--line-height-note);
+}
+.job-fit-concept-status {
+  min-height: 1.45rem;
+  color: var(--color-incomplete-text);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
 }
 .job-fit-matrix { display: grid; }
 .job-fit-survey-subgroup {
@@ -1128,6 +1225,10 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 .job-fit-survey-row {
   min-height: 2.7rem;
   padding: .32rem .55rem;
+}
+.job-fit-survey-row.is-unset {
+  border-left: var(--status-indicator-width) solid var(--color-incomplete-border);
+  background: var(--color-incomplete-background);
 }
 .job-fit-survey-row + .job-fit-survey-row {
   border-top: var(--border-width-default) solid var(--color-border);

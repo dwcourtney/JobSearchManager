@@ -438,8 +438,7 @@ public static class JobFitPreferenceLevels
     {
         StrongPositive => Ideal,
         StrongNegative => Negative,
-        Neutral => null,
-        Ideal or Positive or Negative or HardConflict => value,
+        Neutral or Ideal or Positive or Negative or HardConflict => value,
         _ => null
     };
 }
@@ -492,7 +491,7 @@ public static class TravelTolerance
     public static bool IsLegacyConcept(string? conceptId) =>
         conceptId is not null && LegacyConceptLevels.ContainsKey(conceptId);
 
-    public static int Normalize(
+    public static int? Normalize(
         int? value,
         IEnumerable<JobFitSignalPreference>? legacySignals = null)
     {
@@ -532,7 +531,7 @@ public static class TravelTolerance
 
         return permissive.Count > 0
             ? Math.Clamp(Math.Max(Default, permissive.Max()), Minimum, Maximum)
-            : Default;
+            : null;
     }
 }
 
@@ -556,7 +555,7 @@ public static class WorkLocationPreference
     public static bool IsLegacyConcept(string? conceptId) =>
         conceptId is not null && LegacyConceptLevels.ContainsKey(conceptId);
 
-    public static int Normalize(
+    public static int? Normalize(
         int? value,
         IEnumerable<JobFitSignalPreference>? legacySignals = null)
     {
@@ -578,7 +577,7 @@ public static class WorkLocationPreference
         }
         if (signals.Count == 0)
         {
-            return Default;
+            return null;
         }
 
         static int Utility(string? preference, int distance) => preference switch
@@ -612,8 +611,7 @@ public sealed record JobFitConfiguration(
     int? PreferredWorkLocation = null,
     IReadOnlyList<string>? GroupHardConflicts = null)
 {
-    public static JobFitConfiguration Disabled { get; } = new(
-        false, [], JobSearchManager.TravelTolerance.Default, WorkLocationPreference.Default, []);
+    public static JobFitConfiguration Disabled { get; } = new(false, [], null, null, []);
 
     public static JobFitConfiguration Normalize(
         JobFitConfiguration? configuration,

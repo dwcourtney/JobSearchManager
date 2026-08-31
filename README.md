@@ -175,7 +175,12 @@ Requirement** section in At a Glance with the preserved posting evidence.
 Settings > Job Fit provides optional workspace-specific suitability scoring. It is
 disabled by default for new and existing workspaces. When enabled, users rate every
 canonical concept from `JobConceptCatalog.json` as Hard Conflict, Negative,
-Neutral, Positive, or Ideal; arbitrary Job Fit keywords cannot be entered. Ordinary
+Neutral, Positive, or Ideal; arbitrary Job Fit keywords cannot be entered. A new
+concept starts **Not set**, with no radio selected and no scoring effect. Selecting
+Neutral is an explicit, persisted, complete preference with a zero scoring effect;
+the row's Clear action returns it to Not set. Tabs, groups, and the overall survey
+show configured/unset counts. A group Hard Conflict makes its children effectively
+complete without erasing or rewriting their stored individual choices. Ordinary
 business travel is configured separately at the top of Work Arrangement with one
 native seven-level **Travel Tolerance** control, from No travel (0) through
 Travel-heavy (6). The four travel-band concepts remain internal detectors and no
@@ -203,8 +208,8 @@ matrix organized into collapsible category sections. Role Type, Technical Domain
 Work Environment, and Responsibility Shape retain independent preference rows while
 using labeled subgroups and concise detector-aligned descriptions for easier scanning.
 Individual Contributor and People Management remain separate because their explicit
-detectors do not support a reliable mentoring-to-management continuum. Neutral is the default and is omitted from sparse
-workspace settings. The retired `strongNegative` and `strongPositive` values import
+detectors do not support a reliable mentoring-to-management continuum. The retired
+`strongNegative` and `strongPositive` values import
 as Negative and Ideal, respectively, so older workspaces and exports remain compatible
 while new saves and exports use the current terminology. Legacy travel-row preferences
 are deterministically migrated to one tolerance value. For a legacy travel level
@@ -212,17 +217,17 @@ are deterministically migrated to one tolerance value. For a legacy travel level
 result wins; Positive or Ideal preserves at least that level when no restrictive
 travel preference exists. The former Frequent and Substantial Travel hard conflicts
 used by the existing workspace therefore become level 3 (Occasional). An already
-persisted valid `0..6` value takes precedence. New, neutral, invalid, or otherwise
-unspecified workspaces default to level 4 (Moderate), which avoids unexpectedly
-rejecting the common 10–25% band. Preferred normal work location persists as an
+persisted valid `0..6` value takes precedence. A missing or invalid value remains
+Not set and contributes no score; choosing Set preference begins at level 4
+(Moderate). Preferred normal work location persists as a nullable
 integer `0..5`; a valid explicit value wins. Legacy Ideal and Positive location rows
 pull toward their detector levels while Negative and Hard Conflict rows push away,
 with stronger preferences weighted more heavily. The specific 100% Remote signal
 supersedes generic Remote during migration. Ties prefer the level nearest the neutral
 Hybrid default, then the lower level. Thus the existing workspace's 100% Remote Ideal,
 Remote Ideal, Hybrid Negative, and Onsite Negative settings migrate to level 0 without
-double-counting the generic Remote row. Unconfigured workspaces default to Hybrid (3),
-the center of the corpus scale, avoiding an assumed remote-only or onsite-only bias.
+double-counting the generic Remote row. Missing or invalid location preferences remain
+Not set and contribute no score; choosing Set preference begins at Hybrid (3).
 
 Cards show a themed 1–10 badge. Scoring starts at 5 and bounds each category's total
 contribution, so aligned normal-location evidence can improve Work Arrangement by at most one point,
@@ -256,11 +261,15 @@ hidden when Job Fit is disabled and does not independently recalculate the score
 Confirmed administrators receive an Admin area with Overview and Detector Evaluation
 tabs. Detector Evaluation compares the production Job Concept detector with independent,
 explicit yes/no labels in `DetectorEvaluationFixtures.json`; raw unlabeled job data is
-never treated as ground truth. It reports per-concept confusion counts, positive support,
-precision, recall, F1, macro/micro summaries, and false-positive/false-negative details.
-Undefined zero-denominator metrics are shown as unavailable rather than NaN, and small
-fixture support is called out. CI validates the corpus and publishes a deterministic JSON
-report without enforcing an arbitrary F1 threshold.
+never treated as ground truth. The versioned regression corpus has 96 reviewed labels:
+eight positive and eight negative examples for each of six concepts. It reports positive,
+negative, and total support; deterministic sample classification; the full confusion
+matrix; precision, recall, F1, and macro/micro summaries. Administrators can review and
+filter every labeled example with expected/predicted status, TP/FP/FN/TN result,
+rationale, detector evidence, requisition metadata when available, and provenance.
+This is a regression corpus, not a claim of broad statistical accuracy. Undefined
+zero-denominator metrics are shown as unavailable rather than NaN. CI validates the
+corpus and publishes deterministic JSON without enforcing an arbitrary F1 threshold.
 
 ## Optional accounts
 

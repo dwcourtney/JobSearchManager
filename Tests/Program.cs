@@ -1440,8 +1440,7 @@ static async Task TestJobFitSettingsAsync()
         "{}", new JsonSerializerOptions(JsonSerializerDefaults.Web));
     var legacy = state.NormalizeSettings(missing!);
     Assert(legacy.JobFit is
-               { Enabled: false, TravelTolerance: TravelTolerance.Default,
-                 PreferredWorkLocation: WorkLocationPreference.Default } &&
+               { Enabled: false, TravelTolerance: null, PreferredWorkLocation: null } &&
            legacy.JobFit.Signals.Count == 0,
         "An existing workspace without Job Fit fields did not behave as disabled.");
 
@@ -1488,9 +1487,11 @@ static async Task TestJobFitSettingsAsync()
     });
     await state.SaveSettingsAsync(cleared);
     var clearedReloaded = await state.LoadSettingsAsync();
-    Assert(clearedReloaded.JobFit is { Enabled: true } &&
-           clearedReloaded.JobFit.Signals.Count == 0,
-        "Returning a Job Fit concept to Neutral did not remove its sparse persisted setting.");
+    Assert(clearedReloaded.JobFit is { Enabled: true, TravelTolerance: null,
+               PreferredWorkLocation: null } &&
+           clearedReloaded.JobFit.Signals.Count == 1 &&
+           clearedReloaded.JobFit.Signals.Single().Preference == JobFitPreferenceLevels.Neutral,
+        "Explicit Neutral did not persist as a configured zero-impact preference.");
     }
     finally
     {
@@ -1521,7 +1522,7 @@ static Task TestTravelToleranceMigrationAsync()
         [new("work.travel.substantial", JobFitPreferenceLevels.HardConflict)], 2), concepts);
     var invalidValue = JobFitConfiguration.Normalize(new JobFitConfiguration(true, [], 7), concepts);
     Assert(negative.TravelTolerance == 3 && permissive.TravelTolerance == 5 &&
-           explicitValue.TravelTolerance == 2 && invalidValue.TravelTolerance == TravelTolerance.Default,
+           explicitValue.TravelTolerance == 2 && invalidValue.TravelTolerance is null,
         "Legacy negative/positive migration, explicit-value precedence, or invalid-value fallback was not deterministic.");
     return Task.CompletedTask;
 }
@@ -1555,7 +1556,7 @@ static Task TestWorkLocationMigrationAsync()
     var invalidValue = JobFitConfiguration.Normalize(new JobFitConfiguration(true, [], 4, 6), concepts);
     Assert(centered.PreferredWorkLocation == 2 && negativeOnly.PreferredWorkLocation == 0 &&
            explicitValue.PreferredWorkLocation == 5 &&
-           invalidValue.PreferredWorkLocation == WorkLocationPreference.Default,
+           invalidValue.PreferredWorkLocation is null,
         "Legacy center/negative migration, explicit-value precedence, or invalid-value fallback was not deterministic.");
     return Task.CompletedTask;
 }
@@ -1806,10 +1807,12 @@ static Task TestDetectorEvaluationAsync()
         "role.physical-inspection-quality-control", "role.lab-test-technician",
         "role.warehouse-material-handling", "role.manufacturing-production-operations"
     ], StringComparer.Ordinal);
-    Assert(report.FixtureVersion == 1 && report.FixtureCount == 36 &&
+    Assert(report.FixtureVersion == 2 && report.FixtureCount == 96 &&
            report.Concepts.Select(item => item.ConceptId).ToHashSet(StringComparer.Ordinal)
                .SetEquals(expectedConcepts) &&
-           report.Concepts.All(item => item.PositiveSupport == 3 && item.NegativeExamples == 3) &&
+           report.Concepts.All(item => item.PositiveSupport == 8 && item.NegativeExamples == 8 &&
+               item.TotalExamples == 16 && item.SampleSize == "Developing sample" &&
+               item.Examples.Count == 16) &&
            report.BuildSha == "0123456789abcdef0123456789abcdef01234567",
         "The independent labeled evaluation corpus changed identity, support, or SHA metadata.");
     Assert(report.Concepts.All(item =>
@@ -1835,7 +1838,12 @@ static Task TestDetectorEvaluationAsync()
     Assert(matrix.TruePositive == 1 && matrix.FalsePositive == 1 &&
            matrix.FalseNegative == 1 && matrix.TrueNegative == 1 &&
            matrix.Precision == 0.5 && matrix.Recall == 0.5 && matrix.F1 == 0.5 &&
-           matrix.FalsePositives.Count == 1 && matrix.FalseNegatives.Count == 1,
+           matrix.FalsePositives.Count == 1 && matrix.FalseNegatives.Count == 1 &&
+           matrix.Examples.Select(item => item.Result).ToHashSet(StringComparer.Ordinal)
+               .SetEquals(["TP", "FP", "FN", "TN"]) &&
+           DetectorEvaluationService.SampleSizeLabel(4) == "Small sample" &&
+           DetectorEvaluationService.SampleSizeLabel(5) == "Developing sample" &&
+           DetectorEvaluationService.SampleSizeLabel(15) == "Established sample",
         "TP/FP/FN/TN, precision, recall, F1, or error details were calculated incorrectly.");
     Assert(DetectorEvaluationService.Divide(0, 0) is null &&
            DetectorEvaluationService.HarmonicMean(null, 1) is null &&
@@ -2196,24 +2204,28 @@ static Task TestPortableJobFitAsync()
             new("technical.machine-learning", JobFitPreferenceLevels.StrongPositive),
             new("work.deployment", JobFitPreferenceLevels.HardConflict),
             new("work.onsite", JobFitPreferenceLevels.StrongNegative),
-            new("work.remote", JobFitPreferenceLevels.Neutral)
+            new("work.remote", JobFitPreferenceLevels.Neutral),
+            new("technical.cloud", JobFitPreferenceLevels.Neutral)
         ], 2, null, [JobFitGroupHardConflicts.SoftwareDevelopment,
             JobFitGroupHardConflicts.AiData])
     };
 
     var exported = portable.Export(configured, JobHistoryDocument.Empty);
     var imported = portable.Import(exported, ViewerSettings.Default, JobHistoryDocument.Empty);
-    Assert(exported.Version == 7 && exported.Preferences.JobFit is
+    Assert(exported.Version == 8 && exported.Preferences.JobFit is
                { Enabled: true, TravelTolerance: 2, PreferredWorkLocation: 0 } &&
            imported.Settings.JobFit is
                { Enabled: true, TravelTolerance: 2, PreferredWorkLocation: 0 } &&
-           imported.Settings.JobFit.Signals.Count == 2 &&
+           imported.Settings.JobFit.Signals.Count == 3 &&
            exported.Preferences.JobFit.Signals.Any(signal =>
                signal.ConceptId == "technical.machine-learning" &&
                signal.Preference == JobFitPreferenceLevels.Ideal) &&
            imported.Settings.JobFit.Signals.All(signal =>
                signal.Preference is not JobFitPreferenceLevels.StrongPositive and
                    not JobFitPreferenceLevels.StrongNegative) &&
+           imported.Settings.JobFit.Signals.Any(signal =>
+               signal.ConceptId == "technical.cloud" &&
+               signal.Preference == JobFitPreferenceLevels.Neutral) &&
            imported.Settings.JobFit.GroupHardConflicts?.SequenceEqual(
                [JobFitGroupHardConflicts.AiData,
                 JobFitGroupHardConflicts.SoftwareDevelopment]) == true &&
@@ -2228,8 +2240,8 @@ static Task TestPortableJobFitAsync()
     var legacyImported = portable.Import(legacy, configured, JobHistoryDocument.Empty);
     Assert(legacyImported.Settings.JobFit is { Enabled: false } &&
            legacyImported.Settings.JobFit.Signals.Count == 0 &&
-           legacyImported.Settings.JobFit.TravelTolerance == TravelTolerance.Default &&
-           legacyImported.Settings.JobFit.PreferredWorkLocation == WorkLocationPreference.Default &&
+           legacyImported.Settings.JobFit.TravelTolerance is null &&
+           legacyImported.Settings.JobFit.PreferredWorkLocation is null &&
            legacyImported.Settings.JobFit.GroupHardConflicts?.Count == 0,
         "An older workspace import without Job Fit data did not default to disabled.");
 

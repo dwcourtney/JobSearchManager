@@ -182,6 +182,10 @@
   --color-confirmation-summary-background: var(--color-surface-secondary);
   --color-confirmation-summary-border: var(--color-border);
   --color-confirmation-pending-border: var(--color-accent);
+  /* Informational attention for preferences that have not yet been reviewed. */
+  --color-incomplete-border: var(--color-analysis-pending-badge-border);
+  --color-incomplete-text: var(--color-analysis-pending-badge-text);
+  --color-incomplete-background: var(--color-analysis-pending-badge-background);
   --color-confirmation-secondary-border: var(--color-secondary-button-border);
   --color-confirmation-secondary-text: var(--color-secondary-button-text);
   --color-confirmation-secondary-background: var(--color-secondary-button-background);

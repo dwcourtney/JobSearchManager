@@ -65,7 +65,7 @@ internal sealed partial class PortableWorkspaceService
 {
     public const string FormatIdentifier = "JobSearchManagerBackup";
     internal const string LegacyFormatIdentifier = "WorkdayJobManagerWorkspace";
-    public const int CurrentVersion = 7;
+    public const int CurrentVersion = 8;
     public const int MaximumImportBytes = 1_000_000;
     private readonly CompanyCatalog _companies;
     private readonly JobConceptCatalog _jobConcepts;
@@ -167,7 +167,7 @@ internal sealed partial class PortableWorkspaceService
             throw new WorkspaceImportException(
                 "The selected file is not a Job Search Manager workspace export.");
         }
-        if (document.Version is not (1 or 2 or 3 or 4 or 5 or 6 or CurrentVersion))
+        if (document.Version is not (1 or 2 or 3 or 4 or 5 or 6 or 7 or CurrentVersion))
         {
             throw new WorkspaceImportException($"Workspace version {document.Version} is not supported.");
         }
