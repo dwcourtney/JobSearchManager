@@ -2,6 +2,10 @@ FROM python:3.13.15-slim-bookworm@sha256:b6bd71b0dd3811ddbcbc523ec2965fd1e1bcfdf
 ARG CLASSIFIER_GIT_SHA=unknown
 WORKDIR /app
 
+RUN python -m pip install --no-cache-dir --upgrade \
+    setuptools==83.0.0 \
+    msgpack==1.2.1
+
 COPY server.py healthcheck.py ./
 
 ENV CLASSIFIER_GIT_SHA=${CLASSIFIER_GIT_SHA} \
