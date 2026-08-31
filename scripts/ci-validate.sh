@@ -133,7 +133,7 @@ const result = JSON.parse(process.argv[2]);
 const sha = process.argv[3];
 if (health.status !== "healthy" || health.gpuAvailable !== false || health.revision !== sha) process.exit(1);
 if (!result.received || result.jobId !== "R180395" || result.title !== "Senior Software Developer" || result.descriptionLength !== 9) process.exit(1);
-if (result.serviceVersion !== "0.4.0" || result.protocolVersion !== "4") process.exit(1);
+if (result.serviceVersion !== "0.6.0" || result.protocolVersion !== "4") process.exit(1);
 ' "$classifier_health_json" "$classifier_response" "$expected_sha"
 
 docker run --detach \
