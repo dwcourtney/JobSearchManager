@@ -20,8 +20,8 @@ previous_ollama_reference=""
 ollama_was_running=false
 ollama_image="jsm-ollama:$target_sha"
 ollama_source_revision="f96e7aa0513b9973a0ccc71be414c2ecb9d65b1a"
-model_tag="qwen3:4b-instruct-2507-q4_K_M"
-model_digest="0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0"
+model_tag="llama3.1:8b-instruct-q4_K_M"
+model_digest="46e0c10c039e019119339687c3c1757cc81b9da49709a3b3924863ba87ca666e"
 provision_container="jsm-ollama-provision-${target_sha:0:12}"
 
 cleanup_provision() {
@@ -160,7 +160,7 @@ for _ in $(seq 1 30); do
   sleep 1
 done
 docker exec "$provision_container" ollama pull "$model_tag"
-manifest_path="$model_root/manifests/registry.ollama.ai/library/qwen3/4b-instruct-2507-q4_K_M"
+manifest_path="$model_root/manifests/registry.ollama.ai/library/llama3.1/8b-instruct-q4_K_M"
 [[ -f "$manifest_path" ]] || { echo "Pinned Ollama model manifest is absent." >&2; exit 1; }
 [[ "$(sha256sum "$manifest_path" | awk '{print $1}')" == "$model_digest" ]] || {
   echo "Pinned Ollama model manifest digest validation failed." >&2; exit 1;
