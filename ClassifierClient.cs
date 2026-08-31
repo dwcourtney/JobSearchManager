@@ -125,7 +125,7 @@ public sealed class ClassifierClient(HttpClient httpClient, ILogger<ClassifierCl
                 result.ModelType != "generative-llm" || result.PromptHash.Length != 64 ||
                 result.PromptVersion != "phase3-zero-shot-v1" || result.Temperature != 0 ||
                 result.ContextLength != 8192 || result.MalformedOutputCount != 0 ||
-                result.ModelDigest != "sha256:0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0" ||
+                result.ModelDigest != "sha256:46e0c10c039e019119339687c3c1757cc81b9da49709a3b3924863ba87ca666e" ||
                 !result.GpuAvailable ||
                 result.DeviceCount != 1 || result.DeviceName != "NVIDIA GeForce GTX 1070" ||
                 result.Device != "cuda:0" || result.JobId != request.JobId ||
