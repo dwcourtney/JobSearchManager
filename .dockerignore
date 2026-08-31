@@ -3,7 +3,7 @@
 .github
 **/bin
 **/obj
-classifier-service/__pycache__
+classifier-service
 Tests
 scripts
 deploy
