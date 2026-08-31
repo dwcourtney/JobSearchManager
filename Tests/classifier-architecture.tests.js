@@ -38,7 +38,7 @@ assert.doesNotMatch(scoring, /classifier/i,
 
 assert.match(classifier, /MODEL_ID = "BAAI\/bge-base-en-v1\.5"/);
 assert.match(classifier, /MODEL_REVISION = "a5beb1e3e68b9ab74eb54cfd186867f64f240e1a"/);
-assert.match(classifier, /EMBEDDING_DIMENSION, DEFAULT_THRESHOLD = 768, \.80/);
+assert.match(classifier, /EMBEDDING_DIMENSION, DEFAULT_THRESHOLD = 768, \.50/);
 assert.match(classifier, /AutoModel\.from_pretrained/);
 assert.doesNotMatch(classifier, /AutoModelForSequenceClassification|softmax|entailment/i);
 assert.match(classifier, /last_hidden_state\[:, 0\]/, "BGE must use documented CLS pooling");

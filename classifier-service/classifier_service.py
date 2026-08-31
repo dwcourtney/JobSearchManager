@@ -16,7 +16,7 @@ CONFIG_SHA256 = "bc00af31a4a31b74040d73370aa83b62da34c90b75eb77bfa7db039d90abd59
 MODEL_ROOT = Path(os.environ.get("CLASSIFIER_MODEL_ROOT", "/models/bge-base-en-v1.5"))
 MAX_BODY_BYTES, MAX_TEXT_CHARACTERS = 2_000_000, 500_000
 CHUNK_TOKENS, CHUNK_OVERLAP = 384, 64
-EMBEDDING_DIMENSION, DEFAULT_THRESHOLD = 768, .80
+EMBEDDING_DIMENSION, DEFAULT_THRESHOLD = 768, .50
 AGGREGATION = "max"
 QUERY_INSTRUCTION = "Represent this sentence for searching relevant passages: "
 INFERENCE_LOCK = threading.Lock()
@@ -217,7 +217,7 @@ def self_test() -> None:
     assert chunk_tokens(list(range(10)), 4, 1) == [[0,1,2,3],[3,4,5,6],[6,7,8,9]]
     assert len(CONCEPTS) == len({c for c, _ in CONCEPTS}) == 8
     assert aggregate_similarities([[.1] * 8, [.2] * 8]) == [.2] * 8
-    assert [similarity_matches(v) for v in [.6,.7,.8,.9]] == [False,False,True,True]
+    assert [similarity_matches(v) for v in [.49,.50,.60,.90]] == [False,True,True,True]
     assert len(CONCEPT_CACHE_KEY) == 64 and EMBEDDING_DIMENSION == 768
     assert set(gpu_diagnostic()) == {"gpuAvailable","deviceCount","deviceName","vramTotalMiB","vramUsedMiB","driverVersion"}
     print("Embedding schema, chunking, normalization contract, cache, and threshold self-test: PASS")

@@ -84,6 +84,10 @@ The documented BGE distribution motivates a fixed global threshold grid from `0.
 macro F1. There is no per-concept threshold tuning. A simple positive-description formulation is
 used; no learned or fixture-tuned contrastive classifier is introduced.
 
+The fixed 40-posting calibration selected `0.50` as the single global runtime default. It is
+applied uniformly to all eight concepts; the complete threshold sweep remains the authoritative
+evaluation evidence.
+
 ## Gate
 
 Merge is allowed only after a signed exact topic SHA passes local/hosted tests and isolated
