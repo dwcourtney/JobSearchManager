@@ -37,7 +37,7 @@ assert.match(app, /admin-overview-tab[\s\S]*?Overview[\s\S]*?admin-detector-eval
 assert.doesNotMatch(app, /admin-(?:accounts|workspaces)-tab/,
   "Unimplemented Accounts and Workspaces placeholders must not be added.");
 assert.match(app, /fetch\("\/api\/admin\/detector-evaluation"/);
-assert.match(app, /\["Concept", "Pos", "Neg", "Total", "Sample", "TP", "FP", "FN", "TN", "Precision", "Recall", "F1"\]/,
+assert.match(app, /\["Concept", "Family", "Tier \/ class", "Pos", "Neg", "Total", "Maturity", "TP", "FP", "FN", "TN", "Precision", "Recall", "F1"\]/,
   "Detector metrics must expose labeled positive, negative, and total support with the confusion matrix.");
 assert.match(app, /metric\.sampleSize/,
   "Every concept must display its deterministic sample-size classification.");
@@ -49,6 +49,18 @@ assert.match(app, /Label note:[\s\S]*?Detector evidence:/,
   "Example review must expose label rationale and detector evidence.");
 assert.match(app, /False positives[\s\S]*?False negatives/,
   "Detector errors must be reviewable by classification.");
+assert.match(app, /Search detector concepts[\s\S]*?Tier 1[\s\S]*?Tier 2[\s\S]*?Tier 3[\s\S]*?Not evaluated[\s\S]*?Errors present/,
+  "Full-taxonomy evaluation needs search, tier, maturity, and error filters.");
+assert.match(index, /detector-evaluation-ui\.js\?v=1[\s\S]*?app\.js\?v=35/,
+  "The deterministic Detector Evaluation filter helper must load before its application consumer.");
+assert.match(app, /DetectorEvaluationUi\.matchesMetric/,
+  "Rendered filtering must use the deterministic tested helper.");
+assert.match(app, /All evaluated · Macro[\s\S]*?All evaluated · Micro[\s\S]*?report\.tierAggregates/,
+  "Overall and tier-level Macro/Micro metrics must remain distinct.");
+assert.match(app, /not an independently adjudicated research gold standard/,
+  "Development label-source limitations must be explicit.");
+assert.match(app, /not Job Fit score quality, qualifications, application decisions, or preference sentiment/,
+  "The UI must distinguish detector evaluation from Job Fit scoring and decisions.");
 
 assert.match(program,
   /MapGet\("\/api\/admin\/status"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)/);
@@ -64,30 +76,48 @@ assert.match(security, /SHA256\.HashData/);
 assert.match(security, /UnixFileMode\.UserRead \| UnixFileMode\.UserWrite/);
 assert.match(compose,
   /JOBSEARCHMANAGER_ADMIN_BOOTSTRAP_PATH: \/app\/data\/admin-bootstrap-code/);
-assert.equal(fixtures.version, 2);
-assert.equal(fixtures.fixtures.length, 96);
+assert.equal(fixtures.version, 3);
+assert.equal(fixtures.fixtures.length, 144);
 assert.equal(new Set(fixtures.fixtures.map(item => item.id)).size, fixtures.fixtures.length,
   "Evaluation fixture IDs must be stable and unique.");
-assert.ok(fixtures.fixtures.every(item => typeof item.expectedPresent === "boolean"),
-  "Ground-truth labels must be explicit fixture values.");
-assert.ok(fixtures.fixtures.every(item => !item.provenance || ["public-posting", "synthetic"].includes(item.provenance)),
+assert.deepEqual(Object.keys(fixtures.labelScopes).sort(), ["tier1-target", "tier2-strong-negative"]);
+assert.ok(fixtures.fixtures.every(item =>
+  typeof item.expectedPresent === "boolean" ||
+  typeof item.labelScope === "string" && Array.isArray(item.expectedPresentConceptIds)),
+  "Ground-truth labels must be explicit legacy labels or closed multi-label scope values.");
+assert.ok(fixtures.fixtures.every(item => !item.provenance ||
+  ["public-posting", "synthetic", "synthetic-positive", "synthetic-hard-negative"].includes(item.provenance)),
   "Every explicit provenance value must use a supported class.");
 assert.match(evaluation, /fixture\.Provenance \?\?[\s\S]*?"synthetic"[\s\S]*?"public-posting"/,
   "Legacy fixtures must receive a deterministic provenance class in API output.");
-for (const conceptId of new Set(fixtures.fixtures.map(item => item.conceptId))) {
+for (const conceptId of new Set(fixtures.fixtures.map(item => item.conceptId).filter(Boolean))) {
   const conceptFixtures = fixtures.fixtures.filter(item => item.conceptId === conceptId);
   assert.equal(conceptFixtures.filter(item => item.expectedPresent).length, 8,
     `${conceptId} must have eight reviewed positive examples.`);
   assert.equal(conceptFixtures.filter(item => !item.expectedPresent).length, 8,
     `${conceptId} must have eight reviewed negative examples.`);
 }
+assert.ok(fixtures.fixtures.filter(item => item.labelScope === "tier1-target").length >= 30,
+  "Tier 1 target concepts need a substantial reviewed scenario set.");
+assert.ok(fixtures.fixtures.filter(item => item.labelScope === "tier2-strong-negative").length >= 10,
+  "Tier 2 concepts need an initial reviewed scenario set.");
+assert.ok(fixtures.fixtures.filter(item => item.labelScope).every(item => item.labelSource === "Codex-reviewed"),
+  "New multi-label fixtures must disclose their development label source.");
 assert.match(evaluation, /Fixture\.ExpectedPresent/,
   "Expected labels must be read independently from fixture data.");
 assert.match(evaluation, /_detector\.Analyze/,
   "Evaluation predictions must use the production JobConceptDetector.");
+assert.match(evaluation, /ErrorFixtureIds[\s\S]*?errorFixtureIds/,
+  "Machine-readable metrics must include deterministic error fixture IDs.");
 assert.doesNotMatch(evaluation, /double\.NaN/,
   "Undefined metrics must not emit NaN.");
-assert.match(evaluation, /< 1 => "No positive labels"[\s\S]*?< 5 => "Small sample"[\s\S]*?< 15 => "Developing sample"[\s\S]*?"Established sample"/,
-  "Sample-size classifications must use deterministic positive-support thresholds.");
+assert.match(evaluation, /positiveSupport == 0 \|\| negativeSupport == 0 \? "Not evaluated"[\s\S]*?Math\.Min\(positiveSupport, negativeSupport\) < 5 \? "Small sample"[\s\S]*?< 15 \? "Developing sample"[\s\S]*?"Established sample"/,
+  "Maturity must use deterministic balanced-support thresholds and distinguish unevaluated concepts.");
+assert.match(evaluation, /_catalog\.Concepts[\s\S]*?CalculateConcept/,
+  "Every canonical detector concept must receive an evaluation-status record.");
+assert.match(evaluation, /Tier1Concepts[\s\S]*?Tier2Concepts[\s\S]*?PartialConcepts/,
+  "Tier and partial-evaluation classifications must be deterministic.");
+assert.match(evaluation, /Travel Tolerance preference[\s\S]*?Normal Work Location preference[\s\S]*?Group Hard Conflict overrides[\s\S]*?Configured \/ Not Set preference state/,
+  "Non-detector Job Fit constructs must be explicitly excluded with rationale.");
 
 console.log("All Admin role, bootstrap, and detector-evaluation UI integration tests passed.");

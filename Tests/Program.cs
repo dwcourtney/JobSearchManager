@@ -22,7 +22,7 @@ if (args.Length is 2 or 3 && args[0] == "--detector-evaluation")
     var report = evaluation.Evaluate(args.Length == 3 ? args[2] : null);
     await File.WriteAllTextAsync(args[1], JsonSerializer.Serialize(report,
         new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true }));
-    Console.WriteLine($"DETECTOR EVALUATION fixtures={report.FixtureCount} concepts={report.Concepts.Count}");
+    Console.WriteLine($"DETECTOR EVALUATION fixtures={report.FixtureCount} labels={report.LabelCount} concepts={report.Concepts.Count}");
     return;
 }
 
@@ -1802,33 +1802,54 @@ static Task TestDetectorEvaluationAsync()
     var service = new DetectorEvaluationService(
         new TestHostEnvironment(AppContext.BaseDirectory), catalog, detector);
     var report = service.Evaluate("0123456789abcdef0123456789abcdef01234567");
-    var expectedConcepts = new HashSet<string>([
+    var retainedConcepts = new HashSet<string>([
         "role.mechanical-maintenance-repair", "role.fabrication-assembly-machining",
         "role.physical-inspection-quality-control", "role.lab-test-technician",
         "role.warehouse-material-handling", "role.manufacturing-production-operations"
     ], StringComparer.Ordinal);
-    Assert(report.FixtureVersion == 2 && report.FixtureCount == 96 &&
+    Assert(report.FixtureVersion == 3 && report.FixtureCount == 144 &&
+           report.LabelCount == 1608 && report.CanonicalConceptCount == catalog.Concepts.Count &&
+           report.Concepts.Count == catalog.Concepts.Count &&
            report.Concepts.Select(item => item.ConceptId).ToHashSet(StringComparer.Ordinal)
-               .SetEquals(expectedConcepts) &&
-           report.Concepts.All(item => item.PositiveSupport == 8 && item.NegativeExamples == 8 &&
-               item.TotalExamples == 16 && item.SampleSize == "Developing sample" &&
-               item.Examples.Count == 16) &&
+               .SetEquals(catalog.Concepts.Select(item => item.Id)) &&
+           report.EvaluatableCount == 73 && report.PartiallyEvaluatableCount == 12 &&
+           report.ExcludedCount == 4 &&
+           report.Concepts.Where(item => retainedConcepts.Contains(item.ConceptId)).All(item =>
+               item.PositiveSupport == 8 && item.NegativeExamples == 8 && item.TotalExamples == 16 &&
+               item.SampleSize == "Developing sample" && item.Examples.Count == 16) &&
            report.BuildSha == "0123456789abcdef0123456789abcdef01234567",
-        "The independent labeled evaluation corpus changed identity, support, or SHA metadata.");
-    Assert(report.Concepts.All(item =>
+        $"The full-taxonomy evaluation corpus changed identity, coverage, support, or SHA metadata: " +
+        $"version={report.FixtureVersion} fixtures={report.FixtureCount} labels={report.LabelCount} " +
+        $"canonical={report.CanonicalConceptCount}/{catalog.Concepts.Count} " +
+        $"classes={report.EvaluatableCount}/{report.PartiallyEvaluatableCount}/{report.ExcludedCount}.");
+    Assert(report.Concepts.Where(item => item.Evaluated).All(item =>
                item.TruePositive + item.FalseNegative == item.PositiveSupport &&
                item.FalsePositive + item.TrueNegative == item.NegativeExamples &&
-               item.Precision is >= 0 and <= 1 && item.Recall is >= 0 and <= 1 &&
-               item.F1 is >= 0 and <= 1) &&
+               (item.Precision is null or >= 0 and <= 1) &&
+               (item.Recall is null or >= 0 and <= 1) &&
+               (item.F1 is null or >= 0 and <= 1) &&
+               item.ErrorFixtureIds.Count == item.FalsePositives.Concat(item.FalseNegatives)
+                   .Select(example => example.FixtureId).Distinct(StringComparer.Ordinal).Count()) &&
            report.Macro.Precision is >= 0 and <= 1 &&
            report.Macro.Recall is >= 0 and <= 1 && report.Macro.F1 is >= 0 and <= 1 &&
            report.Micro.Precision is >= 0 and <= 1 &&
-           report.Micro.Recall is >= 0 and <= 1 && report.Micro.F1 is >= 0 and <= 1,
-        "Detector confusion counts, support, or macro/micro metrics are invalid.");
+           report.Micro.Recall is >= 0 and <= 1 && report.Micro.F1 is >= 0 and <= 1 &&
+           report.TierAggregates.Count == 3 &&
+           report.TierAggregates.All(item => item.Macro.ConceptCount > 0 &&
+               item.Micro.ConceptCount == item.Macro.ConceptCount),
+        "Detector confusion counts, support, overall aggregates, or tier aggregates are invalid.");
+    Assert(report.Concepts.Where(item => !item.Evaluated).All(item =>
+               item.SampleSize == "Not evaluated" && item.Precision is null &&
+               item.Recall is null && item.F1 is null) &&
+           report.Concepts.Where(item => item.Tier == DetectorEvaluationService.Tier1)
+               .All(item => item.Evaluated) &&
+           report.Concepts.Any(item => item.EvaluationClass == "Partially evaluatable"),
+        "Unevaluated, tier, or classification status is not deterministic.");
 
     var concept = catalog.Get("role.mechanical-maintenance-repair");
-    var fixture = new DetectorEvaluationFixture(
-        "metric", "Synthetic", "Metric case", "Evidence", concept.Id, true);
+    var fixture = new DetectorEvaluationService.LabeledFixture(
+        "metric", "Synthetic", "Metric case", "Evidence", concept.Id, true,
+        "Independent label", null, "synthetic", "Codex-reviewed");
     DetectorEvaluationService.Observation Observation(bool expected, bool predicted) => new(
         fixture with { Id = $"metric-{expected}-{predicted}", ExpectedPresent = expected },
         predicted ? new DetectedJobConcept(concept.Id, "Production evidence") : null);
@@ -1841,14 +1862,40 @@ static Task TestDetectorEvaluationAsync()
            matrix.FalsePositives.Count == 1 && matrix.FalseNegatives.Count == 1 &&
            matrix.Examples.Select(item => item.Result).ToHashSet(StringComparer.Ordinal)
                .SetEquals(["TP", "FP", "FN", "TN"]) &&
-           DetectorEvaluationService.SampleSizeLabel(4) == "Small sample" &&
-           DetectorEvaluationService.SampleSizeLabel(5) == "Developing sample" &&
-           DetectorEvaluationService.SampleSizeLabel(15) == "Established sample",
+           DetectorEvaluationService.SampleSizeLabel(4, 20) == "Small sample" &&
+           DetectorEvaluationService.SampleSizeLabel(5, 15) == "Developing sample" &&
+           DetectorEvaluationService.SampleSizeLabel(15, 15) == "Established sample" &&
+           DetectorEvaluationService.SampleSizeLabel(15, 1) == "Small sample" &&
+           DetectorEvaluationService.SampleSizeLabel(0, 20) == "Not evaluated",
         "TP/FP/FN/TN, precision, recall, F1, or error details were calculated incorrectly.");
     Assert(DetectorEvaluationService.Divide(0, 0) is null &&
            DetectorEvaluationService.HarmonicMean(null, 1) is null &&
            DetectorEvaluationService.AverageDefined([null, null]) is null,
         "Zero-denominator detector metrics must be explicitly undefined rather than NaN.");
+
+    void AssertInvalid(DetectorEvaluationFixtureDocument document, string message)
+    {
+        try
+        {
+            _ = new DetectorEvaluationService(document, catalog, detector);
+            throw new InvalidOperationException(message);
+        }
+        catch (InvalidDataException)
+        {
+        }
+    }
+    var validFixture = new DetectorEvaluationFixture(
+        "schema-one", "Synthetic", "Schema case", "Explicit evidence", concept.Id, true);
+    AssertInvalid(new DetectorEvaluationFixtureDocument(3, [validFixture, validFixture]),
+        "Duplicate evaluation fixture IDs were accepted.");
+    AssertInvalid(new DetectorEvaluationFixtureDocument(3,
+        [validFixture with { Id = "schema-unknown", ConceptId = "missing.concept" }]),
+        "An unknown evaluation concept ID was accepted.");
+    AssertInvalid(new DetectorEvaluationFixtureDocument(3,
+        [new DetectorEvaluationFixture("schema-scope", "Synthetic", "Scope case", "Evidence",
+            LabelScope: "scope", ExpectedPresentConceptIds: ["technical.cloud"])],
+        new Dictionary<string, IReadOnlyList<string>> { ["scope"] = ["technical.linux"] }),
+        "A Present label outside its closed label scope was accepted.");
     return Task.CompletedTask;
 }
 
