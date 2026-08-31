@@ -1090,7 +1090,7 @@ function synchronizeAdminNavigation(isAdmin) {
   const evaluationTitle = document.createElement("h3");
   evaluationTitle.textContent = "Detector Evaluation";
   const evaluationIntro = document.createElement("p");
-  evaluationIntro.textContent = "Production detector predictions are compared with independent, explicitly labeled fixtures. These metrics describe only this small review corpus—not unlabeled production postings.";
+  evaluationIntro.textContent = "Production detector predictions are compared with independent, explicitly labeled development fixtures. These metrics describe only the reviewed corpus—not unlabeled production postings or Job Fit scoring quality.";
   const evaluationStatus = document.createElement("p");
   evaluationStatus.className = "settings-status";
   evaluationStatus.setAttribute("role", "status");
@@ -1164,9 +1164,15 @@ function appendDetectorErrors(container, label, errors) {
       heading.textContent = `${error.fixtureId} — ${error.title}`;
       const outcome = document.createElement("span");
       outcome.textContent = `Expected ${error.expectedPresent ? "present" : "absent"}; predicted ${error.predictedPresent ? "present" : "absent"}.`;
+      const metadata = document.createElement("small");
+      metadata.textContent = `${error.source}${error.requisitionId ? ` · ${error.requisitionId}` : ""} · ${error.labelSource}`;
+      const excerpt = document.createElement("small");
+      excerpt.textContent = `Posting excerpt: ${error.excerpt}`;
+      const rationale = document.createElement("small");
+      rationale.textContent = `Label rationale: ${error.rationale || "No additional label note."}`;
       const evidence = document.createElement("small");
-      evidence.textContent = `Evidence: ${error.evidence}`;
-      item.append(heading, outcome, evidence);
+      evidence.textContent = `Detector evidence: ${error.evidence}`;
+      item.append(heading, metadata, outcome, excerpt, rationale, evidence);
       list.append(item);
     });
     details.append(list);
@@ -1180,17 +1186,43 @@ function renderDetectorEvaluation(report) {
 
   const caveat = document.createElement("p");
   caveat.className = "detector-sample-caveat";
-  caveat.textContent = `${report.fixtureCount} reviewed labels form a deterministic regression corpus, not a claim of broad statistical accuracy.`;
+  caveat.textContent = `${report.fixtureCount} reviewed posting fixtures provide ${report.labelCount} independent concept labels across ${report.canonicalConceptCount} canonical detectors. These development labels are useful for regression and engineering evaluation, not an independently adjudicated research gold standard or a claim of broad statistical accuracy.`;
   const definitions = document.createElement("p");
   definitions.className = "detector-metric-definitions";
-  definitions.textContent = "Precision: how many predicted positives were truly positive. Recall: how many labeled positives were found. F1: the harmonic mean of Precision and Recall.";
-  container.append(caveat, definitions);
+  definitions.textContent = "This evaluates whether production posting-text detectors identify a concept—not Job Fit score quality, qualifications, application decisions, or preference sentiment. Precision: when JSM says a concept is present, how often is it right? Recall: of labeled postings that truly contain it, how many did JSM find? F1 balances Precision and Recall.";
+  const coverage = document.createElement("p");
+  coverage.className = "detector-coverage-summary";
+  coverage.textContent = `${report.evaluatableCount} evaluatable · ${report.partiallyEvaluatableCount} partially evaluatable · ${report.excludedCount} non-detector constructs excluded.`;
+  container.append(caveat, definitions, coverage);
+
+  const exclusions = document.createElement("details");
+  exclusions.className = "detector-exclusions";
+  const exclusionsSummary = document.createElement("summary");
+  exclusionsSummary.textContent = `What is excluded from direct F1 (${report.exclusions.length})`;
+  const exclusionList = document.createElement("ul");
+  report.exclusions.forEach(item => {
+    const row = document.createElement("li");
+    const name = document.createElement("strong");
+    name.textContent = item.name;
+    const reason = document.createElement("span");
+    reason.textContent = item.rationale;
+    row.append(name, reason);
+    exclusionList.append(row);
+  });
+  exclusions.append(exclusionsSummary, exclusionList);
+  container.append(exclusions);
 
   const aggregate = document.createElement("div");
   aggregate.className = "detector-aggregate-grid";
-  [["Macro", report.macro, "Each concept contributes equally."],
-   ["Micro", report.micro, "TP, FP, and FN are pooled, so common concepts contribute more."]]
-    .forEach(([label, metric, explanation]) => {
+  const aggregateRows = [
+    ["All evaluated · Macro", report.macro, "Each evaluated concept contributes equally."],
+    ["All evaluated · Micro", report.micro, "Predictions are pooled, so concepts with more labels contribute more."],
+    ...report.tierAggregates.flatMap(item => [
+      [`${item.tier} · Macro`, item.macro, `${item.macro.conceptCount} evaluated concepts; each contributes equally.`],
+      [`${item.tier} · Micro`, item.micro, `${item.micro.labelCount} labels pooled within this priority tier.`]
+    ])
+  ];
+  aggregateRows.forEach(([label, metric, explanation]) => {
       const card = document.createElement("section");
       card.className = "detector-aggregate-card";
       const title = document.createElement("h4");
@@ -1204,13 +1236,35 @@ function renderDetectorEvaluation(report) {
     });
   container.append(aggregate);
 
+  const controls = document.createElement("section");
+  controls.className = "detector-concept-controls";
+  controls.setAttribute("aria-label", "Detector concept filters");
+  const searchLabel = document.createElement("label");
+  searchLabel.textContent = "Search concepts";
+  const search = document.createElement("input");
+  search.type = "search";
+  search.placeholder = "AI, cloud, management…";
+  search.setAttribute("aria-label", "Search detector concepts");
+  searchLabel.append(search);
+  const filterButtons = document.createElement("div");
+  filterButtons.className = "detector-summary-filters";
+  const filterChoices = [["all", "All"], ["tier1", "Tier 1"], ["tier2", "Tier 2"],
+    ["tier3", "Tier 3"], ["evaluated", "Evaluated"], ["not-evaluated", "Not evaluated"],
+    ["errors", "Errors present"]];
+  let activeFilter = "all";
+  const filterStatus = document.createElement("p");
+  filterStatus.className = "detector-filter-status";
+  filterStatus.setAttribute("aria-live", "polite");
+  controls.append(searchLabel, filterButtons, filterStatus);
+  container.append(controls);
+
   const tableWrap = document.createElement("div");
   tableWrap.className = "detector-metrics-table-wrap";
   const table = document.createElement("table");
   table.className = "detector-metrics-table";
   const head = document.createElement("thead");
   const headRow = document.createElement("tr");
-  ["Concept", "Pos", "Neg", "Total", "Sample", "TP", "FP", "FN", "TN", "Precision", "Recall", "F1"].forEach(label => {
+  ["Concept", "Family", "Tier / class", "Pos", "Neg", "Total", "Maturity", "TP", "FP", "FN", "TN", "Precision", "Recall", "F1"].forEach(label => {
     const cell = document.createElement("th");
     cell.scope = "col";
     cell.textContent = label;
@@ -1218,12 +1272,19 @@ function renderDetectorEvaluation(report) {
   });
   head.append(headRow);
   const body = document.createElement("tbody");
+  const rows = [];
   report.concepts.forEach(metric => {
     const row = document.createElement("tr");
+    row.detectorMetric = metric;
+    row.dataset.search = `${metric.concept} ${metric.conceptId} ${metric.category}`.toLocaleLowerCase();
+    row.dataset.tier = metric.tier.startsWith("Tier 1") ? "tier1" : metric.tier.startsWith("Tier 2") ? "tier2" : "tier3";
+    row.dataset.evaluated = String(metric.evaluated);
+    row.dataset.errors = String(metric.falsePositive + metric.falseNegative > 0);
     const concept = document.createElement("th");
     concept.scope = "row";
     concept.textContent = metric.concept;
-    const values = [metric.positiveSupport, metric.negativeExamples, metric.totalExamples,
+    const tierClass = `${metric.tier.replace(/ — .*/, "")} · ${metric.evaluationClass}`;
+    const values = [metric.category, tierClass, metric.positiveSupport, metric.negativeExamples, metric.totalExamples,
       metric.sampleSize, metric.truePositive, metric.falsePositive,
       metric.falseNegative, metric.trueNegative, formatDetectorMetric(metric.precision),
       formatDetectorMetric(metric.recall), formatDetectorMetric(metric.f1)];
@@ -1234,10 +1295,37 @@ function renderDetectorEvaluation(report) {
       row.append(cell);
     });
     body.append(row);
+    rows.push(row);
   });
   table.append(head, body);
   tableWrap.append(table);
   container.append(tableWrap);
+
+  const applyConceptFilters = () => {
+    const query = search.value.trim().toLocaleLowerCase();
+    let shown = 0;
+    rows.forEach(row => {
+      row.hidden = !DetectorEvaluationUi.matchesMetric(row.detectorMetric, activeFilter, query);
+      if (!row.hidden) shown += 1;
+    });
+    filterStatus.textContent = `${shown} of ${rows.length} detector concepts shown.`;
+  };
+  filterChoices.forEach(([value, label], index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = label;
+    button.className = "detector-filter-button";
+    button.setAttribute("aria-pressed", String(index === 0));
+    button.addEventListener("click", () => {
+      activeFilter = value;
+      filterButtons.querySelectorAll("button").forEach(item =>
+        item.setAttribute("aria-pressed", String(item === button)));
+      applyConceptFilters();
+    });
+    filterButtons.append(button);
+  });
+  search.addEventListener("input", applyConceptFilters);
+  applyConceptFilters();
 
   const review = document.createElement("section");
   review.className = "detector-example-review";
@@ -1246,11 +1334,11 @@ function renderDetectorEvaluation(report) {
   const reviewCopy = document.createElement("p");
   reviewCopy.textContent = "Expected labels are independently reviewed fixture values; predictions come from the production detector.";
   review.append(reviewTitle, reviewCopy);
-  report.concepts.forEach(metric => {
+  report.concepts.filter(metric => metric.evaluated).forEach(metric => {
     const details = document.createElement("details");
     details.className = "detector-concept-examples";
     const summary = document.createElement("summary");
-    summary.textContent = `${metric.concept} — ${metric.totalExamples} examples`;
+    summary.textContent = `${metric.concept} — ${metric.totalExamples} labels · ${metric.sampleSize}`;
     const filters = document.createElement("div");
     filters.className = "detector-example-filters";
     const list = document.createElement("div");
@@ -1280,9 +1368,13 @@ function renderDetectorEvaluation(report) {
         outcome.textContent = `Expected ${example.expectedPresent ? "Present" : "Absent"} · Predicted ${example.predictedPresent ? "Present" : "Absent"} · ${example.result}`;
         const rationale = document.createElement("small");
         rationale.textContent = example.rationale ? `Label note: ${example.rationale}` : "No label note.";
+        const labelSource = document.createElement("small");
+        labelSource.textContent = `Ground-truth source: ${example.labelSource}`;
+        const excerpt = document.createElement("small");
+        excerpt.textContent = `Posting excerpt: ${example.excerpt}`;
         const evidence = document.createElement("small");
         evidence.textContent = `Detector evidence: ${example.evidence}`;
-        article.append(heading, metadata, outcome, rationale, evidence);
+        article.append(heading, metadata, outcome, labelSource, rationale, excerpt, evidence);
         list.append(article);
       });
     };
@@ -1311,7 +1403,7 @@ function renderDetectorEvaluation(report) {
   const errorTitle = document.createElement("h4");
   errorTitle.textContent = "Error review";
   errors.append(errorTitle);
-  report.concepts.forEach(metric => {
+  report.concepts.filter(metric => metric.falsePositives.length || metric.falseNegatives.length).forEach(metric => {
     const concept = document.createElement("section");
     const heading = document.createElement("h5");
     heading.textContent = metric.concept;
@@ -1332,7 +1424,7 @@ async function loadDetectorEvaluation() {
     const report = await response.json();
     renderDetectorEvaluation(report);
     state.detectorEvaluationLoaded = true;
-    elements.adminEvaluationStatus.textContent = `${report.fixtureCount} labeled concept/posting examples evaluated.`;
+    elements.adminEvaluationStatus.textContent = `${report.labelCount} concept labels evaluated from ${report.fixtureCount} reviewed posting fixtures.`;
   } catch (error) {
     elements.adminEvaluationStatus.textContent = error.message || String(error);
   }

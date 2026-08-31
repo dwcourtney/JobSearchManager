@@ -259,17 +259,32 @@ superseded concepts, Hard Conflict cap behavior, and the final arithmetic. The t
 hidden when Job Fit is disabled and does not independently recalculate the score.
 
 Confirmed administrators receive an Admin area with Overview and Detector Evaluation
-tabs. Detector Evaluation compares the production Job Concept detector with independent,
-explicit yes/no labels in `DetectorEvaluationFixtures.json`; raw unlabeled job data is
-never treated as ground truth. The versioned regression corpus has 96 reviewed labels:
-eight positive and eight negative examples for each of six concepts. It reports positive,
-negative, and total support; deterministic sample classification; the full confusion
-matrix; precision, recall, F1, and macro/micro summaries. Administrators can review and
-filter every labeled example with expected/predicted status, TP/FP/FN/TN result,
-rationale, detector evidence, requisition metadata when available, and provenance.
-This is a regression corpus, not a claim of broad statistical accuracy. Undefined
-zero-denominator metrics are shown as unavailable rather than NaN. CI validates the
-corpus and publishes deterministic JSON without enforcing an arbitrary F1 threshold.
+tabs. Detector Evaluation compares every canonical production Job Concept detector with
+independent Present/Absent development labels in `DetectorEvaluationFixtures.json`;
+raw unlabeled job data, production predictions, Job Fit scores, and user preferences are
+never treated as ground truth. The versioned corpus retains the original 96 single-concept
+labels and adds reviewed multi-label posting scenarios. A named label scope is closed:
+concepts listed in `expectedPresentConceptIds` are explicitly Present and every other
+concept in that scope is explicitly Absent. This lets one posting evaluate overlapping
+concepts without cloning its text into dozens of fixtures.
+
+Every canonical detector has an evaluation-status record and deterministic Tier 1
+(target technical), Tier 2 (strong negative), or Tier 3 (other) ownership. Interpretive
+posting signals are marked partially evaluatable. Travel Tolerance, preferred Normal Work
+Location, group Hard Conflict overrides, and configured/Not Set preference state are
+listed as inappropriate for direct F1 because they are user state rather than posting
+detectors. Maturity uses the smaller of positive and negative support: zero in either
+class is Not evaluated, 1–4 is Small, 5–14 is Developing, and 15+ is Established.
+
+The Admin view provides search and tier/evaluated/error filters; positive, negative, and
+total support; TP/FP/FN/TN; Precision, Recall, and F1; and overall plus tier-specific
+Macro/Micro aggregates calculated only over valid evaluated concepts. Administrators can
+review TP, FP, FN, and TN fixtures with the posting excerpt, independently authored label
+source/rationale, production detector evidence, requisition metadata, and provenance.
+The current `Codex-reviewed` labels are development calibration labels, not an independently
+adjudicated research gold standard or a claim of broad statistical accuracy. Undefined
+metrics remain unavailable rather than NaN. CI validates the schema and publishes
+deterministic JSON without enforcing an arbitrary F1 threshold.
 
 ## Optional accounts
 

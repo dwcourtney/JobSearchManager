@@ -41,6 +41,8 @@ $jobFitUiTestsPath = Join-Path $repo "Tests\job-fit-ui.tests.js"
 $jobFitDetailUiTestsPath = Join-Path $repo "Tests\job-fit-detail-ui.tests.js"
 $accountUiTestsPath = Join-Path $repo "Tests\account-ui.tests.js"
 $adminUiTestsPath = Join-Path $repo "Tests\admin-ui.tests.js"
+$detectorEvaluationUiPath = Join-Path $repo "wwwroot\detector-evaluation-ui.js"
+$detectorEvaluationUiTestsPath = Join-Path $repo "Tests\detector-evaluation-ui.tests.js"
 $securityScanningTestsPath = Join-Path $repo "Tests\security-scanning.tests.js"
 $codeqlScanningTestsPath = Join-Path $repo "Tests\codeql-scanning.tests.js"
 
@@ -76,6 +78,8 @@ foreach ($scriptPath in @(
     $jobFitDetailUiTestsPath,
     $accountUiTestsPath,
     $adminUiTestsPath,
+    $detectorEvaluationUiPath,
+    $detectorEvaluationUiTestsPath,
     $securityScanningTestsPath,
     $codeqlScanningTestsPath)) {
     & $NodePath --check $scriptPath
@@ -184,6 +188,11 @@ if ($LASTEXITCODE -ne 0) {
     throw "Admin role/bootstrap UI integration tests failed."
 }
 
+& $NodePath $detectorEvaluationUiTestsPath
+if ($LASTEXITCODE -ne 0) {
+    throw "Detector Evaluation filter tests failed."
+}
+
 & $NodePath $securityScanningTestsPath
 if ($LASTEXITCODE -ne 0) {
     throw "Security scanning integration tests failed."
@@ -261,7 +270,7 @@ $credentialFitScript = $index.IndexOf('src="/credential-fit.js?v=2"')
 $clearanceFitScript = $index.IndexOf('src="/clearance-fit.js?v=1"')
 $jobFitScript = $index.IndexOf('src="/job-fit.js?v=11"')
 $clipboardTextScript = $index.IndexOf('src="/clipboard-text.js?v=1"')
-$appScript = $index.IndexOf('src="/app.js?v=34"')
+$appScript = $index.IndexOf('src="/app.js?v=35"')
 if ($countryOrderingScript -lt 0 -or $appScript -le $countryOrderingScript) {
     throw "The versioned country-ordering.js asset must load before app.js."
 }
