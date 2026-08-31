@@ -123,7 +123,7 @@ public sealed class ClassifierClient(HttpClient httpClient, ILogger<ClassifierCl
                     concept => concept.ConceptId == item.ConceptId));
             if (result is null || !result.Received || !validPredictions ||
                 result.ModelType != "generative-llm" || result.PromptHash.Length != 64 ||
-                result.PromptVersion != "phase3-general-evidence-v2" || result.Temperature != 0 ||
+                result.PromptVersion != "phase3-zero-shot-v1" || result.Temperature != 0 ||
                 result.ContextLength != 8192 || result.MalformedOutputCount != 0 ||
                 result.ModelDigest != "sha256:0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0" ||
                 !result.GpuAvailable ||

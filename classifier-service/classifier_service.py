@@ -15,7 +15,7 @@ OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://ollama:11434").rstrip("/")
 EXPECTED_DEVICE_NAME = os.environ.get("CLASSIFIER_EXPECTED_DEVICE_NAME", "NVIDIA GeForce GTX 1070")
 MAX_BODY_BYTES, MAX_TEXT_CHARACTERS = 2_000_000, 500_000
 CONTEXT_LENGTH, MAX_OUTPUT_TOKENS, SEED, TEMPERATURE = 8192, 384, 42, 0
-PROMPT_VERSION = "phase3-general-evidence-v2"
+PROMPT_VERSION = "phase3-zero-shot-v1"
 INFERENCE_LOCK = threading.Lock()
 CONCEPTS = (
     ("role.ai-ml-engineering", "Hands-on engineering that builds, integrates, or operationalizes machine-learning models, AI systems, pipelines, or production AI applications."),
@@ -33,11 +33,7 @@ OUTPUT_SCHEMA = {"type": "object", "properties": {key: {"type": "boolean"} for k
 SYSTEM_PROMPT = """You are a careful job-posting responsibility classifier.
 Classify the role itself, not technologies merely mentioned as products, customer environments,
 desired awareness, team context, or work managed by someone else. A label is true only when the
-posting assigns the candidate direct, hands-on responsibility matching its definition. Evaluate
-each concept independently and require explicit evidence for that specific activity; never infer
-one concept merely because another concept is true. Using a technology or deploying an application
-on a platform does not itself assign engineering or operational responsibility for that platform,
-and broad software or systems work does not itself establish server-side business-logic work.
+posting assigns the candidate direct, hands-on responsibility matching its definition.
 Return exactly the requested JSON object with one boolean for every concept. Do not add prose."""
 PROMPT_HASH = hashlib.sha256(json.dumps({"version": PROMPT_VERSION, "system": SYSTEM_PROMPT,
     "concepts": CONCEPTS, "schema": OUTPUT_SCHEMA}, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
