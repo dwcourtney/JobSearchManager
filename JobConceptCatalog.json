@@ -1,5 +1,5 @@
 {
-  "version": 8,
+  "version": 9,
   "concepts": [
     {
       "id": "work.remote",
@@ -142,7 +142,8 @@
       "category": "Work Arrangement",
       "evidencePatterns": [
         "\\brelocation\\s+(?:is\\s+)?required\\b",
-        "\\bmust\\s+relocate\\b"
+        "\\b(?:must|will|shall|may|required\\s+to)\\s+relocate\\b",
+        "\\brelocates?\\s+(?:internationally|overseas|to)\\b"
       ],
       "extendedLocationCategories": ["required-unusual-relocation"]
     },
@@ -264,37 +265,61 @@
       "id": "role.software-engineering",
       "displayName": "Software Engineering",
       "category": "Role Type / Career Direction",
-      "evidencePatterns": ["\\bsoftware\\s+(?:engineer|developer|engineering)\\b", "\\bapplication\\s+developer\\b"]
+      "evidencePatterns": [
+        "\\bsoftware\\s+(?:engineer|developer|engineering)\\b",
+        "\\bapplication\\s+developer\\b",
+        "\\b(?:develop|design|implement|build|test|maintain)(?:s|ed|ing)?\\b.{0,80}\\b(?:software|applications?|APIs?|microservices?|test\\s+harnesses?)\\b",
+        "\\bhands[- ]on\\b.{0,80}\\bsoftware\\s+development\\b"
+      ],
+      "titleExclusionPatterns": ["\\b(?:program|project)\\s+manager\\b"]
     },
     {
       "id": "role.systems-engineering",
       "displayName": "Systems Engineering",
       "category": "Role Type / Career Direction",
-      "evidencePatterns": ["\\bsystems?\\s+engineer(?:ing)?\\b", "\\bsystems?\\s+integration\\s+engineer\\b"]
+      "evidencePatterns": ["\\bsystems?\\s+engineer(?:ing)?\\b", "\\bsystems?\\s+integration\\s+engineer\\b", "\\bsystems?\\s+integration\\b"]
     },
     {
       "id": "role.devops-platform",
       "displayName": "DevOps / Platform Engineering",
       "category": "Role Type / Career Direction",
-      "evidencePatterns": ["\\bDevOps\\s+engineer(?:ing)?\\b", "\\bplatform\\s+engineer(?:ing)?\\b", "\\bsite\\s+reliability\\s+engineer(?:ing)?\\b"]
+      "evidencePatterns": ["\\bDevOps\\s+engineer(?:ing)?\\b", "\\bplatform\\s+engineer(?:ing)?\\b", "\\bsite\\s+reliability\\s+engineer(?:ing)?\\b"],
+      "titleEvidencePatterns": ["\\bDevSecOps\\b"]
     },
     {
       "id": "role.cloud-engineering",
       "displayName": "Cloud Engineering",
       "category": "Role Type / Career Direction",
-      "evidencePatterns": ["\\bcloud\\s+(?:engineer|engineering|architect)\\b"]
+      "evidencePatterns": ["\\bcloud\\s+(?:engineer|engineering|architect)\\b"],
+      "titleEvidencePatterns": [
+        "\\b(?:Azure|AWS|GCP|cloud)\\s+(?:platform|infrastructure|reliability|DevOps)\\b.{0,40}\\bengineer\\b"
+      ],
+      "titleExclusionPatterns": ["\\b(?:program|project)\\s+manager\\b"]
     },
     {
       "id": "role.ai-ml-engineering",
       "displayName": "AI / ML Engineering",
       "category": "Role Type / Career Direction",
-      "evidencePatterns": ["\\b(?:AI|ML|machine\\s+learning)\\s+engineer(?:ing)?\\b", "\\bapplied\\s+(?:AI|machine\\s+learning)\\b"]
+      "evidencePatterns": [
+        "\\b(?:AI|ML|machine\\s+learning)\\s+engineer(?:ing)?\\b",
+        "\\bapplied\\s+(?:AI|machine\\s+learning)\\b",
+        "\\b(?:develop|build|implement|integrate)(?:s|ed|ing)?\\b.{0,80}\\bAI\\s*/\\s*ML[- ]enabled\\s+(?:tools?|systems?|applications?)\\b"
+      ],
+      "titleEvidencePatterns": [
+        "\\b(?:AI|ML|machine\\s+learning|generative\\s+AI|conversational\\s+AI|LLM|language\\s+model|NLP)\\b.{0,80}\\b(?:engineer|developer|scientist|site\\s+reliability)\\b",
+        "\\bRAG\\b.{0,80}\\b(?:engineer|developer|scientist)\\b"
+      ],
+      "titleExclusionPatterns": ["\\b(?:program|project)\\s+manager\\b"]
     },
     {
       "id": "role.data-engineering",
       "displayName": "Data Engineering",
       "category": "Role Type / Career Direction",
-      "evidencePatterns": ["\\bdata\\s+engineer(?:ing)?\\b", "\\bETL\\s+engineer\\b"]
+      "evidencePatterns": [
+        "\\bdata\\s+engineer(?:ing)?\\b",
+        "\\bETL\\s+engineer\\b",
+        "\\b(?:build|develop|design)(?:s|ed|ing)?\\b.{0,80}\\b(?:data\\s+pipelines?|ETL\\s+process(?:es)?|data\\s+architectures?)\\b"
+      ]
     },
     {
       "id": "role.data-science",
@@ -312,13 +337,21 @@
       "id": "role.network-engineering",
       "displayName": "Network Engineering",
       "category": "Role Type / Career Direction",
-      "evidencePatterns": ["\\bnetwork\\s+engineer(?:ing)?\\b", "\\bnetwork\\s+architect\\b"]
+      "evidencePatterns": ["\\bnetwork\\s+engineer(?:ing)?\\b", "\\bnetwork\\s+architect(?:ure)?\\b"]
     },
     {
       "id": "role.infrastructure-engineering",
       "displayName": "Infrastructure Engineering",
       "category": "Role Type / Career Direction",
-      "evidencePatterns": ["\\b(?:IT|cloud|data\\s+center|systems?)?\\s*infrastructure\\s+engineer(?:ing)?\\b", "\\binfrastructure\\s+architect\\b"]
+      "evidencePatterns": [
+        "\\b(?:IT|cloud|data\\s+center|systems?)?\\s*infrastructure\\s+engineer(?:ing)?\\b",
+        "\\binfrastructure\\s+architect\\b",
+        "\\b(?:operate|administer)(?:s|ed|ing)?\\b.{0,80}\\b(?:cloud|network|storage|systems?)\\s+infrastructure\\b"
+      ],
+      "titleEvidencePatterns": [
+        "\\bcloud\\s+(?:DevOps|reliability)\\s+engineer\\b",
+        "\\bstorage\\s+systems?\\s+engineer\\b"
+      ]
     },
     {
       "id": "role.field-service",
@@ -330,7 +363,13 @@
       "id": "role.test-validation-engineering",
       "displayName": "Test / Validation Engineering",
       "category": "Role Type / Career Direction",
-      "evidencePatterns": ["\\b(?:test|verification|validation)\\s+engineer(?:ing)?\\b", "\\bverification\\s+and\\s+validation\\b"]
+      "evidencePatterns": [
+        "\\b(?:test|verification|validation)\\s+engineer(?:ing)?\\b",
+        "\\bverification\\s+and\\s+validation\\b",
+        "\\b(?:build|develop|maintain)(?:s|ed|ing)?\\b.{0,60}\\bautomated\\s+test\\s+(?:frameworks?|pipelines?)\\b",
+        "\\b(?:security|software|systems?|infrastructure)\\s+(?:testing|validation)\\b",
+        "\\bvalidate(?:s|d|ing)?\\b.{0,60}\\bsystems?\\b"
+      ]
     },
     {
       "id": "role.program-management",
@@ -490,49 +529,74 @@
       "id": "technical.application-development",
       "displayName": "Application Development",
       "category": "Technical Domain",
-      "evidencePatterns": ["\\bapplication\\s+development\\b", "\\bdevelop(?:ing)?\\s+(?:web|enterprise|business)\\s+applications?\\b"]
+      "evidencePatterns": [
+        "\\bapplication\\s+(?:development|developer)\\b",
+        "\\bdevelop(?:s|ed|ing)?\\b.{0,80}\\b(?:web|enterprise|business|AI|machine\\s+learning|language\\s+model|natural\\s+language\\s+processing)\\b.{0,40}\\bapplications?\\b"
+      ]
     },
     {
       "id": "technical.backend-development",
       "displayName": "Backend Development",
       "category": "Technical Domain",
-      "evidencePatterns": ["\\bback[- ]end\\s+(?:development|developer|engineering)\\b", "\\bserver[- ]side\\s+development\\b"]
+      "evidencePatterns": [
+        "\\bback(?:end|[- ]end)\\s+(?:development|developer|engineering|services?|APIs?)\\b",
+        "\\bserver[- ]side\\s+(?:development|microservices?)\\b",
+        "\\bbuild(?:s|ing)?\\b.{0,100}\\b(?:AI|machine\\s+learning|language\\s+model|natural\\s+language\\s+processing)\\b.{0,60}\\bservices?\\b",
+        "\\b(?:design|develop|implement|build)(?:s|ed|ing)?\\b.{0,80}\\bmicroservice[- ]based\\s+(?:REST(?:ful)?\\s+)?APIs?\\b"
+      ],
+      "titleExclusionPatterns": ["\\b(?:program|project)\\s+manager\\b"]
     },
     {
       "id": "technical.frontend-development",
       "displayName": "Frontend Development",
       "category": "Technical Domain",
-      "evidencePatterns": ["\\bfront[- ]end\\s+(?:development|developer|engineering)\\b", "\\bclient[- ]side\\s+development\\b"]
+      "evidencePatterns": ["\\bfront(?:end|[- ]end)\\s+(?:development|developer|engineering)\\b", "\\bclient[- ]side\\s+development\\b"]
     },
     {
       "id": "technical.api-development",
       "displayName": "API Development",
       "category": "Technical Domain",
-      "evidencePatterns": ["\\bAPI\\s+(?:development|design|engineering)\\b", "\\bdevelop(?:ing)?\\s+(?:RESTful\\s+|web\\s+)?APIs?\\b"]
+      "evidencePatterns": [
+        "\\bAPI\\s+(?:development|design|engineering)\\b",
+        "\\b(?:develop|design|implement|build|integrate|maintain)(?:s|ed|ing)?\\b.{0,100}\\b(?:(?:RESTful|web|service|backend|model[- ]serving)\\s+)?APIs?\\b",
+        "\\b(?:own|operate|maintain)(?:s|ed|ing)?\\b.{0,100}\\b(?:service|backend|model[- ]serving)\\s+APIs?\\b"
+      ],
+      "titleExclusionPatterns": ["\\b(?:program|project)\\s+manager\\b"]
     },
     {
       "id": "technical.automation-scripting",
       "displayName": "Automation / Scripting",
       "category": "Technical Domain",
-      "evidencePatterns": ["\\bautomation\\s+(?:and|/)\\s+scripting\\b", "\\bscript(?:ing)?\\s+(?:with|using)\\s+(?:Python|PowerShell|Bash)\\b"]
+      "evidencePatterns": [
+        "\\bautomation\\s+(?:and|/)\\s+scripting\\b",
+        "\\bscript(?:ing)?\\s+(?:with|using)\\s+(?:Python|PowerShell|Bash)\\b",
+        "\\b(?:Python|PowerShell|Bash)\\s+(?:automation\\s+)?script(?:ing|s)?\\b",
+        "\\b(?:Python|PowerShell|Bash)\\s+automation\\b",
+        "\\b(?:Linux|deployment|workflow|infrastructure|administrative)\\s+automation\\b",
+        "\\bautomation\\s+(?:tooling|scripts?)\\b",
+        "\\bautomated\\s+(?:test\\s+)?(?:frameworks?|scripts?|pipelines?)\\b",
+        "\\bautomated\\s+(?:data\\s+)?(?:workflows?|pipelines?)\\b",
+        "\\bautomation\\s+to\\s+(?:simplify|support|manage|configure|deploy|administer)\\b"
+      ],
+      "titleExclusionPatterns": ["\\b(?:program|project)\\s+manager\\b"]
     },
     {
       "id": "technical.linux-administration",
       "displayName": "Linux Administration",
       "category": "Technical Domain",
-      "evidencePatterns": ["\\bLinux\\s+(?:system\\s+)?administration\\b", "\\badminister(?:ing)?\\s+Linux\\s+(?:systems|servers)\\b"]
+      "evidencePatterns": ["\\bLinux\\s+(?:system\\s+)?administration\\b", "\\badminister(?:ing)?\\s+Linux(?:\\s+(?:systems|servers))?\\b"]
     },
     {
       "id": "technical.windows-administration",
       "displayName": "Windows Administration",
       "category": "Technical Domain",
-      "evidencePatterns": ["\\bWindows\\s+(?:Server\\s+|system\\s+)?administration\\b", "\\badminister(?:ing)?\\s+Windows\\s+(?:systems|servers)\\b"]
+      "evidencePatterns": ["\\bWindows\\s+(?:Server\\s+|system\\s+)?administration\\b", "\\badminister(?:s|ed|ing)?\\b.{0,40}\\bWindows\\s+(?:systems|servers)\\b"]
     },
     {
       "id": "technical.containers",
       "displayName": "Kubernetes / Containers",
       "category": "Technical Domain",
-      "evidencePatterns": ["\\bKubernetes\\b", "\\bDocker\\b", "\\bcontainer\\s+orchestration\\b"]
+      "evidencePatterns": ["\\bKubernetes\\b", "\\bDocker\\b", "\\bcontainer\\s+orchestration\\b", "\\bLinux\\s+containers?\\b", "\\bcontainerized\\s+(?:applications?|services?)\\b"]
     },
     {
       "id": "technical.infrastructure-as-code",
@@ -586,13 +650,13 @@
       "id": "technical.machine-learning",
       "displayName": "Machine Learning",
       "category": "Technical Domain",
-      "evidencePatterns": ["\\bmachine\\s+learning\\b"]
+      "evidencePatterns": ["\\bmachine\\s+learning\\b", "\\bML[- ]enabled\\b"]
     },
     {
       "id": "technical.artificial-intelligence",
       "displayName": "Artificial Intelligence",
       "category": "Technical Domain",
-      "evidencePatterns": ["\\bartificial\\s+intelligence\\b"]
+      "evidencePatterns": ["\\bartificial\\s+intelligence\\b", "\\bapplied\\s+AI\\b", "\\bAI(?:\\s*/\\s*ML)?[- ](?:enabled|powered)\\b"]
     },
     {
       "id": "technical.nlp",
@@ -618,8 +682,12 @@
       "category": "Technical Domain",
       "evidencePatterns": [
         "\\bsoftware\\s+(?:development|engineering)\\b",
-        "\\bdevelop(?:ing|ment)?\\s+software\\b"
-      ]
+        "\\bsoftware\\s+developer\\b",
+        "\\bdevelop(?:ing|ment)?\\s+software\\b",
+        "\\b(?:develop|design|implement|build|test|maintain)(?:s|ed|ing)?\\b.{0,80}\\b(?:software|applications?|APIs?|microservices?|test\\s+harnesses?)\\b",
+        "\\bdevelop(?:s|ed|ing)?\\b.{0,80}\\b(?:artificial\\s+intelligence|machine\\s+learning|AI|ML)\\b.{0,50}\\bsystems?\\b"
+      ],
+      "titleExclusionPatterns": ["\\b(?:program|project)\\s+manager\\b"]
     },
     {
       "id": "technical.linux",
@@ -632,7 +700,8 @@
       "displayName": "Cloud Platforms",
       "category": "Technical Domain",
       "evidencePatterns": [
-        "\\bcloud\\s+(?:computing|platforms?|infrastructure|services?)\\b",
+        "\\bcloud\\s+(?:computing|platforms?|infrastructure|services?|deployment|model\\s+services?)\\b",
+        "\\bcloud[- ]based\\s+(?:data\\s+)?(?:architectures?|infrastructure|systems?|applications?)\\b",
         "\\bAmazon\\s+Web\\s+Services\\b",
         "\\bMicrosoft\\s+Azure\\b",
         "\\bGoogle\\s+Cloud(?:\\s+Platform)?\\b"

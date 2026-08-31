@@ -9,7 +9,7 @@ namespace JobSearchManager;
 /// </summary>
 public sealed class ExtendedLocationRequirementDetector
 {
-    public const int CurrentAnalysisVersion = 3;
+    public const int CurrentAnalysisVersion = 4;
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(1);
     private const RegexOptions Options =
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled;
@@ -60,7 +60,7 @@ public sealed class ExtendedLocationRequirementDetector
         @"\b(?:may|might|could)\b|\bat\s+(?:the\s+)?discretion\b");
     private static readonly Regex DefiniteObligationPattern = CreateRegex(
         @"\b(?:must|required|requires?|will|shall|expected|willing|willingness|ability|" +
-        @"position|role|employee|candidate|continuous|long[- ]term)\b");
+        @"position|role|employee|candidate|accepts?|undertakes?|works?|travels?|completes?|remains?|continuous|long[- ]term)\b");
     private static readonly Regex ExplicitObligationPattern = CreateRegex(
         @"\b(?:must|required|requires?|will|shall|expected)\b");
     private static readonly Regex AwayPresencePattern = CreateRegex(
@@ -85,6 +85,8 @@ public sealed class ExtendedLocationRequirementDetector
             CreateRegex(@"\bdeployment\s+is\s+required(?:\s+in\s+this\s+(?:position|role))?\b|" +
                         @"\bdeployment\s+(?:to|in|at)\s+[^.!?;]{1,100}\s+is\s+required\b|" +
                         @"\b(?:must|required\s+to|will|shall)\s+deploy\b|" +
+                        @"\b(?:accepts?|undertakes?)\s+(?:international\s+|overseas\s+|sea[- ]going\s+|rotational\s+)?deployments?\b|" +
+                        @"\bremains?\s+deployed\b|" +
                         @"\bdeployment[- ]only\s+position\b|" +
                         @"\bemployment\s+is\s+only\s+provided\s+during\s+the\s+deployment\s+period\b|" +
                         @"\bthis\s+position\s+(?:includes|requires)\s+(?:an?\s+)?(?:international|overseas|OCONUS)\s+deployment\b")),
@@ -113,6 +115,7 @@ public sealed class ExtendedLocationRequirementDetector
         new("rotation", "strong", "required rotational assignment",
             CreateRegex(@"\b(?:this\s+is\s+)?(?:an?\s+)?\d{1,3}(?:[- ]day)?\s+rotational\s+assignment\b|" +
                         @"\b(?:required|mandatory)\s+rotational\s+assignment\b|" +
+                        @"\b(?:accepts?|undertakes?|works?|travels?|completes?)\b[^.!?]{0,80}\brotational\s+(?:assignments?|deployments?)\b|" +
                         @"\b\d{1,2}\s+weeks?\s+on\s*/\s*\d{1,2}\s+weeks?\s+off\b|" +
                         @"\b(?:international|overseas|OCONUS)\s+assignments?\b[^.!?]{0,80}\bup\s+to\s+\d{1,3}[- ]day\s+rotations?\b")),
         new("temporary-duty", "strong", "temporary-duty assignment",

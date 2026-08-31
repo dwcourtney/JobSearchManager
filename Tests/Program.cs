@@ -1590,6 +1590,44 @@ static Task TestJobConceptDetectionAsync()
            ]) && detected.All(item => !string.IsNullOrWhiteSpace(item.Evidence)),
         "Canonical corpus concepts or their actual evidence were not detected consistently.");
 
+    IReadOnlySet<string> DetectConcepts(string title, string text)
+    {
+        var html = $"<p>{text}</p>";
+        return detector.Analyze(
+                title, "United States", [], html,
+                new RemoteWorkDetector().Analyze(title, "United States", [], html),
+                new ExtendedLocationRequirementDetector().Analyze(
+                    title, "United States", [], html))
+            .Select(item => item.ConceptId)
+            .ToHashSet(StringComparer.Ordinal);
+    }
+
+    var generalizedSoftware = DetectConcepts(
+        "Senior AI Platform Engineer",
+        "Design and implement server-side microservices and REST APIs. Build AI/ML-enabled tools, " +
+        "write Python and Bash scripts to automate deployments, and administer Linux hosts.");
+    Assert(generalizedSoftware.IsSupersetOf([
+               "role.software-engineering", "role.ai-ml-engineering",
+               "technical.software-development", "technical.backend-development",
+               "technical.api-development", "technical.automation-scripting",
+               "technical.artificial-intelligence", "technical.machine-learning",
+               "technical.linux-administration"
+           ]),
+        "Generalized software, backend, API, automation, AI/ML, and Linux-administration phrasing regressed. " +
+        $"Detected: {string.Join(", ", generalizedSoftware.OrderBy(id => id, StringComparer.Ordinal))}");
+
+    var oversightOnly = DetectConcepts(
+        "Senior Test Program Manager",
+        "Manages engineers and owns the budget. The program uses APIs and cloud-hosted software, " +
+        "but this role does not develop software, write scripts, build backend services, or implement APIs.");
+    Assert(!oversightOnly.Overlaps([
+               "role.software-engineering", "role.cloud-engineering",
+               "technical.software-development", "technical.backend-development",
+               "technical.api-development", "technical.automation-scripting"
+           ]),
+        "Negated or subordinate technical work was misclassified as direct target-technical responsibility. " +
+        $"Detected: {string.Join(", ", oversightOnly.OrderBy(id => id, StringComparer.Ordinal))}");
+
     var infrastructureDetected = detector.Analyze(
         "Data Center Infrastructure Engineer",
         "Customer data center",
@@ -1756,7 +1794,7 @@ static Task TestJobConceptDetectionAsync()
             $"Industry or software context produced a work-type false positive for '{title}'.");
     }
 
-    Assert(concepts.Version == 8 && concepts.Concepts.Count == 85 &&
+    Assert(concepts.Version == 9 && concepts.Concepts.Count == 85 &&
            concepts.Concepts.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count() == 85 &&
            concepts.Concepts.Any(item => item.Category == "Role Type / Career Direction") &&
            concepts.Concepts.Any(item => item.Category == "Responsibility Shape") &&
@@ -1807,8 +1845,8 @@ static Task TestDetectorEvaluationAsync()
         "role.physical-inspection-quality-control", "role.lab-test-technician",
         "role.warehouse-material-handling", "role.manufacturing-production-operations"
     ], StringComparer.Ordinal);
-    Assert(report.FixtureVersion == 3 && report.FixtureCount == 144 &&
-           report.LabelCount == 1608 && report.CanonicalConceptCount == catalog.Concepts.Count &&
+    Assert(report.FixtureVersion == 3 && report.FixtureCount == 148 &&
+           report.LabelCount == 1740 && report.CanonicalConceptCount == catalog.Concepts.Count &&
            report.Concepts.Count == catalog.Concepts.Count &&
            report.Concepts.Select(item => item.ConceptId).ToHashSet(StringComparer.Ordinal)
                .SetEquals(catalog.Concepts.Select(item => item.Id)) &&
@@ -1845,6 +1883,11 @@ static Task TestDetectorEvaluationAsync()
                .All(item => item.Evaluated) &&
            report.Concepts.Any(item => item.EvaluationClass == "Partially evaluatable"),
         "Unevaluated, tier, or classification status is not deterministic.");
+    var international = report.Concepts.Single(item =>
+        item.ConceptId == "work.international-assignment");
+    Assert(international.Examples.Any(item =>
+               item.FixtureId == "tier2-ops-09" && item.Result == "TP"),
+        "Detector Evaluation did not run the production extended-location analyzer for an explicit OCONUS assignment.");
 
     var concept = catalog.Get("role.mechanical-maintenance-repair");
     var fixture = new DetectorEvaluationService.LabeledFixture(
@@ -3160,8 +3203,8 @@ static async Task TestLocalReclassificationAsync()
 
     Assert(handler.DetailRequests == before && second.Metrics?.ReclassifiedLocally == 1 &&
            second.Jobs.Single().AnalysisVersion == JobSourceClient.CurrentAnalysisVersion &&
-           second.Jobs.Single().ExtendedLocationRequirement?.AnalysisVersion == 3 &&
-           second.Jobs.Single().JobConceptCatalogVersion == 8 &&
+           second.Jobs.Single().ExtendedLocationRequirement?.AnalysisVersion == 4 &&
+           second.Jobs.Single().JobConceptCatalogVersion == 9 &&
            second.Jobs.Single().PayMinimum == 104_550m &&
            second.Jobs.Single().PayMaximum == 141_450m &&
            second.Jobs.Single().PayPeriod == "annual" &&
@@ -4681,7 +4724,7 @@ static Task TestExtendedAwayAssignmentAsync()
            overlap.Any(item => item.ConceptId == "work.rotation") &&
            (catalog.Get(conceptId).Supersedes?.Count ?? 0) == 0,
         "Overlapping deployment/rotation signals were duplicated or incorrectly superseded.");
-    Assert(ExtendedLocationRequirementDetector.CurrentAnalysisVersion == 3 && catalog.Version == 8,
+    Assert(ExtendedLocationRequirementDetector.CurrentAnalysisVersion == 4 && catalog.Version == 9,
         "Extended assignment changes did not invalidate cached classification versions.");
     return Task.CompletedTask;
 }

@@ -9,6 +9,7 @@ public sealed record JobConceptDefinition(
     string Category,
     IReadOnlyList<string>? EvidencePatterns = null,
     IReadOnlyList<string>? TitleEvidencePatterns = null,
+    IReadOnlyList<string>? TitleExclusionPatterns = null,
     bool RemoteDesignation = false,
     IReadOnlyList<string>? RemoteSignalCategories = null,
     IReadOnlyList<string>? ExtendedLocationCategories = null,
@@ -142,6 +143,7 @@ public sealed class JobConceptCatalog
 
         foreach (var pattern in (concept.EvidencePatterns ?? [])
             .Concat(concept.TitleEvidencePatterns ?? [])
+            .Concat(concept.TitleExclusionPatterns ?? [])
             .Concat((concept.ContextRules ?? []).SelectMany(rule => rule.RequiredPatterns ?? [])))
         {
             try
