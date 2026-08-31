@@ -8,7 +8,8 @@ RUN git init \
     && test "$(git rev-parse HEAD)" = "${OLLAMA_SOURCE_REVISION}"
 RUN go get \
       github.com/buger/jsonparser@v1.1.2 \
-      golang.org/x/image@v0.43.0 \
+      golang.org/x/crypto@v0.55.0 \
+      golang.org/x/image@v0.45.0 \
       golang.org/x/mod@v0.40.0 \
       golang.org/x/net@v0.56.0 \
       golang.org/x/text@v0.39.0 \
