@@ -77,7 +77,7 @@ assert.match(security, /UnixFileMode\.UserRead \| UnixFileMode\.UserWrite/);
 assert.match(compose,
   /JOBSEARCHMANAGER_ADMIN_BOOTSTRAP_PATH: \/app\/data\/admin-bootstrap-code/);
 assert.equal(fixtures.version, 3);
-assert.equal(fixtures.fixtures.length, 144);
+assert.equal(fixtures.fixtures.length, 148);
 assert.equal(new Set(fixtures.fixtures.map(item => item.id)).size, fixtures.fixtures.length,
   "Evaluation fixture IDs must be stable and unique.");
 assert.deepEqual(Object.keys(fixtures.labelScopes).sort(), ["tier1-target", "tier2-strong-negative"]);

@@ -103,6 +103,8 @@ public sealed class DetectorEvaluationService
 
     private readonly JobConceptCatalog _catalog;
     private readonly JobConceptDetector _detector;
+    private readonly RemoteWorkDetector _remoteWorkDetector = new();
+    private readonly ExtendedLocationRequirementDetector _extendedLocationDetector = new();
     private readonly IReadOnlyList<DetectorEvaluationFixture> _fixtures;
     private readonly IReadOnlyDictionary<string, IReadOnlyList<string>> _labelScopes;
     private readonly int _fixtureVersion;
@@ -130,8 +132,13 @@ public sealed class DetectorEvaluationService
         var observations = new List<Observation>();
         foreach (var fixture in _fixtures)
         {
+            var descriptionHtml = $"<p>{fixture.Excerpt}</p>";
+            var remoteWork = _remoteWorkDetector.Analyze(
+                fixture.Title, "", [], descriptionHtml);
+            var extendedLocation = _extendedLocationDetector.Analyze(
+                fixture.Title, "", [], descriptionHtml);
             var predictions = _detector.Analyze(
-                    fixture.Title, "", [], $"<p>{fixture.Excerpt}</p>", null, null)
+                    fixture.Title, "", [], descriptionHtml, remoteWork, extendedLocation)
                 .ToDictionary(item => item.ConceptId, StringComparer.Ordinal);
             foreach (var label in Expand(fixture))
             {

@@ -8,9 +8,14 @@ public sealed class JobConceptDetector
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled;
     private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(1);
     private static readonly Regex WhitespacePattern = new(@"\s+", Options, Timeout);
+    private static readonly Regex LocalNegationPattern = new(
+        @"(?:\b(?:do|does|did|is|are|was|were|will|would|should|can|cannot)\s+not|\bnot\s+(?:directly\s+)?(?:responsible\s+for\s+)?|\bno\s+(?:direct\s+)?)$",
+        Options,
+        Timeout);
     private readonly JobConceptCatalog _catalog;
     private readonly Dictionary<string, Regex[]> _patterns;
     private readonly Dictionary<string, Regex[]> _titlePatterns;
+    private readonly Dictionary<string, Regex[]> _titleExclusionPatterns;
     private readonly Dictionary<string, Regex[][]> _contextRules;
 
     public JobConceptDetector(JobConceptCatalog catalog)
@@ -25,6 +30,12 @@ public sealed class JobConceptDetector
         _titlePatterns = catalog.Concepts.ToDictionary(
             concept => concept.Id,
             concept => (concept.TitleEvidencePatterns ?? [])
+                .Select(pattern => new Regex(pattern, Options, Timeout))
+                .ToArray(),
+            StringComparer.Ordinal);
+        _titleExclusionPatterns = catalog.Concepts.ToDictionary(
+            concept => concept.Id,
+            concept => (concept.TitleExclusionPatterns ?? [])
                 .Select(pattern => new Regex(pattern, Options, Timeout))
                 .ToArray(),
             StringComparer.Ordinal);
@@ -56,6 +67,11 @@ public sealed class JobConceptDetector
 
         foreach (var concept in _catalog.Concepts)
         {
+            if (_titleExclusionPatterns[concept.Id].Any(pattern => pattern.IsMatch(title ?? "")))
+            {
+                continue;
+            }
+
             foreach (var pattern in _titlePatterns[concept.Id])
             {
                 var match = pattern.Match(title ?? "");
@@ -70,8 +86,10 @@ public sealed class JobConceptDetector
 
             foreach (var pattern in _patterns[concept.Id])
             {
-                var match = pattern.Match(corpusText);
-                if (!match.Success)
+                var match = pattern.Matches(corpusText)
+                    .Cast<Match>()
+                    .FirstOrDefault(candidate => !IsLocallyNegated(corpusText, candidate));
+                if (match is null)
                 {
                     continue;
                 }
@@ -148,5 +166,12 @@ public sealed class JobConceptDetector
     {
         var normalized = WhitespacePattern.Replace(value, " ").Trim(' ', '.', ';', '\u2022');
         return normalized.Length <= 300 ? normalized : normalized[..297] + "...";
+    }
+
+    private static bool IsLocallyNegated(string corpusText, Match match)
+    {
+        var prefixStart = Math.Max(0, match.Index - 60);
+        var prefix = corpusText[prefixStart..match.Index].TrimEnd();
+        return LocalNegationPattern.IsMatch(prefix);
     }
 }
