@@ -6,10 +6,10 @@ import argparse, hashlib, json, os, threading, time, urllib.error, urllib.reques
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 
-SERVICE_VERSION, PROTOCOL_VERSION = "0.4.0", "4"
-MODEL_TYPE, MODEL_ID = "generative-llm", "Qwen/Qwen3-4B-Instruct-2507"
-MODEL_TAG = "qwen3:4b-instruct-2507-q4_K_M"
-MODEL_DIGEST = "sha256:0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0"
+SERVICE_VERSION, PROTOCOL_VERSION = "0.5.0", "4"
+MODEL_TYPE, MODEL_ID = "generative-llm", "google/gemma-3-4b-it"
+MODEL_TAG = "gemma3:4b-it-q4_K_M"
+MODEL_DIGEST = "sha256:a2af6cc3eb7fa8be8504abaf9b04e88f17a119ec3f04a3addf55f92841195f5a"
 MODEL_QUANTIZATION, OLLAMA_VERSION = "Q4_K_M", "0.33.2"
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://ollama:11434").rstrip("/")
 EXPECTED_DEVICE_NAME = os.environ.get("CLASSIFIER_EXPECTED_DEVICE_NAME", "NVIDIA GeForce GTX 1070")

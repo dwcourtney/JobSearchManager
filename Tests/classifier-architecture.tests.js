@@ -36,8 +36,8 @@ assert.match(program, /--detector-evaluation-diagnostic/,
   "the fixed regex report must be exportable without browser or production data access");
 assert.doesNotMatch(scoring, /classifier/i, "normal Job Fit scoring must remain regex-only");
 
-assert.match(classifier, /MODEL_TAG = "qwen3:4b-instruct-2507-q4_K_M"/);
-assert.match(classifier, /MODEL_DIGEST = "sha256:0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0"/);
+assert.match(classifier, /MODEL_TAG = "gemma3:4b-it-q4_K_M"/);
+assert.match(classifier, /MODEL_DIGEST = "sha256:a2af6cc3eb7fa8be8504abaf9b04e88f17a119ec3f04a3addf55f92841195f5a"/);
 assert.match(classifier, /"format": OUTPUT_SCHEMA/);
 assert.match(classifier, /"temperature": TEMPERATURE, "seed": SEED/);
 assert.match(classifier, /CONTEXT_LENGTH, MAX_OUTPUT_TOKENS, SEED, TEMPERATURE = 8192, 384, 42, 0/);
