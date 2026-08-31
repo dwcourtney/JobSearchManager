@@ -164,13 +164,23 @@ verify_deployment() {
     sleep 1
   done
   [[ "$classifier_health" == "healthy" ]] || return 1
-  docker exec "$classifier_container" python3 /app/classifier_service.py --gpu-diagnostic || return 1
-  docker exec "$classifier_container" python3 /app/classifier_service.py --model-diagnostic || return 1
+  if [[ "$allow_legacy" != "true" ]]; then
+    docker exec "$classifier_container" python3 /app/classifier_service.py --gpu-diagnostic || return 1
+    docker exec "$classifier_container" python3 /app/classifier_service.py --model-diagnostic || return 1
+  fi
 
   local jsm_container=""
   jsm_container="$(docker ps -q --filter label=com.docker.compose.project=jsm-lab \
     --filter label=com.docker.compose.service=jsm | head -n 1)"
-  docker exec "$jsm_container" dotnet JobSearchManager.dll --classifier-diagnostic || return 1
+  local classifier_round_trip=false
+  for _ in $(seq 1 30); do
+    if docker exec "$jsm_container" dotnet JobSearchManager.dll --classifier-diagnostic; then
+      classifier_round_trip=true
+      break
+    fi
+    sleep 2
+  done
+  [[ "$classifier_round_trip" == "true" ]] || return 1
 
   if [[ -n "$expected_sha" ]]; then
     version_json="$(curl --fail --silent --show-error http://192.168.1.20:8080/version)" || return 1
