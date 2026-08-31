@@ -54,7 +54,7 @@ JSM has no CUDA/NVIDIA dependency. The Ollama base image/source/toolchain/module
 adapter base image, and Git revision are pinned. Deployment provisions and hashes the model while temporary registry egress
 is available; the long-running runtime remains on the internal network.
 
-## Fixed zero-shot method
+## Fixed prompt method
 
 One request includes the posting title, complete posting text, and the eight unchanged canonical
 concept IDs/descriptions. One Ollama chat call returns a flat JSON object containing exactly eight
@@ -62,9 +62,15 @@ booleans. The JSON Schema requires every key and forbids additional properties; 
 checks exact keys and strict boolean types. Free-form prose is never parsed.
 
 Generation is fixed at temperature `0`, seed `42`, context `8192`, and maximum output `384`.
-Prompt `phase3-zero-shot-v1` explicitly distinguishes direct hands-on responsibility from an
-incidental product, customer, team, management, or technology mention. It contains no fixture,
-company, or posting-specific exceptions. Its SHA-256 is reported with every response.
+The initial prompt `phase3-zero-shot-v1` explicitly distinguished direct hands-on responsibility
+from incidental product, customer, team, management, or technology mentions. Its honest exact-SHA
+baseline was macro/micro F1 `0.8649/0.8952`, all six hard negatives correct, `55/64`
+generalization labels correct (`3/8` cases exact), and zero malformed outputs. Cloud and backend
+responsibilities were over-inferred, so the one allowed bounded general prompt pass produced
+`phase3-general-evidence-v2`: evaluate every concept independently, require explicit evidence for
+that specific activity, and do not infer platform or backend responsibility from adjacent work.
+Neither prompt contains fixture, company, or posting-specific exceptions. The active prompt's
+SHA-256 is reported with every response.
 
 The official result uses the unchanged 40 fixtures, 320 labels, and eight concepts. The six
 historical semantic hard-negative categories are reported separately, as is the bounded eight-case

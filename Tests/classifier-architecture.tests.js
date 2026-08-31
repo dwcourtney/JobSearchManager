@@ -46,6 +46,8 @@ assert.match(classifier, /type\(value\[key\]\) is not bool/, "output values must
 assert.match(classifier, /model_digest_matches\(item\.get\("digest"\)\)/,
   "Ollama's unprefixed tags digest must be checked against the pinned sha256 identity");
 assert.match(classifier, /actual candidate responsibilities/);
+assert.match(classifier, /PROMPT_VERSION = "phase3-general-evidence-v2"/);
+assert.match(classifier, /Evaluate[\s\S]*?each concept independently/);
 assert.match(classifier, /result = classify\("Backend API Engineer"[\s\S]*?\{\*\*identity\(\), \*\*result\}/,
   "the model diagnostic must report runtime state after loading the model");
 assert.match(ollamaRuntime, /f96e7aa0513b9973a0ccc71be414c2ecb9d65b1a/,

@@ -32,7 +32,7 @@ def post(url, case):
 def validate(response, sha):
     if response.get("revision") != sha or response.get("device") != "cuda:0" or response.get("deviceCount") != 1 or response.get("deviceName") != "NVIDIA GeForce GTX 1070":
         raise SystemExit("Identity/GPU validation failed")
-    if response.get("modelType") != "generative-llm" or response.get("modelDigest") != MODEL_DIGEST or response.get("temperature") != 0 or response.get("promptVersion") != "phase3-zero-shot-v1":
+    if response.get("modelType") != "generative-llm" or response.get("modelDigest") != MODEL_DIGEST or response.get("temperature") != 0 or response.get("promptVersion") != "phase3-general-evidence-v2":
         raise SystemExit("Pinned LLM/prompt contract validation failed")
     predictions = response.get("predictions")
     if not isinstance(predictions, list) or len(predictions) != 8:

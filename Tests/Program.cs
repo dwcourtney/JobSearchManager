@@ -1053,7 +1053,7 @@ static async Task TestLlmClassifierContractAsync()
         modelTag = "qwen3:4b-instruct-2507-q4_K_M",
         modelDigest = "sha256:0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
         quantization = "Q4_K_M", ollamaVersion = "0.33.2", device = "cuda:0",
-        promptVersion = "phase3-zero-shot-v1", promptHash = new string('c', 64),
+        promptVersion = "phase3-general-evidence-v2", promptHash = new string('c', 64),
         temperature = 0, seed = 42, contextLength = 8192, maxOutputTokens = 384,
         totalDurationNanoseconds = 1_000_000_000L, loadDurationNanoseconds = 0L,
         promptTokenCount = 500, outputTokenCount = 50, tokensPerSecond = 20.0,
@@ -1087,7 +1087,7 @@ static Task TestLlmFixtureMetricsAsync()
             "0.4.0", "4", new string('a', 40), true, 1, "NVIDIA GeForce GTX 1070",
             null, 3000, null, "generative-llm", "model", "tag",
             "sha256:0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
-            "Q4_K_M", "0.33.2", "cuda:0", "phase3-zero-shot-v1", new string('c', 64),
+            "Q4_K_M", "0.33.2", "cuda:0", "phase3-general-evidence-v2", new string('c', 64),
             0, 42, 8192, 384, 1000, 0, 500, 50, 20, 1000, 0,
             item.Labels.Select(label => new LlmPrediction(label.Key, label.Value)).ToArray()), 1010)).ToArray();
     var metrics = LlmEvaluationService.Calculate(predictions);
