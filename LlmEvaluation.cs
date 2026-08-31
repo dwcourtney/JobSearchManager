@@ -1,33 +1,29 @@
 namespace JobSearchManager;
 
-public sealed record EmbeddingConcept(string ConceptId, string Description);
-public sealed record EmbeddingEvaluationCase(
-    string FixtureId, string Title, string Description,
+public sealed record LlmConcept(string ConceptId, string Description);
+public sealed record LlmEvaluationCase(string FixtureId, string Title, string Description,
     IReadOnlyDictionary<string, bool> Labels);
-public sealed record EmbeddingConceptMetric(
-    string ConceptId, double Threshold, int TruePositive, int FalsePositive,
+public sealed record LlmConceptMetric(string ConceptId, int TruePositive, int FalsePositive,
     int FalseNegative, int TrueNegative, double? Precision, double? Recall, double? F1);
-public sealed record EmbeddingThresholdReport(
-    double Threshold, DetectorAggregateMetric Macro, DetectorAggregateMetric Micro,
-    IReadOnlyList<EmbeddingConceptMetric> Concepts);
-public sealed record EmbeddingConceptComparison(
+public sealed record LlmConceptComparison(
     string ConceptId, string Concept, int PositiveSupport, int NegativeSupport,
     double? RegexPrecision, double? RegexRecall, double? RegexF1,
-    double? EmbeddingPrecision, double? EmbeddingRecall, double? EmbeddingF1,
-    double? F1Delta);
-public sealed record EmbeddingEvaluationReport(
+    double? LlmPrecision, double? LlmRecall, double? LlmF1, double? F1Delta);
+public sealed record LlmEvaluationReport(
     string Status, string? Error, int FixtureCount, int LabelCount,
-    string? ModelId, string? ModelRevision, string? Device,
+    string? ModelId, string? ModelTag, string? ModelDigest, string? Quantization,
+    string? PromptVersion, string? PromptHash, int? MalformedOutputCount,
     double? AverageInferenceMilliseconds, double? AverageRoundTripMilliseconds,
-    double? BestThreshold, IReadOnlyList<EmbeddingThresholdReport> Thresholds,
-    IReadOnlyList<EmbeddingConceptComparison> ConceptComparisons,
+    double? AverageTokensPerSecond, double? AveragePromptTokens, double? AverageOutputTokens,
+    DetectorAggregateMetric LlmMacro, DetectorAggregateMetric LlmMicro,
+    IReadOnlyList<LlmConceptMetric> Concepts,
+    IReadOnlyList<LlmConceptComparison> ConceptComparisons,
     DetectorAggregateMetric RegexMacro, DetectorAggregateMetric RegexMicro,
     string? BuildSha);
 
-public sealed class EmbeddingEvaluationService(
-    DetectorEvaluationService fixtures, ClassifierClient classifier)
+public sealed class LlmEvaluationService(DetectorEvaluationService fixtures, ClassifierClient classifier)
 {
-    public static readonly EmbeddingConcept[] Concepts = [
+    public static readonly LlmConcept[] Concepts = [
         new("role.ai-ml-engineering", "Hands-on engineering that builds, integrates, or operationalizes machine-learning models, AI systems, pipelines, or production AI applications."),
         new("role.software-engineering", "Direct design, implementation, testing, and maintenance of software systems as an engineering responsibility."),
         new("technical.software-development", "Hands-on implementation, testing, debugging, or maintenance of software applications, services, or systems."),
@@ -37,75 +33,85 @@ public sealed class EmbeddingEvaluationService(
         new("role.cloud-engineering", "Hands-on design, implementation, operation, or reliability engineering of cloud infrastructure, services, and platforms."),
         new("technical.containers", "Direct implementation or operation of containerization and orchestration using Docker, Kubernetes, or related platforms.")
     ];
-    public static readonly double[] ThresholdValues = [.50, .55, .60, .65, .70, .75, .80, .85, .90];
 
-    public async Task<EmbeddingEvaluationReport> EvaluateAsync(
+    public async Task<LlmEvaluationReport> EvaluateAsync(
         string? buildSha = null, CancellationToken cancellationToken = default)
     {
-        var cases = fixtures.BuildEmbeddingCases();
+        var cases = fixtures.BuildLlmCases();
         var regex = fixtures.Evaluate(buildSha);
-        var regexSelected = regex.Concepts.Where(item => Concepts.Any(concept => concept.ConceptId == item.ConceptId)).ToArray();
+        var regexSelected = regex.Concepts.Where(item => Concepts.Any(
+            concept => concept.ConceptId == item.ConceptId)).ToArray();
         var regexAggregate = Aggregate(regexSelected.Select(item => new Counts(
             item.TruePositive, item.FalsePositive, item.FalseNegative, item.TrueNegative)).ToArray());
         var predictions = new List<Prediction>();
         foreach (var item in cases)
         {
-            var result = await classifier.ClassifyEmbeddingAsync(
+            var result = await classifier.ClassifyLlmAsync(
                 new(item.FixtureId, item.Title, item.Description), cancellationToken);
             if (!result.Available || result.Response is null)
-                return new("unavailable", result.Error, cases.Count, cases.Sum(value => value.Labels.Count),
-                    null, null, null, null, null, null, [], [], regexAggregate.Macro,
-                    regexAggregate.Micro, NormalizeSha(buildSha));
+                return Unavailable(result.Error, cases, regexAggregate, buildSha);
             predictions.Add(new(item, result.Response, result.RoundTripMilliseconds));
         }
-        var thresholds = ThresholdValues.Select(threshold => Calculate(predictions, threshold)).ToArray();
-        var best = thresholds.OrderByDescending(item => item.Macro.F1 ?? -1)
-            .ThenBy(item => item.Threshold).First();
-        var comparisons = Compare(regexSelected, best);
+        var metrics = Calculate(predictions);
+        var aggregate = Aggregate(metrics.Select(item => new Counts(item.TruePositive,
+            item.FalsePositive, item.FalseNegative, item.TrueNegative)).ToArray(),
+            metrics.Select(item => item.F1).ToArray(), metrics.Select(item => item.Precision).ToArray(),
+            metrics.Select(item => item.Recall).ToArray());
         var first = predictions[0].Response;
         return new("complete", null, cases.Count, cases.Sum(item => item.Labels.Count),
-            first.ModelId, first.ModelRevision, first.Device,
+            first.ModelId, first.ModelTag, first.ModelDigest, first.Quantization,
+            first.PromptVersion, first.PromptHash,
+            predictions.Sum(item => item.Response.MalformedOutputCount),
             predictions.Average(item => item.Response.InferenceMilliseconds),
-            predictions.Average(item => item.RoundTripMilliseconds), best.Threshold, thresholds,
-            comparisons, regexAggregate.Macro, regexAggregate.Micro, NormalizeSha(buildSha));
+            predictions.Average(item => item.RoundTripMilliseconds),
+            AverageDefined(predictions.Select(item => item.Response.TokensPerSecond)),
+            AverageDefined(predictions.Select(item => item.Response.PromptTokenCount is int value ? (double?)value : null)),
+            AverageDefined(predictions.Select(item => item.Response.OutputTokenCount is int value ? (double?)value : null)),
+            aggregate.Macro, aggregate.Micro, metrics, Compare(regexSelected, metrics),
+            regexAggregate.Macro, regexAggregate.Micro, NormalizeSha(buildSha));
     }
 
-    internal static IReadOnlyList<EmbeddingConceptComparison> Compare(
-        IReadOnlyList<DetectorMetric> regexMetrics, EmbeddingThresholdReport embedding) =>
-        regexMetrics.Select(regexMetric =>
-        {
-            var embeddingMetric = embedding.Concepts.Single(item => item.ConceptId == regexMetric.ConceptId);
-            return new EmbeddingConceptComparison(
-                regexMetric.ConceptId, regexMetric.Concept, regexMetric.PositiveSupport,
-                regexMetric.NegativeExamples, regexMetric.Precision, regexMetric.Recall, regexMetric.F1,
-                embeddingMetric.Precision, embeddingMetric.Recall, embeddingMetric.F1,
-                regexMetric.F1 is double regexF1 && embeddingMetric.F1 is double embeddingF1
-                    ? embeddingF1 - regexF1 : null);
-        }).ToArray();
-
-    internal static EmbeddingThresholdReport Calculate(IReadOnlyList<Prediction> predictions, double threshold)
+    private static LlmEvaluationReport Unavailable(string? error, IReadOnlyList<LlmEvaluationCase> cases,
+        (DetectorAggregateMetric Macro, DetectorAggregateMetric Micro) regex, string? buildSha)
     {
-        var metrics = Concepts.Select(concept =>
+        var empty = new DetectorAggregateMetric(null, null, null, Concepts.Length,
+            cases.Sum(item => item.Labels.Count));
+        return new("unavailable", error, cases.Count, cases.Sum(item => item.Labels.Count),
+            null, null, null, null, null, null, null, null, null, null, null, null,
+            empty, empty, [], [], regex.Macro, regex.Micro, NormalizeSha(buildSha));
+    }
+
+    internal static IReadOnlyList<LlmConceptMetric> Calculate(IReadOnlyList<Prediction> predictions) =>
+        Concepts.Select(concept =>
         {
             var counts = new Counts();
             foreach (var prediction in predictions)
             {
                 var expected = prediction.Case.Labels[concept.ConceptId];
                 var actual = prediction.Response.Predictions.Single(
-                    item => item.ConceptId == concept.ConceptId).Similarity >= threshold;
+                    item => item.ConceptId == concept.ConceptId).Matched;
                 counts = counts.Add(expected, actual);
             }
-            var precision = DetectorEvaluationService.Divide(counts.TruePositive, counts.TruePositive + counts.FalsePositive);
-            var recall = DetectorEvaluationService.Divide(counts.TruePositive, counts.TruePositive + counts.FalseNegative);
-            return new EmbeddingConceptMetric(concept.ConceptId, threshold, counts.TruePositive,
-                counts.FalsePositive, counts.FalseNegative, counts.TrueNegative, precision, recall,
+            var precision = DetectorEvaluationService.Divide(counts.TruePositive,
+                counts.TruePositive + counts.FalsePositive);
+            var recall = DetectorEvaluationService.Divide(counts.TruePositive,
+                counts.TruePositive + counts.FalseNegative);
+            return new LlmConceptMetric(concept.ConceptId, counts.TruePositive, counts.FalsePositive,
+                counts.FalseNegative, counts.TrueNegative, precision, recall,
                 DetectorEvaluationService.HarmonicMean(precision, recall));
         }).ToArray();
-        var aggregate = Aggregate(metrics.Select(item => new Counts(item.TruePositive, item.FalsePositive,
-            item.FalseNegative, item.TrueNegative)).ToArray(), metrics.Select(item => item.F1).ToArray(),
-            metrics.Select(item => item.Precision).ToArray(), metrics.Select(item => item.Recall).ToArray());
-        return new(threshold, aggregate.Macro, aggregate.Micro, metrics);
-    }
+
+    internal static IReadOnlyList<LlmConceptComparison> Compare(
+        IReadOnlyList<DetectorMetric> regexMetrics, IReadOnlyList<LlmConceptMetric> llm) =>
+        regexMetrics.Select(regexMetric =>
+        {
+            var metric = llm.Single(item => item.ConceptId == regexMetric.ConceptId);
+            return new LlmConceptComparison(regexMetric.ConceptId, regexMetric.Concept,
+                regexMetric.PositiveSupport, regexMetric.NegativeExamples,
+                regexMetric.Precision, regexMetric.Recall, regexMetric.F1,
+                metric.Precision, metric.Recall, metric.F1,
+                regexMetric.F1 is double regexF1 && metric.F1 is double llmF1 ? llmF1 - regexF1 : null);
+        }).ToArray();
 
     private static (DetectorAggregateMetric Macro, DetectorAggregateMetric Micro) Aggregate(
         IReadOnlyList<Counts> values, IReadOnlyList<double?>? f1 = null,
@@ -126,10 +132,16 @@ public sealed class EmbeddingEvaluationService(
                 new(microPrecision, microRecall,
                     DetectorEvaluationService.HarmonicMean(microPrecision, microRecall), values.Count, labels));
     }
+
+    private static double? AverageDefined(IEnumerable<double?> values)
+    {
+        var defined = values.Where(value => value.HasValue).Select(value => value!.Value).ToArray();
+        return defined.Length == 0 ? null : defined.Average();
+    }
     private static string? NormalizeSha(string? value) => value is { Length: 40 } &&
         value.All(character => character is >= '0' and <= '9' or >= 'a' and <= 'f') ? value : null;
-    internal sealed record Prediction(EmbeddingEvaluationCase Case,
-        EmbeddingClassifierResponse Response, double RoundTripMilliseconds);
+    internal sealed record Prediction(LlmEvaluationCase Case, LlmClassifierResponse Response,
+        double RoundTripMilliseconds);
     internal sealed record Counts(int TruePositive = 0, int FalsePositive = 0,
         int FalseNegative = 0, int TrueNegative = 0)
     {

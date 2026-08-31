@@ -32,22 +32,22 @@ public sealed record ClassifierDiagnosticResult(
         new(false, elapsed, null, error);
 }
 
-public sealed record EmbeddingPrediction(string ConceptId, double Similarity, bool Matched);
-public sealed record EmbeddingClassifierResponse(
+public sealed record LlmPrediction(string ConceptId, bool Matched);
+public sealed record LlmClassifierResponse(
     bool Received, string JobId, string Title, int DescriptionLength,
     string ServiceVersion, string ProtocolVersion, string Revision,
     bool GpuAvailable, int DeviceCount, string? DeviceName,
     int? VramTotalMiB, int? VramUsedMiB, string? DriverVersion,
-    string ModelType, string ModelId, string ModelRevision, string Device,
-    int EmbeddingDimension, string ConceptEmbeddingCacheKey,
-    int ConceptEmbeddingMemoryBytes, double ConceptEmbeddingNormMin,
-    double ConceptEmbeddingNormMax, double ModelLoadMilliseconds,
-    double ConceptEmbeddingInitializationMilliseconds, string Aggregation, double Threshold,
-    int TokenCount, int ChunkCount, double InferenceMilliseconds,
-    IReadOnlyList<EmbeddingPrediction> Predictions);
-public sealed record EmbeddingClassifierResult(
+    string ModelType, string ModelId, string ModelTag, string ModelDigest,
+    string Quantization, string OllamaVersion, string Device,
+    string PromptVersion, string PromptHash, double Temperature, int Seed,
+    int ContextLength, int MaxOutputTokens, long? TotalDurationNanoseconds,
+    long? LoadDurationNanoseconds, int? PromptTokenCount, int? OutputTokenCount,
+    double? TokensPerSecond, double InferenceMilliseconds, int MalformedOutputCount,
+    IReadOnlyList<LlmPrediction> Predictions);
+public sealed record LlmClassifierResult(
     bool Available, double RoundTripMilliseconds,
-    EmbeddingClassifierResponse? Response, string? Error);
+    LlmClassifierResponse? Response, string? Error);
 
 public sealed class ClassifierClient(HttpClient httpClient, ILogger<ClassifierClient> logger)
 {
@@ -103,7 +103,7 @@ public sealed class ClassifierClient(HttpClient httpClient, ILogger<ClassifierCl
         }
     }
 
-    public async Task<EmbeddingClassifierResult> ClassifyEmbeddingAsync(
+    public async Task<LlmClassifierResult> ClassifyLlmAsync(
         ClassifierRequest request, CancellationToken cancellationToken = default)
     {
         var stopwatch = Stopwatch.StartNew();
@@ -111,33 +111,33 @@ public sealed class ClassifierClient(HttpClient httpClient, ILogger<ClassifierCl
         {
             using var content = CreateJsonContent(request);
             using var response = await httpClient.PostAsync(
-                "classify-embedding", content, cancellationToken);
+                "classify-llm", content, cancellationToken);
             if (!response.IsSuccessStatusCode)
                 return new(false, stopwatch.Elapsed.TotalMilliseconds, null,
                     $"Classifier returned HTTP {(int)response.StatusCode}.");
-            var result = await response.Content.ReadFromJsonAsync<EmbeddingClassifierResponse>(
+            var result = await response.Content.ReadFromJsonAsync<LlmClassifierResponse>(
                 JsonOptions, cancellationToken);
             var validPredictions = result?.Predictions is { Count: 8 } &&
                 result.Predictions.Select(item => item.ConceptId).Distinct(StringComparer.Ordinal).Count() == 8 &&
-                result.Predictions.All(item => item.Similarity is >= -1 and <= 1 &&
-                    item.Matched == (item.Similarity >= result.Threshold));
+                result.Predictions.All(item => LlmEvaluationService.Concepts.Any(
+                    concept => concept.ConceptId == item.ConceptId));
             if (result is null || !result.Received || !validPredictions ||
-                result.ModelType != "embedding" || result.EmbeddingDimension != 768 ||
-                result.Aggregation != "max" || result.ConceptEmbeddingCacheKey.Length != 64 ||
-                result.ConceptEmbeddingNormMin is < .99999 or > 1.00001 ||
-                result.ConceptEmbeddingNormMax is < .99999 or > 1.00001 ||
+                result.ModelType != "generative-llm" || result.PromptHash.Length != 64 ||
+                result.PromptVersion != "phase3-zero-shot-v1" || result.Temperature != 0 ||
+                result.ContextLength != 8192 || result.MalformedOutputCount != 0 ||
+                result.ModelDigest != "sha256:0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0" ||
                 !result.GpuAvailable ||
                 result.DeviceCount != 1 || result.DeviceName != "NVIDIA GeForce GTX 1070" ||
                 result.Device != "cuda:0" || result.JobId != request.JobId ||
                 result.Title != request.Title ||
                 result.DescriptionLength != request.Description.EnumerateRunes().Count())
                 return new(false, stopwatch.Elapsed.TotalMilliseconds, null,
-                    "Classifier embedding response validation failed.");
+                    "Classifier LLM response validation failed.");
             return new(true, stopwatch.Elapsed.TotalMilliseconds, result, null);
         }
         catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException or JsonException)
         {
-            logger.LogWarning("Embedding classifier unavailable for job {JobId}: {FailureType}.",
+            logger.LogWarning("LLM classifier unavailable for job {JobId}: {FailureType}.",
                 LogValue(request.JobId), exception.GetType().Name);
             return new(false, stopwatch.Elapsed.TotalMilliseconds, null,
                 "Classifier service is unavailable.");

@@ -111,7 +111,7 @@ missing_id_status="$(curl --silent --output /dev/null --write-out '%{http_code}'
 model_unavailable_status="$(curl --silent --output /dev/null --write-out '%{http_code}' \
   --header 'Content-Type: application/json' \
   --data '{"jobId":"fixture","title":"Backend Engineer","description":"Build APIs."}' \
-  "http://127.0.0.1:${classifier_port}/classify-embedding")"
+  "http://127.0.0.1:${classifier_port}/classify-llm")"
 [[ "$malformed_status" == "400" && "$missing_id_status" == "400" && "$model_unavailable_status" == "503" ]]
 node -e '
 const health = JSON.parse(process.argv[1]);
@@ -119,7 +119,7 @@ const result = JSON.parse(process.argv[2]);
 const sha = process.argv[3];
 if (health.status !== "healthy" || health.gpuAvailable !== false || health.revision !== sha) process.exit(1);
 if (!result.received || result.jobId !== "R180395" || result.title !== "Senior Software Developer" || result.descriptionLength !== 9) process.exit(1);
-if (result.serviceVersion !== "0.3.0" || result.protocolVersion !== "3") process.exit(1);
+if (result.serviceVersion !== "0.4.0" || result.protocolVersion !== "4") process.exit(1);
 ' "$classifier_health_json" "$classifier_response" "$expected_sha"
 
 docker run --detach \
