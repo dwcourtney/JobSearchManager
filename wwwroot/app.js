@@ -1097,7 +1097,14 @@ function synchronizeAdminNavigation(isAdmin) {
   evaluationStatus.setAttribute("aria-live", "polite");
   const evaluationContent = document.createElement("div");
   evaluationContent.className = "detector-evaluation-content";
-  evaluationPanel.append(evaluationTitle, evaluationIntro, evaluationStatus, evaluationContent);
+  const zeroShotButton = document.createElement("button");
+  zeroShotButton.type = "button";
+  zeroShotButton.textContent = "Run experimental zero-shot comparison";
+  zeroShotButton.addEventListener("click", () => void runZeroShotEvaluation(zeroShotButton));
+  const zeroShotContent = document.createElement("div");
+  zeroShotContent.className = "detector-zero-shot-content";
+  evaluationPanel.append(evaluationTitle, evaluationIntro, zeroShotButton, evaluationStatus,
+    zeroShotContent, evaluationContent);
   surface.append(tabs, section, evaluationPanel);
   view.append(header, surface);
   elements.settingsView.after(view);
@@ -1111,6 +1118,7 @@ function synchronizeAdminNavigation(isAdmin) {
   elements.adminEvaluationPanel = evaluationPanel;
   elements.adminEvaluationStatus = evaluationStatus;
   elements.adminEvaluationContent = evaluationContent;
+  elements.adminZeroShotContent = zeroShotContent;
 }
 
 function showAdminSection(section) {
@@ -1144,6 +1152,78 @@ async function loadAdminStatus() {
 
 function formatDetectorMetric(value) {
   return typeof value === "number" && Number.isFinite(value) ? value.toFixed(2) : "N/A";
+}
+
+function renderZeroShotEvaluation(report) {
+  const container = elements.adminZeroShotContent;
+  container.replaceChildren();
+  const heading = document.createElement("h4");
+  heading.textContent = "Regex vs. experimental zero-shot NLI";
+  const identity = document.createElement("p");
+  identity.textContent = `${report.modelId} @ ${report.modelRevision} · ${report.device} · ${report.fixtureCount} fixtures / ${report.labelCount} labels`;
+  const timing = document.createElement("p");
+  timing.textContent = `Average model inference ${report.averageInferenceMilliseconds.toFixed(1)} ms · round trip ${report.averageRoundTripMilliseconds.toFixed(1)} ms · best global threshold ${report.bestThreshold.toFixed(1)}`;
+  const table = document.createElement("table");
+  table.className = "detector-metrics-table";
+  const head = document.createElement("thead");
+  const headRow = document.createElement("tr");
+  ["Method", "Threshold", "Macro P", "Macro R", "Macro F1", "Micro P", "Micro R", "Micro F1"].forEach(label => {
+    const cell = document.createElement("th"); cell.scope = "col"; cell.textContent = label; headRow.append(cell);
+  });
+  head.append(headRow); const body = document.createElement("tbody");
+  [["Regex", "fixed", report.regexMacro, report.regexMicro],
+   ...report.thresholds.map(item => ["Zero-shot", item.threshold.toFixed(1), item.macro, item.micro])]
+    .forEach(([method, threshold, macro, micro]) => {
+      const row = document.createElement("tr");
+      [method, threshold, formatDetectorMetric(macro.precision), formatDetectorMetric(macro.recall),
+       formatDetectorMetric(macro.f1), formatDetectorMetric(micro.precision),
+       formatDetectorMetric(micro.recall), formatDetectorMetric(micro.f1)].forEach(value => {
+        const cell = document.createElement("td"); cell.textContent = String(value); row.append(cell);
+      }); body.append(row);
+    });
+  table.append(head, body); container.append(heading, identity, timing, table);
+
+  const conceptHeading = document.createElement("h5");
+  conceptHeading.textContent = `Per-concept comparison at zero-shot threshold ${report.bestThreshold.toFixed(1)}`;
+  const conceptTable = document.createElement("table");
+  conceptTable.className = "detector-metrics-table";
+  const conceptHead = document.createElement("thead");
+  const conceptHeadRow = document.createElement("tr");
+  ["Concept", "+ / −", "Regex P", "Regex R", "Regex F1", "Zero-shot P", "Zero-shot R", "Zero-shot F1", "Δ F1"]
+    .forEach(label => {
+      const cell = document.createElement("th"); cell.scope = "col"; cell.textContent = label; conceptHeadRow.append(cell);
+    });
+  conceptHead.append(conceptHeadRow);
+  const conceptBody = document.createElement("tbody");
+  report.conceptComparisons.forEach(item => {
+    const row = document.createElement("tr");
+    [item.concept, `${item.positiveSupport} / ${item.negativeSupport}`,
+     formatDetectorMetric(item.regexPrecision), formatDetectorMetric(item.regexRecall),
+     formatDetectorMetric(item.regexF1), formatDetectorMetric(item.zeroShotPrecision),
+     formatDetectorMetric(item.zeroShotRecall), formatDetectorMetric(item.zeroShotF1),
+     formatDetectorMetric(item.f1Delta)].forEach(value => {
+      const cell = document.createElement("td"); cell.textContent = String(value); row.append(cell);
+    });
+    conceptBody.append(row);
+  });
+  conceptTable.append(conceptHead, conceptBody);
+  container.append(conceptHeading, conceptTable);
+}
+
+async function runZeroShotEvaluation(button) {
+  button.disabled = true;
+  elements.adminEvaluationStatus.textContent = "Running 40 GPU fixture inferences…";
+  try {
+    const response = await fetch("/api/admin/detector-evaluation/zero-shot", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: "{}"
+    });
+    const report = await response.json();
+    if (!response.ok || report.status !== "complete") throw new Error(report.error || "Zero-shot evaluation is unavailable.");
+    renderZeroShotEvaluation(report);
+    elements.adminEvaluationStatus.textContent = "Experimental zero-shot comparison complete. Production scoring was not changed.";
+  } catch (error) {
+    elements.adminEvaluationStatus.textContent = error.message || String(error);
+  } finally { button.disabled = false; }
 }
 
 function appendDetectorErrors(container, label, errors) {

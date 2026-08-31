@@ -37,6 +37,8 @@ actual_sha="$(git -C "$repository_root" rev-parse HEAD)"
   echo "Required persistent JSM directories are missing; refusing deployment." >&2
   exit 1
 }
+model_root="$lab_root/models/nli-distilroberta-base"
+mkdir -p "$model_root"
 
 mkdir -p "$state_root"
 mkdir -p "$security_cache"
@@ -112,6 +114,20 @@ docker info --format 'Docker runtimes: {{json .Runtimes}}'
 docker run --rm --gpus all --entrypoint nvidia-smi "jsm-classifier:$target_sha" \
   --query-gpu=name --format=csv,noheader
 
+# Provision only the immutable model files while egress is available. The long-running
+# classifier uses the private internal network and explicit offline mode.
+docker run --rm --user "$(id -u):$(id -g)" \
+  --env HOME=/tmp --env HF_HUB_DISABLE_XET=1 \
+  --env CLASSIFIER_MODEL_ROOT=/models/nli-distilroberta-base \
+  --volume "$model_root:/models/nli-distilroberta-base" \
+  "jsm-classifier:$target_sha" --download-model
+docker run --rm --gpus all --read-only --tmpfs /tmp \
+  --security-opt no-new-privileges:true --cap-drop ALL \
+  --env CLASSIFIER_MODEL_ROOT=/models/nli-distilroberta-base \
+  --env HF_HUB_OFFLINE=1 --env TRANSFORMERS_OFFLINE=1 \
+  --volume "$model_root:/models/nli-distilroberta-base:ro" \
+  "jsm-classifier:$target_sha" --model-diagnostic
+
 if [[ -f "$active_manifest" ]]; then
   cp -- "$active_manifest" "$previous_manifest.tmp"
   mv -f -- "$previous_manifest.tmp" "$previous_manifest"
@@ -148,7 +164,8 @@ verify_deployment() {
     sleep 1
   done
   [[ "$classifier_health" == "healthy" ]] || return 1
-  docker exec "$classifier_container" dotnet JsmClassifier.dll --gpu-diagnostic || return 1
+  docker exec "$classifier_container" python3 /app/classifier_service.py --gpu-diagnostic || return 1
+  docker exec "$classifier_container" python3 /app/classifier_service.py --model-diagnostic || return 1
 
   local jsm_container=""
   jsm_container="$(docker ps -q --filter label=com.docker.compose.project=jsm-lab \

@@ -359,6 +359,8 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Legacy and new accounts default to no administrator roles", TestAccountRoleCompatibilityAsync),
     ("Admin authorization distinguishes anonymous, non-admin, and admin users", TestAdminAuthorizationAsync),
     ("Classifier client serializes and validates the diagnostic contract", TestClassifierClientContractAsync),
+    ("Zero-shot client validates GPU, model, and score contracts", TestZeroShotClassifierContractAsync),
+    ("Zero-shot evaluation reuses the independently labeled fixture scope", TestZeroShotFixtureMetricsAsync),
     ("Classifier unavailability is isolated from JSM", TestClassifierUnavailableAsync),
     ("First-admin bootstrap is hashed, expiring, single-use, and durable", TestAdminBootstrapLifecycleAsync),
     ("Concurrent first-admin claims grant exactly one account", TestAdminBootstrapConcurrencyAsync),
@@ -1033,6 +1035,57 @@ static async Task TestClassifierUnavailableAsync()
     Assert(!result.Available && result.Response is null &&
            result.Error == "Classifier service is unavailable.",
         "An unavailable experimental classifier was not handled as an isolated diagnostic failure.");
+}
+
+static async Task TestZeroShotClassifierContractAsync()
+{
+    var scores = ZeroShotEvaluationService.Concepts.Select(item => new {
+        conceptId = item.ConceptId, score = .75
+    });
+    var payload = JsonSerializer.Serialize(new {
+        received = true, jobId = "fixture", title = "Backend Engineer", descriptionLength = 11,
+        serviceVersion = "0.2.0", protocolVersion = "2", revision = new string('a', 40),
+        gpuAvailable = true, deviceCount = 1, deviceName = "NVIDIA GeForce GTX 1070",
+        vramTotalMiB = 8192, vramUsedMiB = 900, driverVersion = "580.173.02",
+        modelId = "cross-encoder/nli-distilroberta-base",
+        modelRevision = "b14d131f9d32668a5e6a982729b57ff6ed5dfcbd", device = "cuda:0",
+        tokenCount = 4, chunkCount = 1, inferenceMilliseconds = 12.5, scores
+    }, ClassifierClient.JsonOptions);
+    var client = new ClassifierClient(new HttpClient(new StubHttpMessageHandler(request => {
+        Assert(request.RequestUri?.AbsolutePath == "/classify-zero-shot",
+            "Zero-shot request used the wrong isolated endpoint.");
+        return payload;
+    })) { BaseAddress = new Uri("http://job-classifier:8081/") }, NullLogger<ClassifierClient>.Instance);
+    var result = await client.ClassifyZeroShotAsync(new("fixture", "Backend Engineer", "Build APIs."));
+    Assert(result.Available && result.Response is { Device: "cuda:0", Scores.Count: 8 },
+        "A valid pinned-model GPU response did not pass the JSM contract.");
+}
+
+static Task TestZeroShotFixtureMetricsAsync()
+{
+    var environment = new TestHostEnvironment(AppContext.BaseDirectory);
+    var catalog = new JobConceptCatalog(environment);
+    var detector = new JobConceptDetector(catalog);
+    var evaluation = new DetectorEvaluationService(environment, catalog, detector);
+    var cases = evaluation.BuildZeroShotCases();
+    Assert(cases.Count == 40 && cases.Sum(item => item.Labels.Count) == 320,
+        "Zero-shot evaluation did not select the expected 40 fixtures / 320 independent labels.");
+    var predictions = cases.Select(item => new ZeroShotEvaluationService.Prediction(item,
+        new ZeroShotClassifierResponse(true, item.FixtureId, item.Title, item.Description.Length,
+            "0.2.0", "2", new string('a', 40), true, 1, "NVIDIA GeForce GTX 1070",
+            8192, 500, "580.173.02", "model", new string('b', 40), "cuda:0", 20, 1, 10,
+            item.Labels.Select(label => new ZeroShotScore(label.Key, label.Value ? .9 : .1)).ToArray()), 12)).ToArray();
+    var report = ZeroShotEvaluationService.Calculate(predictions, .5);
+    Assert(report.Macro.F1 == 1 && report.Micro.F1 == 1 && report.Concepts.Count == 8,
+        "Threshold metrics did not preserve deterministic expected labels.");
+    var regexReport = evaluation.Evaluate(new string('a', 40));
+    var regexSelected = regexReport.Concepts.Where(item => ZeroShotEvaluationService.Concepts.Any(
+        concept => concept.ConceptId == item.ConceptId)).ToArray();
+    var comparisons = ZeroShotEvaluationService.Compare(regexSelected, report);
+    Assert(comparisons.Count == 8 && comparisons.All(item => item.ZeroShotF1 == 1) &&
+           comparisons.All(item => item.F1Delta is >= 0),
+        "The per-concept regex/zero-shot comparison did not preserve all metrics and F1 deltas.");
+    return Task.CompletedTask;
 }
 
 static async Task TestAdminBootstrapLifecycleAsync()

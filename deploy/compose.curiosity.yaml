@@ -47,8 +47,16 @@ services:
       - ALL
     environment:
       NVIDIA_VISIBLE_DEVICES: all
-      NVIDIA_DRIVER_CAPABILITIES: utility
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+      CLASSIFIER_MODEL_ROOT: /models/nli-distilroberta-base
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
+      HOME: /tmp
     gpus: all
+    cpus: 2.0
+    mem_limit: 4g
+    volumes:
+      - "${JSM_LAB_ROOT:-/home/codex/jsm-lab}/models/nli-distilroberta-base:/models/nli-distilroberta-base:ro"
     tmpfs:
       - /tmp
     restart: unless-stopped
