@@ -1097,14 +1097,14 @@ function synchronizeAdminNavigation(isAdmin) {
   evaluationStatus.setAttribute("aria-live", "polite");
   const evaluationContent = document.createElement("div");
   evaluationContent.className = "detector-evaluation-content";
-  const embeddingButton = document.createElement("button");
-  embeddingButton.type = "button";
-  embeddingButton.textContent = "Run experimental embedding comparison";
-  embeddingButton.addEventListener("click", () => void runEmbeddingEvaluation(embeddingButton));
-  const embeddingContent = document.createElement("div");
-  embeddingContent.className = "detector-embedding-content";
-  evaluationPanel.append(evaluationTitle, evaluationIntro, embeddingButton, evaluationStatus,
-    embeddingContent, evaluationContent);
+  const llmButton = document.createElement("button");
+  llmButton.type = "button";
+  llmButton.textContent = "Run experimental local LLM comparison";
+  llmButton.addEventListener("click", () => void runLlmEvaluation(llmButton));
+  const llmContent = document.createElement("div");
+  llmContent.className = "detector-llm-content";
+  evaluationPanel.append(evaluationTitle, evaluationIntro, llmButton, evaluationStatus,
+    llmContent, evaluationContent);
   surface.append(tabs, section, evaluationPanel);
   view.append(header, surface);
   elements.settingsView.after(view);
@@ -1118,7 +1118,7 @@ function synchronizeAdminNavigation(isAdmin) {
   elements.adminEvaluationPanel = evaluationPanel;
   elements.adminEvaluationStatus = evaluationStatus;
   elements.adminEvaluationContent = evaluationContent;
-  elements.adminEmbeddingContent = embeddingContent;
+  elements.adminLlmContent = llmContent;
 }
 
 function showAdminSection(section) {
@@ -1154,28 +1154,27 @@ function formatDetectorMetric(value) {
   return typeof value === "number" && Number.isFinite(value) ? value.toFixed(2) : "N/A";
 }
 
-function renderEmbeddingEvaluation(report) {
-  const container = elements.adminEmbeddingContent;
+function renderLlmEvaluation(report) {
+  const container = elements.adminLlmContent;
   container.replaceChildren();
   const heading = document.createElement("h4");
-  heading.textContent = "Regex vs. current embedding experiment";
+  heading.textContent = "Regex vs. local generative LLM experiment";
   const identity = document.createElement("p");
-  identity.textContent = `${report.modelId} @ ${report.modelRevision} · ${report.device} · ${report.fixtureCount} fixtures / ${report.labelCount} labels`;
+  identity.textContent = `${report.modelId} · ${report.quantization} · ${report.modelDigest.slice(0, 19)}… · ${report.fixtureCount} fixtures / ${report.labelCount} labels`;
   const timing = document.createElement("p");
-  timing.textContent = `Average model inference ${report.averageInferenceMilliseconds.toFixed(1)} ms · round trip ${report.averageRoundTripMilliseconds.toFixed(1)} ms · best global threshold ${report.bestThreshold.toFixed(2)}`;
+  timing.textContent = `Average inference ${report.averageInferenceMilliseconds.toFixed(1)} ms · round trip ${report.averageRoundTripMilliseconds.toFixed(1)} ms · ${report.averageTokensPerSecond.toFixed(1)} output tokens/s · malformed outputs ${report.malformedOutputCount}`;
   const table = document.createElement("table");
   table.className = "detector-metrics-table";
   const head = document.createElement("thead");
   const headRow = document.createElement("tr");
-  ["Method", "Threshold", "Macro P", "Macro R", "Macro F1", "Micro P", "Micro R", "Micro F1"].forEach(label => {
+  ["Method", "Macro P", "Macro R", "Macro F1", "Micro P", "Micro R", "Micro F1"].forEach(label => {
     const cell = document.createElement("th"); cell.scope = "col"; cell.textContent = label; headRow.append(cell);
   });
   head.append(headRow); const body = document.createElement("tbody");
-  [["Regex", "fixed", report.regexMacro, report.regexMicro],
-   ...report.thresholds.map(item => ["Embedding", item.threshold.toFixed(2), item.macro, item.micro])]
-    .forEach(([method, threshold, macro, micro]) => {
+  [["Regex", report.regexMacro, report.regexMicro], ["Local LLM", report.llmMacro, report.llmMicro]]
+    .forEach(([method, macro, micro]) => {
       const row = document.createElement("tr");
-      [method, threshold, formatDetectorMetric(macro.precision), formatDetectorMetric(macro.recall),
+      [method, formatDetectorMetric(macro.precision), formatDetectorMetric(macro.recall),
        formatDetectorMetric(macro.f1), formatDetectorMetric(micro.precision),
        formatDetectorMetric(micro.recall), formatDetectorMetric(micro.f1)].forEach(value => {
         const cell = document.createElement("td"); cell.textContent = String(value); row.append(cell);
@@ -1184,12 +1183,12 @@ function renderEmbeddingEvaluation(report) {
   table.append(head, body); container.append(heading, identity, timing, table);
 
   const conceptHeading = document.createElement("h5");
-  conceptHeading.textContent = `Per-concept comparison at embedding threshold ${report.bestThreshold.toFixed(2)}`;
+  conceptHeading.textContent = "Per-concept comparison";
   const conceptTable = document.createElement("table");
   conceptTable.className = "detector-metrics-table";
   const conceptHead = document.createElement("thead");
   const conceptHeadRow = document.createElement("tr");
-  ["Concept", "+ / −", "Regex P", "Regex R", "Regex F1", "Embedding P", "Embedding R", "Embedding F1", "Δ F1"]
+  ["Concept", "+ / −", "Regex P", "Regex R", "Regex F1", "LLM P", "LLM R", "LLM F1", "Δ F1"]
     .forEach(label => {
       const cell = document.createElement("th"); cell.scope = "col"; cell.textContent = label; conceptHeadRow.append(cell);
     });
@@ -1199,8 +1198,8 @@ function renderEmbeddingEvaluation(report) {
     const row = document.createElement("tr");
     [item.concept, `${item.positiveSupport} / ${item.negativeSupport}`,
      formatDetectorMetric(item.regexPrecision), formatDetectorMetric(item.regexRecall),
-     formatDetectorMetric(item.regexF1), formatDetectorMetric(item.embeddingPrecision),
-     formatDetectorMetric(item.embeddingRecall), formatDetectorMetric(item.embeddingF1),
+     formatDetectorMetric(item.regexF1), formatDetectorMetric(item.llmPrecision),
+     formatDetectorMetric(item.llmRecall), formatDetectorMetric(item.llmF1),
      formatDetectorMetric(item.f1Delta)].forEach(value => {
       const cell = document.createElement("td"); cell.textContent = String(value); row.append(cell);
     });
@@ -1210,17 +1209,17 @@ function renderEmbeddingEvaluation(report) {
   container.append(conceptHeading, conceptTable);
 }
 
-async function runEmbeddingEvaluation(button) {
+async function runLlmEvaluation(button) {
   button.disabled = true;
   elements.adminEvaluationStatus.textContent = "Running 40 GPU fixture inferences…";
   try {
-    const response = await fetch("/api/admin/detector-evaluation/embedding", {
+    const response = await fetch("/api/admin/detector-evaluation/llm", {
       method: "POST", headers: { "Content-Type": "application/json" }, body: "{}"
     });
     const report = await response.json();
-    if (!response.ok || report.status !== "complete") throw new Error(report.error || "Embedding evaluation is unavailable.");
-    renderEmbeddingEvaluation(report);
-    elements.adminEvaluationStatus.textContent = "Experimental embedding comparison complete. Production scoring was not changed.";
+    if (!response.ok || report.status !== "complete") throw new Error(report.error || "Local LLM evaluation is unavailable.");
+    renderLlmEvaluation(report);
+    elements.adminEvaluationStatus.textContent = "Experimental local LLM comparison complete. Production scoring was not changed.";
   } catch (error) {
     elements.adminEvaluationStatus.textContent = error.message || String(error);
   } finally { button.disabled = false; }

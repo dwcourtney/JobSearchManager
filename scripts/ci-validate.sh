@@ -79,6 +79,20 @@ classifier_revision="$(docker image inspect --format '{{ index .Config.Labels "o
   exit 1
 }
 bash scripts/security-scan.sh image "$classifier_image" "$security_cache"
+ollama_image="jsm-ollama-ci:$expected_sha"
+docker build \
+  --platform linux/amd64 \
+  --build-arg "JSM_GIT_SHA=$expected_sha" \
+  --build-arg "OLLAMA_SOURCE_REVISION=f96e7aa0513b9973a0ccc71be414c2ecb9d65b1a" \
+  --tag "$ollama_image" \
+  ollama-runtime
+ollama_labels="$(docker image inspect --format '{{json .Config.Labels}}' "$ollama_image")"
+[[ "$ollama_labels" == *"$expected_sha"* && \
+   "$ollama_labels" == *"f96e7aa0513b9973a0ccc71be414c2ecb9d65b1a"* ]] || {
+  echo "Ollama runtime labels do not match the candidate/source revisions." >&2
+  exit 1
+}
+bash scripts/security-scan.sh image "$ollama_image" "$security_cache"
 docker run --detach \
   --name "$classifier_container" \
   --user 65532:65532 \
@@ -111,7 +125,7 @@ missing_id_status="$(curl --silent --output /dev/null --write-out '%{http_code}'
 model_unavailable_status="$(curl --silent --output /dev/null --write-out '%{http_code}' \
   --header 'Content-Type: application/json' \
   --data '{"jobId":"fixture","title":"Backend Engineer","description":"Build APIs."}' \
-  "http://127.0.0.1:${classifier_port}/classify-embedding")"
+  "http://127.0.0.1:${classifier_port}/classify-llm")"
 [[ "$malformed_status" == "400" && "$missing_id_status" == "400" && "$model_unavailable_status" == "503" ]]
 node -e '
 const health = JSON.parse(process.argv[1]);
@@ -119,7 +133,7 @@ const result = JSON.parse(process.argv[2]);
 const sha = process.argv[3];
 if (health.status !== "healthy" || health.gpuAvailable !== false || health.revision !== sha) process.exit(1);
 if (!result.received || result.jobId !== "R180395" || result.title !== "Senior Software Developer" || result.descriptionLength !== 9) process.exit(1);
-if (result.serviceVersion !== "0.3.0" || result.protocolVersion !== "3") process.exit(1);
+if (result.serviceVersion !== "0.4.0" || result.protocolVersion !== "4") process.exit(1);
 ' "$classifier_health_json" "$classifier_response" "$expected_sha"
 
 docker run --detach \

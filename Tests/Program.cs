@@ -359,8 +359,8 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Legacy and new accounts default to no administrator roles", TestAccountRoleCompatibilityAsync),
     ("Admin authorization distinguishes anonymous, non-admin, and admin users", TestAdminAuthorizationAsync),
     ("Classifier client serializes and validates the diagnostic contract", TestClassifierClientContractAsync),
-    ("Embedding client validates GPU, model, and similarity contracts", TestEmbeddingClassifierContractAsync),
-    ("Embedding evaluation reuses the independently labeled fixture scope", TestEmbeddingFixtureMetricsAsync),
+    ("LLM client validates GPU, model, schema, and prompt contracts", TestLlmClassifierContractAsync),
+    ("LLM evaluation reuses the independently labeled fixture scope", TestLlmFixtureMetricsAsync),
     ("Classifier unavailability is isolated from JSM", TestClassifierUnavailableAsync),
     ("First-admin bootstrap is hashed, expiring, single-use, and durable", TestAdminBootstrapLifecycleAsync),
     ("Concurrent first-admin claims grant exactly one account", TestAdminBootstrapConcurrencyAsync),
@@ -1040,64 +1040,66 @@ static async Task TestClassifierUnavailableAsync()
         "An unavailable experimental classifier was not handled as an isolated diagnostic failure.");
 }
 
-static async Task TestEmbeddingClassifierContractAsync()
+static async Task TestLlmClassifierContractAsync()
 {
-    var predictions = EmbeddingEvaluationService.Concepts.Select(item => new {
-        conceptId = item.ConceptId, similarity = .85, matched = true
-    });
+    var predictions = LlmEvaluationService.Concepts.Select(item => new {
+        conceptId = item.ConceptId, matched = true });
     var payload = JsonSerializer.Serialize(new {
         received = true, jobId = "fixture", title = "Backend Engineer", descriptionLength = 11,
-        serviceVersion = "0.3.0", protocolVersion = "3", revision = new string('a', 40),
+        serviceVersion = "0.4.0", protocolVersion = "4", revision = new string('a', 40),
         gpuAvailable = true, deviceCount = 1, deviceName = "NVIDIA GeForce GTX 1070",
-        vramTotalMiB = 8192, vramUsedMiB = 900, driverVersion = "580.173.02",
-        modelType = "embedding", modelId = "BAAI/bge-base-en-v1.5",
-        modelRevision = "a5beb1e3e68b9ab74eb54cfd186867f64f240e1a", device = "cuda:0",
-        embeddingDimension = 768, conceptEmbeddingCacheKey = new string('c', 64),
-        conceptEmbeddingMemoryBytes = 24576, conceptEmbeddingNormMin = 1.0,
-        conceptEmbeddingNormMax = 1.0, modelLoadMilliseconds = 200,
-        conceptEmbeddingInitializationMilliseconds = 10, aggregation = "max", threshold = .8,
-        tokenCount = 4, chunkCount = 1, inferenceMilliseconds = 12.5, predictions
+        vramTotalMiB = (int?)null, vramUsedMiB = 3000, driverVersion = (string?)null,
+        modelType = "generative-llm", modelId = "Qwen/Qwen3-4B-Instruct-2507",
+        modelTag = "qwen3:4b-instruct-2507-q4_K_M",
+        modelDigest = "sha256:0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
+        quantization = "Q4_K_M", ollamaVersion = "0.33.2", device = "cuda:0",
+        promptVersion = "phase3-zero-shot-v1", promptHash = new string('c', 64),
+        temperature = 0, seed = 42, contextLength = 8192, maxOutputTokens = 384,
+        totalDurationNanoseconds = 1_000_000_000L, loadDurationNanoseconds = 0L,
+        promptTokenCount = 500, outputTokenCount = 50, tokensPerSecond = 20.0,
+        inferenceMilliseconds = 1000.0, malformedOutputCount = 0, predictions
     }, ClassifierClient.JsonOptions);
     var client = new ClassifierClient(new HttpClient(new StubHttpMessageHandler(request => {
-        Assert(request.RequestUri?.AbsolutePath == "/classify-embedding",
-            "Embedding request used the wrong isolated endpoint.");
+        Assert(request.RequestUri?.AbsolutePath == "/classify-llm",
+            "LLM request used the wrong isolated endpoint.");
         Assert(request.Content?.Headers.ContentLength is > 0 &&
                request.Headers.TransferEncodingChunked is not true,
-            "Embedding request was not bounded and length-delimited.");
+            "LLM request was not bounded and length-delimited.");
         return payload;
     })) { BaseAddress = new Uri("http://job-classifier:8081/") }, NullLogger<ClassifierClient>.Instance);
-    var result = await client.ClassifyEmbeddingAsync(new("fixture", "Backend Engineer", "Build APIs."));
+    var result = await client.ClassifyLlmAsync(new("fixture", "Backend Engineer", "Build APIs."));
     Assert(result.Available && result.Response is { Device: "cuda:0", Predictions.Count: 8,
-               EmbeddingDimension: 768, ModelType: "embedding" },
+               ContextLength: 8192, ModelType: "generative-llm" },
         "A valid pinned-model GPU response did not pass the JSM contract.");
 }
 
-static Task TestEmbeddingFixtureMetricsAsync()
+static Task TestLlmFixtureMetricsAsync()
 {
     var environment = new TestHostEnvironment(AppContext.BaseDirectory);
     var catalog = new JobConceptCatalog(environment);
     var detector = new JobConceptDetector(catalog);
     var evaluation = new DetectorEvaluationService(environment, catalog, detector);
-    var cases = evaluation.BuildEmbeddingCases();
+    var cases = evaluation.BuildLlmCases();
     Assert(cases.Count == 40 && cases.Sum(item => item.Labels.Count) == 320,
-        "Embedding evaluation did not select the expected 40 fixtures / 320 independent labels.");
-    var predictions = cases.Select(item => new EmbeddingEvaluationService.Prediction(item,
-        new EmbeddingClassifierResponse(true, item.FixtureId, item.Title, item.Description.Length,
-            "0.3.0", "3", new string('a', 40), true, 1, "NVIDIA GeForce GTX 1070",
-            8192, 500, "580.173.02", "embedding", "model", new string('b', 40), "cuda:0",
-            768, new string('c', 64), 24576, 1.0, 1.0, 200, 10, "max", .8, 20, 1, 10,
-            item.Labels.Select(label => new EmbeddingPrediction(
-                label.Key, label.Value ? .9 : .1, label.Value)).ToArray()), 12)).ToArray();
-    var report = EmbeddingEvaluationService.Calculate(predictions, .5);
-    Assert(report.Macro.F1 == 1 && report.Micro.F1 == 1 && report.Concepts.Count == 8,
-        "Threshold metrics did not preserve deterministic expected labels.");
+        "LLM evaluation did not select the expected 40 fixtures / 320 independent labels.");
+    var predictions = cases.Select(item => new LlmEvaluationService.Prediction(item,
+        new LlmClassifierResponse(true, item.FixtureId, item.Title, item.Description.Length,
+            "0.4.0", "4", new string('a', 40), true, 1, "NVIDIA GeForce GTX 1070",
+            null, 3000, null, "generative-llm", "model", "tag",
+            "sha256:0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
+            "Q4_K_M", "0.33.2", "cuda:0", "phase3-zero-shot-v1", new string('c', 64),
+            0, 42, 8192, 384, 1000, 0, 500, 50, 20, 1000, 0,
+            item.Labels.Select(label => new LlmPrediction(label.Key, label.Value)).ToArray()), 1010)).ToArray();
+    var metrics = LlmEvaluationService.Calculate(predictions);
+    Assert(metrics.Count == 8 && metrics.All(item => item.F1 == 1),
+        "LLM metrics did not preserve deterministic expected labels.");
     var regexReport = evaluation.Evaluate(new string('a', 40));
-    var regexSelected = regexReport.Concepts.Where(item => EmbeddingEvaluationService.Concepts.Any(
+    var regexSelected = regexReport.Concepts.Where(item => LlmEvaluationService.Concepts.Any(
         concept => concept.ConceptId == item.ConceptId)).ToArray();
-    var comparisons = EmbeddingEvaluationService.Compare(regexSelected, report);
-    Assert(comparisons.Count == 8 && comparisons.All(item => item.EmbeddingF1 == 1) &&
+    var comparisons = LlmEvaluationService.Compare(regexSelected, metrics);
+    Assert(comparisons.Count == 8 && comparisons.All(item => item.LlmF1 == 1) &&
            comparisons.All(item => item.F1Delta is >= 0),
-        "The per-concept regex/embedding comparison did not preserve all metrics and F1 deltas.");
+        "The per-concept regex/LLM comparison did not preserve all metrics and F1 deltas.");
     return Task.CompletedTask;
 }
 

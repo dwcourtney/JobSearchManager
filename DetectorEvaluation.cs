@@ -174,11 +174,11 @@ public sealed class DetectorEvaluationService
             NormalizeSha(buildSha));
     }
 
-    internal IReadOnlyList<EmbeddingEvaluationCase> BuildEmbeddingCases()
+    internal IReadOnlyList<LlmEvaluationCase> BuildLlmCases()
     {
-        var selected = new HashSet<string>(EmbeddingEvaluationService.Concepts.Select(item => item.ConceptId),
+        var selected = new HashSet<string>(LlmEvaluationService.Concepts.Select(item => item.ConceptId),
             StringComparer.Ordinal);
-        return _fixtures.Select(fixture => new EmbeddingEvaluationCase(
+        return _fixtures.Select(fixture => new LlmEvaluationCase(
                 fixture.Id, fixture.Title, fixture.Excerpt,
                 Expand(fixture).Where(label => selected.Contains(label.ConceptId))
                     .ToDictionary(label => label.ConceptId, label => label.ExpectedPresent,

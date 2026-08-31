@@ -101,7 +101,7 @@ builder.Services.AddHttpClient<ClassifierClient>((services, client) =>
     var baseUrl = services.GetRequiredService<IConfiguration>()["Classifier:BaseUrl"]
         ?? "http://job-classifier:8081/";
     client.BaseAddress = new Uri(baseUrl, UriKind.Absolute);
-    client.Timeout = TimeSpan.FromSeconds(120);
+    client.Timeout = TimeSpan.FromSeconds(300);
     client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
     client.DefaultRequestHeaders.UserAgent.ParseAdd("JobSearchManager/1.0");
 });
@@ -114,7 +114,7 @@ builder.Services.AddSingleton<ExtendedLocationRequirementDetector>();
 builder.Services.AddSingleton<JobConceptCatalog>();
 builder.Services.AddSingleton<JobConceptDetector>();
 builder.Services.AddSingleton<DetectorEvaluationService>();
-builder.Services.AddSingleton<EmbeddingEvaluationService>();
+builder.Services.AddSingleton<LlmEvaluationService>();
 builder.Services.AddSingleton<PortableWorkspaceService>();
 builder.Services.AddSingleton<SharedSourceRefreshCoordinator>();
 // Preserve the established data-protection discriminator so existing Azure
@@ -265,6 +265,15 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
 
 var app = builder.Build();
 var versionInfo = VersionEndpoint.Create(builder.Configuration, hosting);
+
+if (args is ["--detector-evaluation-diagnostic"])
+{
+    var evaluation = app.Services.GetRequiredService<DetectorEvaluationService>();
+    Console.WriteLine(JsonSerializer.Serialize(evaluation.Evaluate(
+        Environment.GetEnvironmentVariable("JOBSEARCHMANAGER_COMMIT_SHA")),
+        ClassifierClient.JsonOptions));
+    return;
+}
 
 app.Use(async (context, next) =>
 {
@@ -491,8 +500,8 @@ app.MapGet("/api/admin/detector-evaluation", (DetectorEvaluationService evaluati
     Results.Ok(evaluation.Evaluate(Environment.GetEnvironmentVariable("JOBSEARCHMANAGER_COMMIT_SHA"))))
     .RequireAuthorization(AdminAuthorization.Policy);
 
-app.MapPost("/api/admin/detector-evaluation/embedding", async Task<IResult> (
-    EmbeddingEvaluationService evaluation, CancellationToken token) =>
+app.MapPost("/api/admin/detector-evaluation/llm", async Task<IResult> (
+    LlmEvaluationService evaluation, CancellationToken token) =>
 {
     var report = await evaluation.EvaluateAsync(
         Environment.GetEnvironmentVariable("JOBSEARCHMANAGER_COMMIT_SHA"), token);
