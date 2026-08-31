@@ -50,9 +50,12 @@ def ollama_json(path: str, payload: dict[str, Any] | None = None, timeout: int =
     if not isinstance(value, dict): raise RuntimeError("Ollama returned a non-object response.")
     return value
 
+def model_digest_matches(value: Any) -> bool:
+    return isinstance(value, str) and f"sha256:{value.removeprefix('sha256:')}" == MODEL_DIGEST
+
 def model_available() -> bool:
     try:
-        return any(item.get("name") == MODEL_TAG and item.get("digest") == MODEL_DIGEST
+        return any(item.get("name") == MODEL_TAG and model_digest_matches(item.get("digest"))
                    for item in ollama_json("/api/tags").get("models", []))
     except (OSError, ValueError, urllib.error.URLError): return False
 
@@ -166,6 +169,8 @@ class Handler(BaseHTTPRequestHandler):
 def self_test() -> None:
     assert len(CONCEPTS) == len(set(CONCEPT_IDS)) == 8
     assert len(PROMPT_HASH) == 64 and OUTPUT_SCHEMA["required"] == list(CONCEPT_IDS)
+    assert model_digest_matches(MODEL_DIGEST) and model_digest_matches(MODEL_DIGEST.removeprefix("sha256:"))
+    assert not model_digest_matches("0" * 64)
     all_false = validate_output({key: False for key in CONCEPT_IDS})
     assert list(all_false) == list(CONCEPT_IDS) and not any(all_false.values())
     try: validate_output({CONCEPT_IDS[0]: True}); raise AssertionError("Incomplete output passed validation.")
