@@ -61,8 +61,8 @@ const state = {
   jobFitEnabled: false,
   jobFitSignals: [],
   jobFitGroupHardConflicts: [],
-  travelTolerance: 4,
-  preferredWorkLocation: 3,
+  travelTolerance: null,
+  preferredWorkLocation: null,
   jobFitConcepts: [],
   jobFitConceptSearch: "",
   activeJobFitTab: "work-arrangement",
@@ -581,9 +581,38 @@ async function initialize() {
     if (!radio || !JobFit.preferenceLabels[radio.value]) return;
     const conceptId = radio.dataset.jobFitConceptId;
     state.jobFitSignals = state.jobFitSignals.filter(signal => signal.conceptId !== conceptId);
-    if (radio.value !== "neutral") {
-      state.jobFitSignals.push({ conceptId, preference: radio.value });
+    state.jobFitSignals.push({ conceptId, preference: radio.value });
+    renderJobFitSurvey();
+    renderResults();
+    queueSettingsSave();
+  });
+  elements.jobFitSurvey.addEventListener("click", event => {
+    const clearConcept = event.target.closest('button[data-clear-job-fit-concept]');
+    if (clearConcept) {
+      state.jobFitSignals = state.jobFitSignals.filter(signal =>
+        signal.conceptId !== clearConcept.dataset.clearJobFitConcept);
+      renderJobFitSurvey();
+      renderResults();
+      queueSettingsSave();
+      return;
     }
+    const setScale = event.target.closest('button[data-set-job-fit-scale]');
+    if (setScale) {
+      if (setScale.dataset.setJobFitScale === "travel") {
+        state.travelTolerance = JobFit.defaultTravelTolerance;
+      } else {
+        state.preferredWorkLocation = JobFit.defaultPreferredWorkLocation;
+      }
+      renderJobFitSurvey();
+      renderResults();
+      queueSettingsSave();
+      return;
+    }
+    const clearScale = event.target.closest('button[data-clear-job-fit-scale]');
+    if (!clearScale) return;
+    if (clearScale.dataset.clearJobFitScale === "travel") state.travelTolerance = null;
+    else state.preferredWorkLocation = null;
+    renderJobFitSurvey();
     renderResults();
     queueSettingsSave();
   });
@@ -1149,6 +1178,14 @@ function renderDetectorEvaluation(report) {
   const container = elements.adminEvaluationContent;
   container.replaceChildren();
 
+  const caveat = document.createElement("p");
+  caveat.className = "detector-sample-caveat";
+  caveat.textContent = `${report.fixtureCount} reviewed labels form a deterministic regression corpus, not a claim of broad statistical accuracy.`;
+  const definitions = document.createElement("p");
+  definitions.className = "detector-metric-definitions";
+  definitions.textContent = "Precision: how many predicted positives were truly positive. Recall: how many labeled positives were found. F1: the harmonic mean of Precision and Recall.";
+  container.append(caveat, definitions);
+
   const aggregate = document.createElement("div");
   aggregate.className = "detector-aggregate-grid";
   [["Macro", report.macro, "Each concept contributes equally."],
@@ -1173,7 +1210,7 @@ function renderDetectorEvaluation(report) {
   table.className = "detector-metrics-table";
   const head = document.createElement("thead");
   const headRow = document.createElement("tr");
-  ["Concept", "Support", "TP", "FP", "FN", "TN", "Precision", "Recall", "F1"].forEach(label => {
+  ["Concept", "Pos", "Neg", "Total", "Sample", "TP", "FP", "FN", "TN", "Precision", "Recall", "F1"].forEach(label => {
     const cell = document.createElement("th");
     cell.scope = "col";
     cell.textContent = label;
@@ -1186,12 +1223,8 @@ function renderDetectorEvaluation(report) {
     const concept = document.createElement("th");
     concept.scope = "row";
     concept.textContent = metric.concept;
-    if (metric.positiveSupport < 5) {
-      const warning = document.createElement("small");
-      warning.textContent = "Small labeled sample";
-      concept.append(warning);
-    }
-    const values = [metric.positiveSupport, metric.truePositive, metric.falsePositive,
+    const values = [metric.positiveSupport, metric.negativeExamples, metric.totalExamples,
+      metric.sampleSize, metric.truePositive, metric.falsePositive,
       metric.falseNegative, metric.trueNegative, formatDetectorMetric(metric.precision),
       formatDetectorMetric(metric.recall), formatDetectorMetric(metric.f1)];
     row.append(concept);
@@ -1205,6 +1238,73 @@ function renderDetectorEvaluation(report) {
   table.append(head, body);
   tableWrap.append(table);
   container.append(tableWrap);
+
+  const review = document.createElement("section");
+  review.className = "detector-example-review";
+  const reviewTitle = document.createElement("h4");
+  reviewTitle.textContent = "Labeled example review";
+  const reviewCopy = document.createElement("p");
+  reviewCopy.textContent = "Expected labels are independently reviewed fixture values; predictions come from the production detector.";
+  review.append(reviewTitle, reviewCopy);
+  report.concepts.forEach(metric => {
+    const details = document.createElement("details");
+    details.className = "detector-concept-examples";
+    const summary = document.createElement("summary");
+    summary.textContent = `${metric.concept} — ${metric.totalExamples} examples`;
+    const filters = document.createElement("div");
+    filters.className = "detector-example-filters";
+    const list = document.createElement("div");
+    list.className = "detector-example-list";
+    const renderExamples = filter => {
+      list.replaceChildren();
+      const examples = metric.examples.filter(example =>
+        filter === "all" ||
+        filter === "positive" && example.expectedPresent ||
+        filter === "negative" && !example.expectedPresent ||
+        filter === "errors" && (example.result === "FP" || example.result === "FN"));
+      if (examples.length === 0) {
+        const empty = document.createElement("p");
+        empty.textContent = "No labeled examples match this filter.";
+        list.append(empty);
+        return;
+      }
+      examples.forEach(example => {
+        const article = document.createElement("article");
+        article.className = `detector-example detector-result-${example.result.toLocaleLowerCase()}`;
+        const heading = document.createElement("strong");
+        heading.textContent = `${example.fixtureId} — ${example.title}`;
+        const metadata = document.createElement("span");
+        const requisition = example.requisitionId ? ` · ${example.requisitionId}` : "";
+        metadata.textContent = `${example.source}${requisition} · ${example.provenance}`;
+        const outcome = document.createElement("span");
+        outcome.textContent = `Expected ${example.expectedPresent ? "Present" : "Absent"} · Predicted ${example.predictedPresent ? "Present" : "Absent"} · ${example.result}`;
+        const rationale = document.createElement("small");
+        rationale.textContent = example.rationale ? `Label note: ${example.rationale}` : "No label note.";
+        const evidence = document.createElement("small");
+        evidence.textContent = `Detector evidence: ${example.evidence}`;
+        article.append(heading, metadata, outcome, rationale, evidence);
+        list.append(article);
+      });
+    };
+    [["all", "All"], ["positive", "Positive labels"], ["negative", "Negative labels"], ["errors", "Errors only"]]
+      .forEach(([value, label], index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = label;
+        button.className = "detector-filter-button";
+        button.setAttribute("aria-pressed", String(index === 0));
+        button.addEventListener("click", () => {
+          filters.querySelectorAll("button").forEach(item =>
+            item.setAttribute("aria-pressed", String(item === button)));
+          renderExamples(value);
+        });
+        filters.append(button);
+      });
+    renderExamples("all");
+    details.append(summary, filters, list);
+    review.append(details);
+  });
+  container.append(review);
 
   const errors = document.createElement("section");
   errors.className = "detector-error-review";
@@ -1604,16 +1704,23 @@ function updateJobFitSettingsUi() {
 }
 
 function updateTravelToleranceDescription() {
-  const definition = JobFit.travelLevels[state.travelTolerance];
-  if (!definition || !elements.travelToleranceInput) return;
+  if (!elements.travelToleranceInput) return;
+  const configured = Number.isInteger(state.travelTolerance);
+  const definition = JobFit.travelLevels[configured
+    ? state.travelTolerance
+    : JobFit.defaultTravelTolerance];
   elements.travelToleranceInput.value = String(definition.level);
   elements.travelToleranceInput.setAttribute(
     "aria-valuetext",
     `Level ${definition.level} - ${definition.shortLabel}`);
-  elements.travelToleranceInput.disabled = !state.jobFitEnabled;
-  elements.travelToleranceSummary.textContent =
-    `Level ${definition.level} - ${definition.shortLabel}`;
-  elements.travelToleranceDescription.textContent = definition.description;
+  elements.travelToleranceInput.disabled = !state.jobFitEnabled || !configured;
+  elements.travelToleranceInput.closest(".job-fit-scale-panel")?.classList.toggle("is-unset", !configured);
+  elements.travelToleranceSummary.textContent = configured
+    ? `Level ${definition.level} - ${definition.shortLabel}`
+    : "Not set";
+  elements.travelToleranceDescription.textContent = configured
+    ? definition.description
+    : "No travel preference affects Job Fit scoring.";
 }
 
 function createTravelToleranceControl() {
@@ -1676,7 +1783,8 @@ function createTravelToleranceControl() {
   const summary = document.createElement("strong");
   const description = document.createElement("span");
   current.append(summary, description);
-  panel.append(heading, introduction, label, input, datalist, ticks, endpoints, current);
+  const actions = createJobFitScaleActions("travel", Number.isInteger(state.travelTolerance));
+  panel.append(heading, introduction, label, input, datalist, ticks, endpoints, current, actions);
 
   elements.travelToleranceInput = input;
   elements.travelToleranceSummary = summary;
@@ -1686,16 +1794,23 @@ function createTravelToleranceControl() {
 }
 
 function updatePreferredWorkLocationDescription() {
-  const definition = JobFit.workLocationLevels[state.preferredWorkLocation];
-  if (!definition || !elements.preferredWorkLocationInput) return;
+  if (!elements.preferredWorkLocationInput) return;
+  const configured = Number.isInteger(state.preferredWorkLocation);
+  const definition = JobFit.workLocationLevels[configured
+    ? state.preferredWorkLocation
+    : JobFit.defaultPreferredWorkLocation];
   elements.preferredWorkLocationInput.value = String(definition.level);
   elements.preferredWorkLocationInput.setAttribute(
     "aria-valuetext",
     `Level ${definition.level} - ${definition.label}`);
-  elements.preferredWorkLocationInput.disabled = !state.jobFitEnabled;
-  elements.preferredWorkLocationSummary.textContent =
-    `Level ${definition.level} - ${definition.label}`;
-  elements.preferredWorkLocationDescription.textContent = definition.description;
+  elements.preferredWorkLocationInput.disabled = !state.jobFitEnabled || !configured;
+  elements.preferredWorkLocationInput.closest(".job-fit-scale-panel")?.classList.toggle("is-unset", !configured);
+  elements.preferredWorkLocationSummary.textContent = configured
+    ? `Level ${definition.level} - ${definition.label}`
+    : "Not set";
+  elements.preferredWorkLocationDescription.textContent = configured
+    ? definition.description
+    : "No routine work-location preference affects Job Fit scoring.";
 }
 
 function createPreferredWorkLocationControl() {
@@ -1758,7 +1873,8 @@ function createPreferredWorkLocationControl() {
   const summary = document.createElement("strong");
   const description = document.createElement("span");
   current.append(summary, description);
-  panel.append(heading, introduction, label, input, datalist, ticks, endpoints, current);
+  const actions = createJobFitScaleActions("location", Number.isInteger(state.preferredWorkLocation));
+  panel.append(heading, introduction, label, input, datalist, ticks, endpoints, current, actions);
 
   elements.preferredWorkLocationInput = input;
   elements.preferredWorkLocationSummary = summary;
@@ -1767,13 +1883,36 @@ function createPreferredWorkLocationControl() {
   return panel;
 }
 
-function createAssignmentLocationIntroduction() {
+function createJobFitScaleActions(kind, configured) {
+  const actions = document.createElement("div");
+  actions.className = "job-fit-scale-actions";
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "job-fit-clear-action";
+  button.disabled = !state.jobFitEnabled;
+  if (configured) {
+    button.textContent = "Clear preference";
+    button.dataset.clearJobFitScale = kind;
+  } else {
+    button.textContent = "Set preference";
+    button.dataset.setJobFitScale = kind;
+  }
+  actions.append(button);
+  return actions;
+}
+
+function createAssignmentLocationIntroduction(completeness) {
   const introduction = document.createElement("section");
   introduction.className = "assignment-location-introduction";
   introduction.setAttribute("aria-labelledby", "assignment-location-heading");
   const heading = document.createElement("h4");
   heading.id = "assignment-location-heading";
   heading.textContent = "Assignment / Location Constraints";
+  const status = document.createElement("small");
+  status.className = "job-fit-completeness-count";
+  status.textContent = completeness.unset > 0 ? `${completeness.unset} unset` : "Complete";
+  heading.setAttribute("aria-label", `Assignment / Location Constraints, ${status.textContent}`);
+  heading.append(status);
   const copy = document.createElement("p");
   copy.textContent = "These signals describe different kinds of required work away from your normal work location. A posting may match more than one.";
   introduction.append(heading, copy);
@@ -1808,6 +1947,12 @@ function renderJobFitSurvey() {
   const available = new Map(userConfigurable.map(concept => [concept.id, concept]));
   const configured = new Map(state.jobFitSignals.map(signal => [signal.conceptId, signal.preference]));
   const overriddenGroups = new Set(state.jobFitGroupHardConflicts);
+  const completeness = JobFit.calculateCompleteness(state.jobFitConcepts, {
+    signals: state.jobFitSignals,
+    travelTolerance: state.travelTolerance,
+    preferredWorkLocation: state.preferredWorkLocation,
+    groupHardConflicts: state.jobFitGroupHardConflicts
+  });
   const specialSearch = {
     "travel-tolerance": "travel tolerance ordinary business travel",
     "normal-work-location": "normal work location preferred remote hybrid onsite office",
@@ -1845,7 +1990,7 @@ function renderJobFitSurvey() {
     ? totalVisible === 0 && matchingTabs === 0
       ? `No Job Fit preferences match “${elements.jobFitConceptSearch.value.trim()}”.`
       : `${totalVisible} concept${totalVisible === 1 ? "" : "s"} match across ${matchingTabs} tab${matchingTabs === 1 ? "" : "s"}. Matching counts appear on each tab.`
-    : `${userConfigurable.length} concepts are organized across ${JobFit.surveyTabs.length} tabs.`;
+    : `${completeness.configured} of ${completeness.total} Job Fit preferences configured; ${completeness.unset} unset.`;
 
   const preferences = [
     ["hardConflict", "HC"],
@@ -1856,11 +2001,17 @@ function renderJobFitSurvey() {
   ];
   for (const tabView of tabViews) {
     const tab = tabView.definition;
+    const tabCompleteness = completeness.tabs[tab.id];
+    const completenessSuffix = tabCompleteness.unset > 0
+      ? ` · ${tabCompleteness.unset} unset`
+      : "";
     const selected = tab.id === state.activeJobFitTab;
     const selectOption = document.createElement("option");
     selectOption.value = tab.id;
     selectOption.selected = selected;
-    selectOption.textContent = query ? `${tab.title} (${tabView.conceptCount})` : tab.title;
+    selectOption.textContent = query
+      ? `${tab.title} (${tabView.conceptCount} matches)${completenessSuffix}`
+      : `${tab.title}${completenessSuffix}`;
     elements.jobFitSectionSelect.append(selectOption);
     const tabButton = document.createElement("button");
     tabButton.id = `job-fit-tab-${tab.id}`;
@@ -1871,7 +2022,13 @@ function renderJobFitSurvey() {
     tabButton.setAttribute("aria-selected", String(selected));
     tabButton.tabIndex = selected ? 0 : -1;
     tabButton.classList.toggle("active", selected);
-    tabButton.textContent = query ? `${tab.title} (${tabView.conceptCount})` : tab.title;
+    tabButton.textContent = query
+      ? `${tab.title} (${tabView.conceptCount})${completenessSuffix}`
+      : `${tab.title}${completenessSuffix}`;
+    tabButton.classList.toggle("is-incomplete", tabCompleteness.unset > 0);
+    tabButton.setAttribute("aria-label", tabCompleteness.unset > 0
+      ? `${tab.title}, ${tabCompleteness.unset} preferences not set`
+      : `${tab.title}, all preferences configured`);
     tabButton.addEventListener("click", () => {
       state.activeJobFitTab = tab.id;
       renderJobFitSurvey();
@@ -1906,21 +2063,30 @@ function renderJobFitSurvey() {
     }
     for (const sectionView of tabView.sections) {
       const sectionDefinition = sectionView.definition;
+      const groupCompleteness = tabCompleteness.groups[sectionDefinition.id];
       const section = document.createElement("section");
       section.className = "job-fit-tab-section";
       if (sectionDefinition.id === "assignment-location") {
         section.setAttribute("aria-labelledby", "assignment-location-heading");
-        section.append(createAssignmentLocationIntroduction());
+        section.append(createAssignmentLocationIntroduction(groupCompleteness));
       } else {
         section.setAttribute("aria-labelledby", `job-fit-section-${sectionDefinition.id}`);
         const sectionHeading = document.createElement("h4");
         sectionHeading.id = `job-fit-section-${sectionDefinition.id}`;
         sectionHeading.className = "job-fit-survey-subgroup";
         sectionHeading.textContent = sectionDefinition.title;
+        const sectionStatus = document.createElement("small");
+        sectionStatus.className = "job-fit-completeness-count";
+        sectionStatus.textContent = groupCompleteness.unset > 0
+          ? `${groupCompleteness.unset} unset`
+          : "Complete";
+        sectionHeading.setAttribute("aria-label", `${sectionDefinition.title}, ${sectionStatus.textContent}`);
+        sectionHeading.append(sectionStatus);
         section.append(sectionHeading);
       }
       const groupOverrideActive = sectionDefinition.hardConflictId &&
         overriddenGroups.has(sectionDefinition.hardConflictId);
+      section.classList.toggle("is-incomplete", groupCompleteness.unset > 0);
       if (sectionDefinition.hardConflictId) {
         const groupChoice = document.createElement("label");
         groupChoice.className = "settings-check job-fit-group-hard-conflict";
@@ -1954,8 +2120,11 @@ function renderJobFitSurvey() {
     header.prepend(blank);
     matrix.append(header);
       sectionView.concepts.forEach(concept => {
+        const conceptConfigured = configured.has(concept.id);
+        const effectivelyConfigured = conceptConfigured || groupOverrideActive;
         const row = document.createElement("div");
         row.className = "job-fit-survey-row";
+        row.classList.toggle("is-unset", !effectivelyConfigured);
         row.setAttribute("role", "radiogroup");
         const labelId = `job-fit-concept-${concept.id.replace(/[^a-z0-9_-]/gi, "-")}`;
         row.setAttribute("aria-labelledby", labelId);
@@ -1972,7 +2141,21 @@ function renderJobFitSurvey() {
           description.id = `${labelId}-description`;
           description.textContent = conceptDescription;
           row.setAttribute("aria-describedby", description.id);
-          conceptCopy.append(name, description);
+          const status = document.createElement("span");
+          status.className = "job-fit-concept-status";
+          if (!effectivelyConfigured) {
+            status.textContent = "Not set";
+          } else if (conceptConfigured && !groupOverrideActive) {
+            const clear = document.createElement("button");
+            clear.type = "button";
+            clear.className = "job-fit-clear-action";
+            clear.dataset.clearJobFitConcept = concept.id;
+            clear.disabled = !state.jobFitEnabled;
+            clear.textContent = "Clear";
+            clear.setAttribute("aria-label", `Clear ${concept.displayName} preference; return to Not set`);
+            status.append(clear);
+          }
+          conceptCopy.append(name, description, status);
           row.append(conceptCopy);
         } else {
           row.append(name);
@@ -1986,9 +2169,9 @@ function renderJobFitSurvey() {
           radio.name = `job-fit-${concept.id}`;
           radio.value = value;
           radio.dataset.jobFitConceptId = concept.id;
-          radio.checked = (configured.get(concept.id) || "neutral") === value;
+          radio.checked = configured.get(concept.id) === value;
           radio.disabled = !state.jobFitEnabled || groupOverrideActive;
-          radio.setAttribute("aria-label", `${concept.displayName}: ${JobFit.preferenceLabels[value]}`);
+          radio.setAttribute("aria-label", `${concept.displayName}: ${JobFit.preferenceLabels[value]}; ${effectivelyConfigured ? "configured" : "not set"}`);
           const short = document.createElement("span");
           short.className = "job-fit-choice-short";
           short.setAttribute("aria-hidden", "true");

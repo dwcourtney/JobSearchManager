@@ -37,8 +37,16 @@ assert.match(app, /admin-overview-tab[\s\S]*?Overview[\s\S]*?admin-detector-eval
 assert.doesNotMatch(app, /admin-(?:accounts|workspaces)-tab/,
   "Unimplemented Accounts and Workspaces placeholders must not be added.");
 assert.match(app, /fetch\("\/api\/admin\/detector-evaluation"/);
-assert.match(app, /Small labeled sample/,
-  "Low-support metrics must be visually qualified.");
+assert.match(app, /\["Concept", "Pos", "Neg", "Total", "Sample", "TP", "FP", "FN", "TN", "Precision", "Recall", "F1"\]/,
+  "Detector metrics must expose labeled positive, negative, and total support with the confusion matrix.");
+assert.match(app, /metric\.sampleSize/,
+  "Every concept must display its deterministic sample-size classification.");
+assert.match(app, /Labeled example review[\s\S]*?Positive labels[\s\S]*?Negative labels[\s\S]*?Errors only/,
+  "Administrators must be able to filter and review every labeled example.");
+assert.match(app, /Expected .*Present[\s\S]*?Predicted .*Present[\s\S]*?example\.result/,
+  "Example review must identify expected label, prediction, and TP/FP/FN/TN result.");
+assert.match(app, /Label note:[\s\S]*?Detector evidence:/,
+  "Example review must expose label rationale and detector evidence.");
 assert.match(app, /False positives[\s\S]*?False negatives/,
   "Detector errors must be reviewable by classification.");
 
@@ -56,16 +64,30 @@ assert.match(security, /SHA256\.HashData/);
 assert.match(security, /UnixFileMode\.UserRead \| UnixFileMode\.UserWrite/);
 assert.match(compose,
   /JOBSEARCHMANAGER_ADMIN_BOOTSTRAP_PATH: \/app\/data\/admin-bootstrap-code/);
-assert.equal(fixtures.fixtures.length, 36);
+assert.equal(fixtures.version, 2);
+assert.equal(fixtures.fixtures.length, 96);
 assert.equal(new Set(fixtures.fixtures.map(item => item.id)).size, fixtures.fixtures.length,
   "Evaluation fixture IDs must be stable and unique.");
 assert.ok(fixtures.fixtures.every(item => typeof item.expectedPresent === "boolean"),
   "Ground-truth labels must be explicit fixture values.");
+assert.ok(fixtures.fixtures.every(item => !item.provenance || ["public-posting", "synthetic"].includes(item.provenance)),
+  "Every explicit provenance value must use a supported class.");
+assert.match(evaluation, /fixture\.Provenance \?\?[\s\S]*?"synthetic"[\s\S]*?"public-posting"/,
+  "Legacy fixtures must receive a deterministic provenance class in API output.");
+for (const conceptId of new Set(fixtures.fixtures.map(item => item.conceptId))) {
+  const conceptFixtures = fixtures.fixtures.filter(item => item.conceptId === conceptId);
+  assert.equal(conceptFixtures.filter(item => item.expectedPresent).length, 8,
+    `${conceptId} must have eight reviewed positive examples.`);
+  assert.equal(conceptFixtures.filter(item => !item.expectedPresent).length, 8,
+    `${conceptId} must have eight reviewed negative examples.`);
+}
 assert.match(evaluation, /Fixture\.ExpectedPresent/,
   "Expected labels must be read independently from fixture data.");
 assert.match(evaluation, /_detector\.Analyze/,
   "Evaluation predictions must use the production JobConceptDetector.");
 assert.doesNotMatch(evaluation, /double\.NaN/,
   "Undefined metrics must not emit NaN.");
+assert.match(evaluation, /< 1 => "No positive labels"[\s\S]*?< 5 => "Small sample"[\s\S]*?< 15 => "Developing sample"[\s\S]*?"Established sample"/,
+  "Sample-size classifications must use deterministic positive-support thresholds.");
 
 console.log("All Admin role, bootstrap, and detector-evaluation UI integration tests passed.");

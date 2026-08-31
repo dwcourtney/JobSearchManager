@@ -16,7 +16,7 @@ const preferences = index.slice(preferencesStart, jobFitStart);
 const jobFit = index.slice(jobFitStart, accountStart);
 
 assert.match(index, /id="job-fit-settings-tab"[\s\S]*?>\s*Job Fit\s*</);
-assert.match(index, /src="\/job-fit\.js\?v=10"/,
+assert.match(index, /src="\/job-fit\.js\?v=11"/,
   "The revised Job Fit runtime must use a new cache-busting asset version.");
 assert.match(index, /id="job-fit-settings-panel"/);
 assert.match(preferences, /id="compensation-heading"[\s\S]*?id="appearance-heading"/);
@@ -77,7 +77,7 @@ assert.match(app,
   /state\.jobFitConcepts\.filter\(concept =>[\s\S]*?concept\.userConfigurable !== false && !hiddenSurveyConcepts\.has\(concept\.id\)\)/,
   "Detector-only and explicitly duplicated concepts must not render as survey rows.");
 assert.match(app,
-  /panel\.append\(createTravelToleranceControl\(\)\)[\s\S]*?panel\.append\(createPreferredWorkLocationControl\(\)\)[\s\S]*?section\.append\(createAssignmentLocationIntroduction\(\)\)/,
+  /panel\.append\(createTravelToleranceControl\(\)\)[\s\S]*?panel\.append\(createPreferredWorkLocationControl\(\)\)[\s\S]*?section\.append\(createAssignmentLocationIntroduction\(groupCompleteness\)\)/,
   "Work Arrangement must order Travel Tolerance, Normal Work Location, then Assignment / Location Constraints.");
 assert.match(app, /heading\.textContent = "Assignment \/ Location Constraints"/);
 assert.match(app, /A posting may match more than one\./,
@@ -95,10 +95,30 @@ assert.match(app,
 assert.match(app, /row\.setAttribute\("role", "radiogroup"\)/);
 assert.match(app, /radio\.name = `job-fit-\$\{concept\.id\}`/,
   "Every concept must have an independent radio group.");
-assert.match(app, /radio\.checked = \(configured\.get\(concept\.id\) \|\| "neutral"\) === value/,
-  "Absence from sparse configuration must render as Neutral.");
-assert.match(app, /if \(radio\.value !== "neutral"\)/,
-  "Returning a concept to Neutral must omit it from the sparse settings array.");
+assert.match(app, /radio\.checked = configured\.get\(concept\.id\) === value/,
+  "Absence from configuration must leave all five preference choices unselected.");
+assert.match(app, /preference: radio\.value/,
+  "Every explicit preference choice, including Neutral, must persist.");
+assert.match(app, /status\.textContent = "Not set"/,
+  "Unconfigured rows must display a subtle Not set marker.");
+assert.match(app, /clear\.dataset\.clearJobFitConcept = concept\.id/,
+  "Configured rows must expose a dedicated Clear action.");
+assert.match(app, /state\.jobFitSignals = state\.jobFitSignals\.filter\(signal =>\s*signal\.conceptId !== clearConcept\.dataset\.clearJobFitConcept\)/,
+  "Clear must remove only the selected concept preference.");
+assert.match(app, /JobFit\.calculateCompleteness\(state\.jobFitConcepts/,
+  "Rendered tabs and groups must use the shared deterministic completeness model.");
+assert.match(app, /\$\{completeness\.configured\} of \$\{completeness\.total\} Job Fit preferences configured; \$\{completeness\.unset\} unset/,
+  "The overall survey status must distinguish configured and unset preferences.");
+assert.match(app, /tabButton\.classList\.toggle\("is-incomplete", tabCompleteness\.unset > 0\)/,
+  "Incomplete tabs must receive a semantic visual state.");
+assert.match(app, /section\.classList\.toggle\("is-incomplete", groupCompleteness\.unset > 0\)/,
+  "Incomplete groups must receive a semantic visual state.");
+assert.match(app, /button\.dataset\.setJobFitScale = kind/,
+  "Unset sliders must expose an explicit Set action.");
+assert.match(app, /button\.dataset\.clearJobFitScale = kind/,
+  "Configured sliders must expose an explicit Clear action.");
+assert.match(app, /(?:travelToleranceInput|preferredWorkLocationInput)\.disabled = !state\.jobFitEnabled \|\| !configured/,
+  "An unset slider must remain visibly distinct from a disabled Job Fit configuration.");
 assert.match(app,
   /state\.excludeStrongExtendedLocationRequirements =\s*settings\.excludeStrongExtendedLocationRequirements === true;/,
   "The persisted filtering setting must hydrate without migration or renaming.");
@@ -268,6 +288,19 @@ assert.equal(renderedConcepts.length,
   "Every user-facing concept name must render exactly once across all Job Fit tabs/groups.");
 assert.equal(renderedConcepts.filter(concept => concept.displayName === "Network Engineering").length, 1,
   "Network Engineering must render exactly once.");
+const emptyCatalogCompleteness = JobFit.calculateCompleteness(catalog.concepts, {
+  signals: [], travelTolerance: null, preferredWorkLocation: null, groupHardConflicts: []
+});
+assert.deepEqual(
+  emptyCatalogCompleteness.tabs["hardware-field"].groups["trades-technician-work"],
+  { total: 4, configured: 0, unset: 4, overrideActive: false },
+  "All four new Trades / Technician concepts must begin Not Set and participate in completeness.");
+assert.deepEqual(
+  emptyCatalogCompleteness.tabs["hardware-field"].groups["physical-operations"],
+  { total: 2, configured: 0, unset: 2, overrideActive: false },
+  "Both new Physical Operations concepts must begin Not Set and participate in completeness.");
+assert.equal(emptyCatalogCompleteness.total, 78,
+  "Overall completeness must include every rendered concept plus both nullable sliders exactly once.");
 assert.equal(JobFit.groupOverrideByConcept["role.network-engineering"],
   "network-physical-infrastructure",
   "The hidden duplicate detector must retain its existing group Hard Conflict behavior.");

@@ -9,26 +9,33 @@ public sealed record DetectorEvaluationFixture(
     string Excerpt,
     string ConceptId,
     bool ExpectedPresent,
-    string? Rationale = null);
+    string? Rationale = null,
+    string? RequisitionId = null,
+    string? Provenance = null);
 
 internal sealed record DetectorEvaluationFixtureDocument(
     int Version,
     IReadOnlyList<DetectorEvaluationFixture> Fixtures);
 
-public sealed record DetectorEvaluationError(
+public sealed record DetectorEvaluationExample(
     string FixtureId,
     string Source,
     string Title,
     bool ExpectedPresent,
     bool PredictedPresent,
+    string Result,
     string Evidence,
-    string? Rationale);
+    string? Rationale,
+    string? RequisitionId,
+    string Provenance);
 
 public sealed record DetectorMetric(
     string ConceptId,
     string Concept,
     int PositiveSupport,
     int NegativeExamples,
+    int TotalExamples,
+    string SampleSize,
     int TruePositive,
     int FalsePositive,
     int FalseNegative,
@@ -36,8 +43,9 @@ public sealed record DetectorMetric(
     double? Precision,
     double? Recall,
     double? F1,
-    IReadOnlyList<DetectorEvaluationError> FalsePositives,
-    IReadOnlyList<DetectorEvaluationError> FalseNegatives);
+    IReadOnlyList<DetectorEvaluationExample> Examples,
+    IReadOnlyList<DetectorEvaluationExample> FalsePositives,
+    IReadOnlyList<DetectorEvaluationExample> FalseNegatives);
 
 public sealed record DetectorAggregateMetric(
     double? Precision,
@@ -127,20 +135,36 @@ public sealed class DetectorEvaluationService
         var precision = Divide(truePositive, truePositive + falsePositive);
         var recall = Divide(truePositive, truePositive + falseNegative);
 
-        DetectorEvaluationError Error(Observation item) => new(
+        DetectorEvaluationExample Example(Observation item)
+        {
+            var predicted = item.Prediction is not null;
+            var result = item.Fixture.ExpectedPresent
+                ? predicted ? "TP" : "FN"
+                : predicted ? "FP" : "TN";
+            return new(
             item.Fixture.Id,
             item.Fixture.Source,
             item.Fixture.Title,
             item.Fixture.ExpectedPresent,
-            item.Prediction is not null,
+            predicted,
+            result,
             item.Prediction?.Evidence ?? item.Fixture.Excerpt,
-            item.Fixture.Rationale);
+            item.Fixture.Rationale,
+            item.Fixture.RequisitionId,
+            ProvenanceFor(item.Fixture));
+        }
+
+        var examples = observations.Select(Example).OrderBy(item => item.FixtureId, StringComparer.Ordinal).ToArray();
+        var positiveSupport = truePositive + falseNegative;
+        var negativeExamples = falsePositive + trueNegative;
 
         return new DetectorMetric(
             concept.Id,
             concept.DisplayName,
-            truePositive + falseNegative,
-            falsePositive + trueNegative,
+            positiveSupport,
+            negativeExamples,
+            positiveSupport + negativeExamples,
+            SampleSizeLabel(positiveSupport),
             truePositive,
             falsePositive,
             falseNegative,
@@ -148,11 +172,18 @@ public sealed class DetectorEvaluationService
             precision,
             recall,
             HarmonicMean(precision, recall),
-            observations.Where(item => !item.Fixture.ExpectedPresent && item.Prediction is not null)
-                .Select(Error).ToArray(),
-            observations.Where(item => item.Fixture.ExpectedPresent && item.Prediction is null)
-                .Select(Error).ToArray());
+            examples,
+            examples.Where(item => item.Result == "FP").ToArray(),
+            examples.Where(item => item.Result == "FN").ToArray());
     }
+
+    internal static string SampleSizeLabel(int positiveSupport) => positiveSupport switch
+    {
+        < 1 => "No positive labels",
+        < 5 => "Small sample",
+        < 15 => "Developing sample",
+        _ => "Established sample"
+    };
 
     internal static double? Divide(int numerator, int denominator) =>
         denominator == 0 ? null : (double)numerator / denominator;
@@ -188,7 +219,8 @@ public sealed class DetectorEvaluationService
         {
             if (string.IsNullOrWhiteSpace(fixture.Id) || !ids.Add(fixture.Id) ||
                 string.IsNullOrWhiteSpace(fixture.Source) || string.IsNullOrWhiteSpace(fixture.Title) ||
-                string.IsNullOrWhiteSpace(fixture.Excerpt) || !catalog.Contains(fixture.ConceptId))
+                string.IsNullOrWhiteSpace(fixture.Excerpt) || !catalog.Contains(fixture.ConceptId) ||
+                fixture.Provenance is not null and not ("synthetic" or "retained-corpus" or "public-posting"))
             {
                 throw new InvalidDataException("A detector evaluation fixture has invalid or duplicate identity data.");
             }
@@ -203,6 +235,11 @@ public sealed class DetectorEvaluationService
     private static string? NormalizeSha(string? value) =>
         value is not null && value.Length == 40 && value.All(character =>
             character is >= '0' and <= '9' or >= 'a' and <= 'f') ? value : null;
+
+    private static string ProvenanceFor(DetectorEvaluationFixture fixture) =>
+        fixture.Provenance ?? (fixture.Source.StartsWith("Synthetic", StringComparison.OrdinalIgnoreCase)
+            ? "synthetic"
+            : "public-posting");
 
     internal sealed record Observation(
         DetectorEvaluationFixture Fixture,

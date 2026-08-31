@@ -239,13 +239,13 @@
   function normalizeTravelTolerance(value) {
     return Number.isInteger(value) && value >= 0 && value <= 6
       ? value
-      : DEFAULT_TRAVEL_TOLERANCE;
+      : null;
   }
 
   function normalizePreferredWorkLocation(value) {
     return Number.isInteger(value) && value >= 0 && value <= 5
       ? value
-      : DEFAULT_PREFERRED_WORK_LOCATION;
+      : null;
   }
 
   function normalizeConfiguration(configuration) {
@@ -261,8 +261,7 @@
           ? "ideal"
           : signal.preference;
       seen.add(signal.conceptId);
-      if (preference === "neutral") continue;
-      if (!Object.hasOwn(WEIGHTS, preference)) continue;
+      if (!Object.hasOwn(LABELS, preference)) continue;
       signals.push({ conceptId: signal.conceptId, preference });
     }
     const groupHardConflicts = Array.from(new Set(
@@ -448,13 +447,13 @@
         };
       });
     const travelRequirement = detectedTravelRequirement(detected, concepts);
-    if (travelRequirement) {
+    if (travelRequirement && Number.isInteger(normalized.travelTolerance)) {
       detectedSignals.push(travelComparisonSignal(
         travelRequirement,
         normalized.travelTolerance));
     }
     const workLocation = detectedWorkLocation(detected, concepts);
-    if (workLocation) {
+    if (workLocation && Number.isInteger(normalized.preferredWorkLocation)) {
       detectedSignals.push(workLocationComparisonSignal(
         workLocation,
         normalized.preferredWorkLocation));
@@ -596,6 +595,62 @@
     return `${value >= 0 ? "+" : ""}${normalized}`;
   }
 
+  function calculateCompleteness(conceptOptions, configuration) {
+    const normalized = normalizeConfiguration(configuration);
+    const available = new Set((Array.isArray(conceptOptions) ? conceptOptions : [])
+      .filter(concept => concept?.userConfigurable !== false &&
+        !SURVEY_HIDDEN_CONCEPT_IDS.includes(concept.id))
+      .map(concept => concept.id));
+    const configured = new Set(normalized.signals.map(signal => signal.conceptId));
+    const overridden = new Set(normalized.groupHardConflicts);
+    const tabs = {};
+    let overallTotal = 0;
+    let overallConfigured = 0;
+    for (const tabDefinition of SURVEY_TABS) {
+      const groups = {};
+      let tabTotal = 0;
+      let tabConfigured = 0;
+      for (const sectionDefinition of tabDefinition.sections) {
+        const conceptIds = sectionDefinition.conceptIds.filter(conceptId => available.has(conceptId));
+        const overrideActive = Boolean(sectionDefinition.hardConflictId &&
+          overridden.has(sectionDefinition.hardConflictId));
+        const configuredCount = overrideActive
+          ? conceptIds.length
+          : conceptIds.filter(conceptId => configured.has(conceptId)).length;
+        groups[sectionDefinition.id] = {
+          total: conceptIds.length,
+          configured: configuredCount,
+          unset: conceptIds.length - configuredCount,
+          overrideActive
+        };
+        tabTotal += conceptIds.length;
+        tabConfigured += configuredCount;
+      }
+      if (tabDefinition.specialControls.includes("travel-tolerance")) {
+        tabTotal += 1;
+        tabConfigured += Number.isInteger(normalized.travelTolerance) ? 1 : 0;
+      }
+      if (tabDefinition.specialControls.includes("normal-work-location")) {
+        tabTotal += 1;
+        tabConfigured += Number.isInteger(normalized.preferredWorkLocation) ? 1 : 0;
+      }
+      tabs[tabDefinition.id] = {
+        total: tabTotal,
+        configured: tabConfigured,
+        unset: tabTotal - tabConfigured,
+        groups
+      };
+      overallTotal += tabTotal;
+      overallConfigured += tabConfigured;
+    }
+    return {
+      total: overallTotal,
+      configured: overallConfigured,
+      unset: overallTotal - overallConfigured,
+      tabs
+    };
+  }
+
   return {
     evaluate,
     normalizeConfiguration,
@@ -610,6 +665,7 @@
     workLocationLevels: WORK_LOCATION_LEVELS,
     defaultPreferredWorkLocation: DEFAULT_PREFERRED_WORK_LOCATION,
     normalizePreferredWorkLocation,
+    calculateCompleteness,
     detectedWorkLocation,
     detectedTravelRequirement,
     surveyTabs: SURVEY_TABS,

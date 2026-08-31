@@ -58,10 +58,11 @@ const sparse = JobFit.normalizeConfiguration(configuration([
   signal(cloud, "negative")
 ]));
 assert.deepEqual(sparse.signals, [
+  signal(remote, "neutral"),
   signal(hybrid, "negative"),
   signal(fullRemote, "ideal"),
   signal(cloud, "negative")
-], "Neutral must be omitted and legacy preference names must migrate to Negative and Ideal.");
+], "Configured Neutral must persist and legacy preference names must migrate to Negative and Ideal.");
 assert.equal(JobFit.evaluate(detected([remote]), configuration([signal(remote, "neutral")]), [remote]).score, 5,
   "Neutral must contribute zero and retain the baseline score.");
 assert.equal(JobFit.preferenceLabels.strongNegative, undefined);
@@ -70,16 +71,62 @@ assert.equal(JobFit.preferenceLabels.strongPositive, undefined,
 assert.equal(JobFit.preferenceLabels.negative, "Negative");
 assert.equal(JobFit.preferenceLabels.ideal, "Ideal");
 assert.equal(sparse.travelTolerance, 4, "New configurations must use the non-rejecting moderate default.");
-assert.equal(JobFit.normalizeTravelTolerance(2.5), 4, "Intermediate travel values must not be accepted.");
+assert.equal(JobFit.normalizeTravelTolerance(2.5), null, "Invalid travel values must normalize to Not Set.");
+assert.equal(JobFit.normalizeConfiguration({ enabled: true, signals: [] }).travelTolerance, null,
+  "A missing travel preference must remain Not Set.");
 assert.deepEqual(JobFit.travelLevels.map(item => item.level), [0, 1, 2, 3, 4, 5, 6]);
 assert.deepEqual(JobFit.travelLevels.map(item => item.label), [
   "No travel", "Extremely rare", "Very light", "Occasional", "Moderate", "Heavy", "Travel-heavy"
 ]);
 assert.equal(sparse.preferredWorkLocation, 3,
   "New configurations must default to the neutral corpus center, Hybrid.");
-assert.equal(JobFit.normalizePreferredWorkLocation(2.5), 3,
-  "Intermediate work-location values must not be accepted.");
+assert.equal(JobFit.normalizePreferredWorkLocation(2.5), null,
+  "Invalid work-location values must normalize to Not Set.");
+assert.equal(JobFit.normalizeConfiguration({ enabled: true, signals: [] }).preferredWorkLocation, null,
+  "A missing work-location preference must remain Not Set.");
 assert.deepEqual(JobFit.workLocationLevels.map(item => item.level), [0, 1, 2, 3, 4, 5]);
+
+const completenessConcepts = [softwareRole, cloud, deployment];
+const emptyCompleteness = JobFit.calculateCompleteness(completenessConcepts,
+  { signals: [], travelTolerance: null, preferredWorkLocation: null });
+assert.equal(emptyCompleteness.total, 5);
+assert.equal(emptyCompleteness.configured, 0);
+assert.equal(emptyCompleteness.unset, 5, "Not Set concepts and sliders must be incomplete.");
+const neutralCompleteness = JobFit.calculateCompleteness(completenessConcepts, {
+  signals: [signal(cloud, "neutral")], travelTolerance: 4, preferredWorkLocation: 3
+});
+assert.equal(neutralCompleteness.configured, 3,
+  "Configured Neutral and configured sliders must count as complete.");
+for (const preference of ["hardConflict", "negative", "neutral", "positive", "ideal"]) {
+  const configuredCompleteness = JobFit.calculateCompleteness(completenessConcepts, {
+    signals: [signal(cloud, preference)], travelTolerance: null, preferredWorkLocation: null
+  });
+  assert.equal(configuredCompleteness.tabs["cloud-infrastructure-it"].configured, 1,
+    `${preference} must count as an explicitly configured preference.`);
+}
+const overriddenCompleteness = JobFit.calculateCompleteness(completenessConcepts, {
+  signals: [], travelTolerance: null, preferredWorkLocation: null,
+  groupHardConflicts: ["software-development"]
+});
+assert.equal(overriddenCompleteness.tabs["software-ai-data"].groups["software-development"].unset, 0,
+  "A group Hard Conflict must make its available children effectively complete.");
+const restoredCompleteness = JobFit.calculateCompleteness(completenessConcepts, {
+  signals: [], travelTolerance: null, preferredWorkLocation: null, groupHardConflicts: []
+});
+assert.equal(restoredCompleteness.tabs["software-ai-data"].groups["software-development"].unset, 1,
+  "Removing a group override must reveal the child's actual Not Set state again.");
+
+const unsetSpecialPreferences = JobFit.evaluate(
+  [
+    detectedWithEvidence(fullRemote, "This position is 100% remote."),
+    detectedWithEvidence(frequentTravel, "Frequent travel is required.")
+  ],
+  { enabled: true, signals: [], travelTolerance: null, preferredWorkLocation: null },
+  [fullRemote, frequentTravel]);
+assert.equal(unsetSpecialPreferences.score, 5);
+assert.equal(unsetSpecialPreferences.contributions.length, 0);
+assert.equal(unsetSpecialPreferences.neutralSignals.length, 0,
+  "Unset travel and location controls must contribute no signal and no score.");
 
 const locationConcepts = [fullRemote, remote, hybrid, onsite];
 const locationCases = [
