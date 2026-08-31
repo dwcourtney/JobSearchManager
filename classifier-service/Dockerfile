@@ -1,6 +1,7 @@
-FROM python:3.12.11-slim-bookworm@sha256:c00fc7b44d844b6da22861ec24af43968a5200eac4ec607b4725d585165d6b49
+FROM python:3.12.14-alpine3.24@sha256:285a71327884a4d50efbea30104473b0fa43ecefa499458899670ca30dae76e5
 ARG CLASSIFIER_GIT_SHA=unknown
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 CLASSIFIER_GIT_SHA=${CLASSIFIER_GIT_SHA}
+RUN apk upgrade --no-cache && rm -rf /var/cache/apk/*
 WORKDIR /app
 COPY classifier_service.py ./
 LABEL org.opencontainers.image.revision=${CLASSIFIER_GIT_SHA}
