@@ -23,3 +23,5 @@ COPY --from=build /out/ollama /usr/bin/ollama
 LABEL org.opencontainers.image.revision=${JSM_GIT_SHA} \
       org.opencontainers.image.source-revision=${OLLAMA_SOURCE_REVISION} \
       org.opencontainers.image.version=0.33.2-jsm-security-rebuild
+USER 65532:65532
+HEALTHCHECK --interval=10s --timeout=5s --start-period=20s --retries=6 CMD ["ollama", "list"]

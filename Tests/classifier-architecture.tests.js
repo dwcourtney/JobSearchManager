@@ -52,6 +52,9 @@ assert.match(ollamaRuntime, /golang:1\.26\.6-trixie@sha256:23fdfd3a/);
 assert.match(ollamaRuntime, /github\.com\/buger\/jsonparser@v1\.1\.2/);
 assert.match(ollamaRuntime, /golang\.org\/x\/net@v0\.56\.0/);
 assert.match(ollamaRuntime, /-buildvcs=false/);
+assert.match(ollamaRuntime, /USER 65532:65532/,
+  "the patched runtime image must be non-root even outside Compose");
+assert.match(ollamaRuntime, /HEALTHCHECK[\s\S]*?ollama[\s\S]*?list/);
 assert.match(client, /classify-llm/);
 assert.match(evaluation, /cases\.Count, cases\.Sum\(item => item\.Labels\.Count\)/);
 assert.match(phase2, /cross-encoder\/nli-distilroberta-base/);
