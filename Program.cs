@@ -41,8 +41,9 @@ if (args is ["--classifier-diagnostic"])
         var baseUrl = Environment.GetEnvironmentVariable("Classifier__BaseUrl")
             ?? "http://job-classifier:8081/";
         using var client = new HttpClient { BaseAddress = new Uri(baseUrl), Timeout = TimeSpan.FromSeconds(10) };
-        using var response = await client.PostAsJsonAsync("classify", new ClassifierRequest(
+        using var content = ClassifierClient.CreateJsonContent(new ClassifierRequest(
             "R180395", "Senior Software Developer", "Phase 1 deployment plumbing proof."));
+        using var response = await client.PostAsync("classify", content);
         response.EnsureSuccessStatusCode();
         var result = await response.Content.ReadFromJsonAsync<ClassifierResponse>(
             ClassifierClient.JsonOptions);

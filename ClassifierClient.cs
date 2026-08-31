@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -48,6 +49,13 @@ public sealed class ClassifierClient(HttpClient httpClient, ILogger<ClassifierCl
 {
     internal static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
+    internal static ByteArrayContent CreateJsonContent<T>(T value)
+    {
+        var content = new ByteArrayContent(JsonSerializer.SerializeToUtf8Bytes(value, JsonOptions));
+        content.Headers.ContentType = new MediaTypeHeaderValue("application/json") { CharSet = "utf-8" };
+        return content;
+    }
+
     public async Task<ClassifierDiagnosticResult> ClassifyAsync(
         ClassifierRequest request,
         CancellationToken cancellationToken = default)
@@ -55,8 +63,8 @@ public sealed class ClassifierClient(HttpClient httpClient, ILogger<ClassifierCl
         var stopwatch = Stopwatch.StartNew();
         try
         {
-            using var response = await httpClient.PostAsJsonAsync(
-                "classify", request, JsonOptions, cancellationToken);
+            using var content = CreateJsonContent(request);
+            using var response = await httpClient.PostAsync("classify", content, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
                 logger.LogWarning("Classifier rejected job {JobId} with HTTP {StatusCode}.",
@@ -97,8 +105,9 @@ public sealed class ClassifierClient(HttpClient httpClient, ILogger<ClassifierCl
         var stopwatch = Stopwatch.StartNew();
         try
         {
-            using var response = await httpClient.PostAsJsonAsync(
-                "classify-zero-shot", request, JsonOptions, cancellationToken);
+            using var content = CreateJsonContent(request);
+            using var response = await httpClient.PostAsync(
+                "classify-zero-shot", content, cancellationToken);
             if (!response.IsSuccessStatusCode)
                 return new(false, stopwatch.Elapsed.TotalMilliseconds, null,
                     $"Classifier returned HTTP {(int)response.StatusCode}.");
