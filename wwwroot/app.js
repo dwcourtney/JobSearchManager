@@ -1182,6 +1182,32 @@ function renderZeroShotEvaluation(report) {
       }); body.append(row);
     });
   table.append(head, body); container.append(heading, identity, timing, table);
+
+  const conceptHeading = document.createElement("h5");
+  conceptHeading.textContent = `Per-concept comparison at zero-shot threshold ${report.bestThreshold.toFixed(1)}`;
+  const conceptTable = document.createElement("table");
+  conceptTable.className = "detector-metrics-table";
+  const conceptHead = document.createElement("thead");
+  const conceptHeadRow = document.createElement("tr");
+  ["Concept", "+ / −", "Regex P", "Regex R", "Regex F1", "Zero-shot P", "Zero-shot R", "Zero-shot F1", "Δ F1"]
+    .forEach(label => {
+      const cell = document.createElement("th"); cell.scope = "col"; cell.textContent = label; conceptHeadRow.append(cell);
+    });
+  conceptHead.append(conceptHeadRow);
+  const conceptBody = document.createElement("tbody");
+  report.conceptComparisons.forEach(item => {
+    const row = document.createElement("tr");
+    [item.concept, `${item.positiveSupport} / ${item.negativeSupport}`,
+     formatDetectorMetric(item.regexPrecision), formatDetectorMetric(item.regexRecall),
+     formatDetectorMetric(item.regexF1), formatDetectorMetric(item.zeroShotPrecision),
+     formatDetectorMetric(item.zeroShotRecall), formatDetectorMetric(item.zeroShotF1),
+     formatDetectorMetric(item.f1Delta)].forEach(value => {
+      const cell = document.createElement("td"); cell.textContent = String(value); row.append(cell);
+    });
+    conceptBody.append(row);
+  });
+  conceptTable.append(conceptHead, conceptBody);
+  container.append(conceptHeading, conceptTable);
 }
 
 async function runZeroShotEvaluation(button) {

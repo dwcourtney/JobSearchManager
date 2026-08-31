@@ -10,11 +10,17 @@ public sealed record ZeroShotConceptMetric(
 public sealed record ZeroShotThresholdReport(
     double Threshold, DetectorAggregateMetric Macro, DetectorAggregateMetric Micro,
     IReadOnlyList<ZeroShotConceptMetric> Concepts);
+public sealed record ZeroShotConceptComparison(
+    string ConceptId, string Concept, int PositiveSupport, int NegativeSupport,
+    double? RegexPrecision, double? RegexRecall, double? RegexF1,
+    double? ZeroShotPrecision, double? ZeroShotRecall, double? ZeroShotF1,
+    double? F1Delta);
 public sealed record ZeroShotEvaluationReport(
     string Status, string? Error, int FixtureCount, int LabelCount,
     string? ModelId, string? ModelRevision, string? Device,
     double? AverageInferenceMilliseconds, double? AverageRoundTripMilliseconds,
     double? BestThreshold, IReadOnlyList<ZeroShotThresholdReport> Thresholds,
+    IReadOnlyList<ZeroShotConceptComparison> ConceptComparisons,
     DetectorAggregateMetric RegexMacro, DetectorAggregateMetric RegexMicro,
     string? BuildSha);
 
@@ -48,20 +54,34 @@ public sealed class ZeroShotEvaluationService(
                 new(item.FixtureId, item.Title, item.Description), cancellationToken);
             if (!result.Available || result.Response is null)
                 return new("unavailable", result.Error, cases.Count, cases.Sum(value => value.Labels.Count),
-                    null, null, null, null, null, null, [], regexAggregate.Macro,
+                    null, null, null, null, null, null, [], [], regexAggregate.Macro,
                     regexAggregate.Micro, NormalizeSha(buildSha));
             predictions.Add(new(item, result.Response, result.RoundTripMilliseconds));
         }
         var thresholds = ThresholdValues.Select(threshold => Calculate(predictions, threshold)).ToArray();
         var best = thresholds.OrderByDescending(item => item.Macro.F1 ?? -1)
             .ThenBy(item => item.Threshold).First();
+        var comparisons = Compare(regexSelected, best);
         var first = predictions[0].Response;
         return new("complete", null, cases.Count, cases.Sum(item => item.Labels.Count),
             first.ModelId, first.ModelRevision, first.Device,
             predictions.Average(item => item.Response.InferenceMilliseconds),
             predictions.Average(item => item.RoundTripMilliseconds), best.Threshold, thresholds,
-            regexAggregate.Macro, regexAggregate.Micro, NormalizeSha(buildSha));
+            comparisons, regexAggregate.Macro, regexAggregate.Micro, NormalizeSha(buildSha));
     }
+
+    internal static IReadOnlyList<ZeroShotConceptComparison> Compare(
+        IReadOnlyList<DetectorMetric> regexMetrics, ZeroShotThresholdReport zeroShot) =>
+        regexMetrics.Select(regexMetric =>
+        {
+            var zeroShotMetric = zeroShot.Concepts.Single(item => item.ConceptId == regexMetric.ConceptId);
+            return new ZeroShotConceptComparison(
+                regexMetric.ConceptId, regexMetric.Concept, regexMetric.PositiveSupport,
+                regexMetric.NegativeExamples, regexMetric.Precision, regexMetric.Recall, regexMetric.F1,
+                zeroShotMetric.Precision, zeroShotMetric.Recall, zeroShotMetric.F1,
+                regexMetric.F1 is double regexF1 && zeroShotMetric.F1 is double zeroShotF1
+                    ? zeroShotF1 - regexF1 : null);
+        }).ToArray();
 
     internal static ZeroShotThresholdReport Calculate(IReadOnlyList<Prediction> predictions, double threshold)
     {

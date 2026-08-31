@@ -1078,6 +1078,13 @@ static Task TestZeroShotFixtureMetricsAsync()
     var report = ZeroShotEvaluationService.Calculate(predictions, .5);
     Assert(report.Macro.F1 == 1 && report.Micro.F1 == 1 && report.Concepts.Count == 8,
         "Threshold metrics did not preserve deterministic expected labels.");
+    var regexReport = evaluation.Evaluate(new string('a', 40));
+    var regexSelected = regexReport.Concepts.Where(item => ZeroShotEvaluationService.Concepts.Any(
+        concept => concept.ConceptId == item.ConceptId)).ToArray();
+    var comparisons = ZeroShotEvaluationService.Compare(regexSelected, report);
+    Assert(comparisons.Count == 8 && comparisons.All(item => item.ZeroShotF1 == 1) &&
+           comparisons.All(item => item.F1Delta is >= 0),
+        "The per-concept regex/zero-shot comparison did not preserve all metrics and F1 deltas.");
     return Task.CompletedTask;
 }
 
