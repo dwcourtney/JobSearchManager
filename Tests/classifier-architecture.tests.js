@@ -52,7 +52,8 @@ assert.match(ollamaRuntime, /golang:1\.26\.6-trixie@sha256:23fdfd3a/);
 assert.match(ollamaRuntime, /github\.com\/buger\/jsonparser@v1\.1\.2/);
 assert.match(ollamaRuntime, /golang\.org\/x\/crypto@v0\.55\.0/);
 assert.match(ollamaRuntime, /golang\.org\/x\/image@v0\.45\.0/);
-assert.match(ollamaRuntime, /golang\.org\/x\/net@v0\.56\.0/);
+assert.match(ollamaRuntime, /golang\.org\/x\/net@v0\.57\.0/);
+assert.match(ollamaRuntime, /golang\.org\/x\/text@v0\.41\.0/);
 assert.match(ollamaRuntime, /-buildvcs=false/);
 assert.match(ollamaRuntime, /USER 65532:65532/,
   "the patched runtime image must be non-root even outside Compose");

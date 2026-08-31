@@ -11,8 +11,8 @@ RUN go get \
       golang.org/x/crypto@v0.55.0 \
       golang.org/x/image@v0.45.0 \
       golang.org/x/mod@v0.40.0 \
-      golang.org/x/net@v0.56.0 \
-      golang.org/x/text@v0.39.0 \
+      golang.org/x/net@v0.57.0 \
+      golang.org/x/text@v0.41.0 \
     && go mod tidy \
     && CGO_ENABLED=1 go build -buildvcs=false -trimpath -buildmode=pie \
       -ldflags="-w -s -X github.com/ollama/ollama/version.Version=0.33.2" -o /out/ollama .
