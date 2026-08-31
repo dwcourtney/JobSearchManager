@@ -18,7 +18,8 @@ previous_classifier_reference=""
 classifier_was_running=false
 previous_ollama_reference=""
 ollama_was_running=false
-ollama_image="ollama/ollama@sha256:9e7d782e99880c70f9563c51633da875ca605518a8f8d95c2532bda70a027b7a"
+ollama_image="jsm-ollama:$target_sha"
+ollama_source_revision="f96e7aa0513b9973a0ccc71be414c2ecb9d65b1a"
 model_tag="qwen3:4b-instruct-2507-q4_K_M"
 model_digest="0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0"
 provision_container="jsm-ollama-provision-${target_sha:0:12}"
@@ -107,6 +108,13 @@ docker build \
   --tag "jsm-classifier:$target_sha" \
   "$repository_root/classifier-service"
 
+docker build \
+  --platform linux/amd64 \
+  --build-arg "JSM_GIT_SHA=$target_sha" \
+  --build-arg "OLLAMA_SOURCE_REVISION=$ollama_source_revision" \
+  --tag "$ollama_image" \
+  "$repository_root/ollama-runtime"
+
 image_revision="$(docker image inspect --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' "jsm:$target_sha")"
 [[ "$image_revision" == "$target_sha" ]] || {
   echo "Image revision $image_revision does not match deployment SHA $target_sha." >&2
@@ -117,11 +125,16 @@ classifier_revision="$(docker image inspect --format '{{ index .Config.Labels "o
   echo "Classifier image revision $classifier_revision does not match deployment SHA $target_sha." >&2
   exit 1
 }
+ollama_revision="$(docker image inspect --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' "$ollama_image")"
+ollama_source="$(docker image inspect --format '{{ index .Config.Labels "org.opencontainers.image.source-revision" }}' "$ollama_image")"
+[[ "$ollama_revision" == "$target_sha" && "$ollama_source" == "$ollama_source_revision" ]] || {
+  echo "Ollama runtime identity does not match the deployment inputs." >&2
+  exit 1
+}
 
 # Scan the exact locally built artifact before any manifest or running container changes.
 bash "$repository_root/scripts/security-scan.sh" image "jsm:$target_sha" "$security_cache"
 bash "$repository_root/scripts/security-scan.sh" image "jsm-classifier:$target_sha" "$security_cache"
-docker pull "$ollama_image"
 bash "$repository_root/scripts/security-scan.sh" image "$ollama_image" "$security_cache"
 
 # Phase 0 host inventory and a non-mutating GPU-container preflight happen before replacement.

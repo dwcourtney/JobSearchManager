@@ -266,6 +266,15 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
 var app = builder.Build();
 var versionInfo = VersionEndpoint.Create(builder.Configuration, hosting);
 
+if (args is ["--detector-evaluation-diagnostic"])
+{
+    var evaluation = app.Services.GetRequiredService<DetectorEvaluationService>();
+    Console.WriteLine(JsonSerializer.Serialize(evaluation.Evaluate(
+        Environment.GetEnvironmentVariable("JOBSEARCHMANAGER_COMMIT_SHA")),
+        ClassifierClient.JsonOptions));
+    return;
+}
+
 app.Use(async (context, next) =>
 {
     if (await HealthEndpoint.TryHandleAsync(context)) return;

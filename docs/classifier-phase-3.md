@@ -18,12 +18,20 @@ Admin/evaluation endpoints.
 - Model tensor blob size: 2,497,280,480 bytes
 - License: Apache-2.0
 - Upstream native context: 262,144 tokens; experiment cap: 8,192 tokens to bound GTX 1070 memory
-- Runtime: Ollama 0.33.2, Linux/amd64 manifest
-  `sha256:9e7d782e99880c70f9563c51633da875ca605518a8f8d95c2532bda70a027b7a`
+- Runtime: Ollama 0.33.2 source commit
+  `f96e7aa0513b9973a0ccc71be414c2ecb9d65b1a`, using CUDA runners from the official
+  Linux/amd64 manifest `sha256:9e7d782e99880c70f9563c51633da875ca605518a8f8d95c2532bda70a027b7a`
 
 The exact requested Qwen instruction model is available as an official Ollama package, so no
 substitution was made. It was selected as the sole initial model because it is materially more
 capable than the failed encoder experiments while its 2.5 GB Q4 weights fit the 8 GB GTX 1070.
+
+The official 0.33.2 image failed the repository's unsuppressed Trivy gate because its static Go
+binary contained 41 dependencies/standard-library findings with available fixes. The runtime
+therefore rebuilds only that control binary from the exact 0.33.2 source commit with Go 1.26.6 and
+fixed module versions, embeds stable 0.33.2 version metadata, and retains the official image's
+CUDA runners. The security rebuild itself must pass the same High/Critical and secret gates; no
+Trivy ignore or policy exception is used.
 
 Primary sources:
 
@@ -42,8 +50,8 @@ The private `classifier` network contains two processes:
 2. `job-classifier` is a small standard-library Python adapter with no GPU, CUDA, or model mount.
    It owns the stable JSM protocol, prompt, JSON Schema, strict output validation, and telemetry.
 
-JSM has no CUDA/NVIDIA dependency. The Ollama image, model manifest, adapter base image, and Git
-revision are pinned. Deployment provisions and hashes the model while temporary registry egress
+JSM has no CUDA/NVIDIA dependency. The Ollama base image/source/toolchain/modules, model manifest,
+adapter base image, and Git revision are pinned. Deployment provisions and hashes the model while temporary registry egress
 is available; the long-running runtime remains on the internal network.
 
 ## Fixed zero-shot method

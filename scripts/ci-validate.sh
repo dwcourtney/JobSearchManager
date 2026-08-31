@@ -79,6 +79,20 @@ classifier_revision="$(docker image inspect --format '{{ index .Config.Labels "o
   exit 1
 }
 bash scripts/security-scan.sh image "$classifier_image" "$security_cache"
+ollama_image="jsm-ollama-ci:$expected_sha"
+docker build \
+  --platform linux/amd64 \
+  --build-arg "JSM_GIT_SHA=$expected_sha" \
+  --build-arg "OLLAMA_SOURCE_REVISION=f96e7aa0513b9973a0ccc71be414c2ecb9d65b1a" \
+  --tag "$ollama_image" \
+  ollama-runtime
+ollama_labels="$(docker image inspect --format '{{json .Config.Labels}}' "$ollama_image")"
+[[ "$ollama_labels" == *"$expected_sha"* && \
+   "$ollama_labels" == *"f96e7aa0513b9973a0ccc71be414c2ecb9d65b1a"* ]] || {
+  echo "Ollama runtime labels do not match the candidate/source revisions." >&2
+  exit 1
+}
+bash scripts/security-scan.sh image "$ollama_image" "$security_cache"
 docker run --detach \
   --name "$classifier_container" \
   --user 65532:65532 \

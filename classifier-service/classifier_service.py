@@ -180,7 +180,8 @@ def main() -> None:
     options = parser.parse_args()
     if options.self_test: self_test()
     elif options.model_diagnostic:
-        print(json.dumps({**identity(), **classify("Backend API Engineer", "Build Python APIs in Docker on AWS.")}))
+        result = classify("Backend API Engineer", "Build Python APIs in Docker on AWS.")
+        print(json.dumps({**identity(), **result}))
     elif options.healthcheck:
         try:
             with urllib.request.urlopen("http://127.0.0.1:8081/healthz", timeout=3) as response:

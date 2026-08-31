@@ -8,6 +8,7 @@ const production = fs.readFileSync(path.join(root, "deploy", "compose.curiosity.
 const program = fs.readFileSync(path.join(root, "Program.cs"), "utf8");
 const scoring = fs.readFileSync(path.join(root, "wwwroot", "job-fit.js"), "utf8");
 const classifier = fs.readFileSync(path.join(root, "classifier-service", "classifier_service.py"), "utf8");
+const ollamaRuntime = fs.readFileSync(path.join(root, "ollama-runtime", "Dockerfile"), "utf8");
 const client = fs.readFileSync(path.join(root, "ClassifierClient.cs"), "utf8");
 const evaluation = fs.readFileSync(path.join(root, "LlmEvaluation.cs"), "utf8");
 const phase2 = fs.readFileSync(path.join(root, "docs", "classifier-phase-2.md"), "utf8");
@@ -31,6 +32,8 @@ assert.match(ollama, /models\/ollama:\/models/);
 assert.match(production, /classifier:\s*\n\s*internal: true/, "classifier network must be private");
 assert.match(program, /MapPost\("\/api\/admin\/classifier-diagnostic"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)/);
 assert.match(program, /MapPost\("\/api\/admin\/detector-evaluation\/llm"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)/);
+assert.match(program, /--detector-evaluation-diagnostic/,
+  "the fixed regex report must be exportable without browser or production data access");
 assert.doesNotMatch(scoring, /classifier/i, "normal Job Fit scoring must remain regex-only");
 
 assert.match(classifier, /MODEL_TAG = "qwen3:4b-instruct-2507-q4_K_M"/);
@@ -41,6 +44,14 @@ assert.match(classifier, /CONTEXT_LENGTH, MAX_OUTPUT_TOKENS, SEED, TEMPERATURE =
 assert.match(classifier, /set\(value\) != set\(CONCEPT_IDS\)/, "output must have exactly eight keys");
 assert.match(classifier, /type\(value\[key\]\) is not bool/, "output values must be strict booleans");
 assert.match(classifier, /actual candidate responsibilities/);
+assert.match(classifier, /result = classify\("Backend API Engineer"[\s\S]*?\{\*\*identity\(\), \*\*result\}/,
+  "the model diagnostic must report runtime state after loading the model");
+assert.match(ollamaRuntime, /f96e7aa0513b9973a0ccc71be414c2ecb9d65b1a/,
+  "the Ollama 0.33.2 source commit must be immutable");
+assert.match(ollamaRuntime, /golang:1\.26\.6-trixie@sha256:23fdfd3a/);
+assert.match(ollamaRuntime, /github\.com\/buger\/jsonparser@v1\.1\.2/);
+assert.match(ollamaRuntime, /golang\.org\/x\/net@v0\.56\.0/);
+assert.match(ollamaRuntime, /-buildvcs=false/);
 assert.match(client, /classify-llm/);
 assert.match(evaluation, /cases\.Count, cases\.Sum\(item => item\.Labels\.Count\)/);
 assert.match(phase2, /cross-encoder\/nli-distilroberta-base/);
