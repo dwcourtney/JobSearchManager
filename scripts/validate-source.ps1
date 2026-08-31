@@ -45,6 +45,7 @@ $detectorEvaluationUiPath = Join-Path $repo "wwwroot\detector-evaluation-ui.js"
 $detectorEvaluationUiTestsPath = Join-Path $repo "Tests\detector-evaluation-ui.tests.js"
 $securityScanningTestsPath = Join-Path $repo "Tests\security-scanning.tests.js"
 $codeqlScanningTestsPath = Join-Path $repo "Tests\codeql-scanning.tests.js"
+$classifierArchitectureTestsPath = Join-Path $repo "Tests\classifier-architecture.tests.js"
 
 foreach ($scriptPath in @(
     $appPath,
@@ -81,7 +82,8 @@ foreach ($scriptPath in @(
     $detectorEvaluationUiPath,
     $detectorEvaluationUiTestsPath,
     $securityScanningTestsPath,
-    $codeqlScanningTestsPath)) {
+    $codeqlScanningTestsPath,
+    $classifierArchitectureTestsPath)) {
     & $NodePath --check $scriptPath
     if ($LASTEXITCODE -ne 0) {
         throw "JavaScript syntax validation failed for $scriptPath."
@@ -201,6 +203,11 @@ if ($LASTEXITCODE -ne 0) {
 & $NodePath $codeqlScanningTestsPath
 if ($LASTEXITCODE -ne 0) {
     throw "CodeQL integration tests failed."
+}
+
+& $NodePath $classifierArchitectureTestsPath
+if ($LASTEXITCODE -ne 0) {
+    throw "Classifier architecture/isolation tests failed."
 }
 
 $styles = Get-Content -LiteralPath $stylesPath -Raw -Encoding UTF8

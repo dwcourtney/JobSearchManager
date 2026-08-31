@@ -1,6 +1,7 @@
 # .NET / Visual Studio build output
 bin/
 obj/
+**/__pycache__/
 .vs/
 TestResults/
 *.user

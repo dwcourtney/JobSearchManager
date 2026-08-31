@@ -3,6 +3,7 @@
 .github
 **/bin
 **/obj
+classifier-service
 Tests
 scripts
 deploy

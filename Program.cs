@@ -34,6 +34,38 @@ if (args is ["--healthcheck"])
     return;
 }
 
+if (args is ["--classifier-diagnostic"])
+{
+    try
+    {
+        var baseUrl = Environment.GetEnvironmentVariable("Classifier__BaseUrl")
+            ?? "http://job-classifier:8081/";
+        using var client = new HttpClient { BaseAddress = new Uri(baseUrl), Timeout = TimeSpan.FromSeconds(10) };
+        using var response = await client.PostAsJsonAsync("classify", new ClassifierRequest(
+            "R180395", "Senior Software Developer", "Phase 1 deployment plumbing proof."));
+        response.EnsureSuccessStatusCode();
+        var result = await response.Content.ReadFromJsonAsync<ClassifierResponse>(
+            ClassifierClient.JsonOptions);
+        var valid = result is
+        {
+            Received: true,
+            JobId: "R180395",
+            Title: "Senior Software Developer",
+            DescriptionLength: 34,
+            GpuAvailable: true,
+            DeviceName: "NVIDIA GeForce GTX 1070"
+        };
+        Console.WriteLine(JsonSerializer.Serialize(new { valid, result }));
+        Environment.ExitCode = valid ? 0 : 1;
+    }
+    catch (Exception exception)
+    {
+        Console.Error.WriteLine($"Classifier diagnostic failed: {exception.GetType().Name}");
+        Environment.ExitCode = 1;
+    }
+    return;
+}
+
 const int ApplicationPort = 54321;
 const string ApplicationUrl = "http://127.0.0.1:54321";
 
@@ -60,6 +92,15 @@ builder.Services.AddHttpClient<JobSourceClient>((services, client) =>
 {
     var options = services.GetRequiredService<IOptions<JobSourceOptions>>().Value;
     client.Timeout = TimeSpan.FromSeconds(Math.Clamp(options.RequestTimeoutSeconds, 5, 120));
+    client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("JobSearchManager/1.0");
+});
+builder.Services.AddHttpClient<ClassifierClient>((services, client) =>
+{
+    var baseUrl = services.GetRequiredService<IConfiguration>()["Classifier:BaseUrl"]
+        ?? "http://job-classifier:8081/";
+    client.BaseAddress = new Uri(baseUrl, UriKind.Absolute);
+    client.Timeout = TimeSpan.FromSeconds(10);
     client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
     client.DefaultRequestHeaders.UserAgent.ParseAdd("JobSearchManager/1.0");
 });
@@ -447,6 +488,22 @@ app.MapGet("/api/admin/status", (HttpContext context) =>
 app.MapGet("/api/admin/detector-evaluation", (DetectorEvaluationService evaluation) =>
     Results.Ok(evaluation.Evaluate(Environment.GetEnvironmentVariable("JOBSEARCHMANAGER_COMMIT_SHA"))))
     .RequireAuthorization(AdminAuthorization.Policy);
+
+app.MapPost("/api/admin/classifier-diagnostic", async Task<IResult> (
+    ClassifierRequest request,
+    ClassifierClient classifier,
+    CancellationToken token) =>
+{
+    if (string.IsNullOrWhiteSpace(request.JobId) || string.IsNullOrWhiteSpace(request.Title) ||
+        request.Description is null)
+    {
+        return Results.BadRequest(new { error = "jobId, title, and description are required." });
+    }
+    var result = await classifier.ClassifyAsync(request, token);
+    return Results.Json(result, statusCode: result.Available
+        ? StatusCodes.Status200OK
+        : StatusCodes.Status503ServiceUnavailable);
+}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
 
 app.MapPost("/api/account/create", async Task<IResult> (
     CreateAccountRequest request,

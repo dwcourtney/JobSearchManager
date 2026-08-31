@@ -5,9 +5,11 @@ expected_sha="${1:?usage: ci-validate.sh <full-git-sha>}"
 security_cache="$(mktemp -d)"
 temporary_root=""
 container=""
+classifier_container=""
 
 cleanup() {
   [[ -z "$container" ]] || docker rm -f "$container" >/dev/null 2>&1 || true
+  [[ -z "$classifier_container" ]] || docker rm -f "$classifier_container" >/dev/null 2>&1 || true
   [[ -z "$temporary_root" ]] || rm -rf -- "$temporary_root"
   rm -rf -- "$security_cache"
 }
@@ -31,6 +33,9 @@ dotnet restore JobSearchManager.csproj --locked-mode
 dotnet restore Tests/JobSearchManager.Tests.csproj --locked-mode
 dotnet build JobSearchManager.csproj --configuration Release --no-restore
 dotnet run --project Tests/JobSearchManager.Tests.csproj --configuration Release --no-restore
+dotnet restore classifier-service/ClassifierService.csproj --locked-mode
+dotnet build classifier-service/ClassifierService.csproj --configuration Release --no-restore
+dotnet run --project classifier-service/ClassifierService.csproj --configuration Release --no-build -- --self-test
 pwsh -NoLogo -NoProfile -File scripts/validate-source.ps1
 pwsh -NoLogo -NoProfile -File scripts/audit-repository.ps1
 bash scripts/security-scan.sh source "$(pwd)" "$security_cache"
@@ -62,6 +67,58 @@ if [[ "$image_revision" != "$expected_sha" ]]; then
 fi
 
 bash scripts/security-scan.sh image "$image" "$security_cache"
+
+classifier_image="jsm-classifier-ci:$expected_sha"
+classifier_container="jsm-classifier-ci-${GITHUB_RUN_ID:-local}-${GITHUB_RUN_ATTEMPT:-1}"
+docker build \
+  --platform linux/amd64 \
+  --build-arg "CLASSIFIER_GIT_SHA=$expected_sha" \
+  --tag "$classifier_image" \
+  classifier-service
+classifier_revision="$(docker image inspect --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' "$classifier_image")"
+[[ "$classifier_revision" == "$expected_sha" ]] || {
+  echo "Classifier image revision $classifier_revision does not match $expected_sha." >&2
+  exit 1
+}
+bash scripts/security-scan.sh image "$classifier_image" "$security_cache"
+docker run --detach \
+  --name "$classifier_container" \
+  --user 65532:65532 \
+  --read-only \
+  --tmpfs /tmp \
+  --security-opt no-new-privileges:true \
+  --cap-drop ALL \
+  --publish 127.0.0.1::8081 \
+  "$classifier_image" >/dev/null
+for _ in $(seq 1 30); do
+  classifier_health="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$classifier_container")"
+  [[ "$classifier_health" == "healthy" ]] && break
+  [[ "$classifier_health" == "unhealthy" ]] && { docker logs "$classifier_container" >&2; exit 1; }
+  sleep 1
+done
+[[ "$classifier_health" == "healthy" ]]
+classifier_port="$(docker port "$classifier_container" 8081/tcp | sed -n 's/.*://p' | head -n 1)"
+classifier_health_json="$(curl --fail --silent --show-error "http://127.0.0.1:${classifier_port}/healthz")"
+classifier_response="$(curl --fail --silent --show-error \
+  --header 'Content-Type: application/json' \
+  --data '{"jobId":"R180395","title":"Senior Software Developer","description":"phase one"}' \
+  "http://127.0.0.1:${classifier_port}/classify")"
+malformed_status="$(curl --silent --output /dev/null --write-out '%{http_code}' \
+  --header 'Content-Type: application/json' --data '{' \
+  "http://127.0.0.1:${classifier_port}/classify")"
+missing_id_status="$(curl --silent --output /dev/null --write-out '%{http_code}' \
+  --header 'Content-Type: application/json' \
+  --data '{"title":"Senior Software Developer","description":"phase one"}' \
+  "http://127.0.0.1:${classifier_port}/classify")"
+[[ "$malformed_status" == "400" && "$missing_id_status" == "400" ]]
+node -e '
+const health = JSON.parse(process.argv[1]);
+const result = JSON.parse(process.argv[2]);
+const sha = process.argv[3];
+if (health.status !== "healthy" || health.gpuAvailable !== false || health.revision !== sha) process.exit(1);
+if (!result.received || result.jobId !== "R180395" || result.title !== "Senior Software Developer" || result.descriptionLength !== 9) process.exit(1);
+if (result.serviceVersion !== "0.1.0" || result.protocolVersion !== "1") process.exit(1);
+' "$classifier_health_json" "$classifier_response" "$expected_sha"
 
 docker run --detach \
   --name "$container" \
