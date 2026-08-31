@@ -100,7 +100,7 @@ builder.Services.AddHttpClient<ClassifierClient>((services, client) =>
     var baseUrl = services.GetRequiredService<IConfiguration>()["Classifier:BaseUrl"]
         ?? "http://job-classifier:8081/";
     client.BaseAddress = new Uri(baseUrl, UriKind.Absolute);
-    client.Timeout = TimeSpan.FromSeconds(10);
+    client.Timeout = TimeSpan.FromSeconds(120);
     client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
     client.DefaultRequestHeaders.UserAgent.ParseAdd("JobSearchManager/1.0");
 });
@@ -113,6 +113,7 @@ builder.Services.AddSingleton<ExtendedLocationRequirementDetector>();
 builder.Services.AddSingleton<JobConceptCatalog>();
 builder.Services.AddSingleton<JobConceptDetector>();
 builder.Services.AddSingleton<DetectorEvaluationService>();
+builder.Services.AddSingleton<ZeroShotEvaluationService>();
 builder.Services.AddSingleton<PortableWorkspaceService>();
 builder.Services.AddSingleton<SharedSourceRefreshCoordinator>();
 // Preserve the established data-protection discriminator so existing Azure
@@ -488,6 +489,15 @@ app.MapGet("/api/admin/status", (HttpContext context) =>
 app.MapGet("/api/admin/detector-evaluation", (DetectorEvaluationService evaluation) =>
     Results.Ok(evaluation.Evaluate(Environment.GetEnvironmentVariable("JOBSEARCHMANAGER_COMMIT_SHA"))))
     .RequireAuthorization(AdminAuthorization.Policy);
+
+app.MapPost("/api/admin/detector-evaluation/zero-shot", async Task<IResult> (
+    ZeroShotEvaluationService evaluation, CancellationToken token) =>
+{
+    var report = await evaluation.EvaluateAsync(
+        Environment.GetEnvironmentVariable("JOBSEARCHMANAGER_COMMIT_SHA"), token);
+    return Results.Json(report, statusCode: report.Status == "complete"
+        ? StatusCodes.Status200OK : StatusCodes.Status503ServiceUnavailable);
+}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
 
 app.MapPost("/api/admin/classifier-diagnostic", async Task<IResult> (
     ClassifierRequest request,

@@ -174,6 +174,20 @@ public sealed class DetectorEvaluationService
             NormalizeSha(buildSha));
     }
 
+    internal IReadOnlyList<ZeroShotEvaluationCase> BuildZeroShotCases()
+    {
+        var selected = new HashSet<string>(ZeroShotEvaluationService.Concepts.Select(item => item.ConceptId),
+            StringComparer.Ordinal);
+        return _fixtures.Select(fixture => new ZeroShotEvaluationCase(
+                fixture.Id, fixture.Title, fixture.Excerpt,
+                Expand(fixture).Where(label => selected.Contains(label.ConceptId))
+                    .ToDictionary(label => label.ConceptId, label => label.ExpectedPresent,
+                        StringComparer.Ordinal)))
+            .Where(item => item.Labels.Count == selected.Count)
+            .OrderBy(item => item.FixtureId, StringComparer.Ordinal)
+            .ToArray();
+    }
+
     internal static DetectorMetric CalculateConcept(
         JobConceptDefinition concept, IReadOnlyList<Observation> observations)
     {
