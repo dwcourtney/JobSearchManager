@@ -1,48 +1,48 @@
 namespace JobSearchManager;
 
-public sealed record ZeroShotConcept(string ConceptId, string Hypothesis);
-public sealed record ZeroShotEvaluationCase(
+public sealed record EmbeddingConcept(string ConceptId, string Description);
+public sealed record EmbeddingEvaluationCase(
     string FixtureId, string Title, string Description,
     IReadOnlyDictionary<string, bool> Labels);
-public sealed record ZeroShotConceptMetric(
+public sealed record EmbeddingConceptMetric(
     string ConceptId, double Threshold, int TruePositive, int FalsePositive,
     int FalseNegative, int TrueNegative, double? Precision, double? Recall, double? F1);
-public sealed record ZeroShotThresholdReport(
+public sealed record EmbeddingThresholdReport(
     double Threshold, DetectorAggregateMetric Macro, DetectorAggregateMetric Micro,
-    IReadOnlyList<ZeroShotConceptMetric> Concepts);
-public sealed record ZeroShotConceptComparison(
+    IReadOnlyList<EmbeddingConceptMetric> Concepts);
+public sealed record EmbeddingConceptComparison(
     string ConceptId, string Concept, int PositiveSupport, int NegativeSupport,
     double? RegexPrecision, double? RegexRecall, double? RegexF1,
-    double? ZeroShotPrecision, double? ZeroShotRecall, double? ZeroShotF1,
+    double? EmbeddingPrecision, double? EmbeddingRecall, double? EmbeddingF1,
     double? F1Delta);
-public sealed record ZeroShotEvaluationReport(
+public sealed record EmbeddingEvaluationReport(
     string Status, string? Error, int FixtureCount, int LabelCount,
     string? ModelId, string? ModelRevision, string? Device,
     double? AverageInferenceMilliseconds, double? AverageRoundTripMilliseconds,
-    double? BestThreshold, IReadOnlyList<ZeroShotThresholdReport> Thresholds,
-    IReadOnlyList<ZeroShotConceptComparison> ConceptComparisons,
+    double? BestThreshold, IReadOnlyList<EmbeddingThresholdReport> Thresholds,
+    IReadOnlyList<EmbeddingConceptComparison> ConceptComparisons,
     DetectorAggregateMetric RegexMacro, DetectorAggregateMetric RegexMicro,
     string? BuildSha);
 
-public sealed class ZeroShotEvaluationService(
+public sealed class EmbeddingEvaluationService(
     DetectorEvaluationService fixtures, ClassifierClient classifier)
 {
-    public static readonly ZeroShotConcept[] Concepts = [
-        new("role.ai-ml-engineering", "This job involves artificial intelligence or machine-learning engineering work."),
-        new("role.software-engineering", "This job involves direct software engineering work."),
-        new("technical.software-development", "This job involves developing or maintaining software."),
-        new("technical.backend-development", "This job involves backend or server-side software development."),
-        new("technical.api-development", "This job involves designing, implementing, or maintaining APIs."),
-        new("technical.automation-scripting", "This job involves scripting or software automation."),
-        new("role.cloud-engineering", "This job involves cloud engineering responsibilities."),
-        new("technical.containers", "This job involves Kubernetes, Docker, or container orchestration responsibilities.")
+    public static readonly EmbeddingConcept[] Concepts = [
+        new("role.ai-ml-engineering", "Hands-on engineering that builds, integrates, or operationalizes machine-learning models, AI systems, pipelines, or production AI applications."),
+        new("role.software-engineering", "Direct design, implementation, testing, and maintenance of software systems as an engineering responsibility."),
+        new("technical.software-development", "Hands-on implementation, testing, debugging, or maintenance of software applications, services, or systems."),
+        new("technical.backend-development", "Server-side software development involving services, business logic, databases, microservices, APIs, and backend systems."),
+        new("technical.api-development", "Direct design, implementation, integration, operation, or maintenance of programmatic service interfaces and APIs."),
+        new("technical.automation-scripting", "Automating technical workflows, deployments, operations, testing, or repetitive tasks with scripts or software tooling."),
+        new("role.cloud-engineering", "Hands-on design, implementation, operation, or reliability engineering of cloud infrastructure, services, and platforms."),
+        new("technical.containers", "Direct implementation or operation of containerization and orchestration using Docker, Kubernetes, or related platforms.")
     ];
-    public static readonly double[] ThresholdValues = [.3, .5, .7];
+    public static readonly double[] ThresholdValues = [.50, .55, .60, .65, .70, .75, .80, .85, .90];
 
-    public async Task<ZeroShotEvaluationReport> EvaluateAsync(
+    public async Task<EmbeddingEvaluationReport> EvaluateAsync(
         string? buildSha = null, CancellationToken cancellationToken = default)
     {
-        var cases = fixtures.BuildZeroShotCases();
+        var cases = fixtures.BuildEmbeddingCases();
         var regex = fixtures.Evaluate(buildSha);
         var regexSelected = regex.Concepts.Where(item => Concepts.Any(concept => concept.ConceptId == item.ConceptId)).ToArray();
         var regexAggregate = Aggregate(regexSelected.Select(item => new Counts(
@@ -50,7 +50,7 @@ public sealed class ZeroShotEvaluationService(
         var predictions = new List<Prediction>();
         foreach (var item in cases)
         {
-            var result = await classifier.ClassifyZeroShotAsync(
+            var result = await classifier.ClassifyEmbeddingAsync(
                 new(item.FixtureId, item.Title, item.Description), cancellationToken);
             if (!result.Available || result.Response is null)
                 return new("unavailable", result.Error, cases.Count, cases.Sum(value => value.Labels.Count),
@@ -70,20 +70,20 @@ public sealed class ZeroShotEvaluationService(
             comparisons, regexAggregate.Macro, regexAggregate.Micro, NormalizeSha(buildSha));
     }
 
-    internal static IReadOnlyList<ZeroShotConceptComparison> Compare(
-        IReadOnlyList<DetectorMetric> regexMetrics, ZeroShotThresholdReport zeroShot) =>
+    internal static IReadOnlyList<EmbeddingConceptComparison> Compare(
+        IReadOnlyList<DetectorMetric> regexMetrics, EmbeddingThresholdReport embedding) =>
         regexMetrics.Select(regexMetric =>
         {
-            var zeroShotMetric = zeroShot.Concepts.Single(item => item.ConceptId == regexMetric.ConceptId);
-            return new ZeroShotConceptComparison(
+            var embeddingMetric = embedding.Concepts.Single(item => item.ConceptId == regexMetric.ConceptId);
+            return new EmbeddingConceptComparison(
                 regexMetric.ConceptId, regexMetric.Concept, regexMetric.PositiveSupport,
                 regexMetric.NegativeExamples, regexMetric.Precision, regexMetric.Recall, regexMetric.F1,
-                zeroShotMetric.Precision, zeroShotMetric.Recall, zeroShotMetric.F1,
-                regexMetric.F1 is double regexF1 && zeroShotMetric.F1 is double zeroShotF1
-                    ? zeroShotF1 - regexF1 : null);
+                embeddingMetric.Precision, embeddingMetric.Recall, embeddingMetric.F1,
+                regexMetric.F1 is double regexF1 && embeddingMetric.F1 is double embeddingF1
+                    ? embeddingF1 - regexF1 : null);
         }).ToArray();
 
-    internal static ZeroShotThresholdReport Calculate(IReadOnlyList<Prediction> predictions, double threshold)
+    internal static EmbeddingThresholdReport Calculate(IReadOnlyList<Prediction> predictions, double threshold)
     {
         var metrics = Concepts.Select(concept =>
         {
@@ -91,12 +91,13 @@ public sealed class ZeroShotEvaluationService(
             foreach (var prediction in predictions)
             {
                 var expected = prediction.Case.Labels[concept.ConceptId];
-                var actual = prediction.Response.Scores.Single(item => item.ConceptId == concept.ConceptId).Score >= threshold;
+                var actual = prediction.Response.Predictions.Single(
+                    item => item.ConceptId == concept.ConceptId).Similarity >= threshold;
                 counts = counts.Add(expected, actual);
             }
             var precision = DetectorEvaluationService.Divide(counts.TruePositive, counts.TruePositive + counts.FalsePositive);
             var recall = DetectorEvaluationService.Divide(counts.TruePositive, counts.TruePositive + counts.FalseNegative);
-            return new ZeroShotConceptMetric(concept.ConceptId, threshold, counts.TruePositive,
+            return new EmbeddingConceptMetric(concept.ConceptId, threshold, counts.TruePositive,
                 counts.FalsePositive, counts.FalseNegative, counts.TrueNegative, precision, recall,
                 DetectorEvaluationService.HarmonicMean(precision, recall));
         }).ToArray();
@@ -127,8 +128,8 @@ public sealed class ZeroShotEvaluationService(
     }
     private static string? NormalizeSha(string? value) => value is { Length: 40 } &&
         value.All(character => character is >= '0' and <= '9' or >= 'a' and <= 'f') ? value : null;
-    internal sealed record Prediction(ZeroShotEvaluationCase Case,
-        ZeroShotClassifierResponse Response, double RoundTripMilliseconds);
+    internal sealed record Prediction(EmbeddingEvaluationCase Case,
+        EmbeddingClassifierResponse Response, double RoundTripMilliseconds);
     internal sealed record Counts(int TruePositive = 0, int FalsePositive = 0,
         int FalseNegative = 0, int TrueNegative = 0)
     {

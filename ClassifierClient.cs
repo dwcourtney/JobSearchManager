@@ -32,18 +32,22 @@ public sealed record ClassifierDiagnosticResult(
         new(false, elapsed, null, error);
 }
 
-public sealed record ZeroShotScore(string ConceptId, double Score);
-public sealed record ZeroShotClassifierResponse(
+public sealed record EmbeddingPrediction(string ConceptId, double Similarity, bool Matched);
+public sealed record EmbeddingClassifierResponse(
     bool Received, string JobId, string Title, int DescriptionLength,
     string ServiceVersion, string ProtocolVersion, string Revision,
     bool GpuAvailable, int DeviceCount, string? DeviceName,
     int? VramTotalMiB, int? VramUsedMiB, string? DriverVersion,
-    string ModelId, string ModelRevision, string Device,
+    string ModelType, string ModelId, string ModelRevision, string Device,
+    int EmbeddingDimension, string ConceptEmbeddingCacheKey,
+    int ConceptEmbeddingMemoryBytes, double ConceptEmbeddingNormMin,
+    double ConceptEmbeddingNormMax, double ModelLoadMilliseconds,
+    double ConceptEmbeddingInitializationMilliseconds, string Aggregation, double Threshold,
     int TokenCount, int ChunkCount, double InferenceMilliseconds,
-    IReadOnlyList<ZeroShotScore> Scores);
-public sealed record ZeroShotClassifierResult(
+    IReadOnlyList<EmbeddingPrediction> Predictions);
+public sealed record EmbeddingClassifierResult(
     bool Available, double RoundTripMilliseconds,
-    ZeroShotClassifierResponse? Response, string? Error);
+    EmbeddingClassifierResponse? Response, string? Error);
 
 public sealed class ClassifierClient(HttpClient httpClient, ILogger<ClassifierClient> logger)
 {
@@ -99,7 +103,7 @@ public sealed class ClassifierClient(HttpClient httpClient, ILogger<ClassifierCl
         }
     }
 
-    public async Task<ZeroShotClassifierResult> ClassifyZeroShotAsync(
+    public async Task<EmbeddingClassifierResult> ClassifyEmbeddingAsync(
         ClassifierRequest request, CancellationToken cancellationToken = default)
     {
         var stopwatch = Stopwatch.StartNew();
@@ -107,27 +111,33 @@ public sealed class ClassifierClient(HttpClient httpClient, ILogger<ClassifierCl
         {
             using var content = CreateJsonContent(request);
             using var response = await httpClient.PostAsync(
-                "classify-zero-shot", content, cancellationToken);
+                "classify-embedding", content, cancellationToken);
             if (!response.IsSuccessStatusCode)
                 return new(false, stopwatch.Elapsed.TotalMilliseconds, null,
                     $"Classifier returned HTTP {(int)response.StatusCode}.");
-            var result = await response.Content.ReadFromJsonAsync<ZeroShotClassifierResponse>(
+            var result = await response.Content.ReadFromJsonAsync<EmbeddingClassifierResponse>(
                 JsonOptions, cancellationToken);
-            var validScores = result?.Scores is { Count: 8 } &&
-                result.Scores.Select(item => item.ConceptId).Distinct(StringComparer.Ordinal).Count() == 8 &&
-                result.Scores.All(item => item.Score is >= 0 and <= 1);
-            if (result is null || !result.Received || !validScores || !result.GpuAvailable ||
+            var validPredictions = result?.Predictions is { Count: 8 } &&
+                result.Predictions.Select(item => item.ConceptId).Distinct(StringComparer.Ordinal).Count() == 8 &&
+                result.Predictions.All(item => item.Similarity is >= -1 and <= 1 &&
+                    item.Matched == (item.Similarity >= result.Threshold));
+            if (result is null || !result.Received || !validPredictions ||
+                result.ModelType != "embedding" || result.EmbeddingDimension != 768 ||
+                result.Aggregation != "max" || result.ConceptEmbeddingCacheKey.Length != 64 ||
+                result.ConceptEmbeddingNormMin is < .99999 or > 1.00001 ||
+                result.ConceptEmbeddingNormMax is < .99999 or > 1.00001 ||
+                !result.GpuAvailable ||
                 result.DeviceCount != 1 || result.DeviceName != "NVIDIA GeForce GTX 1070" ||
                 result.Device != "cuda:0" || result.JobId != request.JobId ||
                 result.Title != request.Title ||
                 result.DescriptionLength != request.Description.EnumerateRunes().Count())
                 return new(false, stopwatch.Elapsed.TotalMilliseconds, null,
-                    "Classifier zero-shot response validation failed.");
+                    "Classifier embedding response validation failed.");
             return new(true, stopwatch.Elapsed.TotalMilliseconds, result, null);
         }
         catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException or JsonException)
         {
-            logger.LogWarning("Zero-shot classifier unavailable for job {JobId}: {FailureType}.",
+            logger.LogWarning("Embedding classifier unavailable for job {JobId}: {FailureType}.",
                 LogValue(request.JobId), exception.GetType().Name);
             return new(false, stopwatch.Elapsed.TotalMilliseconds, null,
                 "Classifier service is unavailable.");

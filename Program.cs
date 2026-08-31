@@ -114,7 +114,7 @@ builder.Services.AddSingleton<ExtendedLocationRequirementDetector>();
 builder.Services.AddSingleton<JobConceptCatalog>();
 builder.Services.AddSingleton<JobConceptDetector>();
 builder.Services.AddSingleton<DetectorEvaluationService>();
-builder.Services.AddSingleton<ZeroShotEvaluationService>();
+builder.Services.AddSingleton<EmbeddingEvaluationService>();
 builder.Services.AddSingleton<PortableWorkspaceService>();
 builder.Services.AddSingleton<SharedSourceRefreshCoordinator>();
 // Preserve the established data-protection discriminator so existing Azure
@@ -491,8 +491,8 @@ app.MapGet("/api/admin/detector-evaluation", (DetectorEvaluationService evaluati
     Results.Ok(evaluation.Evaluate(Environment.GetEnvironmentVariable("JOBSEARCHMANAGER_COMMIT_SHA"))))
     .RequireAuthorization(AdminAuthorization.Policy);
 
-app.MapPost("/api/admin/detector-evaluation/zero-shot", async Task<IResult> (
-    ZeroShotEvaluationService evaluation, CancellationToken token) =>
+app.MapPost("/api/admin/detector-evaluation/embedding", async Task<IResult> (
+    EmbeddingEvaluationService evaluation, CancellationToken token) =>
 {
     var report = await evaluation.EvaluateAsync(
         Environment.GetEnvironmentVariable("JOBSEARCHMANAGER_COMMIT_SHA"), token);
