@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the Phase 2 pre-merge benchmark against an isolated classifier endpoint."""
+"""Run the fixed Phase 2C embedding benchmark against an isolated classifier endpoint."""
 import argparse, json, statistics, time, urllib.request
 from pathlib import Path
 
@@ -7,7 +7,12 @@ CONCEPTS = ["role.ai-ml-engineering", "role.software-engineering",
     "technical.software-development", "technical.backend-development",
     "technical.api-development", "technical.automation-scripting",
     "role.cloud-engineering", "technical.containers"]
-THRESHOLDS = (.3, .5, .7)
+THRESHOLDS = (.50, .55, .60, .65, .70, .75, .80, .85, .90)
+HISTORICAL = {
+    "distilRoBERTa": {"bestThreshold": .3, "macroF1": .642452654, "microF1": .673123487,
+        "conceptF1": [.711111111, .677966102, .818181818, .565217391, .721311475, .8125, .277777778, .555555556]},
+    "deBERTa": {"bestThreshold": .7, "macroF1": .7955379526291256, "microF1": .8184281842818428,
+        "conceptF1": [1, .833333333, .885245902, .634146341, .916666667, .943396226, .333333333, .818181818]}}
 
 def ratio(numerator, denominator): return numerator / denominator if denominator else None
 def f1(precision, recall):
@@ -35,15 +40,18 @@ def main():
     if len(cases) != 40: raise SystemExit(f"Expected 40 scoped fixtures; got {len(cases)}")
     observations, round_trips = [], []
     for case in cases:
-        response, elapsed = post(args.url.rstrip("/") + "/classify-zero-shot",
+        response, elapsed = post(args.url.rstrip("/") + "/classify-embedding",
             {"jobId": case["id"], "title": case["title"], "description": case["excerpt"]})
         if response.get("revision") != args.sha or response.get("device") != "cuda:0" or response.get("deviceCount") != 1 or response.get("deviceName") != "NVIDIA GeForce GTX 1070":
             raise SystemExit(f"Identity/GPU validation failed for {case['id']}")
-        scores = {item["conceptId"]: item["score"] for item in response["scores"]}
-        if set(scores) != set(CONCEPTS): raise SystemExit("Unexpected score schema")
+        if response.get("modelType") != "embedding" or response.get("embeddingDimension") != 768 or response.get("aggregation") != "max":
+            raise SystemExit(f"Embedding contract validation failed for {case['id']}")
+        similarities = {item["conceptId"]: item["similarity"] for item in response["predictions"]}
+        if set(similarities) != set(CONCEPTS) or any(not -1 <= value <= 1 for value in similarities.values()):
+            raise SystemExit("Unexpected embedding prediction schema")
         present = set(case.get("expectedPresentConceptIds", []))
         observations.append({"fixtureId": case["id"], "expected": {c: c in present for c in CONCEPTS},
-            "scores": scores, "inferenceMilliseconds": response["inferenceMilliseconds"],
+            "similarities": similarities, "inferenceMilliseconds": response["inferenceMilliseconds"],
             "tokenCount": response["tokenCount"], "chunkCount": response["chunkCount"]})
         round_trips.append(elapsed)
     threshold_reports = []
@@ -52,7 +60,7 @@ def main():
         for concept in CONCEPTS:
             tp=fp=fn=tn=0
             for item in observations:
-                expected, actual = item["expected"][concept], item["scores"][concept] >= threshold
+                expected, actual = item["expected"][concept], item["similarities"][concept] >= threshold
                 tp += expected and actual; fp += not expected and actual; fn += expected and not actual; tn += not expected and not actual
             precision, recall = ratio(tp, tp+fp), ratio(tp, tp+fn)
             metrics.append({"conceptId": concept, "truePositive": tp, "falsePositive": fp,
@@ -62,17 +70,30 @@ def main():
     best = max(threshold_reports, key=lambda value: (value["macro"]["f1"], -value["threshold"]))
     regex = json.loads(Path(args.regex_report).read_text(encoding="utf-8"))
     regex_metrics = [item for item in regex["concepts"] if item["conceptId"] in CONCEPTS]
-    result = {"schemaVersion": 1, "candidateSha": args.sha, "fixtureVersion": document["version"],
+    historical = {name: {**value, "concepts": [
+        {"conceptId": concept, "f1": score} for concept, score in zip(CONCEPTS, value["conceptF1"], strict=True)]}
+        for name, value in HISTORICAL.items()}
+    for value in historical.values(): del value["conceptF1"]
+    result = {"schemaVersion": 2, "candidateSha": args.sha, "fixtureVersion": document["version"],
         "fixtureCount": len(cases), "labelCount": len(cases) * len(CONCEPTS),
-        "modelId": response["modelId"], "modelRevision": response["modelRevision"],
+        "modelType": response["modelType"], "modelId": response["modelId"],
+        "modelRevision": response["modelRevision"], "embeddingDimension": response["embeddingDimension"],
+        "conceptEmbeddingCacheKey": response["conceptEmbeddingCacheKey"],
+        "conceptEmbeddingMemoryBytes": response["conceptEmbeddingMemoryBytes"],
+        "conceptEmbeddingNormMin": response["conceptEmbeddingNormMin"],
+        "conceptEmbeddingNormMax": response["conceptEmbeddingNormMax"],
+        "modelLoadMilliseconds": response["modelLoadMilliseconds"],
+        "conceptEmbeddingInitializationMilliseconds": response["conceptEmbeddingInitializationMilliseconds"],
+        "aggregation": response["aggregation"],
         "runtime": {"python": "3.12", "pytorch": "2.6.0+cu126", "transformers": "5.16.1",
             "device": response["device"], "deviceName": response["deviceName"]},
         "latency": {"averageInferenceMilliseconds": statistics.mean(item["inferenceMilliseconds"] for item in observations),
             "p95InferenceMilliseconds": sorted(item["inferenceMilliseconds"] for item in observations)[37],
             "averageRoundTripMilliseconds": statistics.mean(round_trips)},
-        "regex": aggregate([{"truePositive": item["truePositive"], "falsePositive": item["falsePositive"],
+        "regex": {**aggregate([{"truePositive": item["truePositive"], "falsePositive": item["falsePositive"],
             "falseNegative": item["falseNegative"], "trueNegative": item["trueNegative"],
             "precision": item["precision"], "recall": item["recall"], "f1": item["f1"]} for item in regex_metrics]),
+            "concepts": regex_metrics}, "historical": historical,
         "bestThreshold": best["threshold"], "thresholds": threshold_reports, "observations": observations}
     Path(args.output).write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({key: result[key] for key in ("candidateSha", "fixtureCount", "labelCount", "modelId", "modelRevision", "latency", "regex", "bestThreshold", "thresholds")}, separators=(",", ":")))

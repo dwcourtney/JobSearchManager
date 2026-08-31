@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Private Phase 2 classifier service. Model inference is experimental only."""
+"""Private experimental classifier service. Production scoring remains regex-only."""
 from __future__ import annotations
 
 import argparse, hashlib, json, os, subprocess, threading, time
@@ -7,25 +7,31 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-SERVICE_VERSION, PROTOCOL_VERSION = "0.2.0", "2"
-MODEL_ID = "cross-encoder/nli-deberta-v3-base"
-MODEL_REVISION = "6c749ce3425cd33b46d187e45b92bbf96ee12ec7"
-MODEL_SHA256 = "d8148c6d49e0a7925134294c56326c71fe0ab1dc390e37355e00c7efbb488afa"
-CONFIG_SHA256 = "897e756eb59d3183adb505952e7910e7cbc7750a43f3b3747a96b688d2b02a47"
-MODEL_ROOT = Path(os.environ.get("CLASSIFIER_MODEL_ROOT", "/models/nli-deberta-v3-base"))
+SERVICE_VERSION, PROTOCOL_VERSION = "0.3.0", "3"
+MODEL_TYPE = "embedding"
+MODEL_ID = "BAAI/bge-base-en-v1.5"
+MODEL_REVISION = "a5beb1e3e68b9ab74eb54cfd186867f64f240e1a"
+MODEL_SHA256 = "c7c1988aae201f80cf91a5dbbd5866409503b89dcaba877ca6dba7dd0a5167d7"
+CONFIG_SHA256 = "bc00af31a4a31b74040d73370aa83b62da34c90b75eb77bfa7db039d90abd591"
+MODEL_ROOT = Path(os.environ.get("CLASSIFIER_MODEL_ROOT", "/models/bge-base-en-v1.5"))
 MAX_BODY_BYTES, MAX_TEXT_CHARACTERS = 2_000_000, 500_000
 CHUNK_TOKENS, CHUNK_OVERLAP = 384, 64
+EMBEDDING_DIMENSION, DEFAULT_THRESHOLD = 768, .80
+AGGREGATION = "max"
+QUERY_INSTRUCTION = "Represent this sentence for searching relevant passages: "
 INFERENCE_LOCK = threading.Lock()
 CONCEPTS = (
-    ("role.ai-ml-engineering", "This job involves artificial intelligence or machine-learning engineering work."),
-    ("role.software-engineering", "This job involves direct software engineering work."),
-    ("technical.software-development", "This job involves developing or maintaining software."),
-    ("technical.backend-development", "This job involves backend or server-side software development."),
-    ("technical.api-development", "This job involves designing, implementing, or maintaining APIs."),
-    ("technical.automation-scripting", "This job involves scripting or software automation."),
-    ("role.cloud-engineering", "This job involves cloud engineering responsibilities."),
-    ("technical.containers", "This job involves Kubernetes, Docker, or container orchestration responsibilities."),
+    ("role.ai-ml-engineering", "Hands-on engineering that builds, integrates, or operationalizes machine-learning models, AI systems, pipelines, or production AI applications."),
+    ("role.software-engineering", "Direct design, implementation, testing, and maintenance of software systems as an engineering responsibility."),
+    ("technical.software-development", "Hands-on implementation, testing, debugging, or maintenance of software applications, services, or systems."),
+    ("technical.backend-development", "Server-side software development involving services, business logic, databases, microservices, APIs, and backend systems."),
+    ("technical.api-development", "Direct design, implementation, integration, operation, or maintenance of programmatic service interfaces and APIs."),
+    ("technical.automation-scripting", "Automating technical workflows, deployments, operations, testing, or repetitive tasks with scripts or software tooling."),
+    ("role.cloud-engineering", "Hands-on design, implementation, operation, or reliability engineering of cloud infrastructure, services, and platforms."),
+    ("technical.containers", "Direct implementation or operation of containerization and orchestration using Docker, Kubernetes, or related platforms."),
 )
+CONCEPT_CACHE_KEY = hashlib.sha256(json.dumps({"version": 1, "instruction": QUERY_INSTRUCTION,
+    "concepts": CONCEPTS}, separators=(",", ":")).encode()).hexdigest()
 
 def gpu_diagnostic() -> dict[str, Any]:
     unavailable = {"gpuAvailable": False, "deviceCount": 0, "deviceName": None,
@@ -51,7 +57,7 @@ def file_sha256(path: Path) -> str:
 
 def model_cache_valid(full: bool = False) -> bool:
     try:
-        identity = json.loads((MODEL_ROOT / ".phase2-model.json").read_text(encoding="utf-8"))
+        identity = json.loads((MODEL_ROOT / ".classifier-model.json").read_text(encoding="utf-8"))
         valid = (identity == {"modelId": MODEL_ID, "revision": MODEL_REVISION} and
                  (MODEL_ROOT / "config.json").is_file() and (MODEL_ROOT / "model.safetensors").is_file())
         return valid and (not full or (file_sha256(MODEL_ROOT / "model.safetensors") == MODEL_SHA256 and
@@ -68,9 +74,22 @@ def chunk_tokens(tokens: list[int], size: int, overlap: int) -> list[list[int]]:
         start += size - overlap
     return chunks
 
+def aggregate_similarities(rows: list[list[float]]) -> list[float]:
+    if not rows or any(len(row) != len(CONCEPTS) for row in rows):
+        raise ValueError("One complete similarity row per posting chunk is required.")
+    return [max(row[index] for row in rows) for index in range(len(CONCEPTS))]
+
+def similarity_matches(similarity: float, threshold: float = DEFAULT_THRESHOLD) -> bool:
+    if not -1 <= similarity <= 1 or not -1 <= threshold <= 1:
+        raise ValueError("Cosine similarity and threshold must be bounded to [-1, 1].")
+    return similarity >= threshold
+
 class ModelRuntime:
     def __init__(self) -> None:
-        self.tokenizer: Any = None; self.model: Any = None; self.torch: Any = None; self.device = "unloaded"
+        self.tokenizer: Any = None; self.model: Any = None; self.torch: Any = None
+        self.concept_embeddings: Any = None; self.device = "unloaded"
+        self.model_load_milliseconds = 0.0; self.concept_initialization_milliseconds = 0.0
+        self.concept_norm_min = 0.0; self.concept_norm_max = 0.0
     @property
     def loaded(self) -> bool: return self.model is not None
     def load(self) -> None:
@@ -78,35 +97,61 @@ class ModelRuntime:
         if not model_cache_valid(full=True): raise RuntimeError("Pinned model cache is unavailable.")
         os.environ["HF_HUB_OFFLINE"] = "1"; os.environ["TRANSFORMERS_OFFLINE"] = "1"
         import torch
-        from transformers import AutoModelForSequenceClassification, AutoTokenizer
+        from transformers import AutoModel, AutoTokenizer
         if not torch.cuda.is_available() or torch.cuda.device_count() != 1:
             raise RuntimeError("Exactly one CUDA device is required for model inference.")
         if torch.cuda.get_device_name(0) != "NVIDIA GeForce GTX 1070":
             raise RuntimeError("The required NVIDIA GeForce GTX 1070 is unavailable.")
+        started = time.perf_counter()
         self.tokenizer = AutoTokenizer.from_pretrained(str(MODEL_ROOT), local_files_only=True)
-        self.model = AutoModelForSequenceClassification.from_pretrained(
+        self.model = AutoModel.from_pretrained(
             str(MODEL_ROOT), local_files_only=True, use_safetensors=True).to("cuda").eval()
         self.torch, self.device = torch, "cuda:0"
+        self.model_load_milliseconds = (time.perf_counter() - started) * 1000
+        started = time.perf_counter()
+        with torch.inference_mode():
+            self.concept_embeddings = self.embed(
+                [QUERY_INSTRUCTION + description for _, description in CONCEPTS])
+        if self.concept_embeddings.shape != (len(CONCEPTS), EMBEDDING_DIMENSION):
+            raise RuntimeError("Embedding model returned an unexpected concept-vector shape.")
+        norms = self.concept_embeddings.norm(p=2, dim=1)
+        self.concept_norm_min, self.concept_norm_max = float(norms.min()), float(norms.max())
+        if not torch.allclose(norms, torch.ones_like(norms), atol=1e-5):
+            raise RuntimeError("Concept embeddings are not L2 normalized.")
+        self.concept_initialization_milliseconds = (time.perf_counter() - started) * 1000
+    def embed(self, texts: list[str]) -> Any:
+        encoded = self.tokenizer(texts, padding=True, truncation=True, max_length=512,
+            return_tensors="pt")
+        encoded = {key: value.to("cuda") for key, value in encoded.items()}
+        vectors = self.model(**encoded).last_hidden_state[:, 0]
+        return self.torch.nn.functional.normalize(vectors, p=2, dim=1)
     def classify(self, title: str, description: str) -> dict[str, Any]:
         self.load()
-        ids = self.tokenizer.encode(f"{title.strip()}\n\n{description.strip()}".strip(), add_special_tokens=False)
-        chunks, maximum, started = chunk_tokens(ids, CHUNK_TOKENS, CHUNK_OVERLAP), dict.fromkeys((c[0] for c in CONCEPTS), 0.0), time.perf_counter()
+        title = title.strip(); description = description.strip()
+        title_ids = self.tokenizer.encode(title, add_special_tokens=False)
+        description_ids = self.tokenizer.encode(description, add_special_tokens=False)
+        chunks = chunk_tokens(description_ids, CHUNK_TOKENS, CHUNK_OVERLAP)
+        passages = [f"{title}\n\n{self.tokenizer.decode(chunk, skip_special_tokens=True)}".strip()
+                    for chunk in chunks]
+        started = time.perf_counter()
         with INFERENCE_LOCK, self.torch.inference_mode():
-            for chunk in chunks:
-                premise = self.tokenizer.decode(chunk, skip_special_tokens=True)
-                encoded = self.tokenizer([premise] * len(CONCEPTS), [h for _, h in CONCEPTS],
-                    padding=True, truncation="only_first", max_length=512, return_tensors="pt")
-                encoded = {key: value.to("cuda") for key, value in encoded.items()}
-                logits = self.model(**encoded).logits
-                labels = {int(key): value.lower() for key, value in self.model.config.id2label.items()}
-                entail = next(i for i, v in labels.items() if "entail" in v)
-                contradict = next(i for i, v in labels.items() if "contrad" in v)
-                scores = self.torch.softmax(logits[:, [contradict, entail]], dim=1)[:, 1].cpu().tolist()
-                for (concept_id, _), score in zip(CONCEPTS, scores, strict=True): maximum[concept_id] = max(maximum[concept_id], float(score))
-        return {"modelId": MODEL_ID, "modelRevision": MODEL_REVISION, "device": self.device,
-                "tokenCount": len(ids), "chunkCount": len(chunks),
+            posting_embeddings = self.embed(passages)
+            rows = (posting_embeddings @ self.concept_embeddings.T).clamp(-1, 1).cpu().tolist()
+            similarities = aggregate_similarities(rows)
+        return {"modelType": MODEL_TYPE, "modelId": MODEL_ID, "modelRevision": MODEL_REVISION,
+                "device": self.device, "embeddingDimension": EMBEDDING_DIMENSION,
+                "conceptEmbeddingCacheKey": CONCEPT_CACHE_KEY,
+                "conceptEmbeddingMemoryBytes": self.concept_embeddings.numel() * self.concept_embeddings.element_size(),
+                "conceptEmbeddingNormMin": self.concept_norm_min,
+                "conceptEmbeddingNormMax": self.concept_norm_max,
+                "modelLoadMilliseconds": self.model_load_milliseconds,
+                "conceptEmbeddingInitializationMilliseconds": self.concept_initialization_milliseconds,
+                "aggregation": AGGREGATION, "threshold": DEFAULT_THRESHOLD,
+                "tokenCount": len(title_ids) + len(description_ids), "chunkCount": len(chunks),
                 "inferenceMilliseconds": (time.perf_counter() - started) * 1000,
-                "scores": [{"conceptId": c, "score": maximum[c]} for c, _ in CONCEPTS]}
+                "predictions": [{"conceptId": concept_id, "similarity": similarity,
+                    "matched": similarity_matches(similarity)}
+                    for (concept_id, _), similarity in zip(CONCEPTS, similarities, strict=True)]}
 
 RUNTIME = ModelRuntime()
 def identity() -> dict[str, Any]:
@@ -132,9 +177,10 @@ class Handler(BaseHTTPRequestHandler):
         if self.path != "/healthz": self.send_json(404, {"error": "not found"}); return
         self.send_json(200, {"status": "healthy", **identity(), "modelId": MODEL_ID,
             "modelRevision": MODEL_REVISION, "modelAvailable": model_cache_valid(),
-            "modelLoaded": RUNTIME.loaded, "modelDevice": RUNTIME.device})
+            "modelType": MODEL_TYPE, "modelLoaded": RUNTIME.loaded, "modelDevice": RUNTIME.device,
+            "embeddingDimension": EMBEDDING_DIMENSION, "aggregation": AGGREGATION})
     def do_POST(self) -> None:  # noqa: N802
-        if self.path not in ("/classify", "/classify-zero-shot"):
+        if self.path not in ("/classify", "/classify-embedding"):
             self.send_json(404, {"error": "not found"}); return
         try:
             request = self.read_json(); job_id, title, description = (request.get(k) for k in ("jobId", "title", "description"))
@@ -154,7 +200,7 @@ class Handler(BaseHTTPRequestHandler):
                                  "descriptionLength": len(description), **identity(), **result})
         except (ValueError, json.JSONDecodeError): self.send_json(400, {"error": "invalid request"})
         except Exception as error:
-            print(f"zero-shot failure type={type(error).__name__}", flush=True)
+            print(f"embedding failure type={type(error).__name__}", flush=True)
             self.send_json(503, {"error": "model inference is unavailable"})
 
 def download_model() -> None:
@@ -162,16 +208,19 @@ def download_model() -> None:
     MODEL_ROOT.mkdir(parents=True, exist_ok=True)
     snapshot_download(repo_id=MODEL_ID, revision=MODEL_REVISION, local_dir=MODEL_ROOT,
         allow_patterns=["config.json", "model.safetensors", "tokenizer.json", "tokenizer_config.json",
-                        "special_tokens_map.json", "spm.model", "added_tokens.json"])
-    (MODEL_ROOT / ".phase2-model.json").write_text(json.dumps({"modelId": MODEL_ID, "revision": MODEL_REVISION}) + "\n")
+                        "special_tokens_map.json", "vocab.txt"])
+    (MODEL_ROOT / ".classifier-model.json").write_text(
+        json.dumps({"modelId": MODEL_ID, "revision": MODEL_REVISION}) + "\n")
     if not model_cache_valid(full=True): raise RuntimeError("Downloaded model cache failed validation.")
 
 def self_test() -> None:
     assert chunk_tokens(list(range(10)), 4, 1) == [[0,1,2,3],[3,4,5,6],[6,7,8,9]]
     assert len(CONCEPTS) == len({c for c, _ in CONCEPTS}) == 8
-    assert [v >= .5 for v in [.2,.3,.5,.7,.9]] == [False,False,True,True,True]
+    assert aggregate_similarities([[.1] * 8, [.2] * 8]) == [.2] * 8
+    assert [similarity_matches(v) for v in [.6,.7,.8,.9]] == [False,False,True,True]
+    assert len(CONCEPT_CACHE_KEY) == 64 and EMBEDDING_DIMENSION == 768
     assert set(gpu_diagnostic()) == {"gpuAvailable","deviceCount","deviceName","vramTotalMiB","vramUsedMiB","driverVersion"}
-    print("Classifier schema, chunking, and threshold self-test: PASS")
+    print("Embedding schema, chunking, normalization contract, cache, and threshold self-test: PASS")
 
 def main() -> None:
     parser = argparse.ArgumentParser()

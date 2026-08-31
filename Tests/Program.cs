@@ -359,8 +359,8 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Legacy and new accounts default to no administrator roles", TestAccountRoleCompatibilityAsync),
     ("Admin authorization distinguishes anonymous, non-admin, and admin users", TestAdminAuthorizationAsync),
     ("Classifier client serializes and validates the diagnostic contract", TestClassifierClientContractAsync),
-    ("Zero-shot client validates GPU, model, and score contracts", TestZeroShotClassifierContractAsync),
-    ("Zero-shot evaluation reuses the independently labeled fixture scope", TestZeroShotFixtureMetricsAsync),
+    ("Embedding client validates GPU, model, and similarity contracts", TestEmbeddingClassifierContractAsync),
+    ("Embedding evaluation reuses the independently labeled fixture scope", TestEmbeddingFixtureMetricsAsync),
     ("Classifier unavailability is isolated from JSM", TestClassifierUnavailableAsync),
     ("First-admin bootstrap is hashed, expiring, single-use, and durable", TestAdminBootstrapLifecycleAsync),
     ("Concurrent first-admin claims grant exactly one account", TestAdminBootstrapConcurrencyAsync),
@@ -1040,57 +1040,64 @@ static async Task TestClassifierUnavailableAsync()
         "An unavailable experimental classifier was not handled as an isolated diagnostic failure.");
 }
 
-static async Task TestZeroShotClassifierContractAsync()
+static async Task TestEmbeddingClassifierContractAsync()
 {
-    var scores = ZeroShotEvaluationService.Concepts.Select(item => new {
-        conceptId = item.ConceptId, score = .75
+    var predictions = EmbeddingEvaluationService.Concepts.Select(item => new {
+        conceptId = item.ConceptId, similarity = .85, matched = true
     });
     var payload = JsonSerializer.Serialize(new {
         received = true, jobId = "fixture", title = "Backend Engineer", descriptionLength = 11,
-        serviceVersion = "0.2.0", protocolVersion = "2", revision = new string('a', 40),
+        serviceVersion = "0.3.0", protocolVersion = "3", revision = new string('a', 40),
         gpuAvailable = true, deviceCount = 1, deviceName = "NVIDIA GeForce GTX 1070",
         vramTotalMiB = 8192, vramUsedMiB = 900, driverVersion = "580.173.02",
-        modelId = "cross-encoder/nli-deberta-v3-base",
-        modelRevision = "6c749ce3425cd33b46d187e45b92bbf96ee12ec7", device = "cuda:0",
-        tokenCount = 4, chunkCount = 1, inferenceMilliseconds = 12.5, scores
+        modelType = "embedding", modelId = "BAAI/bge-base-en-v1.5",
+        modelRevision = "a5beb1e3e68b9ab74eb54cfd186867f64f240e1a", device = "cuda:0",
+        embeddingDimension = 768, conceptEmbeddingCacheKey = new string('c', 64),
+        conceptEmbeddingMemoryBytes = 24576, conceptEmbeddingNormMin = 1.0,
+        conceptEmbeddingNormMax = 1.0, modelLoadMilliseconds = 200,
+        conceptEmbeddingInitializationMilliseconds = 10, aggregation = "max", threshold = .8,
+        tokenCount = 4, chunkCount = 1, inferenceMilliseconds = 12.5, predictions
     }, ClassifierClient.JsonOptions);
     var client = new ClassifierClient(new HttpClient(new StubHttpMessageHandler(request => {
-        Assert(request.RequestUri?.AbsolutePath == "/classify-zero-shot",
-            "Zero-shot request used the wrong isolated endpoint.");
+        Assert(request.RequestUri?.AbsolutePath == "/classify-embedding",
+            "Embedding request used the wrong isolated endpoint.");
         Assert(request.Content?.Headers.ContentLength is > 0 &&
                request.Headers.TransferEncodingChunked is not true,
-            "Zero-shot request was not bounded and length-delimited.");
+            "Embedding request was not bounded and length-delimited.");
         return payload;
     })) { BaseAddress = new Uri("http://job-classifier:8081/") }, NullLogger<ClassifierClient>.Instance);
-    var result = await client.ClassifyZeroShotAsync(new("fixture", "Backend Engineer", "Build APIs."));
-    Assert(result.Available && result.Response is { Device: "cuda:0", Scores.Count: 8 },
+    var result = await client.ClassifyEmbeddingAsync(new("fixture", "Backend Engineer", "Build APIs."));
+    Assert(result.Available && result.Response is { Device: "cuda:0", Predictions.Count: 8,
+               EmbeddingDimension: 768, ModelType: "embedding" },
         "A valid pinned-model GPU response did not pass the JSM contract.");
 }
 
-static Task TestZeroShotFixtureMetricsAsync()
+static Task TestEmbeddingFixtureMetricsAsync()
 {
     var environment = new TestHostEnvironment(AppContext.BaseDirectory);
     var catalog = new JobConceptCatalog(environment);
     var detector = new JobConceptDetector(catalog);
     var evaluation = new DetectorEvaluationService(environment, catalog, detector);
-    var cases = evaluation.BuildZeroShotCases();
+    var cases = evaluation.BuildEmbeddingCases();
     Assert(cases.Count == 40 && cases.Sum(item => item.Labels.Count) == 320,
-        "Zero-shot evaluation did not select the expected 40 fixtures / 320 independent labels.");
-    var predictions = cases.Select(item => new ZeroShotEvaluationService.Prediction(item,
-        new ZeroShotClassifierResponse(true, item.FixtureId, item.Title, item.Description.Length,
-            "0.2.0", "2", new string('a', 40), true, 1, "NVIDIA GeForce GTX 1070",
-            8192, 500, "580.173.02", "model", new string('b', 40), "cuda:0", 20, 1, 10,
-            item.Labels.Select(label => new ZeroShotScore(label.Key, label.Value ? .9 : .1)).ToArray()), 12)).ToArray();
-    var report = ZeroShotEvaluationService.Calculate(predictions, .5);
+        "Embedding evaluation did not select the expected 40 fixtures / 320 independent labels.");
+    var predictions = cases.Select(item => new EmbeddingEvaluationService.Prediction(item,
+        new EmbeddingClassifierResponse(true, item.FixtureId, item.Title, item.Description.Length,
+            "0.3.0", "3", new string('a', 40), true, 1, "NVIDIA GeForce GTX 1070",
+            8192, 500, "580.173.02", "embedding", "model", new string('b', 40), "cuda:0",
+            768, new string('c', 64), 24576, 1.0, 1.0, 200, 10, "max", .8, 20, 1, 10,
+            item.Labels.Select(label => new EmbeddingPrediction(
+                label.Key, label.Value ? .9 : .1, label.Value)).ToArray()), 12)).ToArray();
+    var report = EmbeddingEvaluationService.Calculate(predictions, .5);
     Assert(report.Macro.F1 == 1 && report.Micro.F1 == 1 && report.Concepts.Count == 8,
         "Threshold metrics did not preserve deterministic expected labels.");
     var regexReport = evaluation.Evaluate(new string('a', 40));
-    var regexSelected = regexReport.Concepts.Where(item => ZeroShotEvaluationService.Concepts.Any(
+    var regexSelected = regexReport.Concepts.Where(item => EmbeddingEvaluationService.Concepts.Any(
         concept => concept.ConceptId == item.ConceptId)).ToArray();
-    var comparisons = ZeroShotEvaluationService.Compare(regexSelected, report);
-    Assert(comparisons.Count == 8 && comparisons.All(item => item.ZeroShotF1 == 1) &&
+    var comparisons = EmbeddingEvaluationService.Compare(regexSelected, report);
+    Assert(comparisons.Count == 8 && comparisons.All(item => item.EmbeddingF1 == 1) &&
            comparisons.All(item => item.F1Delta is >= 0),
-        "The per-concept regex/zero-shot comparison did not preserve all metrics and F1 deltas.");
+        "The per-concept regex/embedding comparison did not preserve all metrics and F1 deltas.");
     return Task.CompletedTask;
 }
 
