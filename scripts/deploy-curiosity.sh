@@ -37,7 +37,7 @@ actual_sha="$(git -C "$repository_root" rev-parse HEAD)"
   echo "Required persistent JSM directories are missing; refusing deployment." >&2
   exit 1
 }
-model_root="$lab_root/models/nli-distilroberta-base"
+model_root="$lab_root/models/nli-deberta-v3-base"
 mkdir -p "$model_root"
 
 mkdir -p "$state_root"
@@ -118,14 +118,14 @@ docker run --rm --gpus all --entrypoint nvidia-smi "jsm-classifier:$target_sha" 
 # classifier uses the private internal network and explicit offline mode.
 docker run --rm --user "$(id -u):$(id -g)" \
   --env HOME=/tmp --env HF_HUB_DISABLE_XET=1 \
-  --env CLASSIFIER_MODEL_ROOT=/models/nli-distilroberta-base \
-  --volume "$model_root:/models/nli-distilroberta-base" \
+  --env CLASSIFIER_MODEL_ROOT=/models/nli-deberta-v3-base \
+  --volume "$model_root:/models/nli-deberta-v3-base" \
   "jsm-classifier:$target_sha" --download-model
 docker run --rm --gpus all --read-only --tmpfs /tmp \
   --security-opt no-new-privileges:true --cap-drop ALL \
-  --env CLASSIFIER_MODEL_ROOT=/models/nli-distilroberta-base \
+  --env CLASSIFIER_MODEL_ROOT=/models/nli-deberta-v3-base \
   --env HF_HUB_OFFLINE=1 --env TRANSFORMERS_OFFLINE=1 \
-  --volume "$model_root:/models/nli-distilroberta-base:ro" \
+  --volume "$model_root:/models/nli-deberta-v3-base:ro" \
   "jsm-classifier:$target_sha" --model-diagnostic
 
 if [[ -f "$active_manifest" ]]; then

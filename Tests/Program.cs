@@ -1050,8 +1050,8 @@ static async Task TestZeroShotClassifierContractAsync()
         serviceVersion = "0.2.0", protocolVersion = "2", revision = new string('a', 40),
         gpuAvailable = true, deviceCount = 1, deviceName = "NVIDIA GeForce GTX 1070",
         vramTotalMiB = 8192, vramUsedMiB = 900, driverVersion = "580.173.02",
-        modelId = "cross-encoder/nli-distilroberta-base",
-        modelRevision = "b14d131f9d32668a5e6a982729b57ff6ed5dfcbd", device = "cuda:0",
+        modelId = "cross-encoder/nli-deberta-v3-base",
+        modelRevision = "6c749ce3425cd33b46d187e45b92bbf96ee12ec7", device = "cuda:0",
         tokenCount = 4, chunkCount = 1, inferenceMilliseconds = 12.5, scores
     }, ClassifierClient.JsonOptions);
     var client = new ClassifierClient(new HttpClient(new StubHttpMessageHandler(request => {
