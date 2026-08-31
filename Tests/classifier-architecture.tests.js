@@ -60,6 +60,8 @@ assert.match(client, /Similarity is >= -1 and <= 1/);
 assert.match(evaluation, /ThresholdValues = \[\.50, \.55, \.60, \.65, \.70, \.75, \.80, \.85, \.90\]/);
 assert.match(benchmark, /Expected 40 scoped fixtures/);
 assert.match(benchmark, /"labelCount": len\(cases\) \* len\(CONCEPTS\)/);
+assert.match(benchmark, /value\["macro"\]\["f1"\] is not None else -1\.0/,
+  "threshold selection must tolerate undefined macro F1 at strict thresholds");
 assert.match(benchmark, /"distilRoBERTa"/);
 assert.match(benchmark, /"deBERTa"/);
 assert.match(phase2, /cross-encoder\/nli-distilroberta-base/,

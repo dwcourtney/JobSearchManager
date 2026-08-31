@@ -67,7 +67,9 @@ def main():
                 "falseNegative": fn, "trueNegative": tn, "precision": precision,
                 "recall": recall, "f1": f1(precision, recall)})
         threshold_reports.append({"threshold": threshold, **aggregate(metrics), "concepts": metrics})
-    best = max(threshold_reports, key=lambda value: (value["macro"]["f1"], -value["threshold"]))
+    best = max(threshold_reports, key=lambda value: (
+        value["macro"]["f1"] if value["macro"]["f1"] is not None else -1.0,
+        -value["threshold"]))
     regex = json.loads(Path(args.regex_report).read_text(encoding="utf-8"))
     regex_metrics = [item for item in regex["concepts"] if item["conceptId"] in CONCEPTS]
     historical = {name: {**value, "concepts": [
