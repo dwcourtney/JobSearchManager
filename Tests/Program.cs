@@ -999,6 +999,9 @@ static async Task TestClassifierClientContractAsync()
     {
         Assert(request.Method == HttpMethod.Post && request.RequestUri?.AbsolutePath == "/classify",
             "Classifier client did not POST to the isolated classify endpoint.");
+        Assert(request.Content?.Headers.ContentLength is > 0 &&
+               request.Headers.TransferEncodingChunked is not true,
+            "Classifier client did not send a bounded, length-delimited JSON request.");
         postedJson = request.Content!.ReadAsStringAsync().GetAwaiter().GetResult();
         return """
             {"received":true,"jobId":"R180395","title":"Senior Software Developer",
@@ -1054,6 +1057,9 @@ static async Task TestZeroShotClassifierContractAsync()
     var client = new ClassifierClient(new HttpClient(new StubHttpMessageHandler(request => {
         Assert(request.RequestUri?.AbsolutePath == "/classify-zero-shot",
             "Zero-shot request used the wrong isolated endpoint.");
+        Assert(request.Content?.Headers.ContentLength is > 0 &&
+               request.Headers.TransferEncodingChunked is not true,
+            "Zero-shot request was not bounded and length-delimited.");
         return payload;
     })) { BaseAddress = new Uri("http://job-classifier:8081/") }, NullLogger<ClassifierClient>.Instance);
     var result = await client.ClassifyZeroShotAsync(new("fixture", "Backend Engineer", "Build APIs."));
