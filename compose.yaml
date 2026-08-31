@@ -20,6 +20,7 @@ services:
       Application__OpenBrowser: "false"
       Application__RefreshOnStartup: "false"
       DOTNET_ENVIRONMENT: Production
+      Classifier__BaseUrl: http://job-classifier:8081/
     ports:
       - "192.168.1.20:8080:8080"
     volumes:
@@ -28,3 +29,27 @@ services:
     tmpfs:
       - /tmp
     restart: unless-stopped
+    networks:
+      - default
+      - classifier
+
+  job-classifier:
+    build:
+      context: ./classifier-service
+      dockerfile: Dockerfile
+    user: "65532:65532"
+    read_only: true
+    init: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp
+    restart: unless-stopped
+    networks:
+      - classifier
+
+networks:
+  classifier:
+    internal: true

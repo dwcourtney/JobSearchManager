@@ -358,6 +358,8 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Azure state changes require the exact application origin", TestOriginValidationAsync),
     ("Legacy and new accounts default to no administrator roles", TestAccountRoleCompatibilityAsync),
     ("Admin authorization distinguishes anonymous, non-admin, and admin users", TestAdminAuthorizationAsync),
+    ("Classifier client serializes and validates the diagnostic contract", TestClassifierClientContractAsync),
+    ("Classifier unavailability is isolated from JSM", TestClassifierUnavailableAsync),
     ("First-admin bootstrap is hashed, expiring, single-use, and durable", TestAdminBootstrapLifecycleAsync),
     ("Concurrent first-admin claims grant exactly one account", TestAdminBootstrapConcurrencyAsync),
     ("Admin bootstrap requires explicit non-Azure configuration", TestAdminBootstrapConfigurationAsync),
@@ -986,6 +988,51 @@ static async Task TestAdminAuthorizationAsync()
     await handler.HandleAsync(adminContext);
     Assert(adminContext.HasSucceeded,
         "The Admin policy rejected an authenticated account with the server-side role.");
+}
+
+static async Task TestClassifierClientContractAsync()
+{
+    string? postedJson = null;
+    var handler = new StubHttpMessageHandler(request =>
+    {
+        Assert(request.Method == HttpMethod.Post && request.RequestUri?.AbsolutePath == "/classify",
+            "Classifier client did not POST to the isolated classify endpoint.");
+        postedJson = request.Content!.ReadAsStringAsync().GetAwaiter().GetResult();
+        return """
+            {"received":true,"jobId":"R180395","title":"Senior Software Developer",
+             "descriptionLength":18,"serviceVersion":"0.1.0","protocolVersion":"1",
+             "revision":"test-sha","gpuAvailable":false,"deviceCount":0,
+             "deviceName":null,"vramTotalMiB":null,"vramUsedMiB":null,"driverVersion":null}
+            """;
+    });
+    var client = new ClassifierClient(
+        new HttpClient(handler) { BaseAddress = new Uri("http://job-classifier:8081/") },
+        NullLogger<ClassifierClient>.Instance);
+    var result = await client.ClassifyAsync(new(
+        "R180395", "Senior Software Developer", "exactly 18 chars!!"));
+    var posted = JsonSerializer.Deserialize<ClassifierRequest>(
+        postedJson!, ClassifierClient.JsonOptions)!;
+    Assert(result.Available && result.Response is
+           { JobId: "R180395", Title: "Senior Software Developer", DescriptionLength: 18 } &&
+           posted == new ClassifierRequest(
+               "R180395", "Senior Software Developer", "exactly 18 chars!!"),
+        $"Classifier client did not preserve or validate the exact request/response contract: " +
+        $"available={result.Available}, error={result.Error}, response={JsonSerializer.Serialize(result.Response)}, " +
+        $"posted={postedJson}");
+}
+
+static async Task TestClassifierUnavailableAsync()
+{
+    var client = new ClassifierClient(
+        new HttpClient(new ThrowingHttpMessageHandler())
+        {
+            BaseAddress = new Uri("http://job-classifier:8081/")
+        },
+        NullLogger<ClassifierClient>.Instance);
+    var result = await client.ClassifyAsync(new("R180395", "Title", "Description"));
+    Assert(!result.Available && result.Response is null &&
+           result.Error == "Classifier service is unavailable.",
+        "An unavailable experimental classifier was not handled as an isolated diagnostic failure.");
 }
 
 static async Task TestAdminBootstrapLifecycleAsync()
@@ -5331,6 +5378,14 @@ internal sealed class StubHttpMessageHandler(Func<HttpRequestMessage, string> re
         };
         return Task.FromResult(response);
     }
+}
+
+internal sealed class ThrowingHttpMessageHandler : HttpMessageHandler
+{
+    protected override Task<HttpResponseMessage> SendAsync(
+        HttpRequestMessage request,
+        CancellationToken cancellationToken) =>
+        throw new HttpRequestException("Simulated classifier outage.");
 }
 
 internal sealed class InstrumentedHttpMessageHandler(
