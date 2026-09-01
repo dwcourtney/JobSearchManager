@@ -10,20 +10,10 @@ public sealed record JobConceptDefinition(
     string DisplayName,
     string Category,
     string Definition,
-    IReadOnlyList<string>? EvidencePatterns = null,
-    IReadOnlyList<string>? TitleEvidencePatterns = null,
-    IReadOnlyList<string>? TitleExclusionPatterns = null,
-    bool RemoteDesignation = false,
-    IReadOnlyList<string>? RemoteSignalCategories = null,
-    IReadOnlyList<string>? ExtendedLocationCategories = null,
     IReadOnlyList<string>? Supersedes = null,
     bool UserConfigurable = true,
     int? TravelLevel = null,
-    int? WorkLocationLevel = null,
-    IReadOnlyList<JobConceptContextRule>? ContextRules = null);
-
-public sealed record JobConceptContextRule(
-    IReadOnlyList<string> RequiredPatterns);
+    int? WorkLocationLevel = null);
 
 public sealed record JobConceptOption(
     string Id,
@@ -166,42 +156,6 @@ public sealed class JobConceptCatalog
             concept.WorkLocationLevel is < WorkLocationPreference.Minimum or > WorkLocationPreference.Maximum)
         {
             throw new InvalidDataException("A canonical job concept has invalid identity or display metadata.");
-        }
-
-        var hasEvidence = concept.EvidencePatterns is { Count: > 0 } ||
-            concept.TitleEvidencePatterns is { Count: > 0 } ||
-            concept.ContextRules is { Count: > 0 } ||
-            concept.RemoteDesignation ||
-            concept.RemoteSignalCategories is { Count: > 0 } ||
-            concept.ExtendedLocationCategories is { Count: > 0 };
-        if (!hasEvidence)
-        {
-            throw new InvalidDataException($"Job concept '{concept.Id}' has no corpus evidence mapping.");
-        }
-
-        foreach (var pattern in (concept.EvidencePatterns ?? [])
-            .Concat(concept.TitleEvidencePatterns ?? [])
-            .Concat(concept.TitleExclusionPatterns ?? [])
-            .Concat((concept.ContextRules ?? []).SelectMany(rule => rule.RequiredPatterns ?? [])))
-        {
-            try
-            {
-                _ = new Regex(pattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant,
-                    TimeSpan.FromSeconds(1));
-            }
-            catch (ArgumentException ex)
-            {
-                throw new InvalidDataException(
-                    $"Job concept '{concept.Id}' contains an invalid evidence pattern.", ex);
-            }
-        }
-
-        if ((concept.ContextRules ?? []).Any(rule =>
-                rule.RequiredPatterns is null || rule.RequiredPatterns.Count < 2 ||
-                rule.RequiredPatterns.Any(string.IsNullOrWhiteSpace)))
-        {
-            throw new InvalidDataException(
-                $"Job concept '{concept.Id}' contains an invalid contextual evidence rule.");
         }
 
         if ((concept.Supersedes ?? []).Any(id =>

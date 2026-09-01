@@ -35,9 +35,8 @@ const state = {
   workspaceIdentity: null,
   accountLinkToken: null,
   adminStatusLoaded: false,
-  detectorEvaluationLoaded: false,
+  classifierStatusLoaded: false,
   activeAdminTab: "overview",
-  activeTrainingDataView: "human",
   activeQualificationTab: "basics",
   jobs: [],
   inclusions: [],
@@ -138,17 +137,11 @@ const elements = {
   adminView: null,
   adminStatus: null,
   adminOverviewTab: null,
-  adminEvaluationTab: null,
-  adminTrainingDataTab: null,
-  adminHumanLabelingTab: null,
-  adminMachineLabelingTab: null,
+  adminClassifierTab: null,
   adminOverviewPanel: null,
-  adminEvaluationPanel: null,
-  adminTrainingDataPanel: null,
-  adminHumanLabelingPanel: null,
-  adminMachineLabelingPanel: null,
-  adminEvaluationStatus: null,
-  adminEvaluationContent: null,
+  adminClassifierPanel: null,
+  adminClassifierStatus: null,
+  adminClassifierBackfill: null,
   jobSearchSettingsTab: document.querySelector("#job-search-settings-tab"),
   qualificationsSettingsTab: document.querySelector("#qualifications-settings-tab"),
   preferencesSettingsTab: document.querySelector("#preferences-settings-tab"),
@@ -1005,21 +998,14 @@ function synchronizeAdminNavigation(isAdmin) {
     elements.adminView = null;
     elements.adminStatus = null;
     elements.adminOverviewTab = null;
-    elements.adminEvaluationTab = null;
-    elements.adminTrainingDataTab = null;
-    elements.adminHumanLabelingTab = null;
-    elements.adminMachineLabelingTab = null;
+    elements.adminClassifierTab = null;
     elements.adminOverviewPanel = null;
-    elements.adminEvaluationPanel = null;
-    elements.adminTrainingDataPanel = null;
-    elements.adminHumanLabelingPanel = null;
-    elements.adminMachineLabelingPanel = null;
-    elements.adminEvaluationStatus = null;
-    elements.adminEvaluationContent = null;
+    elements.adminClassifierPanel = null;
+    elements.adminClassifierStatus = null;
+    elements.adminClassifierBackfill = null;
     state.adminStatusLoaded = false;
-    state.detectorEvaluationLoaded = false;
+    state.classifierStatusLoaded = false;
     state.activeAdminTab = "overview";
-    state.activeTrainingDataView = "human";
     return;
   }
   if (elements.adminTab) return;
@@ -1042,14 +1028,13 @@ function synchronizeAdminNavigation(isAdmin) {
   view.setAttribute("role", "tabpanel");
   view.setAttribute("aria-labelledby", "admin-tab");
   view.hidden = true;
-
   const surface = document.createElement("div");
   surface.className = "settings-surface";
-
   const tabs = document.createElement("div");
   tabs.className = "settings-tabs admin-subtabs";
   tabs.setAttribute("role", "tablist");
   tabs.setAttribute("aria-label", "Administration categories");
+
   const overviewTab = document.createElement("button");
   overviewTab.id = "admin-overview-tab";
   overviewTab.className = "detail-tab active";
@@ -1058,118 +1043,57 @@ function synchronizeAdminNavigation(isAdmin) {
   overviewTab.setAttribute("aria-selected", "true");
   overviewTab.setAttribute("aria-controls", "admin-overview-panel");
   overviewTab.textContent = "Overview";
-  const evaluationTab = document.createElement("button");
-  evaluationTab.id = "admin-detector-evaluation-tab";
-  evaluationTab.className = "detail-tab";
-  evaluationTab.type = "button";
-  evaluationTab.setAttribute("role", "tab");
-  evaluationTab.setAttribute("aria-selected", "false");
-  evaluationTab.setAttribute("aria-controls", "admin-detector-evaluation-panel");
-  evaluationTab.tabIndex = -1;
-  evaluationTab.textContent = "Detector Evaluation";
-  const trainingDataTab = document.createElement("button");
-  trainingDataTab.id = "admin-training-data-tab";
-  trainingDataTab.className = "detail-tab";
-  trainingDataTab.type = "button";
-  trainingDataTab.setAttribute("role", "tab");
-  trainingDataTab.setAttribute("aria-selected", "false");
-  trainingDataTab.setAttribute("aria-controls", "admin-training-data-panel");
-  trainingDataTab.tabIndex = -1;
-  trainingDataTab.textContent = "Training Data";
+  const classifierTab = document.createElement("button");
+  classifierTab.id = "admin-classifier-tab";
+  classifierTab.className = "detail-tab";
+  classifierTab.type = "button";
+  classifierTab.setAttribute("role", "tab");
+  classifierTab.setAttribute("aria-selected", "false");
+  classifierTab.setAttribute("aria-controls", "admin-classifier-panel");
+  classifierTab.tabIndex = -1;
+  classifierTab.textContent = "Classifier";
   overviewTab.addEventListener("click", () => showAdminSection("overview", true));
-  evaluationTab.addEventListener("click", () => showAdminSection("detector-evaluation", true));
-  trainingDataTab.addEventListener("click", () => showAdminSection("training-data", true, state.activeTrainingDataView));
-  tabs.append(overviewTab, evaluationTab, trainingDataTab);
+  classifierTab.addEventListener("click", () => showAdminSection("classifier", true));
+  tabs.append(overviewTab, classifierTab);
 
-  const section = document.createElement("section");
-  section.id = "admin-overview-panel";
-  section.className = "settings-section account-section admin-subtab-panel";
-  section.setAttribute("role", "tabpanel");
-  section.setAttribute("aria-labelledby", "admin-overview-tab");
+  const overviewPanel = document.createElement("section");
+  overviewPanel.id = "admin-overview-panel";
+  overviewPanel.className = "settings-section account-section admin-subtab-panel";
+  overviewPanel.setAttribute("role", "tabpanel");
+  overviewPanel.setAttribute("aria-labelledby", "admin-overview-tab");
   const title = document.createElement("h3");
   title.textContent = "Administrator Access";
   const message = document.createElement("p");
   message.textContent = "Administrator access is active for this account.";
-  const future = document.createElement("p");
-  future.className = "account-help";
-  future.textContent = "Administrative access is server-authorized. Account and workspace management will appear only when those capabilities are implemented.";
+  const help = document.createElement("p");
+  help.className = "account-help";
+  help.textContent = "Administration is server-authorized and scoped to operational diagnostics.";
   const status = document.createElement("p");
   status.className = "settings-status";
   status.setAttribute("role", "status");
   status.setAttribute("aria-live", "polite");
-  section.append(title, message, future, status);
-  const evaluationPanel = document.createElement("section");
-  evaluationPanel.id = "admin-detector-evaluation-panel";
-  evaluationPanel.className = "settings-section admin-subtab-panel detector-evaluation-panel";
-  evaluationPanel.setAttribute("role", "tabpanel");
-  evaluationPanel.setAttribute("aria-labelledby", "admin-detector-evaluation-tab");
-  evaluationPanel.hidden = true;
-  const evaluationTitle = document.createElement("h3");
-  evaluationTitle.textContent = "Detector Evaluation";
-  const evaluationIntro = document.createElement("p");
-  evaluationIntro.textContent = "Production detector predictions are compared with independent, explicitly labeled development fixtures. These metrics describe only the reviewed corpus—not unlabeled production postings or Job Fit scoring quality.";
-  const evaluationStatus = document.createElement("p");
-  evaluationStatus.className = "settings-status";
-  evaluationStatus.setAttribute("role", "status");
-  evaluationStatus.setAttribute("aria-live", "polite");
-  const evaluationContent = document.createElement("div");
-  evaluationContent.className = "detector-evaluation-content";
-  const llmButton = document.createElement("button");
-  llmButton.type = "button";
-  llmButton.textContent = "Run experimental local LLM comparison";
-  llmButton.addEventListener("click", () => void runLlmEvaluation(llmButton));
-  const llmContent = document.createElement("div");
-  llmContent.className = "detector-llm-content";
-  evaluationPanel.append(evaluationTitle, evaluationIntro, llmButton, evaluationStatus,
-    llmContent, evaluationContent);
-  const trainingDataPanel = document.createElement("section");
-  trainingDataPanel.id = "admin-training-data-panel";
-  trainingDataPanel.className = "admin-subtab-panel training-data-panel";
-  trainingDataPanel.setAttribute("role", "tabpanel");
-  trainingDataPanel.setAttribute("aria-labelledby", "admin-training-data-tab");
-  trainingDataPanel.hidden = true;
-  const trainingDataHeading = document.createElement("h3");
-  trainingDataHeading.textContent = "Training Data";
-  const trainingDataIntro = document.createElement("p");
-  trainingDataIntro.className = "account-help";
-  trainingDataIntro.textContent = "Prepare reviewed examples for a future supervised classifier through human and machine-assisted labeling.";
-  const trainingDataTabs = document.createElement("div");
-  trainingDataTabs.className = "settings-tabs training-data-subtabs";
-  trainingDataTabs.setAttribute("role", "tablist");
-  trainingDataTabs.setAttribute("aria-label", "Training Data workflows");
-  const humanLabelingTab = document.createElement("button");
-  humanLabelingTab.id = "admin-training-data-human-tab";
-  humanLabelingTab.className = "detail-tab active";
-  humanLabelingTab.type = "button";
-  humanLabelingTab.setAttribute("role", "tab");
-  humanLabelingTab.setAttribute("aria-selected", "true");
-  humanLabelingTab.setAttribute("aria-controls", "admin-human-labeling-panel");
-  humanLabelingTab.textContent = "Human Labeling";
-  const machineLabelingTab = document.createElement("button");
-  machineLabelingTab.id = "admin-training-data-machine-tab";
-  machineLabelingTab.className = "detail-tab";
-  machineLabelingTab.type = "button";
-  machineLabelingTab.setAttribute("role", "tab");
-  machineLabelingTab.setAttribute("aria-selected", "false");
-  machineLabelingTab.setAttribute("aria-controls", "admin-machine-labeling-panel");
-  machineLabelingTab.tabIndex = -1;
-  machineLabelingTab.textContent = "Machine Labeling";
-  humanLabelingTab.addEventListener("click", () => showAdminSection("training-data", true, "human"));
-  machineLabelingTab.addEventListener("click", () => showAdminSection("training-data", true, "machine"));
-  trainingDataTabs.append(humanLabelingTab, machineLabelingTab);
-  const humanLabelingPanel = document.createElement("section");
-  humanLabelingPanel.id = "admin-human-labeling-panel";
-  humanLabelingPanel.className = "settings-section training-data-view annotation-labeling-panel";
-  humanLabelingPanel.setAttribute("role", "tabpanel");
-  humanLabelingPanel.setAttribute("aria-labelledby", "admin-training-data-human-tab");
-  const machineLabelingPanel = document.createElement("section");
-  machineLabelingPanel.id = "admin-machine-labeling-panel";
-  machineLabelingPanel.className = "settings-section training-data-view annotation-labeling-panel";
-  machineLabelingPanel.setAttribute("role", "tabpanel");
-  machineLabelingPanel.setAttribute("aria-labelledby", "admin-training-data-machine-tab");
-  machineLabelingPanel.hidden = true;
-  trainingDataPanel.append(trainingDataHeading, trainingDataIntro, trainingDataTabs, humanLabelingPanel, machineLabelingPanel);
-  surface.append(tabs, section, evaluationPanel, trainingDataPanel);
+  overviewPanel.append(title, message, help, status);
+
+  const classifierPanel = document.createElement("section");
+  classifierPanel.id = "admin-classifier-panel";
+  classifierPanel.className = "settings-section admin-subtab-panel";
+  classifierPanel.setAttribute("role", "tabpanel");
+  classifierPanel.setAttribute("aria-labelledby", "admin-classifier-tab");
+  classifierPanel.hidden = true;
+  const classifierTitle = document.createElement("h3");
+  classifierTitle.textContent = "Qwen Classifier";
+  const classifierIntro = document.createElement("p");
+  classifierIntro.textContent = "View persisted 85-concept classification coverage and start a bounded background backfill. Ingestion and browsing remain available while classification runs.";
+  const classifierStatus = document.createElement("p");
+  classifierStatus.className = "settings-status";
+  classifierStatus.setAttribute("role", "status");
+  classifierStatus.setAttribute("aria-live", "polite");
+  const backfill = document.createElement("button");
+  backfill.type = "button";
+  backfill.textContent = "Start background backfill";
+  backfill.addEventListener("click", () => void startClassifierBackfill());
+  classifierPanel.append(classifierTitle, classifierIntro, classifierStatus, backfill);
+  surface.append(tabs, overviewPanel, classifierPanel);
   view.append(surface);
   elements.settingsView.after(view);
 
@@ -1177,73 +1101,33 @@ function synchronizeAdminNavigation(isAdmin) {
   elements.adminView = view;
   elements.adminStatus = status;
   elements.adminOverviewTab = overviewTab;
-  elements.adminEvaluationTab = evaluationTab;
-  elements.adminTrainingDataTab = trainingDataTab;
-  elements.adminHumanLabelingTab = humanLabelingTab;
-  elements.adminMachineLabelingTab = machineLabelingTab;
-  elements.adminOverviewPanel = section;
-  elements.adminEvaluationPanel = evaluationPanel;
-  elements.adminTrainingDataPanel = trainingDataPanel;
-  elements.adminHumanLabelingPanel = humanLabelingPanel;
-  elements.adminMachineLabelingPanel = machineLabelingPanel;
-  elements.adminEvaluationStatus = evaluationStatus;
-  elements.adminEvaluationContent = evaluationContent;
-  elements.adminLlmContent = llmContent;
-  const directSection = adminSectionFromLocation();
-  if (directSection) {
+  elements.adminClassifierTab = classifierTab;
+  elements.adminOverviewPanel = overviewPanel;
+  elements.adminClassifierPanel = classifierPanel;
+  elements.adminClassifierStatus = classifierStatus;
+  elements.adminClassifierBackfill = backfill;
+  if (window.location.hash === "#admin-classifier") {
     showView("admin", false, { bypassSourceGuard: true });
-    showAdminSection(directSection.section, false, directSection.view);
+    showAdminSection("classifier", false);
   }
 }
 
-function adminSectionFromLocation() {
-  const match = /^#admin-training-data-(human|machine)$/.exec(window.location.hash);
-  if (match) return { section: "training-data", view: match[1] };
-  const legacy = /^#admin-(human|machine)-labeling$/.exec(window.location.hash);
-  return legacy ? { section: "training-data", view: legacy[1] } : null;
-}
-
-function showAdminSection(section, updateLocation = false, trainingDataView = "human") {
-  const evaluationSelected = section === "detector-evaluation";
-  const trainingDataSelected = section === "training-data";
-  const machineSelected = trainingDataSelected && trainingDataView === "machine";
-  const humanSelected = trainingDataSelected && !machineSelected;
-  state.activeAdminTab = evaluationSelected ? "detector-evaluation" : trainingDataSelected ? "training-data" : "overview";
-  if (trainingDataSelected) state.activeTrainingDataView = machineSelected ? "machine" : "human";
-  elements.adminOverviewPanel.hidden = evaluationSelected || trainingDataSelected;
-  elements.adminEvaluationPanel.hidden = !evaluationSelected;
-  elements.adminTrainingDataPanel.hidden = !trainingDataSelected;
-  elements.adminHumanLabelingPanel.hidden = !humanSelected;
-  elements.adminMachineLabelingPanel.hidden = !machineSelected;
-  elements.adminOverviewTab.classList.toggle("active", !evaluationSelected && !trainingDataSelected);
-  elements.adminEvaluationTab.classList.toggle("active", evaluationSelected);
-  elements.adminTrainingDataTab.classList.toggle("active", trainingDataSelected);
-  elements.adminHumanLabelingTab.classList.toggle("active", humanSelected);
-  elements.adminMachineLabelingTab.classList.toggle("active", machineSelected);
-  elements.adminOverviewTab.setAttribute("aria-selected", String(!evaluationSelected && !trainingDataSelected));
-  elements.adminEvaluationTab.setAttribute("aria-selected", String(evaluationSelected));
-  elements.adminTrainingDataTab.setAttribute("aria-selected", String(trainingDataSelected));
-  elements.adminHumanLabelingTab.setAttribute("aria-selected", String(humanSelected));
-  elements.adminMachineLabelingTab.setAttribute("aria-selected", String(machineSelected));
-  elements.adminOverviewTab.tabIndex = evaluationSelected || trainingDataSelected ? -1 : 0;
-  elements.adminEvaluationTab.tabIndex = evaluationSelected ? 0 : -1;
-  elements.adminTrainingDataTab.tabIndex = trainingDataSelected ? 0 : -1;
-  elements.adminHumanLabelingTab.tabIndex = humanSelected ? 0 : -1;
-  elements.adminMachineLabelingTab.tabIndex = machineSelected ? 0 : -1;
-  if (evaluationSelected) void loadDetectorEvaluation();
-  if (humanSelected) AnnotationLabeling.mountHuman(elements.adminHumanLabelingPanel);
-  if (machineSelected) AnnotationLabeling.mountMachine(elements.adminMachineLabelingPanel, {
-    navigateToHuman(queue) {
-      showAdminSection("training-data", true, "human");
-      elements.adminHumanLabelingPanel.dispatchEvent(new CustomEvent("annotation:select-queue", { detail: { queue } }));
-    }
-  });
+function showAdminSection(section, updateLocation = false) {
+  const classifierSelected = section === "classifier";
+  state.activeAdminTab = classifierSelected ? "classifier" : "overview";
+  elements.adminOverviewPanel.hidden = classifierSelected;
+  elements.adminClassifierPanel.hidden = !classifierSelected;
+  elements.adminOverviewTab.classList.toggle("active", !classifierSelected);
+  elements.adminClassifierTab.classList.toggle("active", classifierSelected);
+  elements.adminOverviewTab.setAttribute("aria-selected", String(!classifierSelected));
+  elements.adminClassifierTab.setAttribute("aria-selected", String(classifierSelected));
+  elements.adminOverviewTab.tabIndex = classifierSelected ? -1 : 0;
+  elements.adminClassifierTab.tabIndex = classifierSelected ? 0 : -1;
+  if (classifierSelected) void loadClassifierStatus();
   if (updateLocation) {
-    const hash = trainingDataSelected ? `#admin-training-data-${state.activeTrainingDataView}` : "";
-    history.replaceState(null, "", `${window.location.pathname}${window.location.search}${hash}`);
+    history.replaceState(null, "", `${window.location.pathname}${window.location.search}${classifierSelected ? "#admin-classifier" : ""}`);
   }
 }
-
 async function loadAdminStatus() {
   if (!elements.adminStatus || state.adminStatusLoaded) return;
   elements.adminStatus.textContent = "Verifying administrator access…";
@@ -1259,365 +1143,35 @@ async function loadAdminStatus() {
   }
 }
 
-function formatDetectorMetric(value) {
-  return typeof value === "number" && Number.isFinite(value) ? value.toFixed(2) : "N/A";
-}
-
-function renderLlmEvaluation(report) {
-  const container = elements.adminLlmContent;
-  container.replaceChildren();
-  const heading = document.createElement("h4");
-  heading.textContent = "Regex vs. local generative LLM experiment";
-  const identity = document.createElement("p");
-  identity.textContent = `${report.modelId} · ${report.quantization} · ${report.modelDigest.slice(0, 19)}… · ${report.fixtureCount} fixtures / ${report.labelCount} labels`;
-  const timing = document.createElement("p");
-  timing.textContent = `Average inference ${report.averageInferenceMilliseconds.toFixed(1)} ms · round trip ${report.averageRoundTripMilliseconds.toFixed(1)} ms · ${report.averageTokensPerSecond.toFixed(1)} output tokens/s · malformed outputs ${report.malformedOutputCount}`;
-  const table = document.createElement("table");
-  table.className = "detector-metrics-table";
-  const head = document.createElement("thead");
-  const headRow = document.createElement("tr");
-  ["Method", "Macro P", "Macro R", "Macro F1", "Micro P", "Micro R", "Micro F1"].forEach(label => {
-    const cell = document.createElement("th"); cell.scope = "col"; cell.textContent = label; headRow.append(cell);
-  });
-  head.append(headRow); const body = document.createElement("tbody");
-  [["Regex", report.regexMacro, report.regexMicro], ["Local LLM", report.llmMacro, report.llmMicro]]
-    .forEach(([method, macro, micro]) => {
-      const row = document.createElement("tr");
-      [method, formatDetectorMetric(macro.precision), formatDetectorMetric(macro.recall),
-       formatDetectorMetric(macro.f1), formatDetectorMetric(micro.precision),
-       formatDetectorMetric(micro.recall), formatDetectorMetric(micro.f1)].forEach(value => {
-        const cell = document.createElement("td"); cell.textContent = String(value); row.append(cell);
-      }); body.append(row);
-    });
-  table.append(head, body); container.append(heading, identity, timing, table);
-
-  const conceptHeading = document.createElement("h5");
-  conceptHeading.textContent = "Per-concept comparison";
-  const conceptTable = document.createElement("table");
-  conceptTable.className = "detector-metrics-table";
-  const conceptHead = document.createElement("thead");
-  const conceptHeadRow = document.createElement("tr");
-  ["Concept", "+ / −", "Regex P", "Regex R", "Regex F1", "LLM P", "LLM R", "LLM F1", "Δ F1"]
-    .forEach(label => {
-      const cell = document.createElement("th"); cell.scope = "col"; cell.textContent = label; conceptHeadRow.append(cell);
-    });
-  conceptHead.append(conceptHeadRow);
-  const conceptBody = document.createElement("tbody");
-  report.conceptComparisons.forEach(item => {
-    const row = document.createElement("tr");
-    [item.concept, `${item.positiveSupport} / ${item.negativeSupport}`,
-     formatDetectorMetric(item.regexPrecision), formatDetectorMetric(item.regexRecall),
-     formatDetectorMetric(item.regexF1), formatDetectorMetric(item.llmPrecision),
-     formatDetectorMetric(item.llmRecall), formatDetectorMetric(item.llmF1),
-     formatDetectorMetric(item.f1Delta)].forEach(value => {
-      const cell = document.createElement("td"); cell.textContent = String(value); row.append(cell);
-    });
-    conceptBody.append(row);
-  });
-  conceptTable.append(conceptHead, conceptBody);
-  container.append(conceptHeading, conceptTable);
-}
-
-async function runLlmEvaluation(button) {
-  button.disabled = true;
-  elements.adminEvaluationStatus.textContent = "Running 40 GPU fixture inferences…";
+async function loadClassifierStatus(force = false) {
+  if (!elements.adminClassifierStatus || state.classifierStatusLoaded && !force) return;
+  elements.adminClassifierStatus.textContent = "Loading classifier status…";
   try {
-    const response = await fetch("/api/admin/detector-evaluation/llm", {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: "{}"
-    });
-    const report = await response.json();
-    if (!response.ok || report.status !== "complete") throw new Error(report.error || "Local LLM evaluation is unavailable.");
-    renderLlmEvaluation(report);
-    elements.adminEvaluationStatus.textContent = "Experimental local LLM comparison complete. Production scoring was not changed.";
+    const response = await fetch("/api/admin/classifier/backfill/status", { cache: "no-store" });
+    if (!response.ok) throw new Error("Classifier status could not be loaded.");
+    const result = await response.json();
+    state.classifierStatusLoaded = true;
+    elements.adminClassifierStatus.textContent = `${result.current} of ${result.total} cached postings classified · ${result.pending} pending · ${result.unavailable} unavailable${result.running ? " · backfill running" : ""}.`;
+    elements.adminClassifierBackfill.disabled = result.running || result.pending === 0;
   } catch (error) {
-    elements.adminEvaluationStatus.textContent = error.message || String(error);
-  } finally { button.disabled = false; }
-}
-
-function appendDetectorErrors(container, label, errors) {
-  const details = document.createElement("details");
-  details.className = "detector-error-details";
-  const summary = document.createElement("summary");
-  summary.textContent = `${label} (${errors.length})`;
-  details.append(summary);
-  if (errors.length === 0) {
-    const empty = document.createElement("p");
-    empty.textContent = "None in the labeled fixture corpus.";
-    details.append(empty);
-  } else {
-    const list = document.createElement("ul");
-    errors.forEach(error => {
-      const item = document.createElement("li");
-      const heading = document.createElement("strong");
-      heading.textContent = `${error.fixtureId} — ${error.title}`;
-      const outcome = document.createElement("span");
-      outcome.textContent = `Expected ${error.expectedPresent ? "present" : "absent"}; predicted ${error.predictedPresent ? "present" : "absent"}.`;
-      const metadata = document.createElement("small");
-      metadata.textContent = `${error.source}${error.requisitionId ? ` · ${error.requisitionId}` : ""} · ${error.labelSource}`;
-      const excerpt = document.createElement("small");
-      excerpt.textContent = `Posting excerpt: ${error.excerpt}`;
-      const rationale = document.createElement("small");
-      rationale.textContent = `Label rationale: ${error.rationale || "No additional label note."}`;
-      const evidence = document.createElement("small");
-      evidence.textContent = `Detector evidence: ${error.evidence}`;
-      item.append(heading, metadata, outcome, excerpt, rationale, evidence);
-      list.append(item);
-    });
-    details.append(list);
-  }
-  container.append(details);
-}
-
-function renderDetectorEvaluation(report) {
-  const container = elements.adminEvaluationContent;
-  container.replaceChildren();
-
-  const caveat = document.createElement("p");
-  caveat.className = "detector-sample-caveat";
-  caveat.textContent = `${report.fixtureCount} reviewed posting fixtures provide ${report.labelCount} independent concept labels across ${report.canonicalConceptCount} canonical detectors. These development labels are useful for regression and engineering evaluation, not an independently adjudicated research gold standard or a claim of broad statistical accuracy.`;
-  const definitions = document.createElement("p");
-  definitions.className = "detector-metric-definitions";
-  definitions.textContent = "This evaluates whether production posting-text detectors identify a concept—not Job Fit score quality, qualifications, application decisions, or preference sentiment. Precision: when JSM says a concept is present, how often is it right? Recall: of labeled postings that truly contain it, how many did JSM find? F1 balances Precision and Recall.";
-  const coverage = document.createElement("p");
-  coverage.className = "detector-coverage-summary";
-  coverage.textContent = `${report.evaluatableCount} evaluatable · ${report.partiallyEvaluatableCount} partially evaluatable · ${report.excludedCount} non-detector constructs excluded.`;
-  container.append(caveat, definitions, coverage);
-
-  const exclusions = document.createElement("details");
-  exclusions.className = "detector-exclusions";
-  const exclusionsSummary = document.createElement("summary");
-  exclusionsSummary.textContent = `What is excluded from direct F1 (${report.exclusions.length})`;
-  const exclusionList = document.createElement("ul");
-  report.exclusions.forEach(item => {
-    const row = document.createElement("li");
-    const name = document.createElement("strong");
-    name.textContent = item.name;
-    const reason = document.createElement("span");
-    reason.textContent = item.rationale;
-    row.append(name, reason);
-    exclusionList.append(row);
-  });
-  exclusions.append(exclusionsSummary, exclusionList);
-  container.append(exclusions);
-
-  const aggregate = document.createElement("div");
-  aggregate.className = "detector-aggregate-grid";
-  const aggregateRows = [
-    ["All evaluated · Macro", report.macro, "Each evaluated concept contributes equally."],
-    ["All evaluated · Micro", report.micro, "Predictions are pooled, so concepts with more labels contribute more."],
-    ...report.tierAggregates.flatMap(item => [
-      [`${item.tier} · Macro`, item.macro, `${item.macro.conceptCount} evaluated concepts; each contributes equally.`],
-      [`${item.tier} · Micro`, item.micro, `${item.micro.labelCount} labels pooled within this priority tier.`]
-    ])
-  ];
-  aggregateRows.forEach(([label, metric, explanation]) => {
-      const card = document.createElement("section");
-      card.className = "detector-aggregate-card";
-      const title = document.createElement("h4");
-      title.textContent = `${label} metrics`;
-      const values = document.createElement("p");
-      values.textContent = `Precision ${formatDetectorMetric(metric.precision)} · Recall ${formatDetectorMetric(metric.recall)} · F1 ${formatDetectorMetric(metric.f1)}`;
-      const note = document.createElement("small");
-      note.textContent = explanation;
-      card.append(title, values, note);
-      aggregate.append(card);
-    });
-  container.append(aggregate);
-
-  const controls = document.createElement("section");
-  controls.className = "detector-concept-controls";
-  controls.setAttribute("aria-label", "Detector concept filters");
-  const searchLabel = document.createElement("label");
-  searchLabel.textContent = "Search concepts";
-  const search = document.createElement("input");
-  search.type = "search";
-  search.placeholder = "AI, cloud, management…";
-  search.setAttribute("aria-label", "Search detector concepts");
-  searchLabel.append(search);
-  const filterButtons = document.createElement("div");
-  filterButtons.className = "detector-summary-filters";
-  const filterChoices = [["all", "All"], ["tier1", "Tier 1"], ["tier2", "Tier 2"],
-    ["tier3", "Tier 3"], ["evaluated", "Evaluated"], ["not-evaluated", "Not evaluated"],
-    ["errors", "Errors present"]];
-  let activeFilter = "all";
-  const filterStatus = document.createElement("p");
-  filterStatus.className = "detector-filter-status";
-  filterStatus.setAttribute("aria-live", "polite");
-  controls.append(searchLabel, filterButtons, filterStatus);
-  container.append(controls);
-
-  const tableWrap = document.createElement("div");
-  tableWrap.className = "detector-metrics-table-wrap";
-  const table = document.createElement("table");
-  table.className = "detector-metrics-table";
-  const head = document.createElement("thead");
-  const headRow = document.createElement("tr");
-  ["Concept", "Family", "Tier / class", "Pos", "Neg", "Total", "Maturity", "TP", "FP", "FN", "TN", "Precision", "Recall", "F1"].forEach(label => {
-    const cell = document.createElement("th");
-    cell.scope = "col";
-    cell.textContent = label;
-    headRow.append(cell);
-  });
-  head.append(headRow);
-  const body = document.createElement("tbody");
-  const rows = [];
-  report.concepts.forEach(metric => {
-    const row = document.createElement("tr");
-    row.detectorMetric = metric;
-    row.dataset.search = `${metric.concept} ${metric.conceptId} ${metric.category}`.toLocaleLowerCase();
-    row.dataset.tier = metric.tier.startsWith("Tier 1") ? "tier1" : metric.tier.startsWith("Tier 2") ? "tier2" : "tier3";
-    row.dataset.evaluated = String(metric.evaluated);
-    row.dataset.errors = String(metric.falsePositive + metric.falseNegative > 0);
-    const concept = document.createElement("th");
-    concept.scope = "row";
-    concept.textContent = metric.concept;
-    const tierClass = `${metric.tier.replace(/ — .*/, "")} · ${metric.evaluationClass}`;
-    const values = [metric.category, tierClass, metric.positiveSupport, metric.negativeExamples, metric.totalExamples,
-      metric.sampleSize, metric.truePositive, metric.falsePositive,
-      metric.falseNegative, metric.trueNegative, formatDetectorMetric(metric.precision),
-      formatDetectorMetric(metric.recall), formatDetectorMetric(metric.f1)];
-    row.append(concept);
-    values.forEach(value => {
-      const cell = document.createElement("td");
-      cell.textContent = String(value);
-      row.append(cell);
-    });
-    body.append(row);
-    rows.push(row);
-  });
-  table.append(head, body);
-  tableWrap.append(table);
-  container.append(tableWrap);
-
-  const applyConceptFilters = () => {
-    const query = search.value.trim().toLocaleLowerCase();
-    let shown = 0;
-    rows.forEach(row => {
-      row.hidden = !DetectorEvaluationUi.matchesMetric(row.detectorMetric, activeFilter, query);
-      if (!row.hidden) shown += 1;
-    });
-    filterStatus.textContent = `${shown} of ${rows.length} detector concepts shown.`;
-  };
-  filterChoices.forEach(([value, label], index) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = label;
-    button.className = "detector-filter-button";
-    button.setAttribute("aria-pressed", String(index === 0));
-    button.addEventListener("click", () => {
-      activeFilter = value;
-      filterButtons.querySelectorAll("button").forEach(item =>
-        item.setAttribute("aria-pressed", String(item === button)));
-      applyConceptFilters();
-    });
-    filterButtons.append(button);
-  });
-  search.addEventListener("input", applyConceptFilters);
-  applyConceptFilters();
-
-  const review = document.createElement("section");
-  review.className = "detector-example-review";
-  const reviewTitle = document.createElement("h4");
-  reviewTitle.textContent = "Labeled example review";
-  const reviewCopy = document.createElement("p");
-  reviewCopy.textContent = "Expected labels are independently reviewed fixture values; predictions come from the production detector.";
-  review.append(reviewTitle, reviewCopy);
-  report.concepts.filter(metric => metric.evaluated).forEach(metric => {
-    const details = document.createElement("details");
-    details.className = "detector-concept-examples";
-    const summary = document.createElement("summary");
-    summary.textContent = `${metric.concept} — ${metric.totalExamples} labels · ${metric.sampleSize}`;
-    const filters = document.createElement("div");
-    filters.className = "detector-example-filters";
-    const list = document.createElement("div");
-    list.className = "detector-example-list";
-    const renderExamples = filter => {
-      list.replaceChildren();
-      const examples = metric.examples.filter(example =>
-        filter === "all" ||
-        filter === "positive" && example.expectedPresent ||
-        filter === "negative" && !example.expectedPresent ||
-        filter === "errors" && (example.result === "FP" || example.result === "FN"));
-      if (examples.length === 0) {
-        const empty = document.createElement("p");
-        empty.textContent = "No labeled examples match this filter.";
-        list.append(empty);
-        return;
-      }
-      examples.forEach(example => {
-        const article = document.createElement("article");
-        article.className = `detector-example detector-result-${example.result.toLocaleLowerCase()}`;
-        const heading = document.createElement("strong");
-        heading.textContent = `${example.fixtureId} — ${example.title}`;
-        const metadata = document.createElement("span");
-        const requisition = example.requisitionId ? ` · ${example.requisitionId}` : "";
-        metadata.textContent = `${example.source}${requisition} · ${example.provenance}`;
-        const outcome = document.createElement("span");
-        outcome.textContent = `Expected ${example.expectedPresent ? "Present" : "Absent"} · Predicted ${example.predictedPresent ? "Present" : "Absent"} · ${example.result}`;
-        const rationale = document.createElement("small");
-        rationale.textContent = example.rationale ? `Label note: ${example.rationale}` : "No label note.";
-        const labelSource = document.createElement("small");
-        labelSource.textContent = `Ground-truth source: ${example.labelSource}`;
-        const excerpt = document.createElement("small");
-        excerpt.textContent = `Posting excerpt: ${example.excerpt}`;
-        const evidence = document.createElement("small");
-        evidence.textContent = `Detector evidence: ${example.evidence}`;
-        article.append(heading, metadata, outcome, labelSource, rationale, excerpt, evidence);
-        list.append(article);
-      });
-    };
-    [["all", "All"], ["positive", "Positive labels"], ["negative", "Negative labels"], ["errors", "Errors only"]]
-      .forEach(([value, label], index) => {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.textContent = label;
-        button.className = "detector-filter-button";
-        button.setAttribute("aria-pressed", String(index === 0));
-        button.addEventListener("click", () => {
-          filters.querySelectorAll("button").forEach(item =>
-            item.setAttribute("aria-pressed", String(item === button)));
-          renderExamples(value);
-        });
-        filters.append(button);
-      });
-    renderExamples("all");
-    details.append(summary, filters, list);
-    review.append(details);
-  });
-  container.append(review);
-
-  const errors = document.createElement("section");
-  errors.className = "detector-error-review";
-  const errorTitle = document.createElement("h4");
-  errorTitle.textContent = "Error review";
-  errors.append(errorTitle);
-  report.concepts.filter(metric => metric.falsePositives.length || metric.falseNegatives.length).forEach(metric => {
-    const concept = document.createElement("section");
-    const heading = document.createElement("h5");
-    heading.textContent = metric.concept;
-    concept.append(heading);
-    appendDetectorErrors(concept, "False positives", metric.falsePositives);
-    appendDetectorErrors(concept, "False negatives", metric.falseNegatives);
-    errors.append(concept);
-  });
-  container.append(errors);
-}
-
-async function loadDetectorEvaluation() {
-  if (!elements.adminEvaluationStatus || state.detectorEvaluationLoaded) return;
-  elements.adminEvaluationStatus.textContent = "Evaluating labeled detector fixtures…";
-  try {
-    const response = await fetch("/api/admin/detector-evaluation", { cache: "no-store" });
-    if (!response.ok) throw new Error("Detector evaluation could not be loaded.");
-    const report = await response.json();
-    renderDetectorEvaluation(report);
-    state.detectorEvaluationLoaded = true;
-    elements.adminEvaluationStatus.textContent = `${report.labelCount} concept labels evaluated from ${report.fixtureCount} reviewed posting fixtures.`;
-  } catch (error) {
-    elements.adminEvaluationStatus.textContent = error.message || String(error);
+    elements.adminClassifierStatus.textContent = error.message || String(error);
   }
 }
 
+async function startClassifierBackfill() {
+  if (!elements.adminClassifierBackfill) return;
+  elements.adminClassifierBackfill.disabled = true;
+  elements.adminClassifierStatus.textContent = "Starting bounded background backfill…";
+  try {
+    const response = await fetch("/api/admin/classifier/backfill", { method: "POST" });
+    if (!response.ok) throw new Error("Classifier backfill could not be started.");
+    state.classifierStatusLoaded = false;
+    await loadClassifierStatus(true);
+  } catch (error) {
+    elements.adminClassifierStatus.textContent = error.message || String(error);
+    elements.adminClassifierBackfill.disabled = false;
+  }
+}
 async function claimAdministrator(event) {
   event.preventDefault();
   elements.administratorBootstrapStatus.textContent = "";

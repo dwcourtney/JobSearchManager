@@ -119,8 +119,8 @@ lab machine is offline.
 
 Trivy 0.74.0 runs as a short-lived container pinned to the immutable linux/amd64
 digest `sha256:ee940acbf1f58ebadb42d01434ce4609530bf1b52536afbd1eee66cd7123c5c9`.
-There is no host Trivy installation, daemon, GitHub token, Azure credential, or
-Cloudflare credential. The scanner container is non-root, read-only, has all Linux
+There is no host Trivy installation, daemon, GitHub token, or cloud credential. The scanner
+container is non-root, read-only, has all Linux
 capabilities dropped, has telemetry disabled, and never receives the Docker socket.
 Images are exported to a temporary archive with `docker save`, scanned through
 Trivy's `--input` path, and deleted by an exit trap.
@@ -176,8 +176,8 @@ exposed 63 C# rules and 103 JavaScript rules through GitHub's analysis API.
 
 The workflow defaults to no token permissions. Only the two CodeQL jobs receive
 `contents: read` and `security-events: write`; no deployment environment, self-hosted
-runner, curiosity credential, application data, Azure credential, or Cloudflare
-credential is available to them. Results are uploaded to GitHub code scanning under
+runner, curiosity credential, application data, or cloud credential is available to
+them. Results are uploaded to GitHub code scanning under
 the C# and JavaScript categories and are reviewed at the repository's Security and
 quality code-scanning page.
 
@@ -242,10 +242,10 @@ manual dispatch intentionally revalidates the target.
 
 ## Host deployment behavior
 
-The controlled manifest is `deploy/compose.curiosity.yaml`. It deliberately declares
-only the `jsm` service in Compose project `jsm-lab`. Deployment uses `up --no-deps`
-for that service and never invokes `down` or `--remove-orphans`, so the existing
-Mailpit service is not recreated. `ai801` is outside this Compose project and is never
+The controlled manifest is `deploy/compose.curiosity.yaml`. It declares JSM plus the internal
+classifier adapter and Ollama runtime in Compose project `jsm-lab`. Deployment updates only those
+three named services and never invokes `down`, `--remove-orphans`, or a broad cleanup, so the
+existing Mailpit service is not recreated. `ai801` is outside this Compose project and is never
 selected or cleaned.
 
 The manifest bind-mounts the existing paths without copying, deleting, or replacing
@@ -270,8 +270,7 @@ sed -n '1p' /home/codex/jsm-lab/data/app/admin-bootstrap-code
 
 Do not copy the code into automation logs. A successful claim deletes the file, and
 JSM does not generate another while any Admin account exists. Deployments without the
-explicit bootstrap-path setting remain disabled; Azure rejects this server-file
-mechanism.
+explicit bootstrap-path setting remain disabled.
 
 `/home/codex/jsm-lab/backups` must also exist before deployment, and the deploy script
 refuses to continue if any of these three persistent locations is absent. Application
@@ -330,5 +329,4 @@ from `main` history, which is revalidated before deployment.
 
 Never commit environment files, credentials, account stores, runtime data, Data
 Protection keys, Mailpit state, bundles, runner configuration, or deployment state.
-Never place Azure or Cloudflare credentials in GitHub Actions; this deployment does
-not use or modify Azure.
+Never place cloud credentials in GitHub Actions; this deployment does not require them.

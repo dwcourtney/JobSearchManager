@@ -3,9 +3,6 @@ using System.Net.Mail;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using Azure;
-using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Models;
 using Microsoft.AspNetCore.Identity;
 
 namespace JobSearchManager;
@@ -179,86 +176,6 @@ public sealed class FileAccountRegistryStore : IAccountRegistryStore
             ?? new AccountRegistryDocument();
         document.Normalize();
         return document;
-    }
-}
-
-public sealed class AzureBlobAccountRegistryStore : IAccountRegistryStore
-{
-    internal const string BlobName = "authentication/accounts.json";
-    private readonly BlobClient _blob;
-    private readonly SemaphoreSlim _gate = new(1, 1);
-    private readonly JsonSerializerOptions _json = new(JsonSerializerDefaults.Web) { WriteIndented = true };
-
-    public AzureBlobAccountRegistryStore(BlobContainerClient container) => _blob = container.GetBlobClient(BlobName);
-
-    public async Task<TResult> MutateAsync<TResult>(
-        Func<AccountRegistryDocument, AccountRegistryMutation<TResult>> mutation,
-        CancellationToken cancellationToken = default)
-    {
-        await _gate.WaitAsync(cancellationToken);
-        try
-        {
-            for (var attempt = 0; attempt < 5; attempt++)
-            {
-                var (document, etag) = await ReadAsync(cancellationToken);
-                var result = mutation(document);
-                if (!result.Changed) return result.Result;
-                try
-                {
-                    var content = BinaryData.FromObjectAsJson(document, _json);
-                    await _blob.UploadAsync(content, new BlobUploadOptions
-                    {
-                        HttpHeaders = new BlobHttpHeaders { ContentType = "application/json" },
-                        Conditions = etag.HasValue
-                            ? new BlobRequestConditions { IfMatch = etag.Value }
-                            : new BlobRequestConditions { IfNoneMatch = ETag.All }
-                    }, cancellationToken);
-                    return result.Result;
-                }
-                catch (RequestFailedException ex) when (ex.Status is 409 or 412)
-                {
-                    if (attempt == 4) throw;
-                }
-            }
-            throw new InvalidOperationException("The account registry could not be updated.");
-        }
-        catch (RequestFailedException ex)
-        {
-            throw new WorkspaceStorageException("Account storage is temporarily unavailable.", ex);
-        }
-        finally
-        {
-            _gate.Release();
-        }
-    }
-
-    public async Task ValidateAsync(CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            _ = await _blob.ExistsAsync(cancellationToken);
-        }
-        catch (RequestFailedException ex)
-        {
-            throw new WorkspaceStorageException("Account storage is temporarily unavailable.", ex);
-        }
-    }
-
-    private async Task<(AccountRegistryDocument Document, ETag? ETag)> ReadAsync(
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            var response = await _blob.DownloadContentAsync(cancellationToken);
-            var document = response.Value.Content.ToObjectFromJson<AccountRegistryDocument>(_json)
-                ?? new AccountRegistryDocument();
-            document.Normalize();
-            return (document, response.Value.Details.ETag);
-        }
-        catch (RequestFailedException ex) when (ex.Status == 404)
-        {
-            return (new AccountRegistryDocument(), null);
-        }
     }
 }
 

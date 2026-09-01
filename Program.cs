@@ -3,17 +3,13 @@ using System.IO.Compression;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Claims;
-using System.Text;
 using System.Text.Json;
 using System.Threading.RateLimiting;
-using Azure.Identity;
-using Azure.Storage.Blobs;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -119,14 +115,9 @@ builder.Services.AddSingleton<WorkAuthorizationDetector>();
 builder.Services.AddSingleton<RemoteWorkDetector>();
 builder.Services.AddSingleton<ExtendedLocationRequirementDetector>();
 builder.Services.AddSingleton<JobConceptCatalog>();
-builder.Services.AddSingleton<JobConceptDetector>();
 builder.Services.AddSingleton<SemanticClassificationService>();
-builder.Services.AddSingleton<DetectorEvaluationService>();
-builder.Services.AddSingleton<LlmEvaluationService>();
 builder.Services.AddSingleton<PortableWorkspaceService>();
 builder.Services.AddSingleton<SharedSourceRefreshCoordinator>();
-// Preserve the established data-protection discriminator so existing Azure
-// workspace cookies can be decrypted and migrated to the new cookie name.
 builder.Services.AddJobSearchManagerDataProtection(hosting);
 builder.Services.AddScoped<WorkspaceContext>();
 builder.Services.AddScoped<WorkspaceRuntimeProvider>();
@@ -134,37 +125,10 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<IPasswordHasher<AccountRecord>, PasswordHasher<AccountRecord>>();
 builder.Services.AddSingleton<IAccountEmailSender, SmtpAccountEmailSender>();
 
-if (!hosting.UsesLocalStorage)
-{
-    builder.Services.Configure<ForwardedHeadersOptions>(options =>
-    {
-        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-        options.KnownIPNetworks.Clear();
-        options.KnownProxies.Clear();
-    });
-    builder.Services.AddSingleton(_ => new DefaultAzureCredential(
-        new DefaultAzureCredentialOptions
-        {
-            ExcludeInteractiveBrowserCredential = true
-        }));
-    builder.Services.AddSingleton(services =>
-        new BlobServiceClient(
-            hosting.GetBlobServiceUri(),
-            services.GetRequiredService<DefaultAzureCredential>()));
-    builder.Services.AddSingleton(services =>
-        services.GetRequiredService<BlobServiceClient>()
-            .GetBlobContainerClient(hosting.StorageContainer));
-    builder.Services.AddSingleton<IWorkspaceDataStoreFactory, AzureBlobWorkspaceDataStoreFactory>();
-    builder.Services.AddSingleton<IAccountRegistryStore, AzureBlobAccountRegistryStore>();
-}
-else
-{
-    builder.Services.AddSingleton<IWorkspaceDataStoreFactory, FileWorkspaceDataStoreFactory>();
-    builder.Services.AddSingleton<IAccountRegistryStore, FileAccountRegistryStore>();
-}
+builder.Services.AddSingleton<IWorkspaceDataStoreFactory, FileWorkspaceDataStoreFactory>();
+builder.Services.AddSingleton<IAccountRegistryStore, FileAccountRegistryStore>();
 
 builder.Services.AddSingleton<WorkspaceRuntimeManager>();
-builder.Services.AddSingleton<AnnotationLabelingService>();
 builder.Services.AddSingleton<AccountService>();
 builder.Services.AddSingleton<AdminBootstrapService>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -174,8 +138,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.HttpOnly = true;
         options.Cookie.IsEssential = true;
         options.Cookie.SameSite = SameSiteMode.Lax;
-        options.Cookie.SecurePolicy = hosting.IsAzure
-            ? CookieSecurePolicy.Always : CookieSecurePolicy.SameAsRequest;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
         options.ExpireTimeSpan = TimeSpan.FromDays(180);
         options.SlidingExpiration = true;
         options.Events.OnRedirectToLogin = context =>
@@ -275,15 +238,6 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
 var app = builder.Build();
 var versionInfo = VersionEndpoint.Create(builder.Configuration, hosting);
 
-if (args is ["--detector-evaluation-diagnostic"])
-{
-    var evaluation = app.Services.GetRequiredService<DetectorEvaluationService>();
-    Console.WriteLine(JsonSerializer.Serialize(evaluation.Evaluate(
-        Environment.GetEnvironmentVariable("JOBSEARCHMANAGER_COMMIT_SHA")),
-        ClassifierClient.JsonOptions));
-    return;
-}
-
 app.Use(async (context, next) =>
 {
     if (await HealthEndpoint.TryHandleAsync(context)) return;
@@ -292,13 +246,6 @@ app.Use(async (context, next) =>
 });
 
 app.UseResponseCompression();
-
-if (hosting.UsesAzureTransportSecurity)
-{
-    app.UseForwardedHeaders();
-    app.UseHsts();
-    app.UseHttpsRedirection();
-}
 
 app.UseExceptionHandler(errorApp => errorApp.Run(async context =>
 {
@@ -505,19 +452,6 @@ app.MapGet("/api/admin/status", (HttpContext context) =>
     });
 }).RequireAuthorization(AdminAuthorization.Policy);
 
-app.MapGet("/api/admin/detector-evaluation", (DetectorEvaluationService evaluation) =>
-    Results.Ok(evaluation.Evaluate(Environment.GetEnvironmentVariable("JOBSEARCHMANAGER_COMMIT_SHA"))))
-    .RequireAuthorization(AdminAuthorization.Policy);
-
-app.MapPost("/api/admin/detector-evaluation/llm", async Task<IResult> (
-    LlmEvaluationService evaluation, CancellationToken token) =>
-{
-    var report = await evaluation.EvaluateAsync(
-        Environment.GetEnvironmentVariable("JOBSEARCHMANAGER_COMMIT_SHA"), token);
-    return Results.Json(report, statusCode: report.Status == "complete"
-        ? StatusCodes.Status200OK : StatusCodes.Status503ServiceUnavailable);
-}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
-
 app.MapPost("/api/admin/classifier-diagnostic", async Task<IResult> (
     ClassifierRequest request,
     ClassifierClient classifier,
@@ -547,183 +481,6 @@ app.MapPost("/api/admin/classifier/backfill", async (
         (await provider.GetAsync(token)).Catalog.StartSemanticClassificationBackfill()))
     .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
 
-app.MapGet("/api/admin/annotations/queue", async Task<IResult> (
-    string? status,
-    string? concept,
-    string? company,
-    AnnotationLabelingService annotations,
-    CancellationToken token) =>
-{
-    var queue = await annotations.GetQueueAsync(
-        new AnnotationQueueFilter(status ?? "unreviewed", concept, company), token);
-    return Results.Ok(queue);
-}).RequireAuthorization(AdminAuthorization.Policy);
-
-app.MapGet("/api/admin/annotations/generation-status", async Task<IResult> (
-    string? concept,
-    string? company,
-    WorkspaceRuntimeProvider provider,
-    AnnotationLabelingService annotations,
-    CancellationToken token) =>
-{
-    try
-    {
-        var jobs = (await provider.GetAsync(token)).Catalog.Snapshot.Jobs;
-        return Results.Ok(await annotations.GetGenerationStatusAsync(jobs, company, concept, token));
-    }
-    catch (ArgumentException exception)
-    {
-        return Results.BadRequest(new { error = exception.Message });
-    }
-}).RequireAuthorization(AdminAuthorization.Policy);
-
-app.MapPost("/api/admin/annotations/generate", async Task<IResult> (
-    AnnotationGenerateRequest request,
-    WorkspaceRuntimeProvider provider,
-    AnnotationLabelingService annotations,
-    CancellationToken token) =>
-{
-    var jobs = (await provider.GetAsync(token)).Catalog.Snapshot.Jobs;
-    try
-    {
-        return Results.Ok(await annotations.GenerateAsync(jobs, request, token));
-    }
-    catch (ArgumentException exception)
-    {
-        return Results.BadRequest(new { error = exception.Message });
-    }
-}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
-
-app.MapPut("/api/admin/annotations/{itemId}/decision", async Task<IResult> (
-    string itemId,
-    AnnotationDecisionRequest request,
-    string? status,
-    string? concept,
-    string? company,
-    HttpContext context,
-    AnnotationLabelingService annotations,
-    CancellationToken token) =>
-{
-    try
-    {
-        var reviewer = context.User.FindFirstValue(ClaimTypes.Name) ??
-            context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "administrator";
-        var queue = await annotations.DecideAsync(
-            itemId, request, reviewer,
-            new AnnotationQueueFilter(status ?? "unreviewed", concept, company), token);
-        return queue is null ? Results.NotFound(new { error = "Annotation item was not found." }) : Results.Ok(queue);
-    }
-    catch (ArgumentException exception)
-    {
-        return Results.BadRequest(new { error = exception.Message });
-    }
-}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
-
-app.MapGet("/api/admin/annotations/{itemId}/source", async Task<IResult> (
-    string itemId,
-    AnnotationLabelingService annotations,
-    CancellationToken token) =>
-{
-    var source = await annotations.GetSourceAsync(itemId, token);
-    return source is null ? Results.NotFound(new { error = "Annotation source was not found." }) : Results.Ok(source);
-}).RequireAuthorization(AdminAuthorization.Policy);
-
-app.MapGet("/api/admin/annotations/export", async Task<IResult> (
-    string? mode,
-    string? concept,
-    string? company,
-    string? batchId,
-    HttpContext context,
-    AnnotationLabelingService annotations,
-    CancellationToken token) =>
-{
-    try
-    {
-        var exportMode = mode ?? AnnotationExportModes.Reviewed;
-        var jsonLines = await annotations.ExportJsonLinesAsync(exportMode, concept, company, token, batchId);
-        context.Response.Headers.ContentDisposition =
-            $"attachment; filename=jsm-annotations-{exportMode}.jsonl";
-        return Results.Text(jsonLines, "application/x-ndjson", Encoding.UTF8, StatusCodes.Status200OK);
-    }
-    catch (ArgumentException exception)
-    {
-        return Results.BadRequest(new { error = exception.Message });
-    }
-}).RequireAuthorization(AdminAuthorization.Policy);
-
-app.MapGet("/api/admin/annotations/machine-review-batch-status", async Task<IResult> (
-    string? queue,
-    string? concept,
-    string? company,
-    AnnotationLabelingService annotations,
-    CancellationToken token) =>
-{
-    try
-    {
-        return Results.Ok(await annotations.GetMachineReviewBatchStatusAsync(
-            queue ?? AnnotationMachineReviewQueues.NeverMachineReviewed, concept, company, token));
-    }
-    catch (ArgumentException exception)
-    {
-        return Results.BadRequest(new { error = exception.Message });
-    }
-}).RequireAuthorization(AdminAuthorization.Policy);
-
-app.MapPost("/api/admin/annotations/machine-review-batch", async Task<IResult> (
-    AnnotationMachineReviewBatchRequest request,
-    HttpContext context,
-    AnnotationLabelingService annotations,
-    CancellationToken token) =>
-{
-    try
-    {
-        var export = await annotations.ExportMachineReviewBatchAsync(request, token);
-        context.Response.Headers.ContentDisposition = $"attachment; filename=jsm-machine-review-{export.Batch.Id}.jsonl";
-        context.Response.Headers["X-JSM-Batch-Id"] = export.Batch.Id;
-        context.Response.Headers["X-JSM-Exported-Count"] = export.Batch.ActualCount.ToString();
-        return Results.Text(export.JsonLines, "application/x-ndjson", Encoding.UTF8, StatusCodes.Status200OK);
-    }
-    catch (ArgumentException exception)
-    {
-        return Results.BadRequest(new { error = exception.Message });
-    }
-}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
-
-app.MapPost("/api/admin/annotations/import", async Task<IResult> (
-    HttpRequest request,
-    AnnotationLabelingService annotations,
-    CancellationToken token) =>
-{
-    if (!request.HasFormContentType)
-        return Results.BadRequest(new { error = "Upload a machine-review JSONL file as multipart form data." });
-    try
-    {
-        var form = await request.ReadFormAsync(token);
-        var file = form.Files.GetFile("file");
-        if (file is null || file.Length == 0)
-            return Results.BadRequest(new { error = "Choose a non-empty JSONL file." });
-        if (file.Length > AnnotationLabelingService.MaximumImportBytes)
-            return Results.BadRequest(new { error = "The import exceeds the 25 MB limit." });
-        await using var stream = file.OpenReadStream();
-        using var reader = new StreamReader(stream, new UTF8Encoding(false, true),
-            detectEncodingFromByteOrderMarks: true, bufferSize: 8192, leaveOpen: false);
-        var jsonLines = await reader.ReadToEndAsync(token);
-        return Results.Ok(await annotations.ImportMachineReviewsAsync(jsonLines, file.FileName, token));
-    }
-    catch (DecoderFallbackException)
-    {
-        return Results.BadRequest(new { error = "The import must be valid UTF-8." });
-    }
-    catch (InvalidDataException)
-    {
-        return Results.BadRequest(new { error = "The uploaded form data is invalid." });
-    }
-    catch (ArgumentException exception)
-    {
-        return Results.BadRequest(new { error = exception.Message });
-    }
-}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
-
 app.MapPost("/api/account/create", async Task<IResult> (
     CreateAccountRequest request,
     HttpContext context,
@@ -741,7 +498,7 @@ app.MapPost("/api/account/create", async Task<IResult> (
     var persistence = AccountPersistence.Normalize(request.Persistence);
     await SignInAccountAsync(context, result.Account!, persistence);
     context.Response.Cookies.Delete(
-        WorkspaceIdentity.CookieName, WorkspaceIdentity.CreateCookieOptions(secure: hosting.IsAzure));
+        WorkspaceIdentity.CookieName, WorkspaceIdentity.CreateCookieOptions(secure: false));
     return Results.Ok(new
     {
         authenticated = true,
@@ -765,7 +522,7 @@ app.MapPost("/api/account/login", async Task<IResult> (
     var persistence = AccountPersistence.Normalize(request.Persistence);
     await SignInAccountAsync(context, account, persistence);
     context.Response.Cookies.Delete(
-        WorkspaceIdentity.CookieName, WorkspaceIdentity.CreateCookieOptions(secure: hosting.IsAzure));
+        WorkspaceIdentity.CookieName, WorkspaceIdentity.CreateCookieOptions(secure: false));
     return Results.Ok(new { authenticated = true, account.Email, account.EmailVerified, persistence });
 }).RequireRateLimiting("authentication");
 
@@ -773,7 +530,7 @@ app.MapPost("/api/account/logout", async (HttpContext context) =>
 {
     await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
     context.Response.Cookies.Delete(
-        WorkspaceIdentity.CookieName, WorkspaceIdentity.CreateCookieOptions(secure: hosting.IsAzure));
+        WorkspaceIdentity.CookieName, WorkspaceIdentity.CreateCookieOptions(secure: false));
     return Results.NoContent();
 }).RequireRateLimiting("state");
 
@@ -1065,7 +822,7 @@ app.MapDelete("/api/workspace", async (
     {
         context.Response.Cookies.Delete(
             WorkspaceIdentity.CookieName,
-            WorkspaceIdentity.CreateCookieOptions(secure: hosting.IsAzure));
+            WorkspaceIdentity.CreateCookieOptions(secure: false));
     }
     return Results.Ok(new { deletedDocuments });
 }).RequireRateLimiting("state");
@@ -1141,12 +898,6 @@ if (hosting.IsLocal)
                 ApplicationUrl);
         }
     }
-}
-else if (hosting.IsAzure)
-{
-    app.Logger.LogInformation(
-        "Job Search Manager started in Azure mode with optional accounts and Blob-backed workspaces in container {ContainerName}.",
-        hosting.StorageContainer);
 }
 else
 {
