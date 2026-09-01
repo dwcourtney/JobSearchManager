@@ -3,7 +3,9 @@
 .github
 **/bin
 **/obj
-classifier-service
+classifier-service/*
+!classifier-service/Dockerfile
+!classifier-service/classifier_service.py
 Tests
 scripts
 deploy
