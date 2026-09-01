@@ -15,7 +15,6 @@ OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://ollama:11434").rstrip("/")
 EXPECTED_DEVICE_NAME = os.environ.get("CLASSIFIER_EXPECTED_DEVICE_NAME", "NVIDIA GeForce GTX 1070")
 MAX_BODY_BYTES, MAX_TEXT_CHARACTERS = 2_000_000, 500_000
 CONTEXT_LENGTH, MAX_OUTPUT_TOKENS, SEED, TEMPERATURE = 8192, 384, 42, 0
-PROMPT_VERSION = "phase3-zero-shot-v1"
 INFERENCE_LOCK = threading.Lock()
 CONCEPTS = (
     ("role.ai-ml-engineering", "Hands-on engineering that builds, integrates, or operationalizes machine-learning models, AI systems, pipelines, or production AI applications."),
@@ -30,13 +29,43 @@ CONCEPTS = (
 CONCEPT_IDS = tuple(item[0] for item in CONCEPTS)
 OUTPUT_SCHEMA = {"type": "object", "properties": {key: {"type": "boolean"} for key in CONCEPT_IDS},
                  "required": list(CONCEPT_IDS), "additionalProperties": False}
-SYSTEM_PROMPT = """You are a careful job-posting responsibility classifier.
+PROMPTS = {
+    "v1": ("phase3-zero-shot-v1", """You are a careful job-posting responsibility classifier.
 Classify the role itself, not technologies merely mentioned as products, customer environments,
 desired awareness, team context, or work managed by someone else. A label is true only when the
 posting assigns the candidate direct, hands-on responsibility matching its definition.
-Return exactly the requested JSON object with one boolean for every concept. Do not add prose."""
-PROMPT_HASH = hashlib.sha256(json.dumps({"version": PROMPT_VERSION, "system": SYSTEM_PROMPT,
-    "concepts": CONCEPTS, "schema": OUTPUT_SCHEMA}, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+Return exactly the requested JSON object with one boolean for every concept. Do not add prose."""),
+    "independent-evidence": ("phase3-prompt-independent-evidence-v3", """You are a careful job-posting responsibility classifier.
+Evaluate each supplied concept independently. Mark a concept true only when the posting provides
+sufficient semantic evidence that the candidate personally performs the activity in its definition.
+Do not infer one concept from a related concept, neighboring technical work, technologies or
+products, team or customer context, or mere association. Literal keyword matches are not required
+when the responsibility is clearly assigned.
+Return exactly the requested JSON object with one boolean for every concept. Do not add prose."""),
+    "role-ownership": ("phase3-prompt-role-ownership-v1", """You are a careful job-posting responsibility classifier.
+For each supplied concept, determine who owns the relevant work. Mark it true only when the role
+itself performs or owns responsibility matching the definition. Distinguish the candidate's work
+from management or oversight, work assigned to another team, customer or environment context,
+requested familiarity or awareness, and a supported product or service that happens to use the
+technology. Semantic responsibility is sufficient even without literal technology names.
+Return exactly the requested JSON object with one boolean for every concept. Do not add prose."""),
+    "positive-verification": ("phase3-prompt-positive-verification-v1", """You are a careful job-posting responsibility classifier.
+Begin without assuming that any supplied concept applies. Mark a concept true when the posting
+provides adequate semantic evidence that the candidate is responsible for the defined activity.
+Before returning true, verify that the evidence describes the candidate's work rather than
+association or context. Do not make speculative positive classifications merely because the role
+is adjacent to a domain. Do not reject a clearly supported responsibility solely because explicit
+technology names are absent.
+Return exactly the requested JSON object with one boolean for every concept. Do not add prose."""),
+}
+PROMPT_KEY = os.environ.get("CLASSIFIER_PROMPT_VARIANT", "v1")
+if PROMPT_KEY not in PROMPTS:
+    raise RuntimeError(f"Unsupported classifier prompt variant: {PROMPT_KEY}")
+PROMPT_VERSION, SYSTEM_PROMPT = PROMPTS[PROMPT_KEY]
+PROMPT_HASHES = {key: hashlib.sha256(json.dumps({"version": value[0], "system": value[1],
+    "concepts": CONCEPTS, "schema": OUTPUT_SCHEMA}, sort_keys=True,
+    separators=(",", ":")).encode()).hexdigest() for key, value in PROMPTS.items()}
+PROMPT_HASH = PROMPT_HASHES[PROMPT_KEY]
 
 class InferenceOutputError(Exception): pass
 
@@ -169,6 +198,14 @@ class Handler(BaseHTTPRequestHandler):
 def self_test() -> None:
     assert len(CONCEPTS) == len(set(CONCEPT_IDS)) == 8
     assert len(PROMPT_HASH) == 64 and OUTPUT_SCHEMA["required"] == list(CONCEPT_IDS)
+    assert set(PROMPTS) == {"v1", "independent-evidence", "role-ownership", "positive-verification"}
+    assert len({item[0] for item in PROMPTS.values()}) == len(PROMPTS)
+    assert PROMPT_HASHES == {
+        "v1": "2550a1b61a4b869e8e7c74343eba2357cbcdb7a1d2b50b581112a765ac083d9c",
+        "independent-evidence": "ea911a0a1aef3850104ee2a714f3c4e393dda7aa53d85528002405bcc3108a0d",
+        "role-ownership": "b2562340acde90b924ef5692ad5a85680a56f01dc5c4c2cf32c6b914ff1aa1a9",
+        "positive-verification": "79f822cbe03e4076dd624080170a810a4d7e3e32df692899e03199072df8dda3",
+    }
     assert model_digest_matches(MODEL_DIGEST) and model_digest_matches(MODEL_DIGEST.removeprefix("sha256:"))
     assert not model_digest_matches("0" * 64)
     all_false = validate_output({key: False for key in CONCEPT_IDS})
