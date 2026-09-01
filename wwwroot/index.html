@@ -10,7 +10,7 @@
   <link rel="manifest" href="/site.webmanifest?v=1">
   <script src="/theme-bootstrap.js"></script>
   <link rel="stylesheet" href="/theme.css?v=11">
-  <link rel="stylesheet" href="/styles.css?v=33">
+  <link rel="stylesheet" href="/styles.css?v=34">
   <script src="/vendor/purify.min.js" defer></script>
   <script src="/country-ordering.js?v=2" defer></script>
   <script src="/company-selector.js?v=1" defer></script>
@@ -24,7 +24,7 @@
   <script src="/education-fit.js?v=2" defer></script>
   <script src="/job-fit.js?v=11" defer></script>
   <script src="/clipboard-text.js?v=1" defer></script>
-  <script src="/app.js?v=41" defer></script>
+  <script src="/app.js?v=42" defer></script>
 </head>
 <body>
   <main id="app-shell" class="app-shell" aria-busy="true" inert>
@@ -58,6 +58,7 @@
         <div class="results-summary">
           <strong id="result-count">0 of 0 jobs</strong>
           <span>Newest first</span>
+          <span class="job-fit-legend"><span aria-hidden="true">✦</span> = LLM deep-analysis score</span>
         </div>
       </div>
 
@@ -175,7 +176,7 @@
                     Open original posting
                   </a>
                   <button id="qwen-deep-analysis-button" class="copy-posting-button" type="button">
-                    Deep Analyze with Qwen
+                    Deep Analyze with LLM
                   </button>
                 </div>
               </div>
@@ -307,7 +308,8 @@
               <article id="job-fit-detail-content" class="job-fit-detail-dossier"
                        aria-label="Job Fit score breakdown"></article>
               <section id="qwen-deep-analysis-result" class="job-fit-detail-section" hidden>
-                <h3>Optional Qwen Deep Analysis</h3>
+                <h3>Optional LLM Deep Analysis</h3>
+                <strong id="llm-deep-analysis-score" class="job-fit-detail-score"></strong>
                 <p id="qwen-deep-analysis-provenance"></p>
                 <p id="qwen-deep-analysis-text"></p>
               </section>

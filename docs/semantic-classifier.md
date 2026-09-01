@@ -26,9 +26,11 @@ classification fingerprint, confidence score, and match decision for all 85 conc
 ## Optional: Qwen/Ollama
 
 `qwen3:4b-instruct-2507-q4_K_M` is retained on the internal classifier network only for the
-explicit **Deep Analyze with Qwen** action. It is never scheduled by ingestion or Admin backfill.
+explicit **Deep Analyze with LLM** action. It is never scheduled by ingestion or Admin backfill.
 Qwen results are stored separately with their own posting hash, model provenance, timestamp, and
-analysis text. They never replace the DeBERTa classification or silently change the Job Fit score.
+85-concept predictions. They never replace the persisted DeBERTa classification. When a current
+opt-in result exists, the card presents its derived score with a sparkle and the model-agnostic legend
+`✦ = LLM deep-analysis score`; Job Fit details retain both the default and optional results.
 
 ## Quality boundary
 

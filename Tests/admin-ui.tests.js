@@ -18,7 +18,7 @@ assert.match(index,
   /id="administrator-bootstrap-section"[^>]*hidden[\s\S]*?id="administrator-bootstrap-code"[\s\S]*?minlength="8"[\s\S]*?maxlength="8"[\s\S]*?Claim Administrator/);
 assert.doesNotMatch(index, /annotation-labeling-ui|detector-evaluation-ui/,
   "Removed experimental Admin assets must not load.");
-assert.match(index, /app\.js\?v=41/);
+assert.match(index, /app\.js\?v=42/);
 
 assert.match(app, /synchronizeAdminNavigation\(account\.isAdmin === true\)/);
 assert.match(app, /if \(!isAdmin\)[\s\S]*?adminTab\?\.remove\(\)[\s\S]*?return;/,
@@ -35,7 +35,12 @@ assert.match(app, /fetch\("\/api\/admin\/status"/,
 assert.match(app, /admin-overview-tab[\s\S]*?Overview[\s\S]*?admin-classifier-tab[\s\S]*?Classifier/,
   "Admin must contain only useful Overview and Classifier subtabs.");
 assert.match(app, /DeBERTa Classifier[\s\S]*?Start background backfill/);
-assert.match(app, /Deep Analyze with Qwen/);
+assert.match(app, /Deep Analyze with LLM/);
+assert.match(index, /✦<\/span> = LLM deep-analysis score/);
+assert.doesNotMatch(`${index}\n${app}`, /AI-generated|AI-powered/,
+  "The sparkle must identify optional LLM deep analysis, not AI versus non-AI.");
+assert.match(app, /Job Fit \$\{jobFit\.score\}\/10\$\{llmJobFit \? " ✦" : ""\}/,
+  "Only a current optional LLM result may add the sparkle to a Job Fit badge.");
 assert.match(app, /Job Fit TBD/);
 assert.match(app, /fetch\("\/api\/admin\/classifier\/backfill\/status"/);
 assert.match(app, /fetch\("\/api\/admin\/classifier\/backfill", \{ method: "POST" \}\)/);

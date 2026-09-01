@@ -38,6 +38,15 @@ QWEN_MODEL_ID = "Qwen/Qwen3-4B-Instruct-2507"
 QWEN_MODEL_TAG = "qwen3:4b-instruct-2507-q4_K_M"
 QWEN_MODEL_DIGEST = "sha256:0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0"
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://ollama:11434").rstrip("/")
+QWEN_PROMPT_VERSION = "job-fit-85-deep-analysis-v1"
+QWEN_CONTEXT_LENGTH, QWEN_MAX_OUTPUT_TOKENS, QWEN_SEED, QWEN_TEMPERATURE = 8192, 3072, 42, 0
+QWEN_INFERENCE_LOCK = threading.Lock()
+QWEN_SYSTEM_PROMPT = """You are a careful job-posting responsibility classifier.
+Classify the role itself, not technologies merely mentioned as products, customer environments,
+desired awareness, qualifications without assigned duties, team context, or work managed by someone else.
+A label is true only when the posting assigns the candidate responsibility or a work condition matching
+its definition. Multiple overlapping labels may be true. Return exactly the requested JSON object with
+one boolean for every canonical concept plus a concise analysis. Do not add prose outside the JSON."""
 
 
 def sha256(value: bytes | str) -> str:
@@ -52,20 +61,28 @@ def file_sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def load_catalog() -> tuple[int, str, tuple[tuple[str, str], ...]]:
+def load_catalog() -> tuple[int, str, tuple[tuple[str, str, str, str], ...]]:
     raw = CATALOG_PATH.read_bytes()
     document = json.loads(raw)
     values = document.get("concepts")
-    concepts = tuple((item["id"], item["definition"]) for item in values)
+    concepts = tuple((item["id"], item["displayName"], item["category"], item["definition"])
+                     for item in values)
     if not isinstance(document.get("version"), int) or len(concepts) != 85 or len(set(x[0] for x in concepts)) != 85:
         raise RuntimeError("The production classifier requires exactly 85 canonical concepts.")
-    if any(not concept_id or not definition for concept_id, definition in concepts):
+    if any(not all(item) for item in concepts):
         raise RuntimeError("Every canonical concept requires an ID and definition.")
     return document["version"], sha256(raw.replace(b"\r\n", b"\n")), concepts
 
 
 TAXONOMY_VERSION, TAXONOMY_FINGERPRINT, CONCEPTS = load_catalog()
 CONCEPT_IDS = tuple(item[0] for item in CONCEPTS)
+QWEN_OUTPUT_SCHEMA = {"type": "object", "properties": {
+    "concepts": {"type": "object",
+                 "properties": {key: {"type": "boolean"} for key in CONCEPT_IDS},
+                 "required": list(CONCEPT_IDS), "additionalProperties": False},
+    "analysis": {"type": "string"}},
+    "required": ["concepts", "analysis"], "additionalProperties": False}
+QWEN_PROMPT_HASH = sha256(f"{QWEN_PROMPT_VERSION}\n{QWEN_SYSTEM_PROMPT}\n{TAXONOMY_FINGERPRINT}")
 CONFIGURATION_FINGERPRINT = sha256("\n".join((
     CONFIGURATION_VERSION, MODEL_ID, MODEL_REVISION, MODEL_DIGEST,
     str(CHUNK_TOKENS), str(CHUNK_OVERLAP), str(MAX_LENGTH), str(CONCEPT_BATCH_SIZE), str(THRESHOLD),
@@ -83,6 +100,25 @@ def classification_fingerprint(content_hash: str) -> str:
         MODEL_ID, MODEL_REVISION, MODEL_DIGEST,
         CONFIGURATION_VERSION, CONFIGURATION_FINGERPRINT,
     )))
+
+
+def qwen_classification_fingerprint(content_hash: str) -> str:
+    return sha256("\n".join((
+        content_hash, str(TAXONOMY_VERSION), TAXONOMY_FINGERPRINT,
+        QWEN_MODEL_ID, QWEN_MODEL_TAG, QWEN_MODEL_DIGEST,
+        QWEN_PROMPT_VERSION, QWEN_PROMPT_HASH, str(QWEN_TEMPERATURE),
+        str(QWEN_SEED), str(QWEN_CONTEXT_LENGTH), str(QWEN_MAX_OUTPUT_TOKENS),
+    )))
+
+
+def qwen_user_prompt(title: str, description: str) -> str:
+    definitions = "\n".join(
+        f"- {concept_id} [{category}] {name}: {definition}"
+        for concept_id, name, category, definition in CONCEPTS)
+    return (f"Canonical concept definitions:\n{definitions}\n\nJob title:\n{title}\n\n"
+            f"Full job posting:\n{description}\n\nClassify all 85 concepts according to actual "
+            "candidate responsibilities and work conditions. In analysis, briefly summarize the role, "
+            "responsibility shape, work arrangement, technical domains, and material fit risks.")
 
 
 def model_cache_valid(full: bool = False) -> bool:
@@ -159,7 +195,8 @@ class ModelRuntime:
         ids = self.tokenizer.encode(f"{title.strip()}\n\n{description.strip()}".strip(), add_special_tokens=False)
         chunks = chunk_tokens(ids)
         maximum = dict.fromkeys(CONCEPT_IDS, 0.0)
-        hypotheses = [HYPOTHESIS_TEMPLATE.format(definition=definition) for _, definition in CONCEPTS]
+        hypotheses = [HYPOTHESIS_TEMPLATE.format(definition=definition)
+                      for _, _, _, definition in CONCEPTS]
         started = time.perf_counter()
         with INFERENCE_LOCK, self.torch.inference_mode():
             for chunk in chunks:
@@ -213,21 +250,42 @@ def classify_payload(job_id: str, title: str, description: str) -> dict[str, Any
 
 
 def qwen_deep_analysis(job_id: str, title: str, description: str) -> dict[str, Any]:
-    prompt = ("Analyze this job posting deeply for fit. Explain the role, major responsibilities, "
-              "work arrangement, technical domains, and important risks. Do not alter the default "
-              "Job Fit score.\n\nTitle:\n" + title + "\n\nPosting:\n" + description)
-    request = urllib.request.Request(f"{OLLAMA_URL}/api/generate",
-        data=json.dumps({"model": QWEN_MODEL_TAG, "prompt": prompt, "stream": False,
-                         "options": {"temperature": 0, "seed": 42, "num_ctx": 8192}}).encode(),
+    request = urllib.request.Request(f"{OLLAMA_URL}/api/chat",
+        data=json.dumps({"model": QWEN_MODEL_TAG,
+                         "messages": [{"role": "system", "content": QWEN_SYSTEM_PROMPT},
+                                      {"role": "user", "content": qwen_user_prompt(title, description)}],
+                         "format": QWEN_OUTPUT_SCHEMA, "stream": False, "keep_alive": -1,
+                         "options": {"temperature": QWEN_TEMPERATURE, "seed": QWEN_SEED,
+                                     "num_ctx": QWEN_CONTEXT_LENGTH,
+                                     "num_predict": QWEN_MAX_OUTPUT_TOKENS}}).encode(),
         headers={"Content-Type": "application/json"}, method="POST")
-    with urllib.request.urlopen(request, timeout=180) as response:
-        result = json.load(response)
+    with QWEN_INFERENCE_LOCK, urllib.request.urlopen(request, timeout=300) as response:
+        response_value = json.load(response)
+    content = response_value.get("message", {}).get("content")
+    if response_value.get("done") is not True or not isinstance(content, str):
+        raise RuntimeError("LLM deep-analysis response was incomplete.")
+    try:
+        result = json.loads(content)
+    except json.JSONDecodeError as error:
+        raise RuntimeError("LLM deep-analysis response was not valid JSON.") from error
+    predictions = result.get("concepts") if isinstance(result, dict) else None
+    analysis = result.get("analysis") if isinstance(result, dict) else None
+    if (not isinstance(predictions, dict) or set(predictions) != set(CONCEPT_IDS) or
+            any(type(predictions[key]) is not bool for key in CONCEPT_IDS) or
+            not isinstance(analysis, str) or not analysis.strip()):
+        raise RuntimeError("LLM deep-analysis response failed strict validation.")
+    content_hash = posting_content_hash(title, description)
     return {"received": True, "jobId": job_id, "title": title,
             "modelId": QWEN_MODEL_ID, "modelTag": QWEN_MODEL_TAG,
             "modelDigest": QWEN_MODEL_DIGEST,
+            "taxonomyVersion": TAXONOMY_VERSION, "taxonomyFingerprint": TAXONOMY_FINGERPRINT,
+            "promptVersion": QWEN_PROMPT_VERSION, "promptHash": QWEN_PROMPT_HASH,
             "analyzedUtc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-            "postingContentHash": posting_content_hash(title, description),
-            "analysis": result["response"]}
+            "postingContentHash": content_hash,
+            "classificationFingerprint": qwen_classification_fingerprint(content_hash),
+            "predictions": [{"conceptId": key, "matched": predictions[key]}
+                            for key in CONCEPT_IDS],
+            "analysis": analysis.strip()}
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -293,6 +351,9 @@ def self_test() -> None:
     assert chunk_tokens(list(range(10))) == [list(range(10))]
     assert [value >= THRESHOLD for value in (.2, .5, .9)] == [False, True, True]
     assert len(CONFIGURATION_FINGERPRINT) == len(classification_fingerprint("a" * 64)) == 64
+    assert QWEN_OUTPUT_SCHEMA["properties"]["concepts"]["required"] == list(CONCEPT_IDS)
+    assert len(QWEN_PROMPT_HASH) == len(qwen_classification_fingerprint("a" * 64)) == 64
+    assert "all 85 concepts" in qwen_user_prompt("title", "description")
     print("DeBERTa 85-concept schema, configuration, and threshold self-test: PASS")
 
 

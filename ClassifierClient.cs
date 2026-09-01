@@ -37,7 +37,35 @@ public sealed record SemanticClassifierResult(
 public sealed record QwenDeepAnalysisResponse(
     bool Received, string JobId, string Title, string PostingContentHash,
     string ModelId, string ModelTag, string ModelDigest,
-    DateTimeOffset AnalyzedUtc, string Analysis);
+    int TaxonomyVersion, string TaxonomyFingerprint,
+    string PromptVersion, string PromptHash, string ClassificationFingerprint,
+    DateTimeOffset AnalyzedUtc, IReadOnlyList<SemanticConceptPrediction> Predictions,
+    string Analysis);
+
+public static class QwenDeepAnalysisContract
+{
+    public const string ModelId = "Qwen/Qwen3-4B-Instruct-2507";
+    public const string ModelTag = "qwen3:4b-instruct-2507-q4_K_M";
+    public const string ModelDigest =
+        "sha256:0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0";
+    public const string PromptVersion = "job-fit-85-deep-analysis-v1";
+    public const string PromptHash =
+        "17f07e1391453747b37a3adcaf462b436bb214104264026f232eeac29c1d4071";
+    public const int ContextLength = 8192;
+    public const int MaximumOutputTokens = 3072;
+    public const int Seed = 42;
+    public const double Temperature = 0;
+
+    public static string ClassificationFingerprint(
+        string postingContentHash,
+        JobConceptCatalog catalog) => Hash(string.Join('\n',
+            postingContentHash, catalog.Version, catalog.Fingerprint,
+            ModelId, ModelTag, ModelDigest, PromptVersion, PromptHash,
+            Temperature, Seed, ContextLength, MaximumOutputTokens));
+
+    private static string Hash(string value) => Convert.ToHexString(
+        SHA256.HashData(Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
+}
 
 public static class SemanticClassifierContract
 {
@@ -177,16 +205,28 @@ public sealed class ClassifierClient(
                 JsonOptions, cancellationToken);
             var contentHash = SemanticClassifierContract.PostingContentHash(
                 request.Title, request.Description);
+            var expectedIds = catalog.Concepts.Select(item => item.Id).ToHashSet(StringComparer.Ordinal);
+            var predictionsValid = value?.Predictions is { Count: 85 } &&
+                value.Predictions.Select(item => item.ConceptId).ToHashSet(StringComparer.Ordinal)
+                    .SetEquals(expectedIds);
             if (value is null || !value.Received || value.JobId != request.JobId ||
                 value.Title != request.Title || value.PostingContentHash != contentHash ||
-                value.ModelId != "Qwen/Qwen3-4B-Instruct-2507" ||
-                value.ModelTag != "qwen3:4b-instruct-2507-q4_K_M" ||
-                value.ModelDigest !=
-                    "sha256:0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0" ||
+                value.ModelId != QwenDeepAnalysisContract.ModelId ||
+                value.ModelTag != QwenDeepAnalysisContract.ModelTag ||
+                value.ModelDigest != QwenDeepAnalysisContract.ModelDigest ||
+                value.TaxonomyVersion != catalog.Version ||
+                value.TaxonomyFingerprint != catalog.Fingerprint ||
+                value.PromptVersion != QwenDeepAnalysisContract.PromptVersion ||
+                value.PromptHash != QwenDeepAnalysisContract.PromptHash || !predictionsValid ||
+                value.ClassificationFingerprint != QwenDeepAnalysisContract.ClassificationFingerprint(
+                    contentHash, catalog) ||
                 string.IsNullOrWhiteSpace(value.Analysis))
                 return null;
             return new QwenDeepAnalysis(value.PostingContentHash, value.ModelId,
-                value.ModelTag, value.ModelDigest, value.AnalyzedUtc, value.Analysis);
+                value.ModelTag, value.ModelDigest, value.TaxonomyVersion,
+                value.TaxonomyFingerprint, value.PromptVersion, value.PromptHash,
+                value.ClassificationFingerprint, value.AnalyzedUtc, value.Predictions,
+                value.Analysis);
         }
         catch (Exception exception) when (
             exception is HttpRequestException or TaskCanceledException or JsonException)

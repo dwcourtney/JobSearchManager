@@ -263,7 +263,13 @@ public sealed record QwenDeepAnalysis(
     string ModelId,
     string ModelTag,
     string ModelDigest,
+    int TaxonomyVersion,
+    string TaxonomyFingerprint,
+    string PromptVersion,
+    string PromptHash,
+    string ClassificationFingerprint,
     DateTimeOffset AnalyzedUtc,
+    IReadOnlyList<SemanticConceptPrediction> Predictions,
     string Analysis);
 
 public sealed record CredentialMatch(

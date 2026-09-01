@@ -13,7 +13,8 @@ loopback-only Windows desktop mode and a hardened Linux/container deployment.
 - **Default Semantic Job Fit:** the pinned `cross-encoder/nli-deberta-v3-base` model evaluates all
   85 canonical concepts using bounded NLI inference.
 - **Optional deep analysis:** `qwen3:4b-instruct-2507-q4_K_M` remains available through Ollama only
-  when a user selects **Deep Analyze with Qwen** for one posting.
+  when a user selects **Deep Analyze with LLM** for one posting. The current internal implementation
+  is the pinned Qwen model, while the reusable UI label remains model-agnostic.
 - **Deterministic analysis:** salary, clearance, credentials/licenses, education, citizenship/work
   authorization, explicit remote metadata, and extended-location requirements remain ordinary
   application code. They do not depend on either model.
