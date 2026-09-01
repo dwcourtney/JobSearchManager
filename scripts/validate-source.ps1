@@ -286,8 +286,8 @@ $credentialFitScript = $index.IndexOf('src="/credential-fit.js?v=2"')
 $clearanceFitScript = $index.IndexOf('src="/clearance-fit.js?v=1"')
 $jobFitScript = $index.IndexOf('src="/job-fit.js?v=11"')
 $clipboardTextScript = $index.IndexOf('src="/clipboard-text.js?v=1"')
-$annotationLabelingScript = $index.IndexOf('src="/annotation-labeling-ui.js?v=3"')
-$appScript = $index.IndexOf('src="/app.js?v=37"')
+$annotationLabelingScript = $index.IndexOf('src="/annotation-labeling-ui.js?v=4"')
+$appScript = $index.IndexOf('src="/app.js?v=38"')
 if ($countryOrderingScript -lt 0 -or $appScript -le $countryOrderingScript) {
     throw "The versioned country-ordering.js asset must load before app.js."
 }

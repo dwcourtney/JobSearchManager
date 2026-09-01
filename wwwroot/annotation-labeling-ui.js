@@ -30,7 +30,7 @@
   function generationPayload(itemsToAdd, allEligible, filters) {
     return { requestedItems: allEligible ? null : Number(itemsToAdd), allEligible: Boolean(allEligible), company: filters?.company || null, concept: filters?.concept || null };
   }
-  function formatImportSummary(summary) { return `${summary.recordsRead} read · ${summary.imported} imported · ${summary.unchanged} unchanged · ${summary.conflicts} conflicts · ${summary.rejected} rejected`; }
+  function formatImportSummary(summary) { return `Imported: ${summary.imported} · Unchanged: ${summary.unchanged} · Conflicts: ${summary.conflicts} · Rejected: ${summary.rejected}`; }
   function formatGenerationResult(result) {
     const total = Number(result.total || 0).toLocaleString();
     if (!result.added) return `No items were added because no eligible ungenerated items remain. Corpus total: ${total}.`;
@@ -109,17 +109,38 @@
     }
     async function load() { setError(""); try { const response = await fetch(queueUrl(state.filters), { cache: "no-store" }); if (!response.ok) throw new Error("The annotation queue could not be loaded."); state.response = await response.json(); state.source = null; render(); } catch (failure) { setError(failure.message || String(failure)); } }
     [statusFilter, conceptFilter, companyFilter].forEach(control => control.addEventListener("change", () => { state.filters = { status: statusFilter.value, concept: conceptFilter.value, company: companyFilter.value }; void load(); }));
+    host.addEventListener("annotation:select-queue", event => {
+      const queue = event.detail?.queue;
+      if (![...statusFilter.options].some(option => option.value === queue)) return;
+      statusFilter.value = queue;
+      state.filters = { ...state.filters, status: queue };
+      void load();
+    });
     host.addEventListener("keydown", event => { const action = shortcutFor(event); if (!action || !state.response?.item) return; event.preventDefault(); if (action === "toggleContext") card.querySelector(".annotation-toggles button:first-child")?.click(); else if (action === "toggleFull") card.querySelector(".annotation-toggles button:last-child")?.click(); else card.querySelector(`[data-decision="${action}"]`)?.click(); });
     void load();
   }
 
-  function mountMachine(host) {
+  function mountMachine(host, options = {}) {
     if (!host || host.dataset.annotationMounted === "machine") return;
     host.dataset.annotationMounted = "machine";
     const state = { filters: { concept: "", company: "" }, eligible: 0, busy: false };
     const heading = element("h3", "", "Machine Labeling");
-    const intro = element("p", "account-help", "Generate append-only corpus items and exchange machine-review JSONL.");
+    const intro = element("p", "account-help", "Build the annotation corpus, exchange machine-review JSONL, and route exceptions to human review.");
     const error = element("p", "reset-confirmation-error"); error.hidden = true; error.setAttribute("role", "alert");
+    const guide = element("section", "annotation-workflow-guide"); guide.append(element("h4", "", "Machine labeling workflow"));
+    const guideSteps = element("ol", "annotation-workflow-steps");
+    [["Build corpus", "Add eligible annotation items from cached jobs."], ["Export unreviewed", "Download items that still need machine review."],
+      ["Review externally", "Send the JSONL to ChatGPT, Codex, or another reviewer."], ["Import machine review", "Upload the returned JSONL to record machine opinions."]]
+      .forEach(([title, description]) => { const step = element("li", ""); step.append(element("strong", "", title), element("span", "", description)); guideSteps.append(step); });
+    guide.append(guideSteps);
+    const currentState = element("section", "annotation-dataset-controls annotation-current-state"); currentState.append(element("h4", "", "Current workflow state"));
+    const stateGrid = element("dl", "annotation-state-grid");
+    const stateValues = {};
+    [["total", "Current corpus"], ["eligible", "Eligible ungenerated"], ["unreviewed", "Unreviewed"],
+      ["machineReviewed", "Machine-reviewed"], ["humanReviewed", "Human-reviewed"], ["unsure", "Unsure / excluded"]]
+      .forEach(([key, label]) => { const item = element("div", "annotation-state-item"); item.append(element("dt", "", label), stateValues[key] = element("dd", "", "—")); stateGrid.append(item); });
+    const workflowAction = element("p", "annotation-next-action", "Loading recommended next actions…"); workflowAction.setAttribute("role", "status"); workflowAction.setAttribute("aria-live", "polite");
+    currentState.append(stateGrid, workflowAction);
     const generation = element("section", "annotation-dataset-controls"); generation.append(element("h4", "", "Corpus generation"));
     const generationStatus = element("p", "annotation-generation-status", "Loading corpus availability…"); generationStatus.setAttribute("role", "status"); generationStatus.setAttribute("aria-live", "polite");
     const scope = element("div", "annotation-toolbar");
@@ -130,26 +151,58 @@
     const addItems = element("button", "primary-button", "Add items"); addItems.type = "button"; const addAll = element("button", "confirmation-secondary-button", "Add all eligible"); addAll.type = "button";
     generationRow.append(itemsLabel, addItems, addAll); generation.append(generationStatus, scope, generationRow, element("p", "account-help", "New deterministic items are appended; existing corpus items and decisions are preserved."));
     const exchange = element("section", "annotation-dataset-controls"); exchange.append(element("h4", "", "Machine review exchange"));
-    const exports = element("div", "annotation-toolbar"); const exportModes = [["all", "Export all JSONL"], ["reviewed", "Export reviewed"], ["unreviewed", "Export unreviewed"], ["unsure", "Export unsure"], ["trainingEligible", "Export training-eligible"]];
-    const exportLinks = exportModes.map(([mode, label]) => { const link = element("a", "secondary-link-button", label); link.dataset.exportMode = mode; link.download = `jsm-annotations-${mode}.jsonl`; exports.append(link); return link; });
-    const importRow = element("div", "annotation-toolbar"); const importFile = document.createElement("input"); importFile.type = "file"; importFile.accept = ".jsonl,application/x-ndjson,application/json"; importFile.setAttribute("aria-label", "Machine review JSONL file");
-    const importButton = element("button", "confirmation-secondary-button", "Import machine review JSONL"); importButton.type = "button"; importButton.disabled = true;
-    const operationStatus = element("p", "annotation-import-status"); operationStatus.setAttribute("role", "status"); operationStatus.setAttribute("aria-live", "polite"); importRow.append(importFile, importButton); exchange.append(exports, importRow, operationStatus);
+    const primaryExports = element("div", "annotation-export-group annotation-primary-export"); primaryExports.append(element("h5", "", "Primary workflow"));
+    const primaryExportRow = element("div", "annotation-toolbar");
+    const unreviewedExport = element("a", "primary-link-button", "Export unreviewed"); unreviewedExport.dataset.exportMode = "unreviewed"; unreviewedExport.download = "jsm-annotations-unreviewed.jsonl"; primaryExportRow.append(unreviewedExport); primaryExports.append(primaryExportRow);
+    const otherExports = element("div", "annotation-export-group"); otherExports.append(element("h5", "", "Other exports"));
+    const otherExportRow = element("div", "annotation-toolbar");
+    const exportLinks = [["all", "Export all JSONL"], ["reviewed", "Export reviewed"], ["unsure", "Export unsure"], ["trainingEligible", "Export training-eligible"]]
+      .map(([mode, label]) => { const link = element("a", "secondary-link-button", label); link.dataset.exportMode = mode; link.download = `jsm-annotations-${mode}.jsonl`; otherExportRow.append(link); return link; });
+    otherExports.append(otherExportRow);
+    const importGroup = element("div", "annotation-import-group"); importGroup.append(element("h5", "", "Import reviewed results"));
+    const importRow = element("div", "annotation-import-sequence");
+    const fileStep = element("label", "annotation-file-step"); fileStep.append(element("strong", "", "1. Choose reviewed JSONL"));
+    const importFile = document.createElement("input"); importFile.type = "file"; importFile.accept = ".jsonl,application/x-ndjson,application/json"; importFile.setAttribute("aria-label", "Choose reviewed machine JSONL file"); fileStep.append(importFile);
+    const sequenceArrow = element("span", "annotation-sequence-arrow", "→"); sequenceArrow.setAttribute("aria-hidden", "true");
+    const importButton = element("button", "confirmation-secondary-button", "2. Import machine review JSONL"); importButton.type = "button"; importButton.disabled = true;
+    const operationStatus = element("p", "annotation-import-status"); operationStatus.setAttribute("role", "status"); operationStatus.setAttribute("aria-live", "polite"); importRow.append(fileStep, sequenceArrow, importButton); importGroup.append(importRow, operationStatus);
+    exchange.append(primaryExports, otherExports, importGroup);
+    const handoff = element("section", "annotation-dataset-controls annotation-handoff"); handoff.append(element("h4", "", "Resolve in Human Labeling"));
+    const handoffIntro = element("p", "account-help", "Machine disagreements, human/machine conflicts, and unsure items remain human decisions.");
+    const handoffActions = element("div", "annotation-handoff-actions"); handoff.append(handoffIntro, handoffActions);
     const distribution = element("section", "annotation-dataset-controls"); distribution.append(element("h4", "", "Corpus distribution")); const distributionStatus = element("p", "annotation-stats", "Loading corpus distribution…"); distribution.append(distributionStatus);
-    host.append(heading, intro, generation, exchange, distribution, error);
+    host.append(heading, intro, guide, currentState, generation, exchange, handoff, distribution, error);
     function setError(message) { error.textContent = message || ""; error.hidden = !message; }
     function updateControls() { addItems.disabled = state.busy || state.eligible === 0; addAll.disabled = state.busy || state.eligible === 0; importButton.disabled = state.busy || !importFile.files?.[0]; }
-    function updateLinks() { exportLinks.forEach(link => { link.href = exportUrl(link.dataset.exportMode, state.filters); }); }
-    function renderQueue(response) {
+    function updateLinks() { [unreviewedExport, ...exportLinks].forEach(link => { link.href = exportUrl(link.dataset.exportMode, state.filters); }); }
+    function addHandoff(count, singular, plural, queue) {
+      if (!count) return;
+      const button = element("button", "confirmation-secondary-button", `${count.toLocaleString()} ${count === 1 ? singular : plural} · Review in Human Labeling`);
+      button.type = "button"; button.addEventListener("click", () => options.navigateToHuman?.(queue)); handoffActions.append(button);
+    }
+    function renderQueue(response, status) {
       if (conceptFilter.options.length === 1) (response.concepts || []).forEach(concept => conceptFilter.add(new Option(`${concept.displayName} · ${concept.category}`, concept.id)));
       replaceCompanies(companyFilter, response.companies || []); updateLinks();
+      stateValues.total.textContent = status.total.toLocaleString(); stateValues.eligible.textContent = status.eligibleUngenerated.toLocaleString();
+      stateValues.unreviewed.textContent = response.stats.unreviewed.toLocaleString(); stateValues.machineReviewed.textContent = response.stats.machineLabeled.toLocaleString();
+      stateValues.humanReviewed.textContent = response.stats.reviewed.toLocaleString(); stateValues.unsure.textContent = response.stats.unsure.toLocaleString();
+      const actions = [];
+      if (status.eligibleUngenerated > 0) actions.push("More eligible items can be added to the corpus.");
+      if (response.stats.unreviewed > 0) actions.push("Export unreviewed items for the next machine-review batch.");
+      if (response.stats.machineDisagreements > 0 || response.stats.humanMachineConflicts > 0 || response.stats.unsure > 0) actions.push("Use the Human Labeling handoff below to resolve exceptions.");
+      workflowAction.textContent = actions.join(" ") || "No generation, machine review, or human-resolution action is currently required.";
+      handoffActions.replaceChildren();
+      addHandoff(response.stats.machineDisagreements, "machine disagreement", "machine disagreements", "machineDisagreement");
+      addHandoff(response.stats.humanMachineConflicts, "conflict", "conflicts", "relabeledConflicting");
+      addHandoff(response.stats.unsure, "unsure item", "unsure items", "unsure");
+      if (!handoffActions.children.length) handoffActions.append(element("p", "annotation-stats", "No disagreement, conflict, or unsure queue currently needs handoff."));
       const companies = Object.entries(response.companyDistribution || {}).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([id, count]) => `${id} ${count}`).join(" · ");
       distributionStatus.textContent = `${response.stats.total.toLocaleString()} total · ${response.stats.unreviewed.toLocaleString()} unreviewed · ${response.stats.reviewed.toLocaleString()} reviewed · ${response.stats.unsure.toLocaleString()} unsure · ${response.stats.trainingEligible.toLocaleString()} training-eligible${companies ? ` · ${companies}` : ""}`;
     }
     async function load() {
       setError(""); try { const [queueResponse, statusResponse] = await Promise.all([fetch(queueUrl({ ...state.filters, status: "all" }), { cache: "no-store" }), fetch(generationStatusUrl(state.filters), { cache: "no-store" })]);
         if (!queueResponse.ok) throw new Error("The annotation corpus could not be loaded."); if (!statusResponse.ok) throw new Error("Corpus availability could not be calculated.");
-        const queue = await queueResponse.json(); const status = await statusResponse.json(); state.eligible = status.eligibleUngenerated; renderQueue(queue); generationStatus.textContent = `Current corpus: ${status.total.toLocaleString()} items · Eligible ungenerated items: ${status.eligibleUngenerated.toLocaleString()}`;
+        const queue = await queueResponse.json(); const status = await statusResponse.json(); state.eligible = status.eligibleUngenerated; renderQueue(queue, status); generationStatus.textContent = `Current corpus: ${status.total.toLocaleString()} items · Eligible ungenerated items: ${status.eligibleUngenerated.toLocaleString()}`;
       } catch (failure) { setError(failure.message || String(failure)); } finally { updateControls(); }
     }
     async function generate(allEligible) {

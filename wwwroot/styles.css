@@ -727,6 +727,15 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 
 .admin-subtabs { margin-bottom: 1rem; }
 .admin-subtab-panel { min-width: 0; }
+.training-data-panel { min-width: 0; }
+.training-data-panel > h3 { margin: 1rem 1rem .35rem; }
+.training-data-panel > .account-help { margin: 0 1rem 1rem; color: var(--color-text-secondary); }
+.training-data-subtabs {
+  padding-inline: 1rem;
+  border-top: var(--border-width-default) solid var(--color-border);
+  background: var(--color-settings-subtab-bar-background);
+}
+.training-data-view { min-width: 0; }
 .detector-evaluation-panel > p { max-width: 74rem; }
 .detector-aggregate-grid {
   display: grid;
@@ -2601,6 +2610,26 @@ mark {
 
 .annotation-labeling-panel { display: grid; gap: .85rem; }
 .annotation-labeling-panel > h3, .annotation-labeling-panel > p { margin-block: 0; }
+.annotation-workflow-guide {
+  display: grid;
+  gap: .6rem;
+  padding: .8rem;
+  border: var(--border-width-default) solid var(--color-accent);
+  border-radius: var(--radius-control);
+  background: var(--color-accent-soft);
+}
+.annotation-workflow-guide h4 { margin: 0; }
+.annotation-workflow-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .75rem;
+  margin: 0;
+  padding-inline-start: 1.7rem;
+}
+.annotation-workflow-steps li { padding-inline-start: .15rem; }
+.annotation-workflow-steps li::marker { color: var(--color-accent); font-weight: var(--font-weight-semibold); }
+.annotation-workflow-steps strong, .annotation-workflow-steps span { display: block; }
+.annotation-workflow-steps span { margin-top: .2rem; color: var(--color-text-secondary); font-size: var(--font-size-small); line-height: var(--line-height-note); }
 .annotation-dataset-controls {
   display: grid;
   gap: .55rem;
@@ -2610,6 +2639,22 @@ mark {
   background: var(--color-surface-secondary);
 }
 .annotation-dataset-controls h4 { margin: 0; }
+.annotation-current-state { background: var(--color-surface); }
+.annotation-state-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .55rem;
+  margin: 0;
+}
+.annotation-state-item {
+  padding: .62rem .7rem;
+  border: var(--border-width-default) solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-secondary);
+}
+.annotation-state-item dt { color: var(--color-text-secondary); font-size: var(--font-size-small); }
+.annotation-state-item dd { margin: .18rem 0 0; color: var(--color-text-primary); font-size: var(--font-size-description-h3); font-weight: var(--font-weight-semibold); }
+.annotation-next-action { margin: 0; color: var(--color-text-primary); font-weight: var(--font-weight-medium); }
 .annotation-generation-status {
   margin: 0;
   color: var(--color-text-primary);
@@ -2639,6 +2684,27 @@ mark {
   font-weight: var(--font-weight-medium);
 }
 .secondary-link-button:hover { background: var(--color-secondary-button-hover); }
+.primary-link-button {
+  display: inline-flex;
+  align-items: center;
+  padding: .45rem .8rem;
+  border: var(--border-width-default) solid var(--color-primary-action-border);
+  border-radius: var(--radius-control);
+  color: var(--color-header-text);
+  background: var(--color-accent);
+  text-decoration: none;
+  cursor: pointer;
+  font-weight: var(--font-weight-medium);
+}
+.primary-link-button:hover { background: var(--color-accent-hover); }
+.annotation-export-group, .annotation-import-group { display: grid; gap: .4rem; }
+.annotation-export-group + .annotation-export-group, .annotation-import-group { padding-top: .55rem; border-top: var(--border-width-default) solid var(--color-border); }
+.annotation-export-group h5, .annotation-import-group h5 { margin: 0; color: var(--color-text-primary); }
+.annotation-import-sequence { display: flex; flex-wrap: wrap; align-items: end; gap: .55rem; }
+.annotation-file-step { display: grid; gap: .3rem; color: var(--color-label); }
+.annotation-sequence-arrow { align-self: center; color: var(--color-text-secondary); font-weight: var(--font-weight-semibold); }
+.annotation-handoff-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .55rem; }
+.annotation-handoff-actions p { margin: 0; }
 .annotation-labeling-panel button:disabled {
   cursor: not-allowed;
   opacity: var(--opacity-disabled-control);
@@ -2722,6 +2788,7 @@ mark {
   .detail-header { position: static; }
   .filter-summary { display: none; }
   .detail-tabs.job-fit-tabs { display: none; }
+  .annotation-workflow-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .job-fit-section-chooser { display: block; }
 }
 
@@ -2756,6 +2823,9 @@ mark {
   }
   .account-summary > div { grid-template-columns: 1fr; gap: .15rem; }
   .settings-row > label, .settings-row > .settings-row-label { padding-top: 0; }
+  .annotation-state-grid, .annotation-workflow-steps { grid-template-columns: 1fr; }
+  .annotation-import-sequence { align-items: stretch; flex-direction: column; }
+  .annotation-sequence-arrow { transform: rotate(90deg); }
   .job-fit-matrix-header { display: none; }
   .job-fit-survey-row { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .12rem; padding: .45rem; }
   .job-fit-survey-concept, .job-fit-survey-concept-copy { grid-column: 1 / -1; padding: 0 .15rem .25rem; }

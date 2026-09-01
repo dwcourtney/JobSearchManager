@@ -35,14 +35,20 @@ assert.match(app, /fetch\("\/api\/admin\/status"/,
   "Admin Overview must verify its reusable server authorization endpoint.");
 assert.match(app, /admin-overview-tab[\s\S]*?Overview[\s\S]*?admin-detector-evaluation-tab[\s\S]*?Detector Evaluation/,
   "Admin must preserve Overview and Detector Evaluation subtabs.");
-assert.match(app, /admin-human-labeling-tab[\s\S]*?Human Labeling[\s\S]*?admin-machine-labeling-tab[\s\S]*?Machine Labeling/,
-  "Admin must expose distinct human and machine labeling tabs only after server-confirmed role state.");
-assert.match(index, /annotation-labeling-ui\.js\?v=3[\s\S]*?app\.js\?v=37/,
+assert.match(app, /admin-training-data-tab[\s\S]*?Training Data/,
+  "Training Data must be the only top-level labeling destination.");
+assert.match(app, /admin-training-data-panel[\s\S]*?admin-training-data-human-tab[\s\S]*?Human Labeling[\s\S]*?admin-training-data-machine-tab[\s\S]*?Machine Labeling/,
+  "Human and Machine Labeling must be nested workflows within Training Data.");
+assert.doesNotMatch(app, /id = "admin-(?:human|machine)-labeling-tab"/,
+  "Human and Machine Labeling must not remain top-level Administration tabs.");
+assert.match(index, /annotation-labeling-ui\.js\?v=4[\s\S]*?app\.js\?v=38/,
   "The tested annotation module must load before its application consumer.");
 assert.match(app, /AnnotationLabeling\.mountHuman\(elements\.adminHumanLabelingPanel\)/);
-assert.match(app, /AnnotationLabeling\.mountMachine\(elements\.adminMachineLabelingPanel\)/);
-assert.match(app, /function adminSectionFromLocation\(\)[\s\S]*?human-labeling\|machine-labeling/,
-  "Human and Machine Labeling must support direct URL navigation and refresh.");
+assert.match(app, /AnnotationLabeling\.mountMachine\(elements\.adminMachineLabelingPanel,\s*\{/);
+assert.match(app, /function adminSectionFromLocation\(\)[\s\S]*?admin-training-data-\(human\|machine\)[\s\S]*?section: "training-data", view: match\[1\]/,
+  "Human and Machine nested Training Data views must support direct URL navigation and refresh.");
+assert.match(app, /#admin-training-data-\$\{state\.activeTrainingDataView\}[\s\S]*?history\.replaceState/,
+  "Nested Training Data navigation must write a refreshable canonical URL.");
 assert.doesNotMatch(app, /admin-(?:accounts|workspaces)-tab/,
   "Unimplemented Accounts and Workspaces placeholders must not be added.");
 assert.match(app, /fetch\("\/api\/admin\/detector-evaluation"/);
@@ -60,7 +66,7 @@ assert.match(app, /False positives[\s\S]*?False negatives/,
   "Detector errors must be reviewable by classification.");
 assert.match(app, /Search detector concepts[\s\S]*?Tier 1[\s\S]*?Tier 2[\s\S]*?Tier 3[\s\S]*?Not evaluated[\s\S]*?Errors present/,
   "Full-taxonomy evaluation needs search, tier, maturity, and error filters.");
-assert.match(index, /detector-evaluation-ui\.js\?v=1[\s\S]*?app\.js\?v=37/,
+assert.match(index, /detector-evaluation-ui\.js\?v=1[\s\S]*?app\.js\?v=38/,
   "The deterministic Detector Evaluation filter helper must load before its application consumer.");
 assert.match(app, /DetectorEvaluationUi\.matchesMetric/,
   "Rendered filtering must use the deterministic tested helper.");
@@ -90,14 +96,30 @@ assert.match(humanMount, /Review queue[\s\S]*?Correct[\s\S]*?Unsure \/ Skip[\s\S
   "Human Labeling must retain the one-card review workflow.");
 assert.match(machineMount, /Items to add[\s\S]*?Add items[\s\S]*?Add all eligible[\s\S]*?Current corpus:[\s\S]*?Eligible ungenerated items:/,
   "Machine Labeling must expose unambiguous append-count generation and availability.");
-assert.match(machineMount, /Export all JSONL[\s\S]*?Export unreviewed[\s\S]*?Import machine review JSONL/,
+assert.match(machineMount, /Build corpus[\s\S]*?Export unreviewed[\s\S]*?Review externally[\s\S]*?Import machine review/,
+  "Machine Labeling must present its concise four-step workflow.");
+assert.match(machineMount, /Current workflow state[\s\S]*?Current corpus[\s\S]*?Eligible ungenerated[\s\S]*?Unreviewed[\s\S]*?Machine-reviewed[\s\S]*?Human-reviewed[\s\S]*?Unsure \/ excluded/,
+  "Machine Labeling must show authoritative workflow counts before its controls.");
+assert.match(machineMount, /primary-link-button[\s\S]*?Export unreviewed[\s\S]*?Other exports[\s\S]*?Export all JSONL[\s\S]*?Export reviewed[\s\S]*?Export unsure[\s\S]*?Export training-eligible/,
+  "Export unreviewed must be the primary action while all secondary exports remain available.");
+assert.match(machineMount, /Choose reviewed JSONL[\s\S]*?Import machine review JSONL/,
+  "Machine Labeling must communicate file selection before import.");
+assert.match(machineMount, /Machine review exchange[\s\S]*?Import machine review JSONL/,
   "Machine Labeling must retain browser import/export controls.");
 assert.doesNotMatch(machineMount, /data-decision|Unsure \/ Skip|annotation-card/,
   "Machine Labeling must not contain the human decision card.");
 assert.match(machineMount, /importButton\.disabled = true[\s\S]*?!importFile\.files/,
   "Machine import must be genuinely disabled until a file is selected.");
+assert.match(machineMount, /machineDisagreements[\s\S]*?machineDisagreement[\s\S]*?humanMachineConflicts[\s\S]*?relabeledConflicting[\s\S]*?stats\.unsure[\s\S]*?"unsure"/,
+  "Disagreement, conflict, and unsure counts must navigate to existing Human Labeling queues.");
+assert.match(app, /navigateToHuman\(queue\)[\s\S]*?showAdminSection\("training-data", true, "human"\)[\s\S]*?annotation:select-queue/,
+  "Machine handoff must navigate to Human Labeling and select the requested queue.");
 assert.match(styles, /\.secondary-link-button[\s\S]*?cursor:\s*pointer[\s\S]*?\.secondary-link-button:hover[\s\S]*?--color-secondary-button-hover/,
   "Enabled export links must use clear token-based interactive styling.");
+assert.match(styles, /\.primary-link-button[\s\S]*?--color-accent[\s\S]*?\.primary-link-button:hover[\s\S]*?--color-accent-hover/,
+  "The primary Export unreviewed action must use theme-token styling.");
+assert.match(styles, /\.training-data-subtabs[\s\S]*?--color-settings-subtab-bar-background[\s\S]*?\.annotation-workflow-guide[\s\S]*?--color-accent-soft/,
+  "Nested navigation and workflow presentation must use theme tokens.");
 assert.match(styles, /\.annotation-labeling-panel button:disabled[\s\S]*?cursor:\s*not-allowed[\s\S]*?--opacity-disabled-control/,
   "Disabled labeling controls must have a distinct token-based state.");
 assert.doesNotMatch(styles, /#[0-9a-f]{3,8}\b|(?:rgb|hsl)a?\s*\(/i,

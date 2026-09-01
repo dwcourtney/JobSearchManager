@@ -31,7 +31,7 @@ assert.strictEqual(labeling.formatGenerationResult({ added: 63, total: 1063, rem
   "Added 63 new items. Corpus total: 1,063. No additional eligible items remain.");
 assert.strictEqual(labeling.formatGenerationResult({ added: 0, total: 1063, remainingEligible: 0 }),
   "No items were added because no eligible ungenerated items remain. Corpus total: 1,063.");
-assert.match(labeling.formatImportSummary({ recordsRead: 4, imported: 2, unchanged: 1, conflicts: 1, rejected: 1 }),
-  /4 read.*2 imported.*1 conflicts.*1 rejected/);
+assert.strictEqual(labeling.formatImportSummary({ recordsRead: 4, imported: 2, unchanged: 1, conflicts: 1, rejected: 1 }),
+  "Imported: 2 · Unchanged: 1 · Conflicts: 1 · Rejected: 1");
 
 console.log("Annotation labeling UI tests passed.");
