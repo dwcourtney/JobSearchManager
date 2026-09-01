@@ -546,7 +546,14 @@ app.MapPost("/api/admin/annotations/generate", async Task<IResult> (
     CancellationToken token) =>
 {
     var jobs = (await provider.GetAsync(token)).Catalog.Snapshot.Jobs;
-    return Results.Ok(await annotations.GenerateAsync(jobs, request.MaxItems, token));
+    try
+    {
+        return Results.Ok(await annotations.GenerateAsync(jobs, request, token));
+    }
+    catch (ArgumentException exception)
+    {
+        return Results.BadRequest(new { error = exception.Message });
+    }
 }).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
 
 app.MapPut("/api/admin/annotations/{itemId}/decision", async Task<IResult> (
@@ -584,12 +591,61 @@ app.MapGet("/api/admin/annotations/{itemId}/source", async Task<IResult> (
 }).RequireAuthorization(AdminAuthorization.Policy);
 
 app.MapGet("/api/admin/annotations/export", async Task<IResult> (
+    string? mode,
+    string? concept,
+    string? company,
+    HttpContext context,
     AnnotationLabelingService annotations,
     CancellationToken token) =>
 {
-    var jsonLines = await annotations.ExportJsonLinesAsync(token);
-    return Results.Text(jsonLines, "application/x-ndjson", Encoding.UTF8, StatusCodes.Status200OK);
+    try
+    {
+        var exportMode = mode ?? AnnotationExportModes.Reviewed;
+        var jsonLines = await annotations.ExportJsonLinesAsync(exportMode, concept, company, token);
+        context.Response.Headers.ContentDisposition =
+            $"attachment; filename=jsm-annotations-{exportMode}.jsonl";
+        return Results.Text(jsonLines, "application/x-ndjson", Encoding.UTF8, StatusCodes.Status200OK);
+    }
+    catch (ArgumentException exception)
+    {
+        return Results.BadRequest(new { error = exception.Message });
+    }
 }).RequireAuthorization(AdminAuthorization.Policy);
+
+app.MapPost("/api/admin/annotations/import", async Task<IResult> (
+    HttpRequest request,
+    AnnotationLabelingService annotations,
+    CancellationToken token) =>
+{
+    if (!request.HasFormContentType)
+        return Results.BadRequest(new { error = "Upload a machine-review JSONL file as multipart form data." });
+    try
+    {
+        var form = await request.ReadFormAsync(token);
+        var file = form.Files.GetFile("file");
+        if (file is null || file.Length == 0)
+            return Results.BadRequest(new { error = "Choose a non-empty JSONL file." });
+        if (file.Length > AnnotationLabelingService.MaximumImportBytes)
+            return Results.BadRequest(new { error = "The import exceeds the 25 MB limit." });
+        await using var stream = file.OpenReadStream();
+        using var reader = new StreamReader(stream, new UTF8Encoding(false, true),
+            detectEncodingFromByteOrderMarks: true, bufferSize: 8192, leaveOpen: false);
+        var jsonLines = await reader.ReadToEndAsync(token);
+        return Results.Ok(await annotations.ImportMachineReviewsAsync(jsonLines, file.FileName, token));
+    }
+    catch (DecoderFallbackException)
+    {
+        return Results.BadRequest(new { error = "The import must be valid UTF-8." });
+    }
+    catch (InvalidDataException)
+    {
+        return Results.BadRequest(new { error = "The uploaded form data is invalid." });
+    }
+    catch (ArgumentException exception)
+    {
+        return Results.BadRequest(new { error = exception.Message });
+    }
+}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
 
 app.MapPost("/api/account/create", async Task<IResult> (
     CreateAccountRequest request,
