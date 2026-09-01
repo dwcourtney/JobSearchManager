@@ -994,6 +994,104 @@ static async Task TestAnnotationLabelingAsync()
         Assert(exhausted.Added == 0 && exhausted.Total == allEligible.Total && exhausted.RemainingEligible == 0,
             "Zero-eligible generation duplicated items or rebuilt the corpus destructively.");
 
+        static (JsonElement Header, JsonElement[] Sources, JsonElement[] Items) ParseCompact(string jsonl)
+        {
+            var documents = jsonl.Split('\n', StringSplitOptions.RemoveEmptyEntries)
+                .Select(line => JsonDocument.Parse(line).RootElement.Clone()).ToArray();
+            return (documents.Single(value => value.GetProperty("recordType").GetString() == "batch"),
+                documents.Where(value => value.GetProperty("recordType").GetString() == "source").ToArray(),
+                documents.Where(value => value.GetProperty("recordType").GetString() == "item").ToArray());
+        }
+        var neverBefore = await service.GetMachineReviewBatchStatusAsync();
+        Assert(neverBefore.MatchingCount == allEligible.Total - 1,
+            "The default machine queue did not exclude the item that already had machine opinions.");
+        var requestedCounts = new[] { 1, 2, 10, 100, 17 };
+        var compactExports = new List<AnnotationMachineReviewBatchExport>();
+        foreach (var count in requestedCounts)
+        {
+            var export = await service.ExportMachineReviewBatchAsync(new(RequestedItems: count));
+            var parsed = ParseCompact(export.JsonLines);
+            Assert(export.Batch.ActualCount == count && parsed.Items.Length == count &&
+                parsed.Header.GetProperty("canonicalConceptCatalog").GetArrayLength() == catalog.Concepts.Count &&
+                export.Batch.InterchangeVersion == 3 && export.Batch.AnnotationItemIds.SequenceEqual(
+                    parsed.Items.Select(value => value.GetProperty("annotationItemId").GetString()!), StringComparer.Ordinal),
+                $"Compact export did not return exactly {count} deterministic items with one v3 catalog header.");
+            Assert(parsed.Sources.Select(value => value.GetProperty("id").GetString()).Distinct().Count() == parsed.Sources.Length &&
+                !parsed.Items.Any(value => value.TryGetProperty("fullPosting", out _)) &&
+                !parsed.Items.Any(value => value.TryGetProperty("canonicalConceptCatalog", out _)),
+                "Compact export duplicated source postings or the canonical catalog per item.");
+            compactExports.Add(export);
+        }
+        Assert(compactExports[0].Batch.AnnotationItemIds.SequenceEqual(compactExports[1].Batch.AnnotationItemIds.Take(1)) &&
+            compactExports[1].Batch.AnnotationItemIds.SequenceEqual(compactExports[2].Batch.AnnotationItemIds.Take(2)) &&
+            compactExports[2].Batch.AnnotationItemIds.SequenceEqual(compactExports[3].Batch.AnnotationItemIds.Take(10)),
+            "Stable machine-review ordering did not preserve deterministic prefixes across requested counts.");
+        var beyond = await service.ExportMachineReviewBatchAsync(new(RequestedItems: 50_000));
+        var allMatchingBatch = await service.ExportMachineReviewBatchAsync(new(RequestedItems: null, AllMatching: true));
+        Assert(beyond.Batch.ActualCount == neverBefore.MatchingCount && allMatchingBatch.Batch.ActualCount == neverBefore.MatchingCount &&
+            beyond.Batch.AnnotationItemIds.SequenceEqual(allMatchingBatch.Batch.AnnotationItemIds),
+            "More-than-remaining and all-matching exports did not return the same complete deterministic queue.");
+        var reproducible = await service.ExportMachineReviewBatchAsync(new(RequestedItems: 10));
+        Assert(compactExports[2].Batch.AnnotationItemIds.SequenceEqual(reproducible.Batch.AnnotationItemIds) &&
+            compactExports[2].Batch.ItemIdDigest == reproducible.Batch.ItemIdDigest &&
+            compactExports[2].Batch.Id != reproducible.Batch.Id,
+            "Repeated exports were not selection-reproducible or did not receive distinct batch identities.");
+        var verboseForBatch = await service.ExportJsonLinesAsync(AnnotationExportModes.All, batchId: compactExports[3].Batch.Id);
+        Assert(System.Text.Encoding.UTF8.GetByteCount(compactExports[3].JsonLines) < System.Text.Encoding.UTF8.GetByteCount(verboseForBatch),
+            "Compact 100-item export was not smaller than its equivalent verbose archival export.");
+
+        var partial = compactExports[2];
+        var partialParsed = ParseCompact(partial.JsonLines);
+        string Review(JsonElement item, string reviewer, string decision = "correct") => JsonSerializer.Serialize(new
+        {
+            recordType = "review", schemaVersion = 3, batchId = partial.Batch.Id,
+            annotationItemId = item.GetProperty("annotationItemId").GetString(),
+            contentHash = item.GetProperty("contentHash").GetString(),
+            taxonomyFingerprint = item.GetProperty("taxonomyFingerprint").GetString(), decision,
+            selectedConceptIds = Array.Empty<string>(), reviewerType = "codex", reviewerIdentity = reviewer
+        }, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        var machineOnlyCandidates = partialParsed.Items.Where(value =>
+            !new[] { firstItem.Id, secondItem.Id, unsureItem.Id }.Contains(
+                value.GetProperty("annotationItemId").GetString(), StringComparer.Ordinal)).ToArray();
+        Assert(machineOnlyCandidates.Length >= 3, "The partial-import fixture did not contain enough human-unreviewed items.");
+        var firstReturnedId = machineOnlyCandidates[0].GetProperty("annotationItemId").GetString()!;
+        var secondReturnedId = machineOnlyCandidates[1].GetProperty("annotationItemId").GetString()!;
+        var omittedId = machineOnlyCandidates[2].GetProperty("annotationItemId").GetString()!;
+        var shuffledReturn = string.Join('\n', Review(machineOnlyCandidates[1], "partial-reviewer-b"),
+            Review(machineOnlyCandidates[0], "partial-reviewer-a")) + "\n";
+        var partialSummary = await service.ImportMachineReviewsAsync(shuffledReturn, "partial-shuffled.jsonl");
+        Assert(partialSummary.Imported == 2 && partialSummary.BatchId == partial.Batch.Id &&
+            partialSummary.BatchReturned == 2 && partialSummary.BatchRemaining == 8,
+            "Shuffled partial return did not report exact batch progress.");
+        var afterPartial = await service.GetMachineReviewBatchStatusAsync();
+        Assert(afterPartial.MatchingCount == neverBefore.MatchingCount - 2,
+            "Partial import changed the never-reviewed queue by more than the returned records.");
+        var machineReviewed = await service.GetQueueAsync(new AnnotationQueueFilter("humanUnreviewedMachine"));
+        Assert(machineReviewed.Stats.MachineLabeled == 3,
+            "Partial import did not preserve earlier machine opinions while adding only returned records.");
+        var corpusJson = await File.ReadAllTextAsync(Path.Combine(directory, AnnotationLabelingService.CorpusWorkspaceId, "annotation-corpus.json"));
+        Assert(corpusJson.Contains(firstReturnedId, StringComparison.Ordinal) && corpusJson.Contains(secondReturnedId, StringComparison.Ordinal),
+            "Returned batch identities were not persisted.");
+        using (var corpusDocument = JsonDocument.Parse(corpusJson))
+        {
+            var omitted = corpusDocument.RootElement.GetProperty("items").GetProperty(omittedId);
+            Assert(omitted.GetProperty("machineReviews").GetArrayLength() == 0,
+                "An omitted batch member was inferred complete or otherwise modified.");
+        }
+        var duplicateSummary = await service.ImportMachineReviewsAsync(shuffledReturn, "partial-duplicate.jsonl");
+        Assert(duplicateSummary.Imported == 0 && duplicateSummary.Unchanged == 2,
+            "Duplicate review records were not idempotent.");
+        var unknownBatchLine = Review(partialParsed.Items[0], "unknown-batch-reviewer").Replace(partial.Batch.Id, "machine-batch-unknown", StringComparison.Ordinal);
+        var unknownBatchSummary = await service.ImportMachineReviewsAsync(unknownBatchLine, "unknown-batch.jsonl");
+        Assert(unknownBatchSummary.UnknownBatch == 1 && unknownBatchSummary.Imported == 0,
+            "Unknown batch provenance was accepted.");
+        var outsideItem = ParseCompact(beyond.JsonLines).Items.First(value =>
+            !partial.Batch.AnnotationItemIds.Contains(value.GetProperty("annotationItemId").GetString()!, StringComparer.Ordinal));
+        var outsideReview = Review(outsideItem, "outside-reviewer");
+        var outsideSummary = await service.ImportMachineReviewsAsync(outsideReview, "outside-batch.jsonl");
+        Assert(outsideSummary.ItemNotInBatch == 1 && outsideSummary.Imported == 0,
+            "A valid corpus item outside the declared batch subset was accepted.");
+
         var reloaded = new AnnotationLabelingService(factory, catalog, TimeProvider.System);
         var resumed = await reloaded.GetQueueAsync(new AnnotationQueueFilter("reviewed"));
         Assert(resumed.Stats.Reviewed == 2 && resumed.Stats.Unsure == 1 && resumed.Stats.Total == allEligible.Total &&

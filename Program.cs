@@ -612,6 +612,7 @@ app.MapGet("/api/admin/annotations/export", async Task<IResult> (
     string? mode,
     string? concept,
     string? company,
+    string? batchId,
     HttpContext context,
     AnnotationLabelingService annotations,
     CancellationToken token) =>
@@ -619,7 +620,7 @@ app.MapGet("/api/admin/annotations/export", async Task<IResult> (
     try
     {
         var exportMode = mode ?? AnnotationExportModes.Reviewed;
-        var jsonLines = await annotations.ExportJsonLinesAsync(exportMode, concept, company, token);
+        var jsonLines = await annotations.ExportJsonLinesAsync(exportMode, concept, company, token, batchId);
         context.Response.Headers.ContentDisposition =
             $"attachment; filename=jsm-annotations-{exportMode}.jsonl";
         return Results.Text(jsonLines, "application/x-ndjson", Encoding.UTF8, StatusCodes.Status200OK);
@@ -629,6 +630,44 @@ app.MapGet("/api/admin/annotations/export", async Task<IResult> (
         return Results.BadRequest(new { error = exception.Message });
     }
 }).RequireAuthorization(AdminAuthorization.Policy);
+
+app.MapGet("/api/admin/annotations/machine-review-batch-status", async Task<IResult> (
+    string? queue,
+    string? concept,
+    string? company,
+    AnnotationLabelingService annotations,
+    CancellationToken token) =>
+{
+    try
+    {
+        return Results.Ok(await annotations.GetMachineReviewBatchStatusAsync(
+            queue ?? AnnotationMachineReviewQueues.NeverMachineReviewed, concept, company, token));
+    }
+    catch (ArgumentException exception)
+    {
+        return Results.BadRequest(new { error = exception.Message });
+    }
+}).RequireAuthorization(AdminAuthorization.Policy);
+
+app.MapPost("/api/admin/annotations/machine-review-batch", async Task<IResult> (
+    AnnotationMachineReviewBatchRequest request,
+    HttpContext context,
+    AnnotationLabelingService annotations,
+    CancellationToken token) =>
+{
+    try
+    {
+        var export = await annotations.ExportMachineReviewBatchAsync(request, token);
+        context.Response.Headers.ContentDisposition = $"attachment; filename=jsm-machine-review-{export.Batch.Id}.jsonl";
+        context.Response.Headers["X-JSM-Batch-Id"] = export.Batch.Id;
+        context.Response.Headers["X-JSM-Exported-Count"] = export.Batch.ActualCount.ToString();
+        return Results.Text(export.JsonLines, "application/x-ndjson", Encoding.UTF8, StatusCodes.Status200OK);
+    }
+    catch (ArgumentException exception)
+    {
+        return Results.BadRequest(new { error = exception.Message });
+    }
+}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
 
 app.MapPost("/api/admin/annotations/import", async Task<IResult> (
     HttpRequest request,

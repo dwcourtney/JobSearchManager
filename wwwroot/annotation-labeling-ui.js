@@ -26,11 +26,12 @@
   }
   function queueUrl(filters, base = "/api/admin/annotations/queue") { return queryUrl(base, filters, true); }
   function generationStatusUrl(filters) { return queryUrl("/api/admin/annotations/generation-status", filters); }
+  function machineBatchStatusUrl(queue, filters) { return queryUrl("/api/admin/annotations/machine-review-batch-status", { ...filters, status: queue }, true).replace("status=", "queue="); }
   function exportUrl(mode, filters) { return queryUrl("/api/admin/annotations/export", { ...filters, status: mode }, true).replace("status=", "mode="); }
   function generationPayload(itemsToAdd, allEligible, filters) {
     return { requestedItems: allEligible ? null : Number(itemsToAdd), allEligible: Boolean(allEligible), company: filters?.company || null, concept: filters?.concept || null };
   }
-  function formatImportSummary(summary) { return `Imported: ${summary.imported} · Unchanged: ${summary.unchanged} · Conflicts: ${summary.conflicts} · Rejected: ${summary.rejected}`; }
+  function formatImportSummary(summary) { const base = `Imported: ${summary.imported} · Unchanged: ${summary.unchanged} · Conflicts: ${summary.conflicts} · Rejected: ${summary.rejected}`; return summary.batchId ? `${base} · Batch returned: ${summary.batchReturned}/${summary.batchItemCount} · Remaining from batch: ${summary.batchRemaining}` : base; }
   function formatGenerationResult(result) {
     const total = Number(result.total || 0).toLocaleString();
     if (!result.added) return `No items were added because no eligible ungenerated items remain. Corpus total: ${total}.`;
@@ -123,13 +124,13 @@
   function mountMachine(host, options = {}) {
     if (!host || host.dataset.annotationMounted === "machine") return;
     host.dataset.annotationMounted = "machine";
-    const state = { filters: { concept: "", company: "" }, eligible: 0, busy: false };
+    const state = { filters: { concept: "", company: "" }, eligible: 0, busy: false, batchMatching: 0 };
     const heading = element("h3", "", "Machine Labeling");
     const intro = element("p", "account-help", "Build the annotation corpus, exchange machine-review JSONL, and route exceptions to human review.");
     const error = element("p", "reset-confirmation-error"); error.hidden = true; error.setAttribute("role", "alert");
     const guide = element("section", "annotation-workflow-guide"); guide.append(element("h4", "", "Machine labeling workflow"));
     const guideSteps = element("ol", "annotation-workflow-steps");
-    [["Build corpus", "Add eligible annotation items from cached jobs."], ["Export unreviewed", "Download items that still need machine review."],
+    [["Build corpus", "Add eligible annotation items from cached jobs."], ["Export a bounded batch", "Choose a queue and exact maximum item count."],
       ["Review externally", "Send the JSONL to ChatGPT, Codex, or another reviewer."], ["Import machine review", "Upload the returned JSONL to record machine opinions."]]
       .forEach(([title, description]) => { const step = element("li", ""); step.append(element("strong", "", title), element("span", "", description)); guideSteps.append(step); });
     guide.append(guideSteps);
@@ -151,10 +152,16 @@
     const addItems = element("button", "primary-button", "Add items"); addItems.type = "button"; const addAll = element("button", "confirmation-secondary-button", "Add all eligible"); addAll.type = "button";
     generationRow.append(itemsLabel, addItems, addAll); generation.append(generationStatus, scope, generationRow, element("p", "account-help", "New deterministic items are appended; existing corpus items and decisions are preserved."));
     const exchange = element("section", "annotation-dataset-controls"); exchange.append(element("h4", "", "Machine review exchange"));
-    const primaryExports = element("div", "annotation-export-group annotation-primary-export"); primaryExports.append(element("h5", "", "Primary workflow"));
-    const primaryExportRow = element("div", "annotation-toolbar");
-    const unreviewedExport = element("a", "primary-link-button", "Export unreviewed"); unreviewedExport.dataset.exportMode = "unreviewed"; unreviewedExport.download = "jsm-annotations-unreviewed.jsonl"; primaryExportRow.append(unreviewedExport); primaryExports.append(primaryExportRow);
-    const otherExports = element("div", "annotation-export-group"); otherExports.append(element("h5", "", "Other exports"));
+    const primaryExports = element("div", "annotation-export-group annotation-primary-export"); primaryExports.append(element("h5", "", "Machine review batch"));
+    const batchHelp = element("p", "account-help", "Exports compact schema-v3 JSONL in stable review-priority, creation-time, then item-ID order. Corpus generation count does not affect this batch size.");
+    const batchRow = element("div", "annotation-toolbar");
+    const queueLabel = element("label", "annotation-inline-field", "Queue"); const batchQueue = document.createElement("select"); batchQueue.setAttribute("aria-label", "Machine review queue");
+    [["neverMachineReviewed", "Never machine-reviewed"], ["machineReviewed", "Machine-reviewed"], ["machineDisagreement", "Machine disagreements"], ["humanUnreviewedMachine", "Human-unreviewed machine labels"], ["unsure", "Unsure / ambiguous"]].forEach(([value, label]) => batchQueue.add(new Option(label, value))); queueLabel.append(batchQueue);
+    const batchCountLabel = element("label", "annotation-inline-field", "Items to export"); const batchCount = document.createElement("input"); batchCount.type = "number"; batchCount.min = "1"; batchCount.max = "50000"; batchCount.value = "100"; batchCount.setAttribute("aria-label", "Items to export"); batchCountLabel.append(batchCount);
+    const exportBatch = element("button", "primary-button", "Export batch"); exportBatch.type = "button"; const exportAllMatching = element("button", "confirmation-secondary-button", "Export all matching"); exportAllMatching.type = "button";
+    batchRow.append(queueLabel, batchCountLabel, exportBatch, exportAllMatching);
+    const batchStatus = element("p", "annotation-import-status", "Loading matching count…"); batchStatus.setAttribute("role", "status"); batchStatus.setAttribute("aria-live", "polite"); primaryExports.append(batchHelp, batchRow, batchStatus);
+    const otherExports = element("div", "annotation-export-group"); otherExports.append(element("h5", "", "Verbose archival exports"));
     const otherExportRow = element("div", "annotation-toolbar");
     const exportLinks = [["all", "Export all JSONL"], ["reviewed", "Export reviewed"], ["unsure", "Export unsure"], ["trainingEligible", "Export training-eligible"]]
       .map(([mode, label]) => { const link = element("a", "secondary-link-button", label); link.dataset.exportMode = mode; link.download = `jsm-annotations-${mode}.jsonl`; otherExportRow.append(link); return link; });
@@ -166,15 +173,15 @@
     const sequenceArrow = element("span", "annotation-sequence-arrow", "→"); sequenceArrow.setAttribute("aria-hidden", "true");
     const importButton = element("button", "confirmation-secondary-button", "2. Import machine review JSONL"); importButton.type = "button"; importButton.disabled = true;
     const operationStatus = element("p", "annotation-import-status"); operationStatus.setAttribute("role", "status"); operationStatus.setAttribute("aria-live", "polite"); importRow.append(fileStep, sequenceArrow, importButton); importGroup.append(importRow, operationStatus);
-    exchange.append(primaryExports, otherExports, importGroup);
+    exchange.append(primaryExports, importGroup, otherExports);
     const handoff = element("section", "annotation-dataset-controls annotation-handoff"); handoff.append(element("h4", "", "Resolve in Human Labeling"));
     const handoffIntro = element("p", "account-help", "Machine disagreements, human/machine conflicts, and unsure items remain human decisions.");
     const handoffActions = element("div", "annotation-handoff-actions"); handoff.append(handoffIntro, handoffActions);
     const distribution = element("section", "annotation-dataset-controls"); distribution.append(element("h4", "", "Corpus distribution")); const distributionStatus = element("p", "annotation-stats", "Loading corpus distribution…"); distribution.append(distributionStatus);
     host.append(heading, intro, guide, currentState, generation, exchange, handoff, distribution, error);
     function setError(message) { error.textContent = message || ""; error.hidden = !message; }
-    function updateControls() { addItems.disabled = state.busy || state.eligible === 0; addAll.disabled = state.busy || state.eligible === 0; importButton.disabled = state.busy || !importFile.files?.[0]; }
-    function updateLinks() { [unreviewedExport, ...exportLinks].forEach(link => { link.href = exportUrl(link.dataset.exportMode, state.filters); }); }
+    function updateControls() { addItems.disabled = state.busy || state.eligible === 0; addAll.disabled = state.busy || state.eligible === 0; importButton.disabled = state.busy || !importFile.files?.[0]; exportBatch.disabled = state.busy || state.batchMatching === 0; exportAllMatching.disabled = state.busy || state.batchMatching === 0; }
+    function updateLinks() { exportLinks.forEach(link => { link.href = exportUrl(link.dataset.exportMode, state.filters); }); }
     function addHandoff(count, singular, plural, queue) {
       if (!count) return;
       const button = element("button", "confirmation-secondary-button", `${count.toLocaleString()} ${count === 1 ? singular : plural} · Review in Human Labeling`);
@@ -188,7 +195,7 @@
       stateValues.humanReviewed.textContent = response.stats.reviewed.toLocaleString(); stateValues.unsure.textContent = response.stats.unsure.toLocaleString();
       const actions = [];
       if (status.eligibleUngenerated > 0) actions.push("More eligible items can be added to the corpus.");
-      if (response.stats.unreviewed > 0) actions.push("Export unreviewed items for the next machine-review batch.");
+      if (response.stats.unreviewed > 0) actions.push("Export a bounded never-machine-reviewed batch for external review.");
       if (response.stats.machineDisagreements > 0 || response.stats.humanMachineConflicts > 0 || response.stats.unsure > 0) actions.push("Use the Human Labeling handoff below to resolve exceptions.");
       workflowAction.textContent = actions.join(" ") || "No generation, machine review, or human-resolution action is currently required.";
       handoffActions.replaceChildren();
@@ -200,9 +207,10 @@
       distributionStatus.textContent = `${response.stats.total.toLocaleString()} total · ${response.stats.unreviewed.toLocaleString()} unreviewed · ${response.stats.reviewed.toLocaleString()} reviewed · ${response.stats.unsure.toLocaleString()} unsure · ${response.stats.trainingEligible.toLocaleString()} training-eligible${companies ? ` · ${companies}` : ""}`;
     }
     async function load() {
-      setError(""); try { const [queueResponse, statusResponse] = await Promise.all([fetch(queueUrl({ ...state.filters, status: "all" }), { cache: "no-store" }), fetch(generationStatusUrl(state.filters), { cache: "no-store" })]);
-        if (!queueResponse.ok) throw new Error("The annotation corpus could not be loaded."); if (!statusResponse.ok) throw new Error("Corpus availability could not be calculated.");
-        const queue = await queueResponse.json(); const status = await statusResponse.json(); state.eligible = status.eligibleUngenerated; renderQueue(queue, status); generationStatus.textContent = `Current corpus: ${status.total.toLocaleString()} items · Eligible ungenerated items: ${status.eligibleUngenerated.toLocaleString()}`;
+      setError(""); try { const [queueResponse, statusResponse, batchResponse] = await Promise.all([fetch(queueUrl({ ...state.filters, status: "all" }), { cache: "no-store" }), fetch(generationStatusUrl(state.filters), { cache: "no-store" }), fetch(machineBatchStatusUrl(batchQueue.value, state.filters), { cache: "no-store" })]);
+        if (!queueResponse.ok) throw new Error("The annotation corpus could not be loaded."); if (!statusResponse.ok) throw new Error("Corpus availability could not be calculated."); if (!batchResponse.ok) throw new Error("Machine-review batch availability could not be calculated.");
+        const queue = await queueResponse.json(); const status = await statusResponse.json(); const batch = await batchResponse.json(); state.eligible = status.eligibleUngenerated; state.batchMatching = batch.matchingCount; renderQueue(queue, status); generationStatus.textContent = `Current corpus: ${status.total.toLocaleString()} items · Eligible ungenerated items: ${status.eligibleUngenerated.toLocaleString()}`;
+        const last = batch.lastBatch; batchStatus.textContent = `${batch.matchingCount.toLocaleString()} matching ${batch.matchingCount === 1 ? "item" : "items"}.${last ? ` Last batch: ${last.actualCount.toLocaleString()} items · ${last.id}.` : " No batch has been exported for this queue and scope."}`;
       } catch (failure) { setError(failure.message || String(failure)); } finally { updateControls(); }
     }
     async function generate(allEligible) {
@@ -211,7 +219,20 @@
       try { const response = await fetch("/api/admin/annotations/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); const result = await response.json().catch(() => ({})); if (!response.ok) throw new Error(result.error || "Corpus generation failed."); state.eligible = result.remainingEligible; operationStatus.textContent = formatGenerationResult(result); await load(); }
       catch (failure) { operationStatus.textContent = ""; setError(failure.message || String(failure)); } finally { state.busy = false; updateControls(); }
     }
+    async function exportMachineBatch(allMatching) {
+      const requestedItems = Number(batchCount.value);
+      if (!allMatching && (!Number.isInteger(requestedItems) || requestedItems < 1 || requestedItems > 50000)) { setError("Choose an export count from 1 to 50,000."); return; }
+      state.busy = true; updateControls(); setError(""); batchStatus.textContent = allMatching ? "Preparing all matching items…" : `Preparing up to ${requestedItems.toLocaleString()} items…`;
+      try {
+        const response = await fetch("/api/admin/annotations/machine-review-batch", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ queue: batchQueue.value, requestedItems: allMatching ? null : requestedItems, allMatching, company: state.filters.company || null, concept: state.filters.concept || null }) });
+        if (!response.ok) { const failure = await response.json().catch(() => ({})); throw new Error(failure.error || "Machine-review batch export failed."); }
+        const blob = await response.blob(); const batchId = response.headers.get("X-JSM-Batch-Id") || "batch"; const count = Number(response.headers.get("X-JSM-Exported-Count") || 0);
+        const link = document.createElement("a"); const url = URL.createObjectURL(blob); link.href = url; link.download = `jsm-machine-review-${batchId}.jsonl`; document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 0);
+        batchStatus.textContent = `Exported ${count.toLocaleString()} ${count === 1 ? "item" : "items"} · ${batchId}.`; await load();
+      } catch (failure) { batchStatus.textContent = ""; setError(failure.message || String(failure)); } finally { state.busy = false; updateControls(); }
+    }
     addItems.addEventListener("click", () => void generate(false)); addAll.addEventListener("click", () => void generate(true)); importFile.addEventListener("change", updateControls);
+    exportBatch.addEventListener("click", () => void exportMachineBatch(false)); exportAllMatching.addEventListener("click", () => void exportMachineBatch(true)); batchQueue.addEventListener("change", () => void load());
     importButton.addEventListener("click", async () => { if (!importFile.files?.[0]) return; state.busy = true; updateControls(); setError(""); operationStatus.textContent = "Validating import…";
       try { const body = new FormData(); body.append("file", importFile.files[0]); const response = await fetch("/api/admin/annotations/import", { method: "POST", body }); const summary = await response.json().catch(() => ({})); if (!response.ok) throw new Error(summary.error || "Machine-review import failed."); operationStatus.textContent = formatImportSummary(summary); await load(); }
       catch (failure) { operationStatus.textContent = ""; setError(failure.message || String(failure)); } finally { state.busy = false; updateControls(); } });
