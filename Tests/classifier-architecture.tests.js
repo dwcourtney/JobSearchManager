@@ -6,6 +6,7 @@ const path = require("node:path");
 const root = path.resolve(__dirname, "..");
 const read = (...parts) => fs.readFileSync(path.join(root, ...parts), "utf8");
 const production = read("deploy", "compose.curiosity.yaml");
+const deployment = read("scripts", "deploy-curiosity.sh");
 const program = read("Program.cs");
 const classifier = read("classifier-service", "classifier_service.py");
 const classifierDockerfile = read("classifier-service", "Dockerfile");
@@ -63,6 +64,10 @@ assert.match(catalogService, /SemanticClassificationStates\.Unavailable/,
   "classifier failure must be represented without failing ingestion");
 assert.match(program, /\/api\/admin\/classifier\/backfill/,
   "an explicit existing-cache backfill mechanism must remain available");
+assert.match(program, /Timeout = TimeSpan\.FromSeconds\(120\)/,
+  "the exact-SHA deployment probe must allow one bounded 85-concept GPU inference");
+assert.match(deployment, /if \[\[ "\$allow_legacy" != "true" \]\]; then[\s\S]*?--classifier-diagnostic/,
+  "rollback verification must not apply the new semantic contract to a legacy image");
 assert.match(models, /SemanticJobClassification\? SemanticClassification/,
   "semantic results and provenance must persist with cached jobs");
 
