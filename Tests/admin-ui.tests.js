@@ -41,7 +41,7 @@ assert.match(app, /admin-training-data-panel[\s\S]*?admin-training-data-human-ta
   "Human and Machine Labeling must be nested workflows within Training Data.");
 assert.doesNotMatch(app, /id = "admin-(?:human|machine)-labeling-tab"/,
   "Human and Machine Labeling must not remain top-level Administration tabs.");
-assert.match(index, /annotation-labeling-ui\.js\?v=4[\s\S]*?app\.js\?v=38/,
+assert.match(index, /annotation-labeling-ui\.js\?v=5[\s\S]*?app\.js\?v=39/,
   "The tested annotation module must load before its application consumer.");
 assert.match(app, /AnnotationLabeling\.mountHuman\(elements\.adminHumanLabelingPanel\)/);
 assert.match(app, /AnnotationLabeling\.mountMachine\(elements\.adminMachineLabelingPanel,\s*\{/);
@@ -66,7 +66,7 @@ assert.match(app, /False positives[\s\S]*?False negatives/,
   "Detector errors must be reviewable by classification.");
 assert.match(app, /Search detector concepts[\s\S]*?Tier 1[\s\S]*?Tier 2[\s\S]*?Tier 3[\s\S]*?Not evaluated[\s\S]*?Errors present/,
   "Full-taxonomy evaluation needs search, tier, maturity, and error filters.");
-assert.match(index, /detector-evaluation-ui\.js\?v=1[\s\S]*?app\.js\?v=38/,
+assert.match(index, /detector-evaluation-ui\.js\?v=1[\s\S]*?app\.js\?v=39/,
   "The deterministic Detector Evaluation filter helper must load before its application consumer.");
 assert.match(app, /DetectorEvaluationUi\.matchesMetric/,
   "Rendered filtering must use the deterministic tested helper.");
@@ -82,7 +82,7 @@ assert.match(program,
 assert.match(program,
   /MapGet\("\/api\/admin\/detector-evaluation"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)/,
   "Detector Evaluation must retain server-side admin authorization.");
-for (const route of ["queue", "generation-status", "generate", "decision", "source", "export", "import"]) {
+for (const route of ["queue", "generation-status", "generate", "decision", "source", "export", "machine-review-batch-status", "machine-review-batch", "import"]) {
   assert.match(program,
     new RegExp(`api/admin/annotations[\\s\\S]*?${route}[\\s\\S]*?RequireAuthorization\\(AdminAuthorization\\.Policy\\)`),
     `Annotation ${route} access must retain server-side admin authorization.`);
@@ -96,12 +96,14 @@ assert.match(humanMount, /Review queue[\s\S]*?Correct[\s\S]*?Unsure \/ Skip[\s\S
   "Human Labeling must retain the one-card review workflow.");
 assert.match(machineMount, /Items to add[\s\S]*?Add items[\s\S]*?Add all eligible[\s\S]*?Current corpus:[\s\S]*?Eligible ungenerated items:/,
   "Machine Labeling must expose unambiguous append-count generation and availability.");
-assert.match(machineMount, /Build corpus[\s\S]*?Export unreviewed[\s\S]*?Review externally[\s\S]*?Import machine review/,
+assert.match(machineMount, /Build corpus[\s\S]*?Export a bounded batch[\s\S]*?Review externally[\s\S]*?Import machine review/,
   "Machine Labeling must present its concise four-step workflow.");
 assert.match(machineMount, /Current workflow state[\s\S]*?Current corpus[\s\S]*?Eligible ungenerated[\s\S]*?Unreviewed[\s\S]*?Machine-reviewed[\s\S]*?Human-reviewed[\s\S]*?Unsure \/ excluded/,
   "Machine Labeling must show authoritative workflow counts before its controls.");
-assert.match(machineMount, /primary-link-button[\s\S]*?Export unreviewed[\s\S]*?Other exports[\s\S]*?Export all JSONL[\s\S]*?Export reviewed[\s\S]*?Export unsure[\s\S]*?Export training-eligible/,
-  "Export unreviewed must be the primary action while all secondary exports remain available.");
+assert.match(machineMount, /Machine review batch[\s\S]*?Never machine-reviewed[\s\S]*?Items to export[\s\S]*?Export batch[\s\S]*?Export all matching[\s\S]*?Verbose archival exports[\s\S]*?Export all JSONL/,
+  "Bounded compact batch export must be primary while verbose archival exports remain secondary.");
+assert.match(machineMount, /Machine-reviewed[\s\S]*?Machine disagreements[\s\S]*?Human-unreviewed machine labels[\s\S]*?Unsure \/ ambiguous/,
+  "Machine batch export must expose all required review queues.");
 assert.match(machineMount, /Choose reviewed JSONL[\s\S]*?Import machine review JSONL/,
   "Machine Labeling must communicate file selection before import.");
 assert.match(machineMount, /Machine review exchange[\s\S]*?Import machine review JSONL/,
@@ -116,8 +118,8 @@ assert.match(app, /navigateToHuman\(queue\)[\s\S]*?showAdminSection\("training-d
   "Machine handoff must navigate to Human Labeling and select the requested queue.");
 assert.match(styles, /\.secondary-link-button[\s\S]*?cursor:\s*pointer[\s\S]*?\.secondary-link-button:hover[\s\S]*?--color-secondary-button-hover/,
   "Enabled export links must use clear token-based interactive styling.");
-assert.match(styles, /\.primary-link-button[\s\S]*?--color-accent[\s\S]*?\.primary-link-button:hover[\s\S]*?--color-accent-hover/,
-  "The primary Export unreviewed action must use theme-token styling.");
+assert.doesNotMatch(app, /heading\.textContent = "Administration"/,
+  "The redundant Administration page heading must be removed without removing inner navigation.");
 assert.match(styles, /\.training-data-subtabs[\s\S]*?--color-settings-subtab-bar-background[\s\S]*?\.annotation-workflow-guide[\s\S]*?--color-accent-soft/,
   "Nested navigation and workflow presentation must use theme tokens.");
 assert.match(styles, /\.annotation-labeling-panel button:disabled[\s\S]*?cursor:\s*not-allowed[\s\S]*?--opacity-disabled-control/,

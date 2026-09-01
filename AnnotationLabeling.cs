@@ -47,6 +47,17 @@ public static class AnnotationExportModes
     public static bool IsValid(string? value) => value is All or Reviewed or Unreviewed or Unsure or TrainingEligible;
 }
 
+public static class AnnotationMachineReviewQueues
+{
+    public const string NeverMachineReviewed = "neverMachineReviewed";
+    public const string MachineReviewed = "machineReviewed";
+    public const string MachineDisagreement = "machineDisagreement";
+    public const string HumanUnreviewedMachine = "humanUnreviewedMachine";
+    public const string Unsure = "unsure";
+    public static bool IsValid(string? value) => value is NeverMachineReviewed or MachineReviewed or
+        MachineDisagreement or HumanUnreviewedMachine or Unsure;
+}
+
 public sealed record AnnotationMachineProvenance(string Method, int TaxonomyVersion, string TaxonomyFingerprint,
     IReadOnlyList<string> BasisConceptIds, string? Model, decimal? Confidence);
 public sealed record AnnotationMachineReview(string Id, string ReviewerType, string? ReviewerIdentity, string Decision,
@@ -63,15 +74,18 @@ public sealed record AnnotationItem(string Id, string SourceId, string JobId, st
 public sealed record AnnotationImportRejection(int Line, string? ItemId, string Category, string Message,
     string? ContentHash, string? TaxonomyFingerprint);
 public sealed record AnnotationImportSummary(int RecordsRead, int Imported, int Unchanged, int Conflicts, int Rejected,
-    int StaleFingerprint, int UnknownConcept, int Malformed, int UnknownItem, int ContentHashMismatch, int InvalidProvenance);
+    int StaleFingerprint, int UnknownConcept, int Malformed, int UnknownItem, int ContentHashMismatch, int InvalidProvenance,
+    string? BatchId = null, int? BatchItemCount = null, int? BatchReturned = null, int? BatchRemaining = null,
+    int UnknownBatch = 0, int ItemNotInBatch = 0);
 public sealed record AnnotationImportBatch(string Id, string FileName, DateTimeOffset ImportedUtc,
     AnnotationImportSummary Summary, IReadOnlyList<AnnotationImportRejection> Rejections);
 public sealed record AnnotationCorpus(int SchemaVersion, DateTimeOffset CreatedUtc, DateTimeOffset UpdatedUtc,
     Dictionary<string, AnnotationSource> Sources, Dictionary<string, AnnotationItem> Items,
-    IReadOnlyList<AnnotationImportBatch>? ImportHistory = null)
+    IReadOnlyList<AnnotationImportBatch>? ImportHistory = null,
+    IReadOnlyList<AnnotationMachineReviewBatch>? MachineReviewBatches = null)
 {
     public static AnnotationCorpus Empty(DateTimeOffset now) =>
-        new(2, now, now, new(StringComparer.Ordinal), new(StringComparer.Ordinal), []);
+        new(2, now, now, new(StringComparer.Ordinal), new(StringComparer.Ordinal), [], []);
 }
 public sealed record AnnotationGenerateRequest(int? RequestedItems = 1000, bool AllEligible = false,
     string? Company = null, string? Concept = null);
@@ -87,7 +101,15 @@ public sealed record AnnotationQueueResponse(AnnotationItem? Item, AnnotationSta
 public sealed record AnnotationGenerationStatus(int Total, int EligibleUngenerated);
 public sealed record AnnotationGenerateResult(int Added, int Total, int EligibleCandidates, int RemainingEligible,
     AnnotationQueueResponse Queue);
-internal sealed record AnnotationMachineImportRecord(string? AnnotationItemId, string? ContentHash,
+public sealed record AnnotationMachineReviewBatchRequest(string Queue = AnnotationMachineReviewQueues.NeverMachineReviewed,
+    int? RequestedItems = 100, bool AllMatching = false, string? Company = null, string? Concept = null);
+public sealed record AnnotationMachineReviewBatch(string Id, DateTimeOffset ExportedUtc, string TaxonomyFingerprint,
+    string Queue, string? Company, string? Concept, int? RequestedCount, int ActualCount, bool AllMatching,
+    string OrderingVersion, string ItemIdDigest, IReadOnlyList<string> AnnotationItemIds, int InterchangeVersion);
+public sealed record AnnotationMachineReviewBatchStatus(int MatchingCount, AnnotationMachineReviewBatch? LastBatch);
+public sealed record AnnotationMachineReviewBatchExport(AnnotationMachineReviewBatch Batch, string JsonLines);
+internal sealed record AnnotationMachineImportRecord(string? RecordType, int? SchemaVersion, string? BatchId,
+    string? AnnotationItemId, string? ContentHash,
     string? TaxonomyFingerprint, string? Decision, IReadOnlyList<string>? SelectedConceptIds,
     string? ReviewerType, string? ReviewerIdentity, decimal? Confidence, string? Rationale, DateTimeOffset? ReviewedUtc);
 
@@ -171,6 +193,92 @@ public sealed class AnnotationLabelingService
         } finally { _gate.Release(); }
     }
 
+    public async Task<AnnotationMachineReviewBatchStatus> GetMachineReviewBatchStatusAsync(
+        string queue = AnnotationMachineReviewQueues.NeverMachineReviewed, string? concept = null,
+        string? company = null, CancellationToken token = default)
+    {
+        ValidateMachineReviewBatchRequest(new(queue, 1, false, company, concept));
+        await _gate.WaitAsync(token);
+        try
+        {
+            var corpus = await LoadAsync(_time.GetUtcNow(), token);
+            var matching = MachineReviewItems(corpus, queue, concept, company).Count();
+            var last = (corpus.MachineReviewBatches ?? []).LastOrDefault(batch => batch.Queue == queue &&
+                string.Equals(batch.Concept, NormalizeFilter(concept), StringComparison.Ordinal) &&
+                string.Equals(batch.Company, NormalizeFilter(company), StringComparison.Ordinal));
+            return new(matching, last);
+        }
+        finally { _gate.Release(); }
+    }
+
+    public async Task<AnnotationMachineReviewBatchExport> ExportMachineReviewBatchAsync(
+        AnnotationMachineReviewBatchRequest request, CancellationToken token = default)
+    {
+        ValidateMachineReviewBatchRequest(request);
+        await _gate.WaitAsync(token);
+        try
+        {
+            var now = _time.GetUtcNow();
+            var corpus = await LoadAsync(now, token);
+            var matching = MachineReviewItems(corpus, request.Queue, request.Concept, request.Company).ToArray();
+            var wanted = request.AllMatching ? matching.Length : Math.Min(request.RequestedItems!.Value, matching.Length);
+            var items = matching.Take(wanted).ToArray();
+            var ids = items.Select(item => item.Id).ToArray();
+            const string ordering = "review-priority-created-id-v1";
+            var digest = Hash(string.Join('\n', ids));
+            var batchId = "machine-batch-" + Hash(string.Join('\n', now.ToString("O"), request.Queue,
+                NormalizeFilter(request.Company) ?? "", NormalizeFilter(request.Concept) ?? "", digest))[..24];
+            var batch = new AnnotationMachineReviewBatch(batchId, now, TaxonomyFingerprint, request.Queue,
+                NormalizeFilter(request.Company), NormalizeFilter(request.Concept), request.AllMatching ? null : request.RequestedItems,
+                items.Length, request.AllMatching, ordering, digest, ids, 3);
+            var catalog = _catalog.Concepts.OrderBy(c => c.Id, StringComparer.Ordinal).Select(c => new
+            {
+                c.Id, c.DisplayName, c.Category,
+                definition = $"Canonical JSM {c.Category} concept: {c.DisplayName}.",
+                evidencePatterns = c.EvidencePatterns ?? [], titleEvidencePatterns = c.TitleEvidencePatterns ?? [],
+                contextRules = c.ContextRules ?? []
+            }).ToArray();
+            var lines = new List<string>
+            {
+                JsonSerializer.Serialize(new { recordType = "batch", schemaVersion = 3, batchId = batch.Id,
+                    batch.ExportedUtc, batch.TaxonomyFingerprint, taxonomyVersion = TaxonomyVersion,
+                    batch.Queue, filters = new { batch.Company, batch.Concept }, batch.RequestedCount,
+                    actualExportedCount = batch.ActualCount, batch.AllMatching, batch.OrderingVersion,
+                    batch.ItemIdDigest, includedAnnotationItemIds = batch.AnnotationItemIds,
+                    canonicalConceptCatalog = catalog }, WebJson)
+            };
+            foreach (var source in items.Select(item => item.SourceId).Distinct(StringComparer.Ordinal)
+                .Select(id => corpus.Sources.GetValueOrDefault(id)).Where(source => source is not null)
+                .OrderBy(source => source!.Id, StringComparer.Ordinal))
+                lines.Add(JsonSerializer.Serialize(new { recordType = "source", schemaVersion = 3, batchId = batch.Id,
+                    source!.Id, source.ContentHash, source.JobId, company = source.CompanyId, source.Title,
+                    source.SourceUrl, source.FullPosting, source.CreatedUtc }, WebJson));
+            foreach (var item in items)
+            {
+                var definitions = AllConceptIds(item).Where(_catalog.Contains).Select(id =>
+                {
+                    var c = _catalog.Get(id); return new { c.Id, c.DisplayName, c.Category,
+                        definition = $"Canonical JSM {c.Category} concept: {c.DisplayName}.",
+                        evidencePatterns = c.EvidencePatterns ?? [], titleEvidencePatterns = c.TitleEvidencePatterns ?? [],
+                        contextRules = c.ContextRules ?? [] };
+                }).ToArray();
+                lines.Add(JsonSerializer.Serialize(new { recordType = "item", schemaVersion = 3, batchId = batch.Id,
+                    annotationItemId = item.Id, item.SourceId, item.ContentHash,
+                    taxonomyFingerprint = item.Machine.TaxonomyFingerprint, taxonomyVersion = item.Machine.TaxonomyVersion,
+                    sourceJobId = item.JobId, company = item.CompanyId, item.Title, item.SourceUrl, item.Evidence,
+                    surroundingContext = $"{item.ContextBefore}{item.Evidence}{item.ContextAfter}".Trim(),
+                    item.ContextBefore, item.ContextAfter, suggestedConceptIds = item.CandidateConceptIds,
+                    canonicalConceptDefinitions = definitions, machineProposal = item.Machine,
+                    existingMachineReviews = item.MachineReviews ?? [], item.CreatedUtc }, WebJson));
+            }
+            corpus = corpus with { UpdatedUtc = now,
+                MachineReviewBatches = (corpus.MachineReviewBatches ?? []).Append(batch).TakeLast(100).ToArray() };
+            await SaveAsync(corpus, token);
+            return new(batch, string.Join('\n', lines) + "\n");
+        }
+        finally { _gate.Release(); }
+    }
+
     public async Task<AnnotationQueueResponse?> DecideAsync(string itemId, AnnotationDecisionRequest request, string reviewer,
         AnnotationQueueFilter filter, CancellationToken token = default)
     {
@@ -197,7 +305,7 @@ public sealed class AnnotationLabelingService
     }
 
     public async Task<string> ExportJsonLinesAsync(string mode = AnnotationExportModes.Reviewed,
-        string? concept = null, string? company = null, CancellationToken token = default)
+        string? concept = null, string? company = null, CancellationToken token = default, string? batchId = null)
     {
         if (!AnnotationExportModes.IsValid(mode)) throw new ArgumentException("Choose a valid export mode.", nameof(mode));
         await _gate.WaitAsync(token);
@@ -207,6 +315,13 @@ public sealed class AnnotationLabelingService
             var items = corpus.Items.Values.Where(item => mode switch { AnnotationExportModes.All => true,
                 AnnotationExportModes.Reviewed => item.Status == "reviewed", AnnotationExportModes.Unreviewed => item.Status == "unreviewed",
                 AnnotationExportModes.Unsure => item.Status == "unsure", AnnotationExportModes.TrainingEligible => item.TrainingEligible, _ => false });
+            if (!string.IsNullOrWhiteSpace(batchId))
+            {
+                var batch = (corpus.MachineReviewBatches ?? []).FirstOrDefault(value => value.Id == batchId) ??
+                    throw new ArgumentException("Unknown machine-review batch.", nameof(batchId));
+                var batchItems = batch.AnnotationItemIds.ToHashSet(StringComparer.Ordinal);
+                items = items.Where(item => batchItems.Contains(item.Id));
+            }
             if (!string.IsNullOrWhiteSpace(concept)) items = items.Where(item => AllConceptIds(item).Contains(concept));
             if (!string.IsNullOrWhiteSpace(company)) items = items.Where(item => item.CompanyId == company);
             var lines = items.OrderBy(item => item.Id, StringComparer.Ordinal).Select(item =>
@@ -245,7 +360,11 @@ public sealed class AnnotationLabelingService
         {
             var now = _time.GetUtcNow(); var corpus = await LoadAsync(now, token); var lines = jsonLines.Replace("\r\n", "\n").Split('\n');
             int read = 0, imported = 0, unchanged = 0, conflicts = 0, stale = 0, unknownConcept = 0,
-                malformed = 0, unknownItem = 0, contentMismatch = 0, invalidProvenance = 0;
+                malformed = 0, unknownItem = 0, contentMismatch = 0, invalidProvenance = 0,
+                unknownBatch = 0, itemNotInBatch = 0;
+            string? returnedBatchId = null;
+            AnnotationMachineReviewBatch? returnedBatch = null;
+            var returnedItemIds = new HashSet<string>(StringComparer.Ordinal);
             var rejections = new List<AnnotationImportRejection>();
             for (var index = 0; index < lines.Length; index++)
             {
@@ -255,8 +374,35 @@ public sealed class AnnotationLabelingService
                 AnnotationMachineImportRecord? record;
                 try { record = JsonSerializer.Deserialize<AnnotationMachineImportRecord>(line, WebJson); }
                 catch (JsonException) { malformed++; Reject(rejections, index + 1, null, "malformed", "Record is not valid JSON."); continue; }
+                if (record?.RecordType is "source" or "item") continue;
+                if (record?.RecordType == "batch")
+                {
+                    if (string.IsNullOrWhiteSpace(record.BatchId))
+                    { malformed++; Reject(rejections, index + 1, null, "malformed", "Batch header requires batchId."); continue; }
+                    var headerBatch = (corpus.MachineReviewBatches ?? []).FirstOrDefault(batch => batch.Id == record.BatchId);
+                    if (headerBatch is null)
+                    { unknownBatch++; Reject(rejections, index + 1, null, "unknown-batch", "Machine-review batch does not exist."); continue; }
+                    if (!string.IsNullOrWhiteSpace(record.TaxonomyFingerprint) && record.TaxonomyFingerprint != headerBatch.TaxonomyFingerprint)
+                    { stale++; Reject(rejections, index + 1, null, "stale-fingerprint", "Batch taxonomy fingerprint is stale.", null, record.TaxonomyFingerprint); continue; }
+                    if (returnedBatchId is not null && returnedBatchId != record.BatchId)
+                    { malformed++; Reject(rejections, index + 1, null, "malformed", "A return file may reference only one batch."); continue; }
+                    returnedBatchId = record.BatchId; returnedBatch = headerBatch; continue;
+                }
+                if (record?.RecordType is not null and not "review")
+                { malformed++; Reject(rejections, index + 1, record.AnnotationItemId, "malformed", "Unsupported recordType."); continue; }
                 if (record is null || string.IsNullOrWhiteSpace(record.AnnotationItemId) || string.IsNullOrWhiteSpace(record.ContentHash) || string.IsNullOrWhiteSpace(record.TaxonomyFingerprint))
                 { malformed++; Reject(rejections, index + 1, record?.AnnotationItemId, "malformed", "annotationItemId, contentHash, and taxonomyFingerprint are required.", record?.ContentHash, record?.TaxonomyFingerprint); continue; }
+                if (!string.IsNullOrWhiteSpace(record.BatchId))
+                {
+                    var recordBatch = (corpus.MachineReviewBatches ?? []).FirstOrDefault(batch => batch.Id == record.BatchId);
+                    if (recordBatch is null)
+                    { unknownBatch++; Reject(rejections, index + 1, record.AnnotationItemId, "unknown-batch", "Machine-review batch does not exist.", record.ContentHash, record.TaxonomyFingerprint); continue; }
+                    if (returnedBatchId is not null && returnedBatchId != record.BatchId)
+                    { malformed++; Reject(rejections, index + 1, record.AnnotationItemId, "malformed", "A return file may reference only one batch.", record.ContentHash, record.TaxonomyFingerprint); continue; }
+                    returnedBatchId = record.BatchId; returnedBatch = recordBatch;
+                    if (!recordBatch.AnnotationItemIds.Contains(record.AnnotationItemId, StringComparer.Ordinal))
+                    { itemNotInBatch++; Reject(rejections, index + 1, record.AnnotationItemId, "item-not-in-batch", "Annotation item is not a member of this batch.", record.ContentHash, record.TaxonomyFingerprint); continue; }
+                }
                 if (!corpus.Items.TryGetValue(record.AnnotationItemId, out var item))
                 { unknownItem++; Reject(rejections, index + 1, record.AnnotationItemId, "unknown-item", "Annotation item does not exist.", record.ContentHash, record.TaxonomyFingerprint); continue; }
                 if (record.ContentHash != item.ContentHash)
@@ -274,6 +420,7 @@ public sealed class AnnotationLabelingService
                 if (unknown is not null) { unknownConcept++; Reject(rejections, index + 1, record.AnnotationItemId, "unknown-concept", $"Canonical concept '{unknown}' is unknown.", record.ContentHash, record.TaxonomyFingerprint); continue; }
                 if (decision == AnnotationDecisions.DifferentLabel && selected.Any(item.CandidateConceptIds.Contains))
                 { malformed++; Reject(rejections, index + 1, record.AnnotationItemId, "malformed", "Different label must replace the candidate.", record.ContentHash, record.TaxonomyFingerprint); continue; }
+                if (returnedBatch is not null) returnedItemIds.Add(record.AnnotationItemId);
                 var reviewId = "machine-review-" + Hash(string.Join('\n', item.Id, record.ContentHash, type,
                     record.ReviewerIdentity?.Trim() ?? "", decision, string.Join(',', selected), record.Confidence?.ToString() ?? "", record.Rationale?.Trim() ?? ""))[..24];
                 var reviews = (item.MachineReviews ?? []).ToList();
@@ -286,7 +433,10 @@ public sealed class AnnotationLabelingService
                     TrainingEligible = item.TrainingEligible && !conflict, UpdatedUtc = now }; imported++; if (conflict) conflicts++;
             }
             var summary = new AnnotationImportSummary(read, imported, unchanged, conflicts, rejections.Count, stale,
-                unknownConcept, malformed, unknownItem, contentMismatch, invalidProvenance);
+                unknownConcept, malformed, unknownItem, contentMismatch, invalidProvenance,
+                returnedBatchId, returnedBatch?.ActualCount, returnedBatch is null ? null : returnedItemIds.Count,
+                returnedBatch is null ? null : Math.Max(0, returnedBatch.ActualCount - returnedItemIds.Count),
+                unknownBatch, itemNotInBatch);
             var safeName = Path.GetFileName(fileName ?? "machine-review.jsonl"); if (safeName.Length > 160) safeName = safeName[..160];
             var batch = new AnnotationImportBatch("import-" + Hash($"{now:O}\n{safeName}\n{read}\n{imported}")[..24], safeName, now, summary, rejections.Take(1000).ToArray());
             corpus = corpus with { SchemaVersion = 2, UpdatedUtc = now,
@@ -314,6 +464,43 @@ public sealed class AnnotationLabelingService
         if (!string.IsNullOrWhiteSpace(request.Concept) && !_catalog.Contains(request.Concept)) throw new ArgumentException("Unknown generation concept.");
         if (request.Company?.Length > 200) throw new ArgumentException("Company filter is too long.");
     }
+
+    private void ValidateMachineReviewBatchRequest(AnnotationMachineReviewBatchRequest request)
+    {
+        if (!AnnotationMachineReviewQueues.IsValid(request.Queue))
+            throw new ArgumentException("Choose a valid machine-review queue.");
+        if (!request.AllMatching && (request.RequestedItems is null or < 1 or > MaximumRequestedItems))
+            throw new ArgumentException($"Items to export must be between 1 and {MaximumRequestedItems:N0}.");
+        if (!string.IsNullOrWhiteSpace(request.Concept) && !_catalog.Contains(request.Concept))
+            throw new ArgumentException("Unknown machine-review concept.");
+        if (request.Company?.Length > 200) throw new ArgumentException("Company filter is too long.");
+    }
+
+    private static string? NormalizeFilter(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private static IEnumerable<AnnotationItem> MachineReviewItems(AnnotationCorpus corpus, string queue,
+        string? concept, string? company)
+    {
+        var items = corpus.Items.Values.Where(item => queue switch
+        {
+            AnnotationMachineReviewQueues.NeverMachineReviewed => (item.MachineReviews?.Count ?? 0) == 0,
+            AnnotationMachineReviewQueues.MachineReviewed => (item.MachineReviews?.Count ?? 0) > 0,
+            AnnotationMachineReviewQueues.MachineDisagreement => HasMachineDisagreement(item),
+            AnnotationMachineReviewQueues.HumanUnreviewedMachine => !HasHumanDecision(item) && (item.MachineReviews?.Count ?? 0) > 0,
+            AnnotationMachineReviewQueues.Unsure => item.Status == "unsure" ||
+                (item.MachineReviews ?? []).Any(review => review.Decision == AnnotationDecisions.Unsure),
+            _ => false
+        });
+        if (!string.IsNullOrWhiteSpace(concept)) items = items.Where(item => AllConceptIds(item).Contains(concept.Trim()));
+        if (!string.IsNullOrWhiteSpace(company)) items = items.Where(item => item.CompanyId == company.Trim());
+        return items.OrderBy(MachineReviewPriority).ThenBy(item => item.CreatedUtc).ThenBy(item => item.Id, StringComparer.Ordinal);
+    }
+
+    private static int MachineReviewPriority(AnnotationItem item) => HasHumanMachineConflict(item) ? 0 :
+        HasMachineDisagreement(item) ? 1 : item.Status == "unsure" ||
+        (item.MachineReviews ?? []).Any(review => review.Decision == AnnotationDecisions.Unsure) ? 2 :
+        !HasHumanDecision(item) && (item.MachineReviews?.Count ?? 0) > 0 ? 3 :
+        (item.MachineReviews?.Count ?? 0) == 0 ? 4 : 5;
 
     private List<(AnnotationSource Source, AnnotationItem Item)> BuildCandidates(AnnotationCorpus corpus,
         IEnumerable<JobRecord> jobs, string? company, string? concept, DateTimeOffset now)
@@ -405,7 +592,7 @@ public sealed class AnnotationLabelingService
         foreach (var pair in corpus.Items.ToArray()) corpus.Items[pair.Key] = pair.Value with
         { MachineReviews = pair.Value.MachineReviews ?? [], HumanProvenance = pair.Value.HumanProvenance ??
             (pair.Value.Status == "reviewed" ? "human-reviewed" : pair.Value.Status == "unsure" ? "unsure/excluded" : null) };
-        return corpus with { ImportHistory = corpus.ImportHistory ?? [] };
+        return corpus with { ImportHistory = corpus.ImportHistory ?? [], MachineReviewBatches = corpus.MachineReviewBatches ?? [] };
     }
     private Task SaveAsync(AnnotationCorpus corpus, CancellationToken token) => _store.WriteJsonAsync(WorkspaceDataFile.AnnotationCorpus, corpus, token);
     private static bool HasHumanDecision(AnnotationItem item) => item.Status is "reviewed" or "unsure" && AnnotationDecisions.IsValid(item.Decision);

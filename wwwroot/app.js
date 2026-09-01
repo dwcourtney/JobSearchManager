@@ -1043,13 +1043,6 @@ function synchronizeAdminNavigation(isAdmin) {
   view.setAttribute("aria-labelledby", "admin-tab");
   view.hidden = true;
 
-  const header = document.createElement("header");
-  header.className = "settings-header";
-  const heading = document.createElement("h2");
-  heading.tabIndex = -1;
-  heading.textContent = "Administration";
-  header.append(heading);
-
   const surface = document.createElement("div");
   surface.className = "settings-surface";
 
@@ -1177,7 +1170,7 @@ function synchronizeAdminNavigation(isAdmin) {
   machineLabelingPanel.hidden = true;
   trainingDataPanel.append(trainingDataHeading, trainingDataIntro, trainingDataTabs, humanLabelingPanel, machineLabelingPanel);
   surface.append(tabs, section, evaluationPanel, trainingDataPanel);
-  view.append(header, surface);
+  view.append(surface);
   elements.settingsView.after(view);
 
   elements.adminTab = tab;
