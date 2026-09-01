@@ -52,6 +52,9 @@ actual_sha="$(git -C "$repository_root" rev-parse HEAD)"
 model_root="$lab_root/models/ollama"
 mkdir -p "$model_root"
 sudo -n chown -R 65532:65532 "$model_root"
+deberta_model_root="$lab_root/models/nli-deberta-v3-base"
+mkdir -p "$deberta_model_root"
+sudo -n chown -R 65532:65532 "$deberta_model_root"
 
 mkdir -p "$state_root"
 mkdir -p "$security_cache"
@@ -137,6 +140,10 @@ ollama_source="$(docker image inspect --format '{{ index .Config.Labels "org.ope
 bash "$repository_root/scripts/security-scan.sh" image "jsm:$target_sha" "$security_cache"
 bash "$repository_root/scripts/security-scan.sh" image "jsm-classifier:$target_sha" "$security_cache"
 bash "$repository_root/scripts/security-scan.sh" image "$ollama_image" "$security_cache"
+
+# Restore/validate the exact immutable DeBERTa snapshot retained by the Phase 2B contract.
+# Only this bounded provisioning container has registry egress; production remains internal-only.
+docker run --rm --user 65532:65532 --env HOME=/tmp --tmpfs /tmp --env CLASSIFIER_MODEL_ROOT=/models/nli-deberta-v3-base --volume "$deberta_model_root:/models/nli-deberta-v3-base" "jsm-classifier:$target_sha" --download-model
 
 # Phase 0 host inventory and a non-mutating GPU-container preflight happen before replacement.
 echo "Docker $(docker version --format '{{.Server.Version}}'); Compose $(docker compose version --short)."

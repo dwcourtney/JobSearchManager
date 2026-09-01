@@ -9,22 +9,19 @@ using System.Text.Json;
 namespace JobSearchManager;
 
 public sealed record ClassifierRequest(string JobId, string Title, string Description);
-public sealed record SemanticConceptPrediction(string ConceptId, bool Matched);
+public sealed record SemanticConceptPrediction(string ConceptId, bool Matched, double? Score = null);
 
 public sealed record SemanticClassifierResponse(
     bool Received, string JobId, string Title, int DescriptionLength,
     string ServiceVersion, string ProtocolVersion, string Revision,
     bool GpuAvailable, int DeviceCount, string? DeviceName,
     int? VramTotalMiB, int? VramUsedMiB, string? DriverVersion,
-    string ModelType, string ModelId, string ModelTag, string ModelDigest,
-    string Quantization, string OllamaVersion,
+    string ModelType, string ModelId, string ModelRevision, string ModelDigest,
     int TaxonomyVersion, string TaxonomyFingerprint, int ConceptCount,
-    string PromptVersion, string PromptHash, double Temperature, int Seed,
-    int ContextLength, int MaxOutputTokens, string PostingContentHash,
+    string ClassifierConfigurationVersion, string ClassifierConfigurationFingerprint,
+    double Threshold, int ChunkTokens, int ChunkOverlap, string PostingContentHash,
     string ClassificationFingerprint, DateTimeOffset ClassifiedUtc, string Device,
-    long? TotalDurationNanoseconds, long? LoadDurationNanoseconds,
-    int? PromptTokenCount, int? OutputTokenCount, double? TokensPerSecond,
-    double InferenceMilliseconds, int MalformedOutputCount,
+    int TokenCount, int ChunkCount, double InferenceMilliseconds,
     IReadOnlyList<SemanticConceptPrediction> Predictions);
 
 public sealed record SemanticClassifierResult(
@@ -37,31 +34,33 @@ public sealed record SemanticClassifierResult(
         new(false, elapsed, null, error);
 }
 
+public sealed record QwenDeepAnalysisResponse(
+    bool Received, string JobId, string Title, string PostingContentHash,
+    string ModelId, string ModelTag, string ModelDigest,
+    DateTimeOffset AnalyzedUtc, string Analysis);
+
 public static class SemanticClassifierContract
 {
-    public const string ModelId = "Qwen/Qwen3-4B-Instruct-2507";
-    public const string ModelTag = "qwen3:4b-instruct-2507-q4_K_M";
+    public const string ModelId = "cross-encoder/nli-deberta-v3-base";
+    public const string ModelRevision = "6c749ce3425cd33b46d187e45b92bbf96ee12ec7";
     public const string ModelDigest =
-        "sha256:0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0";
-    public const string PromptVersion = "job-fit-85-zero-shot-v1";
-    public const int ContextLength = 8192;
-    public const int MaxOutputTokens = 2048;
-    public const int Seed = 42;
-    public const int Temperature = 0;
-    public const string SystemPrompt = """
-You are a careful job-posting responsibility classifier.
-Classify the role itself, not technologies merely mentioned as products, customer environments,
-desired awareness, qualifications without assigned duties, team context, or work managed by someone else.
-A label is true only when the posting assigns the candidate responsibility or a work condition matching
-its definition. Multiple overlapping labels may be true. Return exactly the requested JSON object with
-one boolean for every canonical concept. Do not add prose.
-""";
+        "sha256:d8148c6d49e0a7925134294c56326c71fe0ab1dc390e37355e00c7efbb488afa";
+    public const string ConfigurationVersion = "deberta-85-nli-v1";
+    public const int ChunkTokens = 384;
+    public const int ChunkOverlap = 64;
+    public const int MaximumLength = 512;
+    public const int ConceptBatchSize = 8;
+    public const double Threshold = 0.5;
+    public const string HypothesisTemplate =
+        "This job assigns the candidate work or conditions matching this concept: {definition}";
 
     public static string PostingContentHash(string title, string description) =>
         Hash($"{title}\n{description}");
 
-    public static string PromptHash(JobConceptCatalog catalog) =>
-        Hash($"{PromptVersion}\n{SystemPrompt.TrimEnd()}\n{catalog.Fingerprint}");
+    public static string ConfigurationFingerprint(JobConceptCatalog catalog) =>
+        Hash(string.Join('\n', ConfigurationVersion, ModelId, ModelRevision, ModelDigest,
+            ChunkTokens, ChunkOverlap, MaximumLength, ConceptBatchSize, Threshold, HypothesisTemplate,
+            catalog.Fingerprint));
 
     public static string ClassificationFingerprint(
         string postingContentHash,
@@ -72,14 +71,10 @@ one boolean for every canonical concept. Do not add prose.
             catalog.Version.ToString(System.Globalization.CultureInfo.InvariantCulture),
             catalog.Fingerprint,
             ModelId,
-            ModelTag,
+            ModelRevision,
             ModelDigest,
-            PromptVersion,
-            PromptHash(catalog),
-            Temperature.ToString(System.Globalization.CultureInfo.InvariantCulture),
-            Seed.ToString(System.Globalization.CultureInfo.InvariantCulture),
-            ContextLength.ToString(System.Globalization.CultureInfo.InvariantCulture),
-            MaxOutputTokens.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            ConfigurationVersion,
+            ConfigurationFingerprint(catalog));
         return Hash(material);
     }
 
@@ -129,24 +124,24 @@ public sealed class ClassifierClient(
                 result.Predictions.Select(item => item.ConceptId)
                     .ToHashSet(StringComparer.Ordinal).SetEquals(expectedPredictionIds);
             if (result is null || !result.Received || !predictionsValid ||
-                result.ModelType != "generative-llm" ||
+                result.ModelType != "nli-sequence-classifier" ||
                 result.ModelId != SemanticClassifierContract.ModelId ||
-                result.ModelTag != SemanticClassifierContract.ModelTag ||
+                result.ModelRevision != SemanticClassifierContract.ModelRevision ||
                 result.ModelDigest != SemanticClassifierContract.ModelDigest ||
                 result.TaxonomyVersion != catalog.Version ||
                 result.TaxonomyFingerprint != catalog.Fingerprint ||
                 result.ConceptCount != 85 ||
-                result.PromptVersion != SemanticClassifierContract.PromptVersion ||
-                result.PromptHash != SemanticClassifierContract.PromptHash(catalog) ||
-                result.Temperature != SemanticClassifierContract.Temperature ||
-                result.Seed != SemanticClassifierContract.Seed ||
-                result.ContextLength != SemanticClassifierContract.ContextLength ||
-                result.MaxOutputTokens != SemanticClassifierContract.MaxOutputTokens ||
+                result.ClassifierConfigurationVersion != SemanticClassifierContract.ConfigurationVersion ||
+                result.ClassifierConfigurationFingerprint !=
+                    SemanticClassifierContract.ConfigurationFingerprint(catalog) ||
+                result.Threshold != SemanticClassifierContract.Threshold ||
+                result.ChunkTokens != SemanticClassifierContract.ChunkTokens ||
+                result.ChunkOverlap != SemanticClassifierContract.ChunkOverlap ||
                 result.PostingContentHash != expectedContentHash ||
                 result.ClassificationFingerprint !=
                     SemanticClassifierContract.ClassificationFingerprint(expectedContentHash, catalog) ||
-                result.MalformedOutputCount != 0 || !result.GpuAvailable ||
-                result.DeviceCount != 1 || result.DeviceName != "NVIDIA GeForce GTX 1070" ||
+                !result.GpuAvailable || result.DeviceCount != 1 ||
+                result.DeviceName != "NVIDIA GeForce GTX 1070" ||
                 result.Device != "cuda:0" || result.JobId != request.JobId ||
                 result.Title != request.Title ||
                 result.DescriptionLength != request.Description.EnumerateRunes().Count())
@@ -166,6 +161,39 @@ public sealed class ClassifierClient(
             return SemanticClassifierResult.Unavailable(
                 stopwatch.Elapsed.TotalMilliseconds,
                 "Classifier service is unavailable.");
+        }
+    }
+
+    public async Task<QwenDeepAnalysis?> DeepAnalyzeAsync(
+        ClassifierRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var content = CreateJsonContent(request);
+            using var response = await httpClient.PostAsync("deep-analyze", content, cancellationToken);
+            if (!response.IsSuccessStatusCode) return null;
+            var value = await response.Content.ReadFromJsonAsync<QwenDeepAnalysisResponse>(
+                JsonOptions, cancellationToken);
+            var contentHash = SemanticClassifierContract.PostingContentHash(
+                request.Title, request.Description);
+            if (value is null || !value.Received || value.JobId != request.JobId ||
+                value.Title != request.Title || value.PostingContentHash != contentHash ||
+                value.ModelId != "Qwen/Qwen3-4B-Instruct-2507" ||
+                value.ModelTag != "qwen3:4b-instruct-2507-q4_K_M" ||
+                value.ModelDigest !=
+                    "sha256:0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0" ||
+                string.IsNullOrWhiteSpace(value.Analysis))
+                return null;
+            return new QwenDeepAnalysis(value.PostingContentHash, value.ModelId,
+                value.ModelTag, value.ModelDigest, value.AnalyzedUtc, value.Analysis);
+        }
+        catch (Exception exception) when (
+            exception is HttpRequestException or TaskCanceledException or JsonException)
+        {
+            logger.LogWarning("Optional Qwen deep analysis is unavailable for job {JobId}: {FailureType}.",
+                LogValue(request.JobId), exception.GetType().Name);
+            return null;
         }
     }
 
@@ -189,7 +217,8 @@ public sealed class SemanticClassificationService(
     private readonly ConcurrentDictionary<string, SemanticJobClassification> _completed =
         new(StringComparer.Ordinal);
 
-    public string ExpectedPromptHash => SemanticClassifierContract.PromptHash(catalog);
+    public string ExpectedConfigurationFingerprint =>
+        SemanticClassifierContract.ConfigurationFingerprint(catalog);
 
     public bool IsCurrent(JobRecord job)
     {
@@ -203,8 +232,8 @@ public sealed class SemanticClassificationService(
             value.TaxonomyFingerprint == catalog.Fingerprint &&
             value.ModelId == SemanticClassifierContract.ModelId &&
             value.ModelDigest == SemanticClassifierContract.ModelDigest &&
-            value.PromptVersion == SemanticClassifierContract.PromptVersion &&
-            value.PromptHash == ExpectedPromptHash &&
+            value.ClassifierConfigurationVersion == SemanticClassifierContract.ConfigurationVersion &&
+            value.ClassifierConfigurationFingerprint == ExpectedConfigurationFingerprint &&
             value.ClassificationFingerprint ==
                 SemanticClassifierContract.ClassificationFingerprint(contentHash, catalog) &&
             value.Predictions.Count == 85 &&
@@ -225,6 +254,15 @@ public sealed class SemanticClassificationService(
             () => ClassifyCoreAsync(job, description, cancellationToken),
             LazyThreadSafetyMode.ExecutionAndPublication));
         return AwaitAndRemoveAsync(fingerprint, lazy);
+    }
+
+    public Task<QwenDeepAnalysis?> DeepAnalyzeAsync(
+        JobRecord job,
+        CancellationToken cancellationToken = default)
+    {
+        var description = JobAnalysis.HtmlToPlainText(job.DescriptionHtml);
+        return classifier.DeepAnalyzeAsync(
+            new ClassifierRequest(job.StableId, job.Title, description), cancellationToken);
     }
 
     private async Task<SemanticClassificationAttempt> AwaitAndRemoveAsync(
@@ -254,14 +292,16 @@ public sealed class SemanticClassificationService(
                 response.TaxonomyFingerprint,
                 response.ModelType,
                 response.ModelId,
-                response.ModelTag,
+                response.ModelRevision,
                 response.ModelDigest,
-                response.Quantization,
-                response.PromptVersion,
-                response.PromptHash,
+                "",
+                "",
+                "",
                 response.ClassifiedUtc,
                 response.ClassificationFingerprint,
-                response.Predictions);
+                response.Predictions,
+                response.ClassifierConfigurationVersion,
+                response.ClassifierConfigurationFingerprint);
             if (_completed.Count >= MaximumProcessCacheEntries)
                 _completed.Clear();
             _completed[response.ClassificationFingerprint] = classification;

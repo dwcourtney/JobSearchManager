@@ -1,46 +1,40 @@
-# Semantic Job Fit classifier
+# Semantic Job Fit classifiers
 
-Job Fit uses the internal Qwen classifier for all 85 canonical concepts in
-`JobConceptCatalog.json`. The supported model is
-`qwen3:4b-instruct-2507-q4_K_M`, pinned by digest in both the adapter and JSM client.
-Ollama and the adapter are reachable only on the internal Docker classifier network.
+## Default: DeBERTa
 
-The current taxonomy is version 9 with fingerprint
-`514ed1c8c644d1eec426b5fdcf4d5a2c447aa61ce5572ae70b2d03fc3815a049`. The production prompt is
-`job-fit-85-zero-shot-v1` with hash
-`e08076fa0cd5c106818770b3b588385f93debce79cca1034045abdfc4fb23568`. The model digest is
-`sha256:0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0`.
+Automatic Job Fit screening uses `cross-encoder/nli-deberta-v3-base` at immutable revision
+`6c749ce3425cd33b46d187e45b92bbf96ee12ec7`. The pinned weights digest is
+`sha256:d8148c6d49e0a7925134294c56326c71fe0ab1dc390e37355e00c7efbb488afa`.
 
-Classification does not block source ingestion. Each active workspace schedules a bounded
-background pass ordered by active/new jobs and newest posting date. Identical classification
-fingerprints share an in-process result; persisted results are reused only while posting content,
-taxonomy, model digest, prompt, and generation inputs remain unchanged. A classifier outage leaves
-valid cached results intact and otherwise reports `pending` or `unavailable` without affecting
-browsing or deterministic salary, clearance, credential, citizenship, location, or account logic.
+The recovered Phase 2B NLI configuration uses 384-token chunks with 64-token overlap, maximum
+entailment aggregation across chunks, eight-concept GPU batches, a 0.5 match threshold, and dynamic entailment/contradiction
+label discovery. Configuration `deberta-85-nli-v1` applies the same definition-based hypothesis
+template to every one of the 85 canonical concepts. Its configuration fingerprint includes model
+identity/revision/digest, chunking, maximum sequence length, threshold, hypothesis template, and
+taxonomy fingerprint.
 
-Each persisted result includes the posting content hash, taxonomy version and fingerprint, model
-identity and digest, prompt version and hash, classification timestamp, classification fingerprint,
-and all 85 boolean predictions. An administrator may inspect or start the current-source backfill
-through `/api/admin/classifier/backfill/status` and `/api/admin/classifier/backfill`.
+Classification is bounded and asynchronous, so source ingestion never waits for model inference.
+Current/new jobs and newer posting dates are processed first. A valid persisted result is reused
+when posting content, taxonomy, model, and configuration fingerprints are unchanged. Otherwise the
+UI displays **Job Fit TBD**, never a synthetic 5/10 baseline. Failure leaves deterministic salary,
+clearance, credentials, education, citizenship, location, browsing, and accounts functional.
 
-The classification fingerprint covers posting content, taxonomy version and fingerprint, model ID,
-tag and digest, prompt version and hash, temperature, seed, context length, and output-token limit.
-Changing any of those inputs invalidates the cached semantic result. A backfill skips current results
-and therefore does not reclassify unchanged jobs unnecessarily.
+Persisted default results include posting content hash, taxonomy version/fingerprint, model
+identity/revision/digest, classifier configuration version/fingerprint, classification timestamp,
+classification fingerprint, confidence score, and match decision for all 85 concepts.
 
-## Acceptance evidence
+## Optional: Qwen/Ollama
 
-The reusable acceptance set is `SemanticClassifierValidationFixtures.json`; it references every
-canonical concept across responsibility shape, role type, technical domain, work arrangement, and
-work environment. It contains explicit positives, overlap cases, and hard negatives. Run it against
-an isolated candidate adapter with:
+`qwen3:4b-instruct-2507-q4_K_M` is retained on the internal classifier network only for the
+explicit **Deep Analyze with Qwen** action. It is never scheduled by ingestion or Admin backfill.
+Qwen results are stored separately with their own posting hash, model provenance, timestamp, and
+analysis text. They never replace the DeBERTa classification or silently change the Job Fit score.
 
-```text
-python3 scripts/validate-semantic-classifier.py --url http://job-classifier:8081
-```
+## Quality boundary
 
-The initial GTX 1070 validation on 2026-09-01 returned exactly 85 unique booleans for all 21 cases.
-It passed 148 of 155 labeled checks (95.5%) and every hard-negative check. The seven mismatches were
-conservative false negatives; no prompt exceptions or fixture-specific rules were added. The
-general acceptance gate is at least 90% labeled accuracy, no more than 5% hard-negative false
-positives, and coverage references for all 85 canonical IDs.
+The historical DeBERTa evaluation covered an eight-concept subset. The production adapter now
+supports the complete canonical taxonomy structurally, but the definition-derived hypotheses for
+the remaining concepts have not received equivalent per-concept calibration. Scores should be
+treated as screening signals, especially for subtle work-environment and responsibility-shape
+labels. The implementation intentionally uses one general template and does not add fixture-specific
+prompt exceptions.

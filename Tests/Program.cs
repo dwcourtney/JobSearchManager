@@ -931,9 +931,9 @@ static Task TestLlmFixtureMetricsAsync()
            catalog.Concepts.All(item => !string.IsNullOrWhiteSpace(item.Definition)),
         "The canonical semantic taxonomy did not preserve 85 unique, defined concepts.");
     Assert(catalog.Fingerprint == "514ed1c8c644d1eec426b5fdcf4d5a2c447aa61ce5572ae70b2d03fc3815a049" &&
-           SemanticClassifierContract.PromptHash(catalog) ==
-               "e08076fa0cd5c106818770b3b588385f93debce79cca1034045abdfc4fb23568",
-        "The canonical taxonomy or prompt material changed without an explicit version/hash update.");
+           SemanticClassifierContract.ConfigurationFingerprint(catalog) ==
+               "fe1bc78deb84bf339059e591f7b06d7d2bc4b905fefd859429055893d2da3fe3",
+        "The canonical taxonomy or DeBERTa configuration changed without an explicit hash update.");
     return Task.CompletedTask;
 }
 
@@ -943,15 +943,16 @@ static string SemanticClassifierPayload(
     var contentHash = SemanticClassifierContract.PostingContentHash(title, description);
     return JsonSerializer.Serialize(new SemanticClassifierResponse(
         true, jobId, title, description.EnumerateRunes().Count(),
-        "1.0.0", "5", new string('a', 40), true, 1, "NVIDIA GeForce GTX 1070",
-        null, 3000, null, "generative-llm", SemanticClassifierContract.ModelId,
-        SemanticClassifierContract.ModelTag, SemanticClassifierContract.ModelDigest,
-        "Q4_K_M", "0.33.2", catalog.Version, catalog.Fingerprint, 85,
-        SemanticClassifierContract.PromptVersion, SemanticClassifierContract.PromptHash(catalog),
-        0, 42, 8192, 2048, contentHash,
+        "2.0.0", "6", new string('a', 40), true, 1, "NVIDIA GeForce GTX 1070",
+        null, 3000, null, "nli-sequence-classifier", SemanticClassifierContract.ModelId,
+        SemanticClassifierContract.ModelRevision, SemanticClassifierContract.ModelDigest,
+        catalog.Version, catalog.Fingerprint, 85,
+        SemanticClassifierContract.ConfigurationVersion,
+        SemanticClassifierContract.ConfigurationFingerprint(catalog),
+        .5, 384, 64, contentHash,
         SemanticClassifierContract.ClassificationFingerprint(contentHash, catalog),
         new DateTimeOffset(2026, 9, 1, 12, 0, 0, TimeSpan.Zero), "cuda:0",
-        1_000_000_000L, 0L, 500, 50, 20.0, 1000.0, 0,
+        500, 2, 1000.0,
         catalog.Concepts.Select(item => new SemanticConceptPrediction(item.Id, true)).ToArray()),
         ClassifierClient.JsonOptions);
 }

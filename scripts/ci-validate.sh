@@ -129,9 +129,10 @@ node -e '
 const health = JSON.parse(process.argv[1]);
 const sha = process.argv[2];
 if (health.status !== "healthy" || health.gpuAvailable !== false || health.revision !== sha) process.exit(1);
-if (health.serviceVersion !== "1.0.0" || health.protocolVersion !== "5") process.exit(1);
-if (health.conceptCount !== 85 || health.promptVersion !== "job-fit-85-zero-shot-v1") process.exit(1);
-if (!/^[0-9a-f]{64}$/.test(health.taxonomyFingerprint) || !/^[0-9a-f]{64}$/.test(health.promptHash)) process.exit(1);
+if (health.serviceVersion !== "2.0.0" || health.protocolVersion !== "6") process.exit(1);
+if (health.conceptCount !== 85 || health.classifierConfigurationVersion !== "deberta-85-nli-v1") process.exit(1);
+if (!/^[0-9a-f]{64}$/.test(health.taxonomyFingerprint) ||
+    !/^[0-9a-f]{64}$/.test(health.classifierConfigurationFingerprint)) process.exit(1);
 ' "$classifier_health_json" "$expected_sha"
 
 docker run --detach \
