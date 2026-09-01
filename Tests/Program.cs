@@ -1236,6 +1236,7 @@ static async Task TestAdminAuthorizationAsync()
 
 static async Task TestClassifierClientContractAsync()
 {
+    var catalog = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
     string? postedJson = null;
     var handler = new StubHttpMessageHandler(request =>
     {
@@ -1245,24 +1246,21 @@ static async Task TestClassifierClientContractAsync()
                request.Headers.TransferEncodingChunked is not true,
             "Classifier client did not send a bounded, length-delimited JSON request.");
         postedJson = request.Content!.ReadAsStringAsync().GetAwaiter().GetResult();
-        return """
-            {"received":true,"jobId":"R180395","title":"Senior Software Developer",
-             "descriptionLength":18,"serviceVersion":"0.1.0","protocolVersion":"1",
-             "revision":"test-sha","gpuAvailable":false,"deviceCount":0,
-             "deviceName":null,"vramTotalMiB":null,"vramUsedMiB":null,"driverVersion":null}
-            """;
+        return SemanticClassifierPayload(catalog, "R180395", "Backend Engineer", "Build APIs.");
     });
     var client = new ClassifierClient(
         new HttpClient(handler) { BaseAddress = new Uri("http://job-classifier:8081/") },
+        catalog,
         NullLogger<ClassifierClient>.Instance);
     var result = await client.ClassifyAsync(new(
-        "R180395", "Senior Software Developer", "exactly 18 chars!!"));
+        "R180395", "Backend Engineer", "Build APIs."));
     var posted = JsonSerializer.Deserialize<ClassifierRequest>(
         postedJson!, ClassifierClient.JsonOptions)!;
     Assert(result.Available && result.Response is
-           { JobId: "R180395", Title: "Senior Software Developer", DescriptionLength: 18 } &&
+           { JobId: "R180395", Title: "Backend Engineer", DescriptionLength: 11,
+             ConceptCount: 85, Predictions.Count: 85 } &&
            posted == new ClassifierRequest(
-               "R180395", "Senior Software Developer", "exactly 18 chars!!"),
+               "R180395", "Backend Engineer", "Build APIs."),
         $"Classifier client did not preserve or validate the exact request/response contract: " +
         $"available={result.Available}, error={result.Error}, response={JsonSerializer.Serialize(result.Response)}, " +
         $"posted={postedJson}");
@@ -1270,11 +1268,13 @@ static async Task TestClassifierClientContractAsync()
 
 static async Task TestClassifierUnavailableAsync()
 {
+    var catalog = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
     var client = new ClassifierClient(
         new HttpClient(new ThrowingHttpMessageHandler())
         {
             BaseAddress = new Uri("http://job-classifier:8081/")
         },
+        catalog,
         NullLogger<ClassifierClient>.Instance);
     var result = await client.ClassifyAsync(new("R180395", "Title", "Description"));
     Assert(!result.Available && result.Response is null &&
@@ -1284,65 +1284,72 @@ static async Task TestClassifierUnavailableAsync()
 
 static async Task TestLlmClassifierContractAsync()
 {
-    var predictions = LlmEvaluationService.Concepts.Select(item => new {
-        conceptId = item.ConceptId, matched = true });
-    var payload = JsonSerializer.Serialize(new {
-        received = true, jobId = "fixture", title = "Backend Engineer", descriptionLength = 11,
-        serviceVersion = "0.4.0", protocolVersion = "4", revision = new string('a', 40),
-        gpuAvailable = true, deviceCount = 1, deviceName = "NVIDIA GeForce GTX 1070",
-        vramTotalMiB = (int?)null, vramUsedMiB = 3000, driverVersion = (string?)null,
-        modelType = "generative-llm", modelId = "Qwen/Qwen3-4B-Instruct-2507",
-        modelTag = "qwen3:4b-instruct-2507-q4_K_M",
-        modelDigest = "sha256:0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
-        quantization = "Q4_K_M", ollamaVersion = "0.33.2", device = "cuda:0",
-        promptVersion = "phase3-zero-shot-v1", promptHash = new string('c', 64),
-        temperature = 0, seed = 42, contextLength = 8192, maxOutputTokens = 384,
-        totalDurationNanoseconds = 1_000_000_000L, loadDurationNanoseconds = 0L,
-        promptTokenCount = 500, outputTokenCount = 50, tokensPerSecond = 20.0,
-        inferenceMilliseconds = 1000.0, malformedOutputCount = 0, predictions
-    }, ClassifierClient.JsonOptions);
+    var catalog = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+    var requests = 0;
     var client = new ClassifierClient(new HttpClient(new StubHttpMessageHandler(request => {
-        Assert(request.RequestUri?.AbsolutePath == "/classify-llm",
-            "LLM request used the wrong isolated endpoint.");
+        Interlocked.Increment(ref requests);
+        Assert(request.RequestUri?.AbsolutePath == "/classify",
+            "Semantic request used the wrong isolated endpoint.");
         Assert(request.Content?.Headers.ContentLength is > 0 &&
                request.Headers.TransferEncodingChunked is not true,
-            "LLM request was not bounded and length-delimited.");
-        return payload;
-    })) { BaseAddress = new Uri("http://job-classifier:8081/") }, NullLogger<ClassifierClient>.Instance);
-    var result = await client.ClassifyLlmAsync(new("fixture", "Backend Engineer", "Build APIs."));
-    Assert(result.Available && result.Response is { Device: "cuda:0", Predictions.Count: 8,
-               ContextLength: 8192, ModelType: "generative-llm" },
-        "A valid pinned-model GPU response did not pass the JSM contract.");
+            "Semantic request was not bounded and length-delimited.");
+        var posted = JsonSerializer.Deserialize<ClassifierRequest>(
+            request.Content!.ReadAsStringAsync().GetAwaiter().GetResult(),
+            ClassifierClient.JsonOptions)!;
+        return SemanticClassifierPayload(
+            catalog, posted.JobId, posted.Title, posted.Description);
+    })) { BaseAddress = new Uri("http://job-classifier:8081/") }, catalog,
+        NullLogger<ClassifierClient>.Instance);
+    var service = new SemanticClassificationService(client, catalog);
+    var job = CachedJob("leidos", "fixture", "/fixture", "<p>Build APIs.</p>") with
+    {
+        Title = "Backend Engineer"
+    };
+    var result = await service.ClassifyAsync(job);
+    var duplicate = await service.ClassifyAsync(job with { RequisitionId = "duplicate" });
+    var classified = job with
+    {
+        SemanticClassification = result.Classification,
+        SemanticClassificationStatus = SemanticClassificationStates.Complete
+    };
+    Assert(result.Available && duplicate.Available && requests == 1 &&
+           result.Classification is { Predictions.Count: 85 } &&
+           service.IsCurrent(classified) &&
+           !service.IsCurrent(classified with { DescriptionHtml = "<p>Build different APIs.</p>" }),
+        "The 85-concept semantic result was not persisted or invalidated by changed content.");
 }
 
 static Task TestLlmFixtureMetricsAsync()
 {
-    var environment = new TestHostEnvironment(AppContext.BaseDirectory);
-    var catalog = new JobConceptCatalog(environment);
-    var detector = new JobConceptDetector(catalog);
-    var evaluation = new DetectorEvaluationService(environment, catalog, detector);
-    var cases = evaluation.BuildLlmCases();
-    Assert(cases.Count == 40 && cases.Sum(item => item.Labels.Count) == 320,
-        "LLM evaluation did not select the expected 40 fixtures / 320 independent labels.");
-    var predictions = cases.Select(item => new LlmEvaluationService.Prediction(item,
-        new LlmClassifierResponse(true, item.FixtureId, item.Title, item.Description.Length,
-            "0.4.0", "4", new string('a', 40), true, 1, "NVIDIA GeForce GTX 1070",
-            null, 3000, null, "generative-llm", "model", "tag",
-            "sha256:0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
-            "Q4_K_M", "0.33.2", "cuda:0", "phase3-zero-shot-v1", new string('c', 64),
-            0, 42, 8192, 384, 1000, 0, 500, 50, 20, 1000, 0,
-            item.Labels.Select(label => new LlmPrediction(label.Key, label.Value)).ToArray()), 1010)).ToArray();
-    var metrics = LlmEvaluationService.Calculate(predictions);
-    Assert(metrics.Count == 8 && metrics.All(item => item.F1 == 1),
-        "LLM metrics did not preserve deterministic expected labels.");
-    var regexReport = evaluation.Evaluate(new string('a', 40));
-    var regexSelected = regexReport.Concepts.Where(item => LlmEvaluationService.Concepts.Any(
-        concept => concept.ConceptId == item.ConceptId)).ToArray();
-    var comparisons = LlmEvaluationService.Compare(regexSelected, metrics);
-    Assert(comparisons.Count == 8 && comparisons.All(item => item.LlmF1 == 1) &&
-           comparisons.All(item => item.F1Delta is >= 0),
-        "The per-concept regex/LLM comparison did not preserve all metrics and F1 deltas.");
+    var catalog = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+    Assert(catalog.Concepts.Count == 85 &&
+           catalog.Concepts.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count() == 85 &&
+           catalog.Concepts.All(item => !string.IsNullOrWhiteSpace(item.Definition)),
+        "The canonical semantic taxonomy did not preserve 85 unique, defined concepts.");
+    Assert(catalog.Fingerprint == "48a35f20304fe29e1c2207ce5e911f6a81cd66090f674cddefd27729a1d8ea79" &&
+           SemanticClassifierContract.PromptHash(catalog) ==
+               "d4e57347e15d920456a45062259b31913ad523e263fff75407ded49a5b0ba94f",
+        "The canonical taxonomy or prompt material changed without an explicit version/hash update.");
     return Task.CompletedTask;
+}
+
+static string SemanticClassifierPayload(
+    JobConceptCatalog catalog, string jobId, string title, string description)
+{
+    var contentHash = SemanticClassifierContract.PostingContentHash(title, description);
+    return JsonSerializer.Serialize(new SemanticClassifierResponse(
+        true, jobId, title, description.EnumerateRunes().Count(),
+        "1.0.0", "5", new string('a', 40), true, 1, "NVIDIA GeForce GTX 1070",
+        null, 3000, null, "generative-llm", SemanticClassifierContract.ModelId,
+        SemanticClassifierContract.ModelTag, SemanticClassifierContract.ModelDigest,
+        "Q4_K_M", "0.33.2", catalog.Version, catalog.Fingerprint, 85,
+        SemanticClassifierContract.PromptVersion, SemanticClassifierContract.PromptHash(catalog),
+        0, 42, 8192, 2048, contentHash,
+        SemanticClassifierContract.ClassificationFingerprint(contentHash, catalog),
+        new DateTimeOffset(2026, 9, 1, 12, 0, 0, TimeSpan.Zero), "cuda:0",
+        1_000_000_000L, 0L, 500, 50, 20.0, 1000.0, 0,
+        catalog.Concepts.Select(item => new SemanticConceptPrediction(item.Id, true)).ToArray()),
+        ClassifierClient.JsonOptions);
 }
 
 static async Task TestAdminBootstrapLifecycleAsync()
@@ -3561,12 +3568,12 @@ static async Task TestLocalReclassificationAsync()
     Assert(handler.DetailRequests == before && second.Metrics?.ReclassifiedLocally == 1 &&
            second.Jobs.Single().AnalysisVersion == JobSourceClient.CurrentAnalysisVersion &&
            second.Jobs.Single().ExtendedLocationRequirement?.AnalysisVersion == 4 &&
-           second.Jobs.Single().JobConceptCatalogVersion == 9 &&
+           second.Jobs.Single().JobConceptCatalogVersion == 0 &&
            second.Jobs.Single().PayMinimum == 104_550m &&
            second.Jobs.Single().PayMaximum == 141_450m &&
            second.Jobs.Single().PayPeriod == "annual" &&
-           second.Jobs.Single().DetectedConcepts?.Any(item =>
-               item.ConceptId == "work.extended-away-assignment") == true,
+           second.Jobs.Single().DetectedConcepts?.Count == 0 &&
+           second.Jobs.Single().SemanticClassificationStatus == SemanticClassificationStates.Pending,
         $"Parser invalidation did not reclassify cached text locally: details {before}->{handler.DetailRequests}, " +
         $"reclassified={second.Metrics?.ReclassifiedLocally}, company={second.Jobs.Single().CompanyId}, " +
         $"analysis={second.Jobs.Single().AnalysisVersion}, pay={second.Jobs.Single().PayMinimum}-" +

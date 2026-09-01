@@ -46,7 +46,7 @@ if (args is ["--classifier-diagnostic"])
             "R180395", "Senior Software Developer", "Phase 1 deployment plumbing proof."));
         using var response = await client.PostAsync("classify", content);
         response.EnsureSuccessStatusCode();
-        var result = await response.Content.ReadFromJsonAsync<ClassifierResponse>(
+        var result = await response.Content.ReadFromJsonAsync<SemanticClassifierResponse>(
             ClassifierClient.JsonOptions);
         var valid = result is
         {
@@ -55,7 +55,9 @@ if (args is ["--classifier-diagnostic"])
             Title: "Senior Software Developer",
             DescriptionLength: 34,
             GpuAvailable: true,
-            DeviceName: "NVIDIA GeForce GTX 1070"
+            DeviceName: "NVIDIA GeForce GTX 1070",
+            ConceptCount: 85,
+            Predictions.Count: 85
         };
         Console.WriteLine(JsonSerializer.Serialize(new { valid, result }));
         Environment.ExitCode = valid ? 0 : 1;
@@ -114,6 +116,7 @@ builder.Services.AddSingleton<RemoteWorkDetector>();
 builder.Services.AddSingleton<ExtendedLocationRequirementDetector>();
 builder.Services.AddSingleton<JobConceptCatalog>();
 builder.Services.AddSingleton<JobConceptDetector>();
+builder.Services.AddSingleton<SemanticClassificationService>();
 builder.Services.AddSingleton<DetectorEvaluationService>();
 builder.Services.AddSingleton<LlmEvaluationService>();
 builder.Services.AddSingleton<PortableWorkspaceService>();
@@ -526,6 +529,19 @@ app.MapPost("/api/admin/classifier-diagnostic", async Task<IResult> (
         ? StatusCodes.Status200OK
         : StatusCodes.Status503ServiceUnavailable);
 }).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapGet("/api/admin/classifier/backfill/status", async (
+    WorkspaceRuntimeProvider provider,
+    CancellationToken token) =>
+    Results.Ok((await provider.GetAsync(token)).Catalog.GetSemanticClassificationStatus()))
+    .RequireAuthorization(AdminAuthorization.Policy);
+
+app.MapPost("/api/admin/classifier/backfill", async (
+    WorkspaceRuntimeProvider provider,
+    CancellationToken token) =>
+    Results.Accepted(value:
+        (await provider.GetAsync(token)).Catalog.StartSemanticClassificationBackfill()))
+    .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
 
 app.MapGet("/api/admin/annotations/queue", async Task<IResult> (
     string? status,

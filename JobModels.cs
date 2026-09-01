@@ -221,7 +221,10 @@ public sealed record JobRecord(
     IReadOnlyList<UnknownCredentialRequirement>? UnknownCredentialRequirements = null,
     ExtendedLocationRequirementAnalysis? ExtendedLocationRequirement = null,
     IReadOnlyList<DetectedJobConcept>? DetectedConcepts = null,
-    int JobConceptCatalogVersion = 0)
+    int JobConceptCatalogVersion = 0,
+    SemanticJobClassification? SemanticClassification = null,
+    string SemanticClassificationStatus = SemanticClassificationStates.Pending,
+    DateTimeOffset? SemanticClassificationLastAttemptUtc = null)
 {
     public string StableId => $"{CompanyId}:{(!string.IsNullOrWhiteSpace(RequisitionId)
         ? RequisitionId
@@ -229,6 +232,28 @@ public sealed record JobRecord(
             ? ""
             : $":variant:{IdentityDiscriminator}")}";
 }
+
+public static class SemanticClassificationStates
+{
+    public const string Pending = "pending";
+    public const string Complete = "complete";
+    public const string Unavailable = "unavailable";
+}
+
+public sealed record SemanticJobClassification(
+    string PostingContentHash,
+    int TaxonomyVersion,
+    string TaxonomyFingerprint,
+    string ModelType,
+    string ModelId,
+    string ModelTag,
+    string ModelDigest,
+    string Quantization,
+    string PromptVersion,
+    string PromptHash,
+    DateTimeOffset ClassifiedUtc,
+    string ClassificationFingerprint,
+    IReadOnlyList<SemanticConceptPrediction> Predictions);
 
 public sealed record CredentialMatch(
     string CredentialId,
@@ -724,7 +749,8 @@ public sealed record JobListItem(
     JobListRemoteWork? RemoteWork,
     JobListExtendedLocationRequirement? ExtendedLocationRequirement,
     IReadOnlyList<DetectedJobConcept> DetectedConcepts,
-    bool AnalysisPending)
+    bool AnalysisPending,
+    string SemanticClassificationStatus)
 {
     public static JobListItem FromJob(JobRecord job) => new(
         job.StableId,
@@ -760,10 +786,27 @@ public sealed record JobListItem(
         string.IsNullOrWhiteSpace(job.DescriptionHtml) || job.ExtendedLocationRequirement is null
             ? null
             : JobListExtendedLocationRequirement.FromAnalysis(job.ExtendedLocationRequirement),
+        SemanticDetectedConcepts(job),
+        string.IsNullOrWhiteSpace(job.DescriptionHtml),
         string.IsNullOrWhiteSpace(job.DescriptionHtml)
-            ? []
-            : job.DetectedConcepts ?? [],
-        string.IsNullOrWhiteSpace(job.DescriptionHtml));
+            ? SemanticClassificationStates.Pending
+            : job.SemanticClassificationStatus);
+
+    private static IReadOnlyList<DetectedJobConcept> SemanticDetectedConcepts(JobRecord job)
+    {
+        if (string.IsNullOrWhiteSpace(job.DescriptionHtml) ||
+            job.SemanticClassificationStatus != SemanticClassificationStates.Complete ||
+            job.SemanticClassification is null)
+        {
+            return [];
+        }
+        return job.SemanticClassification.Predictions
+            .Where(item => item.Matched)
+            .Select(item => new DetectedJobConcept(
+                item.ConceptId,
+                "Qwen semantic classification"))
+            .ToArray();
+    }
 }
 
 public sealed record JobListCredential(

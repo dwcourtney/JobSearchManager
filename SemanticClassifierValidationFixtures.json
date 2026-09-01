@@ -1,0 +1,152 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "backend-api-hands-on",
+      "title": "Senior Backend Software Engineer",
+      "description": "Individually design and implement production backend services and REST APIs in Python. Write, test, and review application code.",
+      "expectedTrue": ["role.individual-contributor", "responsibility.hands-on-implementation", "role.software-engineering", "technical.application-development", "technical.backend-development", "technical.api-development", "technical.software-development"],
+      "expectedFalse": ["technical.frontend-development", "role.people-management", "responsibility.personnel-management"]
+    },
+    {
+      "id": "frontend-not-backend",
+      "title": "Frontend Engineer",
+      "description": "Build browser user interfaces with TypeScript, CSS, and React. This role does not develop backend services or APIs.",
+      "expectedTrue": ["role.software-engineering", "technical.application-development", "technical.frontend-development", "technical.software-development"],
+      "expectedFalse": ["technical.backend-development", "technical.api-development"]
+    },
+    {
+      "id": "cloud-platform-devops",
+      "title": "Cloud Platform Architect and DevOps Engineer",
+      "description": "Define the platform architecture and own its technical design. Build a Linux cloud platform with CI/CD pipelines, Terraform infrastructure as code, Kubernetes containers, and operational automation scripts.",
+      "expectedTrue": ["responsibility.architecture-heavy", "role.devops-platform", "role.cloud-engineering", "technical.cloud", "technical.linux", "technical.linux-administration", "technical.containers", "technical.infrastructure-as-code", "technical.cicd", "technical.automation-scripting", "responsibility.operations-sustainment"],
+      "expectedFalse": ["technical.windows-administration", "role.data-science"]
+    },
+    {
+      "id": "llm-nlp-engineer",
+      "title": "Machine Learning Engineer, Language Models",
+      "description": "Develop and deploy machine-learning systems for natural-language processing using large language models. Evaluate and improve generative AI inference pipelines.",
+      "expectedTrue": ["role.ai-ml-engineering", "technical.machine-learning", "technical.artificial-intelligence", "technical.nlp", "technical.large-language-models"],
+      "expectedFalse": ["role.data-engineering", "role.network-engineering"]
+    },
+    {
+      "id": "data-engineering-hard-negative",
+      "title": "Data Pipeline Engineer",
+      "description": "Build batch and streaming data ingestion pipelines, warehouse transformations, and reliable data platforms. Data scientists consume the datasets, but this role does not create statistical models.",
+      "expectedTrue": ["role.data-engineering", "responsibility.hands-on-implementation"],
+      "expectedFalse": ["role.data-science", "technical.machine-learning"]
+    },
+    {
+      "id": "data-science-research",
+      "title": "Research Data Scientist",
+      "description": "Research statistical methods, design experiments, train predictive models, and communicate findings. Prototype machine-learning approaches rather than operate data pipelines.",
+      "expectedTrue": ["role.data-science", "technical.machine-learning", "responsibility.research-oriented"],
+      "expectedFalse": ["role.data-engineering", "responsibility.operations-sustainment"]
+    },
+    {
+      "id": "cyber-network-cisco",
+      "title": "Cisco Network Security Engineer",
+      "description": "Configure and secure Cisco routers, switches, firewalls, and enterprise networks. Investigate network-security incidents and remediate vulnerabilities.",
+      "expectedTrue": ["role.cybersecurity", "role.network-engineering", "technical.networking", "technical.cisco-networking"],
+      "expectedFalse": ["technical.storage", "role.software-engineering"]
+    },
+    {
+      "id": "people-program-leader",
+      "title": "Engineering Program Director",
+      "description": "Manage twelve engineers, hire and conduct performance reviews, own the program budget and integrated schedule, lead capture proposals, and coordinate customer commitments. No hands-on implementation is assigned.",
+      "expectedTrue": ["role.management-heavy", "responsibility.team-leadership", "responsibility.personnel-management", "responsibility.budget-ownership", "responsibility.schedule-ownership", "responsibility.proposal-capture", "role.program-management", "role.people-management"],
+      "expectedFalse": ["role.individual-contributor", "responsibility.hands-on-implementation"]
+    },
+    {
+      "id": "project-customer-documentation",
+      "title": "Technical Project Manager",
+      "description": "Plan and track a defined delivery project, maintain schedules and technical documentation, and present status directly to the customer. The position has no direct reports or hiring duties.",
+      "expectedTrue": ["role.project-management", "responsibility.schedule-ownership", "responsibility.documentation-heavy", "responsibility.customer-facing"],
+      "expectedFalse": ["role.people-management", "responsibility.personnel-management"]
+    },
+    {
+      "id": "embedded-hardware-lab",
+      "title": "Embedded Hardware Test Engineer",
+      "description": "Design embedded electronics and firmware interfaces, then perform hands-on validation with oscilloscopes in an engineering laboratory.",
+      "expectedTrue": ["role.hardware-engineering", "role.test-validation-engineering", "technical.embedded-systems", "work.lab-environment", "responsibility.hands-on-implementation"],
+      "expectedFalse": ["work.manufacturing-floor", "role.data-science"]
+    },
+    {
+      "id": "aircraft-maintenance-inspection",
+      "title": "Aircraft Maintenance Inspector",
+      "description": "Repair mechanical aircraft systems on the flight line and physically inspect completed maintenance for quality compliance.",
+      "expectedTrue": ["role.mechanical-maintenance-repair", "role.physical-inspection-quality-control", "work.aircraft-flight-line"],
+      "expectedFalse": ["role.software-engineering", "work.remote"]
+    },
+    {
+      "id": "laboratory-test-technician",
+      "title": "Laboratory Test Technician",
+      "description": "Set up laboratory test equipment, execute prescribed test procedures, record measurements, and maintain the lab. Engineering design is performed by another role.",
+      "expectedTrue": ["role.lab-test-technician", "work.lab-environment", "responsibility.documentation-heavy"],
+      "expectedFalse": ["role.hardware-engineering", "responsibility.architecture-heavy"]
+    },
+    {
+      "id": "manufacturing-fabrication-materials",
+      "title": "Production Fabrication Technician",
+      "description": "Machine and assemble metal components on a manufacturing floor, operate production equipment, and move kits and materials between warehouse staging areas.",
+      "expectedTrue": ["role.fabrication-assembly-machining", "role.manufacturing-production-operations", "role.warehouse-material-handling", "work.manufacturing-floor"],
+      "expectedFalse": ["role.hardware-engineering", "work.lab-environment"]
+    },
+    {
+      "id": "fully-remote-occasional",
+      "title": "Remote Software Engineer",
+      "description": "This is a fully remote, work-from-home position with no routine office attendance. Travel to one annual team meeting may be required.",
+      "expectedTrue": ["work.remote", "work.remote.full", "work.travel.occasional"],
+      "expectedFalse": ["work.hybrid", "work.onsite", "work.travel.frequent"]
+    },
+    {
+      "id": "hybrid-customer-site",
+      "title": "Hybrid Customer Systems Engineer",
+      "description": "Work a hybrid schedule with three days each week at the customer site and two days remote. Travel about 25 percent to other customer offices.",
+      "expectedTrue": ["work.hybrid", "work.customer-site", "work.travel.moderate", "role.systems-engineering", "responsibility.customer-facing"],
+      "expectedFalse": ["work.remote.full", "work.travel.substantial"]
+    },
+    {
+      "id": "classified-data-center",
+      "title": "Classified Data Center Infrastructure Technician",
+      "description": "Work onsite in a classified data center. Install racks, pull network cabling, connect power, administer storage and virtualization hosts, and sustain the physical infrastructure.",
+      "expectedTrue": ["work.onsite", "work.classified-facility", "work.data-center", "work.physical-infrastructure", "technical.cabling-racking", "technical.power-facilities", "technical.storage", "technical.virtualization", "role.infrastructure-engineering"],
+      "expectedFalse": ["work.remote", "technical.frontend-development"]
+    },
+    {
+      "id": "deployed-field-engineer",
+      "title": "Deployed Field Service Engineer",
+      "description": "Deploy to outdoor customer locations for six-month assignments, relocate between sites, and perform field engineering repairs. Frequent travel and extended time away from home are mandatory.",
+      "expectedTrue": ["role.field-service", "work.field-engineering", "work.outdoor-field", "work.customer-site", "work.deployment", "work.extended-away-assignment", "work.relocation", "work.travel.frequent"],
+      "expectedFalse": ["work.remote.full", "work.travel.occasional"]
+    },
+    {
+      "id": "shipboard-hazardous-environment",
+      "title": "Shipboard Marine Technician",
+      "description": "Perform repairs aboard ships, including scuba work, entry into confined spaces, and work at heights. The job rotates 28 days onboard and 28 days off.",
+      "expectedTrue": ["work.shipboard", "work.scuba", "work.confined-spaces", "work.heights", "work.rotation", "role.mechanical-maintenance-repair"],
+      "expectedFalse": ["work.remote", "work.lab-environment"]
+    },
+    {
+      "id": "technology-context-hard-negative",
+      "title": "Contracts Administrator",
+      "description": "The customer sells cloud, AI, Linux, networking, storage, and cybersecurity products. Those technologies are organizational context only; this role reviews contract terms and performs no engineering, administration, development, or technical operations.",
+      "expectedTrue": ["responsibility.documentation-heavy"],
+      "expectedFalse": ["technical.cloud", "technical.artificial-intelligence", "technical.linux-administration", "technical.networking", "technical.storage", "role.cybersecurity", "role.software-engineering"]
+    },
+    {
+      "id": "windows-infrastructure-operations",
+      "title": "Windows Infrastructure Administrator",
+      "description": "Administer Windows Server, enterprise storage, and virtual machines. Maintain infrastructure availability and respond to operational incidents.",
+      "expectedTrue": ["role.infrastructure-engineering", "technical.windows-administration", "technical.storage", "technical.virtualization", "responsibility.operations-sustainment"],
+      "expectedFalse": ["technical.linux-administration", "technical.application-development"]
+    },
+    {
+      "id": "international-rotation-substantial-travel",
+      "title": "International Site Lead",
+      "description": "Lead technical teams on rotating international assignments. Spend 60 percent of the year traveling outside the country at customer sites, with each rotation lasting eight weeks.",
+      "expectedTrue": ["responsibility.team-leadership", "work.international-assignment", "work.rotation", "work.travel.substantial", "work.extended-away-assignment", "work.customer-site"],
+      "expectedFalse": ["work.remote.full", "work.travel.occasional"]
+    }
+  ]
+}

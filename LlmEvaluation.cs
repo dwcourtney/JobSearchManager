@@ -46,7 +46,7 @@ public sealed class LlmEvaluationService(DetectorEvaluationService fixtures, Cla
         var predictions = new List<Prediction>();
         foreach (var item in cases)
         {
-            var result = await classifier.ClassifyLlmAsync(
+            var result = await classifier.ClassifyAsync(
                 new(item.FixtureId, item.Title, item.Description), cancellationToken);
             if (!result.Available || result.Response is null)
                 return Unavailable(result.Error, cases, regexAggregate, buildSha);
@@ -140,7 +140,7 @@ public sealed class LlmEvaluationService(DetectorEvaluationService fixtures, Cla
     }
     private static string? NormalizeSha(string? value) => value is { Length: 40 } &&
         value.All(character => character is >= '0' and <= '9' or >= 'a' and <= 'f') ? value : null;
-    internal sealed record Prediction(LlmEvaluationCase Case, LlmClassifierResponse Response,
+    internal sealed record Prediction(LlmEvaluationCase Case, SemanticClassifierResponse Response,
         double RoundTripMilliseconds);
     internal sealed record Counts(int TruePositive = 0, int FalsePositive = 0,
         int FalseNegative = 0, int TrueNegative = 0)

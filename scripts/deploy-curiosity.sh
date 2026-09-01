@@ -106,7 +106,8 @@ docker build \
   --platform linux/amd64 \
   --build-arg "CLASSIFIER_GIT_SHA=$target_sha" \
   --tag "jsm-classifier:$target_sha" \
-  "$repository_root/classifier-service"
+  --file "$repository_root/classifier-service/Dockerfile" \
+  "$repository_root"
 
 docker build \
   --platform linux/amd64 \

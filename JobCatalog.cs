@@ -4,6 +4,13 @@ namespace JobSearchManager;
 
 using Microsoft.Extensions.Options;
 
+public sealed record SemanticClassificationBackfillStatus(
+    int Total,
+    int Current,
+    int Pending,
+    int Unavailable,
+    bool Running);
+
 public sealed class JobCatalog
 {
     private readonly JobSourceClient _jobSourceClient;
@@ -16,6 +23,7 @@ public sealed class JobCatalog
     private readonly CompanyCatalog _companyCatalog;
     private readonly JobSourceOptions _options;
     private readonly SharedSourceRefreshCoordinator _sharedSourceRefreshCoordinator;
+    private readonly SemanticClassificationService? _semanticClassification;
     private readonly object _gate = new();
     private readonly SemaphoreSlim _historyGate = new(1, 1);
     private readonly SemaphoreSlim _sourceOperationGate = new(1, 1);
@@ -27,6 +35,7 @@ public sealed class JobCatalog
     private Task<JobsSnapshot>? _activeRefresh;
     private JobSourceQuery _currentQuery = JobsSnapshot.Empty.Query;
     private IReadOnlyList<JobRecord> _cachedJobs = [];
+    private Task? _semanticClassificationTask;
 
     public JobCatalog(
         JobSourceClient jobSourceClient,
@@ -38,7 +47,8 @@ public sealed class JobCatalog
         RemoteWorkDetector remoteWorkDetector,
         CompanyCatalog companyCatalog,
         IOptions<JobSourceOptions> options,
-        SharedSourceRefreshCoordinator? sharedSourceRefreshCoordinator = null)
+        SharedSourceRefreshCoordinator? sharedSourceRefreshCoordinator = null,
+        SemanticClassificationService? semanticClassification = null)
     {
         _jobSourceClient = jobSourceClient;
         _stateStore = stateStore;
@@ -50,6 +60,7 @@ public sealed class JobCatalog
         _companyCatalog = companyCatalog;
         _options = options.Value;
         _sharedSourceRefreshCoordinator = sharedSourceRefreshCoordinator ?? new();
+        _semanticClassification = semanticClassification;
     }
 
     public JobsSnapshot Snapshot
@@ -104,13 +115,23 @@ public sealed class JobCatalog
             !string.IsNullOrWhiteSpace(job.DescriptionHtml) && !_jobSourceClient.IsAnalysisCurrent(job));
         var cacheNeedsQueryUpgrade = cache.Query is not null &&
             (!string.IsNullOrWhiteSpace(cache.Query.LocationLabel) || cache.Query.SourceModelVersion < 2);
+        var cacheNeedsSemanticStatusUpgrade = _semanticClassification is not null && cache.Jobs.Any(job =>
+            !string.IsNullOrWhiteSpace(job.DescriptionHtml) &&
+            job.SemanticClassificationStatus == SemanticClassificationStates.Complete &&
+            !_semanticClassification.IsCurrent(job));
         var cachedJobs = CanonicalizeStableIdentities(cache.Jobs.Select(job =>
             !string.IsNullOrWhiteSpace(job.DescriptionHtml) && !_jobSourceClient.IsAnalysisCurrent(job)
                 ? _jobSourceClient.Reclassify(job)
-                : job).ToArray(), "cache initialization");
+                : job).Select(job =>
+                    _semanticClassification is not null &&
+                    !string.IsNullOrWhiteSpace(job.DescriptionHtml) &&
+                    !_semanticClassification.IsCurrent(job)
+                        ? job with { SemanticClassificationStatus = SemanticClassificationStates.Pending }
+                        : job).ToArray(), "cache initialization");
         var cacheNeedsIdentityRepair = cachedJobs.Count != cache.Jobs.Count;
 
-        if (cacheNeedsAnalysisUpgrade || cacheNeedsQueryUpgrade || cacheNeedsIdentityRepair)
+        if (cacheNeedsAnalysisUpgrade || cacheNeedsQueryUpgrade || cacheNeedsIdentityRepair ||
+            cacheNeedsSemanticStatusUpgrade)
         {
             await _stateStore.SaveJobsCacheAsync(
                 cachedJobs,
@@ -161,6 +182,7 @@ public sealed class JobCatalog
             "Loaded {JobCount} jobs from {CachePath}.",
             cachedJobs.Count,
             _stateStore.JobsCachePath);
+        ScheduleSemanticClassification();
     }
 
     public Task<JobsSnapshot> RefreshAsync()
@@ -230,6 +252,7 @@ public sealed class JobCatalog
                 _logger.LogInformation(
                     "Switched to the recent {Company} cache ({JobCount} jobs, refreshed {LastRefreshed}); no provider listing or detail requests were made.",
                     company.DisplayName, availableJobs.Length, lastRefreshed);
+                ScheduleSemanticClassification();
                 return snapshot;
             }
         }
@@ -365,6 +388,7 @@ public sealed class JobCatalog
                 _snapshot.LastRefreshedUtc ?? DateTimeOffset.UtcNow,
                 _snapshot.DetailFailureCount,
                 query);
+            ScheduleSemanticClassification();
             return updated;
         }
         finally
@@ -713,6 +737,7 @@ public sealed class JobCatalog
                 result.DetailFailureCount,
                 cacheChanged,
                 historyChanged);
+            ScheduleSemanticClassification();
             return refreshed;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -808,6 +833,7 @@ public sealed class JobCatalog
         _logger.LogInformation(
             "Reused a shared {Company} refresh completed by another workspace; no duplicate provider requests were made.",
             _companyCatalog.Get(query.CompanyId).DisplayName);
+        ScheduleSemanticClassification();
         return snapshot;
     }
 
@@ -1016,6 +1042,159 @@ public sealed class JobCatalog
     private JobRecord[] VisibleJobs(IReadOnlyList<JobRecord> jobs) => jobs
         .Where(job => job.IsSourceAvailable || IsUserMaintained(job.StableId))
         .ToArray();
+
+    public SemanticClassificationBackfillStatus GetSemanticClassificationStatus()
+    {
+        if (_semanticClassification is null)
+            return new(0, 0, 0, 0, false);
+        JobRecord[] jobs;
+        bool running;
+        lock (_gate)
+        {
+            jobs = _cachedJobs.Where(job => !string.IsNullOrWhiteSpace(job.DescriptionHtml)).ToArray();
+            running = _semanticClassificationTask is { IsCompleted: false };
+        }
+        var current = jobs.Count(_semanticClassification.IsCurrent);
+        var unavailable = jobs.Count(job => !_semanticClassification.IsCurrent(job) &&
+            job.SemanticClassificationStatus == SemanticClassificationStates.Unavailable);
+        return new(jobs.Length, current, jobs.Length - current - unavailable, unavailable, running);
+    }
+
+    public SemanticClassificationBackfillStatus StartSemanticClassificationBackfill()
+    {
+        ScheduleSemanticClassification();
+        return GetSemanticClassificationStatus();
+    }
+
+    private void ScheduleSemanticClassification()
+    {
+        if (_semanticClassification is null)
+            return;
+        lock (_gate)
+        {
+            if (_semanticClassificationTask is { IsCompleted: false })
+                return;
+            _semanticClassificationTask = Task.Run(RunSemanticClassificationAsync);
+        }
+    }
+
+    private async Task RunSemanticClassificationAsync()
+    {
+        try
+        {
+            while (true)
+            {
+                JobRecord? candidate;
+                lock (_gate)
+                {
+                    var newIds = _snapshot.NewJobIds.ToHashSet(StringComparer.Ordinal);
+                    candidate = _cachedJobs
+                        .Where(job => !string.IsNullOrWhiteSpace(job.DescriptionHtml) &&
+                            !_semanticClassification!.IsCurrent(job))
+                        .OrderBy(job => _history.Jobs.TryGetValue(job.StableId, out var history) &&
+                            history.WorkflowState == JobWorkflowStates.Closed ? 1 : 0)
+                        .ThenBy(job => job.IsSourceAvailable ? 0 : 1)
+                        .ThenBy(job => newIds.Contains(job.StableId) ? 0 : 1)
+                        .ThenByDescending(job => job.StartDate ?? DateOnly.MinValue)
+                        .ThenByDescending(job => job.DetailCachedAtUtc ?? DateTimeOffset.MinValue)
+                        .ThenBy(job => job.StableId, StringComparer.Ordinal)
+                        .FirstOrDefault();
+                }
+                if (candidate is null)
+                    return;
+
+                var attempt = await _semanticClassification!.ClassifyAsync(candidate);
+                if (!attempt.Available || attempt.Classification is null)
+                {
+                    await PersistSemanticClassificationAsync(
+                        candidate.StableId,
+                        null,
+                        SemanticClassificationStates.Unavailable,
+                        candidate.SemanticClassification);
+                    _logger.LogWarning(
+                        "Semantic classification paused after the classifier was unavailable; browsing and cached analysis remain available.");
+                    return;
+                }
+
+                await PersistSemanticClassificationAsync(
+                    candidate.StableId,
+                    attempt.Classification,
+                    SemanticClassificationStates.Complete,
+                    candidate.SemanticClassification);
+            }
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception,
+                "Background semantic classification stopped unexpectedly; ingestion and browsing were not affected.");
+        }
+    }
+
+    private async Task PersistSemanticClassificationAsync(
+        string stableId,
+        SemanticJobClassification? classification,
+        string status,
+        SemanticJobClassification? expectedPrevious)
+    {
+        await _sourceOperationGate.WaitAsync();
+        try
+        {
+            JobSourceQuery query;
+            lock (_gate) { query = _currentQuery; }
+            var sourceKey = $"{query.CompanyId}:{_stateStore.QueryFingerprint(query)}";
+            await using var sharedSourceLease = await _sharedSourceRefreshCoordinator.AcquireAsync(sourceKey);
+            var document = await _stateStore.LoadJobsCacheAsync(query);
+            if (document?.Query?.IsEquivalentTo(query, _companyCatalog) != true)
+                return;
+            var current = document.Jobs.FirstOrDefault(job => job.StableId == stableId);
+            if (current is null || string.IsNullOrWhiteSpace(current.DescriptionHtml))
+                return;
+            if (classification is not null)
+            {
+                var description = JobAnalysis.HtmlToPlainText(current.DescriptionHtml);
+                var contentHash = SemanticClassifierContract.PostingContentHash(current.Title, description);
+                if (contentHash != classification.PostingContentHash)
+                    return;
+            }
+            else if (current.SemanticClassification != expectedPrevious &&
+                _semanticClassification!.IsCurrent(current))
+            {
+                return;
+            }
+
+            var updated = current with
+            {
+                SemanticClassification = classification ?? current.SemanticClassification,
+                SemanticClassificationStatus = status,
+                SemanticClassificationLastAttemptUtc = DateTimeOffset.UtcNow
+            };
+            var jobs = document.Jobs.Select(job => job.StableId == stableId ? updated : job).ToArray();
+            await _stateStore.SaveJobsCacheAsync(
+                jobs,
+                document.LastRefreshedUtc ?? document.SavedAtUtc,
+                document.DetailFailureCount,
+                query);
+            lock (_gate)
+            {
+                if (_currentQuery.IsEquivalentTo(query, _companyCatalog))
+                {
+                    _cachedJobs = jobs;
+                    var visible = VisibleJobs(jobs);
+                    _snapshot = _snapshot with
+                    {
+                        Jobs = visible,
+                        TotalJobs = visible.Length,
+                        JobStates = GetJobStates(visible),
+                        JobClosures = GetJobClosures(visible)
+                    };
+                }
+            }
+        }
+        finally
+        {
+            _sourceOperationGate.Release();
+        }
+    }
 
     private bool IsUserMaintained(string stableId) =>
         _history.Jobs.TryGetValue(stableId, out var entry) &&

@@ -1,5 +1,7 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace JobSearchManager;
 
@@ -7,6 +9,7 @@ public sealed record JobConceptDefinition(
     string Id,
     string DisplayName,
     string Category,
+    string Definition,
     IReadOnlyList<string>? EvidencePatterns = null,
     IReadOnlyList<string>? TitleEvidencePatterns = null,
     IReadOnlyList<string>? TitleExclusionPatterns = null,
@@ -26,6 +29,7 @@ public sealed record JobConceptOption(
     string Id,
     string DisplayName,
     string Category,
+    string Definition,
     IReadOnlyList<string> Supersedes,
     bool UserConfigurable,
     int? TravelLevel,
@@ -37,6 +41,7 @@ internal sealed record JobConceptCatalogDocument(
 
 public sealed class JobConceptCatalog
 {
+    private sealed record LoadedCatalog(JobConceptCatalogDocument Document, string Fingerprint);
     private static readonly Regex IdPattern = new(
         "^[a-z0-9]+(?:[.-][a-z0-9]+)*$",
         RegexOptions.CultureInvariant,
@@ -44,11 +49,22 @@ public sealed class JobConceptCatalog
     private readonly Dictionary<string, JobConceptDefinition> _byId;
 
     public JobConceptCatalog(IHostEnvironment environment)
-        : this(LoadDocument(Path.Combine(environment.ContentRootPath, "JobConceptCatalog.json")))
+        : this(Load(Path.Combine(environment.ContentRootPath, "JobConceptCatalog.json")))
     {
     }
 
     internal JobConceptCatalog(JobConceptCatalogDocument document)
+        : this(document, FingerprintFor(JsonSerializer.SerializeToUtf8Bytes(
+            document, new JsonSerializerOptions(JsonSerializerDefaults.Web))))
+    {
+    }
+
+    private JobConceptCatalog(LoadedCatalog loaded)
+        : this(loaded.Document, loaded.Fingerprint)
+    {
+    }
+
+    private JobConceptCatalog(JobConceptCatalogDocument document, string fingerprint)
     {
         if (document.Version < 1 || document.Concepts is null || document.Concepts.Count == 0)
         {
@@ -56,6 +72,7 @@ public sealed class JobConceptCatalog
         }
 
         Version = document.Version;
+        Fingerprint = fingerprint;
         _byId = new Dictionary<string, JobConceptDefinition>(StringComparer.Ordinal);
         foreach (var concept in document.Concepts)
         {
@@ -84,6 +101,7 @@ public sealed class JobConceptCatalog
     }
 
     public int Version { get; }
+    public string Fingerprint { get; }
     public IReadOnlyList<JobConceptDefinition> Concepts { get; }
 
     public IReadOnlyList<JobConceptOption> Options => Concepts
@@ -91,6 +109,7 @@ public sealed class JobConceptCatalog
             concept.Id,
             concept.DisplayName,
             concept.Category,
+            concept.Definition,
             concept.Supersedes ?? [],
             concept.UserConfigurable,
             concept.TravelLevel,
@@ -104,7 +123,13 @@ public sealed class JobConceptCatalog
         : throw new KeyNotFoundException($"Unknown canonical job concept '{id}'.");
 
     internal static JobConceptCatalog LoadDefault() =>
-        new(LoadDocument(Path.Combine(AppContext.BaseDirectory, "JobConceptCatalog.json")));
+        new(Load(Path.Combine(AppContext.BaseDirectory, "JobConceptCatalog.json")));
+
+    private static LoadedCatalog Load(string path)
+    {
+        var bytes = File.ReadAllBytes(path);
+        return new LoadedCatalog(Deserialize(bytes, path), FingerprintFor(bytes));
+    }
 
     private static JobConceptCatalogDocument LoadDocument(string path)
     {
@@ -113,10 +138,22 @@ public sealed class JobConceptCatalog
             throw new FileNotFoundException("The canonical job concept catalog is missing.", path);
         }
 
-        return JsonSerializer.Deserialize<JobConceptCatalogDocument>(
-            File.ReadAllText(path),
+        return Deserialize(File.ReadAllBytes(path), path);
+    }
+
+    private static JobConceptCatalogDocument Deserialize(byte[] bytes, string path) =>
+        JsonSerializer.Deserialize<JobConceptCatalogDocument>(
+            bytes,
             new JsonSerializerOptions(JsonSerializerDefaults.Web))
             ?? throw new InvalidDataException("JobConceptCatalog.json could not be read.");
+
+    private static string FingerprintFor(byte[] bytes)
+    {
+        // Git may materialize the canonical JSON with CRLF on Windows and LF in Linux
+        // containers. Line endings do not change the taxonomy and must not invalidate cache.
+        var normalized = Encoding.UTF8.GetBytes(
+            Encoding.UTF8.GetString(bytes).Replace("\r\n", "\n", StringComparison.Ordinal));
+        return Convert.ToHexString(SHA256.HashData(normalized)).ToLowerInvariant();
     }
 
     private static void Validate(JobConceptDefinition concept)
@@ -124,6 +161,7 @@ public sealed class JobConceptCatalog
         if (string.IsNullOrWhiteSpace(concept.Id) || !IdPattern.IsMatch(concept.Id) ||
             string.IsNullOrWhiteSpace(concept.DisplayName) ||
             string.IsNullOrWhiteSpace(concept.Category) ||
+            string.IsNullOrWhiteSpace(concept.Definition) ||
             concept.TravelLevel is < TravelTolerance.Minimum or > TravelTolerance.Maximum ||
             concept.WorkLocationLevel is < WorkLocationPreference.Minimum or > WorkLocationPreference.Maximum)
         {
