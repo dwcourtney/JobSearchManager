@@ -1,45 +1,26 @@
-using System.Text.RegularExpressions;
-
 namespace JobSearchManager;
 
 public enum ApplicationHostingMode
 {
     Local,
-    Container,
-    Azure
+    Container
 }
 
 public sealed record HostingConfiguration(
     ApplicationHostingMode Mode,
-    string? StorageAccount,
-    string? StorageContainer,
     string? DataProtectionPath = null,
     string? AdminBootstrapPath = null)
 {
     public const string ModeSetting = "JOBSEARCHMANAGER_HOSTING_MODE";
-    public const string StorageAccountSetting = "JOBSEARCHMANAGER_STORAGE_ACCOUNT";
-    public const string StorageContainerSetting = "JOBSEARCHMANAGER_STORAGE_CONTAINER";
     public const string DataProtectionPathSetting = "JOBSEARCHMANAGER_DATA_PROTECTION_PATH";
     public const string AdminBootstrapPathSetting = "JOBSEARCHMANAGER_ADMIN_BOOTSTRAP_PATH";
     internal const string LegacyModeSetting = "WORKDAYJOBMANAGER_HOSTING_MODE";
-    internal const string LegacyStorageAccountSetting = "WORKDAYJOBMANAGER_STORAGE_ACCOUNT";
-    internal const string LegacyStorageContainerSetting = "WORKDAYJOBMANAGER_STORAGE_CONTAINER";
 
-    private static readonly Regex StorageAccountPattern = new(
-        "^[a-z0-9]{3,24}$",
-        RegexOptions.CultureInvariant | RegexOptions.Compiled);
-    private static readonly Regex ContainerPattern = new(
-        "^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])?$",
-        RegexOptions.CultureInvariant | RegexOptions.Compiled);
-
-    public bool IsAzure => Mode == ApplicationHostingMode.Azure;
     public bool IsLocal => Mode == ApplicationHostingMode.Local;
     public bool IsContainer => Mode == ApplicationHostingMode.Container;
-    public bool UsesLocalStorage => !IsAzure;
     public bool UsesPerBrowserWorkspaces => !IsLocal;
     public bool RequiresSameOriginProtection => !IsLocal;
-    public bool UsesAzureTransportSecurity => IsAzure;
-    public bool AdminBootstrapEnabled => !IsAzure && AdminBootstrapPath is not null;
+    public bool AdminBootstrapEnabled => AdminBootstrapPath is not null;
 
     public static HostingConfiguration FromConfiguration(IConfiguration configuration)
     {
@@ -49,19 +30,11 @@ public sealed record HostingConfiguration(
                 ? ApplicationHostingMode.Local
                 : string.Equals(rawMode, "Container", StringComparison.OrdinalIgnoreCase)
                     ? ApplicationHostingMode.Container
-                    : string.Equals(rawMode, "Azure", StringComparison.OrdinalIgnoreCase)
-                        ? ApplicationHostingMode.Azure
-                        : throw new InvalidOperationException(
-                            $"{ModeSetting} must be 'Local', 'Container', or 'Azure'.");
-
-        var account = NullIfWhiteSpace(ReadCanonicalOrLegacy(
-            configuration, StorageAccountSetting, LegacyStorageAccountSetting));
-        var container = NullIfWhiteSpace(ReadCanonicalOrLegacy(
-            configuration, StorageContainerSetting, LegacyStorageContainerSetting));
+                    : throw new InvalidOperationException(
+                        $"{ModeSetting} must be 'Local' or 'Container'.");
         var dataProtectionPath = NullIfWhiteSpace(configuration[DataProtectionPathSetting]);
         var adminBootstrapPath = NullIfWhiteSpace(configuration[AdminBootstrapPathSetting]);
-        var result = new HostingConfiguration(
-            mode, account, container, dataProtectionPath, adminBootstrapPath);
+        var result = new HostingConfiguration(mode, dataProtectionPath, adminBootstrapPath);
         result.Validate();
         return result;
     }
@@ -74,35 +47,6 @@ public sealed record HostingConfiguration(
                 $"Container mode requires {DataProtectionPathSetting} so cookies survive container replacement.");
         }
 
-        if (IsAzure && AdminBootstrapPath is not null)
-        {
-            throw new InvalidOperationException(
-                $"Azure mode does not support the server-file administrator bootstrap mechanism. " +
-                $"Remove {AdminBootstrapPathSetting}.");
-        }
-
-        if (!IsAzure)
-        {
-            return;
-        }
-
-        if (StorageAccount is null || !StorageAccountPattern.IsMatch(StorageAccount))
-        {
-            throw new InvalidOperationException(
-                $"Azure mode requires {StorageAccountSetting} to contain a valid Azure Storage account name.");
-        }
-
-        if (StorageContainer is null || !ContainerPattern.IsMatch(StorageContainer))
-        {
-            throw new InvalidOperationException(
-                $"Azure mode requires {StorageContainerSetting} to contain a valid private Blob container name.");
-        }
-    }
-
-    public Uri GetBlobServiceUri()
-    {
-        Validate();
-        return new Uri($"https://{StorageAccount}.blob.core.windows.net", UriKind.Absolute);
     }
 
     private static string? NullIfWhiteSpace(string? value) =>

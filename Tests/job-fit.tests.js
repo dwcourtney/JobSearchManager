@@ -252,7 +252,7 @@ const boundedArrangement = JobFit.evaluate([
 ], configuration([], 4, 0), [remote, fullRemote, hybrid]);
 assert.equal(boundedArrangement.dimensions[0].impact, 1);
 assert.equal(boundedArrangement.dimensions[0].rawImpact, 1,
-  "Location detectors must collapse to one distance contribution without double-counting.");
+  "Location concepts must collapse to one distance contribution without double-counting.");
 assert.deepEqual(boundedArrangement.contributions.map(item => item.conceptId),
   ["work.location.preference"]);
 assert.equal(boundedArrangement.dimensionBreakdown[0].rawImpact, 1);

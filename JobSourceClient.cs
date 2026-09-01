@@ -26,7 +26,6 @@ public sealed class JobSourceClient
     private readonly WorkAuthorizationDetector _workAuthorizationDetector;
     private readonly RemoteWorkDetector _remoteWorkDetector;
     private readonly ExtendedLocationRequirementDetector _extendedLocationRequirementDetector;
-    private readonly JobConceptDetector _jobConceptDetector;
     private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
 
     public JobSourceClient(
@@ -37,8 +36,7 @@ public sealed class JobSourceClient
         AcademicQualificationDetector academicQualificationDetector,
         WorkAuthorizationDetector workAuthorizationDetector,
         RemoteWorkDetector remoteWorkDetector,
-        ExtendedLocationRequirementDetector extendedLocationRequirementDetector,
-        JobConceptDetector? jobConceptDetector = null)
+        ExtendedLocationRequirementDetector extendedLocationRequirementDetector)
     {
         _httpClient = httpClient;
         _options = options.Value;
@@ -48,8 +46,6 @@ public sealed class JobSourceClient
         _workAuthorizationDetector = workAuthorizationDetector;
         _remoteWorkDetector = remoteWorkDetector;
         _extendedLocationRequirementDetector = extendedLocationRequirementDetector;
-        _jobConceptDetector = jobConceptDetector ?? JobConceptDetector.CreateDefault();
-
         if (_options.PageSize is < 1 or > 20)
         {
             throw new InvalidOperationException("JobSource:PageSize must be between 1 and 20.");

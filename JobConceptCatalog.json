@@ -6,13 +6,6 @@
       "displayName": "Remote Work",
       "category": "Work Arrangement",
       "definition": "Work performed primarily away from an employer or customer site, with remote work explicitly available.",
-      "evidencePatterns": [
-        "\\b(?:mostly\\s+remote|remote[- ]first)\\b",
-        "\\bremote\\b[^.!?]{0,120}\\b(?:quarterly|once|twice)\\b[^.!?]{0,70}\\b(?:office|on[- ]?site|in[- ]person|facility|visits?)\\b",
-        "\\bremote\\b[^.!?]{0,120}\\b(?:occasional(?:ly)?|periodic(?:ally)?|as[- ]needed)\\b[^.!?]{0,70}\\b(?:office|on[- ]?site|in[- ]person|facility|visits?)\\b",
-        "\\b(?:currently|initially)\\s+remote\\b[^.!?]{0,140}\\b(?:transition|return|move)\\b[^.!?]{0,80}\\bon[- ]?site\\b"
-      ],
-      "remoteDesignation": true,
       "userConfigurable": false,
       "workLocationLevel": 2
     },
@@ -21,10 +14,6 @@
       "displayName": "100% Remote Work",
       "category": "Work Arrangement",
       "definition": "Work explicitly described as fully remote, remote-only, or 100 percent remote.",
-      "evidencePatterns": [
-        "\\b(?:100\\s*%|fully|completely)\\s+remote\\b",
-        "\\bremote[- ]only\\b"
-      ],
       "supersedes": [
         "work.remote"
       ],
@@ -36,11 +25,6 @@
       "displayName": "Hybrid Work",
       "category": "Work Arrangement",
       "definition": "A recurring mix of remote work and scheduled work at an office, facility, or customer site.",
-      "evidencePatterns": [
-        "\\bhybrid\\b[^.!?]{0,100}\\b(?:one|two|three|four|five|[1-5])\\s*(?:-|–)?\\s*days?\\b[^.!?]{0,70}\\b(?:on[- ]?site|in[- ]person|office|facility)\\b",
-        "\\bhybrid\\s+(?:work|role|position|schedule)\\b",
-        "\\bhybrid[- ]remote\\b"
-      ],
       "userConfigurable": false,
       "workLocationLevel": 3
     },
@@ -49,17 +33,6 @@
       "displayName": "Onsite Work",
       "category": "Work Arrangement",
       "definition": "Work that requires regular physical presence at an office, facility, installation, or customer site.",
-      "evidencePatterns": [
-        "\\bmostly\\s+on[- ]?site\\b",
-        "\\b(?:fully|100\\s*%)\\s+on[- ]?site\\b",
-        "\\bno\\s+remote\\s+work\\b"
-      ],
-      "remoteSignalCategories": [
-        "scheduled-onsite",
-        "onsite-duty",
-        "operational-site",
-        "physical-installation"
-      ],
       "userConfigurable": false,
       "workLocationLevel": 5
     },
@@ -68,18 +41,6 @@
       "displayName": "Occasional Travel",
       "category": "Work Arrangement",
       "definition": "Occasional or limited work travel, generally no more than about 10 percent.",
-      "evidencePatterns": [
-        "\\b(?:occasional|limited)\\s+travel\\b",
-        "\\btravel\\s*,?\\s+as\\s+needed\\b",
-        "\\btravel\\b[^.!?]{0,80}\\btypically\\s+lasting\\s+no\\s+more\\s+than\\s+one\\s+week\\b",
-        "\\bat\\s+most\\s+one\\s+(?:short\\s+)?trip\\s+every\\s+(?:2\\s*[-–—]\\s*3|two\\s+to\\s+three)\\s+years?\\b",
-        "\\b(?:one|1)\\s+(?:short\\s+)?trip\\s+every\\s+(?:12\\s*[-–—]\\s*18|twelve\\s+to\\s+eighteen)\\s+months?\\b",
-        "\\b(?:[0-9]|10)\\s*%(?!\\s*(?:-|–|—|to)\\s*\\d)\\s+travel\\b",
-        "\\btravel\\b[^.!?]{0,30}\\b(?:[0-9]|10)\\s*%(?!\\s*(?:-|–|—|to)\\s*\\d)"
-      ],
-      "remoteSignalCategories": [
-        "occasional-travel"
-      ],
       "userConfigurable": false,
       "travelLevel": 3
     },
@@ -88,13 +49,6 @@
       "displayName": "Moderate Travel",
       "category": "Work Arrangement",
       "definition": "Recurring moderate work travel, generally around 11 to 25 percent.",
-      "evidencePatterns": [
-        "\\b(?:1[1-9]|[2-4]\\d)\\s*%\\s+travel\\b",
-        "\\btravel\\b[^.!?]{0,30}\\b(?:1[1-9]|[2-4]\\d)\\s*%"
-      ],
-      "remoteSignalCategories": [
-        "moderate-travel"
-      ],
       "supersedes": [
         "work.travel.occasional"
       ],
@@ -106,13 +60,6 @@
       "displayName": "Frequent Travel",
       "category": "Work Arrangement",
       "definition": "Frequent or extensive work travel, generally more than 50 percent.",
-      "evidencePatterns": [
-        "\\b(?:frequent|extensive)\\s+travel\\b",
-        "\\btravel\\s+frequently\\b"
-      ],
-      "remoteSignalCategories": [
-        "frequent-travel"
-      ],
       "userConfigurable": false,
       "travelLevel": 5
     },
@@ -121,13 +68,6 @@
       "displayName": "Substantial Travel",
       "category": "Work Arrangement",
       "definition": "Substantial work travel, generally around 26 to 50 percent.",
-      "evidencePatterns": [
-        "\\b(?:[5-9]\\d|100)\\s*%\\s+travel\\b",
-        "\\btravel\\b[^.!?]{0,30}\\b(?:[5-9]\\d|100)\\s*%"
-      ],
-      "remoteSignalCategories": [
-        "substantial-travel"
-      ],
       "supersedes": [
         "work.travel.frequent",
         "work.travel.moderate",
@@ -140,478 +80,235 @@
       "id": "work.deployment",
       "displayName": "Deployment",
       "category": "Work Arrangement",
-      "definition": "Temporary deployment away from the normal work location to support operations, projects, or customer missions.",
-      "remoteSignalCategories": [
-        "field-deployment"
-      ],
-      "extendedLocationCategories": [
-        "required-deployment",
-        "recurring-deployment",
-        "extended-deployment",
-        "forward-deployed",
-        "possible-deployment"
-      ]
+      "definition": "Temporary deployment away from the normal work location to support operations, projects, or customer missions."
     },
     {
       "id": "work.extended-away-assignment",
       "displayName": "Extended Away-from-Home Assignment",
       "category": "Work Arrangement",
-      "definition": "An assignment requiring extended periods away from home or the normal duty location.",
-      "extendedLocationCategories": [
-        "extended-away-duration",
-        "extended-deployment",
-        "winter-over-assignment",
-        "long-term-away-assignment"
-      ]
+      "definition": "An assignment requiring extended periods away from home or the normal duty location."
     },
     {
       "id": "work.relocation",
       "displayName": "Relocation",
       "category": "Work Arrangement",
-      "definition": "A requirement or explicit expectation that the candidate relocate for the role.",
-      "evidencePatterns": [
-        "\\brelocation\\s+(?:is\\s+)?required\\b",
-        "\\b(?:must|will|shall|may|required\\s+to)\\s+relocate\\b",
-        "\\brelocates?\\s+(?:internationally|overseas|to)\\b"
-      ],
-      "extendedLocationCategories": [
-        "required-unusual-relocation"
-      ]
+      "definition": "A requirement or explicit expectation that the candidate relocate for the role."
     },
     {
       "id": "work.rotation",
       "displayName": "Rotational Assignment",
       "category": "Work Arrangement",
-      "definition": "A recurring rotational work schedule that alternates blocks of duty and time away.",
-      "extendedLocationCategories": [
-        "rotation"
-      ]
+      "definition": "A recurring rotational work schedule that alternates blocks of duty and time away."
     },
     {
       "id": "work.international-assignment",
       "displayName": "International / OCONUS Assignment",
       "category": "Work Arrangement",
-      "definition": "A role or assignment requiring work in another country or an OCONUS location.",
-      "extendedLocationCategories": [
-        "explicit-job-location",
-        "oconus-assignment",
-        "temporary-duty",
-        "possible-extended-assignment"
-      ]
+      "definition": "A role or assignment requiring work in another country or an OCONUS location."
     },
     {
       "id": "work.data-center",
       "displayName": "Data Center",
       "category": "Work Environment",
-      "definition": "Hands-on or operational work inside data-center environments.",
-      "evidencePatterns": [
-        "\\bdata\\s+cent(?:er|re)\\s+(?:environment|operations?|facilit(?:y|ies)|technician|infrastructure)\\b",
-        "\\bwithin\\s+(?:a|the)\\s+data\\s+cent(?:er|re)\\b"
-      ]
+      "definition": "Hands-on or operational work inside data-center environments."
     },
     {
       "id": "work.physical-infrastructure",
       "displayName": "Physical Infrastructure",
       "category": "Work Environment",
-      "definition": "Hands-on interaction with racks, equipment, cabling, power, or facilities systems.",
-      "evidencePatterns": [
-        "\\bphysical\\s+infrastructure\\b",
-        "\\binstall(?:ing|ation)?\\s+(?:and\\s+maintain(?:ing|ance)\\s+)?(?:servers?|switches|routers?|hardware)\\b"
-      ]
+      "definition": "Hands-on interaction with racks, equipment, cabling, power, or facilities systems."
     },
     {
       "id": "work.lab-environment",
       "displayName": "Lab Environment",
       "category": "Work Environment",
-      "definition": "Work regularly performed in engineering, research, test, or hardware laboratories.",
-      "evidencePatterns": [
-        "\\blab(?:oratory)?\\s+environment\\b",
-        "\\bwork\\s+in\\s+(?:a|the)\\s+lab(?:oratory)?\\b"
-      ]
+      "definition": "Work regularly performed in engineering, research, test, or hardware laboratories."
     },
     {
       "id": "work.manufacturing-floor",
       "displayName": "Manufacturing Floor",
       "category": "Work Environment",
-      "definition": "Work performed in production, assembly, or manufacturing environments.",
-      "evidencePatterns": [
-        "\\bmanufacturing\\s+(?:floor|facility|environment)\\b",
-        "\\bproduction\\s+floor\\b"
-      ]
+      "definition": "Work performed in production, assembly, or manufacturing environments."
     },
     {
       "id": "work.aircraft-flight-line",
       "displayName": "Aircraft / Flight Line",
       "category": "Work Environment",
-      "definition": "Work around aircraft, hangars, ramps, or flight-line operations.",
-      "titleEvidencePatterns": [
-        "\\bairborne(?:\\s+sensor)?\\s+operator\\b"
-      ],
-      "evidencePatterns": [
-        "\\bflight\\s+line\\b",
-        "\\b(?:on|around)\\s+aircraft\\b",
-        "\\baircraft\\s+maintenance\\s+(?:hangar|environment)\\b"
-      ]
+      "definition": "Work around aircraft, hangars, ramps, or flight-line operations."
     },
     {
       "id": "work.classified-facility",
       "displayName": "Classified Facility / SCIF",
       "category": "Work Environment",
-      "definition": "Routine work inside secure classified facilities with access or device restrictions.",
-      "evidencePatterns": [
-        "\\bSCIF\\b",
-        "\\bclassified\\s+(?:facility|environment|workspace)\\b",
-        "\\bsensitive\\s+compartmented\\s+information\\s+facility\\b"
-      ]
+      "definition": "Routine work inside secure classified facilities with access or device restrictions."
     },
     {
       "id": "work.customer-site",
       "displayName": "Customer Site",
       "category": "Work Environment",
-      "definition": "Routine work performed at customer-controlled facilities rather than your normal office or home.",
-      "evidencePatterns": [
-        "\\b(?:work|support|perform\\s+duties)\\s+(?:at|on)\\s+(?:the\\s+)?customer(?:'s)?\\s+site\\b",
-        "\\bon[- ]site\\s+at\\s+customer\\s+locations?\\b"
-      ]
+      "definition": "Routine work performed at customer-controlled facilities rather than your normal office or home."
     },
     {
       "id": "work.outdoor-field",
       "displayName": "Outdoor Field Work",
       "category": "Work Environment",
-      "definition": "Regular work outdoors at operational, test, construction, or equipment sites.",
-      "evidencePatterns": [
-        "\\boutdoor\\s+field\\s+work\\b",
-        "\\bwork\\s+outdoors\\s+in\\s+(?:all|various)\\s+weather\\b",
-        "\\bexposure\\s+to\\s+(?:adverse|inclement)\\s+weather\\b"
-      ]
+      "definition": "Regular work outdoors at operational, test, construction, or equipment sites."
     },
     {
       "id": "work.shipboard",
       "displayName": "Shipboard / Sea-going Work",
       "category": "Work Environment",
-      "definition": "Work aboard ships or vessels, potentially including time underway.",
-      "evidencePatterns": [
-        "\\bshipboard\\b",
-        "\\baboard\\s+(?:a\\s+)?(?:ship|vessel)\\b",
-        "\\bsea[- ]going\\b",
-        "\\bat\\s+sea\\b",
-        "\\bsea\\s+trials?\\b"
-      ]
+      "definition": "Work aboard ships or vessels, potentially including time underway."
     },
     {
       "id": "work.scuba",
       "displayName": "SCUBA / Diving",
       "category": "Work Environment",
-      "definition": "Work requiring underwater or diving activities.",
-      "evidencePatterns": [
-        "\\bSCUBA\\b",
-        "\\bcommercial\\s+diving\\b"
-      ]
+      "definition": "Work requiring underwater or diving activities."
     },
     {
       "id": "work.confined-spaces",
       "displayName": "Confined Spaces",
       "category": "Work Environment",
-      "definition": "Work requiring entry into restricted spaces such as tanks, shafts, or crawlspaces.",
-      "evidencePatterns": [
-        "\\bconfined\\s+spaces?\\b"
-      ]
+      "definition": "Work requiring entry into restricted spaces such as tanks, shafts, or crawlspaces."
     },
     {
       "id": "work.heights",
       "displayName": "Work at Heights",
       "category": "Work Environment",
-      "definition": "Work requiring ladders, lifts, towers, rooftops, or elevated platforms.",
-      "evidencePatterns": [
-        "\\bwork(?:ing)?\\s+at\\s+heights?\\b",
-        "\\bclimb(?:ing)?\\s+(?:ladders?|towers?|structures?)\\b"
-      ]
+      "definition": "Work requiring ladders, lifts, towers, rooftops, or elevated platforms."
     },
     {
       "id": "work.field-engineering",
       "displayName": "Field Engineering",
       "category": "Work Environment",
-      "definition": "Engineering work performed at operational, customer, or equipment sites.",
-      "evidencePatterns": [
-        "\\bfield\\s+engineer(?:ing)?\\b",
-        "\\bfield\\s+service\\s+engineer(?:ing)?\\b"
-      ]
+      "definition": "Engineering work performed at operational, customer, or equipment sites."
     },
     {
       "id": "role.individual-contributor",
       "displayName": "Individual Contributor",
       "category": "Role Type / Career Direction",
-      "definition": "Primarily responsible for direct technical work rather than managing people.",
-      "evidencePatterns": [
-        "\\bindividual\\s+contributor\\b",
-        "\\bnon[- ]?managerial\\s+role\\b"
-      ]
+      "definition": "Primarily responsible for direct technical work rather than managing people."
     },
     {
       "id": "role.software-engineering",
       "displayName": "Software Engineering",
       "category": "Role Type / Career Direction",
-      "definition": "Designing, implementing, testing, and maintaining software systems.",
-      "evidencePatterns": [
-        "\\bsoftware\\s+(?:engineer|developer|engineering)\\b",
-        "\\bapplication\\s+developer\\b",
-        "\\b(?:develop|design|implement|build|test|maintain)(?:s|ed|ing)?\\b.{0,80}\\b(?:software|applications?|APIs?|microservices?|test\\s+harnesses?)\\b",
-        "\\bhands[- ]on\\b.{0,80}\\bsoftware\\s+development\\b"
-      ],
-      "titleExclusionPatterns": [
-        "\\b(?:program|project)\\s+manager\\b"
-      ]
+      "definition": "Designing, implementing, testing, and maintaining software systems."
     },
     {
       "id": "role.systems-engineering",
       "displayName": "Systems Engineering",
       "category": "Role Type / Career Direction",
-      "definition": "Requirements, architecture, integration, interfaces, verification, and whole-system behavior.",
-      "evidencePatterns": [
-        "\\bsystems?\\s+engineer(?:ing)?\\b",
-        "\\bsystems?\\s+integration\\s+engineer\\b",
-        "\\bsystems?\\s+integration\\b"
-      ]
+      "definition": "Requirements, architecture, integration, interfaces, verification, and whole-system behavior."
     },
     {
       "id": "role.devops-platform",
       "displayName": "DevOps / Platform Engineering",
       "category": "Role Type / Career Direction",
-      "definition": "CI/CD, developer platforms, infrastructure automation, and operational tooling.",
-      "evidencePatterns": [
-        "\\bDevOps\\s+engineer(?:ing)?\\b",
-        "\\bplatform\\s+engineer(?:ing)?\\b",
-        "\\bsite\\s+reliability\\s+engineer(?:ing)?\\b"
-      ],
-      "titleEvidencePatterns": [
-        "\\bDevSecOps\\b"
-      ]
+      "definition": "CI/CD, developer platforms, infrastructure automation, and operational tooling."
     },
     {
       "id": "role.cloud-engineering",
       "displayName": "Cloud Engineering",
       "category": "Role Type / Career Direction",
-      "definition": "Designing and operating cloud infrastructure, services, and platforms.",
-      "evidencePatterns": [
-        "\\bcloud\\s+(?:engineer|engineering|architect)\\b"
-      ],
-      "titleEvidencePatterns": [
-        "\\b(?:Azure|AWS|GCP|cloud)\\s+(?:platform|infrastructure|reliability|DevOps)\\b.{0,40}\\bengineer\\b"
-      ],
-      "titleExclusionPatterns": [
-        "\\b(?:program|project)\\s+manager\\b"
-      ]
+      "definition": "Designing and operating cloud infrastructure, services, and platforms."
     },
     {
       "id": "role.ai-ml-engineering",
       "displayName": "AI / ML Engineering",
       "category": "Role Type / Career Direction",
-      "definition": "Building, integrating, or operationalizing machine-learning and AI systems.",
-      "evidencePatterns": [
-        "\\b(?:AI|ML|machine\\s+learning)\\s+engineer(?:ing)?\\b",
-        "\\bapplied\\s+(?:AI|machine\\s+learning)\\b",
-        "\\b(?:develop|build|implement|integrate)(?:s|ed|ing)?\\b.{0,80}\\bAI\\s*/\\s*ML[- ]enabled\\s+(?:tools?|systems?|applications?)\\b"
-      ],
-      "titleEvidencePatterns": [
-        "\\b(?:AI|ML|machine\\s+learning|generative\\s+AI|conversational\\s+AI|LLM|language\\s+model|NLP)\\b.{0,80}\\b(?:engineer|developer|scientist|site\\s+reliability)\\b",
-        "\\bRAG\\b.{0,80}\\b(?:engineer|developer|scientist)\\b"
-      ],
-      "titleExclusionPatterns": [
-        "\\b(?:program|project)\\s+manager\\b"
-      ]
+      "definition": "Building, integrating, or operationalizing machine-learning and AI systems."
     },
     {
       "id": "role.data-engineering",
       "displayName": "Data Engineering",
       "category": "Role Type / Career Direction",
-      "definition": "Building data pipelines, storage, transformation, and data-platform systems.",
-      "evidencePatterns": [
-        "\\bdata\\s+engineer(?:ing)?\\b",
-        "\\bETL\\s+engineer\\b",
-        "\\b(?:build|develop|design)(?:s|ed|ing)?\\b.{0,80}\\b(?:data\\s+pipelines?|ETL\\s+process(?:es)?|data\\s+architectures?)\\b"
-      ]
+      "definition": "Building data pipelines, storage, transformation, and data-platform systems."
     },
     {
       "id": "role.data-science",
       "displayName": "Data Science",
       "category": "Role Type / Career Direction",
-      "definition": "Statistical analysis, experimentation, predictive modeling, and analytical modeling.",
-      "evidencePatterns": [
-        "\\bdata\\s+scientist\\b",
-        "\\bdata\\s+science\\b"
-      ]
+      "definition": "Statistical analysis, experimentation, predictive modeling, and analytical modeling."
     },
     {
       "id": "role.cybersecurity",
       "displayName": "Cybersecurity",
       "category": "Role Type / Career Direction",
-      "definition": "Security engineering, analysis, architecture, or other cybersecurity work.",
-      "evidencePatterns": [
-        "\\bcyber(?:security|\\s+security)\\s+(?:engineer|analyst|architect|specialist)\\b",
-        "\\binformation\\s+security\\s+(?:engineer|analyst|architect)\\b"
-      ]
+      "definition": "Security engineering, analysis, architecture, or other cybersecurity work."
     },
     {
       "id": "role.network-engineering",
       "displayName": "Network Engineering",
       "category": "Role Type / Career Direction",
-      "definition": "Network architecture, routing, switching, connectivity, and related systems.",
-      "evidencePatterns": [
-        "\\bnetwork\\s+engineer(?:ing)?\\b",
-        "\\bnetwork\\s+architect(?:ure)?\\b"
-      ]
+      "definition": "Network architecture, routing, switching, connectivity, and related systems."
     },
     {
       "id": "role.infrastructure-engineering",
       "displayName": "Infrastructure Engineering",
       "category": "Role Type / Career Direction",
-      "definition": "Systems, servers, virtualization, storage, operating platforms, and related infrastructure.",
-      "evidencePatterns": [
-        "\\b(?:IT|cloud|data\\s+center|systems?)?\\s*infrastructure\\s+engineer(?:ing)?\\b",
-        "\\binfrastructure\\s+architect\\b",
-        "\\b(?:operate|administer)(?:s|ed|ing)?\\b.{0,80}\\b(?:cloud|network|storage|systems?)\\s+infrastructure\\b"
-      ],
-      "titleEvidencePatterns": [
-        "\\bcloud\\s+(?:DevOps|reliability)\\s+engineer\\b",
-        "\\bstorage\\s+systems?\\s+engineer\\b"
-      ]
+      "definition": "Systems, servers, virtualization, storage, operating platforms, and related infrastructure."
     },
     {
       "id": "role.field-service",
       "displayName": "Field Service",
       "category": "Role Type / Career Direction",
-      "definition": "Hands-on technical work performed at customer, equipment, or operational sites.",
-      "evidencePatterns": [
-        "\\bfield\\s+service\\s+(?:engineer|technician|representative)\\b",
-        "\\bfield\\s+support\\s+engineer\\b"
-      ]
+      "definition": "Hands-on technical work performed at customer, equipment, or operational sites."
     },
     {
       "id": "role.test-validation-engineering",
       "displayName": "Test / Validation Engineering",
       "category": "Role Type / Career Direction",
-      "definition": "Verification, validation, test design, automation, and proving systems meet requirements.",
-      "evidencePatterns": [
-        "\\b(?:test|verification|validation)\\s+engineer(?:ing)?\\b",
-        "\\bverification\\s+and\\s+validation\\b",
-        "\\b(?:build|develop|maintain)(?:s|ed|ing)?\\b.{0,60}\\bautomated\\s+test\\s+(?:frameworks?|pipelines?)\\b",
-        "\\b(?:security|software|systems?|infrastructure)\\s+(?:testing|validation)\\b",
-        "\\bvalidate(?:s|d|ing)?\\b.{0,60}\\bsystems?\\b"
-      ]
+      "definition": "Verification, validation, test design, automation, and proving systems meet requirements."
     },
     {
       "id": "role.program-management",
       "displayName": "Program Management",
       "category": "Role Type / Career Direction",
-      "definition": "Coordinating broad programs, budgets, schedules, stakeholders, and delivery across projects.",
-      "evidencePatterns": [
-        "\\bprogram\\s+manager\\b",
-        "\\bprogram\\s+management\\b"
-      ]
+      "definition": "Coordinating broad programs, budgets, schedules, stakeholders, and delivery across projects."
     },
     {
       "id": "role.project-management",
       "displayName": "Project Management",
       "category": "Role Type / Career Direction",
-      "definition": "Planning and coordinating defined projects, schedules, resources, risks, and deliverables.",
-      "evidencePatterns": [
-        "\\bproject\\s+manager\\b",
-        "\\bproject\\s+management\\b"
-      ]
+      "definition": "Planning and coordinating defined projects, schedules, resources, risks, and deliverables."
     },
     {
       "id": "role.people-management",
       "displayName": "People Management",
       "category": "Role Type / Career Direction",
-      "definition": "Formal responsibility for employees, staffing, performance, development, or hiring.",
-      "evidencePatterns": [
-        "\\bpeople\\s+manager\\b",
-        "\\bmanage\\s+(?:a\\s+)?team\\s+of\\b",
-        "\\bdirect\\s+reports?\\b"
-      ]
+      "definition": "Formal responsibility for employees, staffing, performance, development, or hiring."
     },
     {
       "id": "role.hardware-engineering",
       "displayName": "Hardware Engineering",
       "category": "Role Type / Career Direction",
-      "definition": "Design, integration, testing, or support of hardware and physical electronic systems.",
-      "evidencePatterns": [
-        "\\bhardware\\s+engineer(?:ing)?\\b",
-        "\\belectrical\\s+hardware\\s+(?:design|development)\\b"
-      ]
+      "definition": "Design, integration, testing, or support of hardware and physical electronic systems."
     },
     {
       "id": "role.mechanical-maintenance-repair",
       "displayName": "Mechanical Maintenance / Repair",
       "category": "Role Type / Career Direction",
-      "definition": "Hands-on maintenance, repair, servicing, and mechanical troubleshooting of vehicles, machinery, equipment, or physical systems.",
-      "titleEvidencePatterns": [
-        "\\bfleet\\s+technician\\b",
-        "\\b(?:fleet|automotive|aircraft|industrial|maintenance|process|flight operations)\\s+(?:mechanic|maintenance technician)\\b",
-        "\\bmechanical\\s+(?:maintenance|repair)\\s+technician\\b"
-      ],
-      "evidencePatterns": [
-        "\\bpreventive\\s+maintenance\\s+(?:and|/)\\s+repair\\b",
-        "\\binspect,?\\s+maintain,?\\s+and\\s+repair\\s+(?:vehicles?|machinery|equipment)\\b",
-        "\\b(?:repair(?:ing)?|maintain(?:ing)?|service|servicing|overhaul(?:ing)?|mechanical\\s+troubleshooting)\\b[^.!?]{0,80}\\b(?:machinery|engines?|hydraulic|pneumatic|mechanical\\s+(?:equipment|systems?)|industrial\\s+equipment)\\b"
-      ]
+      "definition": "Hands-on maintenance, repair, servicing, and mechanical troubleshooting of vehicles, machinery, equipment, or physical systems."
     },
     {
       "id": "role.fabrication-assembly-machining",
       "displayName": "Fabrication / Assembly / Machining",
       "category": "Role Type / Career Direction",
-      "definition": "Producing, assembling, machining, welding, or fabricating physical parts, structures, equipment, or assemblies.",
-      "titleEvidencePatterns": [
-        "\\b(?:manufacturing\\s+)?machinist\\b",
-        "\\b(?:assembly\\s+mechanic|fabricator|welder|production\\s+assembler)\\b"
-      ],
-      "evidencePatterns": [
-        "\\blarge\\s+structure\\s+fabrication\\b",
-        "\\bmachine\\s+parts\\s+to\\s+(?:drawing|blueprint|specification)\\b",
-        "\\b(?:fabricat(?:e|es|ing|ion)|machin(?:e|es|ing)|weld(?:ing)?|assembl(?:e|es|ing|y))\\b[^.!?]{0,70}\\b(?:physical\\s+)?(?:parts?|structures?|components?|assemblies|equipment|sheet\\s+metal|composites?|workpieces?)\\b"
-      ]
+      "definition": "Producing, assembling, machining, welding, or fabricating physical parts, structures, equipment, or assemblies."
     },
     {
       "id": "role.physical-inspection-quality-control",
       "displayName": "Physical Inspection / Quality Control",
       "category": "Role Type / Career Direction",
-      "definition": "Hands-on inspection, acceptance, and quality-control verification of physical equipment, parts, installations, materials, or workmanship.",
-      "titleEvidencePatterns": [
-        "\\b(?:electrical|production|manufacturing|quality|test)\\s+inspector\\b",
-        "\\bquality\\s+inspections?\\s+(?:manager|specialist)\\b"
-      ],
-      "evidencePatterns": [
-        "\\bphysical\\s+inspection\\s+(?:and|/)\\s+acceptance\\b",
-        "\\b(?:inspect(?:ion|ing|s)?|verify\\s+workmanship)\\b[^.!?]{0,70}\\b(?:assemblies|parts?|equipment|installations?|workmanship|materials?|welds?|hardware|aircraft|fleet\\s+vehicles?|vehicles?)\\b",
-        "\\b(?:quality[- ]control|acceptance)\\s+inspection\\b[^.!?]{0,70}\\b(?:assemblies|parts?|equipment|installations?|materials?|welds?|hardware|aircraft)\\b"
-      ]
+      "definition": "Hands-on inspection, acceptance, and quality-control verification of physical equipment, parts, installations, materials, or workmanship."
     },
     {
       "id": "role.lab-test-technician",
       "displayName": "Laboratory / Test Technician Work",
       "category": "Role Type / Career Direction",
       "definition": "Technician-level hands-on setup, instrumentation, measurement, test execution, and laboratory support.",
-      "titleEvidencePatterns": [
-        "\\b(?:laboratory|lab)\\s+technician\\b",
-        "\\benvironmental\\s+test\\s+technician\\b"
-      ],
-      "evidencePatterns": [
-        "\\boperate\\s+(?:laboratory|test)\\s+instrumentation\\b"
-      ],
-      "contextRules": [
-        {
-          "requiredPatterns": [
-            "\\b(?:test|laboratory|lab)\\s+technician\\b",
-            "\\b(?:instrumentation|test\\s+equipment|laboratory|specimens?|measurements?|data\\s+acquisition)\\b"
-          ]
-        },
-        {
-          "requiredPatterns": [
-            "\\b(?:set\\s*up|operate|calibrat(?:e|es|ing))\\b",
-            "\\b(?:laboratory|lab)\\s+(?:instrumentation|equipment|apparatus)\\b"
-          ]
-        }
-      ],
       "supersedes": [
         "work.lab-environment"
       ]
@@ -620,42 +317,13 @@
       "id": "role.warehouse-material-handling",
       "displayName": "Warehouse / Material Handling Operations",
       "category": "Role Type / Career Direction",
-      "definition": "Physical receiving, stocking, picking, shipping, inventory movement, warehouse operations, and material handling.",
-      "titleEvidencePatterns": [
-        "\\bwarehouse\\s+(?:associate|operator|specialist|worker)\\b",
-        "\\bmaterial\\s+handler\\b",
-        "\\b(?:MRO(?:&U)?\\s+)?inventory\\s+specialist\\b"
-      ],
-      "evidencePatterns": [
-        "\\bshipping\\s+(?:and|/)\\s+receiving\\b",
-        "\\bwarehouse\\s+operations\\b",
-        "\\bmaterial\\s+handling\\s+(?:operations|equipment)\\b",
-        "\\breceiv(?:e|es|ing)\\b[^.!?]{0,80}\\b(?:stock(?:ing)?|pick(?:ing)?|pack(?:ing)?)\\b[^.!?]{0,80}\\b(?:inventory|materials?|shipments?|parts?)\\b",
-        "\\b(?:stock(?:ing)?|pick(?:ing)?)\\b[^.!?]{0,60}\\b(?:warehouse|physical)\\s+inventory\\b"
-      ]
+      "definition": "Physical receiving, stocking, picking, shipping, inventory movement, warehouse operations, and material handling."
     },
     {
       "id": "role.manufacturing-production-operations",
       "displayName": "Manufacturing / Production Operations",
       "category": "Role Type / Career Direction",
       "definition": "Direct plant-floor production, assembly-line, manufacturing, or production-equipment operations.",
-      "titleEvidencePatterns": [
-        "\\b(?:manufacturing|production)\\s+(?:operator|technician|associate|worker)\\b",
-        "\\bassembly[- ]line\\s+(?:operator|worker)\\b"
-      ],
-      "evidencePatterns": [
-        "\\b(?:assembly|production)\\s+line\\s+operations?\\b",
-        "\\bdirect\\s+production\\s+operations\\b",
-        "\\bplant[- ]floor\\s+operations?\\b"
-      ],
-      "contextRules": [
-        {
-          "requiredPatterns": [
-            "\\b(?:operate|run|monitor|staff)\\b",
-            "\\b(?:production|manufacturing)\\s+(?:line|equipment|machinery|cell)\\b"
-          ]
-        }
-      ],
       "supersedes": [
         "work.manufacturing-floor"
       ]
@@ -664,415 +332,217 @@
       "id": "role.management-heavy",
       "displayName": "Management-heavy Role",
       "category": "Responsibility Shape",
-      "definition": "A large portion of the job is coordination, planning, or management rather than direct technical execution.",
-      "titleEvidencePatterns": [
-        "\\bmanager\\b",
-        "\\bdirector\\b"
-      ],
-      "evidencePatterns": [
-        "\\b(?:program|project|engineering|product|people)\\s+manager\\b",
-        "\\bdirector\\s+of\\b",
-        "\\bmanage\\s+(?:a\\s+)?team\\s+of\\b"
-      ]
+      "definition": "A large portion of the job is coordination, planning, or management rather than direct technical execution."
     },
     {
       "id": "responsibility.hands-on-implementation",
       "displayName": "Hands-on Implementation",
       "category": "Responsibility Shape",
-      "definition": "Significant direct building, coding, configuring, testing, or troubleshooting.",
-      "evidencePatterns": [
-        "\\bhands[- ]on\\s+(?:work|implementation|development|engineering|coding|configuration)\\b",
-        "\\bimplement\\s+and\\s+deploy\\b"
-      ]
+      "definition": "Significant direct building, coding, configuring, testing, or troubleshooting."
     },
     {
       "id": "responsibility.architecture-heavy",
       "displayName": "Architecture-heavy",
       "category": "Responsibility Shape",
-      "definition": "Significant responsibility for architecture, design direction, interfaces, and technical decisions.",
-      "titleEvidencePatterns": [
-        "\\barchitect(?:ure)?\\b"
-      ],
-      "evidencePatterns": [
-        "\\bdefine\\s+(?:the\\s+)?(?:technical|solution|system)\\s+architecture\\b",
-        "\\barchitecture\\s+roadmap\\b",
-        "\\bchief\\s+architect\\b"
-      ]
+      "definition": "Significant responsibility for architecture, design direction, interfaces, and technical decisions."
     },
     {
       "id": "responsibility.customer-facing",
       "displayName": "Customer-facing",
       "category": "Responsibility Shape",
-      "definition": "Regular direct interaction with customers, stakeholders, or external users.",
-      "evidencePatterns": [
-        "\\bcustomer[- ]facing\\b",
-        "\\binterface\\s+(?:directly\\s+)?with\\s+(?:customers|clients)\\b"
-      ]
+      "definition": "Regular direct interaction with customers, stakeholders, or external users."
     },
     {
       "id": "responsibility.team-leadership",
       "displayName": "Team Leadership",
       "category": "Responsibility Shape",
-      "definition": "Leading a technical team without necessarily having formal personnel authority.",
-      "evidencePatterns": [
-        "\\blead\\s+(?:a\\s+)?(?:cross[- ]functional\\s+)?team\\b",
-        "\\btechnical\\s+lead(?:ership)?\\b"
-      ]
+      "definition": "Leading a technical team without necessarily having formal personnel authority."
     },
     {
       "id": "responsibility.personnel-management",
       "displayName": "Personnel Management",
       "category": "Responsibility Shape",
-      "definition": "Formal employee responsibility including hiring, reviews, staffing, or development.",
-      "evidencePatterns": [
-        "\\bhire,?\\s+(?:coach,?\\s+)?and\\s+develop\\b",
-        "\\bperformance\\s+(?:reviews?|management)\\b",
-        "\\bdirect\\s+reports?\\b"
-      ]
+      "definition": "Formal employee responsibility including hiring, reviews, staffing, or development."
     },
     {
       "id": "responsibility.budget-ownership",
       "displayName": "Budget Ownership",
       "category": "Responsibility Shape",
-      "definition": "Accountability for budgets, cost performance, or financial planning.",
-      "evidencePatterns": [
-        "\\bown(?:ership)?\\s+of\\s+(?:the\\s+)?budget\\b",
-        "\\bmanage\\s+(?:the\\s+)?(?:program|project|department)\\s+budget\\b",
-        "\\bP&L\\s+responsibility\\b"
-      ]
+      "definition": "Accountability for budgets, cost performance, or financial planning."
     },
     {
       "id": "responsibility.schedule-ownership",
       "displayName": "Schedule Ownership",
       "category": "Responsibility Shape",
-      "definition": "Accountability for schedules, milestones, dependencies, or delivery performance.",
-      "evidencePatterns": [
-        "\\bown(?:ership)?\\s+of\\s+(?:the\\s+)?(?:project|program)?\\s*schedule\\b",
-        "\\bmanage\\s+(?:the\\s+)?integrated\\s+master\\s+schedule\\b"
-      ]
+      "definition": "Accountability for schedules, milestones, dependencies, or delivery performance."
     },
     {
       "id": "responsibility.proposal-capture",
       "displayName": "Proposal / Capture",
       "category": "Responsibility Shape",
-      "definition": "Business-development work involving proposals, bids, capture strategy, or winning new work.",
-      "evidencePatterns": [
-        "\\bproposal\\s+(?:development|management|writing)\\b",
-        "\\bcapture\\s+(?:manager|management|strategy)\\b"
-      ]
+      "definition": "Business-development work involving proposals, bids, capture strategy, or winning new work."
     },
     {
       "id": "responsibility.documentation-heavy",
       "displayName": "Documentation-heavy",
       "category": "Responsibility Shape",
-      "definition": "A substantial portion of the role involves formal documentation or compliance artifacts.",
-      "titleEvidencePatterns": [
-        "\\btechnical\\s+writer\\b",
-        "\\bdocumentation\\s+specialist\\b"
-      ],
-      "evidencePatterns": [
-        "\\bextensive\\s+(?:technical\\s+)?documentation\\b",
-        "\\bdevelop\\s+and\\s+maintain\\s+(?:technical\\s+)?documentation\\b"
-      ]
+      "definition": "A substantial portion of the role involves formal documentation or compliance artifacts."
     },
     {
       "id": "responsibility.operations-sustainment",
       "displayName": "Operations / Sustainment",
       "category": "Responsibility Shape",
-      "definition": "Ongoing support, maintenance, monitoring, incident response, or lifecycle sustainment.",
-      "evidencePatterns": [
-        "\\boperations?\\s+and\\s+sustainment\\b",
-        "\\bproduction\\s+operations\\s+support\\b",
-        "\\bon[- ]call\\s+rotation\\b"
-      ]
+      "definition": "Ongoing support, maintenance, monitoring, incident response, or lifecycle sustainment."
     },
     {
       "id": "responsibility.research-oriented",
       "displayName": "Research-oriented",
       "category": "Responsibility Shape",
-      "definition": "Investigation, experimentation, prototyping, or evaluation of new techniques.",
-      "evidencePatterns": [
-        "\\bresearch[- ]oriented\\b",
-        "\\bconduct\\s+(?:independent|applied|original)\\s+research\\b",
-        "\\bpublish\\s+(?:research|findings|papers)\\b"
-      ]
+      "definition": "Investigation, experimentation, prototyping, or evaluation of new techniques."
     },
     {
       "id": "technical.application-development",
       "displayName": "Application Development",
       "category": "Technical Domain",
-      "definition": "Building user-facing or business-facing applications.",
-      "evidencePatterns": [
-        "\\bapplication\\s+(?:development|developer)\\b",
-        "\\bdevelop(?:s|ed|ing)?\\b.{0,80}\\b(?:web|enterprise|business|AI|machine\\s+learning|language\\s+model|natural\\s+language\\s+processing)\\b.{0,40}\\bapplications?\\b"
-      ]
+      "definition": "Building user-facing or business-facing applications."
     },
     {
       "id": "technical.backend-development",
       "displayName": "Backend Development",
       "category": "Technical Domain",
-      "definition": "Server-side services, business logic, databases, and APIs.",
-      "evidencePatterns": [
-        "\\bback(?:end|[- ]end)\\s+(?:development|developer|engineering|services?|APIs?)\\b",
-        "\\bserver[- ]side\\s+(?:development|microservices?)\\b",
-        "\\bbuild(?:s|ing)?\\b.{0,100}\\b(?:AI|machine\\s+learning|language\\s+model|natural\\s+language\\s+processing)\\b.{0,60}\\bservices?\\b",
-        "\\b(?:design|develop|implement|build)(?:s|ed|ing)?\\b.{0,80}\\bmicroservice[- ]based\\s+(?:REST(?:ful)?\\s+)?APIs?\\b"
-      ],
-      "titleExclusionPatterns": [
-        "\\b(?:program|project)\\s+manager\\b"
-      ]
+      "definition": "Server-side services, business logic, databases, and APIs."
     },
     {
       "id": "technical.frontend-development",
       "displayName": "Frontend Development",
       "category": "Technical Domain",
-      "definition": "Client-side application interfaces and user-facing web or UI development.",
-      "evidencePatterns": [
-        "\\bfront(?:end|[- ]end)\\s+(?:development|developer|engineering)\\b",
-        "\\bclient[- ]side\\s+development\\b"
-      ]
+      "definition": "Client-side application interfaces and user-facing web or UI development."
     },
     {
       "id": "technical.api-development",
       "displayName": "API Development",
       "category": "Technical Domain",
-      "definition": "Designing and implementing programmatic service interfaces.",
-      "evidencePatterns": [
-        "\\bAPI\\s+(?:development|design|engineering)\\b",
-        "\\b(?:develop|design|implement|build|integrate|maintain)(?:s|ed|ing)?\\b.{0,100}\\b(?:(?:RESTful|web|service|backend|model[- ]serving)\\s+)?APIs?\\b",
-        "\\b(?:own|operate|maintain)(?:s|ed|ing)?\\b.{0,100}\\b(?:service|backend|model[- ]serving)\\s+APIs?\\b"
-      ],
-      "titleExclusionPatterns": [
-        "\\b(?:program|project)\\s+manager\\b"
-      ]
+      "definition": "Designing and implementing programmatic service interfaces."
     },
     {
       "id": "technical.automation-scripting",
       "displayName": "Automation / Scripting",
       "category": "Technical Domain",
-      "definition": "Automating workflows, operations, or repetitive tasks with scripts or tooling.",
-      "evidencePatterns": [
-        "\\bautomation\\s+(?:and|/)\\s+scripting\\b",
-        "\\bscript(?:ing)?\\s+(?:with|using)\\s+(?:Python|PowerShell|Bash)\\b",
-        "\\b(?:Python|PowerShell|Bash)\\s+(?:automation\\s+)?script(?:ing|s)?\\b",
-        "\\b(?:Python|PowerShell|Bash)\\s+automation\\b",
-        "\\b(?:Linux|deployment|workflow|infrastructure|administrative)\\s+automation\\b",
-        "\\bautomation\\s+(?:tooling|scripts?)\\b",
-        "\\bautomated\\s+(?:test\\s+)?(?:frameworks?|scripts?|pipelines?)\\b",
-        "\\bautomated\\s+(?:data\\s+)?(?:workflows?|pipelines?)\\b",
-        "\\bautomation\\s+to\\s+(?:simplify|support|manage|configure|deploy|administer)\\b"
-      ],
-      "titleExclusionPatterns": [
-        "\\b(?:program|project)\\s+manager\\b"
-      ]
+      "definition": "Automating workflows, operations, or repetitive tasks with scripts or tooling."
     },
     {
       "id": "technical.linux-administration",
       "displayName": "Linux Administration",
       "category": "Technical Domain",
-      "definition": "Administration, configuration, maintenance, and troubleshooting of Linux systems.",
-      "evidencePatterns": [
-        "\\bLinux\\s+(?:system\\s+)?administration\\b",
-        "\\badminister(?:ing)?\\s+Linux(?:\\s+(?:systems|servers))?\\b"
-      ]
+      "definition": "Administration, configuration, maintenance, and troubleshooting of Linux systems."
     },
     {
       "id": "technical.windows-administration",
       "displayName": "Windows Administration",
       "category": "Technical Domain",
-      "definition": "Administration, configuration, maintenance, and troubleshooting of Windows systems.",
-      "evidencePatterns": [
-        "\\bWindows\\s+(?:Server\\s+|system\\s+)?administration\\b",
-        "\\badminister(?:s|ed|ing)?\\b.{0,40}\\bWindows\\s+(?:systems|servers)\\b"
-      ]
+      "definition": "Administration, configuration, maintenance, and troubleshooting of Windows systems."
     },
     {
       "id": "technical.containers",
       "displayName": "Kubernetes / Containers",
       "category": "Technical Domain",
-      "definition": "Containerization, orchestration, Docker, Kubernetes, and related platforms.",
-      "evidencePatterns": [
-        "\\bKubernetes\\b",
-        "\\bDocker\\b",
-        "\\bcontainer\\s+orchestration\\b",
-        "\\bLinux\\s+containers?\\b",
-        "\\bcontainerized\\s+(?:applications?|services?)\\b"
-      ]
+      "definition": "Containerization, orchestration, Docker, Kubernetes, and related platforms."
     },
     {
       "id": "technical.infrastructure-as-code",
       "displayName": "Infrastructure as Code",
       "category": "Technical Domain",
-      "definition": "Declarative infrastructure using tools such as Terraform or CloudFormation.",
-      "evidencePatterns": [
-        "\\binfrastructure\\s+as\\s+code\\b",
-        "\\bTerraform\\b",
-        "\\bCloudFormation\\b"
-      ]
+      "definition": "Declarative infrastructure using tools such as Terraform or CloudFormation."
     },
     {
       "id": "technical.networking",
       "displayName": "Network Engineering",
       "category": "Technical Domain",
-      "definition": "Network architecture, routing, switching, connectivity, and related technologies.",
-      "evidencePatterns": [
-        "\\bnetwork\\s+engineering\\b",
-        "\\bnetwork\\s+(?:design|architecture|configuration)\\b"
-      ]
+      "definition": "Network architecture, routing, switching, connectivity, and related technologies."
     },
     {
       "id": "technical.cisco-networking",
       "displayName": "Cisco Networking",
       "category": "Technical Domain",
-      "definition": "Cisco-specific networking technologies, platforms, and tooling.",
-      "evidencePatterns": [
-        "\\bCisco\\s+(?:IOS|NX-OS|routers?|switches|networking)\\b",
-        "\\bCisco\\s+network\\s+(?:equipment|infrastructure)\\b"
-      ]
+      "definition": "Cisco-specific networking technologies, platforms, and tooling."
     },
     {
       "id": "technical.storage",
       "displayName": "Storage",
       "category": "Technical Domain",
-      "definition": "Storage systems, platforms, capacity, performance, and related administration.",
-      "evidencePatterns": [
-        "\\bSAN\\s+(?:storage|administration|infrastructure)\\b",
-        "\\bnetwork[- ]attached\\s+storage\\b",
-        "\\bstorage\\s+(?:arrays?|infrastructure|engineering)\\b"
-      ]
+      "definition": "Storage systems, platforms, capacity, performance, and related administration."
     },
     {
       "id": "technical.virtualization",
       "displayName": "Virtualization",
       "category": "Technical Domain",
-      "definition": "Virtual machines, hypervisors, virtual infrastructure, and related platforms.",
-      "evidencePatterns": [
-        "\\bvirtualization\\b",
-        "\\bVMware\\s+(?:vSphere|ESXi)\\b",
-        "\\bHyper-V\\b"
-      ]
+      "definition": "Virtual machines, hypervisors, virtual infrastructure, and related platforms."
     },
     {
       "id": "technical.power-facilities",
       "displayName": "Power / Facilities Infrastructure",
       "category": "Technical Domain",
-      "definition": "Electrical power, cooling, facilities, or other physical infrastructure systems.",
-      "evidencePatterns": [
-        "\\b(?:UPS|uninterruptible\\s+power|power\\s+distribution)\\s+(?:systems?|units?)\\b",
-        "\\bfacilities\\s+infrastructure\\b",
-        "\\bHVAC\\s+(?:systems?|infrastructure)\\b"
-      ]
+      "definition": "Electrical power, cooling, facilities, or other physical infrastructure systems."
     },
     {
       "id": "technical.cabling-racking",
       "displayName": "Cabling / Racking",
       "category": "Technical Domain",
-      "definition": "Physical installation, cabling, rack-mounted equipment, and related infrastructure work.",
-      "evidencePatterns": [
-        "\\brack(?:ing)?\\s+and\\s+stack(?:ing)?\\b",
-        "\\bcable\\s+(?:installation|management)\\b",
-        "\\brack\\s+(?:and|/)\\s+cable\\b"
-      ]
+      "definition": "Physical installation, cabling, rack-mounted equipment, and related infrastructure work."
     },
     {
       "id": "technical.embedded-systems",
       "displayName": "Embedded Systems",
       "category": "Technical Domain",
-      "definition": "Software and systems running on embedded or device-level hardware.",
-      "evidencePatterns": [
-        "\\bembedded\\s+(?:systems?|software|firmware)\\b",
-        "\\breal[- ]time\\s+operating\\s+systems?\\b"
-      ]
+      "definition": "Software and systems running on embedded or device-level hardware."
     },
     {
       "id": "technical.machine-learning",
       "displayName": "Machine Learning",
       "category": "Technical Domain",
-      "definition": "Statistical or learned models trained from data.",
-      "evidencePatterns": [
-        "\\bmachine\\s+learning\\b",
-        "\\bML[- ]enabled\\b"
-      ]
+      "definition": "Statistical or learned models trained from data."
     },
     {
       "id": "technical.artificial-intelligence",
       "displayName": "Artificial Intelligence",
       "category": "Technical Domain",
-      "definition": "Broad AI systems, techniques, and AI-enabled capabilities.",
-      "evidencePatterns": [
-        "\\bartificial\\s+intelligence\\b",
-        "\\bapplied\\s+AI\\b",
-        "\\bAI(?:\\s*/\\s*ML)?[- ](?:enabled|powered)\\b"
-      ]
+      "definition": "Broad AI systems, techniques, and AI-enabled capabilities."
     },
     {
       "id": "technical.nlp",
       "displayName": "Natural Language Processing",
       "category": "Technical Domain",
-      "definition": "Processing, understanding, or generating human language.",
-      "evidencePatterns": [
-        "\\bnatural\\s+language\\s+processing\\b",
-        "\\bNLP\\b"
-      ]
+      "definition": "Processing, understanding, or generating human language."
     },
     {
       "id": "technical.large-language-models",
       "displayName": "Large Language Models",
       "category": "Technical Domain",
-      "definition": "Transformer and LLM-based systems for language understanding, generation, or reasoning.",
-      "evidencePatterns": [
-        "\\blarge\\s+language\\s+models?\\b",
-        "\\bLLMs?\\b"
-      ]
+      "definition": "Transformer and LLM-based systems for language understanding, generation, or reasoning."
     },
     {
       "id": "technical.software-development",
       "displayName": "Software Development",
       "category": "Technical Domain",
-      "definition": "General implementation and maintenance of software systems.",
-      "evidencePatterns": [
-        "\\bsoftware\\s+(?:development|engineering)\\b",
-        "\\bsoftware\\s+developer\\b",
-        "\\bdevelop(?:ing|ment)?\\s+software\\b",
-        "\\b(?:develop|design|implement|build|test|maintain)(?:s|ed|ing)?\\b.{0,80}\\b(?:software|applications?|APIs?|microservices?|test\\s+harnesses?)\\b",
-        "\\bdevelop(?:s|ed|ing)?\\b.{0,80}\\b(?:artificial\\s+intelligence|machine\\s+learning|AI|ML)\\b.{0,50}\\bsystems?\\b"
-      ],
-      "titleExclusionPatterns": [
-        "\\b(?:program|project)\\s+manager\\b"
-      ]
+      "definition": "General implementation and maintenance of software systems."
     },
     {
       "id": "technical.linux",
       "displayName": "Linux",
       "category": "Technical Domain",
-      "definition": "Developing or operating in Linux environments.",
-      "evidencePatterns": [
-        "\\bLinux\\b"
-      ]
+      "definition": "Developing or operating in Linux environments."
     },
     {
       "id": "technical.cloud",
       "displayName": "Cloud Platforms",
       "category": "Technical Domain",
-      "definition": "AWS, Azure, GCP, and related cloud-native services.",
-      "evidencePatterns": [
-        "\\bcloud\\s+(?:computing|platforms?|infrastructure|services?|deployment|model\\s+services?)\\b",
-        "\\bcloud[- ]based\\s+(?:data\\s+)?(?:architectures?|infrastructure|systems?|applications?)\\b",
-        "\\bAmazon\\s+Web\\s+Services\\b",
-        "\\bMicrosoft\\s+Azure\\b",
-        "\\bGoogle\\s+Cloud(?:\\s+Platform)?\\b"
-      ]
+      "definition": "AWS, Azure, GCP, and related cloud-native services."
     },
     {
       "id": "technical.cicd",
       "displayName": "CI/CD",
       "category": "Technical Domain",
-      "definition": "Automated build, test, release, and deployment pipelines.",
-      "evidencePatterns": [
-        "\\bCI\\s*/\\s*CD\\b",
-        "\\bcontinuous\\s+integration\\b",
-        "\\bcontinuous\\s+(?:delivery|deployment)\\b"
-      ]
+      "definition": "Automated build, test, release, and deployment pipelines."
     }
   ]
 }

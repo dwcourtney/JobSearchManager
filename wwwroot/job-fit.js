@@ -40,7 +40,7 @@
     Object.freeze({ level: 5, label: "Fully onsite", description: "Routine work is performed onsite." })
   ]);
   const DEFAULT_PREFERRED_WORK_LOCATION = 3;
-  // Both canonical detectors remain active for scoring and persisted settings. The
+  // Both canonical concepts remain active for scoring and persisted settings. The
   // role-level concept duplicates the technical-domain concept in the survey, so
   // only the latter owns the single user-facing preference row.
   const SURVEY_HIDDEN_CONCEPT_IDS = Object.freeze(["role.network-engineering"]);

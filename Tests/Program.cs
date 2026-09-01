@@ -1,4 +1,3 @@
-using Azure.Storage.Blobs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
@@ -12,63 +11,6 @@ using System.IO.Compression;
 using System.Net.Mail;
 using System.Security.Claims;
 using JobSearchManager;
-
-if (args.Length is 2 or 3 && args[0] == "--detector-evaluation")
-{
-    var catalog = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
-    var detector = new JobConceptDetector(catalog);
-    var evaluation = new DetectorEvaluationService(
-        new TestHostEnvironment(AppContext.BaseDirectory), catalog, detector);
-    var report = evaluation.Evaluate(args.Length == 3 ? args[2] : null);
-    await File.WriteAllTextAsync(args[1], JsonSerializer.Serialize(report,
-        new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true }));
-    Console.WriteLine($"DETECTOR EVALUATION fixtures={report.FixtureCount} labels={report.LabelCount} concepts={report.Concepts.Count}");
-    return;
-}
-
-if (args.Length == 3 && args[0] == "--job-fit-calibration-detect")
-{
-    using var document = JsonDocument.Parse(await File.ReadAllTextAsync(args[1]));
-    var catalog = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
-    var detector = new JobConceptDetector(catalog);
-    var remoteDetector = new RemoteWorkDetector();
-    var extendedDetector = new ExtendedLocationRequirementDetector();
-    var results = document.RootElement.GetProperty("jobs").EnumerateArray().Select(job =>
-    {
-        var title = job.TryGetProperty("title", out var value) ? value.GetString() ?? "" : "";
-        var requisition = job.TryGetProperty("requisitionId", out value) ? value.GetString() ?? "" : "";
-        var primaryLocation = job.TryGetProperty("primaryLocation", out value) ? value.GetString() ?? "" : "";
-        var additionalLocations = job.TryGetProperty("additionalLocations", out value) &&
-            value.ValueKind == JsonValueKind.Array
-                ? value.EnumerateArray().Select(item => item.GetString() ?? "").ToArray()
-                : [];
-        var html = job.TryGetProperty("descriptionHtml", out value) &&
-            !string.IsNullOrWhiteSpace(value.GetString())
-                ? value.GetString() ?? ""
-                : job.TryGetProperty("compressedDescriptionHtml", out value) &&
-                    !string.IsNullOrWhiteSpace(value.GetString())
-                        ? ExpandCachedDescription(value.GetString()!)
-                        : "";
-        var remote = remoteDetector.Analyze(title, primaryLocation, additionalLocations, html);
-        var extended = extendedDetector.Analyze(title, primaryLocation, additionalLocations, html);
-        return new
-        {
-            requisitionId = requisition,
-            title,
-            detectedConcepts = detector.Analyze(
-                title, primaryLocation, additionalLocations, html, remote, extended),
-            remoteWork = remote,
-            extendedLocationRequirement = extended
-        };
-    }).ToArray();
-    await File.WriteAllTextAsync(args[2], JsonSerializer.Serialize(new
-    {
-        jobConceptCatalogVersion = catalog.Version,
-        jobs = results
-    }, new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true }));
-    Console.WriteLine($"JOB FIT CALIBRATION DETECTOR jobs={results.Length} catalog={catalog.Version}");
-    return;
-}
 
 if (args.Length >= 2 && args[0] == "--extended-location-corpus")
 {
@@ -342,29 +284,27 @@ if (args.Length >= 2 && args[0] == "--authorization-corpus")
 var tests = new (string Name, Func<Task> Run)[]
 {
     ("Local mode is the safe default", TestLocalDefaultAsync),
-    ("Container mode is isolated from Local and Azure hosting semantics", TestContainerConfigurationAsync),
+    ("Container mode uses filesystem persistence and isolated workspaces", TestContainerConfigurationAsync),
     ("Container workspaces are browser-isolated with non-secure LAN cookies", TestContainerWorkspaceMiddlewareAsync),
     ("Configured Data Protection keys persist to the requested directory", TestDataProtectionPersistenceAsync),
     ("Health endpoint is lightweight and returns HTTP 200", TestHealthEndpointAsync),
     ("Log fields cannot forge additional lines", TestLogValueSanitizationAsync),
     ("Version endpoint exposes only immutable deployment identity", TestVersionEndpointAsync),
-    ("Azure mode requires explicit storage configuration", TestAzureValidationAsync),
-    ("Legacy Azure settings migrate without overriding canonical settings", TestLegacyAzureConfigurationAsync),
     ("Workspace identifiers are random and strictly validated", TestWorkspaceIdentityAsync),
     ("Workspace cookie has durable security settings", TestCookieOptionsAsync),
     ("Workspace cookie value is integrity-protected", TestProtectedCookieAsync),
     ("Workspace middleware preserves isolation through a protected cookie", TestWorkspaceMiddlewareAsync),
     ("Legacy workspace cookies migrate without changing workspace identity", TestLegacyWorkspaceCookieMigrationAsync),
-    ("Azure state changes require the exact application origin", TestOriginValidationAsync),
+    ("Container state changes require the exact application origin", TestOriginValidationAsync),
     ("Legacy and new accounts default to no administrator roles", TestAccountRoleCompatibilityAsync),
     ("Admin authorization distinguishes anonymous, non-admin, and admin users", TestAdminAuthorizationAsync),
     ("Classifier client serializes and validates the diagnostic contract", TestClassifierClientContractAsync),
     ("LLM client validates GPU, model, schema, and prompt contracts", TestLlmClassifierContractAsync),
-    ("LLM evaluation reuses the independently labeled fixture scope", TestLlmFixtureMetricsAsync),
+    ("Semantic taxonomy and prompt identity are versioned", TestLlmFixtureMetricsAsync),
     ("Classifier unavailability is isolated from JSM", TestClassifierUnavailableAsync),
     ("First-admin bootstrap is hashed, expiring, single-use, and durable", TestAdminBootstrapLifecycleAsync),
     ("Concurrent first-admin claims grant exactly one account", TestAdminBootstrapConcurrencyAsync),
-    ("Admin bootstrap requires explicit non-Azure configuration", TestAdminBootstrapConfigurationAsync),
+    ("Admin bootstrap requires an explicit server-side path", TestAdminBootstrapConfigurationAsync),
     ("Account passwords are hashed and normalized emails are unique", TestAccountPasswordAndEmailAsync),
     ("Anonymous workspace claims preserve state and establish ownership", TestAccountWorkspaceClaimAsync),
     ("Failed account claims remain atomic and retryable", TestFailedAccountClaimAsync),
@@ -377,8 +317,6 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Portable workspace exports exclude authentication secrets", TestAccountSecretsExcludedFromExportAsync),
     ("File storage round-trips beside its configured base", TestFileStoreAsync),
     ("Workspace reset deletes only known local state documents", TestFileResetAsync),
-    ("Blob namespaces are isolated and traversal-resistant", TestBlobNamespaceAsync),
-    ("Annotation corpus is isolated, durable, and exports conservative labels", TestAnnotationLabelingAsync),
     ("Different workspaces resolve identical sources to one shared cache", TestSharedSourceCacheAsync),
     ("Concurrent workspace refreshes use one provider request", TestSharedRefreshSingleFlightAsync),
     ("Workspace preferences cannot mutate canonical shared source data", TestPreferencesDoNotMutateSharedCacheAsync),
@@ -387,8 +325,6 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Job Fit defaults off and rejects unknown concepts", TestJobFitSettingsAsync),
     ("Travel tolerance migrates legacy preferences deterministically", TestTravelToleranceMigrationAsync),
     ("Preferred work location migrates legacy preferences deterministically", TestWorkLocationMigrationAsync),
-    ("Canonical job concepts are detected during normalization", TestJobConceptDetectionAsync),
-    ("Detector evaluation uses independent labels and valid deterministic metrics", TestDetectorEvaluationAsync),
     ("Obsolete automatic-refresh settings are ignored", TestObsoleteAutomaticSettingsIgnoredAsync),
     ("Legacy applied source remains configured", TestLegacyAppliedSourceMigrationAsync),
     ("Legacy cached posting URLs migrate to the canonical field", TestLegacyCacheUrlMigrationAsync),
@@ -508,8 +444,6 @@ static Task TestLocalDefaultAsync()
     var configuration = new ConfigurationBuilder().AddInMemoryCollection().Build();
     var hosting = HostingConfiguration.FromConfiguration(configuration);
     Assert(hosting.IsLocal, "Hosting must default to Local.");
-    Assert(hosting.StorageAccount is null && hosting.StorageContainer is null,
-        "Local mode must not require Azure storage.");
     return Task.CompletedTask;
 }
 
@@ -535,12 +469,12 @@ static Task TestContainerConfigurationAsync()
             [HostingConfiguration.ModeSetting] = "Container",
             [HostingConfiguration.DataProtectionPathSetting] = "/var/lib/jsm/dataprotection"
         }));
-    Assert(hosting.IsContainer && !hosting.IsLocal && !hosting.IsAzure,
-        "Container mode was not selected independently of Local and Azure.");
-    Assert(hosting.UsesLocalStorage && hosting.UsesPerBrowserWorkspaces,
-        "Container mode did not select local persistence with browser-isolated workspaces.");
-    Assert(hosting.RequiresSameOriginProtection && !hosting.UsesAzureTransportSecurity,
-        "Container mode did not retain browser request protection without Azure HTTPS behavior.");
+    Assert(hosting.IsContainer && !hosting.IsLocal,
+        "Container mode was not selected independently of Local.");
+    Assert(hosting.UsesPerBrowserWorkspaces,
+        "Container mode did not select browser-isolated filesystem workspaces.");
+    Assert(hosting.RequiresSameOriginProtection,
+        "Container mode did not retain same-origin request protection.");
     Assert(hosting.DataProtectionPath == "/var/lib/jsm/dataprotection",
         "Container Data Protection path was not read from configuration.");
     return Task.CompletedTask;
@@ -550,7 +484,7 @@ static async Task TestContainerWorkspaceMiddlewareAsync()
 {
     var provider = new EphemeralDataProtectionProvider();
     var hosting = new HostingConfiguration(
-        ApplicationHostingMode.Container, null, null, "/var/lib/jsm/dataprotection");
+        ApplicationHostingMode.Container, "/var/lib/jsm/dataprotection");
     var middleware = new WorkspaceIdentityMiddleware(
         _ => Task.CompletedTask,
         hosting,
@@ -574,7 +508,7 @@ static async Task TestContainerWorkspaceMiddlewareAsync()
         "Independent Container browsers were assigned one shared workspace.");
     Assert(!firstContext.Response.Headers.SetCookie.ToString()
             .Contains("secure", StringComparison.OrdinalIgnoreCase),
-        "HTTP Container mode issued an Azure-only Secure workspace cookie.");
+        "HTTP Container mode issued an inappropriate Secure workspace cookie.");
 }
 
 static Task TestDataProtectionPersistenceAsync()
@@ -584,8 +518,7 @@ static Task TestDataProtectionPersistenceAsync()
     try
     {
         var services = new ServiceCollection();
-        services.AddJobSearchManagerDataProtection(new HostingConfiguration(
-            ApplicationHostingMode.Container, null, null, directory));
+        services.AddJobSearchManagerDataProtection(new HostingConfiguration(ApplicationHostingMode.Container, directory));
         using var serviceProvider = services.BuildServiceProvider();
         var protector = serviceProvider.GetRequiredService<IDataProtectionProvider>()
             .CreateProtector("container-test");
@@ -633,8 +566,6 @@ static async Task TestVersionEndpointAsync()
     });
     var hosting = new HostingConfiguration(
         ApplicationHostingMode.Container,
-        null,
-        null,
         "/var/lib/jsm/dataprotection");
     var versionInfo = VersionEndpoint.Create(configuration, hosting);
     var context = new DefaultHttpContext();
@@ -672,51 +603,6 @@ static async Task TestVersionEndpointAsync()
         "The version endpoint accepted a state-changing request.");
 }
 
-static Task TestAzureValidationAsync()
-{
-    AssertThrows<InvalidOperationException>(() => HostingConfiguration.FromConfiguration(
-        Configuration(new Dictionary<string, string?>
-        {
-            [HostingConfiguration.ModeSetting] = "Azure"
-        })));
-    var hosting = HostingConfiguration.FromConfiguration(Configuration(
-        new Dictionary<string, string?>
-        {
-            [HostingConfiguration.ModeSetting] = "Azure",
-            [HostingConfiguration.StorageAccountSetting] = "workdayjobmanagerstore",
-            [HostingConfiguration.StorageContainerSetting] = "userdata"
-        }));
-    Assert(hosting.IsAzure, "Explicit Azure mode was not selected.");
-    Assert(hosting.GetBlobServiceUri() ==
-        new Uri("https://workdayjobmanagerstore.blob.core.windows.net"),
-        "Blob service endpoint was not derived centrally.");
-    return Task.CompletedTask;
-}
-
-static Task TestLegacyAzureConfigurationAsync()
-{
-    var legacy = HostingConfiguration.FromConfiguration(Configuration(
-        new Dictionary<string, string?>
-        {
-            [HostingConfiguration.LegacyModeSetting] = "Azure",
-            [HostingConfiguration.LegacyStorageAccountSetting] = "workdayjobmanagerstore",
-            [HostingConfiguration.LegacyStorageContainerSetting] = "userdata"
-        }));
-    Assert(legacy.IsAzure && legacy.StorageAccount == "workdayjobmanagerstore" &&
-           legacy.StorageContainer == "userdata",
-        "Existing Azure application settings did not migrate through the legacy aliases.");
-
-    var canonical = HostingConfiguration.FromConfiguration(Configuration(
-        new Dictionary<string, string?>
-        {
-            [HostingConfiguration.ModeSetting] = "Local",
-            [HostingConfiguration.LegacyModeSetting] = "Azure"
-        }));
-    Assert(canonical.IsLocal,
-        "A legacy Azure setting overrode the canonical hosting-mode setting.");
-    return Task.CompletedTask;
-}
-
 static Task TestWorkspaceIdentityAsync()
 {
     var first = WorkspaceIdentity.Create();
@@ -727,7 +613,7 @@ static Task TestWorkspaceIdentityAsync()
     Assert(!WorkspaceIdentity.IsValid("../another-workspace") &&
            !WorkspaceIdentity.IsValid(first.ToUpperInvariant()) &&
            !WorkspaceIdentity.IsValid("local"),
-        "Workspace validation accepted unsafe or non-Azure values.");
+        "Workspace validation accepted unsafe or reserved values.");
     return Task.CompletedTask;
 }
 
@@ -735,7 +621,7 @@ static Task TestCookieOptionsAsync()
 {
     var options = WorkspaceIdentity.CreateCookieOptions(secure: true);
     Assert(options.HttpOnly && options.Secure && options.IsEssential,
-        "Azure cookie security flags are incomplete.");
+        "Cookie security flags are incomplete.");
     Assert(options.SameSite == SameSiteMode.Lax && options.Path == "/",
         "Workspace cookie scope is incorrect.");
     Assert(options.MaxAge >= TimeSpan.FromDays(365),
@@ -759,10 +645,7 @@ static Task TestProtectedCookieAsync()
 static async Task TestWorkspaceMiddlewareAsync()
 {
     var provider = new EphemeralDataProtectionProvider();
-    var hosting = new HostingConfiguration(
-        ApplicationHostingMode.Azure,
-        "workdayjobmanagerstore",
-        "userdata");
+    var hosting = new HostingConfiguration(ApplicationHostingMode.Container, "/var/lib/jsm/dataprotection");
     var middleware = new WorkspaceIdentityMiddleware(
         _ => Task.CompletedTask,
         hosting,
@@ -776,9 +659,9 @@ static async Task TestWorkspaceMiddlewareAsync()
     await middleware.InvokeAsync(firstContext, firstWorkspace, accounts);
     var setCookie = firstContext.Response.Headers.SetCookie.ToString();
     Assert(setCookie.Contains("httponly", StringComparison.OrdinalIgnoreCase) &&
-           setCookie.Contains("secure", StringComparison.OrdinalIgnoreCase) &&
+           !setCookie.Contains("secure", StringComparison.OrdinalIgnoreCase) &&
            setCookie.Contains("samesite=lax", StringComparison.OrdinalIgnoreCase),
-        "First Azure response did not set the secure workspace cookie.");
+        "First Container response did not set a protected workspace cookie.");
     var cookiePair = setCookie.Split(';', 2)[0];
     Assert(!cookiePair.Contains(firstWorkspace.WorkspaceId, StringComparison.Ordinal),
         "Raw workspace ID leaked into the cookie.");
@@ -812,7 +695,7 @@ static async Task TestLegacyWorkspaceCookieMigrationAsync()
     var workspace = new WorkspaceContext();
     var middleware = new WorkspaceIdentityMiddleware(
         _ => Task.CompletedTask,
-        new HostingConfiguration(ApplicationHostingMode.Azure, "workdayjobmanagerstore", "userdata"),
+        new HostingConfiguration(ApplicationHostingMode.Container, "/var/lib/jsm/dataprotection"),
         provider,
         NullLogger<WorkspaceIdentityMiddleware>.Instance);
 
@@ -832,17 +715,17 @@ static Task TestOriginValidationAsync()
     context.Request.Method = HttpMethods.Put;
     context.Request.Path = "/api/settings";
     context.Request.Scheme = "https";
-    context.Request.Host = new HostString("workday-job-manager.azurewebsites.net");
-    context.Request.Headers.Origin = "https://workday-job-manager.azurewebsites.net";
+    context.Request.Host = new HostString("jobs.example.test");
+    context.Request.Headers.Origin = "https://jobs.example.test";
     Assert(RequestSecurity.IsStateChangingApiRequest(context.Request) &&
            RequestSecurity.HasSameOrigin(context.Request),
-        "Valid same-origin Azure request was rejected.");
+        "Valid same-origin request was rejected.");
     context.Request.Headers.Origin = "https://attacker.example";
     Assert(!RequestSecurity.HasSameOrigin(context.Request),
         "Cross-site state-changing request was accepted.");
     context.Request.Headers.Remove("Origin");
     Assert(!RequestSecurity.HasSameOrigin(context.Request),
-        "Missing Origin was accepted for an Azure state change.");
+        "Missing Origin was accepted for a protected state change.");
     return Task.CompletedTask;
 }
 
@@ -866,285 +749,6 @@ static async Task TestFileStoreAsync()
     {
         if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
     }
-}
-
-static async Task TestAnnotationLabelingAsync()
-{
-    var directory = TestDirectory("annotation-labeling");
-    try
-    {
-        var factory = new TestWorkspaceDataStoreFactory(directory);
-        var catalog = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
-        var firstConcept = catalog.Concepts[0].Id;
-        var secondConcept = catalog.Concepts[1].Id;
-        var thirdConcept = catalog.Concepts[2].Id;
-        var service = new AnnotationLabelingService(factory, catalog, TimeProvider.System);
-        var job = new JobRecord(
-            "Platform Engineer", "REQ-LABEL-1", new DateOnly(2026, 8, 31), "Today", "Remote", [],
-            "Full time", "https://example.test/jobs/REQ-LABEL-1",
-            "<p>Build resilient service interfaces with Kubernetes and careful operational ownership.</p>",
-            null, null, "unknown", "not-found", false, null, null, null, "/jobs/REQ-LABEL-1",
-            CompanyId: "example", DetectedConcepts:
-            [new DetectedJobConcept(firstConcept, "service interfaces"),
-             new DetectedJobConcept(secondConcept, "Kubernetes"),
-             new DetectedJobConcept(thirdConcept, "operational ownership")],
-            JobConceptCatalogVersion: catalog.Version);
-
-        var generated = await service.GenerateAsync([job, job], 200);
-        Assert(generated.Added >= 3 && generated.Added <= 6 && generated.Total == generated.Added,
-            "Annotation generation was not idempotent or retained duplicate machine candidates.");
-        Assert(factory.CreatedWorkspaceIds.SequenceEqual([AnnotationLabelingService.CorpusWorkspaceId]),
-            "The annotation corpus was not isolated in its reserved workspace namespace.");
-        var firstItem = generated.Queue.Item ?? throw new InvalidOperationException("Generated queue was empty.");
-        Assert(generated.Queue.TaxonomyFingerprint.Length == 64 &&
-            generated.Queue.TaxonomyVersion == catalog.Version &&
-            firstItem.Machine.Confidence is null && firstItem.Machine.Model is null,
-            "Annotation provenance omitted the exact taxonomy identity or fabricated confidence/model data.");
-
-        var afterCorrect = await service.DecideAsync(
-            firstItem.Id, new AnnotationDecisionRequest(AnnotationDecisions.Correct),
-            "admin@example.test", new AnnotationQueueFilter());
-        Assert(afterCorrect?.Stats.Reviewed == 1 && afterCorrect.Stats.TrainingEligible == 1 &&
-            afterCorrect.Item?.Id != firstItem.Id,
-            "A saved annotation did not advance and resume at the next unreviewed item.");
-        var secondItem = afterCorrect!.Item!;
-        var afterIncorrect = await service.DecideAsync(
-            secondItem.Id, new AnnotationDecisionRequest(AnnotationDecisions.Incorrect),
-            "admin@example.test", new AnnotationQueueFilter());
-        var unsureItem = afterIncorrect!.Item!;
-        await service.DecideAsync(
-            unsureItem.Id, new AnnotationDecisionRequest(AnnotationDecisions.Unsure, UnsureReason: "Needs domain review"),
-            "admin@example.test", new AnnotationQueueFilter());
-        var reviewedExport = await service.ExportJsonLinesAsync(AnnotationExportModes.Reviewed);
-        var reviewedLines = reviewedExport.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-        var unsureExport = await service.ExportJsonLinesAsync(AnnotationExportModes.Unsure);
-        var allExport = await service.ExportJsonLinesAsync(AnnotationExportModes.All);
-        var unreviewedExport = await service.ExportJsonLinesAsync(AnnotationExportModes.Unreviewed);
-        Assert(reviewedLines.Length == 2 && unsureExport.Split('\n', StringSplitOptions.RemoveEmptyEntries).Length == 1 &&
-            allExport.Split('\n', StringSplitOptions.RemoveEmptyEntries).Length == generated.Total &&
-            unreviewedExport.Split('\n', StringSplitOptions.RemoveEmptyEntries).Length == generated.Total - 3,
-            "All/reviewed/unreviewed/unsure export subsets were not exact.");
-        using var incorrect = JsonDocument.Parse(reviewedLines.Single(line => line.Contains(secondItem.Id)));
-        Assert(incorrect.RootElement.GetProperty("confirmedPresentConceptIds").GetArrayLength() == 0 &&
-            incorrect.RootElement.GetProperty("confirmedAbsentCandidateConceptIds").GetArrayLength() == 1,
-            "An incorrect candidate was broadened into unsupported taxonomy-wide negatives.");
-        using var unsure = JsonDocument.Parse(unsureExport.Split('\n', StringSplitOptions.RemoveEmptyEntries).Single());
-        Assert(!unsure.RootElement.GetProperty("currentReview").GetProperty("trainingEligible").GetBoolean() &&
-            unsure.RootElement.GetProperty("currentReview").GetProperty("status").GetString() == "unsure",
-            "Unsure annotations were not explicitly excluded from training eligibility.");
-
-        static string ImportLine(AnnotationItem item, string fingerprint, string decision, string reviewerType,
-            string? concept = null, string? contentHash = null, string? itemId = null, string? taxonomy = null) =>
-            JsonSerializer.Serialize(new
-            {
-                annotationItemId = itemId ?? item.Id, contentHash = contentHash ?? item.ContentHash,
-                taxonomyFingerprint = taxonomy ?? fingerprint, decision,
-                selectedConceptIds = concept is null ? Array.Empty<string>() : new[] { concept },
-                reviewerType, reviewerIdentity = "test-reviewer", rationale = "bounded test rationale"
-            }, new JsonSerializerOptions(JsonSerializerDefaults.Web));
-        var machineImport = string.Join('\n',
-            ImportLine(firstItem, service.TaxonomyFingerprint, "incorrect", "codex"),
-            ImportLine(firstItem, service.TaxonomyFingerprint, "incorrect", "codex"),
-            ImportLine(firstItem, service.TaxonomyFingerprint, "correct", "chatgpt"),
-            ImportLine(firstItem, service.TaxonomyFingerprint, "correct", "human-reviewed"),
-            ImportLine(firstItem, service.TaxonomyFingerprint, "correct", "codex", itemId: "annotation-missing"),
-            ImportLine(firstItem, service.TaxonomyFingerprint, "correct", "codex", contentHash: new string('0', 64)),
-            ImportLine(firstItem, service.TaxonomyFingerprint, "correct", "codex", taxonomy: new string('f', 64)),
-            ImportLine(firstItem, service.TaxonomyFingerprint, "different-label", "codex", "unknown.concept"),
-            "{not-json}") + "\n";
-        var importSummary = await service.ImportMachineReviewsAsync(machineImport, "machine-review.jsonl");
-        Assert(importSummary.Imported == 2 && importSummary.Unchanged == 1 && importSummary.Conflicts == 2 &&
-            importSummary.InvalidProvenance == 1 && importSummary.UnknownItem == 1 &&
-            importSummary.ContentHashMismatch == 1 && importSummary.StaleFingerprint == 1 &&
-            importSummary.UnknownConcept == 1 && importSummary.Malformed == 1,
-            $"Machine import validation, duplicate handling, or conflict accounting regressed: {JsonSerializer.Serialize(importSummary)}");
-        var conflicts = await service.GetQueueAsync(new AnnotationQueueFilter("machineDisagreement"));
-        Assert(conflicts.Item?.Id == firstItem.Id && conflicts.Stats.MachineDisagreements == 1 &&
-            conflicts.Stats.HumanMachineConflicts == 1 && conflicts.Item.TrainingEligible == false &&
-            conflicts.Item.Reviewer == "admin@example.test" && conflicts.Item.Decision == AnnotationDecisions.Correct,
-            "Machine opinions overwrote human truth or failed to surface an unresolved conflict.");
-        await service.DecideAsync(firstItem.Id, new AnnotationDecisionRequest(AnnotationDecisions.Correct),
-            "admin@example.test", new AnnotationQueueFilter("humanReviewed"));
-        var overridden = await service.GetQueueAsync(new AnnotationQueueFilter("humanReviewed"));
-        Assert(overridden.Stats.TrainingEligible == 2 && overridden.Item?.HumanProvenance == "human-overridden",
-            "Authenticated human conflict resolution did not restore conservative training eligibility.");
-
-        var scaledJobs = Enumerable.Range(0, 400).Select(index => job with
-        {
-            RequisitionId = $"REQ-SCALE-{index:D4}",
-            SourceUrl = $"https://example.test/jobs/REQ-SCALE-{index:D4}",
-            ExternalPath = $"/jobs/REQ-SCALE-{index:D4}",
-            DescriptionHtml = $"<p>Project {index:D4} builds resilient service interfaces with Kubernetes and careful operational ownership for unique system {index:D4}.</p>",
-            CompanyId = index % 2 == 0 ? "example" : "second-company"
-        }).ToArray();
-        var available = await service.GetGenerationStatusAsync(scaledJobs);
-        Assert(available.Total == generated.Total && available.EligibleUngenerated >= 200,
-            "Generation status did not expose the current and eligible ungenerated counts without writing.");
-        var scaled = await service.GenerateAsync(scaledJobs, new AnnotationGenerateRequest(100));
-        Assert(scaled.Total == generated.Total + 100 && scaled.Added == 100 && scaled.Queue.Item is not null &&
-            scaled.Queue.CompanyDistribution.Count == 2,
-            "Items-to-add generation did not append exactly 100 deterministic items.");
-        var generatedAgain = await service.GenerateAsync(scaledJobs, new AnnotationGenerateRequest(100));
-        Assert(generatedAgain.Added == 100 && generatedAgain.Total == generated.Total + 200,
-            "A repeated items-to-add request was interpreted as an absolute corpus target.");
-        var allEligible = await service.GenerateAsync(scaledJobs, new AnnotationGenerateRequest(null, true));
-        Assert(allEligible.Added == available.EligibleUngenerated - 200 && allEligible.RemainingEligible == 0,
-            "Add-all-eligible did not append every remaining deterministic candidate.");
-        var exhausted = await service.GenerateAsync(scaledJobs, new AnnotationGenerateRequest(10));
-        Assert(exhausted.Added == 0 && exhausted.Total == allEligible.Total && exhausted.RemainingEligible == 0,
-            "Zero-eligible generation duplicated items or rebuilt the corpus destructively.");
-
-        static (JsonElement Header, JsonElement[] Sources, JsonElement[] Items) ParseCompact(string jsonl)
-        {
-            var documents = jsonl.Split('\n', StringSplitOptions.RemoveEmptyEntries)
-                .Select(line => JsonDocument.Parse(line).RootElement.Clone()).ToArray();
-            return (documents.Single(value => value.GetProperty("recordType").GetString() == "batch"),
-                documents.Where(value => value.GetProperty("recordType").GetString() == "source").ToArray(),
-                documents.Where(value => value.GetProperty("recordType").GetString() == "item").ToArray());
-        }
-        var neverBefore = await service.GetMachineReviewBatchStatusAsync();
-        Assert(neverBefore.MatchingCount == allEligible.Total - 1,
-            "The default machine queue did not exclude the item that already had machine opinions.");
-        var requestedCounts = new[] { 1, 2, 10, 100, 17 };
-        var compactExports = new List<AnnotationMachineReviewBatchExport>();
-        foreach (var count in requestedCounts)
-        {
-            var export = await service.ExportMachineReviewBatchAsync(new(RequestedItems: count));
-            var parsed = ParseCompact(export.JsonLines);
-            Assert(export.Batch.ActualCount == count && parsed.Items.Length == count &&
-                parsed.Header.GetProperty("canonicalConceptCatalog").GetArrayLength() == catalog.Concepts.Count &&
-                export.Batch.InterchangeVersion == 3 && export.Batch.AnnotationItemIds.SequenceEqual(
-                    parsed.Items.Select(value => value.GetProperty("annotationItemId").GetString()!), StringComparer.Ordinal),
-                $"Compact export did not return exactly {count} deterministic items with one v3 catalog header.");
-            Assert(parsed.Sources.Select(value => value.GetProperty("id").GetString()).Distinct().Count() == parsed.Sources.Length &&
-                !parsed.Items.Any(value => value.TryGetProperty("fullPosting", out _)) &&
-                !parsed.Items.Any(value => value.TryGetProperty("canonicalConceptCatalog", out _)),
-                "Compact export duplicated source postings or the canonical catalog per item.");
-            compactExports.Add(export);
-        }
-        Assert(compactExports[0].Batch.AnnotationItemIds.SequenceEqual(compactExports[1].Batch.AnnotationItemIds.Take(1)) &&
-            compactExports[1].Batch.AnnotationItemIds.SequenceEqual(compactExports[2].Batch.AnnotationItemIds.Take(2)) &&
-            compactExports[2].Batch.AnnotationItemIds.SequenceEqual(compactExports[3].Batch.AnnotationItemIds.Take(10)),
-            "Stable machine-review ordering did not preserve deterministic prefixes across requested counts.");
-        var beyond = await service.ExportMachineReviewBatchAsync(new(RequestedItems: 50_000));
-        var allMatchingBatch = await service.ExportMachineReviewBatchAsync(new(RequestedItems: null, AllMatching: true));
-        Assert(beyond.Batch.ActualCount == neverBefore.MatchingCount && allMatchingBatch.Batch.ActualCount == neverBefore.MatchingCount &&
-            beyond.Batch.AnnotationItemIds.SequenceEqual(allMatchingBatch.Batch.AnnotationItemIds),
-            "More-than-remaining and all-matching exports did not return the same complete deterministic queue.");
-        var reproducible = await service.ExportMachineReviewBatchAsync(new(RequestedItems: 10));
-        Assert(compactExports[2].Batch.AnnotationItemIds.SequenceEqual(reproducible.Batch.AnnotationItemIds) &&
-            compactExports[2].Batch.ItemIdDigest == reproducible.Batch.ItemIdDigest &&
-            compactExports[2].Batch.Id != reproducible.Batch.Id,
-            "Repeated exports were not selection-reproducible or did not receive distinct batch identities.");
-        var verboseForBatch = await service.ExportJsonLinesAsync(AnnotationExportModes.All, batchId: compactExports[3].Batch.Id);
-        Assert(System.Text.Encoding.UTF8.GetByteCount(compactExports[3].JsonLines) < System.Text.Encoding.UTF8.GetByteCount(verboseForBatch),
-            "Compact 100-item export was not smaller than its equivalent verbose archival export.");
-
-        var partial = compactExports[2];
-        var partialParsed = ParseCompact(partial.JsonLines);
-        string Review(JsonElement item, string reviewer, string decision = "correct") => JsonSerializer.Serialize(new
-        {
-            recordType = "review", schemaVersion = 3, batchId = partial.Batch.Id,
-            annotationItemId = item.GetProperty("annotationItemId").GetString(),
-            contentHash = item.GetProperty("contentHash").GetString(),
-            taxonomyFingerprint = item.GetProperty("taxonomyFingerprint").GetString(), decision,
-            selectedConceptIds = Array.Empty<string>(), reviewerType = "codex", reviewerIdentity = reviewer
-        }, new JsonSerializerOptions(JsonSerializerDefaults.Web));
-        var machineOnlyCandidates = partialParsed.Items.Where(value =>
-            !new[] { firstItem.Id, secondItem.Id, unsureItem.Id }.Contains(
-                value.GetProperty("annotationItemId").GetString(), StringComparer.Ordinal)).ToArray();
-        Assert(machineOnlyCandidates.Length >= 3, "The partial-import fixture did not contain enough human-unreviewed items.");
-        var firstReturnedId = machineOnlyCandidates[0].GetProperty("annotationItemId").GetString()!;
-        var secondReturnedId = machineOnlyCandidates[1].GetProperty("annotationItemId").GetString()!;
-        var omittedId = machineOnlyCandidates[2].GetProperty("annotationItemId").GetString()!;
-        var shuffledReturn = string.Join('\n', Review(machineOnlyCandidates[1], "partial-reviewer-b"),
-            Review(machineOnlyCandidates[0], "partial-reviewer-a")) + "\n";
-        var partialSummary = await service.ImportMachineReviewsAsync(shuffledReturn, "partial-shuffled.jsonl");
-        Assert(partialSummary.Imported == 2 && partialSummary.BatchId == partial.Batch.Id &&
-            partialSummary.BatchReturned == 2 && partialSummary.BatchRemaining == 8,
-            "Shuffled partial return did not report exact batch progress.");
-        var afterPartial = await service.GetMachineReviewBatchStatusAsync();
-        Assert(afterPartial.MatchingCount == neverBefore.MatchingCount - 2,
-            "Partial import changed the never-reviewed queue by more than the returned records.");
-        var machineReviewed = await service.GetQueueAsync(new AnnotationQueueFilter("humanUnreviewedMachine"));
-        Assert(machineReviewed.Stats.MachineLabeled == 3,
-            "Partial import did not preserve earlier machine opinions while adding only returned records.");
-        var corpusJson = await File.ReadAllTextAsync(Path.Combine(directory, AnnotationLabelingService.CorpusWorkspaceId, "annotation-corpus.json"));
-        Assert(corpusJson.Contains(firstReturnedId, StringComparison.Ordinal) && corpusJson.Contains(secondReturnedId, StringComparison.Ordinal),
-            "Returned batch identities were not persisted.");
-        using (var corpusDocument = JsonDocument.Parse(corpusJson))
-        {
-            var omitted = corpusDocument.RootElement.GetProperty("items").GetProperty(omittedId);
-            Assert(omitted.GetProperty("machineReviews").GetArrayLength() == 0,
-                "An omitted batch member was inferred complete or otherwise modified.");
-        }
-        var duplicateSummary = await service.ImportMachineReviewsAsync(shuffledReturn, "partial-duplicate.jsonl");
-        Assert(duplicateSummary.Imported == 0 && duplicateSummary.Unchanged == 2,
-            "Duplicate review records were not idempotent.");
-        var unknownBatchLine = Review(partialParsed.Items[0], "unknown-batch-reviewer").Replace(partial.Batch.Id, "machine-batch-unknown", StringComparison.Ordinal);
-        var unknownBatchSummary = await service.ImportMachineReviewsAsync(unknownBatchLine, "unknown-batch.jsonl");
-        Assert(unknownBatchSummary.UnknownBatch == 1 && unknownBatchSummary.Imported == 0,
-            "Unknown batch provenance was accepted.");
-        var outsideItem = ParseCompact(beyond.JsonLines).Items.First(value =>
-            !partial.Batch.AnnotationItemIds.Contains(value.GetProperty("annotationItemId").GetString()!, StringComparer.Ordinal));
-        var outsideReview = Review(outsideItem, "outside-reviewer");
-        var outsideSummary = await service.ImportMachineReviewsAsync(outsideReview, "outside-batch.jsonl");
-        Assert(outsideSummary.ItemNotInBatch == 1 && outsideSummary.Imported == 0,
-            "A valid corpus item outside the declared batch subset was accepted.");
-
-        var reloaded = new AnnotationLabelingService(factory, catalog, TimeProvider.System);
-        var resumed = await reloaded.GetQueueAsync(new AnnotationQueueFilter("reviewed"));
-        Assert(resumed.Stats.Reviewed == 2 && resumed.Stats.Unsure == 1 && resumed.Stats.Total == allEligible.Total &&
-            resumed.Stats.TrainingEligible == 2 && resumed.Item is not null,
-            "Durable annotation decisions or stable item history did not survive scale-up and reload.");
-        Assert(AnnotationLabelingService.ValidateDecision(
-            new AnnotationDecisionRequest(AnnotationDecisions.DifferentLabel, [firstConcept])) is null &&
-            AnnotationLabelingService.ValidateDecision(
-                new AnnotationDecisionRequest(AnnotationDecisions.MultipleLabels, [firstConcept])) is not null,
-            "Replacement and multi-label validation semantics regressed.");
-    }
-    finally
-    {
-        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
-    }
-}
-
-static Task TestBlobNamespaceAsync()
-{
-    var container = new BlobContainerClient(new Uri("https://example.blob.core.windows.net/userdata"));
-    var firstId = WorkspaceIdentity.Create();
-    var secondId = WorkspaceIdentity.Create();
-    var first = new AzureBlobWorkspaceDataStore(
-        container, firstId, NullLogger<AzureBlobWorkspaceDataStore>.Instance);
-    var second = new AzureBlobWorkspaceDataStore(
-        container, secondId, NullLogger<AzureBlobWorkspaceDataStore>.Instance);
-    Assert(first.Describe(WorkspaceDataFile.Settings) ==
-        $"workspaces/{WorkspaceIdentity.Redact(firstId)}/settings.json", "First Blob description is incorrect.");
-    Assert(second.Describe(WorkspaceDataFile.Settings) ==
-        $"workspaces/{WorkspaceIdentity.Redact(secondId)}/settings.json", "Second Blob description is incorrect.");
-    Assert(first.Describe(WorkspaceDataFile.Settings) != second.Describe(WorkspaceDataFile.Settings),
-        "Distinct workspaces resolved to the same Blob.");
-    Assert(AzureBlobWorkspaceDataStore.BuildBlobName(firstId, WorkspaceDataFile.Settings) ==
-        $"workspaces/{firstId}/settings.json", "Actual Blob namespace is incorrect.");
-    Assert(AzureBlobWorkspaceDataStore.BuildBlobName(secondId, WorkspaceDataFile.JobHistory) ==
-        $"workspaces/{secondId}/job-history.json", "Second actual Blob namespace is incorrect.");
-    var fingerprint = new string('a', 64);
-    Assert(AzureBlobWorkspaceDataStore.BuildCompanyCacheBlobName(firstId, "northrop-grumman", fingerprint) ==
-        $"shared/job-caches/northrop-grumman/{fingerprint}.json" &&
-        AzureBlobWorkspaceDataStore.BuildCompanyCacheBlobName(secondId, "northrop-grumman", fingerprint) ==
-        $"shared/job-caches/northrop-grumman/{fingerprint}.json" &&
-        first.DescribeCompanyCache("northrop-grumman", fingerprint) ==
-        second.DescribeCompanyCache("northrop-grumman", fingerprint),
-        "Identical company/query caches remained workspace-scoped.");
-    AssertThrows<ArgumentException>(() => AzureBlobWorkspaceDataStore.BuildBlobName(
-        "../another-workspace", WorkspaceDataFile.Settings));
-    AssertThrows<ArgumentException>(() => AzureBlobWorkspaceDataStore.BuildCompanyCacheBlobName(
-        firstId, "../another-company", fingerprint));
-    AssertThrows<ArgumentException>(() => AzureBlobWorkspaceDataStore.BuildCompanyCacheBlobName(
-        firstId, "northrop-grumman", "not-a-sha256"));
-    AssertThrows<ArgumentException>(() => new AzureBlobWorkspaceDataStore(
-        container, "../another-workspace", NullLogger<AzureBlobWorkspaceDataStore>.Instance));
-    return Task.CompletedTask;
 }
 
 static Task TestNeutralDefaultsAsync()
@@ -1279,7 +883,7 @@ static async Task TestClassifierUnavailableAsync()
     var result = await client.ClassifyAsync(new("R180395", "Title", "Description"));
     Assert(!result.Available && result.Response is null &&
            result.Error == "Classifier service is unavailable.",
-        "An unavailable experimental classifier was not handled as an isolated diagnostic failure.");
+        "An unavailable classifier was not handled as an isolated, non-fatal failure.");
 }
 
 static async Task TestLlmClassifierContractAsync()
@@ -1326,9 +930,9 @@ static Task TestLlmFixtureMetricsAsync()
            catalog.Concepts.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count() == 85 &&
            catalog.Concepts.All(item => !string.IsNullOrWhiteSpace(item.Definition)),
         "The canonical semantic taxonomy did not preserve 85 unique, defined concepts.");
-    Assert(catalog.Fingerprint == "48a35f20304fe29e1c2207ce5e911f6a81cd66090f674cddefd27729a1d8ea79" &&
+    Assert(catalog.Fingerprint == "514ed1c8c644d1eec426b5fdcf4d5a2c447aa61ce5572ae70b2d03fc3815a049" &&
            SemanticClassifierContract.PromptHash(catalog) ==
-               "d4e57347e15d920456a45062259b31913ad523e263fff75407ded49a5b0ba94f",
+               "e08076fa0cd5c106818770b3b588385f93debce79cca1034045abdfc4fb23568",
         "The canonical taxonomy or prompt material changed without an explicit version/hash update.");
     return Task.CompletedTask;
 }
@@ -1363,8 +967,7 @@ static async Task TestAdminBootstrapLifecycleAsync()
         var account = (await fixture.Service.CreateAsync(
             WorkspaceIdentity.Create(), "first-admin@example.test", "first admin passphrase",
             new Uri("https://example.test/"))).Account!;
-        var hosting = new HostingConfiguration(
-            ApplicationHostingMode.Container, null, null, "/var/lib/jsm/dataprotection", codePath);
+        var hosting = new HostingConfiguration(ApplicationHostingMode.Container, "/var/lib/jsm/dataprotection", codePath);
         var bootstrap = new AdminBootstrapService(fixture.Service, hosting, fixture.Time);
         await bootstrap.InitializeAsync();
 
@@ -1458,9 +1061,7 @@ static async Task TestAdminBootstrapConcurrencyAsync()
             new Uri("https://example.test/"))).Account!;
         var bootstrap = new AdminBootstrapService(
             fixture.Service,
-            new HostingConfiguration(
-                ApplicationHostingMode.Container, null, null,
-                "/var/lib/jsm/dataprotection", codePath),
+            new HostingConfiguration(ApplicationHostingMode.Container, "/var/lib/jsm/dataprotection", codePath),
             fixture.Time);
         await bootstrap.InitializeAsync();
         var code = (await File.ReadAllLinesAsync(codePath))[0];
@@ -1486,7 +1087,7 @@ static async Task TestAdminBootstrapConfigurationAsync()
         new Uri("https://example.test/"));
     var disabled = new AdminBootstrapService(
         disabledFixture.Service,
-        new HostingConfiguration(ApplicationHostingMode.Local, null, null),
+        new HostingConfiguration(ApplicationHostingMode.Local),
         disabledFixture.Time);
     await disabled.InitializeAsync();
     Assert(!await disabled.IsAvailableAsync(),
@@ -1499,9 +1100,7 @@ static async Task TestAdminBootstrapConfigurationAsync()
         var emptyFixture = TestAccountService();
         var empty = new AdminBootstrapService(
             emptyFixture.Service,
-            new HostingConfiguration(
-                ApplicationHostingMode.Container, null, null,
-                "/var/lib/jsm/dataprotection", emptyPath),
+            new HostingConfiguration(ApplicationHostingMode.Container, "/var/lib/jsm/dataprotection", emptyPath),
             emptyFixture.Time);
         await empty.InitializeAsync();
         Assert(!File.Exists(emptyPath) && !await empty.IsAvailableAsync(),
@@ -1511,15 +1110,6 @@ static async Task TestAdminBootstrapConfigurationAsync()
     {
         if (Directory.Exists(emptyDirectory)) Directory.Delete(emptyDirectory, recursive: true);
     }
-
-    AssertThrows<InvalidOperationException>(() => HostingConfiguration.FromConfiguration(
-        Configuration(new Dictionary<string, string?>
-        {
-            [HostingConfiguration.ModeSetting] = "Azure",
-            [HostingConfiguration.StorageAccountSetting] = "workdayjobmanagerstore",
-            [HostingConfiguration.StorageContainerSetting] = "userdata",
-            [HostingConfiguration.AdminBootstrapPathSetting] = "/tmp/unsafe-bootstrap"
-        })));
 }
 
 static ClaimsPrincipal TestPrincipal(AccountRecord account) => new(new ClaimsIdentity(
@@ -1634,7 +1224,7 @@ static async Task TestAccountAuthorizationAsync()
     var protectedWorkspace = protection.CreateProtector(WorkspaceIdentity.ProtectorPurpose).Protect(workspaceId);
     var middleware = new WorkspaceIdentityMiddleware(
         _ => Task.CompletedTask,
-        new HostingConfiguration(ApplicationHostingMode.Azure, "workdayjobmanagerstore", "userdata"),
+        new HostingConfiguration(ApplicationHostingMode.Container, "/var/lib/jsm/dataprotection"),
         protection,
         NullLogger<WorkspaceIdentityMiddleware>.Instance);
     var anonymousContext = new DefaultHttpContext();
@@ -1662,7 +1252,7 @@ static async Task TestAccountAuthorizationAsync()
         new Uri("http://127.0.0.1:54321/"));
     var localMiddleware = new WorkspaceIdentityMiddleware(
         _ => Task.CompletedTask,
-        new HostingConfiguration(ApplicationHostingMode.Local, null, null),
+        new HostingConfiguration(ApplicationHostingMode.Local),
         protection,
         NullLogger<WorkspaceIdentityMiddleware>.Instance);
     var localAnonymousContext = new DefaultHttpContext();
@@ -1922,387 +1512,6 @@ static Task TestWorkLocationMigrationAsync()
            explicitValue.PreferredWorkLocation == 5 &&
            invalidValue.PreferredWorkLocation is null,
         "Legacy center/negative migration, explicit-value precedence, or invalid-value fallback was not deterministic.");
-    return Task.CompletedTask;
-}
-
-static Task TestJobConceptDetectionAsync()
-{
-    var concepts = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
-    var detector = new JobConceptDetector(concepts);
-    var remote = new RemoteWorkDetector().Analyze(
-        "Machine Learning Engineer", "Remote / Teleworker US", [],
-        "<p>This is a fully remote role using Linux and CI/CD. Frequent travel is required.</p>");
-    var extended = new ExtendedLocationRequirementDetector().Analyze(
-        "Machine Learning Engineer", "Remote / Teleworker US", [],
-        "<p>This is a fully remote role using Linux and CI/CD. Frequent travel is required.</p>");
-    var detected = detector.Analyze(
-        "Machine Learning Engineer",
-        "Remote / Teleworker US",
-        [],
-        "<p>This is a fully remote role using Linux and CI/CD. Frequent travel is required.</p>",
-        remote,
-        extended);
-    var ids = detected.Select(item => item.ConceptId).ToHashSet(StringComparer.Ordinal);
-    Assert(ids.IsSupersetOf([
-               "work.remote",
-               "work.remote.full",
-               "work.travel.frequent",
-               "role.ai-ml-engineering",
-               "technical.machine-learning",
-               "technical.linux",
-               "technical.cicd"
-           ]) && detected.All(item => !string.IsNullOrWhiteSpace(item.Evidence)),
-        "Canonical corpus concepts or their actual evidence were not detected consistently.");
-
-    IReadOnlySet<string> DetectConcepts(string title, string text)
-    {
-        var html = $"<p>{text}</p>";
-        return detector.Analyze(
-                title, "United States", [], html,
-                new RemoteWorkDetector().Analyze(title, "United States", [], html),
-                new ExtendedLocationRequirementDetector().Analyze(
-                    title, "United States", [], html))
-            .Select(item => item.ConceptId)
-            .ToHashSet(StringComparer.Ordinal);
-    }
-
-    var generalizedSoftware = DetectConcepts(
-        "Senior AI Platform Engineer",
-        "Design and implement server-side microservices and REST APIs. Build AI/ML-enabled tools, " +
-        "write Python and Bash scripts to automate deployments, and administer Linux hosts.");
-    Assert(generalizedSoftware.IsSupersetOf([
-               "role.software-engineering", "role.ai-ml-engineering",
-               "technical.software-development", "technical.backend-development",
-               "technical.api-development", "technical.automation-scripting",
-               "technical.artificial-intelligence", "technical.machine-learning",
-               "technical.linux-administration"
-           ]),
-        "Generalized software, backend, API, automation, AI/ML, and Linux-administration phrasing regressed. " +
-        $"Detected: {string.Join(", ", generalizedSoftware.OrderBy(id => id, StringComparer.Ordinal))}");
-
-    var oversightOnly = DetectConcepts(
-        "Senior Test Program Manager",
-        "Manages engineers and owns the budget. The program uses APIs and cloud-hosted software, " +
-        "but this role does not develop software, write scripts, build backend services, or implement APIs.");
-    Assert(!oversightOnly.Overlaps([
-               "role.software-engineering", "role.cloud-engineering",
-               "technical.software-development", "technical.backend-development",
-               "technical.api-development", "technical.automation-scripting"
-           ]),
-        "Negated or subordinate technical work was misclassified as direct target-technical responsibility. " +
-        $"Detected: {string.Join(", ", oversightOnly.OrderBy(id => id, StringComparer.Ordinal))}");
-
-    var infrastructureDetected = detector.Analyze(
-        "Data Center Infrastructure Engineer",
-        "Customer data center",
-        [],
-        "<p>Hands-on work within a data center environment supporting physical infrastructure. " +
-        "Perform rack and cable installation, Linux administration, Docker, cloud platforms, and CI/CD.</p>",
-        new RemoteWorkDetector().Analyze(
-            "Data Center Infrastructure Engineer", "Customer data center", [], ""),
-        new ExtendedLocationRequirementDetector().Analyze(
-            "Data Center Infrastructure Engineer", "Customer data center", [], ""));
-    var infrastructureIds = infrastructureDetected
-        .Select(item => item.ConceptId)
-        .ToHashSet(StringComparer.Ordinal);
-    Assert(infrastructureIds.IsSupersetOf([
-               "role.infrastructure-engineering",
-               "work.data-center",
-               "work.physical-infrastructure",
-               "responsibility.hands-on-implementation",
-               "technical.linux-administration",
-               "technical.containers",
-               "technical.cabling-racking"
-           ]),
-        "Infrastructure-heavy jobs did not produce canonical role, environment, responsibility, and technical concepts. " +
-        $"Detected: {string.Join(", ", infrastructureIds.OrderBy(id => id, StringComparer.Ordinal))}");
-
-    var travelBands = new[]
-    {
-        ("This role requires occasional travel.", "work.travel.occasional"),
-        ("This role requires up to 10% travel.", "work.travel.occasional"),
-        ("This role requires 25% travel.", "work.travel.moderate"),
-        ("This role requires travel 10%-40% depending on project needs.", "work.travel.moderate"),
-        ("This role requires 50% travel.", "work.travel.substantial"),
-        ("Travel as needed to customer sites.", "work.travel.occasional"),
-        ("Travel typically lasting no more than one week.", "work.travel.occasional"),
-        ("At most one short trip every 2-3 years.", "work.travel.occasional"),
-        ("About one short trip every 12-18 months.", "work.travel.occasional")
-    };
-    foreach (var (description, expected) in travelBands)
-    {
-        var remoteTravel = new RemoteWorkDetector().Analyze(
-            "Remote Engineer", "Remote, US", [], $"<p>{description}</p>");
-        var travelIds = detector.Analyze(
-            "Remote Engineer", "Remote, US", [], $"<p>{description}</p>", remoteTravel,
-            new ExtendedLocationRequirementDetector().Analyze(
-                "Remote Engineer", "Remote, US", [], $"<p>{description}</p>"))
-            .Select(item => item.ConceptId)
-            .ToHashSet(StringComparer.Ordinal);
-        Assert(travelIds.Contains(expected),
-            $"Travel band '{expected}' was not detected for: {description}");
-        if (description.Contains("10%-40%", StringComparison.Ordinal))
-        {
-            Assert(!travelIds.Contains("work.travel.occasional"),
-                "A 10%-40% range was also misclassified as occasional travel.");
-        }
-    }
-    var travelNegative = detector.Analyze(
-        "Travel Industry Analyst", "Remote, US", [],
-        "<p>Twenty-five years of travel-industry experience is preferred.</p>",
-        new RemoteWorkDetector().Analyze(
-            "Travel Industry Analyst", "Remote, US", [],
-            "<p>Twenty-five years of travel-industry experience is preferred.</p>"),
-        new ExtendedLocationRequirementDetector().Analyze(
-            "Travel Industry Analyst", "Remote, US", [],
-            "<p>Twenty-five years of travel-industry experience is preferred.</p>"));
-    Assert(travelNegative.All(item => !item.ConceptId.StartsWith("work.travel.", StringComparison.Ordinal)),
-        "Travel-industry experience was misclassified as a current travel obligation.");
-
-    var locationEvidenceCases = new[]
-    {
-        ("This role is mostly remote.", "work.remote", "mostly remote"),
-        ("This role is remote with quarterly office visits.", "work.remote", "quarterly office visits"),
-        ("This position is currently remote but will transition onsite.", "work.remote", "transition onsite"),
-        ("This is a hybrid role with 2 days onsite per week.", "work.hybrid", "2 days onsite"),
-        ("This role is mostly onsite with limited remote flexibility.", "work.onsite", "mostly onsite")
-    };
-    foreach (var (description, expectedId, expectedEvidence) in locationEvidenceCases)
-    {
-        var remoteLocation = new RemoteWorkDetector().Analyze(
-            "Engineer", "Remote, US", [], $"<p>{description}</p>");
-        var locationDetected = detector.Analyze(
-            "Engineer", "Remote, US", [], $"<p>{description}</p>", remoteLocation,
-            new ExtendedLocationRequirementDetector().Analyze(
-                "Engineer", "Remote, US", [], $"<p>{description}</p>"));
-        var match = locationDetected.Single(item => item.ConceptId == expectedId);
-        Assert(match.Evidence.Contains(expectedEvidence, StringComparison.OrdinalIgnoreCase),
-            $"Specific location evidence was lost for: {description}");
-    }
-
-    var titleCases = new[]
-    {
-        ("DDI Architect", "responsibility.architecture-heavy"),
-        ("Technical Writer", "responsibility.documentation-heavy"),
-        ("Airborne Sensor Operator", "work.aircraft-flight-line"),
-        ("Technical Manager - Data Transmission", "role.management-heavy")
-    };
-    foreach (var (title, expected) in titleCases)
-    {
-        var titleIds = detector.Analyze(title, "Remote, US", [], "<p>General duties.</p>",
-            new RemoteWorkDetector().Analyze(title, "Remote, US", [], "<p>General duties.</p>"),
-            new ExtendedLocationRequirementDetector().Analyze(
-                title, "Remote, US", [], "<p>General duties.</p>"))
-            .Select(item => item.ConceptId)
-            .ToHashSet(StringComparer.Ordinal);
-        Assert(titleIds.Contains(expected),
-            $"Title-aware concept '{expected}' was not detected for '{title}'.");
-    }
-    var titleContextNegative = detector.Analyze(
-        "Software Engineer", "Remote, US", [],
-        "<p>Collaborate with the architect, technical writer, airborne sensor operator, and manager.</p>",
-        new RemoteWorkDetector().Analyze(
-            "Software Engineer", "Remote, US", [],
-            "<p>Collaborate with the architect, technical writer, airborne sensor operator, and manager.</p>"),
-        new ExtendedLocationRequirementDetector().Analyze(
-            "Software Engineer", "Remote, US", [],
-            "<p>Collaborate with the architect, technical writer, airborne sensor operator, and manager.</p>"));
-    Assert(titleContextNegative.All(item => item.ConceptId is not
-            ("responsibility.architecture-heavy" or "responsibility.documentation-heavy" or
-             "work.aircraft-flight-line" or "role.management-heavy")),
-        "A title-only concept was inferred from a body reference to another role.");
-
-    HashSet<string> DetectWorkType(string title, string description) => detector.Analyze(
-        title, "United States", [], $"<p>{description}</p>",
-        new RemoteWorkDetector().Analyze(title, "United States", [], $"<p>{description}</p>"),
-        new ExtendedLocationRequirementDetector().Analyze(
-            title, "United States", [], $"<p>{description}</p>"))
-        .Select(item => item.ConceptId).ToHashSet(StringComparer.Ordinal);
-    var workTypeCases = new[]
-    {
-        ("Fleet Technician/Auditor", "Inspect, maintain, troubleshoot, and repair fleet vehicles.",
-            new[] { "role.mechanical-maintenance-repair", "role.physical-inspection-quality-control" }),
-        ("Manufacturing Machinist", "Machine metal parts to blueprint specifications.",
-            new[] { "role.fabrication-assembly-machining" }),
-        ("Electrical Test Inspector", "Inspect electrical assemblies and verify hardware workmanship.",
-            new[] { "role.physical-inspection-quality-control" }),
-        ("Laboratory Technician", "Operate laboratory instrumentation and record physical measurements.",
-            new[] { "role.lab-test-technician" }),
-        ("Warehouse Associate", "Receive shipments, stock parts, pick inventory, and move pallets.",
-            new[] { "role.warehouse-material-handling" }),
-        ("Production Technician", "Operate manufacturing equipment and monitor a production line.",
-            new[] { "role.manufacturing-production-operations" })
-    };
-    foreach (var (title, description, expected) in workTypeCases)
-    {
-        var workTypeIds = DetectWorkType(title, description);
-        Assert(workTypeIds.IsSupersetOf(expected),
-            $"Reusable work-type concepts were missed for '{title}': {string.Join(", ", workTypeIds)}");
-    }
-    var hardNegatives = new[]
-    {
-        ("Software Engineer, Automotive Platform", "Develop cloud software for automotive telemetry APIs."),
-        ("Manufacturing Software Engineer", "Develop manufacturing execution software and assembly scheduling systems."),
-        ("Software QA Engineer", "Inspect application logs and review automated test results."),
-        ("Software Test Engineer", "Write automated tests in Python for the CI test framework."),
-        ("Data Warehouse Developer", "Build ETL pipelines for an enterprise data warehouse.")
-    };
-    var newWorkTypeIds = new HashSet<string>([
-        "role.mechanical-maintenance-repair", "role.fabrication-assembly-machining",
-        "role.physical-inspection-quality-control", "role.lab-test-technician",
-        "role.warehouse-material-handling", "role.manufacturing-production-operations"
-    ], StringComparer.Ordinal);
-    foreach (var (title, description) in hardNegatives)
-    {
-        Assert(!DetectWorkType(title, description).Overlaps(newWorkTypeIds),
-            $"Industry or software context produced a work-type false positive for '{title}'.");
-    }
-
-    Assert(concepts.Version == 9 && concepts.Concepts.Count == 85 &&
-           concepts.Concepts.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count() == 85 &&
-           concepts.Concepts.Any(item => item.Category == "Role Type / Career Direction") &&
-           concepts.Concepts.Any(item => item.Category == "Responsibility Shape") &&
-           concepts.Concepts.All(item => !item.Id.StartsWith("qualification.", StringComparison.Ordinal)),
-        "The expanded versioned corpus is incomplete, duplicated, or improperly duplicates Qualification Fit.");
-    Assert(concepts.Get("work.remote.full").Supersedes?.SequenceEqual(["work.remote"]) == true &&
-           concepts.Get("work.travel.moderate").Supersedes?.SequenceEqual(["work.travel.occasional"]) == true &&
-           concepts.Get("work.travel.substantial").Supersedes?.SequenceEqual(
-               ["work.travel.frequent", "work.travel.moderate", "work.travel.occasional"]) == true,
-        "Canonical correlated-signal supersedence metadata is missing.");
-    Assert(concepts.Get("role.lab-test-technician").Supersedes?.SequenceEqual(
-               ["work.lab-environment"]) == true &&
-           concepts.Get("role.manufacturing-production-operations").Supersedes?.SequenceEqual(
-               ["work.manufacturing-floor"]) == true,
-        "New work-type concepts must suppress duplicate environment scoring when both detect.");
-    var internalTravel = concepts.Options
-        .Where(option => option.Id.StartsWith("work.travel.", StringComparison.Ordinal))
-        .ToArray();
-    Assert(internalTravel.Length == 4 && internalTravel.All(option => !option.UserConfigurable) &&
-           internalTravel.Select(option => option.TravelLevel).Order().SequenceEqual(
-               new int?[] { 3, 4, 5, 6 }),
-        "The four travel detectors were not retained as hidden, level-bearing corpus signals.");
-    var internalLocations = concepts.Options
-        .Where(option => WorkLocationPreference.IsLegacyConcept(option.Id))
-        .ToArray();
-    Assert(internalLocations.Length == 4 && internalLocations.All(option => !option.UserConfigurable) &&
-           internalLocations.Select(option => option.WorkLocationLevel).Order().SequenceEqual(
-               new int?[] { 0, 2, 3, 5 }),
-        "The four location detectors were not retained as hidden, level-bearing corpus signals.");
-    Assert(concepts.Options.All(option =>
-            !string.IsNullOrWhiteSpace(option.Id) &&
-            !string.IsNullOrWhiteSpace(option.DisplayName) &&
-            !string.IsNullOrWhiteSpace(option.Category) &&
-            option.Supersedes is not null),
-        "A selectable canonical concept lacks a stable ID or display metadata.");
-    return Task.CompletedTask;
-}
-
-static Task TestDetectorEvaluationAsync()
-{
-    var catalog = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
-    var detector = new JobConceptDetector(catalog);
-    var service = new DetectorEvaluationService(
-        new TestHostEnvironment(AppContext.BaseDirectory), catalog, detector);
-    var report = service.Evaluate("0123456789abcdef0123456789abcdef01234567");
-    var retainedConcepts = new HashSet<string>([
-        "role.mechanical-maintenance-repair", "role.fabrication-assembly-machining",
-        "role.physical-inspection-quality-control", "role.lab-test-technician",
-        "role.warehouse-material-handling", "role.manufacturing-production-operations"
-    ], StringComparer.Ordinal);
-    Assert(report.FixtureVersion == 3 && report.FixtureCount == 148 &&
-           report.LabelCount == 1740 && report.CanonicalConceptCount == catalog.Concepts.Count &&
-           report.Concepts.Count == catalog.Concepts.Count &&
-           report.Concepts.Select(item => item.ConceptId).ToHashSet(StringComparer.Ordinal)
-               .SetEquals(catalog.Concepts.Select(item => item.Id)) &&
-           report.EvaluatableCount == 73 && report.PartiallyEvaluatableCount == 12 &&
-           report.ExcludedCount == 4 &&
-           report.Concepts.Where(item => retainedConcepts.Contains(item.ConceptId)).All(item =>
-               item.PositiveSupport == 8 && item.NegativeExamples == 8 && item.TotalExamples == 16 &&
-               item.SampleSize == "Developing sample" && item.Examples.Count == 16) &&
-           report.BuildSha == "0123456789abcdef0123456789abcdef01234567",
-        $"The full-taxonomy evaluation corpus changed identity, coverage, support, or SHA metadata: " +
-        $"version={report.FixtureVersion} fixtures={report.FixtureCount} labels={report.LabelCount} " +
-        $"canonical={report.CanonicalConceptCount}/{catalog.Concepts.Count} " +
-        $"classes={report.EvaluatableCount}/{report.PartiallyEvaluatableCount}/{report.ExcludedCount}.");
-    Assert(report.Concepts.Where(item => item.Evaluated).All(item =>
-               item.TruePositive + item.FalseNegative == item.PositiveSupport &&
-               item.FalsePositive + item.TrueNegative == item.NegativeExamples &&
-               (item.Precision is null or >= 0 and <= 1) &&
-               (item.Recall is null or >= 0 and <= 1) &&
-               (item.F1 is null or >= 0 and <= 1) &&
-               item.ErrorFixtureIds.Count == item.FalsePositives.Concat(item.FalseNegatives)
-                   .Select(example => example.FixtureId).Distinct(StringComparer.Ordinal).Count()) &&
-           report.Macro.Precision is >= 0 and <= 1 &&
-           report.Macro.Recall is >= 0 and <= 1 && report.Macro.F1 is >= 0 and <= 1 &&
-           report.Micro.Precision is >= 0 and <= 1 &&
-           report.Micro.Recall is >= 0 and <= 1 && report.Micro.F1 is >= 0 and <= 1 &&
-           report.TierAggregates.Count == 3 &&
-           report.TierAggregates.All(item => item.Macro.ConceptCount > 0 &&
-               item.Micro.ConceptCount == item.Macro.ConceptCount),
-        "Detector confusion counts, support, overall aggregates, or tier aggregates are invalid.");
-    Assert(report.Concepts.Where(item => !item.Evaluated).All(item =>
-               item.SampleSize == "Not evaluated" && item.Precision is null &&
-               item.Recall is null && item.F1 is null) &&
-           report.Concepts.Where(item => item.Tier == DetectorEvaluationService.Tier1)
-               .All(item => item.Evaluated) &&
-           report.Concepts.Any(item => item.EvaluationClass == "Partially evaluatable"),
-        "Unevaluated, tier, or classification status is not deterministic.");
-    var international = report.Concepts.Single(item =>
-        item.ConceptId == "work.international-assignment");
-    Assert(international.Examples.Any(item =>
-               item.FixtureId == "tier2-ops-09" && item.Result == "TP"),
-        "Detector Evaluation did not run the production extended-location analyzer for an explicit OCONUS assignment.");
-
-    var concept = catalog.Get("role.mechanical-maintenance-repair");
-    var fixture = new DetectorEvaluationService.LabeledFixture(
-        "metric", "Synthetic", "Metric case", "Evidence", concept.Id, true,
-        "Independent label", null, "synthetic", "Codex-reviewed");
-    DetectorEvaluationService.Observation Observation(bool expected, bool predicted) => new(
-        fixture with { Id = $"metric-{expected}-{predicted}", ExpectedPresent = expected },
-        predicted ? new DetectedJobConcept(concept.Id, "Production evidence") : null);
-    var matrix = DetectorEvaluationService.CalculateConcept(concept,
-        [Observation(true, true), Observation(false, true),
-         Observation(true, false), Observation(false, false)]);
-    Assert(matrix.TruePositive == 1 && matrix.FalsePositive == 1 &&
-           matrix.FalseNegative == 1 && matrix.TrueNegative == 1 &&
-           matrix.Precision == 0.5 && matrix.Recall == 0.5 && matrix.F1 == 0.5 &&
-           matrix.FalsePositives.Count == 1 && matrix.FalseNegatives.Count == 1 &&
-           matrix.Examples.Select(item => item.Result).ToHashSet(StringComparer.Ordinal)
-               .SetEquals(["TP", "FP", "FN", "TN"]) &&
-           DetectorEvaluationService.SampleSizeLabel(4, 20) == "Small sample" &&
-           DetectorEvaluationService.SampleSizeLabel(5, 15) == "Developing sample" &&
-           DetectorEvaluationService.SampleSizeLabel(15, 15) == "Established sample" &&
-           DetectorEvaluationService.SampleSizeLabel(15, 1) == "Small sample" &&
-           DetectorEvaluationService.SampleSizeLabel(0, 20) == "Not evaluated",
-        "TP/FP/FN/TN, precision, recall, F1, or error details were calculated incorrectly.");
-    Assert(DetectorEvaluationService.Divide(0, 0) is null &&
-           DetectorEvaluationService.HarmonicMean(null, 1) is null &&
-           DetectorEvaluationService.AverageDefined([null, null]) is null,
-        "Zero-denominator detector metrics must be explicitly undefined rather than NaN.");
-
-    void AssertInvalid(DetectorEvaluationFixtureDocument document, string message)
-    {
-        try
-        {
-            _ = new DetectorEvaluationService(document, catalog, detector);
-            throw new InvalidOperationException(message);
-        }
-        catch (InvalidDataException)
-        {
-        }
-    }
-    var validFixture = new DetectorEvaluationFixture(
-        "schema-one", "Synthetic", "Schema case", "Explicit evidence", concept.Id, true);
-    AssertInvalid(new DetectorEvaluationFixtureDocument(3, [validFixture, validFixture]),
-        "Duplicate evaluation fixture IDs were accepted.");
-    AssertInvalid(new DetectorEvaluationFixtureDocument(3,
-        [validFixture with { Id = "schema-unknown", ConceptId = "missing.concept" }]),
-        "An unknown evaluation concept ID was accepted.");
-    AssertInvalid(new DetectorEvaluationFixtureDocument(3,
-        [new DetectorEvaluationFixture("schema-scope", "Synthetic", "Scope case", "Evidence",
-            LabelScope: "scope", ExpectedPresentConceptIds: ["technical.cloud"])],
-        new Dictionary<string, IReadOnlyList<string>> { ["scope"] = ["technical.linux"] }),
-        "A Present label outside its closed label scope was accepted.");
     return Task.CompletedTask;
 }
 
@@ -5018,11 +4227,7 @@ static Task TestExtendedLocationConfidenceAsync()
 
 static Task TestExtendedAwayAssignmentAsync()
 {
-    var catalog = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
     var detector = new ExtendedLocationRequirementDetector();
-    var conceptDetector = new JobConceptDetector(catalog);
-    const string conceptId = "work.extended-away-assignment";
-
     var positiveCases = new[]
     {
         "The position will be onsite at the Customer Site in The Hague, Netherlands for 3 months to onboard.",
@@ -5030,25 +4235,14 @@ static Task TestExtendedAwayAssignmentAsync()
         "This winter-over assignment requires deployment to Antarctica for the austral winter.",
         "Employees work a required rotation of 6 weeks onsite and 6 weeks remote.",
         "The employee must reside aboard the ship for 8 weeks at sea.",
-        "The role requires an initial 12-week customer-site onboarding assignment.",
         "Temporary duty in Guam is required for 60 days.",
-        "Ability to travel on continuous travel assignments sometimes up to 5 months is required.",
-        "Willing to travel to Wallops Island for around 10 months/year.",
         "This is a 100% long-term OCONUS assignment in Iraq."
     };
-
     foreach (var text in positiveCases)
     {
-        var extended = detector.Analyze("Site Specialist", "United States", [], $"<p>{text}</p>");
-        var detected = conceptDetector.Analyze("Site Specialist", "United States", [],
-            $"<p>{text}</p>", null, extended);
-        Assert(detected.Count(item => item.ConceptId == conceptId) == 1,
-            $"Extended assignment concept was not detected exactly once: {text}");
-        var evidence = detected.Single(item => item.ConceptId == conceptId).Evidence;
-        Assert(text.Contains("winter-over", StringComparison.OrdinalIgnoreCase) ||
-               text.Contains("long-term", StringComparison.OrdinalIgnoreCase) ||
-               System.Text.RegularExpressions.Regex.IsMatch(evidence, @"\b(?:\d{1,3}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)[- ]?(?:consecutive\s+)?(?:days?|weeks?|months?)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase),
-            $"Extended assignment evidence omitted the qualifying duration: {evidence}");
+        var result = detector.Analyze("Site Specialist", "United States", [], $"<p>{text}</p>");
+        Assert(result.Confidence == "strong" && result.Signals.Count > 0,
+            $"Extended assignment was not recognized as a strong deterministic location requirement: {text}");
     }
 
     var negativeCases = new[]
@@ -5057,42 +4251,24 @@ static Task TestExtendedAwayAssignmentAsync()
         "Travel may be required up to 50%.",
         "Occasional international travel is expected.",
         "Visit the customer site for one week per month.",
-        "Travel for one week per quarter is required.",
         "This hybrid role is onsite three days per week.",
         "Relocation is required with no temporary assignment duration.",
         "Travel destinations include Germany and Japan.",
         "Requires five years of experience and twelve months of project leadership.",
-        "Requires a four-year degree and a certification earned within the last three years.",
         "The project duration is 18 months.",
-        "Must remain at a workstation for extended periods.",
         "A passport valid for 12 months is required.",
-        "Possess a passport valid for 12 months after employment start and be able to travel internationally.",
         "Deployment to Antarctica may be necessary for approximately 6 months at management discretion."
     };
-
     foreach (var text in negativeCases)
     {
-        var extended = detector.Analyze("Program Analyst", "United States", [], $"<p>{text}</p>");
-        var detected = conceptDetector.Analyze("Program Analyst", "United States", [],
-            $"<p>{text}</p>", null, extended);
-        Assert(detected.All(item => item.ConceptId != conceptId),
-            $"Ordinary, incidental, or conditional language produced the extended assignment concept: {text}");
+        var result = detector.Analyze("Program Analyst", "United States", [], $"<p>{text}</p>");
+        Assert(result.Confidence != "strong",
+            $"Ordinary, incidental, or conditional language became a strong assignment requirement: {text}");
     }
-
-    var overlapText = "This is a 90-day rotational assignment in Guam and the employee must deploy.";
-    var overlapExtended = detector.Analyze("Field Engineer", "United States", [], $"<p>{overlapText}</p>");
-    var overlap = conceptDetector.Analyze("Field Engineer", "United States", [],
-        $"<p>{overlapText}</p>", null, overlapExtended);
-    Assert(overlap.Count(item => item.ConceptId == conceptId) == 1 &&
-           overlap.Any(item => item.ConceptId == "work.deployment") &&
-           overlap.Any(item => item.ConceptId == "work.rotation") &&
-           (catalog.Get(conceptId).Supersedes?.Count ?? 0) == 0,
-        "Overlapping deployment/rotation signals were duplicated or incorrectly superseded.");
-    Assert(ExtendedLocationRequirementDetector.CurrentAnalysisVersion == 4 && catalog.Version == 9,
-        "Extended assignment changes did not invalidate cached classification versions.");
+    Assert(ExtendedLocationRequirementDetector.CurrentAnalysisVersion == 4,
+        "Extended-location parser version changed unexpectedly.");
     return Task.CompletedTask;
 }
-
 static Task TestExpandedCompanyFixturesAsync()
 {
     const string northrop = """

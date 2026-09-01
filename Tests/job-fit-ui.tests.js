@@ -34,7 +34,7 @@ assert.match(jobFit, /id="exclude-strong-extended-location-requirements"[^>]*typ
   "Job Fit must contain the existing work-arrangement filtering checkbox.");
 assert.match(jobFit,
   /Hide jobs with strong work-arrangement conflicts such as deployment, rotation, relocation, or extended away-from-home assignments\. Ordinary business travel is not excluded\./,
-  "Work Arrangement Filtering must explain its broader detector semantics.");
+  "Work Arrangement Filtering must explain its broader conflict semantics.");
 assert.match(index, /id="job-fit-enabled"/);
 assert.match(index, /id="job-fit-concept-search"/);
 assert.match(index, /id="job-fit-survey"/,
@@ -75,7 +75,7 @@ assert.match(app, /preferredWorkLocation: state\.preferredWorkLocation/,
   "Preferred work location must be included when settings are saved.");
 assert.match(app,
   /state\.jobFitConcepts\.filter\(concept =>[\s\S]*?concept\.userConfigurable !== false && !hiddenSurveyConcepts\.has\(concept\.id\)\)/,
-  "Detector-only and explicitly duplicated concepts must not render as survey rows.");
+  "Internal-only and explicitly duplicated concepts must not render as survey rows.");
 assert.match(app,
   /panel\.append\(createTravelToleranceControl\(\)\)[\s\S]*?panel\.append\(createPreferredWorkLocationControl\(\)\)[\s\S]*?section\.append\(createAssignmentLocationIntroduction\(groupCompleteness\)\)/,
   "Work Arrangement must order Travel Tolerance, Normal Work Location, then Assignment / Location Constraints.");
@@ -152,17 +152,17 @@ assert.deepEqual([...new Set(catalog.concepts.map(concept => concept.category))]
 ]);
 assert.equal(catalog.concepts.length, 85, "The complete canonical catalog must remain available.");
 const travelConcepts = catalog.concepts.filter(concept => concept.id.startsWith("work.travel."));
-assert.equal(travelConcepts.length, 4, "All four internal travel detectors must remain in the catalog.");
+assert.equal(travelConcepts.length, 4, "All four internal travel concepts must remain in the catalog.");
 assert.deepEqual(travelConcepts.map(concept => concept.travelLevel).sort(), [3, 4, 5, 6]);
 assert.ok(travelConcepts.every(concept => concept.userConfigurable === false),
-  "Internal travel detectors must be hidden from user configuration.");
+  "Internal travel concepts must be hidden from user configuration.");
 const locationConcepts = catalog.concepts.filter(concept =>
   ["work.remote.full", "work.remote", "work.hybrid", "work.onsite"].includes(concept.id));
 assert.deepEqual(locationConcepts.map(concept => concept.workLocationLevel).sort(), [0, 2, 3, 5]);
 assert.ok(locationConcepts.every(concept => concept.userConfigurable === false),
-  "Internal normal-work-location detectors must be hidden from user configuration.");
+  "Internal normal-work-location concepts must be hidden from user configuration.");
 assert.equal(catalog.concepts.filter(concept => concept.userConfigurable !== false).length, 77,
-  "Only the four travel and four normal-location detector rows may be hidden from the survey.");
+  "Only the four travel and four normal-location internal rows may be hidden from the survey.");
 const expectedSurveyGroups = {
   "Role Type / Career Direction": [
     ["Technical Engineering", [
@@ -303,7 +303,7 @@ assert.equal(emptyCatalogCompleteness.total, 78,
   "Overall completeness must include every rendered concept plus both nullable sliders exactly once.");
 assert.equal(JobFit.groupOverrideByConcept["role.network-engineering"],
   "network-physical-infrastructure",
-  "The hidden duplicate detector must retain its existing group Hard Conflict behavior.");
+  "The hidden duplicate concept must retain its existing group Hard Conflict behavior.");
 assert.deepEqual([...JobFit.groupHardConflictIds], [
   "software-development", "ai-data", "cloud-platform-automation",
   "systems-administration", "network-physical-infrastructure"

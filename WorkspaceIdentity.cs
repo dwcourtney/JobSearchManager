@@ -159,12 +159,12 @@ public sealed class WorkspaceIdentityMiddleware
             httpContext.Response.Cookies.Append(
                 WorkspaceIdentity.CookieName,
                 _protector.Protect(workspaceId!),
-                WorkspaceIdentity.CreateCookieOptions(secure: _hosting.IsAzure));
+                WorkspaceIdentity.CreateCookieOptions(secure: false));
             if (migratedLegacyCookie)
             {
                 httpContext.Response.Cookies.Delete(
                     WorkspaceIdentity.LegacyCookieName,
-                    WorkspaceIdentity.CreateCookieOptions(secure: _hosting.IsAzure));
+                    WorkspaceIdentity.CreateCookieOptions(secure: false));
                 _logger.LogInformation(
                     "Migrated anonymous workspace {WorkspaceReference} to the current cookie name.",
                     WorkspaceIdentity.Redact(workspaceId!));

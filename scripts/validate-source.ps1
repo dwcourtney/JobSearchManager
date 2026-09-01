@@ -36,15 +36,10 @@ $themeSettingsTestsPath = Join-Path $repo "Tests\theme-settings.tests.js"
 $cacheStatusTestsPath = Join-Path $repo "Tests\cache-status.tests.js"
 $jobFitPath = Join-Path $repo "wwwroot\job-fit.js"
 $jobFitTestsPath = Join-Path $repo "Tests\job-fit.tests.js"
-$jobFitCalibrationReportTestsPath = Join-Path $repo "Tests\job-fit-calibration-report.tests.js"
 $jobFitUiTestsPath = Join-Path $repo "Tests\job-fit-ui.tests.js"
 $jobFitDetailUiTestsPath = Join-Path $repo "Tests\job-fit-detail-ui.tests.js"
 $accountUiTestsPath = Join-Path $repo "Tests\account-ui.tests.js"
 $adminUiTestsPath = Join-Path $repo "Tests\admin-ui.tests.js"
-$detectorEvaluationUiPath = Join-Path $repo "wwwroot\detector-evaluation-ui.js"
-$detectorEvaluationUiTestsPath = Join-Path $repo "Tests\detector-evaluation-ui.tests.js"
-$annotationLabelingUiPath = Join-Path $repo "wwwroot\annotation-labeling-ui.js"
-$annotationLabelingUiTestsPath = Join-Path $repo "Tests\annotation-labeling-ui.tests.js"
 $securityScanningTestsPath = Join-Path $repo "Tests\security-scanning.tests.js"
 $codeqlScanningTestsPath = Join-Path $repo "Tests\codeql-scanning.tests.js"
 $classifierArchitectureTestsPath = Join-Path $repo "Tests\classifier-architecture.tests.js"
@@ -76,15 +71,10 @@ foreach ($scriptPath in @(
     $cacheStatusTestsPath,
     $jobFitPath,
     $jobFitTestsPath,
-    $jobFitCalibrationReportTestsPath,
     $jobFitUiTestsPath,
     $jobFitDetailUiTestsPath,
     $accountUiTestsPath,
     $adminUiTestsPath,
-    $detectorEvaluationUiPath,
-    $detectorEvaluationUiTestsPath,
-    $annotationLabelingUiPath,
-    $annotationLabelingUiTestsPath,
     $securityScanningTestsPath,
     $codeqlScanningTestsPath,
     $classifierArchitectureTestsPath)) {
@@ -169,11 +159,6 @@ if ($LASTEXITCODE -ne 0) {
     throw "Job Fit scoring tests failed."
 }
 
-& $NodePath $jobFitCalibrationReportTestsPath
-if ($LASTEXITCODE -ne 0) {
-    throw "Job Fit calibration report tests failed."
-}
-
 & $NodePath $jobFitUiTestsPath
 if ($LASTEXITCODE -ne 0) {
     throw "Job Fit UI integration tests failed."
@@ -192,16 +177,6 @@ if ($LASTEXITCODE -ne 0) {
 & $NodePath $adminUiTestsPath
 if ($LASTEXITCODE -ne 0) {
     throw "Admin role/bootstrap UI integration tests failed."
-}
-
-& $NodePath $detectorEvaluationUiTestsPath
-if ($LASTEXITCODE -ne 0) {
-    throw "Detector Evaluation filter tests failed."
-}
-
-& $NodePath $annotationLabelingUiTestsPath
-if ($LASTEXITCODE -ne 0) {
-    throw "Annotation labeling UI tests failed."
 }
 
 & $NodePath $securityScanningTestsPath
@@ -286,8 +261,7 @@ $credentialFitScript = $index.IndexOf('src="/credential-fit.js?v=2"')
 $clearanceFitScript = $index.IndexOf('src="/clearance-fit.js?v=1"')
 $jobFitScript = $index.IndexOf('src="/job-fit.js?v=11"')
 $clipboardTextScript = $index.IndexOf('src="/clipboard-text.js?v=1"')
-$annotationLabelingScript = $index.IndexOf('src="/annotation-labeling-ui.js?v=5"')
-$appScript = $index.IndexOf('src="/app.js?v=39"')
+$appScript = $index.IndexOf('src="/app.js?v=40"')
 if ($countryOrderingScript -lt 0 -or $appScript -le $countryOrderingScript) {
     throw "The versioned country-ordering.js asset must load before app.js."
 }
@@ -313,11 +287,6 @@ if ($jobFitScript -lt 0 -or $appScript -le $jobFitScript) {
 if ($clipboardTextScript -lt 0 -or $appScript -le $clipboardTextScript -or
     $app -notmatch '\bClipboardText\.copyText\(postingText\)') {
     throw "The clipboard fallback module must load before app.js and handle Copy Posting transport."
-}
-if ($annotationLabelingScript -lt 0 -or $appScript -le $annotationLabelingScript -or
-    $app -notmatch '\bAnnotationLabeling\.mountHuman\b' -or
-    $app -notmatch '\bAnnotationLabeling\.mountMachine\b') {
-    throw "The annotation labeling module must load before app.js and mount only in Admin."
 }
 if ($countryOrdering -notmatch 'globalThis\.CountryOrdering\s*=' -or
     $app -notmatch '\bCountryOrdering\.orderCountryFacets\b' -or

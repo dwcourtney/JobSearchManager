@@ -19,12 +19,6 @@
     <Content Update="CredentialCatalog.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Update="CompanyCatalog.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Update="JobConceptCatalog.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <Content Update="DetectorEvaluationFixtures.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Azure.Identity" Version="1.21.0" />
-    <PackageReference Include="Azure.Storage.Blobs" Version="12.29.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -38,8 +32,6 @@
     <Content Remove="classifier-service\**\*" />
     <None Remove="Tests\**\*" />
     <None Remove="classifier-service\**\*" />
-    <Content Remove="azure-deploy-*\**\*;publish\**\*" />
-    <None Remove="azure-deploy-*\**\*;publish\**\*" />
   </ItemGroup>
 
 </Project>
