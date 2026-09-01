@@ -19,8 +19,18 @@ assert.strictEqual(
   labeling.exportUrl("all", { concept: "cloud.aws", company: "acme" }),
   "/api/admin/annotations/export?mode=all&concept=cloud.aws&company=acme");
 assert.deepStrictEqual(
-  labeling.generationPayload("1000", false, { concept: "cloud.aws", company: "acme" }),
-  { requestedItems: 1000, allEligible: false, company: "acme", concept: "cloud.aws" });
+  labeling.generationPayload("100", false, { concept: "cloud.aws", company: "acme" }),
+  { requestedItems: 100, allEligible: false, company: "acme", concept: "cloud.aws" });
+assert.deepStrictEqual(labeling.generationPayload("100", true, { concept: "", company: "" }),
+  { requestedItems: null, allEligible: true, company: null, concept: null });
+assert.strictEqual(labeling.generationStatusUrl({ concept: "cloud.aws", company: "acme" }),
+  "/api/admin/annotations/generation-status?concept=cloud.aws&company=acme");
+assert.strictEqual(labeling.formatGenerationResult({ added: 100, total: 1100, remainingEligible: 25 }),
+  "Added 100 new items. Corpus total: 1,100.");
+assert.strictEqual(labeling.formatGenerationResult({ added: 63, total: 1063, remainingEligible: 0 }),
+  "Added 63 new items. Corpus total: 1,063. No additional eligible items remain.");
+assert.strictEqual(labeling.formatGenerationResult({ added: 0, total: 1063, remainingEligible: 0 }),
+  "No items were added because no eligible ungenerated items remain. Corpus total: 1,063.");
 assert.match(labeling.formatImportSummary({ recordsRead: 4, imported: 2, unchanged: 1, conflicts: 1, rejected: 1 }),
   /4 read.*2 imported.*1 conflicts.*1 rejected/);
 

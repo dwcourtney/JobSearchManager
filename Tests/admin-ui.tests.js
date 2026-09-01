@@ -12,6 +12,7 @@ const security = fs.readFileSync(path.join(root, "AdministratorSecurity.cs"), "u
 const evaluation = fs.readFileSync(path.join(root, "DetectorEvaluation.cs"), "utf8");
 const fixtures = JSON.parse(fs.readFileSync(path.join(root, "DetectorEvaluationFixtures.json"), "utf8"));
 const compose = fs.readFileSync(path.join(root, "deploy", "compose.curiosity.yaml"), "utf8");
+const styles = fs.readFileSync(path.join(root, "wwwroot", "styles.css"), "utf8");
 
 assert.doesNotMatch(index, /id="admin-tab"/,
   "Anonymous/non-admin markup must not contain an Admin navigation tab.");
@@ -34,11 +35,14 @@ assert.match(app, /fetch\("\/api\/admin\/status"/,
   "Admin Overview must verify its reusable server authorization endpoint.");
 assert.match(app, /admin-overview-tab[\s\S]*?Overview[\s\S]*?admin-detector-evaluation-tab[\s\S]*?Detector Evaluation/,
   "Admin must preserve Overview and Detector Evaluation subtabs.");
-assert.match(app, /admin-labeling-tab[\s\S]*?Labeling/,
-  "Admin must expose the human labeling workspace only after server-confirmed role state.");
-assert.match(index, /annotation-labeling-ui\.js\?v=2[\s\S]*?app\.js\?v=36/,
+assert.match(app, /admin-human-labeling-tab[\s\S]*?Human Labeling[\s\S]*?admin-machine-labeling-tab[\s\S]*?Machine Labeling/,
+  "Admin must expose distinct human and machine labeling tabs only after server-confirmed role state.");
+assert.match(index, /annotation-labeling-ui\.js\?v=3[\s\S]*?app\.js\?v=37/,
   "The tested annotation module must load before its application consumer.");
-assert.match(app, /AnnotationLabeling\.mount\(elements\.adminLabelingPanel\)/);
+assert.match(app, /AnnotationLabeling\.mountHuman\(elements\.adminHumanLabelingPanel\)/);
+assert.match(app, /AnnotationLabeling\.mountMachine\(elements\.adminMachineLabelingPanel\)/);
+assert.match(app, /function adminSectionFromLocation\(\)[\s\S]*?human-labeling\|machine-labeling/,
+  "Human and Machine Labeling must support direct URL navigation and refresh.");
 assert.doesNotMatch(app, /admin-(?:accounts|workspaces)-tab/,
   "Unimplemented Accounts and Workspaces placeholders must not be added.");
 assert.match(app, /fetch\("\/api\/admin\/detector-evaluation"/);
@@ -56,7 +60,7 @@ assert.match(app, /False positives[\s\S]*?False negatives/,
   "Detector errors must be reviewable by classification.");
 assert.match(app, /Search detector concepts[\s\S]*?Tier 1[\s\S]*?Tier 2[\s\S]*?Tier 3[\s\S]*?Not evaluated[\s\S]*?Errors present/,
   "Full-taxonomy evaluation needs search, tier, maturity, and error filters.");
-assert.match(index, /detector-evaluation-ui\.js\?v=1[\s\S]*?app\.js\?v=36/,
+assert.match(index, /detector-evaluation-ui\.js\?v=1[\s\S]*?app\.js\?v=37/,
   "The deterministic Detector Evaluation filter helper must load before its application consumer.");
 assert.match(app, /DetectorEvaluationUi\.matchesMetric/,
   "Rendered filtering must use the deterministic tested helper.");
@@ -72,16 +76,32 @@ assert.match(program,
 assert.match(program,
   /MapGet\("\/api\/admin\/detector-evaluation"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)/,
   "Detector Evaluation must retain server-side admin authorization.");
-for (const route of ["queue", "generate", "decision", "source", "export", "import"]) {
+for (const route of ["queue", "generation-status", "generate", "decision", "source", "export", "import"]) {
   assert.match(program,
     new RegExp(`api/admin/annotations[\\s\\S]*?${route}[\\s\\S]*?RequireAuthorization\\(AdminAuthorization\\.Policy\\)`),
     `Annotation ${route} access must retain server-side admin authorization.`);
 }
 const labelingUi = fs.readFileSync(path.join(root, "wwwroot", "annotation-labeling-ui.js"), "utf8");
-assert.match(labelingUi, /Machine reviews are provenance-rich opinions, not human gold/,
-  "The exchange UI must not present imported machine labels as human gold.");
-assert.match(labelingUi, /Target corpus size[\s\S]*?All eligible[\s\S]*?Export all JSONL[\s\S]*?Export unreviewed[\s\S]*?Import machine review JSONL/,
-  "The Admin workflow must expose scalable generation and browser import/export controls.");
+const humanMount = labelingUi.slice(labelingUi.indexOf("function mountHuman"), labelingUi.indexOf("function mountMachine"));
+const machineMount = labelingUi.slice(labelingUi.indexOf("function mountMachine"));
+assert.doesNotMatch(humanMount, /Items to add|Add all eligible|Export all JSONL|Import machine review JSONL/,
+  "Human Labeling must not contain machine generation or exchange controls.");
+assert.match(humanMount, /Review queue[\s\S]*?Correct[\s\S]*?Unsure \/ Skip[\s\S]*?Show full posting/,
+  "Human Labeling must retain the one-card review workflow.");
+assert.match(machineMount, /Items to add[\s\S]*?Add items[\s\S]*?Add all eligible[\s\S]*?Current corpus:[\s\S]*?Eligible ungenerated items:/,
+  "Machine Labeling must expose unambiguous append-count generation and availability.");
+assert.match(machineMount, /Export all JSONL[\s\S]*?Export unreviewed[\s\S]*?Import machine review JSONL/,
+  "Machine Labeling must retain browser import/export controls.");
+assert.doesNotMatch(machineMount, /data-decision|Unsure \/ Skip|annotation-card/,
+  "Machine Labeling must not contain the human decision card.");
+assert.match(machineMount, /importButton\.disabled = true[\s\S]*?!importFile\.files/,
+  "Machine import must be genuinely disabled until a file is selected.");
+assert.match(styles, /\.secondary-link-button[\s\S]*?cursor:\s*pointer[\s\S]*?\.secondary-link-button:hover[\s\S]*?--color-secondary-button-hover/,
+  "Enabled export links must use clear token-based interactive styling.");
+assert.match(styles, /\.annotation-labeling-panel button:disabled[\s\S]*?cursor:\s*not-allowed[\s\S]*?--opacity-disabled-control/,
+  "Disabled labeling controls must have a distinct token-based state.");
+assert.doesNotMatch(styles, /#[0-9a-f]{3,8}\b|(?:rgb|hsl)a?\s*\(/i,
+  "Labeling styles must not introduce hard-coded colors.");
 assert.match(program,
   /MapPost\("\/api\/account\/admin-bootstrap"[\s\S]*?RequireAuthorization\(\)[\s\S]*?RequireRateLimiting\("admin-bootstrap"\)/);
 assert.match(program, /PermitLimit = 5[\s\S]*?Window = TimeSpan\.FromMinutes\(15\)/);

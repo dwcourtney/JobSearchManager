@@ -977,17 +977,26 @@ static async Task TestAnnotationLabelingAsync()
             DescriptionHtml = $"<p>Project {index:D4} builds resilient service interfaces with Kubernetes and careful operational ownership for unique system {index:D4}.</p>",
             CompanyId = index % 2 == 0 ? "example" : "second-company"
         }).ToArray();
-        var scaled = await service.GenerateAsync(scaledJobs, new AnnotationGenerateRequest(1000));
-        Assert(scaled.Total == 1000 && scaled.Added == 1000 - generated.Total && scaled.Queue.Item is not null &&
+        var available = await service.GetGenerationStatusAsync(scaledJobs);
+        Assert(available.Total == generated.Total && available.EligibleUngenerated >= 200,
+            "Generation status did not expose the current and eligible ungenerated counts without writing.");
+        var scaled = await service.GenerateAsync(scaledJobs, new AnnotationGenerateRequest(100));
+        Assert(scaled.Total == generated.Total + 100 && scaled.Added == 100 && scaled.Queue.Item is not null &&
             scaled.Queue.CompanyDistribution.Count == 2,
-            "Target-size generation did not append a deterministic 1,000-item corpus with bounded one-item retrieval.");
-        var generatedAgain = await service.GenerateAsync(scaledJobs, new AnnotationGenerateRequest(1000));
-        Assert(generatedAgain.Added == 0 && generatedAgain.Total == 1000,
-            "Repeated generation duplicated items or rebuilt the corpus destructively.");
+            "Items-to-add generation did not append exactly 100 deterministic items.");
+        var generatedAgain = await service.GenerateAsync(scaledJobs, new AnnotationGenerateRequest(100));
+        Assert(generatedAgain.Added == 100 && generatedAgain.Total == generated.Total + 200,
+            "A repeated items-to-add request was interpreted as an absolute corpus target.");
+        var allEligible = await service.GenerateAsync(scaledJobs, new AnnotationGenerateRequest(null, true));
+        Assert(allEligible.Added == available.EligibleUngenerated - 200 && allEligible.RemainingEligible == 0,
+            "Add-all-eligible did not append every remaining deterministic candidate.");
+        var exhausted = await service.GenerateAsync(scaledJobs, new AnnotationGenerateRequest(10));
+        Assert(exhausted.Added == 0 && exhausted.Total == allEligible.Total && exhausted.RemainingEligible == 0,
+            "Zero-eligible generation duplicated items or rebuilt the corpus destructively.");
 
         var reloaded = new AnnotationLabelingService(factory, catalog, TimeProvider.System);
         var resumed = await reloaded.GetQueueAsync(new AnnotationQueueFilter("reviewed"));
-        Assert(resumed.Stats.Reviewed == 2 && resumed.Stats.Unsure == 1 && resumed.Stats.Total == 1000 &&
+        Assert(resumed.Stats.Reviewed == 2 && resumed.Stats.Unsure == 1 && resumed.Stats.Total == allEligible.Total &&
             resumed.Stats.TrainingEligible == 2 && resumed.Item is not null,
             "Durable annotation decisions or stable item history did not survive scale-up and reload.");
         Assert(AnnotationLabelingService.ValidateDecision(

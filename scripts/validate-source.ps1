@@ -286,8 +286,8 @@ $credentialFitScript = $index.IndexOf('src="/credential-fit.js?v=2"')
 $clearanceFitScript = $index.IndexOf('src="/clearance-fit.js?v=1"')
 $jobFitScript = $index.IndexOf('src="/job-fit.js?v=11"')
 $clipboardTextScript = $index.IndexOf('src="/clipboard-text.js?v=1"')
-$annotationLabelingScript = $index.IndexOf('src="/annotation-labeling-ui.js?v=2"')
-$appScript = $index.IndexOf('src="/app.js?v=36"')
+$annotationLabelingScript = $index.IndexOf('src="/annotation-labeling-ui.js?v=3"')
+$appScript = $index.IndexOf('src="/app.js?v=37"')
 if ($countryOrderingScript -lt 0 -or $appScript -le $countryOrderingScript) {
     throw "The versioned country-ordering.js asset must load before app.js."
 }
@@ -315,7 +315,8 @@ if ($clipboardTextScript -lt 0 -or $appScript -le $clipboardTextScript -or
     throw "The clipboard fallback module must load before app.js and handle Copy Posting transport."
 }
 if ($annotationLabelingScript -lt 0 -or $appScript -le $annotationLabelingScript -or
-    $app -notmatch '\bAnnotationLabeling\.mount\b') {
+    $app -notmatch '\bAnnotationLabeling\.mountHuman\b' -or
+    $app -notmatch '\bAnnotationLabeling\.mountMachine\b') {
     throw "The annotation labeling module must load before app.js and mount only in Admin."
 }
 if ($countryOrdering -notmatch 'globalThis\.CountryOrdering\s*=' -or

@@ -138,8 +138,12 @@ const elements = {
   adminStatus: null,
   adminOverviewTab: null,
   adminEvaluationTab: null,
+  adminHumanLabelingTab: null,
+  adminMachineLabelingTab: null,
   adminOverviewPanel: null,
   adminEvaluationPanel: null,
+  adminHumanLabelingPanel: null,
+  adminMachineLabelingPanel: null,
   adminEvaluationStatus: null,
   adminEvaluationContent: null,
   jobSearchSettingsTab: document.querySelector("#job-search-settings-tab"),
@@ -999,10 +1003,12 @@ function synchronizeAdminNavigation(isAdmin) {
     elements.adminStatus = null;
     elements.adminOverviewTab = null;
     elements.adminEvaluationTab = null;
-    elements.adminLabelingTab = null;
+    elements.adminHumanLabelingTab = null;
+    elements.adminMachineLabelingTab = null;
     elements.adminOverviewPanel = null;
     elements.adminEvaluationPanel = null;
-    elements.adminLabelingPanel = null;
+    elements.adminHumanLabelingPanel = null;
+    elements.adminMachineLabelingPanel = null;
     elements.adminEvaluationStatus = null;
     elements.adminEvaluationContent = null;
     state.adminStatusLoaded = false;
@@ -1062,19 +1068,29 @@ function synchronizeAdminNavigation(isAdmin) {
   evaluationTab.setAttribute("aria-controls", "admin-detector-evaluation-panel");
   evaluationTab.tabIndex = -1;
   evaluationTab.textContent = "Detector Evaluation";
-  const labelingTab = document.createElement("button");
-  labelingTab.id = "admin-labeling-tab";
-  labelingTab.className = "detail-tab";
-  labelingTab.type = "button";
-  labelingTab.setAttribute("role", "tab");
-  labelingTab.setAttribute("aria-selected", "false");
-  labelingTab.setAttribute("aria-controls", "admin-labeling-panel");
-  labelingTab.tabIndex = -1;
-  labelingTab.textContent = "Labeling";
-  overviewTab.addEventListener("click", () => showAdminSection("overview"));
-  evaluationTab.addEventListener("click", () => showAdminSection("detector-evaluation"));
-  labelingTab.addEventListener("click", () => showAdminSection("labeling"));
-  tabs.append(overviewTab, evaluationTab, labelingTab);
+  const humanLabelingTab = document.createElement("button");
+  humanLabelingTab.id = "admin-human-labeling-tab";
+  humanLabelingTab.className = "detail-tab";
+  humanLabelingTab.type = "button";
+  humanLabelingTab.setAttribute("role", "tab");
+  humanLabelingTab.setAttribute("aria-selected", "false");
+  humanLabelingTab.setAttribute("aria-controls", "admin-human-labeling-panel");
+  humanLabelingTab.tabIndex = -1;
+  humanLabelingTab.textContent = "Human Labeling";
+  const machineLabelingTab = document.createElement("button");
+  machineLabelingTab.id = "admin-machine-labeling-tab";
+  machineLabelingTab.className = "detail-tab";
+  machineLabelingTab.type = "button";
+  machineLabelingTab.setAttribute("role", "tab");
+  machineLabelingTab.setAttribute("aria-selected", "false");
+  machineLabelingTab.setAttribute("aria-controls", "admin-machine-labeling-panel");
+  machineLabelingTab.tabIndex = -1;
+  machineLabelingTab.textContent = "Machine Labeling";
+  overviewTab.addEventListener("click", () => showAdminSection("overview", true));
+  evaluationTab.addEventListener("click", () => showAdminSection("detector-evaluation", true));
+  humanLabelingTab.addEventListener("click", () => showAdminSection("human-labeling", true));
+  machineLabelingTab.addEventListener("click", () => showAdminSection("machine-labeling", true));
+  tabs.append(overviewTab, evaluationTab, humanLabelingTab, machineLabelingTab);
 
   const section = document.createElement("section");
   section.id = "admin-overview-panel";
@@ -1117,13 +1133,19 @@ function synchronizeAdminNavigation(isAdmin) {
   llmContent.className = "detector-llm-content";
   evaluationPanel.append(evaluationTitle, evaluationIntro, llmButton, evaluationStatus,
     llmContent, evaluationContent);
-  const labelingPanel = document.createElement("section");
-  labelingPanel.id = "admin-labeling-panel";
-  labelingPanel.className = "settings-section admin-subtab-panel annotation-labeling-panel";
-  labelingPanel.setAttribute("role", "tabpanel");
-  labelingPanel.setAttribute("aria-labelledby", "admin-labeling-tab");
-  labelingPanel.hidden = true;
-  surface.append(tabs, section, evaluationPanel, labelingPanel);
+  const humanLabelingPanel = document.createElement("section");
+  humanLabelingPanel.id = "admin-human-labeling-panel";
+  humanLabelingPanel.className = "settings-section admin-subtab-panel annotation-labeling-panel";
+  humanLabelingPanel.setAttribute("role", "tabpanel");
+  humanLabelingPanel.setAttribute("aria-labelledby", "admin-human-labeling-tab");
+  humanLabelingPanel.hidden = true;
+  const machineLabelingPanel = document.createElement("section");
+  machineLabelingPanel.id = "admin-machine-labeling-panel";
+  machineLabelingPanel.className = "settings-section admin-subtab-panel annotation-labeling-panel";
+  machineLabelingPanel.setAttribute("role", "tabpanel");
+  machineLabelingPanel.setAttribute("aria-labelledby", "admin-machine-labeling-tab");
+  machineLabelingPanel.hidden = true;
+  surface.append(tabs, section, evaluationPanel, humanLabelingPanel, machineLabelingPanel);
   view.append(header, surface);
   elements.settingsView.after(view);
 
@@ -1132,33 +1154,55 @@ function synchronizeAdminNavigation(isAdmin) {
   elements.adminStatus = status;
   elements.adminOverviewTab = overviewTab;
   elements.adminEvaluationTab = evaluationTab;
-  elements.adminLabelingTab = labelingTab;
+  elements.adminHumanLabelingTab = humanLabelingTab;
+  elements.adminMachineLabelingTab = machineLabelingTab;
   elements.adminOverviewPanel = section;
   elements.adminEvaluationPanel = evaluationPanel;
-  elements.adminLabelingPanel = labelingPanel;
+  elements.adminHumanLabelingPanel = humanLabelingPanel;
+  elements.adminMachineLabelingPanel = machineLabelingPanel;
   elements.adminEvaluationStatus = evaluationStatus;
   elements.adminEvaluationContent = evaluationContent;
   elements.adminLlmContent = llmContent;
+  const directSection = adminSectionFromLocation();
+  if (directSection) {
+    showView("admin", false, { bypassSourceGuard: true });
+    showAdminSection(directSection);
+  }
 }
 
-function showAdminSection(section) {
+function adminSectionFromLocation() {
+  const match = /^#admin-(human-labeling|machine-labeling)$/.exec(window.location.hash);
+  return match?.[1] || null;
+}
+
+function showAdminSection(section, updateLocation = false) {
   const evaluationSelected = section === "detector-evaluation";
-  const labelingSelected = section === "labeling";
-  state.activeAdminTab = evaluationSelected ? "detector-evaluation" : labelingSelected ? "labeling" : "overview";
-  elements.adminOverviewPanel.hidden = evaluationSelected || labelingSelected;
+  const humanSelected = section === "human-labeling";
+  const machineSelected = section === "machine-labeling";
+  state.activeAdminTab = evaluationSelected ? "detector-evaluation" : humanSelected ? "human-labeling" : machineSelected ? "machine-labeling" : "overview";
+  elements.adminOverviewPanel.hidden = evaluationSelected || humanSelected || machineSelected;
   elements.adminEvaluationPanel.hidden = !evaluationSelected;
-  elements.adminLabelingPanel.hidden = !labelingSelected;
-  elements.adminOverviewTab.classList.toggle("active", !evaluationSelected && !labelingSelected);
+  elements.adminHumanLabelingPanel.hidden = !humanSelected;
+  elements.adminMachineLabelingPanel.hidden = !machineSelected;
+  elements.adminOverviewTab.classList.toggle("active", !evaluationSelected && !humanSelected && !machineSelected);
   elements.adminEvaluationTab.classList.toggle("active", evaluationSelected);
-  elements.adminLabelingTab.classList.toggle("active", labelingSelected);
-  elements.adminOverviewTab.setAttribute("aria-selected", String(!evaluationSelected && !labelingSelected));
+  elements.adminHumanLabelingTab.classList.toggle("active", humanSelected);
+  elements.adminMachineLabelingTab.classList.toggle("active", machineSelected);
+  elements.adminOverviewTab.setAttribute("aria-selected", String(!evaluationSelected && !humanSelected && !machineSelected));
   elements.adminEvaluationTab.setAttribute("aria-selected", String(evaluationSelected));
-  elements.adminLabelingTab.setAttribute("aria-selected", String(labelingSelected));
-  elements.adminOverviewTab.tabIndex = evaluationSelected || labelingSelected ? -1 : 0;
+  elements.adminHumanLabelingTab.setAttribute("aria-selected", String(humanSelected));
+  elements.adminMachineLabelingTab.setAttribute("aria-selected", String(machineSelected));
+  elements.adminOverviewTab.tabIndex = evaluationSelected || humanSelected || machineSelected ? -1 : 0;
   elements.adminEvaluationTab.tabIndex = evaluationSelected ? 0 : -1;
-  elements.adminLabelingTab.tabIndex = labelingSelected ? 0 : -1;
+  elements.adminHumanLabelingTab.tabIndex = humanSelected ? 0 : -1;
+  elements.adminMachineLabelingTab.tabIndex = machineSelected ? 0 : -1;
   if (evaluationSelected) void loadDetectorEvaluation();
-  if (labelingSelected) AnnotationLabeling.mount(elements.adminLabelingPanel);
+  if (humanSelected) AnnotationLabeling.mountHuman(elements.adminHumanLabelingPanel);
+  if (machineSelected) AnnotationLabeling.mountMachine(elements.adminMachineLabelingPanel);
+  if (updateLocation) {
+    const hash = humanSelected || machineSelected ? `#admin-${state.activeAdminTab}` : "";
+    history.replaceState(null, "", `${window.location.pathname}${window.location.search}${hash}`);
+  }
 }
 
 async function loadAdminStatus() {

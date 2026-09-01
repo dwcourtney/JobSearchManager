@@ -539,6 +539,24 @@ app.MapGet("/api/admin/annotations/queue", async Task<IResult> (
     return Results.Ok(queue);
 }).RequireAuthorization(AdminAuthorization.Policy);
 
+app.MapGet("/api/admin/annotations/generation-status", async Task<IResult> (
+    string? concept,
+    string? company,
+    WorkspaceRuntimeProvider provider,
+    AnnotationLabelingService annotations,
+    CancellationToken token) =>
+{
+    try
+    {
+        var jobs = (await provider.GetAsync(token)).Catalog.Snapshot.Jobs;
+        return Results.Ok(await annotations.GetGenerationStatusAsync(jobs, company, concept, token));
+    }
+    catch (ArgumentException exception)
+    {
+        return Results.BadRequest(new { error = exception.Message });
+    }
+}).RequireAuthorization(AdminAuthorization.Policy);
+
 app.MapPost("/api/admin/annotations/generate", async Task<IResult> (
     AnnotationGenerateRequest request,
     WorkspaceRuntimeProvider provider,
