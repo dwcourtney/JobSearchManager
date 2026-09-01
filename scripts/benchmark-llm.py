@@ -29,10 +29,12 @@ def post(url, case):
     started = time.perf_counter()
     with urllib.request.urlopen(request, timeout=300) as response: result = json.load(response)
     return result, (time.perf_counter() - started) * 1000
-def validate(response, sha):
+def validate(response, sha, prompt_version, prompt_hash):
     if response.get("revision") != sha or response.get("device") != "cuda:0" or response.get("deviceCount") != 1 or response.get("deviceName") != "NVIDIA GeForce GTX 1070":
         raise SystemExit("Identity/GPU validation failed")
-    if response.get("modelType") != "generative-llm" or response.get("modelDigest") != MODEL_DIGEST or response.get("temperature") != 0 or response.get("promptVersion") != "phase3-zero-shot-v1":
+    if (response.get("modelType") != "generative-llm" or response.get("modelDigest") != MODEL_DIGEST
+            or response.get("temperature") != 0 or response.get("promptVersion") != prompt_version
+            or response.get("promptHash") != prompt_hash):
         raise SystemExit("Pinned LLM/prompt contract validation failed")
     predictions = response.get("predictions")
     if not isinstance(predictions, list) or len(predictions) != 8:
@@ -41,11 +43,12 @@ def validate(response, sha):
     if set(values) != set(CONCEPTS) or any(type(value) is not bool for value in values.values()):
         raise SystemExit("Unexpected LLM prediction values")
     return values
-def evaluate(cases, url, sha):
+def evaluate(cases, url, sha, prompt_version, prompt_hash):
     observations, round_trips, malformed = [], [], 0
     for case in cases:
         try:
-            response, elapsed = post(url, case); actual = validate(response, sha)
+            response, elapsed = post(url, case); actual = validate(
+                response, sha, prompt_version, prompt_hash)
         except (ValueError, KeyError, json.JSONDecodeError):
             malformed += 1; raise
         expected_set = set(case.get("expectedPresentConceptIds", []))
@@ -78,17 +81,22 @@ def main():
     parser.add_argument("--url", required=True); parser.add_argument("--fixtures", required=True)
     parser.add_argument("--regex-report", required=True); parser.add_argument("--qualitative", required=True)
     parser.add_argument("--sha", required=True); parser.add_argument("--output", required=True)
+    parser.add_argument("--prompt-version", required=True); parser.add_argument("--prompt-hash", required=True)
     args = parser.parse_args()
     if len(args.sha) != 40 or any(c not in "0123456789abcdef" for c in args.sha): raise SystemExit("Full lowercase SHA required")
+    if len(args.prompt_hash) != 64 or any(c not in "0123456789abcdef" for c in args.prompt_hash): raise SystemExit("Full lowercase prompt hash required")
     document = json.loads(Path(args.fixtures).read_text(encoding="utf-8"))
     cases = [item for item in document["fixtures"] if item.get("labelScope") == "tier1-target"]
     if len(cases) != 40: raise SystemExit(f"Expected 40 scoped fixtures; got {len(cases)}")
     url = args.url.rstrip("/") + "/classify-llm"
-    observations, round_trips, malformed, response = evaluate(cases, url, args.sha)
+    observations, round_trips, malformed, response = evaluate(
+        cases, url, args.sha, args.prompt_version, args.prompt_hash)
     concept_metrics = metrics(observations); llm = {**aggregate(concept_metrics), "concepts": concept_metrics}
     qualitative = json.loads(Path(args.qualitative).read_text(encoding="utf-8"))
-    hard, hard_rt, hard_bad, _ = evaluate(qualitative["hardNegatives"], url, args.sha)
-    general, general_rt, general_bad, _ = evaluate(qualitative["generalization"], url, args.sha)
+    hard, hard_rt, hard_bad, _ = evaluate(
+        qualitative["hardNegatives"], url, args.sha, args.prompt_version, args.prompt_hash)
+    general, general_rt, general_bad, _ = evaluate(
+        qualitative["generalization"], url, args.sha, args.prompt_version, args.prompt_hash)
     regex = json.loads(Path(args.regex_report).read_text(encoding="utf-8"))
     regex_metrics = [item for item in regex["concepts"] if item["conceptId"] in CONCEPTS]
     inference = [item["inferenceMilliseconds"] for item in observations]
