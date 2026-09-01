@@ -3,6 +3,7 @@ using System.IO.Compression;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Claims;
+using System.Text;
 using System.Text.Json;
 using System.Threading.RateLimiting;
 using Azure.Identity;
@@ -156,6 +157,7 @@ else
 }
 
 builder.Services.AddSingleton<WorkspaceRuntimeManager>();
+builder.Services.AddSingleton<AnnotationLabelingService>();
 builder.Services.AddSingleton<AccountService>();
 builder.Services.AddSingleton<AdminBootstrapService>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -524,6 +526,70 @@ app.MapPost("/api/admin/classifier-diagnostic", async Task<IResult> (
         ? StatusCodes.Status200OK
         : StatusCodes.Status503ServiceUnavailable);
 }).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapGet("/api/admin/annotations/queue", async Task<IResult> (
+    string? status,
+    string? concept,
+    string? company,
+    AnnotationLabelingService annotations,
+    CancellationToken token) =>
+{
+    var queue = await annotations.GetQueueAsync(
+        new AnnotationQueueFilter(status ?? "unreviewed", concept, company), token);
+    return Results.Ok(queue);
+}).RequireAuthorization(AdminAuthorization.Policy);
+
+app.MapPost("/api/admin/annotations/generate", async Task<IResult> (
+    AnnotationGenerateRequest request,
+    WorkspaceRuntimeProvider provider,
+    AnnotationLabelingService annotations,
+    CancellationToken token) =>
+{
+    var jobs = (await provider.GetAsync(token)).Catalog.Snapshot.Jobs;
+    return Results.Ok(await annotations.GenerateAsync(jobs, request.MaxItems, token));
+}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapPut("/api/admin/annotations/{itemId}/decision", async Task<IResult> (
+    string itemId,
+    AnnotationDecisionRequest request,
+    string? status,
+    string? concept,
+    string? company,
+    HttpContext context,
+    AnnotationLabelingService annotations,
+    CancellationToken token) =>
+{
+    try
+    {
+        var reviewer = context.User.FindFirstValue(ClaimTypes.Name) ??
+            context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "administrator";
+        var queue = await annotations.DecideAsync(
+            itemId, request, reviewer,
+            new AnnotationQueueFilter(status ?? "unreviewed", concept, company), token);
+        return queue is null ? Results.NotFound(new { error = "Annotation item was not found." }) : Results.Ok(queue);
+    }
+    catch (ArgumentException exception)
+    {
+        return Results.BadRequest(new { error = exception.Message });
+    }
+}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapGet("/api/admin/annotations/{itemId}/source", async Task<IResult> (
+    string itemId,
+    AnnotationLabelingService annotations,
+    CancellationToken token) =>
+{
+    var source = await annotations.GetSourceAsync(itemId, token);
+    return source is null ? Results.NotFound(new { error = "Annotation source was not found." }) : Results.Ok(source);
+}).RequireAuthorization(AdminAuthorization.Policy);
+
+app.MapGet("/api/admin/annotations/export", async Task<IResult> (
+    AnnotationLabelingService annotations,
+    CancellationToken token) =>
+{
+    var jsonLines = await annotations.ExportJsonLinesAsync(token);
+    return Results.Text(jsonLines, "application/x-ndjson", Encoding.UTF8, StatusCodes.Status200OK);
+}).RequireAuthorization(AdminAuthorization.Policy);
 
 app.MapPost("/api/account/create", async Task<IResult> (
     CreateAccountRequest request,

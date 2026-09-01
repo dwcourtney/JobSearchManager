@@ -33,7 +33,12 @@ assert.match(app, /postAccountJson\("\/api\/account\/admin-bootstrap"/);
 assert.match(app, /fetch\("\/api\/admin\/status"/,
   "Admin Overview must verify its reusable server authorization endpoint.");
 assert.match(app, /admin-overview-tab[\s\S]*?Overview[\s\S]*?admin-detector-evaluation-tab[\s\S]*?Detector Evaluation/,
-  "Admin must expose only Overview and Detector Evaluation subtabs.");
+  "Admin must preserve Overview and Detector Evaluation subtabs.");
+assert.match(app, /admin-labeling-tab[\s\S]*?Labeling/,
+  "Admin must expose the human labeling workspace only after server-confirmed role state.");
+assert.match(index, /annotation-labeling-ui\.js\?v=1[\s\S]*?app\.js\?v=36/,
+  "The tested annotation module must load before its application consumer.");
+assert.match(app, /AnnotationLabeling\.mount\(elements\.adminLabelingPanel\)/);
 assert.doesNotMatch(app, /admin-(?:accounts|workspaces)-tab/,
   "Unimplemented Accounts and Workspaces placeholders must not be added.");
 assert.match(app, /fetch\("\/api\/admin\/detector-evaluation"/);
@@ -51,7 +56,7 @@ assert.match(app, /False positives[\s\S]*?False negatives/,
   "Detector errors must be reviewable by classification.");
 assert.match(app, /Search detector concepts[\s\S]*?Tier 1[\s\S]*?Tier 2[\s\S]*?Tier 3[\s\S]*?Not evaluated[\s\S]*?Errors present/,
   "Full-taxonomy evaluation needs search, tier, maturity, and error filters.");
-assert.match(index, /detector-evaluation-ui\.js\?v=1[\s\S]*?app\.js\?v=35/,
+assert.match(index, /detector-evaluation-ui\.js\?v=1[\s\S]*?app\.js\?v=36/,
   "The deterministic Detector Evaluation filter helper must load before its application consumer.");
 assert.match(app, /DetectorEvaluationUi\.matchesMetric/,
   "Rendered filtering must use the deterministic tested helper.");
@@ -67,6 +72,11 @@ assert.match(program,
 assert.match(program,
   /MapGet\("\/api\/admin\/detector-evaluation"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)/,
   "Detector Evaluation must retain server-side admin authorization.");
+for (const route of ["queue", "generate", "decision", "source", "export"]) {
+  assert.match(program,
+    new RegExp(`api/admin/annotations[\\s\\S]*?${route}[\\s\\S]*?RequireAuthorization\\(AdminAuthorization\\.Policy\\)`),
+    `Annotation ${route} access must retain server-side admin authorization.`);
+}
 assert.match(program,
   /MapPost\("\/api\/account\/admin-bootstrap"[\s\S]*?RequireAuthorization\(\)[\s\S]*?RequireRateLimiting\("admin-bootstrap"\)/);
 assert.match(program, /PermitLimit = 5[\s\S]*?Window = TimeSpan\.FromMinutes\(15\)/);
@@ -120,4 +130,4 @@ assert.match(evaluation, /Tier1Concepts[\s\S]*?Tier2Concepts[\s\S]*?PartialConce
 assert.match(evaluation, /Travel Tolerance preference[\s\S]*?Normal Work Location preference[\s\S]*?Group Hard Conflict overrides[\s\S]*?Configured \/ Not Set preference state/,
   "Non-detector Job Fit constructs must be explicitly excluded with rationale.");
 
-console.log("All Admin role, bootstrap, and detector-evaluation UI integration tests passed.");
+console.log("All Admin role, bootstrap, detector-evaluation, and labeling UI integration tests passed.");

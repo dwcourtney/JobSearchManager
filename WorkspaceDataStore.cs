@@ -8,7 +8,8 @@ public enum WorkspaceDataFile
 {
     Settings,
     JobsCache,
-    JobHistory
+    JobHistory,
+    AnnotationCorpus
 }
 
 public interface IWorkspaceDataStore
@@ -67,6 +68,7 @@ public static class WorkspaceDataFiles
         WorkspaceDataFile.Settings => "settings.json",
         WorkspaceDataFile.JobsCache => "jobs-cache.json",
         WorkspaceDataFile.JobHistory => "job-history.json",
+        WorkspaceDataFile.AnnotationCorpus => "annotation-corpus.json",
         _ => throw new ArgumentOutOfRangeException(nameof(file))
     };
 
