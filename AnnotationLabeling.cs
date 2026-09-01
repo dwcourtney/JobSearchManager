@@ -84,7 +84,9 @@ public sealed record AnnotationQueueResponse(AnnotationItem? Item, AnnotationSta
     IReadOnlyList<JobConceptOption> Concepts, IReadOnlyList<string> Companies,
     IReadOnlyDictionary<string, int> ConceptDistribution, IReadOnlyDictionary<string, int> CompanyDistribution,
     string TaxonomyFingerprint, int TaxonomyVersion);
-public sealed record AnnotationGenerateResult(int Added, int Total, int EligibleCandidates, AnnotationQueueResponse Queue);
+public sealed record AnnotationGenerationStatus(int Total, int EligibleUngenerated);
+public sealed record AnnotationGenerateResult(int Added, int Total, int EligibleCandidates, int RemainingEligible,
+    AnnotationQueueResponse Queue);
 internal sealed record AnnotationMachineImportRecord(string? AnnotationItemId, string? ContentHash,
     string? TaxonomyFingerprint, string? Decision, IReadOnlyList<string>? SelectedConceptIds,
     string? ReviewerType, string? ReviewerIdentity, decimal? Confidence, string? Rationale, DateTimeOffset? ReviewedUtc);
@@ -127,42 +129,8 @@ public sealed class AnnotationLabelingService
         try
         {
             var now = _time.GetUtcNow(); var corpus = await LoadAsync(now, token);
-            var templateKeys = corpus.Items.Values.Select(TemplateKey).ToHashSet(StringComparer.Ordinal);
-            var candidates = new List<(AnnotationSource Source, AnnotationItem Item)>();
-            foreach (var job in jobs.Where(job => !string.IsNullOrWhiteSpace(job.DescriptionHtml) && job.DetectedConcepts is { Count: > 0 })
-                .Where(job => string.IsNullOrWhiteSpace(request.Company) || job.CompanyId == request.Company)
-                .OrderBy(job => job.CompanyId, StringComparer.Ordinal).ThenBy(job => job.StableId, StringComparer.Ordinal))
-            {
-                var posting = Normalize(JobAnalysis.HtmlToPlainText(job.DescriptionHtml)); if (posting.Length == 0) continue;
-                var hash = Hash($"{Normalize(job.Title)}\n{posting}"); var sourceId = $"source-{hash[..24]}";
-                var source = new AnnotationSource(sourceId, hash, job.StableId, job.CompanyId, job.Title, job.SourceUrl, posting, now);
-                foreach (var detected in job.DetectedConcepts!.OrderBy(item => item.ConceptId, StringComparer.Ordinal))
-                {
-                    if (!_catalog.Contains(detected.ConceptId)) continue;
-                    var span = LocateEvidence(job.Title, posting, detected.Evidence);
-                    if (span.Evidence.Length == 0 || IsBoilerplate(span.Evidence)) continue;
-                    var definition = _catalog.Get(detected.ConceptId);
-                    var adjacent = _catalog.Concepts.Where(c => c.Id != detected.ConceptId && c.Category == definition.Category)
-                        .OrderBy(c => Hash($"{hash}\n{span.Start}\n{c.Id}"), StringComparer.Ordinal).Select(c => c.Id).FirstOrDefault();
-                    var proposals = new List<(string Id, string Method)> { (detected.ConceptId, "jsm-deterministic-concept-extraction") };
-                    if (adjacent is not null) proposals.Add((adjacent, "jsm-deterministic-adjacent-hard-negative-proposal"));
-                    foreach (var proposal in proposals)
-                    {
-                        if (!string.IsNullOrWhiteSpace(request.Concept) && proposal.Id != request.Concept && detected.ConceptId != request.Concept) continue;
-                        var itemId = "annotation-" + Hash($"{hash}\n{span.Start}\n{span.Evidence}\n{proposal.Id}\n{TaxonomyFingerprint}")[..24];
-                        var item = new AnnotationItem(itemId, sourceId, job.StableId, job.CompanyId, job.Title, job.SourceUrl,
-                            hash, span.Evidence, span.Before, span.After, [proposal.Id],
-                            new AnnotationMachineProvenance(proposal.Method, _catalog.Version, TaxonomyFingerprint,
-                                [detected.ConceptId], null, null), "unreviewed", null, [], null, null, null, false, now, now, [], null);
-                        var key = TemplateKey(item);
-                        if (!corpus.Items.ContainsKey(itemId) && templateKeys.Add(key)) candidates.Add((source, item));
-                    }
-                }
-            }
-            var existingInScope = corpus.Items.Values.Count(item =>
-                (string.IsNullOrWhiteSpace(request.Company) || item.CompanyId == request.Company) &&
-                (string.IsNullOrWhiteSpace(request.Concept) || item.CandidateConceptIds.Contains(request.Concept) || item.Machine.BasisConceptIds.Contains(request.Concept)));
-            var wanted = request.AllEligible ? int.MaxValue : Math.Max(0, request.RequestedItems!.Value - existingInScope);
+            var candidates = BuildCandidates(corpus, jobs, request.Company, request.Concept, now);
+            var wanted = request.AllEligible ? int.MaxValue : request.RequestedItems!.Value;
             var queues = candidates.GroupBy(c => c.Item.CandidateConceptIds[0], StringComparer.Ordinal)
                 .OrderByDescending(g => g.Count()).ThenBy(g => g.Key, StringComparer.Ordinal)
                 .Select(g => new Queue<(AnnotationSource Source, AnnotationItem Item)>(InterleaveCompanies(g))).ToList();
@@ -174,8 +142,22 @@ public sealed class AnnotationLabelingService
                     corpus.Items.Add(candidate.Item.Id, candidate.Item); added++; if (queues[i].Count == 0) queues.RemoveAt(i);
                 }
             if (added > 0) { corpus = corpus with { SchemaVersion = 2, UpdatedUtc = now }; await SaveAsync(corpus, token); }
-            return new AnnotationGenerateResult(added, corpus.Items.Count, candidates.Count,
+            return new AnnotationGenerateResult(added, corpus.Items.Count, candidates.Count, candidates.Count - added,
                 BuildQueue(corpus, new AnnotationQueueFilter()));
+        }
+        finally { _gate.Release(); }
+    }
+
+    public async Task<AnnotationGenerationStatus> GetGenerationStatusAsync(IEnumerable<JobRecord> jobs,
+        string? company = null, string? concept = null, CancellationToken token = default)
+    {
+        var request = new AnnotationGenerateRequest(1, false, company, concept); ValidateGenerateRequest(request);
+        await _gate.WaitAsync(token);
+        try
+        {
+            var now = _time.GetUtcNow(); var corpus = await LoadAsync(now, token);
+            return new AnnotationGenerationStatus(corpus.Items.Count,
+                BuildCandidates(corpus, jobs, company, concept, now).Count);
         }
         finally { _gate.Release(); }
     }
@@ -328,9 +310,47 @@ public sealed class AnnotationLabelingService
     private void ValidateGenerateRequest(AnnotationGenerateRequest request)
     {
         if (!request.AllEligible && (request.RequestedItems is null or < 1 or > MaximumRequestedItems))
-            throw new ArgumentException($"Target corpus size must be between 1 and {MaximumRequestedItems:N0}.");
+            throw new ArgumentException($"Items to add must be between 1 and {MaximumRequestedItems:N0}.");
         if (!string.IsNullOrWhiteSpace(request.Concept) && !_catalog.Contains(request.Concept)) throw new ArgumentException("Unknown generation concept.");
         if (request.Company?.Length > 200) throw new ArgumentException("Company filter is too long.");
+    }
+
+    private List<(AnnotationSource Source, AnnotationItem Item)> BuildCandidates(AnnotationCorpus corpus,
+        IEnumerable<JobRecord> jobs, string? company, string? concept, DateTimeOffset now)
+    {
+        var templateKeys = corpus.Items.Values.Select(TemplateKey).ToHashSet(StringComparer.Ordinal);
+        var candidates = new List<(AnnotationSource Source, AnnotationItem Item)>();
+        foreach (var job in jobs.Where(job => !string.IsNullOrWhiteSpace(job.DescriptionHtml) && job.DetectedConcepts is { Count: > 0 })
+            .Where(job => string.IsNullOrWhiteSpace(company) || job.CompanyId == company)
+            .OrderBy(job => job.CompanyId, StringComparer.Ordinal).ThenBy(job => job.StableId, StringComparer.Ordinal))
+        {
+            var posting = Normalize(JobAnalysis.HtmlToPlainText(job.DescriptionHtml)); if (posting.Length == 0) continue;
+            var hash = Hash($"{Normalize(job.Title)}\n{posting}"); var sourceId = $"source-{hash[..24]}";
+            var source = new AnnotationSource(sourceId, hash, job.StableId, job.CompanyId, job.Title, job.SourceUrl, posting, now);
+            foreach (var detected in job.DetectedConcepts!.OrderBy(item => item.ConceptId, StringComparer.Ordinal))
+            {
+                if (!_catalog.Contains(detected.ConceptId)) continue;
+                var span = LocateEvidence(job.Title, posting, detected.Evidence);
+                if (span.Evidence.Length == 0 || IsBoilerplate(span.Evidence)) continue;
+                var definition = _catalog.Get(detected.ConceptId);
+                var adjacent = _catalog.Concepts.Where(c => c.Id != detected.ConceptId && c.Category == definition.Category)
+                    .OrderBy(c => Hash($"{hash}\n{span.Start}\n{c.Id}"), StringComparer.Ordinal).Select(c => c.Id).FirstOrDefault();
+                var proposals = new List<(string Id, string Method)> { (detected.ConceptId, "jsm-deterministic-concept-extraction") };
+                if (adjacent is not null) proposals.Add((adjacent, "jsm-deterministic-adjacent-hard-negative-proposal"));
+                foreach (var proposal in proposals)
+                {
+                    if (!string.IsNullOrWhiteSpace(concept) && proposal.Id != concept && detected.ConceptId != concept) continue;
+                    var itemId = "annotation-" + Hash($"{hash}\n{span.Start}\n{span.Evidence}\n{proposal.Id}\n{TaxonomyFingerprint}")[..24];
+                    var item = new AnnotationItem(itemId, sourceId, job.StableId, job.CompanyId, job.Title, job.SourceUrl,
+                        hash, span.Evidence, span.Before, span.After, [proposal.Id],
+                        new AnnotationMachineProvenance(proposal.Method, _catalog.Version, TaxonomyFingerprint,
+                            [detected.ConceptId], null, null), "unreviewed", null, [], null, null, null, false, now, now, [], null);
+                    var key = TemplateKey(item);
+                    if (!corpus.Items.ContainsKey(itemId) && templateKeys.Add(key)) candidates.Add((source, item));
+                }
+            }
+        }
+        return candidates;
     }
 
     private AnnotationQueueResponse BuildQueue(AnnotationCorpus corpus, AnnotationQueueFilter filter)

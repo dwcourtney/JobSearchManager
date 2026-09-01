@@ -1,15 +1,17 @@
 # Annotation corpus exchange
 
-The Admin **Labeling** page supports a bounded, one-card human workflow backed by a corpus that can contain thousands of items. Generation appends deterministic candidates and never rebuilds or removes existing decisions.
+The Admin area separates **Human Labeling**, a bounded one-card review workflow, from **Machine Labeling**, the append-only corpus and JSONL exchange workflow. Both remain protected by server-side administrator authorization.
 
 ## Recommended workflow
 
-1. In Admin > Labeling, choose a target corpus size or **All eligible**, optionally select a company or concept, and generate.
+1. In Admin > Machine Labeling, enter **Items to add** and choose **Add items**, or choose the independent **Add all eligible** action. The page shows current and eligible ungenerated counts first. Generation appends deterministic candidates and never rebuilds or removes existing decisions.
 2. Choose **Export all JSONL** or **Export unreviewed**. The selected company and concept filters also apply to export.
 3. Give the JSONL to ChatGPT, Codex, Qwen, or an offline reviewer with this instruction: return exactly one JSON object per input line using the machine-review result shape below; preserve `annotationItemId`, `contentHash`, and `taxonomyFingerprint`; use only canonical IDs supplied in the input; do not invent confidence.
 4. Upload the returned JSONL with **Import machine review JSONL**.
 5. Review **Machine disagreements**, **Human-unreviewed machine labels**, **Unsure / ambiguous**, and **Rare concepts** in the one-card UI.
-6. Only authenticated decisions made in JSM become human-reviewed or human-overridden training-eligible labels.
+6. In Admin > Human Labeling, review one item at a time. Only authenticated decisions made in JSM become human-reviewed or human-overridden training-eligible labels.
+
+All JSONL exports remain enabled, including zero-record subsets, and download a valid empty file when no item matches. Controls that require an input, such as machine-review import, remain visibly and functionally disabled until that input is present.
 
 ## Export record (schema version 2)
 
