@@ -2600,6 +2600,20 @@ mark {
 }
 
 .annotation-labeling-panel { display: grid; gap: .85rem; }
+.annotation-dataset-controls {
+  display: grid;
+  gap: .55rem;
+  padding: .8rem;
+  border: var(--border-width-default) solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-secondary);
+}
+.annotation-dataset-controls h4 { margin: 0; }
+.annotation-inline-field { display: grid; gap: .25rem; }
+.annotation-inline-field input { width: 9rem; }
+.annotation-check-field { display: inline-flex; align-items: center; }
+.annotation-import-status { margin: 0; color: var(--color-text-secondary); }
+.annotation-provenance { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin-top: .55rem; }
 .annotation-toolbar, .annotation-actions, .annotation-toggles {
   display: flex;
   flex-wrap: wrap;

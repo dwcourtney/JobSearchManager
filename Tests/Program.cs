@@ -915,23 +915,81 @@ static async Task TestAnnotationLabelingAsync()
         await service.DecideAsync(
             unsureItem.Id, new AnnotationDecisionRequest(AnnotationDecisions.Unsure, UnsureReason: "Needs domain review"),
             "admin@example.test", new AnnotationQueueFilter());
-        var export = await service.ExportJsonLinesAsync();
-        var exportLines = export.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-        Assert(exportLines.Length == 3, "Reviewed and explicitly unsure annotations were not exported exactly once.");
-        using var incorrect = JsonDocument.Parse(exportLines.Single(line => line.Contains(secondItem.Id)));
+        var reviewedExport = await service.ExportJsonLinesAsync(AnnotationExportModes.Reviewed);
+        var reviewedLines = reviewedExport.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        var unsureExport = await service.ExportJsonLinesAsync(AnnotationExportModes.Unsure);
+        var allExport = await service.ExportJsonLinesAsync(AnnotationExportModes.All);
+        var unreviewedExport = await service.ExportJsonLinesAsync(AnnotationExportModes.Unreviewed);
+        Assert(reviewedLines.Length == 2 && unsureExport.Split('\n', StringSplitOptions.RemoveEmptyEntries).Length == 1 &&
+            allExport.Split('\n', StringSplitOptions.RemoveEmptyEntries).Length == generated.Total &&
+            unreviewedExport.Split('\n', StringSplitOptions.RemoveEmptyEntries).Length == generated.Total - 3,
+            "All/reviewed/unreviewed/unsure export subsets were not exact.");
+        using var incorrect = JsonDocument.Parse(reviewedLines.Single(line => line.Contains(secondItem.Id)));
         Assert(incorrect.RootElement.GetProperty("confirmedPresentConceptIds").GetArrayLength() == 0 &&
             incorrect.RootElement.GetProperty("confirmedAbsentCandidateConceptIds").GetArrayLength() == 1,
             "An incorrect candidate was broadened into unsupported taxonomy-wide negatives.");
-        using var unsure = JsonDocument.Parse(exportLines.Single(line => line.Contains(unsureItem.Id)));
-        Assert(!unsure.RootElement.GetProperty("trainingEligible").GetBoolean() &&
-            unsure.RootElement.GetProperty("status").GetString() == "unsure",
+        using var unsure = JsonDocument.Parse(unsureExport.Split('\n', StringSplitOptions.RemoveEmptyEntries).Single());
+        Assert(!unsure.RootElement.GetProperty("currentReview").GetProperty("trainingEligible").GetBoolean() &&
+            unsure.RootElement.GetProperty("currentReview").GetProperty("status").GetString() == "unsure",
             "Unsure annotations were not explicitly excluded from training eligibility.");
+
+        static string ImportLine(AnnotationItem item, string fingerprint, string decision, string reviewerType,
+            string? concept = null, string? contentHash = null, string? itemId = null, string? taxonomy = null) =>
+            JsonSerializer.Serialize(new
+            {
+                annotationItemId = itemId ?? item.Id, contentHash = contentHash ?? item.ContentHash,
+                taxonomyFingerprint = taxonomy ?? fingerprint, decision,
+                selectedConceptIds = concept is null ? Array.Empty<string>() : new[] { concept },
+                reviewerType, reviewerIdentity = "test-reviewer", rationale = "bounded test rationale"
+            }, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        var machineImport = string.Join('\n',
+            ImportLine(firstItem, service.TaxonomyFingerprint, "incorrect", "codex"),
+            ImportLine(firstItem, service.TaxonomyFingerprint, "incorrect", "codex"),
+            ImportLine(firstItem, service.TaxonomyFingerprint, "correct", "chatgpt"),
+            ImportLine(firstItem, service.TaxonomyFingerprint, "correct", "human-reviewed"),
+            ImportLine(firstItem, service.TaxonomyFingerprint, "correct", "codex", itemId: "annotation-missing"),
+            ImportLine(firstItem, service.TaxonomyFingerprint, "correct", "codex", contentHash: new string('0', 64)),
+            ImportLine(firstItem, service.TaxonomyFingerprint, "correct", "codex", taxonomy: new string('f', 64)),
+            ImportLine(firstItem, service.TaxonomyFingerprint, "different-label", "codex", "unknown.concept"),
+            "{not-json}") + "\n";
+        var importSummary = await service.ImportMachineReviewsAsync(machineImport, "machine-review.jsonl");
+        Assert(importSummary.Imported == 2 && importSummary.Unchanged == 1 && importSummary.Conflicts == 2 &&
+            importSummary.InvalidProvenance == 1 && importSummary.UnknownItem == 1 &&
+            importSummary.ContentHashMismatch == 1 && importSummary.StaleFingerprint == 1 &&
+            importSummary.UnknownConcept == 1 && importSummary.Malformed == 1,
+            $"Machine import validation, duplicate handling, or conflict accounting regressed: {JsonSerializer.Serialize(importSummary)}");
+        var conflicts = await service.GetQueueAsync(new AnnotationQueueFilter("machineDisagreement"));
+        Assert(conflicts.Item?.Id == firstItem.Id && conflicts.Stats.MachineDisagreements == 1 &&
+            conflicts.Stats.HumanMachineConflicts == 1 && conflicts.Item.TrainingEligible == false &&
+            conflicts.Item.Reviewer == "admin@example.test" && conflicts.Item.Decision == AnnotationDecisions.Correct,
+            "Machine opinions overwrote human truth or failed to surface an unresolved conflict.");
+        await service.DecideAsync(firstItem.Id, new AnnotationDecisionRequest(AnnotationDecisions.Correct),
+            "admin@example.test", new AnnotationQueueFilter("humanReviewed"));
+        var overridden = await service.GetQueueAsync(new AnnotationQueueFilter("humanReviewed"));
+        Assert(overridden.Stats.TrainingEligible == 2 && overridden.Item?.HumanProvenance == "human-overridden",
+            "Authenticated human conflict resolution did not restore conservative training eligibility.");
+
+        var scaledJobs = Enumerable.Range(0, 400).Select(index => job with
+        {
+            RequisitionId = $"REQ-SCALE-{index:D4}",
+            SourceUrl = $"https://example.test/jobs/REQ-SCALE-{index:D4}",
+            ExternalPath = $"/jobs/REQ-SCALE-{index:D4}",
+            DescriptionHtml = $"<p>Project {index:D4} builds resilient service interfaces with Kubernetes and careful operational ownership for unique system {index:D4}.</p>",
+            CompanyId = index % 2 == 0 ? "example" : "second-company"
+        }).ToArray();
+        var scaled = await service.GenerateAsync(scaledJobs, new AnnotationGenerateRequest(1000));
+        Assert(scaled.Total == 1000 && scaled.Added == 1000 - generated.Total && scaled.Queue.Item is not null &&
+            scaled.Queue.CompanyDistribution.Count == 2,
+            "Target-size generation did not append a deterministic 1,000-item corpus with bounded one-item retrieval.");
+        var generatedAgain = await service.GenerateAsync(scaledJobs, new AnnotationGenerateRequest(1000));
+        Assert(generatedAgain.Added == 0 && generatedAgain.Total == 1000,
+            "Repeated generation duplicated items or rebuilt the corpus destructively.");
 
         var reloaded = new AnnotationLabelingService(factory, catalog, TimeProvider.System);
         var resumed = await reloaded.GetQueueAsync(new AnnotationQueueFilter("reviewed"));
-        Assert(resumed.Stats.Reviewed == 2 && resumed.Stats.Unsure == 1 &&
+        Assert(resumed.Stats.Reviewed == 2 && resumed.Stats.Unsure == 1 && resumed.Stats.Total == 1000 &&
             resumed.Stats.TrainingEligible == 2 && resumed.Item is not null,
-            "Durable annotation decisions did not reload from the isolated corpus.");
+            "Durable annotation decisions or stable item history did not survive scale-up and reload.");
         Assert(AnnotationLabelingService.ValidateDecision(
             new AnnotationDecisionRequest(AnnotationDecisions.DifferentLabel, [firstConcept])) is null &&
             AnnotationLabelingService.ValidateDecision(

@@ -36,7 +36,7 @@ assert.match(app, /admin-overview-tab[\s\S]*?Overview[\s\S]*?admin-detector-eval
   "Admin must preserve Overview and Detector Evaluation subtabs.");
 assert.match(app, /admin-labeling-tab[\s\S]*?Labeling/,
   "Admin must expose the human labeling workspace only after server-confirmed role state.");
-assert.match(index, /annotation-labeling-ui\.js\?v=1[\s\S]*?app\.js\?v=36/,
+assert.match(index, /annotation-labeling-ui\.js\?v=2[\s\S]*?app\.js\?v=36/,
   "The tested annotation module must load before its application consumer.");
 assert.match(app, /AnnotationLabeling\.mount\(elements\.adminLabelingPanel\)/);
 assert.doesNotMatch(app, /admin-(?:accounts|workspaces)-tab/,
@@ -72,11 +72,16 @@ assert.match(program,
 assert.match(program,
   /MapGet\("\/api\/admin\/detector-evaluation"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)/,
   "Detector Evaluation must retain server-side admin authorization.");
-for (const route of ["queue", "generate", "decision", "source", "export"]) {
+for (const route of ["queue", "generate", "decision", "source", "export", "import"]) {
   assert.match(program,
     new RegExp(`api/admin/annotations[\\s\\S]*?${route}[\\s\\S]*?RequireAuthorization\\(AdminAuthorization\\.Policy\\)`),
     `Annotation ${route} access must retain server-side admin authorization.`);
 }
+const labelingUi = fs.readFileSync(path.join(root, "wwwroot", "annotation-labeling-ui.js"), "utf8");
+assert.match(labelingUi, /Machine reviews are provenance-rich opinions, not human gold/,
+  "The exchange UI must not present imported machine labels as human gold.");
+assert.match(labelingUi, /Target corpus size[\s\S]*?All eligible[\s\S]*?Export all JSONL[\s\S]*?Export unreviewed[\s\S]*?Import machine review JSONL/,
+  "The Admin workflow must expose scalable generation and browser import/export controls.");
 assert.match(program,
   /MapPost\("\/api\/account\/admin-bootstrap"[\s\S]*?RequireAuthorization\(\)[\s\S]*?RequireRateLimiting\("admin-bootstrap"\)/);
 assert.match(program, /PermitLimit = 5[\s\S]*?Window = TimeSpan\.FromMinutes\(15\)/);
