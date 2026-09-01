@@ -7,7 +7,7 @@ CONCEPTS = ["role.ai-ml-engineering", "role.software-engineering",
     "technical.software-development", "technical.backend-development",
     "technical.api-development", "technical.automation-scripting",
     "role.cloud-engineering", "technical.containers"]
-MODEL_DIGEST = "sha256:0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0"
+MODEL_DIGEST = "sha256:78fad5d182a7c33065e153a5f8ba210754207ba9d91973f57dffa7f487363753"
 HISTORICAL = {
     "distilRoBERTa": {"macroF1": .642452654, "microF1": .673123487},
     "deBERTa": {"macroF1": .7955379526291256, "microF1": .8184281842818428},

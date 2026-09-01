@@ -1046,12 +1046,12 @@ static async Task TestLlmClassifierContractAsync()
         conceptId = item.ConceptId, matched = true });
     var payload = JsonSerializer.Serialize(new {
         received = true, jobId = "fixture", title = "Backend Engineer", descriptionLength = 11,
-        serviceVersion = "0.4.0", protocolVersion = "4", revision = new string('a', 40),
+        serviceVersion = "0.6.0", protocolVersion = "4", revision = new string('a', 40),
         gpuAvailable = true, deviceCount = 1, deviceName = "NVIDIA GeForce GTX 1070",
         vramTotalMiB = (int?)null, vramUsedMiB = 3000, driverVersion = (string?)null,
-        modelType = "generative-llm", modelId = "Qwen/Qwen3-4B-Instruct-2507",
-        modelTag = "qwen3:4b-instruct-2507-q4_K_M",
-        modelDigest = "sha256:0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
+        modelType = "generative-llm", modelId = "microsoft/Phi-4-mini-instruct",
+        modelTag = "phi4-mini:3.8b-q4_K_M",
+        modelDigest = "sha256:78fad5d182a7c33065e153a5f8ba210754207ba9d91973f57dffa7f487363753",
         quantization = "Q4_K_M", ollamaVersion = "0.33.2", device = "cuda:0",
         promptVersion = "phase3-zero-shot-v1", promptHash = new string('c', 64),
         temperature = 0, seed = 42, contextLength = 8192, maxOutputTokens = 384,
@@ -1084,9 +1084,9 @@ static Task TestLlmFixtureMetricsAsync()
         "LLM evaluation did not select the expected 40 fixtures / 320 independent labels.");
     var predictions = cases.Select(item => new LlmEvaluationService.Prediction(item,
         new LlmClassifierResponse(true, item.FixtureId, item.Title, item.Description.Length,
-            "0.4.0", "4", new string('a', 40), true, 1, "NVIDIA GeForce GTX 1070",
+            "0.6.0", "4", new string('a', 40), true, 1, "NVIDIA GeForce GTX 1070",
             null, 3000, null, "generative-llm", "model", "tag",
-            "sha256:0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
+            "sha256:78fad5d182a7c33065e153a5f8ba210754207ba9d91973f57dffa7f487363753",
             "Q4_K_M", "0.33.2", "cuda:0", "phase3-zero-shot-v1", new string('c', 64),
             0, 42, 8192, 384, 1000, 0, 500, 50, 20, 1000, 0,
             item.Labels.Select(label => new LlmPrediction(label.Key, label.Value)).ToArray()), 1010)).ToArray();
