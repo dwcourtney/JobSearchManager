@@ -56,7 +56,7 @@ def load_catalog() -> tuple[int, str, tuple[tuple[str, str, str, str], ...]]:
         concepts.append(fields)  # type: ignore[arg-type]
     if len(concepts) != 85 or len({item[0] for item in concepts}) != len(concepts):
         raise RuntimeError("The production classifier requires exactly 85 unique canonical concepts.")
-    return version, sha256(raw), tuple(concepts)
+    return version, sha256(raw.replace(b"\r\n", b"\n")), tuple(concepts)
 
 
 TAXONOMY_VERSION, TAXONOMY_FINGERPRINT, CONCEPTS = load_catalog()

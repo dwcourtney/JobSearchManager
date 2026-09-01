@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace JobSearchManager;
 
@@ -146,8 +147,14 @@ public sealed class JobConceptCatalog
             new JsonSerializerOptions(JsonSerializerDefaults.Web))
             ?? throw new InvalidDataException("JobConceptCatalog.json could not be read.");
 
-    private static string FingerprintFor(byte[] bytes) =>
-        Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
+    private static string FingerprintFor(byte[] bytes)
+    {
+        // Git may materialize the canonical JSON with CRLF on Windows and LF in Linux
+        // containers. Line endings do not change the taxonomy and must not invalidate cache.
+        var normalized = Encoding.UTF8.GetBytes(
+            Encoding.UTF8.GetString(bytes).Replace("\r\n", "\n", StringComparison.Ordinal));
+        return Convert.ToHexString(SHA256.HashData(normalized)).ToLowerInvariant();
+    }
 
     private static void Validate(JobConceptDefinition concept)
     {

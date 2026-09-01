@@ -1326,9 +1326,9 @@ static Task TestLlmFixtureMetricsAsync()
            catalog.Concepts.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count() == 85 &&
            catalog.Concepts.All(item => !string.IsNullOrWhiteSpace(item.Definition)),
         "The canonical semantic taxonomy did not preserve 85 unique, defined concepts.");
-    Assert(catalog.Fingerprint == "84c14e994aa8fd53cb2c63018e6ce61a57ff24618d278bea1b43afc6c537065f" &&
+    Assert(catalog.Fingerprint == "48a35f20304fe29e1c2207ce5e911f6a81cd66090f674cddefd27729a1d8ea79" &&
            SemanticClassifierContract.PromptHash(catalog) ==
-               "a031bd4798fdee258dda308135b3514e18433b7ffc58dee68637c3cc610c84da",
+               "d4e57347e15d920456a45062259b31913ad523e263fff75407ded49a5b0ba94f",
         "The canonical taxonomy or prompt material changed without an explicit version/hash update.");
     return Task.CompletedTask;
 }
