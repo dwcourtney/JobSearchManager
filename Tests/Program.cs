@@ -378,6 +378,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("File storage round-trips beside its configured base", TestFileStoreAsync),
     ("Workspace reset deletes only known local state documents", TestFileResetAsync),
     ("Blob namespaces are isolated and traversal-resistant", TestBlobNamespaceAsync),
+    ("Annotation corpus is isolated, durable, and exports conservative labels", TestAnnotationLabelingAsync),
     ("Different workspaces resolve identical sources to one shared cache", TestSharedSourceCacheAsync),
     ("Concurrent workspace refreshes use one provider request", TestSharedRefreshSingleFlightAsync),
     ("Workspace preferences cannot mutate canonical shared source data", TestPreferencesDoNotMutateSharedCacheAsync),
@@ -860,6 +861,82 @@ static async Task TestFileStoreAsync()
         Assert(store.Describe(WorkspaceDataFile.Settings) ==
             Path.Combine(Path.GetFullPath(directory), "settings.json"),
             "File storage escaped its configured application-local directory.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static async Task TestAnnotationLabelingAsync()
+{
+    var directory = TestDirectory("annotation-labeling");
+    try
+    {
+        var factory = new TestWorkspaceDataStoreFactory(directory);
+        var catalog = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+        var firstConcept = catalog.Concepts[0].Id;
+        var secondConcept = catalog.Concepts[1].Id;
+        var thirdConcept = catalog.Concepts[2].Id;
+        var service = new AnnotationLabelingService(factory, catalog, TimeProvider.System);
+        var job = new JobRecord(
+            "Platform Engineer", "REQ-LABEL-1", new DateOnly(2026, 8, 31), "Today", "Remote", [],
+            "Full time", "https://example.test/jobs/REQ-LABEL-1",
+            "<p>Build resilient service interfaces with Kubernetes and careful operational ownership.</p>",
+            null, null, "unknown", "not-found", false, null, null, null, "/jobs/REQ-LABEL-1",
+            CompanyId: "example", DetectedConcepts:
+            [new DetectedJobConcept(firstConcept, "service interfaces"),
+             new DetectedJobConcept(secondConcept, "Kubernetes"),
+             new DetectedJobConcept(thirdConcept, "operational ownership")],
+            JobConceptCatalogVersion: catalog.Version);
+
+        var generated = await service.GenerateAsync([job, job], 200);
+        Assert(generated.Added >= 3 && generated.Added <= 6 && generated.Total == generated.Added,
+            "Annotation generation was not idempotent or retained duplicate machine candidates.");
+        Assert(factory.CreatedWorkspaceIds.SequenceEqual([AnnotationLabelingService.CorpusWorkspaceId]),
+            "The annotation corpus was not isolated in its reserved workspace namespace.");
+        var firstItem = generated.Queue.Item ?? throw new InvalidOperationException("Generated queue was empty.");
+        Assert(generated.Queue.TaxonomyFingerprint.Length == 64 &&
+            generated.Queue.TaxonomyVersion == catalog.Version &&
+            firstItem.Machine.Confidence is null && firstItem.Machine.Model is null,
+            "Annotation provenance omitted the exact taxonomy identity or fabricated confidence/model data.");
+
+        var afterCorrect = await service.DecideAsync(
+            firstItem.Id, new AnnotationDecisionRequest(AnnotationDecisions.Correct),
+            "admin@example.test", new AnnotationQueueFilter());
+        Assert(afterCorrect?.Stats.Reviewed == 1 && afterCorrect.Stats.TrainingEligible == 1 &&
+            afterCorrect.Item?.Id != firstItem.Id,
+            "A saved annotation did not advance and resume at the next unreviewed item.");
+        var secondItem = afterCorrect!.Item!;
+        var afterIncorrect = await service.DecideAsync(
+            secondItem.Id, new AnnotationDecisionRequest(AnnotationDecisions.Incorrect),
+            "admin@example.test", new AnnotationQueueFilter());
+        var unsureItem = afterIncorrect!.Item!;
+        await service.DecideAsync(
+            unsureItem.Id, new AnnotationDecisionRequest(AnnotationDecisions.Unsure, UnsureReason: "Needs domain review"),
+            "admin@example.test", new AnnotationQueueFilter());
+        var export = await service.ExportJsonLinesAsync();
+        var exportLines = export.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        Assert(exportLines.Length == 3, "Reviewed and explicitly unsure annotations were not exported exactly once.");
+        using var incorrect = JsonDocument.Parse(exportLines.Single(line => line.Contains(secondItem.Id)));
+        Assert(incorrect.RootElement.GetProperty("confirmedPresentConceptIds").GetArrayLength() == 0 &&
+            incorrect.RootElement.GetProperty("confirmedAbsentCandidateConceptIds").GetArrayLength() == 1,
+            "An incorrect candidate was broadened into unsupported taxonomy-wide negatives.");
+        using var unsure = JsonDocument.Parse(exportLines.Single(line => line.Contains(unsureItem.Id)));
+        Assert(!unsure.RootElement.GetProperty("trainingEligible").GetBoolean() &&
+            unsure.RootElement.GetProperty("status").GetString() == "unsure",
+            "Unsure annotations were not explicitly excluded from training eligibility.");
+
+        var reloaded = new AnnotationLabelingService(factory, catalog, TimeProvider.System);
+        var resumed = await reloaded.GetQueueAsync(new AnnotationQueueFilter("reviewed"));
+        Assert(resumed.Stats.Reviewed == 2 && resumed.Stats.Unsure == 1 &&
+            resumed.Stats.TrainingEligible == 2 && resumed.Item is not null,
+            "Durable annotation decisions did not reload from the isolated corpus.");
+        Assert(AnnotationLabelingService.ValidateDecision(
+            new AnnotationDecisionRequest(AnnotationDecisions.DifferentLabel, [firstConcept])) is null &&
+            AnnotationLabelingService.ValidateDecision(
+                new AnnotationDecisionRequest(AnnotationDecisions.MultipleLabels, [firstConcept])) is not null,
+            "Replacement and multi-label validation semantics regressed.");
     }
     finally
     {
@@ -5386,6 +5463,20 @@ static (AccountService Service, MemoryAccountRegistryStore Store,
 }
 
 internal sealed record TestDocument(string Name, int Value);
+
+internal sealed class TestWorkspaceDataStoreFactory(string root) : IWorkspaceDataStoreFactory
+{
+    public List<string> CreatedWorkspaceIds { get; } = [];
+
+    public IWorkspaceDataStore Create(string workspaceId)
+    {
+        CreatedWorkspaceIds.Add(workspaceId);
+        return new FileWorkspaceDataStore(
+            Path.Combine(root, workspaceId), NullLogger<FileWorkspaceDataStore>.Instance);
+    }
+
+    public Task ValidateAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+}
 
 internal sealed class ManualTimeProvider(DateTimeOffset value) : TimeProvider
 {

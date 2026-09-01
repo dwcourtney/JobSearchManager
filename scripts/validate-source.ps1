@@ -43,6 +43,8 @@ $accountUiTestsPath = Join-Path $repo "Tests\account-ui.tests.js"
 $adminUiTestsPath = Join-Path $repo "Tests\admin-ui.tests.js"
 $detectorEvaluationUiPath = Join-Path $repo "wwwroot\detector-evaluation-ui.js"
 $detectorEvaluationUiTestsPath = Join-Path $repo "Tests\detector-evaluation-ui.tests.js"
+$annotationLabelingUiPath = Join-Path $repo "wwwroot\annotation-labeling-ui.js"
+$annotationLabelingUiTestsPath = Join-Path $repo "Tests\annotation-labeling-ui.tests.js"
 $securityScanningTestsPath = Join-Path $repo "Tests\security-scanning.tests.js"
 $codeqlScanningTestsPath = Join-Path $repo "Tests\codeql-scanning.tests.js"
 $classifierArchitectureTestsPath = Join-Path $repo "Tests\classifier-architecture.tests.js"
@@ -81,6 +83,8 @@ foreach ($scriptPath in @(
     $adminUiTestsPath,
     $detectorEvaluationUiPath,
     $detectorEvaluationUiTestsPath,
+    $annotationLabelingUiPath,
+    $annotationLabelingUiTestsPath,
     $securityScanningTestsPath,
     $codeqlScanningTestsPath,
     $classifierArchitectureTestsPath)) {
@@ -195,6 +199,11 @@ if ($LASTEXITCODE -ne 0) {
     throw "Detector Evaluation filter tests failed."
 }
 
+& $NodePath $annotationLabelingUiTestsPath
+if ($LASTEXITCODE -ne 0) {
+    throw "Annotation labeling UI tests failed."
+}
+
 & $NodePath $securityScanningTestsPath
 if ($LASTEXITCODE -ne 0) {
     throw "Security scanning integration tests failed."
@@ -277,7 +286,8 @@ $credentialFitScript = $index.IndexOf('src="/credential-fit.js?v=2"')
 $clearanceFitScript = $index.IndexOf('src="/clearance-fit.js?v=1"')
 $jobFitScript = $index.IndexOf('src="/job-fit.js?v=11"')
 $clipboardTextScript = $index.IndexOf('src="/clipboard-text.js?v=1"')
-$appScript = $index.IndexOf('src="/app.js?v=35"')
+$annotationLabelingScript = $index.IndexOf('src="/annotation-labeling-ui.js?v=1"')
+$appScript = $index.IndexOf('src="/app.js?v=36"')
 if ($countryOrderingScript -lt 0 -or $appScript -le $countryOrderingScript) {
     throw "The versioned country-ordering.js asset must load before app.js."
 }
@@ -303,6 +313,10 @@ if ($jobFitScript -lt 0 -or $appScript -le $jobFitScript) {
 if ($clipboardTextScript -lt 0 -or $appScript -le $clipboardTextScript -or
     $app -notmatch '\bClipboardText\.copyText\(postingText\)') {
     throw "The clipboard fallback module must load before app.js and handle Copy Posting transport."
+}
+if ($annotationLabelingScript -lt 0 -or $appScript -le $annotationLabelingScript -or
+    $app -notmatch '\bAnnotationLabeling\.mount\b') {
+    throw "The annotation labeling module must load before app.js and mount only in Admin."
 }
 if ($countryOrdering -notmatch 'globalThis\.CountryOrdering\s*=' -or
     $app -notmatch '\bCountryOrdering\.orderCountryFacets\b' -or
