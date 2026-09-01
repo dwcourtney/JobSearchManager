@@ -20,8 +20,9 @@ assert.match(index, /id="full-posting-panel"/);
 
 assert.match(app, /function evaluateJobFit\(job\)[\s\S]*?JobFit\.evaluate/,
   "The card and detail view must share the authoritative Job Fit evaluator.");
-assert.match(app, /const jobFit = evaluateJobFit\(job\);[\s\S]*?Job Fit \$\{jobFit\.score\}\/10/,
-  "The card badge must use the shared Job Fit result score.");
+assert.match(app,
+  /const defaultJobFit = evaluateJobFit\(job\);[\s\S]*?const llmJobFit = evaluateLlmJobFit\(job\);[\s\S]*?const jobFit = llmJobFit \|\| defaultJobFit;[\s\S]*?Job Fit \$\{jobFit\.score\}\/10/,
+  "The card badge must use the current optional LLM score or the shared default Job Fit score.");
 assert.match(app, /renderJobFitDetail\(evaluateJobFit\(job\), job\)/,
   "The detail tab must render the same shared Job Fit result.");
 assert.match(app, /score\.textContent = `\$\{result\.score\} \/ 10`/);

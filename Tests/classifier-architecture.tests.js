@@ -49,8 +49,13 @@ assert.match(classifier, /classificationFingerprint/);
 assert.match(classifier, /taxonomyFingerprint/);
 assert.match(classifier, /postingContentHash/);
 assert.match(classifier, /qwen_deep_analysis/);
+assert.match(classifier, /QWEN_PROMPT_VERSION = "job-fit-85-deep-analysis-v1"/);
+assert.match(classifier, /QWEN_OUTPUT_SCHEMA/);
+assert.match(classifier, /qwen_classification_fingerprint/);
 assert.match(program, /\/api\/jobs\/deep-analysis/);
 assert.match(models, /QwenDeepAnalysis\? QwenDeepAnalysis/);
+assert.match(models, /QwenDeepAnalysis\([\s\S]*?TaxonomyFingerprint[\s\S]*?PromptHash[\s\S]*?Predictions/,
+  "opt-in LLM predictions and their provenance must persist separately");
 assert.match(classifierDockerfile, /COPY JobConceptCatalog\.json/,
   "the classifier image must receive the canonical taxonomy artifact");
 
