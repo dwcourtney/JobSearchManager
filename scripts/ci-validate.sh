@@ -72,7 +72,8 @@ docker build \
   --platform linux/amd64 \
   --build-arg "CLASSIFIER_GIT_SHA=$expected_sha" \
   --tag "$classifier_image" \
-  classifier-service
+  --file classifier-service/Dockerfile \
+  .
 classifier_revision="$(docker image inspect --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' "$classifier_image")"
 [[ "$classifier_revision" == "$expected_sha" ]] || {
   echo "Classifier image revision $classifier_revision does not match $expected_sha." >&2
@@ -111,7 +112,7 @@ done
 [[ "$classifier_health" == "healthy" ]]
 classifier_port="$(docker port "$classifier_container" 8081/tcp | sed -n 's/.*://p' | head -n 1)"
 classifier_health_json="$(curl --fail --silent --show-error "http://127.0.0.1:${classifier_port}/healthz")"
-classifier_response="$(curl --fail --silent --show-error \
+classifier_unavailable_status="$(curl --silent --output /dev/null --write-out '%{http_code}' \
   --header 'Content-Type: application/json' \
   --data '{"jobId":"R180395","title":"Senior Software Developer","description":"phase one"}' \
   "http://127.0.0.1:${classifier_port}/classify")"
@@ -122,19 +123,16 @@ missing_id_status="$(curl --silent --output /dev/null --write-out '%{http_code}'
   --header 'Content-Type: application/json' \
   --data '{"title":"Senior Software Developer","description":"phase one"}' \
   "http://127.0.0.1:${classifier_port}/classify")"
-model_unavailable_status="$(curl --silent --output /dev/null --write-out '%{http_code}' \
-  --header 'Content-Type: application/json' \
-  --data '{"jobId":"fixture","title":"Backend Engineer","description":"Build APIs."}' \
-  "http://127.0.0.1:${classifier_port}/classify-llm")"
-[[ "$malformed_status" == "400" && "$missing_id_status" == "400" && "$model_unavailable_status" == "503" ]]
+[[ "$malformed_status" == "400" && "$missing_id_status" == "400" && \
+   "$classifier_unavailable_status" == "503" ]]
 node -e '
 const health = JSON.parse(process.argv[1]);
-const result = JSON.parse(process.argv[2]);
-const sha = process.argv[3];
+const sha = process.argv[2];
 if (health.status !== "healthy" || health.gpuAvailable !== false || health.revision !== sha) process.exit(1);
-if (!result.received || result.jobId !== "R180395" || result.title !== "Senior Software Developer" || result.descriptionLength !== 9) process.exit(1);
-if (result.serviceVersion !== "0.4.0" || result.protocolVersion !== "4") process.exit(1);
-' "$classifier_health_json" "$classifier_response" "$expected_sha"
+if (health.serviceVersion !== "1.0.0" || health.protocolVersion !== "5") process.exit(1);
+if (health.conceptCount !== 85 || health.promptVersion !== "job-fit-85-zero-shot-v1") process.exit(1);
+if (!/^[0-9a-f]{64}$/.test(health.taxonomyFingerprint) || !/^[0-9a-f]{64}$/.test(health.promptHash)) process.exit(1);
+' "$classifier_health_json" "$expected_sha"
 
 docker run --detach \
   --name "$container" \

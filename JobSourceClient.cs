@@ -548,14 +548,6 @@ public sealed class JobSourceClient
             title, primaryLocation, additionalLocations, descriptionHtml);
         var extendedLocationRequirement = _extendedLocationRequirementDetector.Analyze(
             title, primaryLocation, additionalLocations, descriptionHtml);
-        var detectedConcepts = _jobConceptDetector.Analyze(
-            title,
-            primaryLocation,
-            additionalLocations,
-            descriptionHtml,
-            remoteWork,
-            extendedLocationRequirement);
-
         return new JobRecord(
             title,
             requisitionId,
@@ -596,8 +588,8 @@ public sealed class JobSourceClient
             listing.IdentityDiscriminator,
             credentials.UnknownRequirements,
             extendedLocationRequirement,
-            detectedConcepts,
-            _jobConceptDetector.CatalogVersion);
+            [],
+            0);
     }
 
     public async Task<JobRecord> FetchJobDetailAsync(
@@ -631,9 +623,7 @@ public sealed class JobSourceClient
         job.WorkAuthorization?.AnalysisVersion == WorkAuthorizationDetector.CurrentAnalysisVersion &&
         job.RemoteWork?.AnalysisVersion == RemoteWorkDetector.CurrentAnalysisVersion &&
         job.ExtendedLocationRequirement?.AnalysisVersion ==
-            ExtendedLocationRequirementDetector.CurrentAnalysisVersion &&
-        job.DetectedConcepts is not null &&
-        job.JobConceptCatalogVersion == _jobConceptDetector.CatalogVersion;
+            ExtendedLocationRequirementDetector.CurrentAnalysisVersion;
 
     private static bool IsPrimaryAnalysisCurrent(JobRecord job)
     {
@@ -663,13 +653,6 @@ public sealed class JobSourceClient
             job.Title, job.PrimaryLocation, job.AdditionalLocations, description);
         var extendedLocationRequirement = _extendedLocationRequirementDetector.Analyze(
             job.Title, job.PrimaryLocation, job.AdditionalLocations, description);
-        var detectedConcepts = _jobConceptDetector.Analyze(
-            job.Title,
-            job.PrimaryLocation,
-            job.AdditionalLocations,
-            description,
-            remoteWork,
-            extendedLocationRequirement);
         return job with
         {
             PayMinimum = salary.Minimum,
@@ -692,8 +675,8 @@ public sealed class JobSourceClient
             WorkAuthorization = authorization,
             RemoteWork = remoteWork,
             ExtendedLocationRequirement = extendedLocationRequirement,
-            DetectedConcepts = detectedConcepts,
-            JobConceptCatalogVersion = _jobConceptDetector.CatalogVersion,
+            DetectedConcepts = [],
+            JobConceptCatalogVersion = 0,
             AnalysisVersion = CurrentAnalysisVersion
         };
     }

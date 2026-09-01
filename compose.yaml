@@ -35,8 +35,8 @@ services:
 
   job-classifier:
     build:
-      context: ./classifier-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: classifier-service/Dockerfile
     user: "65532:65532"
     read_only: true
     init: true
