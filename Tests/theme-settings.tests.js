@@ -50,8 +50,8 @@ for (const [id, label] of [
   assert.match(bootstrap, new RegExp(`"${id}"`));
 }
 assert.match(index, /theme\.css\?v=11/);
-assert.match(index, /styles\.css\?v=31/);
-assert.match(index, /app\.js\?v=37/);
+assert.match(index, /styles\.css\?v=32/);
+assert.match(index, /app\.js\?v=38/);
 assert.match(app, /function normalizeThemeMode\(value\)/);
 assert.match(app, /SUPPORTED_THEME_MODES\.has\(value\) \? value : "light"/);
 
