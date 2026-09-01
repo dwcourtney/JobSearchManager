@@ -18,7 +18,7 @@ assert.match(index,
   /id="administrator-bootstrap-section"[^>]*hidden[\s\S]*?id="administrator-bootstrap-code"[\s\S]*?minlength="8"[\s\S]*?maxlength="8"[\s\S]*?Claim Administrator/);
 assert.doesNotMatch(index, /annotation-labeling-ui|detector-evaluation-ui/,
   "Removed experimental Admin assets must not load.");
-assert.match(index, /app\.js\?v=40/);
+assert.match(index, /app\.js\?v=41/);
 
 assert.match(app, /synchronizeAdminNavigation\(account\.isAdmin === true\)/);
 assert.match(app, /if \(!isAdmin\)[\s\S]*?adminTab\?\.remove\(\)[\s\S]*?return;/,
@@ -34,7 +34,9 @@ assert.match(app, /fetch\("\/api\/admin\/status"/,
   "Admin Overview must verify its server authorization endpoint.");
 assert.match(app, /admin-overview-tab[\s\S]*?Overview[\s\S]*?admin-classifier-tab[\s\S]*?Classifier/,
   "Admin must contain only useful Overview and Classifier subtabs.");
-assert.match(app, /Qwen Classifier[\s\S]*?Start background backfill/);
+assert.match(app, /DeBERTa Classifier[\s\S]*?Start background backfill/);
+assert.match(app, /Deep Analyze with Qwen/);
+assert.match(app, /Job Fit TBD/);
 assert.match(app, /fetch\("\/api\/admin\/classifier\/backfill\/status"/);
 assert.match(app, /fetch\("\/api\/admin\/classifier\/backfill", \{ method: "POST" \}\)/);
 assert.match(app, /result\.current[\s\S]*?result\.total[\s\S]*?result\.pending[\s\S]*?result\.unavailable[\s\S]*?result\.running/,
@@ -66,4 +68,4 @@ assert.match(compose,
 assert.doesNotMatch(styles, /annotation-|detector-|training-data-/,
   "Removed experimental Admin styling must not remain.");
 
-console.log("All Admin role, bootstrap, and Qwen classifier UI integration tests passed.");
+console.log("All Admin role and default DeBERTa / opt-in Qwen UI integration tests passed.");

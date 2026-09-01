@@ -224,7 +224,8 @@ public sealed record JobRecord(
     int JobConceptCatalogVersion = 0,
     SemanticJobClassification? SemanticClassification = null,
     string SemanticClassificationStatus = SemanticClassificationStates.Pending,
-    DateTimeOffset? SemanticClassificationLastAttemptUtc = null)
+    DateTimeOffset? SemanticClassificationLastAttemptUtc = null,
+    QwenDeepAnalysis? QwenDeepAnalysis = null)
 {
     public string StableId => $"{CompanyId}:{(!string.IsNullOrWhiteSpace(RequisitionId)
         ? RequisitionId
@@ -253,7 +254,17 @@ public sealed record SemanticJobClassification(
     string PromptHash,
     DateTimeOffset ClassifiedUtc,
     string ClassificationFingerprint,
-    IReadOnlyList<SemanticConceptPrediction> Predictions);
+    IReadOnlyList<SemanticConceptPrediction> Predictions,
+    string? ClassifierConfigurationVersion = null,
+    string? ClassifierConfigurationFingerprint = null);
+
+public sealed record QwenDeepAnalysis(
+    string PostingContentHash,
+    string ModelId,
+    string ModelTag,
+    string ModelDigest,
+    DateTimeOffset AnalyzedUtc,
+    string Analysis);
 
 public sealed record CredentialMatch(
     string CredentialId,
@@ -750,7 +761,8 @@ public sealed record JobListItem(
     JobListExtendedLocationRequirement? ExtendedLocationRequirement,
     IReadOnlyList<DetectedJobConcept> DetectedConcepts,
     bool AnalysisPending,
-    string SemanticClassificationStatus)
+    string SemanticClassificationStatus,
+    QwenDeepAnalysis? QwenDeepAnalysis)
 {
     public static JobListItem FromJob(JobRecord job) => new(
         job.StableId,
@@ -790,7 +802,8 @@ public sealed record JobListItem(
         string.IsNullOrWhiteSpace(job.DescriptionHtml),
         string.IsNullOrWhiteSpace(job.DescriptionHtml)
             ? SemanticClassificationStates.Pending
-            : job.SemanticClassificationStatus);
+            : job.SemanticClassificationStatus,
+        job.QwenDeepAnalysis);
 
     private static IReadOnlyList<DetectedJobConcept> SemanticDetectedConcepts(JobRecord job)
     {
@@ -804,7 +817,7 @@ public sealed record JobListItem(
             .Where(item => item.Matched)
             .Select(item => new DetectedJobConcept(
                 item.ConceptId,
-                "Qwen semantic classification"))
+                "DeBERTa semantic classification"))
             .ToArray();
     }
 }
@@ -928,6 +941,8 @@ public sealed record JobsListSnapshot(
 public sealed record DescriptionMatchRequest(
     IReadOnlyList<string>? IncludeKeywords,
     IReadOnlyList<string>? ExcludeKeywords);
+
+public sealed record JobDeepAnalysisRequest(string StableId);
 
 public sealed record UserProfile(
     EducationProfile Education,

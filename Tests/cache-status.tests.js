@@ -12,8 +12,8 @@ const styles = fs.readFileSync(path.join(root, "wwwroot", "styles.css"), "utf8")
 assert.match(index,
   /class="subtle header-status"[\s\S]*?id="last-refreshed"[\s\S]*?id="cache-status"[^>]*hidden/);
 assert.match(index, /id="cache-banner"[^>]*aria-live="polite"[^>]*hidden/);
-assert.match(index, /styles\.css\?v=32/);
-assert.match(index, /app\.js\?v=40/);
+assert.match(index, /styles\.css\?v=33/);
+assert.match(index, /app\.js\?v=41/);
 
 const updaterStart = app.indexOf("function updateCacheStatus(snapshot)");
 const updaterEnd = app.indexOf("function wireKeywordInput", updaterStart);

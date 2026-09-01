@@ -6,6 +6,7 @@
 classifier-service/*
 !classifier-service/Dockerfile
 !classifier-service/classifier_service.py
+!classifier-service/requirements.lock
 Tests
 scripts
 deploy

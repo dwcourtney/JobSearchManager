@@ -10,15 +10,16 @@ loopback-only Windows desktop mode and a hardened Linux/container deployment.
 - **Persistence:** JSON files on the local filesystem. Container mode isolates each anonymous or
   authenticated workspace and persists account, workspace, cache, and Data Protection state in
   explicit bind mounts.
-- **Semantic Job Fit:** an internal adapter sends bounded background work to the pinned local
-  `qwen3:4b-instruct-2507-q4_K_M` model through Ollama. The 85-concept taxonomy is canonical in
-  `JobConceptCatalog.json`.
+- **Default Semantic Job Fit:** the pinned `cross-encoder/nli-deberta-v3-base` model evaluates all
+  85 canonical concepts using bounded NLI inference.
+- **Optional deep analysis:** `qwen3:4b-instruct-2507-q4_K_M` remains available through Ollama only
+  when a user selects **Deep Analyze with Qwen** for one posting.
 - **Deterministic analysis:** salary, clearance, credentials/licenses, education, citizenship/work
   authorization, explicit remote metadata, and extended-location requirements remain ordinary
-  application code. They do not depend on Qwen.
+  application code. They do not depend on either model.
 - **Accounts:** optional local accounts use ASP.NET Core Identity password hashing, protected
   authentication cookies, email verification/recovery, and portable workspace export/import.
-- **Administration:** the Admin page contains operational status and Qwen backfill controls only.
+- **Administration:** the Admin page contains operational status and DeBERTa backfill controls only.
 
 Azure storage/hosting, the annotation and Training Data subsystem, semantic regex matching, and
 rejected model-experiment plumbing are not part of the supported product.
@@ -66,8 +67,9 @@ documented in `docs/curiosity-cicd.md`.
 
 ## Semantic classification
 
-Qwen classifies every canonical Job Fit concept asynchronously. A persisted result contains posting
-content hash, taxonomy version/fingerprint, model identity/digest, prompt version/hash, timestamp,
+DeBERTa classifies every canonical Job Fit concept asynchronously. A persisted result contains posting
+content hash, taxonomy version/fingerprint, model identity/revision/digest, classifier-configuration
+version/fingerprint, timestamp,
 classification fingerprint, and all 85 predictions. Cache reuse requires every output-affecting input
 to remain unchanged. Classification prioritizes active and recent jobs, then newer posting dates.
 
@@ -108,7 +110,7 @@ python3 scripts/validate-semantic-classifier.py --url http://job-classifier:8081
 
 - `Program.cs`, `JobCatalog.cs`, `JobModels.cs` — HTTP application, ingestion, cache, and workflow.
 - `JobConceptCatalog.json`, `ClassifierClient.cs`, `classifier-service/` — canonical 85-concept
-  semantic contract, persistence provenance, and private Qwen adapter.
+  semantic contract, persistence provenance, default DeBERTa runtime, and opt-in Qwen adapter.
 - `*Detector.cs`, `JobAnalysis.cs` — deterministic non-semantic parsers.
 - `wwwroot/` — dependency-light browser application and theme system.
 - `Tests/` — deterministic .NET and JavaScript regression coverage.
@@ -118,6 +120,5 @@ python3 scripts/validate-semantic-classifier.py --url http://job-classifier:8081
 
 The product previously evaluated Azure Blob persistence, regex-based semantic concepts, annotation
 workflows, supervised embeddings, and several local/hosted language-model alternatives. Those paths
-were experiments, not supported architecture. Qwen with the full 85-concept taxonomy is the sole
-semantic classifier; the history is intentionally summarized here rather than retained as executable
-plumbing or operational documentation.
+were experiments, not supported architecture. DeBERTa is the default screening classifier; Qwen is
+an optional per-job deep-analysis tool and never runs as an automatic backfill.

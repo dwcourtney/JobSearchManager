@@ -2475,6 +2475,11 @@ mark {
   white-space: nowrap;
   border: 0;
 }
+.job-card .job-fit-badge.job-fit-tbd {
+  border: var(--border-width-default) solid var(--color-border);
+  color: var(--color-text-secondary);
+  background: var(--color-surface-secondary);
+}
 
 @media (max-width: 900px) {
   .app-shell { height: auto; min-height: 100vh; }

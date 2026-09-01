@@ -48,12 +48,18 @@ services:
     environment:
       OLLAMA_URL: http://ollama:11434
       CLASSIFIER_EXPECTED_DEVICE_NAME: NVIDIA GeForce GTX 1070
+      CLASSIFIER_MODEL_ROOT: /models/nli-deberta-v3-base
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
       HOME: /tmp
     depends_on:
       ollama:
         condition: service_healthy
-    cpus: 1.0
-    mem_limit: 256m
+    gpus: all
+    cpus: 2.0
+    mem_limit: 4g
+    volumes:
+      - "${JSM_LAB_ROOT:-/home/codex/jsm-lab}/models/nli-deberta-v3-base:/models/nli-deberta-v3-base:ro"
     tmpfs:
       - /tmp
     restart: unless-stopped

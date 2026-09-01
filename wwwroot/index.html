@@ -10,7 +10,7 @@
   <link rel="manifest" href="/site.webmanifest?v=1">
   <script src="/theme-bootstrap.js"></script>
   <link rel="stylesheet" href="/theme.css?v=11">
-  <link rel="stylesheet" href="/styles.css?v=32">
+  <link rel="stylesheet" href="/styles.css?v=33">
   <script src="/vendor/purify.min.js" defer></script>
   <script src="/country-ordering.js?v=2" defer></script>
   <script src="/company-selector.js?v=1" defer></script>
@@ -24,7 +24,7 @@
   <script src="/education-fit.js?v=2" defer></script>
   <script src="/job-fit.js?v=11" defer></script>
   <script src="/clipboard-text.js?v=1" defer></script>
-  <script src="/app.js?v=40" defer></script>
+  <script src="/app.js?v=41" defer></script>
 </head>
 <body>
   <main id="app-shell" class="app-shell" aria-busy="true" inert>
@@ -174,6 +174,9 @@
                   <a id="source-posting-link" class="source-posting-button" target="_blank" rel="noopener noreferrer">
                     Open original posting
                   </a>
+                  <button id="qwen-deep-analysis-button" class="copy-posting-button" type="button">
+                    Deep Analyze with Qwen
+                  </button>
                 </div>
               </div>
               <span id="copy-posting-status" class="visually-hidden" role="status" aria-live="polite"></span>
@@ -303,6 +306,11 @@
                      role="tabpanel" aria-labelledby="job-fit-detail-tab" hidden>
               <article id="job-fit-detail-content" class="job-fit-detail-dossier"
                        aria-label="Job Fit score breakdown"></article>
+              <section id="qwen-deep-analysis-result" class="job-fit-detail-section" hidden>
+                <h3>Optional Qwen Deep Analysis</h3>
+                <p id="qwen-deep-analysis-provenance"></p>
+                <p id="qwen-deep-analysis-text"></p>
+              </section>
             </section>
             <section id="full-posting-panel" class="detail-tab-panel full-posting-panel"
                      role="tabpanel" aria-labelledby="full-posting-tab" hidden>

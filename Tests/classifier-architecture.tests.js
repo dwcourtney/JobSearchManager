@@ -27,7 +27,8 @@ for (const block of [adapter, ollama]) {
   assert.match(block, /no-new-privileges:true/);
   assert.match(block, /cap_drop:\s*\n\s*- ALL/);
 }
-assert.doesNotMatch(adapter, /gpus:|\/models/, "the adapter must have neither GPU nor model access");
+assert.match(adapter, /gpus: all/, "the default DeBERTa classifier must have GPU access");
+assert.match(adapter, /models\/nli-deberta-v3-base:\/models\/nli-deberta-v3-base:ro/);
 assert.match(ollama, /gpus: all/);
 assert.match(ollama, /models\/ollama:\/models/);
 assert.match(production, /classifier:\s*\n\s*internal: true/, "classifier network must be private");
@@ -37,18 +38,19 @@ assert.equal(new Set(taxonomy.concepts.map(item => item.id)).size, 85,
   "canonical concept IDs must remain unique");
 assert.ok(taxonomy.concepts.every(item => item.definition?.trim()),
   "every semantic concept must have a canonical definition");
-assert.match(classifier, /MODEL_TAG = "qwen3:4b-instruct-2507-q4_K_M"/);
-assert.match(classifier, /MODEL_DIGEST = "sha256:0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0"/);
-assert.match(classifier, /PROMPT_VERSION = "job-fit-85-zero-shot-v1"/);
+assert.match(classifier, /MODEL_ID = "cross-encoder\/nli-deberta-v3-base"/);
+assert.match(classifier, /MODEL_REVISION = "6c749ce3425cd33b46d187e45b92bbf96ee12ec7"/);
+assert.match(classifier, /MODEL_SHA256 = "d8148c6d49e0a7925134294c56326c71fe0ab1dc390e37355e00c7efbb488afa"/);
+assert.match(classifier, /CONFIGURATION_VERSION = "deberta-85-nli-v1"/);
+assert.match(classifier, /CHUNK_TOKENS, CHUNK_OVERLAP, MAX_LENGTH, CONCEPT_BATCH_SIZE, THRESHOLD = 384, 64, 512, 8, 0\.5/);
 assert.match(classifier, /len\(CONCEPTS\) == len\(set\(CONCEPT_IDS\)\) == 85/);
-assert.match(classifier, /"format": OUTPUT_SCHEMA/);
-assert.match(classifier, /set\(value\) != set\(CONCEPT_IDS\)/,
-  "output must have exactly the canonical 85 keys");
-assert.match(classifier, /type\(value\[key\]\) is not bool/,
-  "output values must be strict booleans");
+assert.match(classifier, /"predictions": predictions/);
 assert.match(classifier, /classificationFingerprint/);
 assert.match(classifier, /taxonomyFingerprint/);
 assert.match(classifier, /postingContentHash/);
+assert.match(classifier, /qwen_deep_analysis/);
+assert.match(program, /\/api\/jobs\/deep-analysis/);
+assert.match(models, /QwenDeepAnalysis\? QwenDeepAnalysis/);
 assert.match(classifierDockerfile, /COPY JobConceptCatalog\.json/,
   "the classifier image must receive the canonical taxonomy artifact");
 
@@ -77,4 +79,4 @@ assert.match(ollamaRuntime, /USER 65532:65532/,
   "the patched runtime image must be non-root even outside Compose");
 assert.match(ollamaRuntime, /HEALTHCHECK[\s\S]*?ollama[\s\S]*?list/);
 
-console.log("85-concept semantic classifier isolation, persistence, and scheduling architecture tests: PASS");
+console.log("85-concept DeBERTa default and opt-in Qwen architecture tests: PASS");

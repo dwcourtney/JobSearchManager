@@ -350,6 +350,19 @@ app.MapGet("/api/jobs/detail", async Task<IResult> (
     return detail is null ? Results.NotFound() : Results.Ok(detail);
 }).RequireRateLimiting("provider");
 
+app.MapPost("/api/jobs/deep-analysis", async Task<IResult> (
+    JobDeepAnalysisRequest request,
+    WorkspaceRuntimeProvider provider,
+    CancellationToken token) =>
+{
+    if (string.IsNullOrWhiteSpace(request.StableId)) return Results.BadRequest();
+    var result = await (await provider.GetAsync(token)).Catalog
+        .DeepAnalyzeWithQwenAsync(request.StableId, token);
+    return result is null
+        ? Results.StatusCode(StatusCodes.Status503ServiceUnavailable)
+        : Results.Ok(result);
+}).RequireRateLimiting("provider");
+
 app.MapPost("/api/jobs/description-matches", async (
     DescriptionMatchRequest request,
     WorkspaceRuntimeProvider provider,

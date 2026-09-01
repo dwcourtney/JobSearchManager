@@ -1060,6 +1060,50 @@ public sealed class JobCatalog
         return new(jobs.Length, current, jobs.Length - current - unavailable, unavailable, running);
     }
 
+    public async Task<QwenDeepAnalysis?> DeepAnalyzeWithQwenAsync(
+        string stableId,
+        CancellationToken cancellationToken = default)
+    {
+        if (_semanticClassification is null) return null;
+        var job = await GetJobDetailAsync(stableId, cancellationToken);
+        if (job is null || string.IsNullOrWhiteSpace(job.DescriptionHtml)) return null;
+        var analysis = await _semanticClassification.DeepAnalyzeAsync(job, cancellationToken);
+        if (analysis is null) return null;
+
+        await _sourceOperationGate.WaitAsync(cancellationToken);
+        try
+        {
+            JobSourceQuery query;
+            lock (_gate) { query = _currentQuery; }
+            var sourceKey = $"{query.CompanyId}:{_stateStore.QueryFingerprint(query)}";
+            await using var sharedSourceLease =
+                await _sharedSourceRefreshCoordinator.AcquireAsync(sourceKey, cancellationToken);
+            var document = await _stateStore.LoadJobsCacheAsync(query);
+            if (document?.Query?.IsEquivalentTo(query, _companyCatalog) != true) return null;
+            var current = document.Jobs.FirstOrDefault(item => item.StableId == stableId);
+            if (current is null || SemanticClassifierContract.PostingContentHash(
+                    current.Title, JobAnalysis.HtmlToPlainText(current.DescriptionHtml)) !=
+                analysis.PostingContentHash)
+                return null;
+            var updated = current with { QwenDeepAnalysis = analysis };
+            var jobs = document.Jobs.Select(item => item.StableId == stableId ? updated : item).ToArray();
+            await _stateStore.SaveJobsCacheAsync(jobs,
+                document.LastRefreshedUtc ?? document.SavedAtUtc,
+                document.DetailFailureCount, query);
+            lock (_gate)
+            {
+                _cachedJobs = jobs;
+                var visible = VisibleJobs(jobs);
+                _snapshot = _snapshot with { Jobs = visible, TotalJobs = visible.Length };
+            }
+            return analysis;
+        }
+        finally
+        {
+            _sourceOperationGate.Release();
+        }
+    }
+
     public SemanticClassificationBackfillStatus StartSemanticClassificationBackfill()
     {
         ScheduleSemanticClassification();
