@@ -152,11 +152,11 @@ public sealed class LlmHoldoutEvaluationService
     public const string ExactDisclaimer = AiHoldoutEvaluationService.ExactDisclaimer;
     private const string HoldoutName = "holdout.json";
     private const string ReferenceName = "ai-reference-labels-v1.json";
-    private const string ProgressName = "llm-predictions-progress.json";
-    private const string PredictionsName = "llm-predictions-v1.json";
+    private const string ProgressName = "llm-predictions-progress-v2.json";
+    private const string PredictionsName = "llm-predictions-v2.json";
     private const string StatusName = "llm-holdout-status.json";
     private const string LatestReportName = "llm-holdout-report-latest.json";
-    private const string ExternalResourceName = "llm-holdout-resource-observation.json";
+    private const string ExternalResourceName = "llm-holdout-resource-observation-v2.json";
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     { WriteIndented = true };
     private readonly string _directory;
@@ -195,6 +195,8 @@ public sealed class LlmHoldoutEvaluationService
         modelDigest = QwenDeepAnalysisContract.ModelDigest,
         promptVersion = QwenDeepAnalysisContract.PromptVersion,
         promptHash = QwenDeepAnalysisContract.PromptHash,
+        outputContractVersion = QwenDeepAnalysisContract.OutputContractVersion,
+        outputSchemaHash = QwenDeepAnalysisContract.OutputSchemaHash,
         taxonomyVersion = _catalog.Version,
         taxonomyFingerprint = _catalog.Fingerprint,
         generationConfiguration = GenerationConfiguration()
@@ -244,6 +246,20 @@ public sealed class LlmHoldoutEvaluationService
 
     public async Task<LlmHoldoutEvaluationReport> RunAsync(CancellationToken token = default)
     {
+        try { return await RunCoreAsync(token); }
+        catch (Exception exception)
+        {
+            var current = GetStatus();
+            await WriteStatusAsync(new(LlmHoldoutEvaluationStates.Failed, "Failed",
+                DateTimeOffset.UtcNow, current.EvaluationRunId, current.Completed,
+                current.Total, exception.Message, null, null, current.StartedUtc),
+                CancellationToken.None);
+            throw;
+        }
+    }
+
+    private async Task<LlmHoldoutEvaluationReport> RunCoreAsync(CancellationToken token)
+    {
         Directory.CreateDirectory(_directory);
         var runId = Guid.NewGuid().ToString("N");
         await StatusAsync(LlmHoldoutEvaluationStates.Preparing, "Preparing frozen holdout",
@@ -290,7 +306,7 @@ public sealed class LlmHoldoutEvaluationService
             await StatusAsync(LlmHoldoutEvaluationStates.Freezing, "Freezing predictions",
                 runId, progress.Count, holdout.Examples.Count,
                 "All predictions are complete; freezing them before reference comparison.", token);
-            frozen = new(1, $"{holdout.SamplingRunId}-qwen-predictions-v1", "frozen-llm-predictions",
+            frozen = new(2, $"{holdout.SamplingRunId}-qwen-predictions-v2", "frozen-llm-predictions",
                 DateTimeOffset.UtcNow, holdout.SampleFingerprint, _catalog.Fingerprint,
                 _catalog.Version, QwenDeepAnalysisContract.ModelId, QwenDeepAnalysisContract.ModelTag,
                 QwenDeepAnalysisContract.ModelDigest, QwenDeepAnalysisContract.PromptVersion,
@@ -350,7 +366,7 @@ public sealed class LlmHoldoutEvaluationService
             ExactDisclaimer,
             "Apples-to-apples agreement with one AI-derived reference standard is not absolute human-grounded truth. Interpret high-disagreement and low-support concepts cautiously.",
             "scored",
-            "Qwen did not participate in reference creation. Predictions were frozen before references were opened. No prompt, generation setting, taxonomy, RegEx rule, or production Job Fit behavior was changed for this run.");
+            "Qwen did not participate in reference creation. Predictions were frozen before references were opened. The versioned v2 compact structured-output contract was fixed before this fresh run; no holdout label, score, RegEx rule, taxonomy, model, or production Job Fit behavior informed or changed it.");
         var immutableName = $"llm-holdout-report-{runId}.json";
         await WriteAtomicallyAsync(Path.Combine(_directory, immutableName), report, token);
         await WriteAtomicallyAsync(Path.Combine(_directory, LatestReportName), report, token);
@@ -415,7 +431,7 @@ public sealed class LlmHoldoutEvaluationService
     private void ValidateFrozenPredictions(LlmHoldoutPredictionDataset value,
         HoldoutSampleDocument holdout)
     {
-        if (value.Version != 1 || value.DatasetStatus != "frozen-llm-predictions" ||
+        if (value.Version != 2 || value.DatasetStatus != "frozen-llm-predictions" ||
             value.HoldoutFingerprint != holdout.SampleFingerprint ||
             value.TaxonomyFingerprint != _catalog.Fingerprint || value.TaxonomyVersion != _catalog.Version ||
             value.ModelId != QwenDeepAnalysisContract.ModelId || value.ModelTag != QwenDeepAnalysisContract.ModelTag ||
@@ -571,7 +587,7 @@ public sealed class LlmHoldoutEvaluationService
     private static LlmGenerationConfiguration GenerationConfiguration() => new(
         QwenDeepAnalysisContract.Temperature, QwenDeepAnalysisContract.Seed,
         QwenDeepAnalysisContract.ContextLength, QwenDeepAnalysisContract.MaximumOutputTokens,
-        "strict-json-object-with-85-required-canonical-boolean-properties");
+        $"{QwenDeepAnalysisContract.OutputContractVersion}:{QwenDeepAnalysisContract.OutputSchemaHash}");
     private static string PredictionFingerprint(LlmHoldoutPredictionDataset value) => Hash(
         JsonSerializer.Serialize(value with { PredictionDatasetFingerprint = "" }, JsonOptions)
             .Replace("\r\n", "\n"));

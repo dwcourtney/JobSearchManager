@@ -150,7 +150,38 @@ if (args.Length >= 3 && args[0] == "--regex-maintenance")
                     classifier, store, catalog);
                 var llmEvaluation = new LlmHoldoutEvaluationService(evaluationDirectory,
                     llmClient.DeepAnalyzeAsync, store, catalog, regexBaseline.GetLatestReport);
-                Console.WriteLine(JsonSerializer.Serialize(await llmEvaluation.RunAsync(), jsonOptions));
+                try
+                {
+                    Console.WriteLine(JsonSerializer.Serialize(
+                        await llmEvaluation.RunAsync(), jsonOptions));
+                }
+                catch (Exception exception)
+                {
+                    Console.Error.WriteLine($"LLM holdout evaluation failed: {exception.GetType().Name}: {exception.Message}");
+                    Environment.ExitCode = 1;
+                }
+            }
+            break;
+        case "preflight-llm-holdout" when args.Length == 4:
+            using (var preflightHttp = new HttpClient
+            {
+                BaseAddress = new Uri(Environment.GetEnvironmentVariable("DEEP_ANALYSIS_URL")
+                    ?? "http://deep-analysis:8081/"),
+                Timeout = TimeSpan.FromSeconds(300)
+            })
+            {
+                var preflightClient = new ClassifierClient(preflightHttp, catalog,
+                    NullLogger<ClassifierClient>.Instance);
+                try
+                {
+                    Console.WriteLine(JsonSerializer.Serialize(await LlmTechnicalPreflight.RunAsync(
+                        Path.GetFullPath(args[3]), preflightClient.DeepAnalyzeAsync, catalog), jsonOptions));
+                }
+                catch (Exception exception)
+                {
+                    Console.Error.WriteLine($"LLM technical preflight failed: {exception.GetType().Name}: {exception.Message}");
+                    Environment.ExitCode = 1;
+                }
             }
             break;
         case "reconcile-cache" when args.Length == 4:
@@ -178,7 +209,7 @@ if (args.Length >= 3 && args[0] == "--regex-maintenance")
             Console.WriteLine(JsonSerializer.Serialize(new { backup = Path.GetFullPath(args[3]) }, jsonOptions));
             break;
         default:
-            Console.Error.WriteLine("Usage: --regex-maintenance <overview|evaluate|evaluate-ai-holdout|evaluate-llm-holdout|benchmark-cache|reconcile-cache|sample-holdout|export|import|review-stale|retention|backup> <regex-rules.db> [evaluation-directory|cache-root] [plan.json] [output.json]");
+            Console.Error.WriteLine("Usage: --regex-maintenance <overview|evaluate|evaluate-ai-holdout|evaluate-llm-holdout|preflight-llm-holdout|benchmark-cache|reconcile-cache|sample-holdout|export|import|review-stale|retention|backup> <regex-rules.db> [evaluation-directory|cache-root] [plan.json] [output.json]");
             Environment.ExitCode = 2;
             break;
     }

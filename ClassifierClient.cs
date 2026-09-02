@@ -21,7 +21,8 @@ public sealed record QwenDeepAnalysisResponse(
     bool Received, string JobId, string Title, string PostingContentHash,
     string ModelId, string ModelTag, string ModelDigest,
     int TaxonomyVersion, string TaxonomyFingerprint,
-    string PromptVersion, string PromptHash, string ClassificationFingerprint,
+    string PromptVersion, string PromptHash, string OutputContractVersion,
+    string OutputSchemaHash, string ClassificationFingerprint,
     DateTimeOffset AnalyzedUtc, IReadOnlyList<SemanticConceptPrediction> Predictions,
     string Analysis, QwenInferenceMetrics? Inference = null);
 
@@ -31,9 +32,12 @@ public static class QwenDeepAnalysisContract
     public const string ModelTag = "qwen3:4b-instruct-2507-q4_K_M";
     public const string ModelDigest =
         "sha256:0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0";
-    public const string PromptVersion = "job-fit-85-deep-analysis-v1";
+    public const string PromptVersion = "job-fit-85-compact-json-v2";
     public const string PromptHash =
-        "17f07e1391453747b37a3adcaf462b436bb214104264026f232eeac29c1d4071";
+        "3b78608ac218ae11e021598b7ad386315674ecb9abba18840e93f8ee36f05d98";
+    public const string OutputContractVersion = "compact-85-boolean-map-v2";
+    public const string OutputSchemaHash =
+        "15e934183d07749e0db4c3cb4f3bef51a5507285fad23025196ae4f184ad2ef8";
     public const int ContextLength = 8192;
     public const int MaximumOutputTokens = 3072;
     public const int Seed = 42;
@@ -44,6 +48,7 @@ public static class QwenDeepAnalysisContract
         JobConceptCatalog catalog) => Hash(string.Join('\n',
             postingContentHash, catalog.Version, catalog.Fingerprint,
             ModelId, ModelTag, ModelDigest, PromptVersion, PromptHash,
+            OutputContractVersion, OutputSchemaHash,
             Temperature, Seed, ContextLength, MaximumOutputTokens));
 
     private static string Hash(string value) => Convert.ToHexString(
@@ -89,7 +94,9 @@ public sealed class ClassifierClient(
                 value.TaxonomyVersion != catalog.Version ||
                 value.TaxonomyFingerprint != catalog.Fingerprint ||
                 value.PromptVersion != QwenDeepAnalysisContract.PromptVersion ||
-                value.PromptHash != QwenDeepAnalysisContract.PromptHash || !predictionsValid ||
+                value.PromptHash != QwenDeepAnalysisContract.PromptHash ||
+                value.OutputContractVersion != QwenDeepAnalysisContract.OutputContractVersion ||
+                value.OutputSchemaHash != QwenDeepAnalysisContract.OutputSchemaHash || !predictionsValid ||
                 value.ClassificationFingerprint != QwenDeepAnalysisContract.ClassificationFingerprint(
                     contentHash, catalog) ||
                 string.IsNullOrWhiteSpace(value.Analysis) || !ValidMetrics(value.Inference))

@@ -1221,11 +1221,17 @@ static async Task TestLlmHoldoutEvaluationAsync()
             baselineMetrics.Macro, baselineMetrics.Micro, baselineMetrics.Concepts,
             "one point", "scored", null);
         var requests = 0;
+        var injectTechnicalFailure = true;
         async Task<QwenDeepAnalysis?> Predict(ClassifierRequest request, CancellationToken token)
         {
             await Task.Yield();
             token.ThrowIfCancellationRequested();
-            Interlocked.Increment(ref requests);
+            var requestNumber = Interlocked.Increment(ref requests);
+            if (requestNumber == 4 && injectTechnicalFailure)
+            {
+                injectTechnicalFailure = false;
+                return null;
+            }
             var contentHash = SemanticRulesetFingerprint.PostingContentHash(
                 request.Title, request.Description);
             return new QwenDeepAnalysis(contentHash, QwenDeepAnalysisContract.ModelId,
@@ -1240,22 +1246,37 @@ static async Task TestLlmHoldoutEvaluationAsync()
         }
         var service = new LlmHoldoutEvaluationService(evaluationDirectory, Predict, store,
             catalog, () => baseline);
+        await AssertThrowsAsync<InvalidDataException>(() => service.RunAsync());
+        var checkpoint = JsonSerializer.Deserialize<IReadOnlyList<LlmHoldoutPredictionItem>>(
+            await File.ReadAllBytesAsync(Path.Combine(evaluationDirectory,
+                "llm-predictions-progress-v2.json")),
+            new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        Assert(checkpoint?.Count == 3 &&
+               service.GetStatus().State == LlmHoldoutEvaluationStates.Failed,
+            "A technical evaluator failure did not preserve the validated checkpoint and durable failed state.");
+        service = new LlmHoldoutEvaluationService(evaluationDirectory, Predict, store,
+            catalog, () => baseline);
         var first = await service.RunAsync();
-        var frozenPath = Path.Combine(evaluationDirectory, "llm-predictions-v1.json");
+        var frozenPath = Path.Combine(evaluationDirectory, "llm-predictions-v2.json");
         var frozenBefore = await File.ReadAllBytesAsync(frozenPath);
         var second = await service.RunAsync();
         var frozenAfter = await File.ReadAllBytesAsync(frozenPath);
+        var preflight = await LlmTechnicalPreflight.RunAsync(evaluationDirectory,
+            Predict, catalog);
         await using var connection = new Microsoft.Data.Sqlite.SqliteConnection(
             $"Data Source={store.DatabasePath}");
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
         command.CommandText = "SELECT COUNT(*) FROM LlmEvaluationRunDetails;";
         var ledgerCount = Convert.ToInt32(await command.ExecuteScalarAsync());
-        Assert(requests == 200 && frozenBefore.SequenceEqual(frozenAfter) &&
+        Assert(requests == 203 && frozenBefore.SequenceEqual(frozenAfter) &&
                first.PredictionFingerprint == second.PredictionFingerprint &&
                first.EligibleConceptDecisions == 17_000 && first.PostingCount == 200 &&
                first.LlmMacro == first.RegexMacro && first.LlmMicro == first.RegexMicro &&
                first.Runtime.ApproximateInferenceCount == 200 && ledgerCount == 2 &&
+               preflight.Status == "passed" && preflight.CompleteStructuredOutput &&
+               preflight.StablePredictions && preflight.BoundedOutput &&
+               preflight.CheckpointRoundTrip && preflight.OutputTokenCounts.Count == 2 &&
                service.GetStatus().State == LlmHoldoutEvaluationStates.Complete,
             "The LLM holdout did not freeze exactly one prediction set before common scoring and ledger persistence.");
     }
@@ -1318,7 +1339,8 @@ static Task TestLlmFixtureMetricsAsync()
            catalog.Concepts.All(item => !string.IsNullOrWhiteSpace(item.Definition)),
         "The canonical semantic taxonomy did not preserve 85 unique, defined concepts.");
     Assert(catalog.Fingerprint == "514ed1c8c644d1eec426b5fdcf4d5a2c447aa61ce5572ae70b2d03fc3815a049" &&
-           QwenDeepAnalysisContract.PromptVersion == "job-fit-85-deep-analysis-v1",
+           QwenDeepAnalysisContract.PromptVersion == "job-fit-85-compact-json-v2" &&
+           QwenDeepAnalysisContract.OutputContractVersion == "compact-85-boolean-map-v2",
         "The canonical taxonomy or opt-in LLM prompt identity changed without an explicit version update.");
     return Task.CompletedTask;
 }
@@ -1331,7 +1353,8 @@ static string QwenPayload(
         true, jobId, title, contentHash, QwenDeepAnalysisContract.ModelId,
         QwenDeepAnalysisContract.ModelTag, QwenDeepAnalysisContract.ModelDigest,
         catalog.Version, catalog.Fingerprint, QwenDeepAnalysisContract.PromptVersion,
-        QwenDeepAnalysisContract.PromptHash,
+        QwenDeepAnalysisContract.PromptHash, QwenDeepAnalysisContract.OutputContractVersion,
+        QwenDeepAnalysisContract.OutputSchemaHash,
         QwenDeepAnalysisContract.ClassificationFingerprint(contentHash, catalog),
         new DateTimeOffset(2026, 9, 1, 12, 0, 0, TimeSpan.Zero),
         catalog.Concepts.Select(item => new SemanticConceptPrediction(item.Id, true)).ToArray(),

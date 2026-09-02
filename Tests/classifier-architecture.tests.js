@@ -51,8 +51,11 @@ assert.match(client, /"sqlite-regex-v1"/);
 assert.doesNotMatch(client, /\/classify|DeBERTa|deberta/i);
 
 assert.match(adapter, /purpose": "opt-in-llm-deep-analysis"/);
-assert.match(adapter, /SERVICE_VERSION, PROTOCOL_VERSION = "3\.1\.0", "8"/);
-assert.match(adapter, /QWEN_PROMPT_VERSION = "job-fit-85-deep-analysis-v1"/);
+assert.match(adapter, /SERVICE_VERSION, PROTOCOL_VERSION = "3\.2\.0", "9"/);
+assert.match(adapter, /QWEN_PROMPT_VERSION = "job-fit-85-compact-json-v2"/);
+assert.match(adapter, /QWEN_OUTPUT_CONTRACT_VERSION = "compact-85-boolean-map-v2"/);
+assert.match(adapter, /QWEN_OUTPUT_SCHEMA_HASH/);
+assert.match(adapter, /response_value\.get\("done_reason"\) != "stop"/);
 assert.match(adapter, /QWEN_OUTPUT_SCHEMA/);
 assert.match(adapter, /qwen_classification_fingerprint/);
 assert.doesNotMatch(adapter, /torch|transformers|deberta|\/classify/i);
