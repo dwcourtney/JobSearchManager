@@ -1277,6 +1277,7 @@ static async Task TestLlmHoldoutEvaluationAsync()
                preflight.Status == "passed" && preflight.CompleteStructuredOutput &&
                preflight.StablePredictions && preflight.BoundedOutput &&
                preflight.CheckpointRoundTrip && preflight.OutputTokenCounts.Count == 2 &&
+               preflight.SemanticDisagreementCount == 0 &&
                service.GetStatus().State == LlmHoldoutEvaluationStates.Complete,
             "The LLM holdout did not freeze exactly one prediction set before common scoring and ledger persistence.");
     }

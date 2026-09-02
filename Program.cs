@@ -57,7 +57,8 @@ if (args.Length >= 3 && args[0] == "--llm-benchmark")
                         NullLogger<ClassifierClient>.Instance);
                     object result = action == "preflight"
                         ? await LlmTechnicalPreflight.RunAsync(benchmarkDirectory,
-                            client.DeepAnalyzeAsync, catalog)
+                            client.DeepAnalyzeAsync, catalog,
+                            requireStablePredictions: false)
                         : await new LlmHardwareBenchmarkRunner(benchmarkDirectory,
                             client.DeepAnalyzeAsync, catalog).RunPredictionsAsync();
                     Console.WriteLine(JsonSerializer.Serialize(result, jsonOptions));
@@ -846,6 +847,8 @@ app.MapGet("/api/admin/evaluations/llm-holdout/status", (
     {
         status = evaluation.GetStatus(),
         report = evaluation.GetLatestReport(),
+        rtx5080Status = evaluation.GetRtx5080Status(),
+        hardwareComparison = evaluation.GetHardwareComparison(),
         model = evaluation.GetCurrentModelInfo()
     })).RequireAuthorization(AdminAuthorization.Policy);
 

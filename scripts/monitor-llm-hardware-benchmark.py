@@ -10,7 +10,7 @@ import time
 from datetime import datetime, timezone
 
 
-MODEL_DIGEST = "sha256:0edcdef34593c76c4b82c1a8b8210a3d3d707f7f812b74a568798291c05c68ba"
+MODEL_DIGEST = "sha256:0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0"
 
 
 def command(*arguments):
@@ -25,9 +25,14 @@ def memory_bytes(value):
     return int(float(number) * factors[unit])
 
 
-def container_memory(name):
-    usage = command("docker", "stats", "--no-stream", "--format", "{{.MemUsage}}", name)
-    return memory_bytes(usage.split("/")[0])
+def container_memories(*names):
+    output = command("docker", "stats", "--no-stream", "--format",
+                     "{{.Name}} {{.MemUsage}}", *names)
+    result = {}
+    for line in output.splitlines():
+        name, usage = line.split(maxsplit=1)
+        result[name] = memory_bytes(usage.split("/")[0])
+    return result
 
 
 def main():
@@ -61,12 +66,13 @@ def main():
         if previous_time is not None:
             energy_watt_seconds += (previous_power + power) / 2 * (now - previous_time)
         previous_time, previous_power = now, power
+        memory = container_memories(arguments.ollama, arguments.adapter)
         samples.append({
             "gpu": utilization,
             "memory": int(memory_mib * 1024 * 1024),
             "power": power,
-            "ollama": container_memory(arguments.ollama),
-            "adapter": container_memory(arguments.adapter),
+            "ollama": memory[arguments.ollama],
+            "adapter": memory[arguments.adapter],
         })
         time.sleep(max(0.0, arguments.interval - (time.monotonic() - started)))
 
@@ -88,7 +94,7 @@ def main():
         "averageGpuPowerWatts": sum(row["power"] for row in samples) / len(samples),
         "peakGpuPowerWatts": max(row["power"] for row in samples),
         "approximateGpuEnergyWattHours": energy_watt_seconds / 3600,
-        "source": "One-second nvidia-smi host-GPU samples and docker stats container-memory samples; energy is trapezoidal integration of observed board power."
+        "source": "Repeated nvidia-smi host-GPU and single-pass docker stats container-memory samples requested at one-second intervals; actual monotonic intervals are used for trapezoidal board-power integration."
     }
     destination = os.path.abspath(arguments.output)
     temporary = destination + ".tmp"
