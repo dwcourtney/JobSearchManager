@@ -76,6 +76,30 @@ The current detector returns boolean present/absent decisions. Precision, recall
 
 Evaluation is explicit Admin/maintenance work. It never runs on normal job requests, and benchmark classifications do not increment production rule-use counters.
 
+## Apples-to-apples local LLM evaluation
+
+Admin -> Evaluation -> LLM uses the same frozen 200 postings, 85 concepts, reference-label
+fingerprint, 97 unresolved exclusions, and metric calculator as the RegEx production-holdout run.
+The established `job-fit-85-deep-analysis-v1` prompt and pinned generation configuration are used
+without holdout-driven changes. Qwen receives only the full posting and canonical taxonomy; it never
+receives references, RegEx rules or predictions, RegEx evidence or scores, benchmark results, or
+Codex A/B artifacts.
+
+The enforced order is: validate the unlabeled holdout, run or safely resume exactly one prediction
+per posting, freeze and fingerprint all 200 x 85 predictions, and only then open the immutable
+AI-adjudicated reference file. A frozen prediction set is never overwritten or selectively retried.
+A changed model, prompt, taxonomy, or generation contract requires a separately versioned
+experiment. The generic evaluation ledger keeps RegEx and LLM runs separate and the LLM detail row
+records model, prompt, generation, reference, prediction, comparison, and runtime provenance.
+
+Latency and Ollama token timing come from the first inference responses. Ollama model residency and
+VRAM allocation come from its private `/api/ps` response; adapter RAM is peak process RSS. GPU
+utilization is deliberately unavailable inside the hardened JSM container rather than granting it
+host or Docker-socket access. An operator may provide the evaluation directory with a validated
+`llm-holdout-resource-observation.json` generated from external `nvidia-smi` and `docker stats`
+sampling during the run. The evaluator reads that observation only after predictions are frozen, so
+resource measurement cannot change predictions.
+
 ## Practical interpretation
 
 The old historical macro F1 near `0.9976` answers “did the detector preserve expected behavior on the original eight-concept known-case subset?” It does not answer “how accurate is this on future production jobs?” The broader curated corpus is also development/regression evidence. A holdout instead asks how the frozen detector behaves on a random production sample that did not influence its construction.

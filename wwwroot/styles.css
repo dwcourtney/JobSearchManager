@@ -2563,6 +2563,7 @@ mark {
 }
 
 .admin-evaluation-list { display: grid; gap: 1rem; margin-top: 1rem; }
+.admin-evaluation-subtabs { margin-top: .75rem; }
 .admin-evaluation-card { border: var(--border-width-default) solid var(--color-border); border-radius: var(--radius-control); }
 .admin-evaluation-card > h4 { margin: 0 0 .55rem; color: var(--color-text-heading); }
 .admin-evaluation-card > strong { display: block; color: var(--color-text-secondary); line-height: var(--line-height-note); }
@@ -2577,6 +2578,8 @@ mark {
 .admin-evaluation-metrics dd { margin: .18rem 0 0; color: var(--color-text-heading); font-weight: var(--font-weight-semibold); font-variant-numeric: tabular-nums; }
 .admin-evaluation-metadata { overflow-wrap: anywhere; color: var(--color-text-secondary); font-size: var(--font-size-caption); }
 .admin-evaluation-table-controls, .admin-table-pager { display: flex; align-items: center; gap: .5rem; margin: .65rem 0; }
+.admin-evaluation-card details { overflow-x: auto; }
+.admin-comparison-summary { margin: .85rem 0; }
 .admin-table-pager span { margin-right: auto; color: var(--color-text-secondary); }
 .admin-compact-table { width: 100%; border-collapse: collapse; font-size: var(--font-size-caption); }
 .admin-compact-table th, .admin-compact-table td { padding: .45rem .5rem; border-bottom: var(--border-width-default) solid var(--color-border); text-align: left; vertical-align: top; }

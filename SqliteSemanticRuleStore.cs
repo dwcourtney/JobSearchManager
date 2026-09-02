@@ -19,7 +19,7 @@ public sealed record EvaluationRunSummary(
 
 public sealed class SqliteSemanticRuleStore : IDisposable
 {
-    private const int SchemaVersion = 4;
+    private const int SchemaVersion = 5;
     private readonly string _connectionString;
     private readonly JobConceptCatalog _catalog;
     private readonly SemanticRulePolicy _policy;
@@ -149,6 +149,22 @@ public sealed class SqliteSemanticRuleStore : IDisposable
                 Precision REAL NULL, Recall REAL NULL, F1 REAL NULL,
                 PRIMARY KEY (EvaluationRunId, ConceptId)
             );
+            CREATE TABLE IF NOT EXISTS LlmEvaluationRunDetails (
+                EvaluationRunId TEXT PRIMARY KEY REFERENCES EvaluationRuns(EvaluationRunId),
+                HoldoutFingerprint TEXT NOT NULL,
+                ReferenceLabelFingerprint TEXT NOT NULL,
+                PredictionFingerprint TEXT NOT NULL,
+                ClassifierType TEXT NOT NULL,
+                ModelId TEXT NOT NULL,
+                ModelTag TEXT NOT NULL,
+                ModelDigest TEXT NOT NULL,
+                PromptVersion TEXT NOT NULL,
+                PromptHash TEXT NOT NULL,
+                GenerationConfigurationJson TEXT NOT NULL,
+                RuntimeMetricsJson TEXT NOT NULL,
+                ComparisonMetricsJson TEXT NOT NULL,
+                Limitations TEXT NOT NULL
+            );
             CREATE TABLE IF NOT EXISTS CandidateValidations (
                 RuleId TEXT PRIMARY KEY REFERENCES SemanticRules(RuleId),
                 RuleFingerprint TEXT NOT NULL,
@@ -190,6 +206,25 @@ public sealed class SqliteSemanticRuleStore : IDisposable
                 ALTER TABLE EvaluationRuns ADD COLUMN HistoricalMicroPrecision REAL NULL;
                 ALTER TABLE EvaluationRuns ADD COLUMN HistoricalMicroRecall REAL NULL;
                 ALTER TABLE EvaluationRuns ADD COLUMN HistoricalMicroF1 REAL NULL;
+                """);
+        if (version is > 0 and < 5)
+            Execute(connection, transaction, """
+                CREATE TABLE IF NOT EXISTS LlmEvaluationRunDetails (
+                    EvaluationRunId TEXT PRIMARY KEY REFERENCES EvaluationRuns(EvaluationRunId),
+                    HoldoutFingerprint TEXT NOT NULL,
+                    ReferenceLabelFingerprint TEXT NOT NULL,
+                    PredictionFingerprint TEXT NOT NULL,
+                    ClassifierType TEXT NOT NULL,
+                    ModelId TEXT NOT NULL,
+                    ModelTag TEXT NOT NULL,
+                    ModelDigest TEXT NOT NULL,
+                    PromptVersion TEXT NOT NULL,
+                    PromptHash TEXT NOT NULL,
+                    GenerationConfigurationJson TEXT NOT NULL,
+                    RuntimeMetricsJson TEXT NOT NULL,
+                    ComparisonMetricsJson TEXT NOT NULL,
+                    Limitations TEXT NOT NULL
+                );
                 """);
         if (version < SchemaVersion)
         {
@@ -538,8 +573,16 @@ public sealed class SqliteSemanticRuleStore : IDisposable
         return created;
     }
 
-    public async Task SaveEvaluationAsync(RegexEvaluationReport report,
-        CancellationToken cancellationToken = default)
+    public Task SaveEvaluationAsync(RegexEvaluationReport report,
+        CancellationToken cancellationToken = default) =>
+        SaveEvaluationCoreAsync(report, null, cancellationToken);
+
+    public Task SaveLlmEvaluationAsync(RegexEvaluationReport report,
+        LlmEvaluationLedgerDetails details, CancellationToken cancellationToken = default) =>
+        SaveEvaluationCoreAsync(report, details, cancellationToken);
+
+    private async Task SaveEvaluationCoreAsync(RegexEvaluationReport report,
+        LlmEvaluationLedgerDetails? llmDetails, CancellationToken cancellationToken)
     {
         await _writeGate.WaitAsync(cancellationToken);
         try
@@ -644,6 +687,36 @@ public sealed class SqliteSemanticRuleStore : IDisposable
                 command.Parameters.AddWithValue("$precision", Db(result.Precision));
                 command.Parameters.AddWithValue("$recall", Db(result.Recall));
                 command.Parameters.AddWithValue("$f1", Db(result.F1));
+                await command.ExecuteNonQueryAsync(cancellationToken);
+            }
+            if (llmDetails is not null)
+            {
+                if (llmDetails.EvaluationRunId != report.EvaluationRunId)
+                    throw new InvalidDataException("LLM ledger details do not match the evaluation run.");
+                await using var command = connection.CreateCommand();
+                command.Transaction = (SqliteTransaction)transaction;
+                command.CommandText = """
+                    INSERT INTO LlmEvaluationRunDetails(EvaluationRunId,HoldoutFingerprint,
+                        ReferenceLabelFingerprint,PredictionFingerprint,ClassifierType,ModelId,
+                        ModelTag,ModelDigest,PromptVersion,PromptHash,GenerationConfigurationJson,
+                        RuntimeMetricsJson,ComparisonMetricsJson,Limitations)
+                    VALUES($run,$holdout,$reference,$prediction,$type,$modelId,$modelTag,$digest,
+                        $promptVersion,$promptHash,$generation,$runtime,$comparison,$limitations);
+                    """;
+                command.Parameters.AddWithValue("$run", llmDetails.EvaluationRunId);
+                command.Parameters.AddWithValue("$holdout", llmDetails.HoldoutFingerprint);
+                command.Parameters.AddWithValue("$reference", llmDetails.ReferenceLabelFingerprint);
+                command.Parameters.AddWithValue("$prediction", llmDetails.PredictionFingerprint);
+                command.Parameters.AddWithValue("$type", llmDetails.ClassifierType);
+                command.Parameters.AddWithValue("$modelId", llmDetails.ModelId);
+                command.Parameters.AddWithValue("$modelTag", llmDetails.ModelTag);
+                command.Parameters.AddWithValue("$digest", llmDetails.ModelDigest);
+                command.Parameters.AddWithValue("$promptVersion", llmDetails.PromptVersion);
+                command.Parameters.AddWithValue("$promptHash", llmDetails.PromptHash);
+                command.Parameters.AddWithValue("$generation", llmDetails.GenerationConfigurationJson);
+                command.Parameters.AddWithValue("$runtime", llmDetails.RuntimeMetricsJson);
+                command.Parameters.AddWithValue("$comparison", llmDetails.ComparisonMetricsJson);
+                command.Parameters.AddWithValue("$limitations", llmDetails.Limitations);
                 await command.ExecuteNonQueryAsync(cancellationToken);
             }
             await transaction.CommitAsync(cancellationToken);

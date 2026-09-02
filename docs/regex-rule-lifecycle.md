@@ -48,6 +48,7 @@ The local maintenance entry point is:
 dotnet JobSearchManager.dll --regex-maintenance overview <database>
 dotnet JobSearchManager.dll --regex-maintenance evaluate <database>
 dotnet JobSearchManager.dll --regex-maintenance evaluate-ai-holdout <database> <evaluation-directory>
+dotnet JobSearchManager.dll --regex-maintenance evaluate-llm-holdout <database> <evaluation-directory>
 dotnet JobSearchManager.dll --regex-maintenance benchmark-cache <database> <cache-root>
 dotnet JobSearchManager.dll --regex-maintenance reconcile-cache <database> <cache-root>
 dotnet JobSearchManager.dll --regex-maintenance sample-holdout <database> <cache-root> <plan.json> <output.json>

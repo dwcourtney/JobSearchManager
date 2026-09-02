@@ -34,10 +34,13 @@ disagreement-only adjudication before this classifier is invoked. Unresolved ref
 and excluded from binary metrics. Its report includes AI consistency statistics and the exact
 reference fingerprint; it never changes rules or selects a per-job classifier winner.
 
-## Dormant: Qwen/Ollama
+## Evaluation-only: Qwen/Ollama
 
-`qwen3:4b-instruct-2507-q4_K_M` remains installed for possible later restoration, but JSM exposes no
-normal UI or HTTP execution route for it. It is never scheduled by ingestion or RegEx backfill.
+`qwen3:4b-instruct-2507-q4_K_M` remains disabled in the normal Jobs workflow. JSM exposes no normal
+Jobs UI or HTTP execution route for it, and ingestion or RegEx backfill never schedules it. An
+administrator may explicitly run the frozen production-holdout experiment under Evaluation -> LLM.
+That path freezes predictions before reading references and cannot arbitrate or replace production
+RegEx Job Fit.
 Historical requests may persist as queued, running, completed, or failed;
 duplicate work with the same posting/model fingerprint is coalesced. Results retain posting hash,
 model digest, taxonomy and prompt provenance, classification fingerprint, timestamp, all 85 concept
@@ -45,6 +48,9 @@ predictions, and the analysis text.
 
 The adapter exposes only `/healthz` and `/deep-analyze`. The former DeBERTa `/classify` endpoint,
 weights, model mount, CUDA runtime, and automatic model inference are intentionally absent.
+Protocol 8 adds Ollama timing/token/residency fields to the existing response for evaluation
+measurement. It does not change the model prompt, temperature, seed, context length, output-token
+limit, taxonomy, or 85-boolean prediction contract.
 
 ## Quality boundary
 

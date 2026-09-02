@@ -67,6 +67,10 @@ List and detail views project the same current RegEx classification, so selectin
 observational. The Admin evaluation ledger separates the **CURATED REGRESSION BENCHMARK**,
 validation, and **AI-ADJUDICATED PRODUCTION HOLDOUT**. The holdout uses prediction-blinded Codex A/B
 passes plus disagreement adjudication; its machine-derived references are not human ground truth.
+Admin -> Evaluation is split into **RegEx** and **LLM**. The LLM page can freeze the current pinned
+local model's first complete 85-concept prediction set before comparing it with those exact same
+references and exclusions. This explicit experiment does not re-enable LLM Job Fit or change the
+production classifier.
 See `docs/regex-evaluation-methodology.md` for sampling,
 label provenance, contamination, support, metrics, and the PR-curve limitation.
 
@@ -93,8 +97,8 @@ exact-commit identity checks, and confirms the removed `/classify` model endpoin
 - `SemanticRules.cs`, `SqliteSemanticRuleStore.cs`, `RegexSemanticClassifier.cs` — rule schema,
   lifecycle, hot reload, fingerprints, and telemetry.
 - `LegacyJobConceptRules.json`, `RegexValidationCorpus.json`, `RegexEvaluation.cs`,
-  `AiHoldoutEvaluation.cs` — recovered source catalog, curated regression evaluation, and the
-  durable prediction-blinded holdout pipeline.
+  `AiHoldoutEvaluation.cs`, `LlmHoldoutEvaluation.cs` — recovered source catalog, curated regression
+  evaluation, frozen references, and the durable apples-to-apples LLM holdout pipeline.
 - `ClassifierClient.cs`, `classifier-service/` — in-process default RegEx integration and opt-in Qwen
   bridge.
 - `Program.cs`, `JobCatalog.cs`, `JobModels.cs` — HTTP application, ingestion, cache, workflow, and

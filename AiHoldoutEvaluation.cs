@@ -214,7 +214,9 @@ public sealed class AiHoldoutEvaluationService
         await ValidatePromptAsync(manifest.LabelerB, "labeler-b-prompt.txt", token);
         await ValidatePromptAsync(manifest.Adjudicator, "adjudicator-prompt.txt", token);
         var holdout = await ReadRequiredAsync<HoldoutSampleDocument>(manifest.HoldoutFile, token);
-        ValidateHoldout(holdout, manifest);
+        ValidateFrozenHoldout(holdout, _catalog);
+        if (holdout.SampleFingerprint != manifest.ExpectedSampleFingerprint)
+            throw new InvalidDataException("The frozen holdout does not match the approved manifest.");
         var runId = Guid.NewGuid().ToString("N");
 
         await StatusAsync(AiHoldoutEvaluationStates.LabelingPassA, "Labeling pass A",
@@ -245,7 +247,7 @@ public sealed class AiHoldoutEvaluationService
             runId, 0, holdout.Examples.Count * _catalog.Concepts.Count,
             "Freezing machine-derived references before any RegEx scoring.", token);
         var references = BuildReferenceDataset(holdout, manifest, passA, passB, adjudications);
-        var fingerprint = ReferenceFingerprint(references);
+        var fingerprint = CalculateReferenceFingerprint(references);
         references = references with { ReferenceDatasetFingerprint = fingerprint };
         var referencePath = Path.Combine(_directory, ReferenceName);
         if (File.Exists(referencePath))
@@ -254,7 +256,7 @@ public sealed class AiHoldoutEvaluationService
                 await File.ReadAllBytesAsync(referencePath, token), JsonOptions)
                 ?? throw new InvalidDataException("The frozen reference dataset is invalid.");
             if (frozen.ReferenceDatasetFingerprint != fingerprint ||
-                ReferenceFingerprint(frozen) != fingerprint)
+                CalculateReferenceFingerprint(frozen) != fingerprint)
                 throw new InvalidDataException(
                     "Reference judgments changed after freeze. Create a new reference dataset version; the existing frozen references were not modified.");
             references = frozen;
@@ -301,11 +303,12 @@ public sealed class AiHoldoutEvaluationService
         return report;
     }
 
-    private void ValidateHoldout(HoldoutSampleDocument holdout, AiHoldoutRunManifest manifest)
+    internal static void ValidateFrozenHoldout(HoldoutSampleDocument holdout,
+        JobConceptCatalog catalog)
     {
         if (holdout.DatasetRole != EvaluationDatasetRoles.ProductionHoldout ||
             holdout.DatasetStatus != "frozen-unlabeled" || holdout.Examples.Count != holdout.Plan.SampleSize ||
-            holdout.SampleFingerprint != manifest.ExpectedSampleFingerprint ||
+            catalog.Concepts.Count != 85 ||
             holdout.Examples.Select(item => item.EvaluationExampleId).Distinct(StringComparer.Ordinal).Count()
                 != holdout.Examples.Count ||
             holdout.Examples.Any(item => item.DetectorOutputExposedDuringLabeling ||
@@ -423,37 +426,8 @@ public sealed class AiHoldoutEvaluationService
         AiHoldoutRunManifest manifest, AiReferenceDataset references,
         IReadOnlyDictionary<string, IReadOnlySet<string>> predictions)
     {
-        var concepts = new List<AiHoldoutConceptMetric>();
-        foreach (var concept in _catalog.Concepts)
-        {
-            var values = references.Decisions.Where(item => item.ConceptId == concept.Id).ToArray();
-            var eligible = values.Where(item => !item.Unresolved).ToArray();
-            var tp = eligible.Count(item => item.FinalReferenceJudgment == AiReferenceJudgments.Present &&
-                predictions[item.EvaluationExampleId].Contains(concept.Id));
-            var fp = eligible.Count(item => item.FinalReferenceJudgment == AiReferenceJudgments.Absent &&
-                predictions[item.EvaluationExampleId].Contains(concept.Id));
-            var fn = eligible.Count(item => item.FinalReferenceJudgment == AiReferenceJudgments.Present &&
-                !predictions[item.EvaluationExampleId].Contains(concept.Id));
-            var tn = eligible.Count(item => item.FinalReferenceJudgment == AiReferenceJudgments.Absent &&
-                !predictions[item.EvaluationExampleId].Contains(concept.Id));
-            var precision = Divide(tp, tp + fp);
-            var recall = Divide(tp, tp + fn);
-            concepts.Add(new(concept.Id, concept.DisplayName, tp + fn, eligible.Length,
-                values.Length - eligible.Length, tp, fp, fn, tn, precision, recall,
-                Harmonic(precision, recall), values.Count(item => !item.Agreed),
-                (double)values.Count(item => !item.Agreed) / values.Length));
-        }
-        var macro = new RegexAggregateEvaluation(Average(concepts.Select(item => item.Precision)),
-            Average(concepts.Select(item => item.Recall)), Average(concepts.Select(item => item.F1)),
-            concepts.Count, concepts.Sum(item => item.EligibleDecisions));
-        var totalTp = concepts.Sum(item => item.TruePositive);
-        var totalFp = concepts.Sum(item => item.FalsePositive);
-        var totalFn = concepts.Sum(item => item.FalseNegative);
-        var microPrecision = Divide(totalTp, totalTp + totalFp);
-        var microRecall = Divide(totalTp, totalTp + totalFn);
-        var micro = new RegexAggregateEvaluation(microPrecision, microRecall,
-            Harmonic(microPrecision, microRecall), concepts.Count,
-            concepts.Sum(item => item.EligibleDecisions));
+        var metricResult = HoldoutMetricCalculator.Calculate(_catalog, references, predictions);
+        var concepts = metricResult.Concepts;
         var highestPostings = references.Decisions.GroupBy(item => item.EvaluationExampleId,
                 StringComparer.Ordinal).Select(group => new AiHoldoutPostingDisagreement(group.Key,
                 group.Count(item => !item.Agreed),
@@ -464,9 +438,9 @@ public sealed class AiHoldoutEvaluationService
             references.AgreementCount, references.DisagreementCount,
             (double)references.DisagreementCount / references.ConceptDecisionCount,
             references.AdjudicatedCount, references.UnresolvedCount, concepts, highestPostings);
-        var eligibleCount = concepts.Sum(item => item.EligibleDecisions);
-        var positives = concepts.Sum(item => item.Support);
-        var negatives = eligibleCount - positives;
+        var eligibleCount = metricResult.EligibleCount;
+        var positives = metricResult.PositiveCount;
+        var negatives = metricResult.NegativeCount;
         return new(runId, DateTimeOffset.UtcNow, references.DatasetId,
             EvaluationDatasetRoles.ProductionHoldout, references.DatasetDisplayName,
             "Prediction-blinded machine-derived reference evaluation of current production RegEx generalization.",
@@ -479,7 +453,8 @@ public sealed class AiHoldoutEvaluationService
             holdout.Examples.Count, references.ConceptDecisionCount, eligibleCount,
             references.UnresolvedCount, positives, negatives,
             eligibleCount == 0 ? 0 : (double)positives / eligibleCount,
-            eligibleCount == 0 ? 0 : (double)negatives / eligibleCount, macro, micro, concepts,
+            eligibleCount == 0 ? 0 : (double)negatives / eligibleCount, metricResult.Macro,
+            metricResult.Micro, concepts,
             "Not available: binary RegEx output yields one precision/recall operating point; no threshold-swept PR curve is scientifically defined.",
             "scored", manifest.Notes);
     }
@@ -524,7 +499,7 @@ public sealed class AiHoldoutEvaluationService
             throw new InvalidDataException($"{reviewer.Role} prompt fingerprint does not verify.");
     }
 
-    private static string ReferenceFingerprint(AiReferenceDataset references)
+    internal static string CalculateReferenceFingerprint(AiReferenceDataset references)
     {
         var canonical = string.Join("\n", references.Decisions.Select(item =>
             $"{item.EvaluationExampleId}|{item.PostingContentHash}|{item.ConceptId}|{item.LabelerAJudgment}|{item.LabelerBJudgment}|{item.AdjudicatedJudgment ?? ""}|{item.FinalReferenceJudgment}"));
