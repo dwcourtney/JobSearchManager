@@ -56,7 +56,7 @@ assert.match(adapter, /QWEN_PROMPT_VERSION = "job-fit-85-deep-analysis-v1"/);
 assert.match(adapter, /QWEN_OUTPUT_SCHEMA/);
 assert.match(adapter, /qwen_classification_fingerprint/);
 assert.doesNotMatch(adapter, /torch|transformers|deberta|\/classify/i);
-assert.match(adapterDockerfile, /python:3\.12\.12-slim-bookworm@sha256:/);
+assert.match(adapterDockerfile, /python:3\.12\.12-alpine3\.23@sha256:/);
 assert.match(adapterDockerfile, /COPY JobConceptCatalog\.json/);
 
 assert.match(program, /\/api\/jobs\/deep-analysis/);
