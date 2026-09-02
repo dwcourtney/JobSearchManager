@@ -789,11 +789,9 @@ public sealed record JobListItem(
     JobListExtendedLocationRequirement? ExtendedLocationRequirement,
     IReadOnlyList<DetectedJobConcept> DetectedConcepts,
     bool AnalysisPending,
-    string SemanticClassificationStatus,
-    QwenDeepAnalysis? QwenDeepAnalysis,
-    LlmDeepAnalysisRequestState DeepAnalysisRequest)
+    string SemanticClassificationStatus)
 {
-    public static JobListItem FromJob(JobRecord job) => new(
+    public static JobListItem FromJob(JobRecord job, bool semanticCurrent = true) => new(
         job.StableId,
         job.Title,
         job.RequisitionId,
@@ -827,15 +825,13 @@ public sealed record JobListItem(
         string.IsNullOrWhiteSpace(job.DescriptionHtml) || job.ExtendedLocationRequirement is null
             ? null
             : JobListExtendedLocationRequirement.FromAnalysis(job.ExtendedLocationRequirement),
-        SemanticDetectedConcepts(job),
+        semanticCurrent ? SemanticDetectedConcepts(job) : [],
         string.IsNullOrWhiteSpace(job.DescriptionHtml),
-        string.IsNullOrWhiteSpace(job.DescriptionHtml)
+        string.IsNullOrWhiteSpace(job.DescriptionHtml) || !semanticCurrent
             ? SemanticClassificationStates.Pending
-            : job.SemanticClassificationStatus,
-        job.QwenDeepAnalysis,
-        job.DeepAnalysisRequest ?? LlmDeepAnalysisRequestState.NotRequested);
+            : job.SemanticClassificationStatus);
 
-    private static IReadOnlyList<DetectedJobConcept> SemanticDetectedConcepts(JobRecord job)
+    public static IReadOnlyList<DetectedJobConcept> SemanticDetectedConcepts(JobRecord job)
     {
         if (string.IsNullOrWhiteSpace(job.DescriptionHtml) ||
             job.SemanticClassificationStatus != SemanticClassificationStates.Complete ||
@@ -850,6 +846,16 @@ public sealed record JobListItem(
                 "Lifecycle-managed RegEx semantic classification"))
             .ToArray();
     }
+}
+
+public static class JobPresentation
+{
+    public static JobRecord AuthoritativeRegexDetail(JobRecord job) => job with
+    {
+        DetectedConcepts = JobListItem.SemanticDetectedConcepts(job),
+        QwenDeepAnalysis = null,
+        DeepAnalysisRequest = null
+    };
 }
 
 public sealed record JobListCredential(
@@ -952,8 +958,9 @@ public sealed record JobsListSnapshot(
     RefreshProgress? RefreshProgress,
     RefreshMetrics? Metrics)
 {
-    public static JobsListSnapshot FromSnapshot(JobsSnapshot snapshot) => new(
-        snapshot.Jobs.Select(JobListItem.FromJob).ToArray(),
+    public static JobsListSnapshot FromSnapshot(JobsSnapshot snapshot,
+        Func<JobRecord, bool>? semanticCurrent = null) => new(
+        snapshot.Jobs.Select(job => JobListItem.FromJob(job, semanticCurrent?.Invoke(job) ?? true)).ToArray(),
         snapshot.TotalJobs,
         snapshot.LastRefreshedUtc,
         snapshot.IsRefreshing,

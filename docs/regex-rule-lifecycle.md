@@ -8,7 +8,7 @@ normal synchronous durability, and a busy timeout.
 
 The schema stores:
 
-- rules with concept, pattern/category, scope, rule type, status, timestamps, usage counters,
+- rules with concept, pattern/category, scope, rule type, status, timestamps, usage and timeout counters,
   provenance, reason, and optional context group;
 - `supersedes` and `derived-from` relationships;
 - versioned evaluation runs, per-rule evidence, and per-concept confusion counts;
@@ -47,6 +47,8 @@ The local maintenance entry point is:
 dotnet JobSearchManager.dll --regex-maintenance overview <database>
 dotnet JobSearchManager.dll --regex-maintenance evaluate <database>
 dotnet JobSearchManager.dll --regex-maintenance benchmark-cache <database> <cache-root>
+dotnet JobSearchManager.dll --regex-maintenance reconcile-cache <database> <cache-root>
+dotnet JobSearchManager.dll --regex-maintenance sample-holdout <database> <cache-root> <plan.json> <output.json>
 dotnet JobSearchManager.dll --regex-maintenance export <database> <json-file>
 dotnet JobSearchManager.dll --regex-maintenance import <database> <json-file>
 dotnet JobSearchManager.dll --regex-maintenance review-stale <database>
@@ -58,11 +60,18 @@ JSON exports include schema and taxonomy fingerprints. Imports reject mismatched
 never activate rules automatically. A malformed pattern, invalid metadata, failed compile, or failed
 database operation leaves the prior runtime snapshot active.
 
+Run `reconcile-cache` only while JSM is stopped. It scans every cache document, verifies content,
+ruleset, taxonomy, and configuration fingerprints, rewrites stale semantic results atomically, and
+reports inspected/stale/recomputed/repaired counts plus elapsed time. It does not alter accounts,
+settings, job history, workflow states, or production rule-use counters.
+
 ## Telemetry and review
 
-Production matches accumulate in memory and flush in batches on a bounded interval and shutdown.
-Failed flushes are re-queued. Evaluation and diagnostics pass `productionUsage: false` and therefore
-cannot inflate counters. `last matched` reflects successful production rule matches; `last reviewed`
+Production matches and bounded RegEx timeouts accumulate in memory and flush in batches on a bounded
+interval and shutdown. A timed-out rule is a non-match while remaining rules continue. Failed flushes
+are re-queued without duplicating counters already committed. Evaluation and diagnostics pass
+`productionUsage: false` and therefore cannot inflate production counters. Evaluation reports keep
+their own timeout counts. `last matched` reflects successful production rule matches; `last reviewed`
 reflects lifecycle approval, not inference activity.
 
 The default review interval is 30 days and retired retention is 180 days. The explicit retention

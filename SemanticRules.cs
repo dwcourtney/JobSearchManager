@@ -68,7 +68,9 @@ public sealed record SemanticRule(
     long MatchCountSinceReview,
     string Provenance,
     string? Reason,
-    string? ContextGroupId = null);
+    string? ContextGroupId = null,
+    long TimeoutCountLifetime = 0,
+    DateTimeOffset? LastTimedOutUtc = null);
 
 public sealed record SemanticRuleRelationship(
     string SourceRuleId, string TargetRuleId, string RelationshipType, DateTimeOffset CreatedUtc);
@@ -123,7 +125,8 @@ public sealed record RegexClassification(
     string RulesetFingerprint,
     DateTimeOffset ClassifiedUtc,
     IReadOnlyList<DetectedJobConcept> Concepts,
-    IReadOnlyDictionary<string, IReadOnlyList<string>> MatchedRuleIds);
+    IReadOnlyDictionary<string, IReadOnlyList<string>> MatchedRuleIds,
+    IReadOnlyList<string> TimedOutRuleIds);
 
 public static class SemanticRuleValidation
 {

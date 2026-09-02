@@ -3,9 +3,23 @@ using Microsoft.Data.Sqlite;
 
 namespace JobSearchManager;
 
+public sealed record EvaluationRunSummary(
+    string EvaluationRunId, DateTimeOffset EvaluatedUtc, string DatasetId, string DatasetRole,
+    string DatasetDisplayName, string Purpose, string DatasetFingerprint,
+    string RulesetFingerprint, string TaxonomyFingerprint, int TaxonomyVersion,
+    string ConfigurationFingerprint,
+    string LabelProvenance, string SamplingMethod, long? RandomSeed, int SampleSize,
+    int PostingCount, int ConceptDecisionCount, int PositiveDecisionCount,
+    int NegativeDecisionCount, string EvaluationStatus,
+    double? MacroPrecision, double? MacroRecall, double? MacroF1,
+    double? MicroPrecision, double? MicroRecall, double? MicroF1,
+    double? HistoricalMacroPrecision, double? HistoricalMacroRecall, double? HistoricalMacroF1,
+    double? HistoricalMicroPrecision, double? HistoricalMicroRecall, double? HistoricalMicroF1,
+    string? Notes);
+
 public sealed class SqliteSemanticRuleStore : IDisposable
 {
-    private const int SchemaVersion = 2;
+    private const int SchemaVersion = 4;
     private readonly string _connectionString;
     private readonly JobConceptCatalog _catalog;
     private readonly SemanticRulePolicy _policy;
@@ -65,10 +79,13 @@ public sealed class SqliteSemanticRuleStore : IDisposable
                 RetiredUtc TEXT NULL,
                 MatchCountLifetime INTEGER NOT NULL DEFAULT 0,
                 MatchCountSinceReview INTEGER NOT NULL DEFAULT 0,
+                TimeoutCountLifetime INTEGER NOT NULL DEFAULT 0,
+                LastTimedOutUtc TEXT NULL,
                 Provenance TEXT NOT NULL,
                 Reason TEXT NULL,
                 CHECK (MatchCountLifetime >= 0),
-                CHECK (MatchCountSinceReview >= 0)
+                CHECK (MatchCountSinceReview >= 0),
+                CHECK (TimeoutCountLifetime >= 0)
             );
             CREATE INDEX IF NOT EXISTS IX_SemanticRules_StatusConcept
                 ON SemanticRules(Status, ConceptId);
@@ -87,10 +104,27 @@ public sealed class SqliteSemanticRuleStore : IDisposable
                 RulesetFingerprint TEXT NOT NULL,
                 ValidationCorpusFingerprint TEXT NOT NULL,
                 TaxonomyFingerprint TEXT NOT NULL,
+                TaxonomyVersion INTEGER NOT NULL DEFAULT 0,
                 ConfigurationFingerprint TEXT NOT NULL,
                 MacroPrecision REAL NULL, MacroRecall REAL NULL, MacroF1 REAL NULL,
                 MicroPrecision REAL NULL, MicroRecall REAL NULL, MicroF1 REAL NULL,
+                HistoricalMacroPrecision REAL NULL, HistoricalMacroRecall REAL NULL,
+                HistoricalMacroF1 REAL NULL, HistoricalMicroPrecision REAL NULL,
+                HistoricalMicroRecall REAL NULL, HistoricalMicroF1 REAL NULL,
                 RuleCount INTEGER NOT NULL, ConceptCount INTEGER NOT NULL,
+                DatasetId TEXT NOT NULL DEFAULT 'curated-regression-v1',
+                DatasetRole TEXT NOT NULL DEFAULT 'development-regression',
+                DatasetDisplayName TEXT NOT NULL DEFAULT 'CURATED REGRESSION BENCHMARK',
+                Purpose TEXT NOT NULL DEFAULT '',
+                LabelProvenance TEXT NOT NULL DEFAULT 'unknown',
+                SamplingMethod TEXT NOT NULL DEFAULT 'unknown',
+                RandomSeed INTEGER NULL,
+                SampleSize INTEGER NOT NULL DEFAULT 0,
+                PostingCount INTEGER NOT NULL DEFAULT 0,
+                ConceptDecisionCount INTEGER NOT NULL DEFAULT 0,
+                PositiveDecisionCount INTEGER NOT NULL DEFAULT 0,
+                NegativeDecisionCount INTEGER NOT NULL DEFAULT 0,
+                EvaluationStatus TEXT NOT NULL DEFAULT 'scored',
                 Notes TEXT NULL
             );
             CREATE TABLE IF NOT EXISTS RuleEvaluationResults (
@@ -104,6 +138,7 @@ public sealed class SqliteSemanticRuleStore : IDisposable
                 RedundantTruePositives INTEGER NOT NULL,
                 RepresentativeExamplesJson TEXT NOT NULL,
                 FalsePositiveExamplesJson TEXT NOT NULL,
+                TimeoutCount INTEGER NOT NULL DEFAULT 0,
                 PRIMARY KEY (EvaluationRunId, RuleId)
             );
             CREATE TABLE IF NOT EXISTS ConceptEvaluationResults (
@@ -125,6 +160,37 @@ public sealed class SqliteSemanticRuleStore : IDisposable
             "SELECT COALESCE(MAX(SchemaVersion), 0) FROM SchemaInfo;");
         if (version > SchemaVersion)
             throw new InvalidDataException($"Semantic rule database schema {version} is newer than this application.");
+        if (version is > 0 and < 3)
+        {
+            Execute(connection, transaction, """
+                ALTER TABLE SemanticRules ADD COLUMN TimeoutCountLifetime INTEGER NOT NULL DEFAULT 0;
+                ALTER TABLE SemanticRules ADD COLUMN LastTimedOutUtc TEXT NULL;
+                ALTER TABLE RuleEvaluationResults ADD COLUMN TimeoutCount INTEGER NOT NULL DEFAULT 0;
+                ALTER TABLE EvaluationRuns ADD COLUMN DatasetId TEXT NOT NULL DEFAULT 'curated-regression-v1';
+                ALTER TABLE EvaluationRuns ADD COLUMN DatasetRole TEXT NOT NULL DEFAULT 'development-regression';
+                ALTER TABLE EvaluationRuns ADD COLUMN DatasetDisplayName TEXT NOT NULL DEFAULT 'CURATED REGRESSION BENCHMARK';
+                ALTER TABLE EvaluationRuns ADD COLUMN Purpose TEXT NOT NULL DEFAULT '';
+                ALTER TABLE EvaluationRuns ADD COLUMN LabelProvenance TEXT NOT NULL DEFAULT 'unknown';
+                ALTER TABLE EvaluationRuns ADD COLUMN SamplingMethod TEXT NOT NULL DEFAULT 'unknown';
+                ALTER TABLE EvaluationRuns ADD COLUMN RandomSeed INTEGER NULL;
+                ALTER TABLE EvaluationRuns ADD COLUMN SampleSize INTEGER NOT NULL DEFAULT 0;
+                ALTER TABLE EvaluationRuns ADD COLUMN PostingCount INTEGER NOT NULL DEFAULT 0;
+                ALTER TABLE EvaluationRuns ADD COLUMN ConceptDecisionCount INTEGER NOT NULL DEFAULT 0;
+                ALTER TABLE EvaluationRuns ADD COLUMN PositiveDecisionCount INTEGER NOT NULL DEFAULT 0;
+                ALTER TABLE EvaluationRuns ADD COLUMN NegativeDecisionCount INTEGER NOT NULL DEFAULT 0;
+                ALTER TABLE EvaluationRuns ADD COLUMN EvaluationStatus TEXT NOT NULL DEFAULT 'scored';
+                """);
+        }
+        if (version is > 0 and < 4)
+            Execute(connection, transaction, """
+                ALTER TABLE EvaluationRuns ADD COLUMN TaxonomyVersion INTEGER NOT NULL DEFAULT 0;
+                ALTER TABLE EvaluationRuns ADD COLUMN HistoricalMacroPrecision REAL NULL;
+                ALTER TABLE EvaluationRuns ADD COLUMN HistoricalMacroRecall REAL NULL;
+                ALTER TABLE EvaluationRuns ADD COLUMN HistoricalMacroF1 REAL NULL;
+                ALTER TABLE EvaluationRuns ADD COLUMN HistoricalMicroPrecision REAL NULL;
+                ALTER TABLE EvaluationRuns ADD COLUMN HistoricalMicroRecall REAL NULL;
+                ALTER TABLE EvaluationRuns ADD COLUMN HistoricalMicroF1 REAL NULL;
+                """);
         if (version < SchemaVersion)
         {
             using var command = connection.CreateCommand();
@@ -372,6 +438,34 @@ public sealed class SqliteSemanticRuleStore : IDisposable
         finally { _writeGate.Release(); }
     }
 
+    public async Task ApplyTimeoutsAsync(IReadOnlyDictionary<string, long> timeouts,
+        DateTimeOffset timedOutUtc, CancellationToken cancellationToken = default)
+    {
+        if (timeouts.Count == 0) return;
+        await _writeGate.WaitAsync(cancellationToken);
+        try
+        {
+            await using var connection = await OpenAsync(cancellationToken);
+            await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+            foreach (var item in timeouts.Where(item => item.Value > 0))
+            {
+                await using var command = connection.CreateCommand();
+                command.Transaction = (SqliteTransaction)transaction;
+                command.CommandText = """
+                    UPDATE SemanticRules SET LastTimedOutUtc=$u,
+                        TimeoutCountLifetime=TimeoutCountLifetime+$count
+                    WHERE RuleId=$id AND Status IN ('active','review-due');
+                    """;
+                command.Parameters.AddWithValue("$u", Format(timedOutUtc));
+                command.Parameters.AddWithValue("$count", item.Value);
+                command.Parameters.AddWithValue("$id", item.Key);
+                await command.ExecuteNonQueryAsync(cancellationToken);
+            }
+            await transaction.CommitAsync(cancellationToken);
+        }
+        finally { _writeGate.Release(); }
+    }
+
     public async Task<string> ExportJsonAsync(CancellationToken cancellationToken = default)
     {
         await using var connection = await OpenAsync(cancellationToken);
@@ -457,17 +551,26 @@ public sealed class SqliteSemanticRuleStore : IDisposable
                 command.Transaction = (SqliteTransaction)transaction;
                 command.CommandText = """
                     INSERT INTO EvaluationRuns(EvaluationRunId,EvaluatedUtc,RulesetFingerprint,
-                        ValidationCorpusFingerprint,TaxonomyFingerprint,ConfigurationFingerprint,
+                        ValidationCorpusFingerprint,TaxonomyFingerprint,TaxonomyVersion,ConfigurationFingerprint,
                         MacroPrecision,MacroRecall,MacroF1,MicroPrecision,MicroRecall,MicroF1,
-                        RuleCount,ConceptCount,Notes)
-                    VALUES($id,$utc,$rules,$corpus,$taxonomy,$config,$map,$mar,$maf,
-                        $mip,$mir,$mif,$ruleCount,$conceptCount,NULL);
+                        HistoricalMacroPrecision,HistoricalMacroRecall,HistoricalMacroF1,
+                        HistoricalMicroPrecision,HistoricalMicroRecall,HistoricalMicroF1,
+                        RuleCount,ConceptCount,DatasetId,DatasetRole,DatasetDisplayName,Purpose,
+                        LabelProvenance,SamplingMethod,RandomSeed,SampleSize,PostingCount,
+                        ConceptDecisionCount,PositiveDecisionCount,NegativeDecisionCount,
+                        EvaluationStatus,Notes)
+                    VALUES($id,$utc,$rules,$corpus,$taxonomy,$taxonomyVersion,$config,$map,$mar,$maf,
+                        $mip,$mir,$mif,$hmap,$hmar,$hmaf,$hmip,$hmir,$hmif,
+                        $ruleCount,$conceptCount,$datasetId,$datasetRole,$datasetName,
+                        $purpose,$provenance,$sampling,$seed,$sampleSize,$postingCount,$decisions,
+                        $positive,$negative,$status,$notes);
                     """;
                 command.Parameters.AddWithValue("$id", report.EvaluationRunId);
                 command.Parameters.AddWithValue("$utc", Format(report.EvaluatedUtc));
                 command.Parameters.AddWithValue("$rules", report.RulesetFingerprint);
                 command.Parameters.AddWithValue("$corpus", report.ValidationCorpusFingerprint);
                 command.Parameters.AddWithValue("$taxonomy", report.TaxonomyFingerprint);
+                command.Parameters.AddWithValue("$taxonomyVersion", report.TaxonomyVersion);
                 command.Parameters.AddWithValue("$config", report.ConfigurationFingerprint);
                 command.Parameters.AddWithValue("$map", Db(report.Macro.Precision));
                 command.Parameters.AddWithValue("$mar", Db(report.Macro.Recall));
@@ -475,8 +578,28 @@ public sealed class SqliteSemanticRuleStore : IDisposable
                 command.Parameters.AddWithValue("$mip", Db(report.Micro.Precision));
                 command.Parameters.AddWithValue("$mir", Db(report.Micro.Recall));
                 command.Parameters.AddWithValue("$mif", Db(report.Micro.F1));
+                command.Parameters.AddWithValue("$hmap", Db(report.HistoricalBenchmarkMacro.Precision));
+                command.Parameters.AddWithValue("$hmar", Db(report.HistoricalBenchmarkMacro.Recall));
+                command.Parameters.AddWithValue("$hmaf", Db(report.HistoricalBenchmarkMacro.F1));
+                command.Parameters.AddWithValue("$hmip", Db(report.HistoricalBenchmarkMicro.Precision));
+                command.Parameters.AddWithValue("$hmir", Db(report.HistoricalBenchmarkMicro.Recall));
+                command.Parameters.AddWithValue("$hmif", Db(report.HistoricalBenchmarkMicro.F1));
                 command.Parameters.AddWithValue("$ruleCount", report.RuleCount);
                 command.Parameters.AddWithValue("$conceptCount", report.Concepts.Count);
+                command.Parameters.AddWithValue("$datasetId", report.DatasetId);
+                command.Parameters.AddWithValue("$datasetRole", report.DatasetRole);
+                command.Parameters.AddWithValue("$datasetName", report.DatasetDisplayName);
+                command.Parameters.AddWithValue("$purpose", report.Purpose);
+                command.Parameters.AddWithValue("$provenance", report.LabelProvenance);
+                command.Parameters.AddWithValue("$sampling", report.SamplingMethod);
+                command.Parameters.AddWithValue("$seed", report.RandomSeed is null ? DBNull.Value : report.RandomSeed.Value);
+                command.Parameters.AddWithValue("$sampleSize", report.PostingCount);
+                command.Parameters.AddWithValue("$postingCount", report.PostingCount);
+                command.Parameters.AddWithValue("$decisions", report.ConceptDecisionCount);
+                command.Parameters.AddWithValue("$positive", report.PositiveDecisionCount);
+                command.Parameters.AddWithValue("$negative", report.NegativeDecisionCount);
+                command.Parameters.AddWithValue("$status", report.EvaluationStatus);
+                command.Parameters.AddWithValue("$notes", report.Notes is null ? DBNull.Value : report.Notes);
                 await command.ExecuteNonQueryAsync(cancellationToken);
             }
             foreach (var result in report.Rules)
@@ -484,8 +607,12 @@ public sealed class SqliteSemanticRuleStore : IDisposable
                 await using var command = connection.CreateCommand();
                 command.Transaction = (SqliteTransaction)transaction;
                 command.CommandText = """
-                    INSERT INTO RuleEvaluationResults VALUES($run,$rule,$matches,$tp,$fp,$precision,
-                        $unique,$redundant,$examples,$falseExamples);
+                    INSERT INTO RuleEvaluationResults(EvaluationRunId,RuleId,ValidationMatchCount,
+                        TruePositiveMatches,FalsePositiveMatches,Precision,UniqueTruePositives,
+                        RedundantTruePositives,RepresentativeExamplesJson,FalsePositiveExamplesJson,
+                        TimeoutCount)
+                    VALUES($run,$rule,$matches,$tp,$fp,$precision,$unique,$redundant,$examples,
+                        $falseExamples,$timeouts);
                     """;
                 command.Parameters.AddWithValue("$run", report.EvaluationRunId);
                 command.Parameters.AddWithValue("$rule", result.RuleId);
@@ -497,6 +624,7 @@ public sealed class SqliteSemanticRuleStore : IDisposable
                 command.Parameters.AddWithValue("$redundant", result.RedundantTruePositives);
                 command.Parameters.AddWithValue("$examples", JsonSerializer.Serialize(result.RepresentativeExamples));
                 command.Parameters.AddWithValue("$falseExamples", JsonSerializer.Serialize(result.FalsePositiveExamples));
+                command.Parameters.AddWithValue("$timeouts", result.TimeoutCount);
                 await command.ExecuteNonQueryAsync(cancellationToken);
             }
             foreach (var result in report.Concepts)
@@ -521,6 +649,38 @@ public sealed class SqliteSemanticRuleStore : IDisposable
             await transaction.CommitAsync(cancellationToken);
         }
         finally { _writeGate.Release(); }
+    }
+
+    public async Task<IReadOnlyList<EvaluationRunSummary>> ListEvaluationRunsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var results = new List<EvaluationRunSummary>();
+        await using var connection = await OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT EvaluationRunId,EvaluatedUtc,DatasetId,DatasetRole,DatasetDisplayName,Purpose,
+                ValidationCorpusFingerprint,RulesetFingerprint,TaxonomyFingerprint,TaxonomyVersion,
+                ConfigurationFingerprint,LabelProvenance,SamplingMethod,RandomSeed,SampleSize,
+                PostingCount,ConceptDecisionCount,PositiveDecisionCount,NegativeDecisionCount,
+                EvaluationStatus,MacroPrecision,MacroRecall,MacroF1,MicroPrecision,MicroRecall,
+                MicroF1,HistoricalMacroPrecision,HistoricalMacroRecall,HistoricalMacroF1,
+                HistoricalMicroPrecision,HistoricalMicroRecall,HistoricalMicroF1,Notes
+            FROM EvaluationRuns ORDER BY EvaluatedUtc DESC;
+            """;
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+            results.Add(new(reader.GetString(0), Parse(reader.GetString(1)), reader.GetString(2),
+                reader.GetString(3), reader.GetString(4), reader.GetString(5), reader.GetString(6),
+                reader.GetString(7), reader.GetString(8), reader.GetInt32(9), reader.GetString(10),
+                reader.GetString(11), reader.GetString(12), reader.IsDBNull(13) ? null : reader.GetInt64(13),
+                reader.GetInt32(14), reader.GetInt32(15), reader.GetInt32(16), reader.GetInt32(17),
+                reader.GetInt32(18), reader.GetString(19), NullableDouble(reader, 20),
+                NullableDouble(reader, 21), NullableDouble(reader, 22), NullableDouble(reader, 23),
+                NullableDouble(reader, 24), NullableDouble(reader, 25),
+                NullableDouble(reader, 26), NullableDouble(reader, 27), NullableDouble(reader, 28),
+                NullableDouble(reader, 29), NullableDouble(reader, 30), NullableDouble(reader, 31),
+                reader.IsDBNull(32) ? null : reader.GetString(32)));
+        return results;
     }
 
     public async Task BackupAsync(string destinationPath,
@@ -571,9 +731,11 @@ public sealed class SqliteSemanticRuleStore : IDisposable
         command.CommandText = """
             INSERT INTO SemanticRules(RuleId,ConceptId,Pattern,Scope,RuleType,Status,ContextGroupId,
                 CreatedUtc,LastModifiedUtc,LastMatchedUtc,LastReviewedUtc,RetiredUtc,
-                MatchCountLifetime,MatchCountSinceReview,Provenance,Reason)
+                MatchCountLifetime,MatchCountSinceReview,TimeoutCountLifetime,LastTimedOutUtc,
+                Provenance,Reason)
             VALUES($id,$concept,$pattern,$scope,$type,$status,$group,$created,$modified,
-                $matched,$reviewed,$retired,$lifetime,$recent,$provenance,$reason);
+                $matched,$reviewed,$retired,$lifetime,$recent,$timeouts,$lastTimeout,
+                $provenance,$reason);
             """;
         command.Parameters.AddWithValue("$id", rule.RuleId);
         command.Parameters.AddWithValue("$concept", rule.ConceptId);
@@ -589,6 +751,8 @@ public sealed class SqliteSemanticRuleStore : IDisposable
         command.Parameters.AddWithValue("$retired", Db(rule.RetiredUtc));
         command.Parameters.AddWithValue("$lifetime", rule.MatchCountLifetime);
         command.Parameters.AddWithValue("$recent", rule.MatchCountSinceReview);
+        command.Parameters.AddWithValue("$timeouts", rule.TimeoutCountLifetime);
+        command.Parameters.AddWithValue("$lastTimeout", Db(rule.LastTimedOutUtc));
         command.Parameters.AddWithValue("$provenance", rule.Provenance);
         command.Parameters.AddWithValue("$reason", Db(rule.Reason));
         await command.ExecuteNonQueryAsync(cancellationToken);
@@ -601,7 +765,8 @@ public sealed class SqliteSemanticRuleStore : IDisposable
         command.CommandText = $"""
             SELECT RuleId,ConceptId,Pattern,Scope,RuleType,Status,CreatedUtc,LastModifiedUtc,
                 LastMatchedUtc,LastReviewedUtc,RetiredUtc,MatchCountLifetime,
-                MatchCountSinceReview,Provenance,Reason,ContextGroupId
+                MatchCountSinceReview,Provenance,Reason,ContextGroupId,
+                TimeoutCountLifetime,LastTimedOutUtc
             FROM SemanticRules {where} ORDER BY ConceptId,RuleType,RuleId;
             """;
         configure?.Invoke(command);
@@ -613,7 +778,8 @@ public sealed class SqliteSemanticRuleStore : IDisposable
                 Parse(reader.GetString(7)), NullableDate(reader, 8), NullableDate(reader, 9),
                 NullableDate(reader, 10), reader.GetInt64(11), reader.GetInt64(12), reader.GetString(13),
                 reader.IsDBNull(14) ? null : reader.GetString(14),
-                reader.IsDBNull(15) ? null : reader.GetString(15)));
+                reader.IsDBNull(15) ? null : reader.GetString(15), reader.GetInt64(16),
+                NullableDate(reader, 17)));
         return values;
     }
 
@@ -660,6 +826,9 @@ public sealed class SqliteSemanticRuleStore : IDisposable
         System.Globalization.DateTimeStyles.AssumeUniversal);
     private static DateTimeOffset? NullableDate(SqliteDataReader reader, int ordinal) =>
         reader.IsDBNull(ordinal) ? null : Parse(reader.GetString(ordinal));
+
+    private static double? NullableDouble(SqliteDataReader reader, int ordinal) =>
+        reader.IsDBNull(ordinal) ? null : reader.GetDouble(ordinal);
 
     public void Dispose()
     {

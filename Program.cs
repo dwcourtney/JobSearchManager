@@ -113,6 +113,26 @@ if (args.Length >= 3 && args[0] == "--regex-maintenance")
                 classifier.ActiveRuleCount
             }, jsonOptions));
             break;
+        case "sample-holdout" when args.Length == 6:
+            var holdoutPlan = JsonSerializer.Deserialize<HoldoutSamplingPlan>(
+                await File.ReadAllTextAsync(Path.GetFullPath(args[4])), jsonOptions)
+                ?? throw new InvalidDataException("The holdout sampling plan is empty.");
+            var holdout = await ProductionHoldoutSampler.SampleAsync(Path.GetFullPath(args[3]),
+                holdoutPlan);
+            await ProductionHoldoutSampler.WriteAtomicallyAsync(holdout,
+                Path.GetFullPath(args[5]));
+            Console.WriteLine(JsonSerializer.Serialize(new
+            {
+                output = Path.GetFullPath(args[5]), holdout.SamplingRunId,
+                holdout.PopulationSize, sampleSize = holdout.Examples.Count,
+                holdout.PlanFingerprint, holdout.PopulationFingerprint, holdout.SampleFingerprint,
+                holdout.DatasetStatus
+            }, jsonOptions));
+            break;
+        case "reconcile-cache" when args.Length == 4:
+            Console.WriteLine(JsonSerializer.Serialize(await RegexCacheReconciler.ReconcileAsync(
+                Path.GetFullPath(args[3]), classifier, catalog), jsonOptions));
+            break;
         case "export":
             Console.WriteLine(await store.ExportJsonAsync());
             break;
@@ -134,7 +154,7 @@ if (args.Length >= 3 && args[0] == "--regex-maintenance")
             Console.WriteLine(JsonSerializer.Serialize(new { backup = Path.GetFullPath(args[3]) }, jsonOptions));
             break;
         default:
-            Console.Error.WriteLine("Usage: --regex-maintenance <overview|evaluate|benchmark-cache|export|import|review-stale|retention|backup> <regex-rules.db> [file-or-cache-root]");
+            Console.Error.WriteLine("Usage: --regex-maintenance <overview|evaluate|benchmark-cache|reconcile-cache|sample-holdout|export|import|review-stale|retention|backup> <regex-rules.db> [cache-root] [plan.json] [output.json]");
             Environment.ExitCode = 2;
             break;
     }
@@ -394,7 +414,7 @@ app.UseStaticFiles();
 
 app.MapGet("/api/jobs", async (WorkspaceRuntimeProvider provider, CancellationToken token) =>
 {
-    var compact = JobsListSnapshot.FromSnapshot((await provider.GetAsync(token)).Catalog.Snapshot);
+    var compact = (await provider.GetAsync(token)).Catalog.CompactSnapshot;
     app.Logger.LogInformation(
         "Compact job-list response contains {JobCount} jobs; full descriptions are excluded.",
         compact.Jobs.Count);
@@ -422,20 +442,8 @@ app.MapGet("/api/jobs/detail", async Task<IResult> (
     CancellationToken token) =>
 {
     var detail = await (await provider.GetAsync(token)).Catalog.GetJobDetailAsync(stableId, token);
-    return detail is null ? Results.NotFound() : Results.Ok(detail);
-}).RequireRateLimiting("provider");
-
-app.MapPost("/api/jobs/deep-analysis", async Task<IResult> (
-    JobDeepAnalysisRequest request,
-    WorkspaceRuntimeProvider provider,
-    CancellationToken token) =>
-{
-    if (string.IsNullOrWhiteSpace(request.StableId)) return Results.BadRequest();
-    var result = await (await provider.GetAsync(token)).Catalog
-        .DeepAnalyzeWithQwenAsync(request.StableId, token);
-    return result is null
-        ? Results.StatusCode(StatusCodes.Status503ServiceUnavailable)
-        : Results.Ok(result);
+    return detail is null ? Results.NotFound() :
+        Results.Ok(JobPresentation.AuthoritativeRegexDetail(detail));
 }).RequireRateLimiting("provider");
 
 app.MapPost("/api/jobs/description-matches", async (
@@ -590,13 +598,16 @@ app.MapPost("/api/admin/regex-rules", async Task<IResult> (
 
 app.MapPost("/api/admin/regex-rules/{ruleId}/transition/{status}", async Task<IResult> (
     string ruleId, string status, SqliteSemanticRuleStore store,
-    RegexSemanticClassifier classifier, CancellationToken token) =>
+    RegexSemanticClassifier classifier, WorkspaceRuntimeProvider provider, CancellationToken token) =>
 {
     try
     {
         var value = await store.TransitionAsync(ruleId, status, token);
         if (SemanticRuleStatuses.RunsInProduction(value.Status) || value.Status == SemanticRuleStatuses.Retired)
+        {
             await classifier.ReloadAsync(token);
+            (await provider.GetAsync(token)).Catalog.StartSemanticClassificationBackfill();
+        }
         return Results.Ok(value);
     }
     catch (KeyNotFoundException) { return Results.NotFound(); }
@@ -628,15 +639,24 @@ app.MapPost("/api/admin/regex-rules/relationships", async Task<IResult> (
 }).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
 
 app.MapPost("/api/admin/regex-rules/reload", async (
-    RegexSemanticClassifier classifier, CancellationToken token) =>
-    Results.Ok(new { rulesetFingerprint = await classifier.ReloadAsync(token) }))
+    RegexSemanticClassifier classifier, WorkspaceRuntimeProvider provider, CancellationToken token) =>
+{
+    var rulesetFingerprint = await classifier.ReloadAsync(token);
+    var reconciliation = (await provider.GetAsync(token)).Catalog.StartSemanticClassificationBackfill();
+    return Results.Ok(new { rulesetFingerprint, reconciliation });
+})
     .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
 
 app.MapPost("/api/admin/regex-rules/review-stale", async (
-    SqliteSemanticRuleStore store, RegexSemanticClassifier classifier, CancellationToken token) =>
+    SqliteSemanticRuleStore store, RegexSemanticClassifier classifier,
+    WorkspaceRuntimeProvider provider, CancellationToken token) =>
 {
     var count = await store.MarkReviewDueAsync(DateTimeOffset.UtcNow, token);
-    if (count > 0) await classifier.ReloadAsync(token);
+    if (count > 0)
+    {
+        await classifier.ReloadAsync(token);
+        (await provider.GetAsync(token)).Catalog.StartSemanticClassificationBackfill();
+    }
     return Results.Ok(new { reviewDue = count });
 }).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
 
@@ -664,6 +684,28 @@ app.MapPost("/api/admin/regex-rules/evaluate", async (
     RegexEvaluationService evaluation, CancellationToken token) =>
     Results.Ok(await evaluation.EvaluateAsync(persist: true, cancellationToken: token)))
     .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapGet("/api/admin/evaluations", async (
+    SqliteSemanticRuleStore store, CancellationToken token) =>
+{
+    var runs = await store.ListEvaluationRunsAsync(token);
+    return Results.Ok(new
+    {
+        runs,
+        datasetRoles = new object[]
+        {
+            new { role = EvaluationDatasetRoles.DevelopmentRegression,
+                displayName = "CURATED REGRESSION BENCHMARK", status = "available",
+                warning = "Known-case development/regression evidence; not production accuracy." },
+            new { role = EvaluationDatasetRoles.Validation, displayName = "VALIDATION",
+                status = "not-yet-available",
+                warning = "An independently maintained labeled validation dataset has not been established." },
+            new { role = EvaluationDatasetRoles.ProductionHoldout,
+                displayName = "UNSEEN PRODUCTION HOLDOUT", status = "not-yet-available",
+                warning = "Independent labels do not exist. RegEx and Qwen predictions are never ground truth." }
+        }
+    });
+}).RequireAuthorization(AdminAuthorization.Policy);
 
 app.MapGet("/api/admin/classifier/backfill/status", async (
     WorkspaceRuntimeProvider provider,

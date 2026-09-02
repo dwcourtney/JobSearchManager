@@ -1,5 +1,12 @@
 {
   "version": 3,
+  "datasetId": "curated-regression-v1",
+  "datasetRole": "development-regression",
+  "displayName": "CURATED REGRESSION BENCHMARK",
+  "purpose": "Known positives, known negatives, hard negatives, edge cases, detector debugging, and regression protection. Rules may be developed using this corpus.",
+  "labelProvenance": "Mixed reviewed curation recorded per fixture; these are not independent unseen production labels.",
+  "samplingMethod": "curated-known-cases-not-random",
+  "notes": "These metrics measure regression behavior on known cases. They are not production accuracy or an estimate of unseen real-world generalization.",
   "labelScopes": {
     "tier1-target": [
       "role.ai-ml-engineering", "role.cloud-engineering", "role.data-engineering", "role.data-science",
@@ -186,5 +193,4 @@
     { "id": "tier2-hard-negative-01", "source": "Synthetic hard negative", "title": "Remote Individual Contributor Software Developer", "excerpt": "Develop software from a home office. The application contains project-management, budget, schedule, deployment, relocation, data-center, shipboard, diving, manufacturing-floor, and customer-site records, but the developer has no managerial, field, travel, physical-infrastructure, or hazardous-work duties.", "labelScope": "tier2-strong-negative", "expectedPresentConceptIds": [], "rationale": "Domain vocabulary belongs to application data, not the posting's responsibilities.", "provenance": "synthetic-hard-negative", "labelSource": "Codex-reviewed" }
   ]
 }
-
 

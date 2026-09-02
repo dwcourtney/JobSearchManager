@@ -9,7 +9,12 @@ public sealed record SemanticClassificationBackfillStatus(
     int Current,
     int Pending,
     int Unavailable,
-    bool Running);
+    bool Running,
+    int JobsInspected = 0,
+    int StaleResultsFound = 0,
+    int RecomputedResults = 0,
+    int InconsistenciesRepaired = 0,
+    double ElapsedMilliseconds = 0);
 
 public sealed class JobCatalog
 {
@@ -36,6 +41,12 @@ public sealed class JobCatalog
     private JobSourceQuery _currentQuery = JobsSnapshot.Empty.Query;
     private IReadOnlyList<JobRecord> _cachedJobs = [];
     private Task? _semanticClassificationTask;
+    private int _reconciliationInspected;
+    private int _reconciliationStale;
+    private int _reconciliationRecomputed;
+    private int _reconciliationRepaired;
+    private DateTimeOffset? _reconciliationStartedUtc;
+    private double _reconciliationElapsedMilliseconds;
 
     public JobCatalog(
         JobSourceClient jobSourceClient,
@@ -335,6 +346,25 @@ public sealed class JobCatalog
                 : _cachedJobs;
             job = sharedJobs.FirstOrDefault(item =>
                 string.Equals(item.StableId, stableId, StringComparison.Ordinal)) ?? job;
+
+            if (_semanticClassification is not null &&
+                !string.IsNullOrWhiteSpace(job.DescriptionHtml) &&
+                !_semanticClassification.IsCurrent(job))
+            {
+                var attempt = await _semanticClassification.ClassifyAsync(job, cancellationToken);
+                job = job with
+                {
+                    SemanticClassification = attempt.Classification ?? job.SemanticClassification,
+                    SemanticClassificationStatus = attempt.Available && attempt.Classification is not null
+                        ? SemanticClassificationStates.Complete
+                        : SemanticClassificationStates.Unavailable,
+                    SemanticClassificationLastAttemptUtc = DateTimeOffset.UtcNow
+                };
+                sharedJobs = sharedJobs.Select(item => item.StableId == stableId ? job : item).ToArray();
+                await _stateStore.SaveJobsCacheAsync(sharedJobs,
+                    sharedDocument?.LastRefreshedUtc ?? DateTimeOffset.UtcNow,
+                    sharedDocument?.DetailFailureCount ?? 0, query);
+            }
 
             if (!string.IsNullOrWhiteSpace(job.DescriptionHtml) &&
                 _jobSourceClient.IsAnalysisCurrent(job))
@@ -1057,7 +1087,12 @@ public sealed class JobCatalog
         var current = jobs.Count(_semanticClassification.IsCurrent);
         var unavailable = jobs.Count(job => !_semanticClassification.IsCurrent(job) &&
             job.SemanticClassificationStatus == SemanticClassificationStates.Unavailable);
-        return new(jobs.Length, current, jobs.Length - current - unavailable, unavailable, running);
+        var elapsed = running && _reconciliationStartedUtc.HasValue
+            ? (DateTimeOffset.UtcNow - _reconciliationStartedUtc.Value).TotalMilliseconds
+            : _reconciliationElapsedMilliseconds;
+        return new(jobs.Length, current, jobs.Length - current - unavailable, unavailable, running,
+            _reconciliationInspected, _reconciliationStale, _reconciliationRecomputed,
+            _reconciliationRepaired, elapsed);
     }
 
     public async Task<QwenDeepAnalysis?> DeepAnalyzeWithQwenAsync(
@@ -1144,6 +1179,16 @@ public sealed class JobCatalog
         }
     }
 
+    public JobsListSnapshot CompactSnapshot
+    {
+        get
+        {
+            lock (_gate)
+                return JobsListSnapshot.FromSnapshot(_snapshot,
+                    job => _semanticClassification?.IsCurrent(job) ?? true);
+        }
+    }
+
     public SemanticClassificationBackfillStatus StartSemanticClassificationBackfill()
     {
         ScheduleSemanticClassification();
@@ -1164,6 +1209,16 @@ public sealed class JobCatalog
 
     private async Task RunSemanticClassificationAsync()
     {
+        lock (_gate)
+        {
+            _reconciliationInspected = _cachedJobs.Count(job => !string.IsNullOrWhiteSpace(job.DescriptionHtml));
+            _reconciliationStale = _cachedJobs.Count(job => !string.IsNullOrWhiteSpace(job.DescriptionHtml) &&
+                !_semanticClassification!.IsCurrent(job));
+            _reconciliationRecomputed = 0;
+            _reconciliationRepaired = 0;
+            _reconciliationStartedUtc = DateTimeOffset.UtcNow;
+            _reconciliationElapsedMilliseconds = 0;
+        }
         try
         {
             while (true)
@@ -1205,12 +1260,20 @@ public sealed class JobCatalog
                     attempt.Classification,
                     SemanticClassificationStates.Complete,
                     candidate.SemanticClassification);
+                Interlocked.Increment(ref _reconciliationRecomputed);
+                Interlocked.Increment(ref _reconciliationRepaired);
             }
         }
         catch (Exception exception)
         {
             _logger.LogError(exception,
                 "Background semantic classification stopped unexpectedly; ingestion and browsing were not affected.");
+        }
+        finally
+        {
+            if (_reconciliationStartedUtc.HasValue)
+                _reconciliationElapsedMilliseconds =
+                    (DateTimeOffset.UtcNow - _reconciliationStartedUtc.Value).TotalMilliseconds;
         }
     }
 
