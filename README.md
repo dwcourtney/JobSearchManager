@@ -65,7 +65,9 @@ production usage.
 
 List and detail views project the same current RegEx classification, so selecting a job is
 observational. The Admin evaluation ledger separates the **CURATED REGRESSION BENCHMARK**,
-validation, and unseen production holdout. See `docs/regex-evaluation-methodology.md` for sampling,
+validation, and **AI-ADJUDICATED PRODUCTION HOLDOUT**. The holdout uses prediction-blinded Codex A/B
+passes plus disagreement adjudication; its machine-derived references are not human ground truth.
+See `docs/regex-evaluation-methodology.md` for sampling,
 label provenance, contamination, support, metrics, and the PR-curve limitation.
 
 Candidate rules start as proposed. Comparative fixed-corpus evidence must be persisted before they
@@ -90,8 +92,9 @@ exact-commit identity checks, and confirms the removed `/classify` model endpoin
 
 - `SemanticRules.cs`, `SqliteSemanticRuleStore.cs`, `RegexSemanticClassifier.cs` — rule schema,
   lifecycle, hot reload, fingerprints, and telemetry.
-- `LegacyJobConceptRules.json`, `RegexValidationCorpus.json`, `RegexEvaluation.cs` — recovered source
-  catalog, fixed evaluation corpus, and deterministic evidence reporting.
+- `LegacyJobConceptRules.json`, `RegexValidationCorpus.json`, `RegexEvaluation.cs`,
+  `AiHoldoutEvaluation.cs` — recovered source catalog, curated regression evaluation, and the
+  durable prediction-blinded holdout pipeline.
 - `ClassifierClient.cs`, `classifier-service/` — in-process default RegEx integration and opt-in Qwen
   bridge.
 - `Program.cs`, `JobCatalog.cs`, `JobModels.cs` — HTTP application, ingestion, cache, workflow, and

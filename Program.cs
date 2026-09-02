@@ -129,6 +129,11 @@ if (args.Length >= 3 && args[0] == "--regex-maintenance")
                 holdout.DatasetStatus
             }, jsonOptions));
             break;
+        case "evaluate-ai-holdout" when args.Length == 4:
+            var aiEvaluation = new AiHoldoutEvaluationService(Path.GetFullPath(args[3]),
+                classifier, store, catalog);
+            Console.WriteLine(JsonSerializer.Serialize(await aiEvaluation.RunAsync(), jsonOptions));
+            break;
         case "reconcile-cache" when args.Length == 4:
             Console.WriteLine(JsonSerializer.Serialize(await RegexCacheReconciler.ReconcileAsync(
                 Path.GetFullPath(args[3]), classifier, catalog), jsonOptions));
@@ -154,7 +159,7 @@ if (args.Length >= 3 && args[0] == "--regex-maintenance")
             Console.WriteLine(JsonSerializer.Serialize(new { backup = Path.GetFullPath(args[3]) }, jsonOptions));
             break;
         default:
-            Console.Error.WriteLine("Usage: --regex-maintenance <overview|evaluate|benchmark-cache|reconcile-cache|sample-holdout|export|import|review-stale|retention|backup> <regex-rules.db> [cache-root] [plan.json] [output.json]");
+            Console.Error.WriteLine("Usage: --regex-maintenance <overview|evaluate|evaluate-ai-holdout|benchmark-cache|reconcile-cache|sample-holdout|export|import|review-stale|retention|backup> <regex-rules.db> [evaluation-directory|cache-root] [plan.json] [output.json]");
             Environment.ExitCode = 2;
             break;
     }
@@ -209,6 +214,7 @@ builder.Services.AddSingleton<JobConceptCatalog>();
 builder.Services.AddSingleton<SqliteSemanticRuleStore>();
 builder.Services.AddSingleton<RegexSemanticClassifier>();
 builder.Services.AddSingleton<RegexEvaluationService>();
+builder.Services.AddSingleton<AiHoldoutEvaluationService>();
 builder.Services.AddHostedService<RegexTelemetryFlushService>();
 builder.Services.AddSingleton<SemanticClassificationService>();
 builder.Services.AddSingleton<PortableWorkspaceService>();
@@ -686,12 +692,16 @@ app.MapPost("/api/admin/regex-rules/evaluate", async (
     .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
 
 app.MapGet("/api/admin/evaluations", async (
-    SqliteSemanticRuleStore store, CancellationToken token) =>
+    SqliteSemanticRuleStore store, AiHoldoutEvaluationService holdout, CancellationToken token) =>
 {
     var runs = await store.ListEvaluationRunsAsync(token);
+    var holdoutStatus = holdout.GetStatus();
+    var holdoutReport = holdout.GetLatestReport();
     return Results.Ok(new
     {
         runs,
+        holdoutStatus,
+        holdoutReport,
         datasetRoles = new object[]
         {
             new { role = EvaluationDatasetRoles.DevelopmentRegression,
@@ -701,11 +711,25 @@ app.MapGet("/api/admin/evaluations", async (
                 status = "not-yet-available",
                 warning = "An independently maintained labeled validation dataset has not been established." },
             new { role = EvaluationDatasetRoles.ProductionHoldout,
-                displayName = "UNSEEN PRODUCTION HOLDOUT", status = "not-yet-available",
-                warning = "Independent labels do not exist. RegEx and Qwen predictions are never ground truth." }
+                displayName = "AI-ADJUDICATED PRODUCTION HOLDOUT",
+                status = holdoutReport is null ? holdoutStatus.State : "available",
+                warning = AiHoldoutEvaluationService.ExactDisclaimer }
         }
     });
 }).RequireAuthorization(AdminAuthorization.Policy);
+
+app.MapGet("/api/admin/evaluations/ai-holdout/status", (
+    AiHoldoutEvaluationService evaluation) => Results.Ok(new
+    {
+        status = evaluation.GetStatus(),
+        report = evaluation.GetLatestReport()
+    })).RequireAuthorization(AdminAuthorization.Policy);
+
+app.MapPost("/api/admin/evaluations/ai-holdout", (
+    AiHoldoutEvaluationService evaluation) => evaluation.TryStart()
+        ? Results.Accepted(value: evaluation.GetStatus())
+        : Results.Conflict(new { error = "An AI-adjudicated holdout evaluation is already running." }))
+    .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
 
 app.MapGet("/api/admin/classifier/backfill/status", async (
     WorkspaceRuntimeProvider provider,

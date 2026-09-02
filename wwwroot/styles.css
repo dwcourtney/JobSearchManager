@@ -2561,3 +2561,36 @@ mark {
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
+
+.admin-evaluation-list { display: grid; gap: 1rem; margin-top: 1rem; }
+.admin-evaluation-card { border: var(--border-width-default) solid var(--color-border); border-radius: var(--radius-control); }
+.admin-evaluation-card > h4 { margin: 0 0 .55rem; color: var(--color-text-heading); }
+.admin-evaluation-card > strong { display: block; color: var(--color-text-secondary); line-height: var(--line-height-note); }
+.admin-evaluation-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(8rem, 1fr));
+  gap: .55rem;
+  margin: 1rem 0;
+}
+.admin-evaluation-metrics > div { padding: .55rem; border: var(--border-width-default) solid var(--color-border); border-radius: var(--radius-control); }
+.admin-evaluation-metrics dt { color: var(--color-text-secondary); font-size: var(--font-size-caption); }
+.admin-evaluation-metrics dd { margin: .18rem 0 0; color: var(--color-text-heading); font-weight: var(--font-weight-semibold); font-variant-numeric: tabular-nums; }
+.admin-evaluation-metadata { overflow-wrap: anywhere; color: var(--color-text-secondary); font-size: var(--font-size-caption); }
+.admin-evaluation-table-controls, .admin-table-pager { display: flex; align-items: center; gap: .5rem; margin: .65rem 0; }
+.admin-table-pager span { margin-right: auto; color: var(--color-text-secondary); }
+.admin-compact-table { width: 100%; border-collapse: collapse; font-size: var(--font-size-caption); }
+.admin-compact-table th, .admin-compact-table td { padding: .45rem .5rem; border-bottom: var(--border-width-default) solid var(--color-border); text-align: left; vertical-align: top; }
+.admin-compact-table th { color: var(--color-label); background: var(--color-surface-secondary); white-space: nowrap; }
+.admin-compact-table td:not(:first-child) { font-variant-numeric: tabular-nums; }
+.admin-rule-table { table-layout: fixed; }
+.admin-rule-table th:nth-child(1) { width: 18%; }
+.admin-rule-table th:nth-child(2) { width: 25%; }
+.admin-rule-table td { overflow: hidden; text-overflow: ellipsis; }
+.admin-rule-table details[open] { position: relative; z-index: 1; min-width: 32rem; padding: .5rem; border: var(--border-width-default) solid var(--color-border); border-radius: var(--radius-control); background: var(--color-settings-surface-background); }
+.admin-rule-table details button { margin: .3rem .3rem 0 0; }
+
+@media (max-width: 760px) {
+  .admin-evaluation-metrics { grid-template-columns: repeat(2, minmax(7rem, 1fr)); }
+  .admin-compact-table { display: block; overflow-x: auto; }
+  .admin-rule-table { min-width: 62rem; }
+}

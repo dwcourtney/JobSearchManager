@@ -1103,9 +1103,9 @@ function synchronizeAdminNavigation(isAdmin) {
   classifierPanel.setAttribute("aria-labelledby", "admin-classifier-tab");
   classifierPanel.hidden = true;
   const classifierTitle = document.createElement("h3");
-  classifierTitle.textContent = "Lifecycle-managed RegEx Rules";
+  classifierTitle.textContent = "RegEx Rules";
   const classifierIntro = document.createElement("p");
-  classifierIntro.textContent = "Inspect active, review-due, and retired rules. SQLite is authoritative; rule changes are validated before hot reload. RegEx is the sole Job Fit classifier.";
+  classifierIntro.textContent = "Search and inspect the production Job Fit rules. Open a row for its full pattern, provenance, lifecycle details, and carefully scoped controls.";
   const classifierStatus = document.createElement("p");
   classifierStatus.className = "settings-status";
   classifierStatus.setAttribute("role", "status");
@@ -1116,12 +1116,17 @@ function synchronizeAdminNavigation(isAdmin) {
   backfill.addEventListener("click", () => void startClassifierBackfill());
   const evaluate = document.createElement("button");
   evaluate.type = "button";
-  evaluate.textContent = "Run curated regression benchmark";
+  evaluate.textContent = "Run Curated Regression Benchmark";
+  evaluate.title = "Read-only evaluation of current rules against known regression cases. It does not change rules, jobs, or production match counters; it records evaluation results only.";
   evaluate.addEventListener("click", () => void evaluateRegexRules());
   const reload = document.createElement("button");
   reload.type = "button";
-  reload.textContent = "Validate and hot reload";
+  reload.textContent = "Verify and Apply Current Rule Set";
+  reload.title = "Validates and compiles the already-approved active rules. On success it replaces the in-memory ruleset and reclassifies stale cache entries; it does not create or edit rules.";
   reload.addEventListener("click", () => void reloadRegexRules());
+  const actionHelp = document.createElement("p");
+  actionHelp.className = "account-help";
+  actionHelp.textContent = "Benchmark is read-only. Verify and Apply changes production classification only when approved rule records already differ from the running ruleset.";
   const filters = document.createElement("div");
   filters.className = "settings-grid";
   const statusFilter = document.createElement("select");
@@ -1143,14 +1148,26 @@ function synchronizeAdminNavigation(isAdmin) {
   }
   const provenanceFilter = document.createElement("input");
   provenanceFilter.placeholder = "Filter provenance";
+  const ruleSort = document.createElement("select");
+  for (const [value, label] of [["concept", "Sort: concept"], ["status", "Sort: status"],
+    ["lastMatched", "Sort: last matched"], ["lifetime", "Sort: lifetime matches"],
+    ["timeouts", "Sort: timeouts"]]) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    ruleSort.append(option);
+  }
   const rulesList = document.createElement("div");
   rulesList.className = "admin-regex-rule-list";
-  for (const control of [statusFilter, conceptFilter, usageFilter, provenanceFilter]) {
-    control.addEventListener("input", renderAdminRegexRules);
+  for (const control of [statusFilter, conceptFilter, usageFilter, provenanceFilter, ruleSort]) {
+    control.addEventListener("input", () => {
+      state.adminRegexRulePage = 0;
+      renderAdminRegexRules();
+    });
     filters.append(control);
   }
   classifierPanel.append(classifierTitle, classifierIntro, classifierStatus,
-    backfill, evaluate, reload, filters, rulesList);
+    backfill, evaluate, reload, actionHelp, filters, rulesList);
   const evaluationPanel = document.createElement("section");
   evaluationPanel.id = "admin-evaluation-panel";
   evaluationPanel.className = "settings-section admin-subtab-panel";
@@ -1158,9 +1175,9 @@ function synchronizeAdminNavigation(isAdmin) {
   evaluationPanel.setAttribute("aria-labelledby", "admin-evaluation-tab");
   evaluationPanel.hidden = true;
   const evaluationTitle = document.createElement("h3");
-  evaluationTitle.textContent = "RegEx Evaluation Evidence";
+  evaluationTitle.textContent = "Evaluation";
   const evaluationIntro = document.createElement("p");
-  evaluationIntro.textContent = "Metrics stay separated by dataset role. F1 is not accuracy, and known-case regression evidence is not an unseen production estimate.";
+  evaluationIntro.textContent = "Run and review two scientifically distinct evaluations. F1 is not accuracy, and development evidence is never combined with production-holdout evidence.";
   const evaluationContent = document.createElement("div");
   evaluationContent.className = "admin-evaluation-list";
   evaluationPanel.append(evaluationTitle, evaluationIntro, evaluationContent);
@@ -1184,6 +1201,7 @@ function synchronizeAdminNavigation(isAdmin) {
   elements.adminRegexConceptFilter = conceptFilter;
   elements.adminRegexUsageFilter = usageFilter;
   elements.adminRegexProvenanceFilter = provenanceFilter;
+  elements.adminRegexRuleSort = ruleSort;
   elements.adminRegexRulesList = rulesList;
   if (window.location.hash === "#admin-classifier") {
     showView("admin", false, { bypassSourceGuard: true });
@@ -1225,34 +1243,178 @@ async function loadEvaluationLedger() {
     const response = await fetch("/api/admin/evaluations", { cache: "no-store" });
     if (!response.ok) throw new Error("Evaluation ledger could not be loaded.");
     const result = await response.json();
-    elements.adminEvaluationContent.replaceChildren();
-    for (const role of result.datasetRoles) {
-      const latest = result.runs.find(run => run.datasetRole === role.role);
-      const article = document.createElement("article");
-      article.className = "settings-section";
-      const heading = document.createElement("h4");
-      heading.textContent = role.displayName;
-      const status = document.createElement("strong");
-      status.textContent = latest ? "SCORED" : "NOT YET AVAILABLE";
-      const warning = document.createElement("p");
-      warning.textContent = role.warning;
-      article.append(heading, status, warning);
-      if (latest) {
-        const support = document.createElement("p");
-        support.textContent = `Dataset role ${latest.datasetRole} · ${latest.postingCount} postings · ${latest.conceptDecisionCount} concept decisions (${latest.positiveDecisionCount} positive, ${latest.negativeDecisionCount} negative) · ${latest.labelProvenance}.`;
-        const metrics = document.createElement("p");
-        metrics.textContent = `Macro P/R/F1 ${formatMetric(latest.macroPrecision)} / ${formatMetric(latest.macroRecall)} / ${formatMetric(latest.macroF1)} · Micro P/R/F1 ${formatMetric(latest.microPrecision)} / ${formatMetric(latest.microRecall)} / ${formatMetric(latest.microF1)}.`;
-        const historical = document.createElement("p");
-        historical.textContent = `Preserved historical 8-concept subset — Macro P/R/F1 ${formatMetric(latest.historicalMacroPrecision)} / ${formatMetric(latest.historicalMacroRecall)} / ${formatMetric(latest.historicalMacroF1)} · Micro P/R/F1 ${formatMetric(latest.historicalMicroPrecision)} / ${formatMetric(latest.historicalMicroRecall)} / ${formatMetric(latest.historicalMicroF1)}.`;
-        const provenance = document.createElement("p");
-        provenance.textContent = `Dataset ${latest.datasetFingerprint} · ruleset ${latest.rulesetFingerprint} · sampling ${latest.samplingMethod} · seed ${latest.randomSeed ?? "n/a"} · ${formatLongDate(latest.evaluatedUtc) || latest.evaluatedUtc}.`;
-        article.append(support, metrics, historical, provenance);
-      }
-      elements.adminEvaluationContent.append(article);
-    }
+    elements.adminEvaluationContent.replaceChildren(
+      renderCuratedEvaluationCard(result), renderHoldoutEvaluationCard(result));
   } catch (error) {
     elements.adminEvaluationContent.textContent = error.message || String(error);
   }
+}
+
+function renderCuratedEvaluationCard(result) {
+  const latest = result.runs.find(run => run.datasetRole === "development-regression");
+  const article = document.createElement("article");
+  article.className = "settings-section admin-evaluation-card";
+  const heading = document.createElement("h4");
+  heading.textContent = "CURATED REGRESSION BENCHMARK";
+  const warning = document.createElement("strong");
+  warning.textContent = "Not a production generalization estimate.";
+  const purpose = document.createElement("p");
+  purpose.textContent = "Known-case regression protection for the current rule set. Running it does not modify rules, jobs, or production match counters; it records evaluation evidence only.";
+  const action = document.createElement("button");
+  action.type = "button";
+  action.textContent = "Run Curated Regression Benchmark";
+  action.addEventListener("click", async () => {
+    action.disabled = true;
+    await evaluateRegexRules();
+    await loadEvaluationLedger();
+  });
+  article.append(heading, warning, purpose, action);
+  if (latest) {
+    article.append(renderEvaluationMetrics(latest.macroPrecision, latest.macroRecall,
+      latest.macroF1, latest.microPrecision, latest.microRecall, latest.microF1));
+    const metadata = document.createElement("p");
+    metadata.className = "admin-evaluation-metadata";
+    metadata.textContent = `${latest.postingCount} postings · last run ${formatLongDate(latest.evaluatedUtc) || latest.evaluatedUtc} · dataset ${latest.datasetFingerprint} · ruleset ${latest.rulesetFingerprint}`;
+    article.append(metadata);
+  }
+  return article;
+}
+
+function renderHoldoutEvaluationCard(result) {
+  const report = result.holdoutReport;
+  const runStatus = result.holdoutStatus || { state: "not-started", displayState: "Not started", completed: 0, total: 200 };
+  const article = document.createElement("article");
+  article.className = "settings-section admin-evaluation-card";
+  const heading = document.createElement("h4");
+  heading.textContent = "AI-ADJUDICATED PRODUCTION HOLDOUT";
+  const disclaimer = document.createElement("strong");
+  disclaimer.textContent = "Reference labels were generated through prediction-blinded AI review and adjudication. They are not human-ground-truth labels.";
+  const purpose = document.createElement("p");
+  purpose.textContent = "200 frozen production postings · prediction-blinded Codex A/B passes · disagreement adjudication · RegEx scoring only after reference freeze. JSM validates durable Codex artifacts and never stores Codex credentials or substitutes Qwen.";
+  const action = document.createElement("button");
+  action.type = "button";
+  action.textContent = "Run AI-Adjudicated Holdout Evaluation";
+  const running = !["not-started", "complete", "failed"].includes(runStatus.state);
+  action.disabled = running;
+  action.addEventListener("click", () => void startAiHoldoutEvaluation(action));
+  const progress = document.createElement("p");
+  progress.className = "settings-status";
+  progress.setAttribute("role", "status");
+  progress.textContent = `${runStatus.displayState}${runStatus.total ? `: ${runStatus.completed} / ${runStatus.total}` : ""}${runStatus.message ? ` · ${runStatus.message}` : ""}`;
+  article.append(heading, disclaimer, purpose, action, progress);
+  if (report) {
+    const reliability = document.createElement("p");
+    reliability.textContent = `A/B agreement ${formatPercent(1 - report.agreement.disagreementRate)} · ${report.agreement.disagreements} disagreements adjudicated · ${report.unresolvedExcludedDecisions} unresolved decisions excluded.`;
+    article.append(reliability, renderEvaluationMetrics(report.macro.precision,
+      report.macro.recall, report.macro.f1, report.micro.precision, report.micro.recall,
+      report.micro.f1), renderHoldoutConceptTable(report.concepts));
+    const metadata = document.createElement("p");
+    metadata.className = "admin-evaluation-metadata";
+    metadata.textContent = `Reference ${report.referenceLabelFingerprint} · holdout ${report.datasetFingerprint} · ruleset ${report.rulesetFingerprint} · ${formatLongDate(report.evaluatedUtc) || report.evaluatedUtc}`;
+    article.append(metadata);
+  }
+  return article;
+}
+
+function renderEvaluationMetrics(macroPrecision, macroRecall, macroF1,
+  microPrecision, microRecall, microF1) {
+  const grid = document.createElement("dl");
+  grid.className = "admin-evaluation-metrics";
+  for (const [label, value] of [["Macro Precision", macroPrecision], ["Macro Recall", macroRecall],
+    ["Macro F1", macroF1], ["Micro Precision", microPrecision],
+    ["Micro Recall", microRecall], ["Micro F1", microF1]]) {
+    const wrapper = document.createElement("div");
+    const term = document.createElement("dt");
+    term.textContent = label;
+    const definition = document.createElement("dd");
+    definition.textContent = formatMetric(value);
+    wrapper.append(term, definition);
+    grid.append(wrapper);
+  }
+  return grid;
+}
+
+function renderHoldoutConceptTable(concepts) {
+  const details = document.createElement("details");
+  const summary = document.createElement("summary");
+  summary.textContent = "Per-concept metrics";
+  const controls = document.createElement("div");
+  controls.className = "admin-evaluation-table-controls";
+  const search = document.createElement("input");
+  search.placeholder = "Filter concept";
+  const sort = document.createElement("select");
+  for (const [value, label] of [["f1", "Worst F1"], ["support", "Lowest support"],
+    ["disagreement", "Highest disagreement"], ["name", "Concept name"]]) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    sort.append(option);
+  }
+  const table = document.createElement("table");
+  table.className = "admin-compact-table";
+  const render = () => {
+    const query = search.value.trim().toLowerCase();
+    const rows = concepts.filter(item => !query || item.conceptName.toLowerCase().includes(query) || item.conceptId.includes(query));
+    rows.sort((a, b) => sort.value === "support" ? a.support - b.support
+      : sort.value === "disagreement" ? b.disagreementRate - a.disagreementRate
+        : sort.value === "name" ? a.conceptName.localeCompare(b.conceptName)
+          : (a.f1 ?? -1) - (b.f1 ?? -1));
+    table.replaceChildren();
+    const head = document.createElement("thead");
+    const headerRow = document.createElement("tr");
+    for (const label of ["Concept", "Support", "Precision", "Recall", "F1", "A/B disagreement"]) {
+      const th = document.createElement("th");
+      th.textContent = label;
+      headerRow.append(th);
+    }
+    head.append(headerRow);
+    const body = document.createElement("tbody");
+    for (const item of rows) {
+      const row = document.createElement("tr");
+      for (const value of [item.conceptName, item.support, formatMetric(item.precision),
+        formatMetric(item.recall), formatMetric(item.f1), formatPercent(item.disagreementRate)]) {
+        const cell = document.createElement("td");
+        cell.textContent = value;
+        row.append(cell);
+      }
+      body.append(row);
+    }
+    table.append(head, body);
+  };
+  search.addEventListener("input", render);
+  sort.addEventListener("change", render);
+  controls.append(search, sort);
+  details.append(summary, controls, table);
+  render();
+  return details;
+}
+
+async function startAiHoldoutEvaluation(button) {
+  button.disabled = true;
+  try {
+    const response = await fetch("/api/admin/evaluations/ai-holdout", { method: "POST" });
+    if (!response.ok && response.status !== 409) {
+      const failure = await response.json().catch(() => ({}));
+      throw new Error(failure.error || "AI-adjudicated holdout evaluation could not be started.");
+    }
+    await pollAiHoldoutEvaluation();
+  } catch (error) {
+    button.disabled = false;
+    elements.adminEvaluationContent.textContent = error.message || String(error);
+  }
+}
+
+async function pollAiHoldoutEvaluation() {
+  await new Promise(resolve => window.setTimeout(resolve, 750));
+  const response = await fetch("/api/admin/evaluations/ai-holdout/status", { cache: "no-store" });
+  if (!response.ok) throw new Error("Holdout evaluation status could not be loaded.");
+  const result = await response.json();
+  await loadEvaluationLedger();
+  if (!["complete", "failed"].includes(result.status.state)) await pollAiHoldoutEvaluation();
+}
+
+function formatPercent(value) {
+  return Number.isFinite(value) ? `${(value * 100).toFixed(1)}%` : "undefined";
 }
 
 function formatMetric(value) {
@@ -1331,42 +1493,87 @@ function renderAdminRegexRules() {
     if (usage === "high" && rule.matchCountLifetime < 100) return false;
     if (usage === "stale" && rule.lastMatchedUtc && Date.parse(rule.lastMatchedUtc) > staleCutoff) return false;
     return true;
-  }).slice(0, 250);
+  });
+  const sort = elements.adminRegexRuleSort?.value || "concept";
+  rules.sort((a, b) => sort === "status" ? a.status.localeCompare(b.status) || a.conceptId.localeCompare(b.conceptId)
+    : sort === "lastMatched" ? (Date.parse(b.lastMatchedUtc || 0) || 0) - (Date.parse(a.lastMatchedUtc || 0) || 0)
+      : sort === "lifetime" ? b.matchCountLifetime - a.matchCountLifetime
+        : sort === "timeouts" ? b.timeoutCountLifetime - a.timeoutCountLifetime
+          : a.conceptId.localeCompare(b.conceptId) || a.ruleId.localeCompare(b.ruleId));
+  const pageSize = 50;
+  const pageCount = Math.max(1, Math.ceil(rules.length / pageSize));
+  state.adminRegexRulePage = Math.min(state.adminRegexRulePage || 0, pageCount - 1);
+  const page = rules.slice(state.adminRegexRulePage * pageSize,
+    (state.adminRegexRulePage + 1) * pageSize);
   elements.adminRegexRulesList.replaceChildren();
-  const summary = document.createElement("p");
-  summary.className = "settings-status";
-  summary.textContent = `Showing ${rules.length} of ${state.adminRegexRules.length} rules.`;
-  elements.adminRegexRulesList.append(summary);
-  for (const rule of rules) {
-    const article = document.createElement("article");
-    article.className = "settings-section";
-    const heading = document.createElement("strong");
-    heading.textContent = `${rule.conceptId} · ${rule.status} · ${rule.scope} · ${rule.ruleType}`;
-    const pattern = document.createElement("code");
-    pattern.textContent = rule.pattern;
+  const pager = document.createElement("div");
+  pager.className = "admin-table-pager";
+  const summary = document.createElement("span");
+  summary.textContent = `${rules.length} matching rules · page ${state.adminRegexRulePage + 1} of ${pageCount}`;
+  const previous = document.createElement("button");
+  previous.type = "button";
+  previous.textContent = "Previous";
+  previous.disabled = state.adminRegexRulePage === 0;
+  previous.addEventListener("click", () => { state.adminRegexRulePage--; renderAdminRegexRules(); });
+  const next = document.createElement("button");
+  next.type = "button";
+  next.textContent = "Next";
+  next.disabled = state.adminRegexRulePage >= pageCount - 1;
+  next.addEventListener("click", () => { state.adminRegexRulePage++; renderAdminRegexRules(); });
+  pager.append(summary, previous, next);
+  const table = document.createElement("table");
+  table.className = "admin-compact-table admin-rule-table";
+  const head = document.createElement("thead");
+  const headerRow = document.createElement("tr");
+  for (const label of ["Concept", "Pattern", "Type / scope", "Status", "Last matched",
+    "Lifetime", "Recent", "Timeouts"] ) {
+    const cell = document.createElement("th");
+    cell.textContent = label;
+    headerRow.append(cell);
+  }
+  head.append(headerRow);
+  const body = document.createElement("tbody");
+  for (const rule of page) {
+    const row = document.createElement("tr");
+    const conceptCell = document.createElement("td");
+    const details = document.createElement("details");
+    const detailsSummary = document.createElement("summary");
+    detailsSummary.textContent = rule.conceptId;
+    const fullPattern = document.createElement("code");
+    fullPattern.textContent = rule.pattern;
     const metadata = document.createElement("p");
-    metadata.textContent = `Created ${formatLongDate(rule.createdUtc) || rule.createdUtc} · last matched ${rule.lastMatchedUtc ? formatLongDate(rule.lastMatchedUtc) : "never"} · lifetime ${rule.matchCountLifetime} · since review ${rule.matchCountSinceReview} · ${rule.provenance}`;
-    article.append(heading, pattern, metadata);
-    const actions = rule.status === "proposed"
-      ? [["Validate candidate", "validate"]]
-      : rule.status === "validated"
-        ? [["Activate", "active"], ["Return to proposed", "proposed"]]
-        : rule.status === "active"
-          ? [["Retire", "retired"]]
-          : rule.status === "review-due"
-            ? [["Approve review", "active"], ["Retire", "retired"]]
-            : rule.status === "retired"
-              ? [["Restore as validated", "validated"]]
-              : [];
-    for (const [label, action] of actions) {
+    metadata.textContent = `Rule ${rule.ruleId} · created ${formatLongDate(rule.createdUtc) || rule.createdUtc} · modified ${formatLongDate(rule.lastModifiedUtc) || rule.lastModifiedUtc} · provenance ${rule.provenance}${rule.reason ? ` · ${rule.reason}` : ""}`;
+    details.append(detailsSummary, fullPattern, metadata);
+    for (const [label, action] of regexRuleActions(rule)) {
       const button = document.createElement("button");
       button.type = "button";
       button.textContent = label;
       button.addEventListener("click", () => void applyRegexRuleAction(rule.ruleId, action));
-      article.append(button);
+      details.append(button);
     }
-    elements.adminRegexRulesList.append(article);
+    conceptCell.append(details);
+    const abbreviated = rule.pattern.length > 72 ? `${rule.pattern.slice(0, 69)}…` : rule.pattern;
+    for (const value of [abbreviated, `${rule.ruleType} / ${rule.scope}`, rule.status,
+      rule.lastMatchedUtc ? formatLongDate(rule.lastMatchedUtc) : "Never", rule.matchCountLifetime,
+      rule.matchCountSinceReview, rule.timeoutCountLifetime]) {
+      const cell = document.createElement("td");
+      cell.textContent = value;
+      cell.title = value === abbreviated ? rule.pattern : "";
+      row.append(cell);
+    }
+    row.prepend(conceptCell);
+    body.append(row);
   }
+  table.append(head, body);
+  elements.adminRegexRulesList.append(pager, table);
+}
+
+function regexRuleActions(rule) {
+  return rule.status === "proposed" ? [["Validate candidate", "validate"]]
+    : rule.status === "validated" ? [["Activate", "active"], ["Return to proposed", "proposed"]]
+      : rule.status === "active" ? [["Retire", "retired"]]
+        : rule.status === "review-due" ? [["Approve review", "active"], ["Retire", "retired"]]
+          : rule.status === "retired" ? [["Restore as validated", "validated"]] : [];
 }
 
 async function applyRegexRuleAction(ruleId, action) {
