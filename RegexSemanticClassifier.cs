@@ -61,8 +61,8 @@ public sealed class RegexSemanticClassifier
             if (!current.ByConcept.TryGetValue(concept.Id, out var rules)) continue;
             var matched = new List<(CompiledRule Rule, string Evidence)>();
             var excluded = rules.Where(item => item.Rule.RuleType == SemanticRuleTypes.Exclusion)
-                .Select(item => (item, Match: item.Pattern!.Match(title ?? "")))
-                .Where(item => item.Match.Success)
+                .Select(item => (item, Match: FirstMatch(item, title ?? "", rejectLocalNegation: false)))
+                .Where(item => item.Match is not null)
                 .ToArray();
             if (excluded.Length > 0)
             {
@@ -75,9 +75,8 @@ public sealed class RegexSemanticClassifier
             {
                 var input = rule.Rule.Scope == SemanticRuleScopes.Title ? title ?? "" :
                     rule.Rule.Scope == SemanticRuleScopes.Posting ? description : corpus;
-                var match = rule.Pattern!.Matches(input).Cast<Match>().FirstOrDefault(candidate =>
-                    rule.Rule.RuleType != SemanticRuleTypes.PositiveEvidence ||
-                    !IsLocallyNegated(input, candidate));
+                var match = FirstMatch(rule, input,
+                    rejectLocalNegation: rule.Rule.RuleType == SemanticRuleTypes.PositiveEvidence);
                 if (match is not null) matched.Add((rule, NormalizeEvidence(match.Value)));
             }
 
@@ -88,11 +87,11 @@ public sealed class RegexSemanticClassifier
                 {
                     var input = item.Rule.Scope == SemanticRuleScopes.Title ? title ?? "" :
                         item.Rule.Scope == SemanticRuleScopes.Posting ? description : corpus;
-                    return (Rule: item, Match: item.Pattern!.Match(input));
+                    return (Rule: item, Match: FirstMatch(item, input, rejectLocalNegation: false));
                 }).ToArray();
-                if (groupMatches.All(item => item.Match.Success))
+                if (groupMatches.All(item => item.Match is not null))
                     matched.AddRange(groupMatches.Select(item => (item.Rule,
-                        NormalizeEvidence(item.Match.Value))));
+                        NormalizeEvidence(item.Match!.Value))));
             }
 
             foreach (var rule in rules.Where(item => item.Rule.RuleType == SemanticRuleTypes.RemoteDesignation))
@@ -169,7 +168,23 @@ public sealed class RegexSemanticClassifier
     private static bool IsLocallyNegated(string corpusText, Match match)
     {
         var start = Math.Max(0, match.Index - 60);
-        return LocalNegationPattern.IsMatch(corpusText[start..match.Index].TrimEnd());
+        try { return LocalNegationPattern.IsMatch(corpusText[start..match.Index].TrimEnd()); }
+        catch (RegexMatchTimeoutException) { return true; }
+    }
+
+    private static Match? FirstMatch(CompiledRule rule, string input, bool rejectLocalNegation)
+    {
+        try
+        {
+            foreach (Match match in rule.Pattern!.Matches(input))
+                if (!rejectLocalNegation || !IsLocallyNegated(input, match)) return match;
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            // A recovered fallback pattern is always bounded. Under transient CPU pressure,
+            // isolate its timeout as a non-match instead of discarding every other rule result.
+        }
+        return null;
     }
 
     private static string NormalizeEvidence(string value)
