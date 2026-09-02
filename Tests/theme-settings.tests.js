@@ -50,8 +50,8 @@ for (const [id, label] of [
   assert.match(bootstrap, new RegExp(`"${id}"`));
 }
 assert.match(index, /theme\.css\?v=11/);
-assert.match(index, /styles\.css\?v=37/);
-assert.match(index, /app\.js\?v=46/);
+assert.match(index, /styles\.css\?v=38/);
+assert.match(index, /app\.js\?v=47/);
 assert.match(app, /function normalizeThemeMode\(value\)/);
 assert.match(app, /SUPPORTED_THEME_MODES\.has\(value\) \? value : "light"/);
 
@@ -128,6 +128,12 @@ assert.match(styles,
   /\.settings-section h3\s*\{[\s\S]*?background:\s*var\(--color-settings-section-header-background\)/);
 assert.match(styles,
   /\.credential-inventory-category > summary\s*\{[\s\S]*?background:\s*var\(--color-accordion-header-background\)/);
+assert.match(styles,
+  /\.primary-button,[\s\S]*?color:\s*var\(--color-primary-action-text\)[\s\S]*?background:\s*var\(--color-accent\)/,
+  "Shared primary actions must use the semantic action foreground and background tokens.");
+assert.match(styles,
+  /\.admin-evaluation-action\[aria-busy="true"\][\s\S]*?var\(--color-accent-hover\)/,
+  "Evaluation running state must remain inside the semantic action palette.");
 
 function luminance(hex) {
   const channels = hex.slice(1).match(/../g).map(value => parseInt(value, 16) / 255)

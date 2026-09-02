@@ -18,7 +18,7 @@ assert.match(index,
   /id="administrator-bootstrap-section"[^>]*hidden[\s\S]*?id="administrator-bootstrap-code"[\s\S]*?minlength="8"[\s\S]*?maxlength="8"[\s\S]*?Claim Administrator/);
 assert.doesNotMatch(index, /annotation-labeling-ui|detector-evaluation-ui/,
   "Removed experimental Admin assets must not load.");
-assert.match(index, /app\.js\?v=46/);
+assert.match(index, /app\.js\?v=47/);
 
 assert.match(app, /synchronizeAdminNavigation\(account\.isAdmin === true\)/);
 assert.match(app, /if \(!isAdmin\)[\s\S]*?adminTab\?\.remove\(\)[\s\S]*?return;/,
@@ -54,6 +54,13 @@ assert.match(app,
   "Normal LLM polling must update the existing progress region in place.");
 assert.match(app, /server-side evaluation continues safely when this page is closed or refreshed/);
 assert.match(styles, /\.llm-evaluation-progress-bar[\s\S]*?--color-loading-progress-track[\s\S]*?--color-loading-progress-fill/);
+assert.equal((app.match(/primary-button admin-evaluation-action/g) || []).length, 3,
+  "Every Evaluation action must use the shared themed primary-button component.");
+assert.match(app, /LLM Holdout Evaluation Running…[\s\S]*?aria-busy/,
+  "The running evaluation action must expose a textual and accessible busy state.");
+assert.match(styles,
+  /\.admin-evaluation-filter-input[\s\S]*?--color-input-text[\s\S]*?--color-input-background/,
+  "Evaluation filters must use semantic form-control tokens.");
 assert.match(app, /admin-compact-table[\s\S]*?Previous[\s\S]*?Next/,
   "RegEx rules must use a compact paginated table instead of giant cards.");
 assert.match(app, /Worst F1[\s\S]*?Lowest support[\s\S]*?Highest disagreement[\s\S]*?Concept name/);

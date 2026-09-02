@@ -1124,6 +1124,7 @@ function synchronizeAdminNavigation(isAdmin) {
   backfill.addEventListener("click", () => void startClassifierBackfill());
   const evaluate = document.createElement("button");
   evaluate.type = "button";
+  evaluate.className = "primary-button";
   evaluate.textContent = "Run Curated Regression Benchmark";
   evaluate.title = "Read-only evaluation of current rules against known regression cases. It does not change rules, jobs, or production match counters; it records evaluation results only.";
   evaluate.addEventListener("click", () => void evaluateRegexRules());
@@ -1313,11 +1314,20 @@ function renderCuratedEvaluationCard(result) {
   purpose.textContent = "Known-case regression protection for the current rule set. Running it does not modify rules, jobs, or production match counters; it records evaluation evidence only.";
   const action = document.createElement("button");
   action.type = "button";
+  action.className = "primary-button admin-evaluation-action";
   action.textContent = "Run Curated Regression Benchmark";
   action.addEventListener("click", async () => {
     action.disabled = true;
-    await evaluateRegexRules();
-    await loadEvaluationLedger();
+    action.setAttribute("aria-busy", "true");
+    action.textContent = "Running Curated Regression Benchmark…";
+    try {
+      await evaluateRegexRules();
+      await loadEvaluationLedger();
+    } finally {
+      action.disabled = false;
+      action.setAttribute("aria-busy", "false");
+      action.textContent = "Run Curated Regression Benchmark";
+    }
   });
   article.append(heading, warning, purpose, action);
   if (latest) {
@@ -1344,9 +1354,13 @@ function renderHoldoutEvaluationCard(result) {
   purpose.textContent = "200 frozen production postings · prediction-blinded Codex A/B passes · disagreement adjudication · RegEx scoring only after reference freeze. JSM validates durable Codex artifacts and never stores Codex credentials or substitutes Qwen.";
   const action = document.createElement("button");
   action.type = "button";
-  action.textContent = "Run AI-Adjudicated Holdout Evaluation";
+  action.className = "primary-button admin-evaluation-action";
   const running = !["not-started", "complete", "failed"].includes(runStatus.state);
+  action.textContent = running
+    ? "AI-Adjudicated Holdout Evaluation Running…"
+    : "Run AI-Adjudicated Holdout Evaluation";
   action.disabled = running;
+  action.setAttribute("aria-busy", String(running));
   action.addEventListener("click", () => void startAiHoldoutEvaluation(action));
   const progress = document.createElement("p");
   progress.className = "settings-status";
@@ -1386,10 +1400,14 @@ function renderLlmEvaluationCard(result) {
   disclaimer.textContent = "Reference labels were generated through prediction-blinded AI review and adjudication. They are not human-ground-truth labels.";
   const action = document.createElement("button");
   action.type = "button";
+  action.className = "primary-button admin-evaluation-action";
   action.dataset.llmEvaluationAction = "true";
-  action.textContent = "Run LLM Holdout Evaluation";
   const running = !["not-started", "complete", "failed"].includes(runStatus.state);
+  action.textContent = report
+    ? "LLM Holdout Evaluation Complete"
+    : running ? "LLM Holdout Evaluation Running…" : "Run LLM Holdout Evaluation";
   action.disabled = running || report !== null;
+  action.setAttribute("aria-busy", String(running));
   action.title = report ? "The first frozen prediction set is retained. A changed model or prompt requires a separately versioned experiment." : purpose.textContent;
   action.addEventListener("click", () => void startLlmHoldoutEvaluation(action));
   const progress = renderLlmEvaluationProgress(runStatus);
@@ -1579,8 +1597,12 @@ function renderLlmConceptComparison(concepts) {
   const controls = document.createElement("div");
   controls.className = "admin-evaluation-table-controls";
   const search = document.createElement("input");
+  search.className = "admin-evaluation-filter-input";
   search.placeholder = "Filter concept";
+  search.setAttribute("aria-label", "Filter LLM comparison concepts");
   const sort = document.createElement("select");
+  sort.className = "admin-evaluation-filter-select";
+  sort.setAttribute("aria-label", "Sort LLM comparison concepts");
   for (const [value, label] of [["llmF1", "Sort: LLM F1"], ["regexF1", "Sort: RegEx F1"],
     ["difference", "Sort: F1 difference"], ["support", "Sort: support"],
     ["disagreement", "Sort: labeler disagreement"], ["name", "Sort: concept name"]]) {
@@ -1635,6 +1657,8 @@ function renderLlmConceptComparison(concepts) {
 
 async function startLlmHoldoutEvaluation(button) {
   button.disabled = true;
+  button.setAttribute("aria-busy", "true");
+  button.textContent = "LLM Holdout Evaluation Running…";
   try {
     const response = await fetch("/api/admin/evaluations/llm-holdout", { method: "POST" });
     if (!response.ok && response.status !== 409) {
@@ -1644,6 +1668,8 @@ async function startLlmHoldoutEvaluation(button) {
     startLlmHoldoutPolling();
   } catch (error) {
     button.disabled = false;
+    button.setAttribute("aria-busy", "false");
+    button.textContent = "Run LLM Holdout Evaluation";
     const message = elements.adminEvaluationContent?.querySelector("[data-llm-evaluation-message]");
     if (message) message.textContent = error.message || String(error);
   }
@@ -1687,7 +1713,13 @@ async function refreshLlmHoldoutStatus(generation) {
     updateLlmEvaluationProgress(region, result.status);
     const running = !["not-started", "complete", "failed"].includes(result.status.state);
     const action = elements.adminEvaluationContent?.querySelector("[data-llm-evaluation-action]");
-    if (action) action.disabled = running || result.report !== null;
+    if (action) {
+      action.disabled = running || result.report !== null;
+      action.setAttribute("aria-busy", String(running));
+      action.textContent = result.report
+        ? "LLM Holdout Evaluation Complete"
+        : running ? "LLM Holdout Evaluation Running…" : "Run LLM Holdout Evaluation";
+    }
     if (["complete", "failed"].includes(result.status.state)) {
       stopLlmHoldoutPolling();
       if (result.report) await loadEvaluationLedger();
@@ -1746,8 +1778,12 @@ function renderHoldoutConceptTable(concepts) {
   const controls = document.createElement("div");
   controls.className = "admin-evaluation-table-controls";
   const search = document.createElement("input");
+  search.className = "admin-evaluation-filter-input";
   search.placeholder = "Filter concept";
+  search.setAttribute("aria-label", "Filter holdout concepts");
   const sort = document.createElement("select");
+  sort.className = "admin-evaluation-filter-select";
+  sort.setAttribute("aria-label", "Sort holdout concepts");
   for (const [value, label] of [["f1", "Worst F1"], ["support", "Lowest support"],
     ["disagreement", "Highest disagreement"], ["name", "Concept name"]]) {
     const option = document.createElement("option");
@@ -1796,6 +1832,8 @@ function renderHoldoutConceptTable(concepts) {
 
 async function startAiHoldoutEvaluation(button) {
   button.disabled = true;
+  button.setAttribute("aria-busy", "true");
+  button.textContent = "AI-Adjudicated Holdout Evaluation Running…";
   try {
     const response = await fetch("/api/admin/evaluations/ai-holdout", { method: "POST" });
     if (!response.ok && response.status !== 409) {
@@ -1805,6 +1843,8 @@ async function startAiHoldoutEvaluation(button) {
     await pollAiHoldoutEvaluation();
   } catch (error) {
     button.disabled = false;
+    button.setAttribute("aria-busy", "false");
+    button.textContent = "Run AI-Adjudicated Holdout Evaluation";
     elements.adminEvaluationContent.textContent = error.message || String(error);
   }
 }
