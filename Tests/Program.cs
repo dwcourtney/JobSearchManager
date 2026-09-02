@@ -301,6 +301,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("SQLite RegEx rules migrate, reload, evaluate, and track lifecycle telemetry", TestRegexRuleLifecycleAsync),
     ("List and detail presentations share immutable RegEx authority", TestRegexPresentationConsistencyAsync),
     ("Production holdout sampling is reproducible, blinded, and contamination-aware", TestHoldoutSamplingAsync),
+    ("AI holdout freezes complete A/B references before RegEx scoring", TestAiHoldoutEvaluationAsync),
     ("Offline cache reconciliation repairs every stale RegEx record idempotently", TestRegexCacheReconciliationAsync),
     ("Default RegEx is local while LLM infrastructure remains dormant", TestLlmClassifierContractAsync),
     ("Semantic taxonomy and prompt identity are versioned", TestLlmFixtureMetricsAsync),
@@ -1068,6 +1069,75 @@ static async Task TestHoldoutSamplingAsync()
     }
     finally
     {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static async Task TestAiHoldoutEvaluationAsync()
+{
+    var directory = Path.Combine(Path.GetTempPath(), "jsm-ai-holdout-" + Guid.NewGuid().ToString("N"));
+    Directory.CreateDirectory(directory);
+    try
+    {
+        var cacheDirectory = Path.Combine(directory, "cache");
+        var evaluationDirectory = Path.Combine(directory, "evaluation");
+        Directory.CreateDirectory(cacheDirectory);
+        Directory.CreateDirectory(evaluationDirectory);
+        var job = CachedJob("leidos", "ai-holdout", "/ai-holdout",
+            "<p>Build software and backend APIs.</p>");
+        await File.WriteAllTextAsync(Path.Combine(cacheDirectory, "cache.json"), JsonSerializer.Serialize(
+            new JobsCacheDocument(5, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, 0, [job]),
+            new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+        var holdout = await ProductionHoldoutSampler.SampleAsync(cacheDirectory,
+            new HoldoutSamplingPlan(1, "Fixture population before detector output.", null, null, null,
+                "active-and-inactive", 1, "simple-random", 99));
+        await ProductionHoldoutSampler.WriteAtomicallyAsync(holdout,
+            Path.Combine(evaluationDirectory, "holdout.json"));
+        var catalog = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+        using var store = new SqliteSemanticRuleStore(Path.Combine(directory, "regex-rules.db"), catalog);
+        store.Initialize(RepositoryAsset("LegacyJobConceptRules.json"));
+        var classifier = new RegexSemanticClassifier(store, catalog);
+        await classifier.InitializeAsync();
+        var reviewed = new AiLabelingPassItem(holdout.Examples[0].EvaluationExampleId,
+            holdout.Examples[0].PostingContentHash, ["role.software-engineering"], [], 85);
+        var line = JsonSerializer.Serialize(reviewed, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        await File.WriteAllTextAsync(Path.Combine(evaluationDirectory, "labeler-a.jsonl"), line + "\n");
+        await File.WriteAllTextAsync(Path.Combine(evaluationDirectory, "labeler-b.jsonl"), line + "\n");
+        await File.WriteAllTextAsync(Path.Combine(evaluationDirectory, "adjudication.jsonl"), "");
+        await File.WriteAllTextAsync(Path.Combine(evaluationDirectory, "labeler-a-prompt.txt"), "test prompt a");
+        await File.WriteAllTextAsync(Path.Combine(evaluationDirectory, "labeler-b-prompt.txt"), "test prompt b");
+        await File.WriteAllTextAsync(Path.Combine(evaluationDirectory, "adjudicator-prompt.txt"), "test prompt c");
+        static string PromptHash(string value) => Convert.ToHexString(
+            System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(value)))
+            .ToLowerInvariant();
+        var completed = new DateTimeOffset(2026, 9, 2, 12, 0, 0, TimeSpan.Zero);
+        var reviewerA = new AiReviewerIdentity("Labeler A", "Codex", "isolated test configuration",
+            "ai-reference-labeler-v1", PromptHash("test prompt a"), completed);
+        var reviewerB = new AiReviewerIdentity("Labeler B", "Codex", "isolated test configuration",
+            "ai-reference-labeler-v1", PromptHash("test prompt b"), completed);
+        var adjudicator = new AiReviewerIdentity("Adjudicator", "Codex", "disagreement-only test configuration",
+            "ai-reference-adjudicator-v1", PromptHash("test prompt c"), completed);
+        var manifest = new AiHoldoutRunManifest(1, "holdout.json", holdout.SampleFingerprint,
+            reviewerA, reviewerB, adjudicator, AiHoldoutEvaluationService.ExactDisclaimer);
+        await File.WriteAllTextAsync(Path.Combine(evaluationDirectory, "ai-holdout-manifest.json"),
+            JsonSerializer.Serialize(manifest, new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+        var service = new AiHoldoutEvaluationService(evaluationDirectory, classifier, store, catalog);
+        var report = await service.RunAsync();
+        var referencePath = Path.Combine(evaluationDirectory, "ai-reference-labels-v1.json");
+        var referenceBefore = await File.ReadAllBytesAsync(referencePath);
+        var repeated = await service.RunAsync();
+        var referenceAfter = await File.ReadAllBytesAsync(referencePath);
+        Assert(report.PostingCount == 1 && report.TotalConceptDecisions == 85 &&
+               report.EligibleConceptDecisions == 85 && report.Agreement.Agreements == 85 &&
+               report.Agreement.Disagreements == 0 && report.UnresolvedExcludedDecisions == 0 &&
+               report.ReferenceLabelFingerprint == repeated.ReferenceLabelFingerprint &&
+               referenceBefore.SequenceEqual(referenceAfter) &&
+               service.GetStatus().State == AiHoldoutEvaluationStates.Complete,
+            "The AI holdout pipeline did not freeze complete references or preserve them across scoring runs.");
+    }
+    finally
+    {
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
         if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
     }
 }

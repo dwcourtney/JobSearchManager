@@ -43,6 +43,7 @@ $adminUiTestsPath = Join-Path $repo "Tests\admin-ui.tests.js"
 $securityScanningTestsPath = Join-Path $repo "Tests\security-scanning.tests.js"
 $codeqlScanningTestsPath = Join-Path $repo "Tests\codeql-scanning.tests.js"
 $classifierArchitectureTestsPath = Join-Path $repo "Tests\classifier-architecture.tests.js"
+$aiHoldoutEvaluationTestsPath = Join-Path $repo "Tests\ai-holdout-evaluation.tests.js"
 
 foreach ($scriptPath in @(
     $appPath,
@@ -77,7 +78,8 @@ foreach ($scriptPath in @(
     $adminUiTestsPath,
     $securityScanningTestsPath,
     $codeqlScanningTestsPath,
-    $classifierArchitectureTestsPath)) {
+    $classifierArchitectureTestsPath,
+    $aiHoldoutEvaluationTestsPath)) {
     & $NodePath --check $scriptPath
     if ($LASTEXITCODE -ne 0) {
         throw "JavaScript syntax validation failed for $scriptPath."
@@ -194,6 +196,11 @@ if ($LASTEXITCODE -ne 0) {
     throw "Classifier architecture/isolation tests failed."
 }
 
+& $NodePath $aiHoldoutEvaluationTestsPath
+if ($LASTEXITCODE -ne 0) {
+    throw "AI-adjudicated holdout scientific-boundary tests failed."
+}
+
 $styles = Get-Content -LiteralPath $stylesPath -Raw -Encoding UTF8
 $theme = Get-Content -LiteralPath $themePath -Raw -Encoding UTF8
 $index = Get-Content -LiteralPath $indexPath -Raw -Encoding UTF8
@@ -261,7 +268,7 @@ $credentialFitScript = $index.IndexOf('src="/credential-fit.js?v=2"')
 $clearanceFitScript = $index.IndexOf('src="/clearance-fit.js?v=1"')
 $jobFitScript = $index.IndexOf('src="/job-fit.js?v=11"')
 $clipboardTextScript = $index.IndexOf('src="/clipboard-text.js?v=1"')
-$appScript = $index.IndexOf('src="/app.js?v=43"')
+$appScript = $index.IndexOf('src="/app.js?v=44"')
 if ($countryOrderingScript -lt 0 -or $appScript -le $countryOrderingScript) {
     throw "The versioned country-ordering.js asset must load before app.js."
 }

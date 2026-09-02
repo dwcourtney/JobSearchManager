@@ -36,16 +36,18 @@ time. Review-due status continues to run in production until an admin approves o
 
 ## Admin and maintenance interfaces
 
-The Admin RegEx Rules view shows status, concept, scope, type, pattern/category, provenance, created
-date, last match, lifetime matches, and matches since review. It filters by status, concept, usage,
-and provenance and provides deterministic evaluation, candidate validation, activation/review/
-retirement, hot reload, and stale-cache reclassification.
+The Admin RegEx Rules view uses a compact searchable, sortable, paginated table for status, concept,
+scope, type, abbreviated pattern, last match, lifetime/recent matches, and timeouts. Opening one row
+shows its full pattern, provenance, timestamps, and lifecycle controls. **Run Curated Regression
+Benchmark** is read-only. **Verify and Apply Current Rule Set** validates and compiles already-approved
+rules before replacing the runtime snapshot; it does not author rules.
 
 The local maintenance entry point is:
 
 ```text
 dotnet JobSearchManager.dll --regex-maintenance overview <database>
 dotnet JobSearchManager.dll --regex-maintenance evaluate <database>
+dotnet JobSearchManager.dll --regex-maintenance evaluate-ai-holdout <database> <evaluation-directory>
 dotnet JobSearchManager.dll --regex-maintenance benchmark-cache <database> <cache-root>
 dotnet JobSearchManager.dll --regex-maintenance reconcile-cache <database> <cache-root>
 dotnet JobSearchManager.dll --regex-maintenance sample-holdout <database> <cache-root> <plan.json> <output.json>

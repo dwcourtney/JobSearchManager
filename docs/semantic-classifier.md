@@ -29,6 +29,11 @@ Evaluation reports include per-concept TP/FP/FN/TN and precision/recall/F1, plus
 true/false positives, unique/redundant true positives, and representative examples. Evaluation calls
 are explicitly non-production usage and do not alter rule telemetry.
 
+The separate **AI-ADJUDICATED PRODUCTION HOLDOUT** freezes two independent Codex passes and
+disagreement-only adjudication before this classifier is invoked. Unresolved references are counted
+and excluded from binary metrics. Its report includes AI consistency statistics and the exact
+reference fingerprint; it never changes rules or selects a per-job classifier winner.
+
 ## Dormant: Qwen/Ollama
 
 `qwen3:4b-instruct-2507-q4_K_M` remains installed for possible later restoration, but JSM exposes no
