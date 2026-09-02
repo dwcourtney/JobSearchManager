@@ -235,6 +235,15 @@ if (args.Length >= 3 && args[0] == "--regex-maintenance")
                 }
             }
             break;
+        case "freeze-triage-reference" when args.Length == 4:
+            var triageReference = new TriageEvaluationService(Path.GetFullPath(args[3]));
+            Console.WriteLine(JsonSerializer.Serialize(
+                await triageReference.FreezeReferenceAsync(), jsonOptions));
+            break;
+        case "evaluate-triage" when args.Length == 4:
+            var triageEvaluation = new TriageEvaluationService(Path.GetFullPath(args[3]));
+            Console.WriteLine(JsonSerializer.Serialize(await triageEvaluation.RunAsync(), jsonOptions));
+            break;
         case "reconcile-cache" when args.Length == 4:
             Console.WriteLine(JsonSerializer.Serialize(await RegexCacheReconciler.ReconcileAsync(
                 Path.GetFullPath(args[3]), classifier, catalog), jsonOptions));
@@ -260,7 +269,7 @@ if (args.Length >= 3 && args[0] == "--regex-maintenance")
             Console.WriteLine(JsonSerializer.Serialize(new { backup = Path.GetFullPath(args[3]) }, jsonOptions));
             break;
         default:
-            Console.Error.WriteLine("Usage: --regex-maintenance <overview|evaluate|evaluate-ai-holdout|evaluate-llm-holdout|preflight-llm-holdout|benchmark-cache|reconcile-cache|sample-holdout|export|import|review-stale|retention|backup> <regex-rules.db> [evaluation-directory|cache-root] [plan.json] [output.json]");
+            Console.Error.WriteLine("Usage: --regex-maintenance <overview|evaluate|evaluate-ai-holdout|evaluate-llm-holdout|preflight-llm-holdout|freeze-triage-reference|evaluate-triage|benchmark-cache|reconcile-cache|sample-holdout|export|import|review-stale|retention|backup> <regex-rules.db> [evaluation-directory|cache-root] [plan.json] [output.json]");
             Environment.ExitCode = 2;
             break;
     }
@@ -317,6 +326,7 @@ builder.Services.AddSingleton<RegexSemanticClassifier>();
 builder.Services.AddSingleton<RegexEvaluationService>();
 builder.Services.AddSingleton<AiHoldoutEvaluationService>();
 builder.Services.AddSingleton<LlmHoldoutEvaluationService>();
+builder.Services.AddSingleton<TriageEvaluationService>();
 builder.Services.AddHostedService<RegexTelemetryFlushService>();
 builder.Services.AddSingleton<SemanticClassificationService>();
 builder.Services.AddSingleton<PortableWorkspaceService>();
@@ -795,7 +805,8 @@ app.MapPost("/api/admin/regex-rules/evaluate", async (
 
 app.MapGet("/api/admin/evaluations", async (
     SqliteSemanticRuleStore store, AiHoldoutEvaluationService holdout,
-    LlmHoldoutEvaluationService llmHoldout, CancellationToken token) =>
+    LlmHoldoutEvaluationService llmHoldout, TriageEvaluationService triage,
+    CancellationToken token) =>
 {
     var runs = await store.ListEvaluationRunsAsync(token);
     var holdoutStatus = holdout.GetStatus();
@@ -813,6 +824,8 @@ app.MapGet("/api/admin/evaluations", async (
         llmRtx5080Status = llmHoldout.GetRtx5080Status(),
         llmHardwareComparison,
         llmModel = llmHoldout.GetCurrentModelInfo(),
+        triageStatus = triage.GetStatus(),
+        triageReport = triage.GetLatestReport(),
         datasetRoles = new object[]
         {
             new { role = EvaluationDatasetRoles.DevelopmentRegression,
@@ -856,6 +869,19 @@ app.MapPost("/api/admin/evaluations/llm-holdout", (
     LlmHoldoutEvaluationService evaluation) => evaluation.TryStart()
         ? Results.Accepted(value: evaluation.GetStatus())
         : Results.Conflict(new { error = "An LLM holdout evaluation is already running." }))
+    .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapGet("/api/admin/evaluations/triage/status", (
+    TriageEvaluationService evaluation) => Results.Ok(new
+    {
+        status = evaluation.GetStatus(),
+        report = evaluation.GetLatestReport()
+    })).RequireAuthorization(AdminAuthorization.Policy);
+
+app.MapPost("/api/admin/evaluations/triage", (
+    TriageEvaluationService evaluation) => evaluation.TryStart()
+        ? Results.Accepted(value: evaluation.GetStatus())
+        : Results.Conflict(new { error = "A triage evaluation is already running." }))
     .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
 
 app.MapGet("/api/admin/classifier/backfill/status", async (
