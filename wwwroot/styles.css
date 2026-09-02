@@ -2579,6 +2579,47 @@ mark {
 .admin-evaluation-metadata { overflow-wrap: anywhere; color: var(--color-text-secondary); font-size: var(--font-size-caption); }
 .admin-evaluation-table-controls, .admin-table-pager { display: flex; align-items: center; gap: .5rem; margin: .65rem 0; }
 .admin-evaluation-card details { overflow-x: auto; }
+.llm-evaluation-progress {
+  display: grid;
+  gap: .4rem;
+  margin-top: .85rem;
+  padding: .75rem;
+  border: var(--border-width-default) solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-settings-surface-background);
+}
+.llm-evaluation-phase { color: var(--color-text-heading); }
+.llm-evaluation-progress-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.llm-evaluation-progress-bar {
+  width: 100%;
+  height: .7rem;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-loading-progress-track);
+  color: var(--color-loading-progress-fill);
+  accent-color: var(--color-loading-progress-fill);
+}
+.llm-evaluation-progress-bar::-webkit-progress-bar {
+  border-radius: inherit;
+  background: var(--color-loading-progress-track);
+}
+.llm-evaluation-progress-bar::-webkit-progress-value {
+  border-radius: inherit;
+  background: var(--color-loading-progress-fill);
+  transition: width var(--duration-loading-overlay) var(--easing-standard);
+}
+.llm-evaluation-progress-bar::-moz-progress-bar {
+  border-radius: inherit;
+  background: var(--color-loading-progress-fill);
+}
+.llm-evaluation-message, .llm-evaluation-timing, .llm-evaluation-continuity { margin: 0; }
 .admin-comparison-summary { margin: .85rem 0; }
 .admin-table-pager span { margin-right: auto; color: var(--color-text-secondary); }
 .admin-compact-table { width: 100%; border-collapse: collapse; font-size: var(--font-size-caption); }
