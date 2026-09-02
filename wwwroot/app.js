@@ -5,6 +5,7 @@ const SETTINGS_SAVE_DEBOUNCE_MS = 400;
 const OVERLAY_TRANSITION_MS = 180;
 const COPY_FEEDBACK_MS = 2000;
 const REFRESH_STATUS_POLL_MS = 1000;
+const LLM_HOLDOUT_STATUS_POLL_MS = 2000;
 const ALL_COUNTRIES_LABEL = "All countries";
 const ALL_LOCATIONS_LABEL = "All locations";
 const SUPPORTED_THEME_MODES = new Set([
@@ -38,7 +39,13 @@ const state = {
   classifierStatusLoaded: false,
   adminRegexRules: [],
   activeAdminTab: "overview",
-  activeEvaluationTab: "regex",
+  activeEvaluationTab: (() => {
+    try { return window.sessionStorage.getItem("jsm-active-evaluation-tab") === "llm" ? "llm" : "regex"; }
+    catch { return "regex"; }
+  })(),
+  llmHoldoutPollTimer: null,
+  llmHoldoutPollGeneration: 0,
+  llmHoldoutStatusRequestInFlight: false,
   activeQualificationTab: "basics",
   jobs: [],
   inclusions: [],
@@ -1231,6 +1238,7 @@ function showAdminSection(section, updateLocation = false) {
   elements.adminEvaluationTab.tabIndex = evaluationSelected ? 0 : -1;
   if (classifierSelected) void loadClassifierStatus();
   if (evaluationSelected) void loadEvaluationLedger();
+  if (!evaluationSelected) stopLlmHoldoutPolling();
   if (updateLocation) {
     const hash = classifierSelected ? "#admin-classifier" : evaluationSelected ? "#admin-evaluation" : "";
     history.replaceState(null, "", `${window.location.pathname}${window.location.search}${hash}`);
@@ -1251,6 +1259,8 @@ async function loadEvaluationLedger() {
 }
 
 function renderEvaluationNavigation(result) {
+  const llmPollingRequired = !["not-started", "complete", "failed"]
+    .includes(result.llmHoldoutStatus?.state || "not-started");
   const wrapper = document.createElement("div");
   const tabs = document.createElement("div");
   tabs.className = "settings-tabs admin-evaluation-subtabs";
@@ -1272,6 +1282,7 @@ function renderEvaluationNavigation(result) {
   llmPanel.append(renderLlmEvaluationCard(result));
   const select = value => {
     state.activeEvaluationTab = value;
+    try { window.sessionStorage.setItem("jsm-active-evaluation-tab", value); } catch { /* optional preference */ }
     const regexSelected = value === "regex";
     regexPanel.hidden = !regexSelected;
     llmPanel.hidden = regexSelected;
@@ -1279,6 +1290,8 @@ function renderEvaluationNavigation(result) {
     llmTab.classList.toggle("active", !regexSelected);
     regexTab.setAttribute("aria-selected", String(regexSelected));
     llmTab.setAttribute("aria-selected", String(!regexSelected));
+    if (regexSelected || !llmPollingRequired) stopLlmHoldoutPolling();
+    else window.setTimeout(startLlmHoldoutPolling, 0);
   };
   regexTab.addEventListener("click", () => select("regex"));
   llmTab.addEventListener("click", () => select("llm"));
@@ -1361,7 +1374,8 @@ function renderLlmEvaluationCard(result) {
     state: "not-started", displayState: "Not started", completed: 0, total: 200
   };
   const article = document.createElement("article");
-  article.className = "settings-section admin-evaluation-card";
+  article.className = "settings-section admin-evaluation-card llm-evaluation-card";
+  article.dataset.llmEvaluationCard = "true";
   const heading = document.createElement("h4");
   heading.textContent = "LLM PRODUCTION HOLDOUT";
   const current = document.createElement("p");
@@ -1372,15 +1386,13 @@ function renderLlmEvaluationCard(result) {
   disclaimer.textContent = "Reference labels were generated through prediction-blinded AI review and adjudication. They are not human-ground-truth labels.";
   const action = document.createElement("button");
   action.type = "button";
+  action.dataset.llmEvaluationAction = "true";
   action.textContent = "Run LLM Holdout Evaluation";
   const running = !["not-started", "complete", "failed"].includes(runStatus.state);
   action.disabled = running || report !== null;
   action.title = report ? "The first frozen prediction set is retained. A changed model or prompt requires a separately versioned experiment." : purpose.textContent;
   action.addEventListener("click", () => void startLlmHoldoutEvaluation(action));
-  const progress = document.createElement("p");
-  progress.className = "settings-status";
-  progress.setAttribute("role", "status");
-  progress.textContent = `${runStatus.displayState}${runStatus.total ? `: ${runStatus.completed} / ${runStatus.total}` : ""}${runStatus.message ? ` · ${runStatus.message}` : ""}`;
+  const progress = renderLlmEvaluationProgress(runStatus);
   article.append(heading, current, purpose, disclaimer, action, progress);
   if (report) {
     const caution = document.createElement("p");
@@ -1397,6 +1409,120 @@ function renderLlmEvaluationCard(result) {
   technical.append(summary, metadata);
   article.append(technical);
   return article;
+}
+
+function renderLlmEvaluationProgress(runStatus) {
+  const region = document.createElement("section");
+  region.className = "llm-evaluation-progress";
+  region.dataset.llmEvaluationProgress = "true";
+  region.setAttribute("aria-label", "LLM holdout evaluation progress");
+  const phase = document.createElement("strong");
+  phase.className = "llm-evaluation-phase";
+  phase.dataset.llmEvaluationPhase = "true";
+  const summary = document.createElement("div");
+  summary.className = "llm-evaluation-progress-summary";
+  const count = document.createElement("span");
+  count.dataset.llmEvaluationCount = "true";
+  const percentage = document.createElement("span");
+  percentage.dataset.llmEvaluationPercentage = "true";
+  const bar = document.createElement("progress");
+  bar.className = "llm-evaluation-progress-bar";
+  bar.dataset.llmEvaluationBar = "true";
+  bar.setAttribute("aria-label", "Completed LLM holdout postings");
+  const message = document.createElement("p");
+  message.className = "settings-status llm-evaluation-message";
+  message.dataset.llmEvaluationMessage = "true";
+  message.setAttribute("role", "status");
+  message.setAttribute("aria-live", "polite");
+  const timing = document.createElement("p");
+  timing.className = "admin-evaluation-metadata llm-evaluation-timing";
+  timing.dataset.llmEvaluationTiming = "true";
+  const continuity = document.createElement("p");
+  continuity.className = "admin-evaluation-metadata llm-evaluation-continuity";
+  continuity.textContent = "The server-side evaluation continues safely when this page is closed or refreshed.";
+  summary.append(count, percentage);
+  region.append(phase, summary, bar, message, timing, continuity);
+  updateLlmEvaluationProgress(region, runStatus);
+  return region;
+}
+
+function llmEvaluationPhase(status) {
+  const phases = {
+    "not-started": "Not started",
+    "preparing-frozen-holdout": "Preparing frozen holdout",
+    "running-llm-predictions": "Running LLM predictions",
+    "freezing-predictions": "Freezing predictions",
+    "scoring-reference-labels": "Scoring against reference labels",
+    complete: "Complete",
+    failed: "Failed"
+  };
+  return phases[status?.state] || status?.displayState || "Status unavailable";
+}
+
+function updateLlmEvaluationProgress(region, status) {
+  if (!region || !status) return;
+  const total = Number.isFinite(status.total) && status.total > 0 ? status.total : 200;
+  const completed = Number.isFinite(status.completed)
+    ? Math.min(total, Math.max(0, status.completed)) : 0;
+  const percent = total ? completed / total * 100 : 0;
+  region.querySelector("[data-llm-evaluation-phase]").textContent = llmEvaluationPhase(status);
+  region.querySelector("[data-llm-evaluation-count]").textContent = `${completed} / ${total}`;
+  region.querySelector("[data-llm-evaluation-percentage]").textContent = `${percent.toFixed(1)}%`;
+  const bar = region.querySelector("[data-llm-evaluation-bar]");
+  bar.max = total;
+  bar.value = completed;
+  bar.setAttribute("aria-valuetext", `${completed} of ${total} postings, ${percent.toFixed(1)} percent`);
+  region.querySelector("[data-llm-evaluation-message]").textContent = status.message || "";
+  const timing = llmEvaluationTiming(status, completed, total);
+  const timingElement = region.querySelector("[data-llm-evaluation-timing]");
+  timingElement.textContent = timing;
+  timingElement.hidden = !timing;
+  region.dataset.state = status.state || "unknown";
+}
+
+function llmEvaluationTiming(status, completed, total) {
+  const started = Date.parse(status.startedUtc || "");
+  if (!Number.isFinite(started)) return "";
+  const terminal = ["complete", "failed"].includes(status.state);
+  const updated = Date.parse(status.updatedUtc || "");
+  const now = terminal && Number.isFinite(updated) ? updated : Date.now();
+  const parts = [`Elapsed ${formatDuration(Math.max(0, (now - started) / 1000))}`];
+  const history = recordLlmProgressSample(status, completed);
+  const intervals = [];
+  for (let index = 1; index < history.length; index++) {
+    const count = history[index].completed - history[index - 1].completed;
+    const seconds = (history[index].updated - history[index - 1].updated) / 1000;
+    if (count > 0 && seconds > 0) intervals.push(seconds / count);
+  }
+  if (intervals.length) {
+    const recent = intervals.slice(-8);
+    const mean = recent.reduce((sum, value) => sum + value, 0) / recent.length;
+    parts.push(`Recent ${(60 / mean).toFixed(2)} postings/minute`);
+    if (!terminal && recent.length >= 4 && completed < total) {
+      const variance = recent.reduce((sum, value) => sum + (value - mean) ** 2, 0) / recent.length;
+      const variation = Math.sqrt(variance) / mean;
+      if (variation <= 0.35) parts.push(`ETA ${formatDuration((total - completed) * mean)}`);
+    }
+  }
+  return parts.join(" · ");
+}
+
+function recordLlmProgressSample(status, completed) {
+  if (!status.evaluationRunId) return [];
+  const key = `jsm-llm-holdout-progress-${status.evaluationRunId}`;
+  let history = [];
+  try { history = JSON.parse(window.sessionStorage.getItem(key) || "[]"); }
+  catch { history = []; }
+  if (!Array.isArray(history)) history = [];
+  history = history.filter(item => Number.isFinite(item.completed) && Number.isFinite(item.updated));
+  const updated = Date.parse(status.updatedUtc || "");
+  const last = history.at(-1);
+  if (Number.isFinite(updated) && (!last || last.completed !== completed)) {
+    history.push({ completed, updated });
+    history = history.slice(-12);
+    try { window.sessionStorage.setItem(key, JSON.stringify(history)); } catch { /* optional timing cache */ }
+  }
+  return history;
 }
 
 function renderClassifierComparison(report) {
@@ -1515,20 +1641,65 @@ async function startLlmHoldoutEvaluation(button) {
       const failure = await response.json().catch(() => ({}));
       throw new Error(failure.error || "LLM holdout evaluation could not be started.");
     }
-    await pollLlmHoldoutEvaluation();
+    startLlmHoldoutPolling();
   } catch (error) {
     button.disabled = false;
-    elements.adminEvaluationContent.textContent = error.message || String(error);
+    const message = elements.adminEvaluationContent?.querySelector("[data-llm-evaluation-message]");
+    if (message) message.textContent = error.message || String(error);
   }
 }
 
-async function pollLlmHoldoutEvaluation() {
-  await new Promise(resolve => window.setTimeout(resolve, 1500));
-  const response = await fetch("/api/admin/evaluations/llm-holdout/status", { cache: "no-store" });
-  if (!response.ok) throw new Error("LLM holdout evaluation status could not be loaded.");
-  const result = await response.json();
-  await loadEvaluationLedger();
-  if (!["complete", "failed"].includes(result.status.state)) await pollLlmHoldoutEvaluation();
+function stopLlmHoldoutPolling() {
+  state.llmHoldoutPollGeneration++;
+  if (state.llmHoldoutPollTimer !== null) {
+    window.clearTimeout(state.llmHoldoutPollTimer);
+    state.llmHoldoutPollTimer = null;
+  }
+}
+
+function startLlmHoldoutPolling() {
+  stopLlmHoldoutPolling();
+  const generation = state.llmHoldoutPollGeneration;
+  void refreshLlmHoldoutStatus(generation);
+}
+
+function scheduleLlmHoldoutPoll(generation) {
+  if (generation !== state.llmHoldoutPollGeneration) return;
+  state.llmHoldoutPollTimer = window.setTimeout(
+    () => void refreshLlmHoldoutStatus(generation), LLM_HOLDOUT_STATUS_POLL_MS);
+}
+
+async function refreshLlmHoldoutStatus(generation) {
+  if (generation !== state.llmHoldoutPollGeneration || state.activeView !== "admin" ||
+      state.activeAdminTab !== "evaluation" || state.activeEvaluationTab !== "llm") return;
+  if (state.llmHoldoutStatusRequestInFlight) {
+    scheduleLlmHoldoutPoll(generation);
+    return;
+  }
+  const region = elements.adminEvaluationContent?.querySelector("[data-llm-evaluation-progress]");
+  if (!region) return;
+  state.llmHoldoutStatusRequestInFlight = true;
+  try {
+    const response = await fetch("/api/admin/evaluations/llm-holdout/status", { cache: "no-store" });
+    if (!response.ok) throw new Error("LLM holdout evaluation status could not be loaded.");
+    const result = await response.json();
+    if (generation !== state.llmHoldoutPollGeneration) return;
+    updateLlmEvaluationProgress(region, result.status);
+    const running = !["not-started", "complete", "failed"].includes(result.status.state);
+    const action = elements.adminEvaluationContent?.querySelector("[data-llm-evaluation-action]");
+    if (action) action.disabled = running || result.report !== null;
+    if (["complete", "failed"].includes(result.status.state)) {
+      stopLlmHoldoutPolling();
+      if (result.report) await loadEvaluationLedger();
+      return;
+    }
+  } catch (error) {
+    const message = region.querySelector("[data-llm-evaluation-message]");
+    if (message) message.textContent = error.message || String(error);
+  } finally {
+    state.llmHoldoutStatusRequestInFlight = false;
+  }
+  scheduleLlmHoldoutPoll(generation);
 }
 
 function formatDuration(seconds) {

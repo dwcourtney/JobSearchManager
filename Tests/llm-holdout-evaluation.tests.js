@@ -17,6 +17,8 @@ assert.match(source, /PredictionDatasetFingerprint != PredictionFingerprint\(val
 assert.match(source, /item\.LabelProvenance\.Contains\("qwen"/);
 assert.match(source, /SaveLlmEvaluationAsync/);
 assert.match(source, /First valid prediction per posting is retained/);
+assert.match(source, /DateTimeOffset\? StartedUtc/,
+  "Durable LLM status must expose a run start time so elapsed progress survives browser refresh.");
 assert.doesNotMatch(source, /RegexSemanticClassifier|LegacyJobConceptRules|_classifier\.Classify/,
   "The LLM prediction runner must not load or inspect RegEx implementation details.");
 assert.match(program, /MapPost\("\/api\/admin\/evaluations\/llm-holdout"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)[\s\S]*?RequireRateLimiting\("state"\)/);

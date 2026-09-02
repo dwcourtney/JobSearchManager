@@ -18,7 +18,7 @@ assert.match(index,
   /id="administrator-bootstrap-section"[^>]*hidden[\s\S]*?id="administrator-bootstrap-code"[\s\S]*?minlength="8"[\s\S]*?maxlength="8"[\s\S]*?Claim Administrator/);
 assert.doesNotMatch(index, /annotation-labeling-ui|detector-evaluation-ui/,
   "Removed experimental Admin assets must not load.");
-assert.match(index, /app\.js\?v=45/);
+assert.match(index, /app\.js\?v=46/);
 
 assert.match(app, /synchronizeAdminNavigation\(account\.isAdmin === true\)/);
 assert.match(app, /if \(!isAdmin\)[\s\S]*?adminTab\?\.remove\(\)[\s\S]*?return;/,
@@ -41,6 +41,19 @@ assert.match(app, /CURATED REGRESSION BENCHMARK[\s\S]*?AI-ADJUDICATED PRODUCTION
 assert.match(app, /Run AI-Adjudicated Holdout Evaluation/);
 assert.match(app, /Evaluation classifiers[\s\S]*?RegEx[\s\S]*?LLM/);
 assert.match(app, /Run LLM Holdout Evaluation/);
+assert.match(app, /LLM_HOLDOUT_STATUS_POLL_MS = 2000/);
+assert.match(app, /data-llm-evaluation-progress/);
+assert.match(app, /Completed LLM holdout postings/);
+assert.match(app, /Running LLM predictions[\s\S]*?Freezing predictions[\s\S]*?Scoring against reference labels[\s\S]*?Complete[\s\S]*?Failed/);
+assert.match(app, /Recent .*postings\/minute[\s\S]*?variation <= 0\.35/,
+  "ETA must be based on measured, stability-checked progress rather than a fixed assumption.");
+assert.doesNotMatch(app, /async function pollLlmHoldoutEvaluation/,
+  "The old full-ledger redraw polling loop must be removed.");
+assert.match(app,
+  /async function refreshLlmHoldoutStatus[\s\S]*?updateLlmEvaluationProgress\(region, result\.status\)/,
+  "Normal LLM polling must update the existing progress region in place.");
+assert.match(app, /server-side evaluation continues safely when this page is closed or refreshed/);
+assert.match(styles, /\.llm-evaluation-progress-bar[\s\S]*?--color-loading-progress-track[\s\S]*?--color-loading-progress-fill/);
 assert.match(app, /admin-compact-table[\s\S]*?Previous[\s\S]*?Next/,
   "RegEx rules must use a compact paginated table instead of giant cards.");
 assert.match(app, /Worst F1[\s\S]*?Lowest support[\s\S]*?Highest disagreement[\s\S]*?Concept name/);

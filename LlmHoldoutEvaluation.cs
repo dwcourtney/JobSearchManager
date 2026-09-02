@@ -78,7 +78,7 @@ public sealed record LlmHoldoutEvaluationReport(
 public sealed record LlmHoldoutEvaluationStatus(
     string State, string DisplayState, DateTimeOffset UpdatedUtc,
     string? EvaluationRunId, int Completed, int Total, string? Message,
-    string? PredictionFingerprint, string? ReportFile);
+    string? PredictionFingerprint, string? ReportFile, DateTimeOffset? StartedUtc = null);
 
 public sealed record LlmEvaluationLedgerDetails(
     string EvaluationRunId, string HoldoutFingerprint, string ReferenceLabelFingerprint,
@@ -235,7 +235,7 @@ public sealed class LlmHoldoutEvaluationService
             {
                 await WriteStatusAsync(new(LlmHoldoutEvaluationStates.Failed, "Failed",
                     DateTimeOffset.UtcNow, GetStatus().EvaluationRunId, GetStatus().Completed, 200,
-                    exception.Message, null, null));
+                    exception.Message, null, null, GetStatus().StartedUtc));
             }
             finally { _runGate.Release(); }
         });
@@ -358,7 +358,7 @@ public sealed class LlmHoldoutEvaluationService
         await WriteStatusAsync(new(LlmHoldoutEvaluationStates.Complete, "Complete",
             DateTimeOffset.UtcNow, runId, holdout.Examples.Count, holdout.Examples.Count,
             "LLM production-holdout evaluation complete.", frozen.PredictionDatasetFingerprint,
-            immutableName), token);
+            immutableName, GetStatus().StartedUtc), token);
         return report;
     }
 
@@ -547,9 +547,14 @@ public sealed class LlmHoldoutEvaluationService
     }
 
     private Task StatusAsync(string state, string display, string runId, int completed, int total,
-        string message, CancellationToken token, string? predictionFingerprint = null) =>
-        WriteStatusAsync(new(state, display, DateTimeOffset.UtcNow, runId, completed, total,
-            message, predictionFingerprint, null), token);
+        string message, CancellationToken token, string? predictionFingerprint = null)
+    {
+        var current = GetStatus();
+        var startedUtc = current.EvaluationRunId == runId && current.StartedUtc is not null
+            ? current.StartedUtc : DateTimeOffset.UtcNow;
+        return WriteStatusAsync(new(state, display, DateTimeOffset.UtcNow, runId, completed, total,
+            message, predictionFingerprint, null, startedUtc), token);
+    }
 
     private Task WriteStatusAsync(LlmHoldoutEvaluationStatus status,
         CancellationToken token = default) => WriteAtomicallyAsync(
