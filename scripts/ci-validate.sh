@@ -135,7 +135,10 @@ const require = (condition, message) => {
   }
 };
 require(health.status === "healthy" && health.revision === sha, "health or revision mismatch");
-require(health.serviceVersion === "3.1.0" && health.protocolVersion === "8", "service protocol mismatch");
+require(health.serviceVersion === "3.2.0" && health.protocolVersion === "9", "service protocol mismatch");
+require(health.outputContractVersion === "compact-85-boolean-map-v2" &&
+  health.outputSchemaHash === "15e934183d07749e0db4c3cb4f3bef51a5507285fad23025196ae4f184ad2ef8",
+  "structured output contract mismatch");
 require(health.purpose === "opt-in-llm-deep-analysis" && health.conceptCount === 85, "purpose or taxonomy size mismatch");
 require(/^[0-9a-f]{64}$/.test(health.taxonomyFingerprint) && /^[0-9a-f]{64}$/.test(health.promptHash), "invalid taxonomy or prompt fingerprint");
 ' "$deep_analysis_health_json" "$expected_sha"
