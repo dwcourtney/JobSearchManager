@@ -13,7 +13,7 @@ assert.match(index,
   /class="subtle header-status"[\s\S]*?id="last-refreshed"[\s\S]*?id="cache-status"[^>]*hidden/);
 assert.match(index, /id="cache-banner"[^>]*aria-live="polite"[^>]*hidden/);
 assert.match(index, /styles\.css\?v=39/);
-assert.match(index, /app\.js\?v=50/);
+assert.match(index, /app\.js\?v=51/);
 
 const updaterStart = app.indexOf("function updateCacheStatus(snapshot)");
 const updaterEnd = app.indexOf("function wireKeywordInput", updaterStart);
