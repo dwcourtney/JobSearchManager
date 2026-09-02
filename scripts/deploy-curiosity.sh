@@ -383,6 +383,10 @@ if (( ${#successful_images[@]} > 5 )); then
   for (( index=0; index<remove_count; index++ )); do
     old_sha="${successful_images[$index]}"
     [[ "$old_sha" =~ ^[0-9a-f]{40}$ ]] || continue
+    if [[ -n "$(docker ps --all --quiet --filter "ancestor=jsm:$old_sha")" ]]; then
+      echo "Retaining jsm:$old_sha because a stopped or running container still references it."
+      continue
+    fi
     docker image rm "jsm:$old_sha"
   done
   printf '%s\n' "${successful_images[@]:remove_count}" > "$history_file.tmp"

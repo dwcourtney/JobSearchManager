@@ -7,6 +7,9 @@ const root = path.resolve(__dirname, "..");
 const read = (...parts) => fs.readFileSync(path.join(root, ...parts), "utf8");
 const production = read("deploy", "compose.curiosity.yaml");
 const deployment = read("scripts", "deploy-curiosity.sh");
+assert.match(deployment,
+  /docker ps --all --quiet --filter "ancestor=jsm:\$old_sha"[\s\S]*?Retaining jsm:\$old_sha/,
+  "Deployment retention must not fail after cutover when a stopped container references an old image.");
 const program = read("Program.cs");
 const adapter = read("classifier-service", "classifier_service.py");
 const adapterDockerfile = read("classifier-service", "Dockerfile");
