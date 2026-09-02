@@ -1383,6 +1383,8 @@ function renderHoldoutEvaluationCard(result) {
 
 function renderLlmEvaluationCard(result) {
   const report = result.llmHoldoutReport;
+  const comparison = result.llmHardwareComparison;
+  const rtxReport = comparison?.rtx5080 || null;
   const model = result.llmModel || {};
   const runStatus = result.llmHoldoutStatus || {
     state: "not-started", displayState: "Not started", completed: 0, total: 200
@@ -1398,6 +1400,40 @@ function renderLlmEvaluationCard(result) {
   purpose.textContent = "Runs the current local LLM against the existing frozen production holdout. It does not modify reference labels, RegEx rules, or production Job Fit results.";
   const disclaimer = document.createElement("strong");
   disclaimer.textContent = "Reference labels were generated through prediction-blinded AI review and adjudication. They are not human-ground-truth labels.";
+  const hardwareTabs = document.createElement("div");
+  hardwareTabs.className = "settings-tabs llm-hardware-tabs";
+  hardwareTabs.setAttribute("role", "tablist");
+  hardwareTabs.setAttribute("aria-label", "LLM evaluation hardware");
+  const gtxTab = document.createElement("button");
+  gtxTab.type = "button";
+  gtxTab.className = "detail-tab";
+  gtxTab.setAttribute("role", "tab");
+  gtxTab.textContent = "GTX 1070";
+  const rtxTab = document.createElement("button");
+  rtxTab.type = "button";
+  rtxTab.className = "detail-tab";
+  rtxTab.setAttribute("role", "tab");
+  rtxTab.textContent = "RTX 5080";
+  const gtxPanel = document.createElement("section");
+  gtxPanel.className = "llm-hardware-panel";
+  gtxPanel.setAttribute("role", "tabpanel");
+  const rtxPanel = document.createElement("section");
+  rtxPanel.className = "llm-hardware-panel";
+  rtxPanel.setAttribute("role", "tabpanel");
+  const selectHardware = key => {
+    const gtxSelected = key === "gtx1070";
+    gtxPanel.hidden = !gtxSelected;
+    rtxPanel.hidden = gtxSelected;
+    gtxTab.classList.toggle("active", gtxSelected);
+    rtxTab.classList.toggle("active", !gtxSelected);
+    gtxTab.setAttribute("aria-selected", String(gtxSelected));
+    rtxTab.setAttribute("aria-selected", String(!gtxSelected));
+    gtxTab.tabIndex = gtxSelected ? 0 : -1;
+    rtxTab.tabIndex = gtxSelected ? -1 : 0;
+  };
+  gtxTab.addEventListener("click", () => selectHardware("gtx1070"));
+  rtxTab.addEventListener("click", () => selectHardware("rtx5080"));
+  hardwareTabs.append(gtxTab, rtxTab);
   const action = document.createElement("button");
   action.type = "button";
   action.className = "primary-button admin-evaluation-action";
@@ -1411,11 +1447,11 @@ function renderLlmEvaluationCard(result) {
   action.title = report ? "The first frozen prediction set is retained. A changed model or prompt requires a separately versioned experiment." : purpose.textContent;
   action.addEventListener("click", () => void startLlmHoldoutEvaluation(action));
   const progress = renderLlmEvaluationProgress(runStatus);
-  article.append(heading, current, purpose, disclaimer, action, progress);
+  gtxPanel.append(action, progress);
   if (report) {
     const caution = document.createElement("p");
     caution.textContent = "Apples-to-apples agreement with the same AI-derived references is not absolute human-grounded truth. Treat high-disagreement and low-support concepts cautiously.";
-    article.append(caution, renderClassifierComparison(report),
+    gtxPanel.append(caution, renderClassifierComparison(report),
       renderLlmRuntime(report.runtime), renderLlmConceptComparison(report.concepts));
   }
   const technical = document.createElement("details");
@@ -1425,8 +1461,83 @@ function renderLlmEvaluationCard(result) {
   metadata.className = "admin-evaluation-metadata";
   metadata.textContent = `Model ${model.modelId || report?.modelId || "unavailable"} · digest ${model.modelDigest || report?.modelDigest || "unavailable"} · prompt ${model.promptVersion || report?.promptVersion || "unavailable"} / ${model.promptHash || report?.promptHash || "unavailable"} · taxonomy ${model.taxonomyFingerprint || report?.taxonomyFingerprint || "unavailable"}${report ? ` · prediction ${report.predictionFingerprint} · evaluated ${formatLongDate(report.evaluatedUtc) || report.evaluatedUtc}` : ""}`;
   technical.append(summary, metadata);
-  article.append(technical);
+  gtxPanel.append(technical);
+  const rtxStatus = result.llmRtx5080Status || {
+    state: "not-started", displayState: "Not started", completed: 0, total: 200,
+    message: "The isolated RTX 5080 benchmark has not been imported."
+  };
+  rtxPanel.append(renderLlmEvaluationProgress(rtxStatus));
+  if (rtxReport) {
+    const rtxCaution = document.createElement("p");
+    rtxCaution.textContent = "Same frozen semantic experiment and AI-derived references; only benchmark hardware and unavoidable NVIDIA runtime layers differ.";
+    rtxPanel.append(rtxCaution, renderClassifierComparison(rtxReport),
+      renderLlmRuntime(rtxReport.runtime), renderLlmConceptComparison(rtxReport.concepts),
+      renderLlmHardwareProvenance(comparison.rtx5080Hardware, rtxReport));
+  }
+  article.append(heading, current, purpose, disclaimer, hardwareTabs, gtxPanel, rtxPanel);
+  if (comparison) article.append(renderLlmHardwareComparison(comparison));
+  selectHardware("gtx1070");
   return article;
+}
+
+function renderLlmHardwareProvenance(hardware, report) {
+  const details = document.createElement("details");
+  const summary = document.createElement("summary");
+  summary.textContent = "RTX 5080 technical provenance";
+  const metadata = document.createElement("p");
+  metadata.className = "admin-evaluation-metadata";
+  metadata.textContent = `${hardware.gpuName} · driver ${hardware.driverVersion} · CUDA ${hardware.cudaVersion} · Docker ${hardware.dockerVersion} · NVIDIA Container Toolkit ${hardware.nvidiaContainerToolkitVersion} · model ${report.modelTag} / ${report.modelDigest} · prediction ${report.predictionFingerprint}`;
+  details.append(summary, metadata);
+  return details;
+}
+
+function renderLlmHardwareComparison(comparison) {
+  const details = document.createElement("details");
+  details.className = "llm-hardware-comparison";
+  details.open = true;
+  const summary = document.createElement("summary");
+  summary.textContent = "GTX 1070 vs RTX 5080";
+  const agreement = document.createElement("p");
+  agreement.textContent = `Semantic agreement ${formatPercent(comparison.semanticAgreement.agreementRate)} · ${comparison.semanticAgreement.disagreementCount} / ${comparison.semanticAgreement.totalDecisions} concept decisions differ.`;
+  const table = document.createElement("table");
+  table.className = "admin-compact-table admin-comparison-summary";
+  const rows = [
+    ["Macro F1", formatMetric(comparison.gtx1070.llmMacro.f1), formatMetric(comparison.rtx5080.llmMacro.f1)],
+    ["Micro F1", formatMetric(comparison.gtx1070.llmMicro.f1), formatMetric(comparison.rtx5080.llmMicro.f1)],
+    ["Elapsed", formatDuration(comparison.gtx1070.runtime.totalElapsedSeconds), formatDuration(comparison.rtx5080.runtime.totalElapsedSeconds)],
+    ["Postings/min", comparison.gtx1070.runtime.postingsPerMinute.toFixed(2), comparison.rtx5080.runtime.postingsPerMinute.toFixed(2)],
+    ["Output tokens/sec", formatMetric(comparison.gtx1070.runtime.weightedOutputTokensPerSecond), formatMetric(comparison.rtx5080.runtime.weightedOutputTokensPerSecond)],
+    ["Peak model VRAM", formatBytes(comparison.gtx1070.runtime.peakModelVramBytes), formatBytes(comparison.rtx5080.runtime.peakModelVramBytes)],
+    ["Ollama RAM", formatBytes(comparison.gtx1070.runtime.peakOllamaContainerRamBytes), formatBytes(comparison.rtx5080.runtime.peakOllamaContainerRamBytes)],
+    ["Average GPU utilization", formatOptionalPercent(comparison.gtx1070.runtime.averageGpuUtilizationPercent), formatOptionalPercent(comparison.rtx5080.runtime.averageGpuUtilizationPercent)]
+  ];
+  const head = document.createElement("thead");
+  const header = document.createElement("tr");
+  for (const value of ["Measure", "GTX 1070", "RTX 5080"]) {
+    const cell = document.createElement("th");
+    cell.textContent = value;
+    header.append(cell);
+  }
+  head.append(header);
+  const body = document.createElement("tbody");
+  for (const values of rows) {
+    const row = document.createElement("tr");
+    for (const value of values) {
+      const cell = document.createElement("td");
+      cell.textContent = value;
+      row.append(cell);
+    }
+    body.append(row);
+  }
+  table.append(head, body);
+  const speed = document.createElement("p");
+  speed.className = "admin-evaluation-metadata";
+  const energy = Number.isFinite(comparison.rtx5080Resources.approximateGpuEnergyWattHours)
+    ? `${comparison.rtx5080Resources.approximateGpuEnergyWattHours.toFixed(2)} Wh`
+    : "unavailable";
+  speed.textContent = `${comparison.performance.speedupMultiplier.toFixed(2)}× speedup · ${comparison.performance.runtimeReductionPercent.toFixed(1)}% runtime reduction · RTX board energy ${energy} (sampled).`;
+  details.append(summary, agreement, table, speed);
+  return details;
 }
 
 function renderLlmEvaluationProgress(runStatus) {
@@ -1747,6 +1858,10 @@ function formatBytes(value) {
   let unit = 0;
   while (number >= 1024 && unit < units.length - 1) { number /= 1024; unit++; }
   return `${number.toFixed(unit ? 1 : 0)} ${units[unit]}`;
+}
+
+function formatOptionalPercent(value) {
+  return Number.isFinite(value) ? `${value.toFixed(1)}%` : "unavailable";
 }
 
 function formatSignedMetric(value) {

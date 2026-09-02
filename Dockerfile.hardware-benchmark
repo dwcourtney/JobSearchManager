@@ -1,0 +1,11 @@
+ARG JSM_IMAGE_REFERENCE
+FROM ${JSM_IMAGE_REFERENCE}
+
+USER 0:0
+RUN rm -f \
+    /app/LegacyJobConceptRules.json \
+    /app/RegexValidationCorpus.json \
+    /app/EvaluationHoldoutPlan.example.json
+
+LABEL org.opencontainers.image.purpose="isolated-llm-hardware-benchmark"
+USER 1001:1001

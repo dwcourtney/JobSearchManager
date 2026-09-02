@@ -8,6 +8,8 @@ const repo = path.resolve(__dirname, "..");
 const scan = fs.readFileSync(path.join(repo, "scripts", "security-scan.sh"), "utf8");
 const ci = fs.readFileSync(path.join(repo, "scripts", "ci-validate.sh"), "utf8");
 const deploy = fs.readFileSync(path.join(repo, "scripts", "deploy-curiosity.sh"), "utf8");
+const benchmarkDockerfile = fs.readFileSync(path.join(repo, "Dockerfile.hardware-benchmark"), "utf8");
+const benchmarkCompose = fs.readFileSync(path.join(repo, "deploy", "compose.tinker-benchmark.yaml"), "utf8");
 
 const trivyReference = "ghcr.io/aquasecurity/trivy:0.74.0@sha256:ee940acbf1f58ebadb42d01434ce4609530bf1b52536afbd1eee66cd7123c5c9";
 assert.ok(scan.includes(trivyReference), "Trivy must be pinned by version and immutable digest.");
@@ -29,6 +31,15 @@ const candidateRun = ci.indexOf("docker run --detach");
 assert.ok(sourceScan >= 0 && sourceScan < imageBuild, "CI must scan source before building.");
 assert.ok(imageScan > imageBuild && imageScan < candidateRun, "CI must scan the exact image before executing it.");
 assert.ok(ci.includes("security-scan.sh policy-test"), "CI must prove scanner findings fail closed.");
+assert.match(ci, /Dockerfile\.hardware-benchmark[\s\S]*?security-scan\.sh image "\$benchmark_image"/,
+  "CI must scan the exact RegEx-data-free hardware benchmark image.");
+assert.match(benchmarkDockerfile, /rm -f[\s\S]*?LegacyJobConceptRules\.json[\s\S]*?RegexValidationCorpus\.json/);
+assert.doesNotMatch(benchmarkCompose, /ports:|network_mode:\s*host/,
+  "The tinker benchmark must not publish a model or application endpoint.");
+assert.match(benchmarkCompose, /internal:\s*true/,
+  "The tinker classifier network must be private.");
+assert.doesNotMatch(benchmarkCompose, /mailpit|jsm-lab\/data|restart:\s*unless-stopped/,
+  "The benchmark must not become a production service or access production/Mailpit data.");
 
 const deployBuild = deploy.indexOf("docker build");
 const deployScan = deploy.indexOf("security-scan.sh\" image");
