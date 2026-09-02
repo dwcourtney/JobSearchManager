@@ -36,6 +36,7 @@ const state = {
   accountLinkToken: null,
   adminStatusLoaded: false,
   classifierStatusLoaded: false,
+  adminRegexRules: [],
   activeAdminTab: "overview",
   activeQualificationTab: "basics",
   jobs: [],
@@ -103,6 +104,7 @@ const state = {
   refreshPollingGeneration: 0,
   overlayHideTimer: null,
   copyFeedbackTimer: null,
+  deepAnalysisTimer: null,
   focusBeforeLoading: null,
   sourceMetadataLoading: false,
   sourceRequestGeneration: 0,
@@ -142,6 +144,11 @@ const elements = {
   adminClassifierPanel: null,
   adminClassifierStatus: null,
   adminClassifierBackfill: null,
+  adminRegexStatusFilter: null,
+  adminRegexConceptFilter: null,
+  adminRegexUsageFilter: null,
+  adminRegexProvenanceFilter: null,
+  adminRegexRulesList: null,
   jobSearchSettingsTab: document.querySelector("#job-search-settings-tab"),
   qualificationsSettingsTab: document.querySelector("#qualifications-settings-tab"),
   preferencesSettingsTab: document.querySelector("#preferences-settings-tab"),
@@ -1057,7 +1064,7 @@ function synchronizeAdminNavigation(isAdmin) {
   classifierTab.setAttribute("aria-selected", "false");
   classifierTab.setAttribute("aria-controls", "admin-classifier-panel");
   classifierTab.tabIndex = -1;
-  classifierTab.textContent = "Classifier";
+  classifierTab.textContent = "RegEx Rules";
   overviewTab.addEventListener("click", () => showAdminSection("overview", true));
   classifierTab.addEventListener("click", () => showAdminSection("classifier", true));
   tabs.append(overviewTab, classifierTab);
@@ -1087,18 +1094,54 @@ function synchronizeAdminNavigation(isAdmin) {
   classifierPanel.setAttribute("aria-labelledby", "admin-classifier-tab");
   classifierPanel.hidden = true;
   const classifierTitle = document.createElement("h3");
-  classifierTitle.textContent = "DeBERTa Classifier";
+  classifierTitle.textContent = "Lifecycle-managed RegEx Rules";
   const classifierIntro = document.createElement("p");
-  classifierIntro.textContent = "View persisted 85-concept DeBERTa coverage and start a bounded background backfill. Qwen is never queued here and remains opt-in per job.";
+  classifierIntro.textContent = "Inspect active, review-due, and retired rules. SQLite is authoritative; rule changes are validated before hot reload. LLM analysis remains opt-in per job.";
   const classifierStatus = document.createElement("p");
   classifierStatus.className = "settings-status";
   classifierStatus.setAttribute("role", "status");
   classifierStatus.setAttribute("aria-live", "polite");
   const backfill = document.createElement("button");
   backfill.type = "button";
-  backfill.textContent = "Start background backfill";
+  backfill.textContent = "Reclassify stale cache";
   backfill.addEventListener("click", () => void startClassifierBackfill());
-  classifierPanel.append(classifierTitle, classifierIntro, classifierStatus, backfill);
+  const evaluate = document.createElement("button");
+  evaluate.type = "button";
+  evaluate.textContent = "Run deterministic evaluation";
+  evaluate.addEventListener("click", () => void evaluateRegexRules());
+  const reload = document.createElement("button");
+  reload.type = "button";
+  reload.textContent = "Validate and hot reload";
+  reload.addEventListener("click", () => void reloadRegexRules());
+  const filters = document.createElement("div");
+  filters.className = "settings-grid";
+  const statusFilter = document.createElement("select");
+  for (const value of ["", "proposed", "validated", "active", "review-due", "retired", "deleted"]) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = value || "All statuses";
+    statusFilter.append(option);
+  }
+  const conceptFilter = document.createElement("input");
+  conceptFilter.placeholder = "Filter concept";
+  const usageFilter = document.createElement("select");
+  for (const [value, label] of [["", "All usage"], ["unused", "Never matched"],
+    ["low", "Low usage (1–5)"], ["high", "High usage (100+)"], ["stale", "Last used 30+ days ago"]]) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    usageFilter.append(option);
+  }
+  const provenanceFilter = document.createElement("input");
+  provenanceFilter.placeholder = "Filter provenance";
+  const rulesList = document.createElement("div");
+  rulesList.className = "admin-regex-rule-list";
+  for (const control of [statusFilter, conceptFilter, usageFilter, provenanceFilter]) {
+    control.addEventListener("input", renderAdminRegexRules);
+    filters.append(control);
+  }
+  classifierPanel.append(classifierTitle, classifierIntro, classifierStatus,
+    backfill, evaluate, reload, filters, rulesList);
   surface.append(tabs, overviewPanel, classifierPanel);
   view.append(surface);
   elements.settingsView.after(view);
@@ -1112,6 +1155,11 @@ function synchronizeAdminNavigation(isAdmin) {
   elements.adminClassifierPanel = classifierPanel;
   elements.adminClassifierStatus = classifierStatus;
   elements.adminClassifierBackfill = backfill;
+  elements.adminRegexStatusFilter = statusFilter;
+  elements.adminRegexConceptFilter = conceptFilter;
+  elements.adminRegexUsageFilter = usageFilter;
+  elements.adminRegexProvenanceFilter = provenanceFilter;
+  elements.adminRegexRulesList = rulesList;
   if (window.location.hash === "#admin-classifier") {
     showView("admin", false, { bypassSourceGuard: true });
     showAdminSection("classifier", false);
@@ -1153,12 +1201,21 @@ async function loadClassifierStatus(force = false) {
   if (!elements.adminClassifierStatus || state.classifierStatusLoaded && !force) return;
   elements.adminClassifierStatus.textContent = "Loading classifier status…";
   try {
-    const response = await fetch("/api/admin/classifier/backfill/status", { cache: "no-store" });
-    if (!response.ok) throw new Error("Classifier status could not be loaded.");
-    const result = await response.json();
+    const [overviewResponse, cacheResponse, rulesResponse] = await Promise.all([
+      fetch("/api/admin/regex-rules/overview", { cache: "no-store" }),
+      fetch("/api/admin/classifier/backfill/status", { cache: "no-store" }),
+      fetch("/api/admin/regex-rules", { cache: "no-store" })
+    ]);
+    if (!overviewResponse.ok || !cacheResponse.ok || !rulesResponse.ok) {
+      throw new Error("RegEx rule status could not be loaded.");
+    }
+    const overview = await overviewResponse.json();
+    const result = await cacheResponse.json();
+    state.adminRegexRules = await rulesResponse.json();
     state.classifierStatusLoaded = true;
-    elements.adminClassifierStatus.textContent = `${result.current} of ${result.total} cached postings classified · ${result.pending} pending · ${result.unavailable} unavailable${result.running ? " · backfill running" : ""}.`;
+    elements.adminClassifierStatus.textContent = `${overview.activeRuleCount} runtime rules · fingerprint ${overview.rulesetFingerprint.slice(0, 12)}… · ${result.current} of ${result.total} cached postings current · ${result.pending} stale${result.running ? " · reclassification running" : ""}.`;
     elements.adminClassifierBackfill.disabled = result.running || result.pending === 0;
+    renderAdminRegexRules();
   } catch (error) {
     elements.adminClassifierStatus.textContent = error.message || String(error);
   }
@@ -1167,7 +1224,7 @@ async function loadClassifierStatus(force = false) {
 async function startClassifierBackfill() {
   if (!elements.adminClassifierBackfill) return;
   elements.adminClassifierBackfill.disabled = true;
-  elements.adminClassifierStatus.textContent = "Starting bounded background backfill…";
+  elements.adminClassifierStatus.textContent = "Starting fast RegEx cache reclassification…";
   try {
     const response = await fetch("/api/admin/classifier/backfill", { method: "POST" });
     if (!response.ok) throw new Error("Classifier backfill could not be started.");
@@ -1177,6 +1234,103 @@ async function startClassifierBackfill() {
     elements.adminClassifierStatus.textContent = error.message || String(error);
     elements.adminClassifierBackfill.disabled = false;
   }
+}
+
+function renderAdminRegexRules() {
+  if (!elements.adminRegexRulesList) return;
+  const status = elements.adminRegexStatusFilter?.value || "";
+  const concept = (elements.adminRegexConceptFilter?.value || "").trim().toLowerCase();
+  const provenance = (elements.adminRegexProvenanceFilter?.value || "").trim().toLowerCase();
+  const usage = elements.adminRegexUsageFilter?.value || "";
+  const staleCutoff = Date.now() - 30 * 86400000;
+  const rules = state.adminRegexRules.filter(rule => {
+    if (status && rule.status !== status) return false;
+    if (concept && !rule.conceptId.toLowerCase().includes(concept)) return false;
+    if (provenance && !rule.provenance.toLowerCase().includes(provenance)) return false;
+    if (usage === "unused" && rule.matchCountLifetime !== 0) return false;
+    if (usage === "low" && !(rule.matchCountLifetime >= 1 && rule.matchCountLifetime <= 5)) return false;
+    if (usage === "high" && rule.matchCountLifetime < 100) return false;
+    if (usage === "stale" && rule.lastMatchedUtc && Date.parse(rule.lastMatchedUtc) > staleCutoff) return false;
+    return true;
+  }).slice(0, 250);
+  elements.adminRegexRulesList.replaceChildren();
+  const summary = document.createElement("p");
+  summary.className = "settings-status";
+  summary.textContent = `Showing ${rules.length} of ${state.adminRegexRules.length} rules.`;
+  elements.adminRegexRulesList.append(summary);
+  for (const rule of rules) {
+    const article = document.createElement("article");
+    article.className = "settings-section";
+    const heading = document.createElement("strong");
+    heading.textContent = `${rule.conceptId} · ${rule.status} · ${rule.scope} · ${rule.ruleType}`;
+    const pattern = document.createElement("code");
+    pattern.textContent = rule.pattern;
+    const metadata = document.createElement("p");
+    metadata.textContent = `Created ${formatLongDate(rule.createdUtc) || rule.createdUtc} · last matched ${rule.lastMatchedUtc ? formatLongDate(rule.lastMatchedUtc) : "never"} · lifetime ${rule.matchCountLifetime} · since review ${rule.matchCountSinceReview} · ${rule.provenance}`;
+    article.append(heading, pattern, metadata);
+    const actions = rule.status === "proposed"
+      ? [["Validate candidate", "validate"]]
+      : rule.status === "validated"
+        ? [["Activate", "active"], ["Return to proposed", "proposed"]]
+        : rule.status === "active"
+          ? [["Retire", "retired"]]
+          : rule.status === "review-due"
+            ? [["Approve review", "active"], ["Retire", "retired"]]
+            : rule.status === "retired"
+              ? [["Restore as validated", "validated"]]
+              : [];
+    for (const [label, action] of actions) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = label;
+      button.addEventListener("click", () => void applyRegexRuleAction(rule.ruleId, action));
+      article.append(button);
+    }
+    elements.adminRegexRulesList.append(article);
+  }
+}
+
+async function applyRegexRuleAction(ruleId, action) {
+  elements.adminClassifierStatus.textContent = action === "validate"
+    ? "Comparing candidate against the fixed validation corpus…"
+    : "Applying rule lifecycle transition…";
+  const endpoint = action === "validate"
+    ? `/api/admin/regex-rules/${encodeURIComponent(ruleId)}/validate`
+    : `/api/admin/regex-rules/${encodeURIComponent(ruleId)}/transition/${encodeURIComponent(action)}`;
+  let response = await fetch(endpoint, { method: "POST" });
+  if (response.ok && action === "validate") {
+    response = await fetch(`/api/admin/regex-rules/${encodeURIComponent(ruleId)}/transition/validated`,
+      { method: "POST" });
+  }
+  if (!response.ok) {
+    const failure = await response.json().catch(() => ({}));
+    elements.adminClassifierStatus.textContent = failure.error || "Rule action was rejected.";
+    return;
+  }
+  state.classifierStatusLoaded = false;
+  await loadClassifierStatus(true);
+}
+
+async function reloadRegexRules() {
+  elements.adminClassifierStatus.textContent = "Validating and compiling active rules…";
+  const response = await fetch("/api/admin/regex-rules/reload", { method: "POST" });
+  if (!response.ok) {
+    elements.adminClassifierStatus.textContent = "Rule reload was rejected; the previous runtime ruleset remains active.";
+    return;
+  }
+  state.classifierStatusLoaded = false;
+  await loadClassifierStatus(true);
+}
+
+async function evaluateRegexRules() {
+  elements.adminClassifierStatus.textContent = "Running deterministic corpus evaluation…";
+  const response = await fetch("/api/admin/regex-rules/evaluate", { method: "POST" });
+  if (!response.ok) {
+    elements.adminClassifierStatus.textContent = "RegEx evaluation failed.";
+    return;
+  }
+  const result = await response.json();
+  elements.adminClassifierStatus.textContent = `Evaluation ${result.evaluationRunId.slice(0, 8)} · historical macro F1 ${result.historicalBenchmarkMacro.f1.toFixed(6)} · micro F1 ${result.historicalBenchmarkMicro.f1.toFixed(6)} · full-corpus macro F1 ${result.macro.f1.toFixed(6)}.`;
 }
 async function claimAdministrator(event) {
   event.preventDefault();
@@ -3718,7 +3872,7 @@ function createJobListItem(job) {
       badges,
       "job-fit-badge job-fit-tbd",
       "Job Fit TBD",
-      "DeBERTa semantic classification is pending or unavailable.");
+      "RegEx semantic classification is pending or unavailable.");
   }
   if (job.analysisPending) {
     const pendingBadge = document.createElement("span");
@@ -4444,9 +4598,16 @@ function renderDetail(job) {
     : "";
   elements.detailHiddenBadge.hidden = detailWorkflowState !== JobWorkflowState.STATES.hidden;
   elements.copyPostingButton.disabled = !job.descriptionHtml;
-  elements.qwenDeepAnalysisButton.disabled = !job.descriptionHtml;
+  const deepAnalysisStatus = job.deepAnalysisRequest?.status ||
+    (job.qwenDeepAnalysis ? "completed" : "notRequested");
+  const deepAnalysisRunning = ["queued", "running"].includes(deepAnalysisStatus);
+  elements.qwenDeepAnalysisButton.disabled = !job.descriptionHtml || deepAnalysisRunning;
   const llmJobFit = evaluateLlmJobFit(job);
-  elements.qwenDeepAnalysisButton.textContent = llmJobFit
+  elements.qwenDeepAnalysisButton.textContent = deepAnalysisStatus === "queued"
+    ? "LLM deep analysis queued…"
+    : deepAnalysisStatus === "running"
+      ? "LLM deep analysis running…"
+      : llmJobFit
     ? "Refresh LLM Deep Analysis"
     : "Deep Analyze with LLM";
   elements.qwenDeepAnalysisResult.hidden = !llmJobFit;
@@ -4456,8 +4617,11 @@ function renderDetail(job) {
   elements.llmDeepAnalysisScore.textContent = llmJobFit ? `${llmJobFit.score} / 10 ✦` : "";
   elements.qwenDeepAnalysisProvenance.textContent = llmJobFit
     ? `Opt-in LLM result from ${job.qwenDeepAnalysis.modelTag}; the default Job Fit result remains separate.`
-    : "";
+    : deepAnalysisStatus === "failed"
+      ? job.deepAnalysisRequest?.error || "LLM deep analysis failed."
+      : deepAnalysisRunning ? "The request is persisted; this page will update when it finishes." : "";
   elements.qwenDeepAnalysisText.textContent = llmJobFit ? job.qwenDeepAnalysis.analysis : "";
+  if (deepAnalysisRunning) scheduleDeepAnalysisPoll(job.stableId);
   if (!job.descriptionHtml) {
     resetCopyFeedback();
     elements.copyPostingButton.title = "Full job posting is unavailable";
@@ -4668,6 +4832,8 @@ async function deepAnalyzeSelectedJob() {
   if (!job || !job.descriptionHtml) return;
   elements.qwenDeepAnalysisButton.disabled = true;
   elements.qwenDeepAnalysisButton.textContent = "LLM deep analysis running…";
+  job.deepAnalysisRequest = { status: "queued", requestedUtc: new Date().toISOString() };
+  scheduleDeepAnalysisPoll(job.stableId);
   try {
     const response = await fetch("/api/jobs/deep-analysis", {
       method: "POST",
@@ -4676,6 +4842,11 @@ async function deepAnalyzeSelectedJob() {
     });
     if (!response.ok) throw new Error("LLM deep analysis is currently unavailable.");
     job.qwenDeepAnalysis = await response.json();
+    job.deepAnalysisRequest = {
+      status: "completed",
+      completedUtc: job.qwenDeepAnalysis.analyzedUtc,
+      resultFingerprint: job.qwenDeepAnalysis.classificationFingerprint
+    };
     renderDetail(job);
     showDetailTab("fit", true);
   } catch (error) {
@@ -4683,6 +4854,29 @@ async function deepAnalyzeSelectedJob() {
     elements.qwenDeepAnalysisButton.disabled = false;
     elements.qwenDeepAnalysisButton.textContent = "Deep Analyze with LLM";
   }
+}
+
+function scheduleDeepAnalysisPoll(stableId) {
+  if (state.deepAnalysisTimer) return;
+  state.deepAnalysisTimer = setTimeout(async () => {
+    state.deepAnalysisTimer = null;
+    if (state.selectedJobId !== stableId) return;
+    try {
+      const response = await fetch(
+        `/api/jobs/detail?stableId=${encodeURIComponent(stableId)}`, { cache: "no-store" });
+      if (!response.ok) return;
+      const detail = await response.json();
+      const index = state.jobs.findIndex(item => item.stableId === stableId);
+      if (index < 0) return;
+      state.jobs[index] = { ...state.jobs[index], ...detail };
+      renderDetail(state.jobs[index]);
+      if (["queued", "running"].includes(detail.deepAnalysisRequest?.status)) {
+        scheduleDeepAnalysisPoll(stableId);
+      }
+    } catch {
+      scheduleDeepAnalysisPoll(stableId);
+    }
+  }, 2000);
 }
 
 function renderQualificationFit(

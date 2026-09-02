@@ -298,10 +298,9 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Container state changes require the exact application origin", TestOriginValidationAsync),
     ("Legacy and new accounts default to no administrator roles", TestAccountRoleCompatibilityAsync),
     ("Admin authorization distinguishes anonymous, non-admin, and admin users", TestAdminAuthorizationAsync),
-    ("Classifier client serializes and validates the diagnostic contract", TestClassifierClientContractAsync),
-    ("LLM client validates GPU, model, schema, and prompt contracts", TestLlmClassifierContractAsync),
+    ("SQLite RegEx rules migrate, reload, evaluate, and track lifecycle telemetry", TestRegexRuleLifecycleAsync),
+    ("Default RegEx is local and LLM deep analysis remains explicit", TestLlmClassifierContractAsync),
     ("Semantic taxonomy and prompt identity are versioned", TestLlmFixtureMetricsAsync),
-    ("Classifier unavailability is isolated from JSM", TestClassifierUnavailableAsync),
     ("First-admin bootstrap is hashed, expiring, single-use, and durable", TestAdminBootstrapLifecycleAsync),
     ("Concurrent first-admin claims grant exactly one account", TestAdminBootstrapConcurrencyAsync),
     ("Admin bootstrap requires an explicit server-side path", TestAdminBootstrapConfigurationAsync),
@@ -838,89 +837,151 @@ static async Task TestAdminAuthorizationAsync()
         "The Admin policy rejected an authenticated account with the server-side role.");
 }
 
-static async Task TestClassifierClientContractAsync()
-{
-    var catalog = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
-    string? postedJson = null;
-    var handler = new StubHttpMessageHandler(request =>
-    {
-        Assert(request.Method == HttpMethod.Post && request.RequestUri?.AbsolutePath == "/classify",
-            "Classifier client did not POST to the isolated classify endpoint.");
-        Assert(request.Content?.Headers.ContentLength is > 0 &&
-               request.Headers.TransferEncodingChunked is not true,
-            "Classifier client did not send a bounded, length-delimited JSON request.");
-        postedJson = request.Content!.ReadAsStringAsync().GetAwaiter().GetResult();
-        return SemanticClassifierPayload(catalog, "R180395", "Backend Engineer", "Build APIs.");
-    });
-    var client = new ClassifierClient(
-        new HttpClient(handler) { BaseAddress = new Uri("http://job-classifier:8081/") },
-        catalog,
-        NullLogger<ClassifierClient>.Instance);
-    var result = await client.ClassifyAsync(new(
-        "R180395", "Backend Engineer", "Build APIs."));
-    var posted = JsonSerializer.Deserialize<ClassifierRequest>(
-        postedJson!, ClassifierClient.JsonOptions)!;
-    Assert(result.Available && result.Response is
-           { JobId: "R180395", Title: "Backend Engineer", DescriptionLength: 11,
-             ConceptCount: 85, Predictions.Count: 85 } &&
-           posted == new ClassifierRequest(
-               "R180395", "Backend Engineer", "Build APIs."),
-        $"Classifier client did not preserve or validate the exact request/response contract: " +
-        $"available={result.Available}, error={result.Error}, response={JsonSerializer.Serialize(result.Response)}, " +
-        $"posted={postedJson}");
-}
-
-static async Task TestClassifierUnavailableAsync()
-{
-    var catalog = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
-    var client = new ClassifierClient(
-        new HttpClient(new ThrowingHttpMessageHandler())
-        {
-            BaseAddress = new Uri("http://job-classifier:8081/")
-        },
-        catalog,
-        NullLogger<ClassifierClient>.Instance);
-    var result = await client.ClassifyAsync(new("R180395", "Title", "Description"));
-    Assert(!result.Available && result.Response is null &&
-           result.Error == "Classifier service is unavailable.",
-        "An unavailable classifier was not handled as an isolated, non-fatal failure.");
-}
-
 static async Task TestLlmClassifierContractAsync()
 {
     var catalog = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
     var requests = 0;
     var client = new ClassifierClient(new HttpClient(new StubHttpMessageHandler(request => {
         Interlocked.Increment(ref requests);
-        Assert(request.RequestUri?.AbsolutePath == "/classify",
-            "Semantic request used the wrong isolated endpoint.");
+        Assert(request.RequestUri?.AbsolutePath == "/deep-analyze",
+            "Opt-in LLM request used the wrong isolated endpoint.");
         Assert(request.Content?.Headers.ContentLength is > 0 &&
                request.Headers.TransferEncodingChunked is not true,
             "Semantic request was not bounded and length-delimited.");
         var posted = JsonSerializer.Deserialize<ClassifierRequest>(
             request.Content!.ReadAsStringAsync().GetAwaiter().GetResult(),
             ClassifierClient.JsonOptions)!;
-        return SemanticClassifierPayload(
-            catalog, posted.JobId, posted.Title, posted.Description);
-    })) { BaseAddress = new Uri("http://job-classifier:8081/") }, catalog,
+        return QwenPayload(catalog, posted.JobId, posted.Title, posted.Description);
+    })) { BaseAddress = new Uri("http://deep-analysis:8081/") }, catalog,
         NullLogger<ClassifierClient>.Instance);
-    var service = new SemanticClassificationService(client, catalog);
+    var testDirectory = Path.Combine(Path.GetTempPath(), "jsm-regex-service-" + Guid.NewGuid().ToString("N"));
+    Directory.CreateDirectory(testDirectory);
+    var store = new SqliteSemanticRuleStore(Path.Combine(testDirectory, "rules.db"), catalog);
+    store.Initialize(RepositoryAsset("LegacyJobConceptRules.json"));
+    var regex = new RegexSemanticClassifier(store, catalog);
+    await regex.InitializeAsync();
+    var service = new SemanticClassificationService(client, catalog, regex);
     var job = CachedJob("leidos", "fixture", "/fixture", "<p>Build APIs.</p>") with
     {
         Title = "Backend Engineer"
     };
     var result = await service.ClassifyAsync(job);
     var duplicate = await service.ClassifyAsync(job with { RequisitionId = "duplicate" });
+    var deepAnalysis = await service.DeepAnalyzeAsync(job);
     var classified = job with
     {
         SemanticClassification = result.Classification,
         SemanticClassificationStatus = SemanticClassificationStates.Complete
     };
     Assert(result.Available && duplicate.Available && requests == 1 &&
+           deepAnalysis is { Predictions.Count: 85 } &&
            result.Classification is { Predictions.Count: 85 } &&
            service.IsCurrent(classified) &&
            !service.IsCurrent(classified with { DescriptionHtml = "<p>Build different APIs.</p>" }),
         "The 85-concept semantic result was not persisted or invalidated by changed content.");
+    store.Dispose();
+    Directory.Delete(testDirectory, recursive: true);
+}
+
+static async Task TestRegexRuleLifecycleAsync()
+{
+    var directory = Path.Combine(Path.GetTempPath(), "jsm-regex-rules-" + Guid.NewGuid().ToString("N"));
+    Directory.CreateDirectory(directory);
+    try
+    {
+        var environment = new TestHostEnvironment(Path.GetDirectoryName(RepositoryAsset("RegexValidationCorpus.json"))!);
+        var catalog = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+        using var store = new SqliteSemanticRuleStore(Path.Combine(directory, "regex-rules.db"), catalog,
+            new SemanticRulePolicy(ReviewAfterDays: 30, TelemetryFlushSeconds: 1));
+        store.Initialize(RepositoryAsset("LegacyJobConceptRules.json"));
+        var rules = await store.ListRulesAsync();
+        Assert(rules.Count > 100 && rules.All(item => item.MatchCountLifetime == 0 &&
+            item.LastMatchedUtc is null && item.Provenance.StartsWith("legacy-regex-catalog-v", StringComparison.Ordinal)),
+            "Legacy RegEx rules were not honestly migrated into SQLite.");
+
+        var invalidRejected = false;
+        try
+        {
+            await store.CreateAsync(new("role.software-engineering", "[", "both",
+                "positive-evidence", "test"));
+        }
+        catch (ArgumentException) { invalidRejected = true; }
+        Assert(invalidRejected, "An invalid RegEx candidate was accepted.");
+        var lifecycleBypassRejected = false;
+        try
+        {
+            await store.CreateAsync(new("role.software-engineering", @"\bsoftware\b", "both",
+                "positive-evidence", "test", Status: SemanticRuleStatuses.Active));
+        }
+        catch (InvalidDataException) { lifecycleBypassRejected = true; }
+        Assert(lifecycleBypassRejected, "A new rule bypassed proposed status and lifecycle validation.");
+
+        var classifier = new RegexSemanticClassifier(store, catalog);
+        await classifier.InitializeAsync();
+        var originalFingerprint = classifier.RulesetFingerprint;
+        var active = rules.First(item => item.Status == SemanticRuleStatuses.Active);
+        await store.TransitionAsync(active.RuleId, SemanticRuleStatuses.Retired);
+        await classifier.ReloadAsync();
+        Assert(classifier.RulesetFingerprint != originalFingerprint,
+            "Retiring an active rule did not change the ruleset fingerprint.");
+
+        var candidate = await store.CreateAsync(new("role.software-engineering",
+            @"\bsoftware\s+engineer(?:ing)?\b", "both", "positive-evidence", "unit-test"));
+        var unvalidatedRejected = false;
+        try
+        {
+            await store.TransitionAsync(candidate.RuleId, SemanticRuleStatuses.Validated);
+        }
+        catch (InvalidOperationException) { unvalidatedRejected = true; }
+        Assert(unvalidatedRejected,
+            "A proposed rule bypassed comparative validation before lifecycle approval.");
+        var evaluation = new RegexEvaluationService(environment, classifier, store, catalog);
+        var evidence = await evaluation.ValidateCandidateAsync(candidate.RuleId);
+        Assert(evidence.RuleResult.ValidationMatchCount > 0 &&
+            evidence.RuleResult.TruePositiveMatches > 0 &&
+            evidence.ValidationCorpusFingerprint.Length == 64,
+            "Candidate validation did not persist useful comparative corpus evidence.");
+        candidate = await store.TransitionAsync(candidate.RuleId, SemanticRuleStatuses.Validated);
+        candidate = await store.TransitionAsync(candidate.RuleId, SemanticRuleStatuses.Active);
+        await store.AddRelationshipAsync(candidate.RuleId, active.RuleId,
+            SemanticRuleRelationshipTypes.Supersedes);
+        await classifier.ReloadAsync();
+        var production = classifier.Classify("Software Engineer", "<p>Build software systems.</p>",
+            null, null, productionUsage: true);
+        Assert(production.Concepts.Any(item => item.ConceptId == "role.software-engineering"),
+            "The activated candidate did not participate after hot reload.");
+        await classifier.FlushUsageAsync();
+        var afterUsage = (await store.ListRulesAsync()).Single(item => item.RuleId == candidate.RuleId);
+        Assert(afterUsage.MatchCountLifetime == 1 && afterUsage.MatchCountSinceReview == 1 &&
+            afterUsage.LastMatchedUtc.HasValue, "Production usage telemetry was not persisted.");
+
+        var report = await evaluation.EvaluateAsync();
+        var afterEvaluation = (await store.ListRulesAsync()).Single(item => item.RuleId == candidate.RuleId);
+        Assert(afterEvaluation.MatchCountLifetime == 1,
+            "Validation evaluation incorrectly incremented production usage telemetry.");
+        Assert(report.Rules.Count == classifier.ActiveRuleCount && report.Concepts.Count > 0 &&
+            report.Macro.F1.HasValue && report.Micro.F1.HasValue &&
+            Math.Abs(report.Macro.F1.Value - 0.894597869692249) < 1e-12 &&
+            Math.Abs(report.Micro.F1.Value - 0.915770609318996) < 1e-12 &&
+            Math.Abs(report.HistoricalBenchmarkMacro.F1!.Value - 0.9976415094339622) < 1e-12 &&
+            Math.Abs(report.HistoricalBenchmarkMicro.F1!.Value - 0.9969230769230769) < 1e-12 &&
+            report.Rules.All(item => item.UniqueTruePositives + item.RedundantTruePositives ==
+                item.TruePositiveMatches),
+            $"RegEx evaluation metrics were incomplete or regressed: historical macro={report.HistoricalBenchmarkMacro.F1}, historical micro={report.HistoricalBenchmarkMicro.F1}.");
+
+        var exported = await store.ExportJsonAsync();
+        using var json = JsonDocument.Parse(exported);
+        Assert(json.RootElement.GetProperty("rules").GetArrayLength() == (await store.ListRulesAsync()).Count,
+            "JSON audit export did not include the complete lifecycle rule inventory.");
+        var imported = await store.ImportCandidatesAsync(exported, "unit-test-import");
+        Assert(imported.Count > 100 && imported.All(item => item.Status == SemanticRuleStatuses.Proposed),
+            "Imported rules bypassed candidate/proposed validation.");
+    }
+    finally
+    {
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
 }
 
 static Task TestLlmFixtureMetricsAsync()
@@ -931,29 +992,24 @@ static Task TestLlmFixtureMetricsAsync()
            catalog.Concepts.All(item => !string.IsNullOrWhiteSpace(item.Definition)),
         "The canonical semantic taxonomy did not preserve 85 unique, defined concepts.");
     Assert(catalog.Fingerprint == "514ed1c8c644d1eec426b5fdcf4d5a2c447aa61ce5572ae70b2d03fc3815a049" &&
-           SemanticClassifierContract.ConfigurationFingerprint(catalog) ==
-               "fe1bc78deb84bf339059e591f7b06d7d2bc4b905fefd859429055893d2da3fe3",
-        "The canonical taxonomy or DeBERTa configuration changed without an explicit hash update.");
+           QwenDeepAnalysisContract.PromptVersion == "job-fit-85-deep-analysis-v1",
+        "The canonical taxonomy or opt-in LLM prompt identity changed without an explicit version update.");
     return Task.CompletedTask;
 }
 
-static string SemanticClassifierPayload(
+static string QwenPayload(
     JobConceptCatalog catalog, string jobId, string title, string description)
 {
-    var contentHash = SemanticClassifierContract.PostingContentHash(title, description);
-    return JsonSerializer.Serialize(new SemanticClassifierResponse(
-        true, jobId, title, description.EnumerateRunes().Count(),
-        "2.0.0", "6", new string('a', 40), true, 1, "NVIDIA GeForce GTX 1070",
-        null, 3000, null, "nli-sequence-classifier", SemanticClassifierContract.ModelId,
-        SemanticClassifierContract.ModelRevision, SemanticClassifierContract.ModelDigest,
-        catalog.Version, catalog.Fingerprint, 85,
-        SemanticClassifierContract.ConfigurationVersion,
-        SemanticClassifierContract.ConfigurationFingerprint(catalog),
-        .5, 384, 64, contentHash,
-        SemanticClassifierContract.ClassificationFingerprint(contentHash, catalog),
-        new DateTimeOffset(2026, 9, 1, 12, 0, 0, TimeSpan.Zero), "cuda:0",
-        500, 2, 1000.0,
-        catalog.Concepts.Select(item => new SemanticConceptPrediction(item.Id, true)).ToArray()),
+    var contentHash = SemanticRulesetFingerprint.PostingContentHash(title, description);
+    return JsonSerializer.Serialize(new QwenDeepAnalysisResponse(
+        true, jobId, title, contentHash, QwenDeepAnalysisContract.ModelId,
+        QwenDeepAnalysisContract.ModelTag, QwenDeepAnalysisContract.ModelDigest,
+        catalog.Version, catalog.Fingerprint, QwenDeepAnalysisContract.PromptVersion,
+        QwenDeepAnalysisContract.PromptHash,
+        QwenDeepAnalysisContract.ClassificationFingerprint(contentHash, catalog),
+        new DateTimeOffset(2026, 9, 1, 12, 0, 0, TimeSpan.Zero),
+        catalog.Concepts.Select(item => new SemanticConceptPrediction(item.Id, true)).ToArray(),
+        "Opt-in analysis."),
         ClassifierClient.JsonOptions);
 }
 
@@ -4809,6 +4865,13 @@ static (AccountService Service, MemoryAccountRegistryStore Store,
         store, new PasswordHasher<AccountRecord>(), email, time,
         NullLogger<AccountService>.Instance);
     return (service, store, email, time);
+}
+
+static string RepositoryAsset(string name)
+{
+    var outputCopy = Path.Combine(AppContext.BaseDirectory, name);
+    if (File.Exists(outputCopy)) return outputCopy;
+    return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", name));
 }
 
 internal sealed record TestDocument(string Name, int Value);

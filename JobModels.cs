@@ -225,7 +225,8 @@ public sealed record JobRecord(
     SemanticJobClassification? SemanticClassification = null,
     string SemanticClassificationStatus = SemanticClassificationStates.Pending,
     DateTimeOffset? SemanticClassificationLastAttemptUtc = null,
-    QwenDeepAnalysis? QwenDeepAnalysis = null)
+    QwenDeepAnalysis? QwenDeepAnalysis = null,
+    LlmDeepAnalysisRequestState? DeepAnalysisRequest = null)
 {
     public string StableId => $"{CompanyId}:{(!string.IsNullOrWhiteSpace(RequisitionId)
         ? RequisitionId
@@ -271,6 +272,27 @@ public sealed record QwenDeepAnalysis(
     DateTimeOffset AnalyzedUtc,
     IReadOnlyList<SemanticConceptPrediction> Predictions,
     string Analysis);
+
+public static class LlmDeepAnalysisStatuses
+{
+    public const string NotRequested = "notRequested";
+    public const string Queued = "queued";
+    public const string Running = "running";
+    public const string Completed = "completed";
+    public const string Failed = "failed";
+}
+
+public sealed record LlmDeepAnalysisRequestState(
+    string Status,
+    DateTimeOffset? RequestedUtc = null,
+    DateTimeOffset? StartedUtc = null,
+    DateTimeOffset? CompletedUtc = null,
+    string? Error = null,
+    string? ResultFingerprint = null)
+{
+    public static LlmDeepAnalysisRequestState NotRequested { get; } =
+        new(LlmDeepAnalysisStatuses.NotRequested);
+}
 
 public sealed record CredentialMatch(
     string CredentialId,
@@ -768,7 +790,8 @@ public sealed record JobListItem(
     IReadOnlyList<DetectedJobConcept> DetectedConcepts,
     bool AnalysisPending,
     string SemanticClassificationStatus,
-    QwenDeepAnalysis? QwenDeepAnalysis)
+    QwenDeepAnalysis? QwenDeepAnalysis,
+    LlmDeepAnalysisRequestState DeepAnalysisRequest)
 {
     public static JobListItem FromJob(JobRecord job) => new(
         job.StableId,
@@ -809,7 +832,8 @@ public sealed record JobListItem(
         string.IsNullOrWhiteSpace(job.DescriptionHtml)
             ? SemanticClassificationStates.Pending
             : job.SemanticClassificationStatus,
-        job.QwenDeepAnalysis);
+        job.QwenDeepAnalysis,
+        job.DeepAnalysisRequest ?? LlmDeepAnalysisRequestState.NotRequested);
 
     private static IReadOnlyList<DetectedJobConcept> SemanticDetectedConcepts(JobRecord job)
     {
@@ -823,7 +847,7 @@ public sealed record JobListItem(
             .Where(item => item.Matched)
             .Select(item => new DetectedJobConcept(
                 item.ConceptId,
-                "DeBERTa semantic classification"))
+                "Lifecycle-managed RegEx semantic classification"))
             .ToArray();
     }
 }

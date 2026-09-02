@@ -31,41 +31,112 @@ if (args is ["--healthcheck"])
     return;
 }
 
-if (args is ["--classifier-diagnostic"])
+if (args.Length >= 3 && args[0] == "--regex-maintenance")
 {
-    try
+    var action = args[1];
+    var databasePath = Path.GetFullPath(args[2]);
+    var catalog = JobConceptCatalog.LoadDefault();
+    using var store = new SqliteSemanticRuleStore(databasePath, catalog);
+    store.Initialize(Path.Combine(AppContext.BaseDirectory, "LegacyJobConceptRules.json"));
+    var classifier = new RegexSemanticClassifier(store, catalog);
+    await classifier.InitializeAsync();
+    var jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true };
+    switch (action)
     {
-        var baseUrl = Environment.GetEnvironmentVariable("Classifier__BaseUrl")
-            ?? "http://job-classifier:8081/";
-        using var client = new HttpClient
-        {
-            BaseAddress = new Uri(baseUrl),
-            Timeout = TimeSpan.FromSeconds(120)
-        };
-        using var content = ClassifierClient.CreateJsonContent(new ClassifierRequest(
-            "R180395", "Senior Software Developer", "Phase 1 deployment plumbing proof."));
-        using var response = await client.PostAsync("classify", content);
-        response.EnsureSuccessStatusCode();
-        var result = await response.Content.ReadFromJsonAsync<SemanticClassifierResponse>(
-            ClassifierClient.JsonOptions);
-        var valid = result is
-        {
-            Received: true,
-            JobId: "R180395",
-            Title: "Senior Software Developer",
-            DescriptionLength: 34,
-            GpuAvailable: true,
-            DeviceName: "NVIDIA GeForce GTX 1070",
-            ConceptCount: 85,
-            Predictions.Count: 85
-        };
-        Console.WriteLine(JsonSerializer.Serialize(new { valid, result }));
-        Environment.ExitCode = valid ? 0 : 1;
-    }
-    catch (Exception exception)
-    {
-        Console.Error.WriteLine($"Classifier diagnostic failed: {exception.GetType().Name}");
-        Environment.ExitCode = 1;
+        case "overview":
+            var rules = await store.ListRulesAsync();
+            Console.WriteLine(JsonSerializer.Serialize(new
+            {
+                databasePath,
+                classifier.RulesetFingerprint,
+                classifier.ActiveRuleCount,
+                statuses = rules.GroupBy(item => item.Status, StringComparer.Ordinal)
+                    .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal)
+            }, jsonOptions));
+            break;
+        case "evaluate":
+            var evaluation = new RegexEvaluationService(
+                Path.Combine(AppContext.BaseDirectory, "RegexValidationCorpus.json"),
+                classifier, store, catalog);
+            Console.WriteLine(JsonSerializer.Serialize(await evaluation.EvaluateAsync(), jsonOptions));
+            break;
+        case "benchmark-cache" when args.Length == 4:
+            var cacheRoot = Path.GetFullPath(args[3]);
+            var cacheFiles = Directory.EnumerateFiles(cacheRoot, "*.json", SearchOption.AllDirectories)
+                .OrderBy(path => path, StringComparer.Ordinal).ToArray();
+            var benchmarkJobs = new List<JobRecord>();
+            foreach (var path in cacheFiles)
+            {
+                try
+                {
+                    var document = JsonSerializer.Deserialize<JobsCacheDocument>(
+                        await File.ReadAllBytesAsync(path),
+                        new JsonSerializerOptions(JsonSerializerDefaults.Web));
+                    if (document?.Jobs is { } jobs) benchmarkJobs.AddRange(jobs);
+                }
+                catch (JsonException) { }
+            }
+            var classifiedJobs = 0;
+            var matchedConcepts = 0;
+            var benchmarkTimer = Stopwatch.StartNew();
+            foreach (var job in benchmarkJobs)
+            {
+                var description = job.DescriptionHtml;
+                if (string.IsNullOrWhiteSpace(description) &&
+                    !string.IsNullOrWhiteSpace(job.CompressedDescriptionHtml))
+                {
+                    using var input = new MemoryStream(Convert.FromBase64String(job.CompressedDescriptionHtml));
+                    using var gzip = new GZipStream(input, CompressionMode.Decompress);
+                    using var reader = new StreamReader(gzip);
+                    description = await reader.ReadToEndAsync();
+                }
+                if (string.IsNullOrWhiteSpace(description)) continue;
+                var result = classifier.Classify(job.Title, description, job.RemoteWork,
+                    job.ExtendedLocationRequirement, productionUsage: false);
+                classifiedJobs++;
+                matchedConcepts += result.Concepts.Count;
+            }
+            benchmarkTimer.Stop();
+            Console.WriteLine(JsonSerializer.Serialize(new
+            {
+                cacheRoot,
+                cacheFileCount = cacheFiles.Length,
+                jobRecordCount = benchmarkJobs.Count,
+                classifiedJobs,
+                matchedConcepts,
+                elapsedMilliseconds = benchmarkTimer.Elapsed.TotalMilliseconds,
+                millisecondsPerJob = classifiedJobs == 0 ? 0 :
+                    benchmarkTimer.Elapsed.TotalMilliseconds / classifiedJobs,
+                jobsPerSecond = benchmarkTimer.Elapsed.TotalSeconds == 0 ? 0 :
+                    classifiedJobs / benchmarkTimer.Elapsed.TotalSeconds,
+                classifier.RulesetFingerprint,
+                classifier.ActiveRuleCount
+            }, jsonOptions));
+            break;
+        case "export":
+            Console.WriteLine(await store.ExportJsonAsync());
+            break;
+        case "import" when args.Length == 4:
+            Console.WriteLine(JsonSerializer.Serialize(await store.ImportCandidatesAsync(
+                await File.ReadAllTextAsync(Path.GetFullPath(args[3])), "maintenance-cli-import"),
+                jsonOptions));
+            break;
+        case "review-stale":
+            Console.WriteLine(JsonSerializer.Serialize(new
+            { reviewDue = await store.MarkReviewDueAsync(DateTimeOffset.UtcNow) }, jsonOptions));
+            break;
+        case "retention":
+            Console.WriteLine(JsonSerializer.Serialize(new
+            { deleted = await store.ApplyRetiredRetentionAsync(DateTimeOffset.UtcNow) }, jsonOptions));
+            break;
+        case "backup" when args.Length == 4:
+            await store.BackupAsync(Path.GetFullPath(args[3]));
+            Console.WriteLine(JsonSerializer.Serialize(new { backup = Path.GetFullPath(args[3]) }, jsonOptions));
+            break;
+        default:
+            Console.Error.WriteLine("Usage: --regex-maintenance <overview|evaluate|benchmark-cache|export|import|review-stale|retention|backup> <regex-rules.db> [file-or-cache-root]");
+            Environment.ExitCode = 2;
+            break;
     }
     return;
 }
@@ -101,8 +172,8 @@ builder.Services.AddHttpClient<JobSourceClient>((services, client) =>
 });
 builder.Services.AddHttpClient<ClassifierClient>((services, client) =>
 {
-    var baseUrl = services.GetRequiredService<IConfiguration>()["Classifier:BaseUrl"]
-        ?? "http://job-classifier:8081/";
+    var baseUrl = services.GetRequiredService<IConfiguration>()["DeepAnalysis:BaseUrl"]
+        ?? "http://deep-analysis:8081/";
     client.BaseAddress = new Uri(baseUrl, UriKind.Absolute);
     client.Timeout = TimeSpan.FromSeconds(300);
     client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
@@ -115,6 +186,10 @@ builder.Services.AddSingleton<WorkAuthorizationDetector>();
 builder.Services.AddSingleton<RemoteWorkDetector>();
 builder.Services.AddSingleton<ExtendedLocationRequirementDetector>();
 builder.Services.AddSingleton<JobConceptCatalog>();
+builder.Services.AddSingleton<SqliteSemanticRuleStore>();
+builder.Services.AddSingleton<RegexSemanticClassifier>();
+builder.Services.AddSingleton<RegexEvaluationService>();
+builder.Services.AddHostedService<RegexTelemetryFlushService>();
 builder.Services.AddSingleton<SemanticClassificationService>();
 builder.Services.AddSingleton<PortableWorkspaceService>();
 builder.Services.AddSingleton<SharedSourceRefreshCoordinator>();
@@ -467,7 +542,9 @@ app.MapGet("/api/admin/status", (HttpContext context) =>
 
 app.MapPost("/api/admin/classifier-diagnostic", async Task<IResult> (
     ClassifierRequest request,
-    ClassifierClient classifier,
+    RegexSemanticClassifier classifier,
+    RemoteWorkDetector remoteDetector,
+    ExtendedLocationRequirementDetector extendedDetector,
     CancellationToken token) =>
 {
     if (string.IsNullOrWhiteSpace(request.JobId) || string.IsNullOrWhiteSpace(request.Title) ||
@@ -475,11 +552,118 @@ app.MapPost("/api/admin/classifier-diagnostic", async Task<IResult> (
     {
         return Results.BadRequest(new { error = "jobId, title, and description are required." });
     }
-    var result = await classifier.ClassifyAsync(request, token);
-    return Results.Json(result, statusCode: result.Available
-        ? StatusCodes.Status200OK
-        : StatusCodes.Status503ServiceUnavailable);
+    token.ThrowIfCancellationRequested();
+    var html = $"<p>{System.Net.WebUtility.HtmlEncode(request.Description)}</p>";
+    var result = classifier.Classify(request.Title, html,
+        remoteDetector.Analyze(request.Title, "", [], html),
+        extendedDetector.Analyze(request.Title, "", [], html), productionUsage: false);
+    return Results.Ok(result);
 }).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapGet("/api/admin/regex-rules", async (
+    string? status, string? conceptId, SqliteSemanticRuleStore store, CancellationToken token) =>
+    Results.Ok(await store.ListRulesAsync(status, conceptId, token)))
+    .RequireAuthorization(AdminAuthorization.Policy);
+
+app.MapGet("/api/admin/regex-rules/overview", async (
+    SqliteSemanticRuleStore store, RegexSemanticClassifier classifier, CancellationToken token) =>
+{
+    var rules = await store.ListRulesAsync(cancellationToken: token);
+    return Results.Ok(new
+    {
+        classifier.RulesetFingerprint,
+        classifier.ActiveRuleCount,
+        database = Path.GetFileName(store.DatabasePath),
+        statuses = rules.GroupBy(item => item.Status, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal),
+        store.Policy
+    });
+}).RequireAuthorization(AdminAuthorization.Policy);
+
+app.MapPost("/api/admin/regex-rules", async Task<IResult> (
+    SemanticRuleCandidate candidate, SqliteSemanticRuleStore store, CancellationToken token) =>
+{
+    try { return Results.Created($"/api/admin/regex-rules", await store.CreateAsync(candidate, token)); }
+    catch (Exception exception) when (exception is InvalidDataException or ArgumentException)
+    { return Results.BadRequest(new { error = exception.Message }); }
+}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapPost("/api/admin/regex-rules/{ruleId}/transition/{status}", async Task<IResult> (
+    string ruleId, string status, SqliteSemanticRuleStore store,
+    RegexSemanticClassifier classifier, CancellationToken token) =>
+{
+    try
+    {
+        var value = await store.TransitionAsync(ruleId, status, token);
+        if (SemanticRuleStatuses.RunsInProduction(value.Status) || value.Status == SemanticRuleStatuses.Retired)
+            await classifier.ReloadAsync(token);
+        return Results.Ok(value);
+    }
+    catch (KeyNotFoundException) { return Results.NotFound(); }
+    catch (Exception exception) when (exception is InvalidOperationException or ArgumentException)
+    { return Results.BadRequest(new { error = exception.Message }); }
+}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapPost("/api/admin/regex-rules/{ruleId}/validate", async Task<IResult> (
+    string ruleId, RegexEvaluationService evaluation, CancellationToken token) =>
+{
+    try { return Results.Ok(await evaluation.ValidateCandidateAsync(ruleId, token)); }
+    catch (KeyNotFoundException) { return Results.NotFound(); }
+    catch (Exception exception) when (exception is InvalidOperationException or InvalidDataException)
+    { return Results.BadRequest(new { error = exception.Message }); }
+}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapPost("/api/admin/regex-rules/relationships", async Task<IResult> (
+    SemanticRuleRelationshipCandidate relationship, SqliteSemanticRuleStore store,
+    CancellationToken token) =>
+{
+    try
+    {
+        await store.AddRelationshipAsync(relationship.SourceRuleId, relationship.TargetRuleId,
+            relationship.RelationshipType, token);
+        return Results.NoContent();
+    }
+    catch (KeyNotFoundException) { return Results.NotFound(); }
+    catch (InvalidDataException exception) { return Results.BadRequest(new { error = exception.Message }); }
+}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapPost("/api/admin/regex-rules/reload", async (
+    RegexSemanticClassifier classifier, CancellationToken token) =>
+    Results.Ok(new { rulesetFingerprint = await classifier.ReloadAsync(token) }))
+    .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapPost("/api/admin/regex-rules/review-stale", async (
+    SqliteSemanticRuleStore store, RegexSemanticClassifier classifier, CancellationToken token) =>
+{
+    var count = await store.MarkReviewDueAsync(DateTimeOffset.UtcNow, token);
+    if (count > 0) await classifier.ReloadAsync(token);
+    return Results.Ok(new { reviewDue = count });
+}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapPost("/api/admin/regex-rules/retention", async (
+    SqliteSemanticRuleStore store, CancellationToken token) =>
+    Results.Ok(new { deleted = await store.ApplyRetiredRetentionAsync(DateTimeOffset.UtcNow, token) }))
+    .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapGet("/api/admin/regex-rules/export", async (
+    SqliteSemanticRuleStore store, CancellationToken token) =>
+    Results.Text(await store.ExportJsonAsync(token), "application/json"))
+    .RequireAuthorization(AdminAuthorization.Policy);
+
+app.MapPost("/api/admin/regex-rules/import", async Task<IResult> (
+    HttpRequest request, SqliteSemanticRuleStore store, CancellationToken token) =>
+{
+    using var reader = new StreamReader(request.Body);
+    var json = await reader.ReadToEndAsync(token);
+    if (json.Length > 5_000_000) return Results.BadRequest(new { error = "Rule import is too large." });
+    try { return Results.Ok(await store.ImportCandidatesAsync(json, "admin-json-import", token)); }
+    catch (InvalidDataException exception) { return Results.BadRequest(new { error = exception.Message }); }
+}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapPost("/api/admin/regex-rules/evaluate", async (
+    RegexEvaluationService evaluation, CancellationToken token) =>
+    Results.Ok(await evaluation.EvaluateAsync(persist: true, cancellationToken: token)))
+    .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
 
 app.MapGet("/api/admin/classifier/backfill/status", async (
     WorkspaceRuntimeProvider provider,
@@ -860,6 +1044,7 @@ app.MapPut("/api/history/workflow-state", async (
     .RequireRateLimiting("state");
 
 var dataStores = app.Services.GetRequiredService<IWorkspaceDataStoreFactory>();
+await app.Services.GetRequiredService<RegexSemanticClassifier>().InitializeAsync();
 await dataStores.ValidateAsync();
 await app.Services.GetRequiredService<IAccountRegistryStore>().ValidateAsync();
 await app.Services.GetRequiredService<AdminBootstrapService>().InitializeAsync();

@@ -242,8 +242,8 @@ manual dispatch intentionally revalidates the target.
 
 ## Host deployment behavior
 
-The controlled manifest is `deploy/compose.curiosity.yaml`. It declares JSM plus the internal
-classifier adapter and Ollama runtime in Compose project `jsm-lab`. Deployment updates only those
+The controlled manifest is `deploy/compose.curiosity.yaml`. It declares JSM plus the internal,
+opt-in deep-analysis bridge and Ollama runtime in Compose project `jsm-lab`. Deployment updates only those
 three named services and never invokes `down`, `--remove-orphans`, or a broad cleanup, so the
 existing Mailpit service is not recreated. `ai801` is outside this Compose project and is never
 selected or cleaned.
@@ -283,8 +283,8 @@ successful releases exist. Cleanup addresses only verified `jsm:<40-hex-sha>` ta
 it never uses Docker prune commands and never examines unrelated images, volumes, or
 networks.
 
-If post-replacement checks fail, the script switches only JSM to the previous image,
-then verifies health and, for CI/CD-era releases, `/version`. During the one-time first
+If post-replacement checks fail, the script restores the previous JSM and optional-analysis service
+images, then verifies health and, for CI/CD-era releases, `/version`. During the one-time first
 bootstrap only, the pre-CI/CD image has no `/version` endpoint; legacy rollback can
 therefore prove Docker health and `/healthz` but cannot report a version SHA. After the
 first successful CI/CD release, every retained rollback target supports both checks.

@@ -15,6 +15,7 @@ replacement_started=false
 previous_reference=""
 previous_sha=""
 previous_classifier_reference=""
+previous_classifier_service="deep-analysis"
 classifier_was_running=false
 previous_ollama_reference=""
 ollama_was_running=false
@@ -23,9 +24,11 @@ ollama_source_revision="f96e7aa0513b9973a0ccc71be414c2ecb9d65b1a"
 model_tag="qwen3:4b-instruct-2507-q4_K_M"
 model_digest="0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0"
 provision_container="jsm-ollama-provision-${target_sha:0:12}"
+candidate_audit_root=""
 
 cleanup_provision() {
   docker rm -f "$provision_container" >/dev/null 2>&1 || true
+  [[ -z "$candidate_audit_root" ]] || rm -rf -- "$candidate_audit_root"
 }
 trap cleanup_provision EXIT
 
@@ -50,11 +53,9 @@ actual_sha="$(git -C "$repository_root" rev-parse HEAD)"
   exit 1
 }
 model_root="$lab_root/models/ollama"
+legacy_model_root="$lab_root/models/nli-deberta-v3-base"
 mkdir -p "$model_root"
 sudo -n chown -R 65532:65532 "$model_root"
-deberta_model_root="$lab_root/models/nli-deberta-v3-base"
-mkdir -p "$deberta_model_root"
-sudo -n chown -R 65532:65532 "$deberta_model_root"
 
 mkdir -p "$state_root"
 mkdir -p "$security_cache"
@@ -74,7 +75,12 @@ current_container="$(docker ps -q \
 previous_reference="$(docker inspect --format '{{.Image}}' "$current_container")"
 current_classifier="$(docker ps -q \
   --filter label=com.docker.compose.project=jsm-lab \
-  --filter label=com.docker.compose.service=job-classifier | head -n 1)"
+  --filter label=com.docker.compose.service=deep-analysis | head -n 1)"
+if [[ -z "$current_classifier" ]]; then
+  previous_classifier_service="job-classifier"
+  current_classifier="$(docker ps -q --filter label=com.docker.compose.project=jsm-lab \
+    --filter label=com.docker.compose.service=job-classifier | head -n 1)"
+fi
 if [[ -n "$current_classifier" ]]; then
   classifier_was_running=true
   previous_classifier_reference="$(docker inspect --format '{{.Image}}' "$current_classifier")"
@@ -99,6 +105,17 @@ if [[ -f "$deployed_sha_file" ]]; then
   fi
 fi
 
+if [[ -f "$lab_root/data/app/regex-rules.db" ]]; then
+  backup_name="regex-rules-predeploy-${previous_sha:-unknown}-$(date -u +%Y%m%dT%H%M%SZ).db"
+  docker exec "$current_container" dotnet JobSearchManager.dll --regex-maintenance backup \
+    /app/data/regex-rules.db "/app/data/$backup_name"
+  [[ -f "$lab_root/data/app/$backup_name" ]] || {
+    echo "Online RegEx database backup was not created; refusing deployment." >&2
+    exit 1
+  }
+  mv -- "$lab_root/data/app/$backup_name" "$lab_root/backups/$backup_name"
+fi
+
 docker build \
   --platform linux/amd64 \
   --build-arg "JSM_GIT_SHA=$target_sha" \
@@ -108,7 +125,7 @@ docker build \
 docker build \
   --platform linux/amd64 \
   --build-arg "CLASSIFIER_GIT_SHA=$target_sha" \
-  --tag "jsm-classifier:$target_sha" \
+  --tag "jsm-deep-analysis:$target_sha" \
   --file "$repository_root/classifier-service/Dockerfile" \
   "$repository_root"
 
@@ -124,7 +141,7 @@ image_revision="$(docker image inspect --format '{{ index .Config.Labels "org.op
   echo "Image revision $image_revision does not match deployment SHA $target_sha." >&2
   exit 1
 }
-classifier_revision="$(docker image inspect --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' "jsm-classifier:$target_sha")"
+classifier_revision="$(docker image inspect --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' "jsm-deep-analysis:$target_sha")"
 [[ "$classifier_revision" == "$target_sha" ]] || {
   echo "Classifier image revision $classifier_revision does not match deployment SHA $target_sha." >&2
   exit 1
@@ -138,15 +155,53 @@ ollama_source="$(docker image inspect --format '{{ index .Config.Labels "org.ope
 
 # Scan the exact locally built artifact before any manifest or running container changes.
 bash "$repository_root/scripts/security-scan.sh" image "jsm:$target_sha" "$security_cache"
-bash "$repository_root/scripts/security-scan.sh" image "jsm-classifier:$target_sha" "$security_cache"
+bash "$repository_root/scripts/security-scan.sh" image "jsm-deep-analysis:$target_sha" "$security_cache"
 bash "$repository_root/scripts/security-scan.sh" image "$ollama_image" "$security_cache"
 
-# Restore/validate the exact immutable DeBERTa snapshot retained by the Phase 2B contract.
-# Only this bounded provisioning container has registry egress; production remains internal-only.
-docker run --rm --user 65532:65532 --env HOME=/tmp --tmpfs /tmp --env CLASSIFIER_MODEL_ROOT=/models/nli-deberta-v3-base --volume "$deberta_model_root:/models/nli-deberta-v3-base" "jsm-classifier:$target_sha" --download-model
+# Evaluate the exact candidate against the fixed corpus and every production cache in place.
+# Production data is mounted read-only and the candidate SQLite database is disposable.
+candidate_audit_root="$(mktemp -d "$state_root/candidate-regex-audit.XXXXXX")"
+sudo -n chown 1001:1001 "$candidate_audit_root"
+evaluation_report="$state_root/regex-evaluation-$target_sha.json"
+cache_benchmark_report="$state_root/regex-cache-benchmark-$target_sha.json"
+docker run --rm --user 1001:1001 --read-only --tmpfs /tmp \
+  --volume "$candidate_audit_root:/audit" \
+  "jsm:$target_sha" --regex-maintenance evaluate /audit/regex-rules.db > "$evaluation_report"
+docker run --rm --user 1001:1001 --read-only --tmpfs /tmp \
+  --volume "$candidate_audit_root:/audit" \
+  --volume "$lab_root/data/app:/production:ro" \
+  "jsm:$target_sha" --regex-maintenance benchmark-cache /audit/regex-rules.db \
+  /production/workspaces > "$cache_benchmark_report"
+python3 - "$evaluation_report" "$cache_benchmark_report" <<'PY'
+import json, math, sys
+evaluation = json.load(open(sys.argv[1], encoding="utf-8"))
+benchmark = json.load(open(sys.argv[2], encoding="utf-8"))
+expected = {
+    "macro": 0.9976415094339622,
+    "micro": 0.9969230769230769,
+    "full_macro": 0.894597869692249,
+    "full_micro": 0.915770609318996,
+}
+actual = {
+    "macro": evaluation["historicalBenchmarkMacro"]["f1"],
+    "micro": evaluation["historicalBenchmarkMicro"]["f1"],
+    "full_macro": evaluation["macro"]["f1"],
+    "full_micro": evaluation["micro"]["f1"],
+}
+if any(not math.isclose(actual[key], value, rel_tol=0, abs_tol=1e-12)
+       for key, value in expected.items()):
+    raise SystemExit(f"RegEx candidate metric regression: {actual}")
+if evaluation["fixtureCount"] != 148 or evaluation["ruleCount"] != 288:
+    raise SystemExit("RegEx candidate corpus/rule inventory changed unexpectedly.")
+if benchmark["classifiedJobs"] < 1 or benchmark["jobsPerSecond"] <= 0:
+    raise SystemExit("RegEx production-cache benchmark classified no postings.")
+print("RegEx candidate metrics and production-cache benchmark passed:", actual, benchmark)
+PY
+rm -rf -- "$candidate_audit_root"
+candidate_audit_root=""
 
 # Phase 0 host inventory and a non-mutating GPU-container preflight happen before replacement.
-echo "Docker $(docker version --format '{{.Server.Version}}'); Compose $(docker compose version --short)."
+echo "Docker $(docker version --format '{{.Server.Version}}'); $(docker compose version)."
 nvidia-smi --query-gpu=name,driver_version,memory.total,memory.used --format=csv,noheader
 command -v nvidia-ctk >/dev/null || {
   echo "NVIDIA Container Toolkit is required but nvidia-ctk is absent. No host configuration was changed." >&2
@@ -201,7 +256,11 @@ verify_deployment() {
 
   local classifier_container=""
   classifier_container="$(docker ps -q --filter label=com.docker.compose.project=jsm-lab \
-    --filter label=com.docker.compose.service=job-classifier | head -n 1)"
+    --filter label=com.docker.compose.service=deep-analysis | head -n 1)"
+  if [[ -z "$classifier_container" && "$allow_legacy" == "true" ]]; then
+    classifier_container="$(docker ps -q --filter label=com.docker.compose.project=jsm-lab \
+      --filter label=com.docker.compose.service=job-classifier | head -n 1)"
+  fi
   [[ -n "$classifier_container" ]] || return 1
   local classifier_health=""
   for _ in $(seq 1 30); do
@@ -220,22 +279,7 @@ verify_deployment() {
     [[ "$(docker exec "$ollama_container" nvidia-smi --query-gpu=name --format=csv,noheader | tr -d '\r')" \
       == "NVIDIA GeForce GTX 1070" ]] || return 1
     docker exec "$ollama_container" ollama list | grep -F "$model_tag" >/dev/null || return 1
-    docker exec "$classifier_container" python3 /app/classifier_service.py --model-diagnostic || return 1
-  fi
-
-  if [[ "$allow_legacy" != "true" ]]; then
-    local jsm_container=""
-    jsm_container="$(docker ps -q --filter label=com.docker.compose.project=jsm-lab \
-      --filter label=com.docker.compose.service=jsm | head -n 1)"
-    local classifier_round_trip=false
-    for _ in $(seq 1 3); do
-      if docker exec "$jsm_container" dotnet JobSearchManager.dll --classifier-diagnostic; then
-        classifier_round_trip=true
-        break
-      fi
-      sleep 2
-    done
-    [[ "$classifier_round_trip" == "true" ]] || return 1
+    docker exec "$classifier_container" python3 /app/classifier_service.py --healthcheck || return 1
   fi
 
   if [[ -n "$expected_sha" ]]; then
@@ -251,22 +295,23 @@ rollback() {
   trap - ERR
   if [[ "$replacement_started" == true && -n "$previous_reference" ]]; then
     echo "Deployment verification failed; restoring the previous JSM/classifier state." >&2
-    JSM_IMAGE_REFERENCE="jsm:$target_sha" CLASSIFIER_IMAGE_REFERENCE="jsm-classifier:$target_sha" \
+    JSM_IMAGE_REFERENCE="jsm:$target_sha" DEEP_ANALYSIS_IMAGE_REFERENCE="jsm-deep-analysis:$target_sha" \
       OLLAMA_IMAGE_REFERENCE="$ollama_image" JSM_LAB_ROOT="$lab_root" \
       docker compose --project-name jsm-lab --file "$active_manifest" \
-      rm --stop --force ollama job-classifier || true
+      rm --stop --force ollama deep-analysis || true
     if [[ "$classifier_was_running" != true ]]; then
-      JSM_IMAGE_REFERENCE="jsm:$target_sha" CLASSIFIER_IMAGE_REFERENCE="jsm-classifier:$target_sha" \
+      JSM_IMAGE_REFERENCE="jsm:$target_sha" DEEP_ANALYSIS_IMAGE_REFERENCE="jsm-deep-analysis:$target_sha" \
         OLLAMA_IMAGE_REFERENCE="$ollama_image" JSM_LAB_ROOT="$lab_root" docker compose --project-name jsm-lab --file "$active_manifest" \
-        rm --stop --force job-classifier || true
+        rm --stop --force deep-analysis || true
     fi
     mv -f -- "$previous_manifest" "$active_manifest"
     if [[ "$classifier_was_running" == true ]]; then
       JSM_IMAGE_REFERENCE="$previous_reference" \
         CLASSIFIER_IMAGE_REFERENCE="$previous_classifier_reference" \
+        DEEP_ANALYSIS_IMAGE_REFERENCE="$previous_classifier_reference" \
         OLLAMA_IMAGE_REFERENCE="${previous_ollama_reference:-$ollama_image}" JSM_LAB_ROOT="$lab_root" \
         docker compose --project-name jsm-lab --file "$active_manifest" \
-        up --detach --force-recreate jsm job-classifier
+        up --detach --force-recreate jsm "$previous_classifier_service"
     else
       JSM_IMAGE_REFERENCE="$previous_reference" JSM_LAB_ROOT="$lab_root" \
         docker compose --project-name jsm-lab --file "$active_manifest" \
@@ -281,31 +326,34 @@ rollback() {
       echo "Rollback did not pass verification; JSM requires operator attention." >&2
     fi
     docker image rm "jsm:$target_sha" >/dev/null 2>&1 || true
-    docker image rm "jsm-classifier:$target_sha" >/dev/null 2>&1 || true
+    docker image rm "jsm-deep-analysis:$target_sha" >/dev/null 2>&1 || true
   fi
   exit "$failure_status"
 }
 trap rollback ERR
 
 replacement_started=true
-JSM_IMAGE_REFERENCE="jsm:$target_sha" CLASSIFIER_IMAGE_REFERENCE="jsm-classifier:$target_sha" \
+JSM_IMAGE_REFERENCE="jsm:$target_sha" DEEP_ANALYSIS_IMAGE_REFERENCE="jsm-deep-analysis:$target_sha" \
   OLLAMA_IMAGE_REFERENCE="$ollama_image" \
   JSM_LAB_ROOT="$lab_root" \
   docker compose --project-name jsm-lab --file "$active_manifest" \
   up --detach --no-deps ollama
-JSM_IMAGE_REFERENCE="jsm:$target_sha" CLASSIFIER_IMAGE_REFERENCE="jsm-classifier:$target_sha" \
+JSM_IMAGE_REFERENCE="jsm:$target_sha" DEEP_ANALYSIS_IMAGE_REFERENCE="jsm-deep-analysis:$target_sha" \
   OLLAMA_IMAGE_REFERENCE="$ollama_image" \
   JSM_LAB_ROOT="$lab_root" \
   docker compose --project-name jsm-lab --file "$active_manifest" \
-  up --detach --no-deps job-classifier
-JSM_IMAGE_REFERENCE="jsm:$target_sha" CLASSIFIER_IMAGE_REFERENCE="jsm-classifier:$target_sha" \
+  up --detach --no-deps deep-analysis
+JSM_IMAGE_REFERENCE="jsm:$target_sha" DEEP_ANALYSIS_IMAGE_REFERENCE="jsm-deep-analysis:$target_sha" \
   OLLAMA_IMAGE_REFERENCE="$ollama_image" \
   JSM_LAB_ROOT="$lab_root" \
   docker compose --project-name jsm-lab --file "$active_manifest" \
   up --detach --no-deps --force-recreate jsm
 verify_deployment "$target_sha" false
+if [[ "$previous_classifier_service" == "job-classifier" && -n "$current_classifier" ]]; then
+  docker rm -f "$current_classifier" >/dev/null
+fi
 docker stats --no-stream --format '{{.Name}} cpu={{.CPUPerc}} memory={{.MemUsage}}' \
-  "$(docker ps -q --filter label=com.docker.compose.project=jsm-lab --filter label=com.docker.compose.service=job-classifier)"
+  "$(docker ps -q --filter label=com.docker.compose.project=jsm-lab --filter label=com.docker.compose.service=deep-analysis)"
 nvidia-smi --query-gpu=name,memory.total,memory.used --format=csv,noheader
 replacement_started=false
 trap - ERR
@@ -341,4 +389,17 @@ if (( ${#successful_images[@]} > 5 )); then
   mv -f -- "$history_file.tmp" "$history_file"
 fi
 
-echo "JSM/classifier deployment succeeded at $target_sha. Mailpit and unrelated Docker resources were not operated."
+if [[ "$previous_classifier_service" == "job-classifier" ]]; then
+  if [[ -d "$legacy_model_root" ]]; then
+    resolved_legacy_model_root="$(realpath -e -- "$legacy_model_root")"
+    [[ "$resolved_legacy_model_root" == "/home/codex/jsm-lab/models/nli-deberta-v3-base" ]] || {
+      echo "Legacy model path resolved outside its exact expected target; refusing cleanup." >&2
+      exit 1
+    }
+    rm -rf -- "$resolved_legacy_model_root"
+  fi
+  [[ -z "$previous_classifier_reference" ]] ||
+    docker image rm "$previous_classifier_reference" >/dev/null 2>&1 || true
+fi
+
+echo "JSM/RegEx and optional deep-analysis deployment succeeded at $target_sha. Mailpit and unrelated Docker resources were not operated."

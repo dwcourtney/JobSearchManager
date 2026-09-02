@@ -34,7 +34,7 @@ assert.match(app, /fetch\("\/api\/admin\/status"/,
   "Admin Overview must verify its server authorization endpoint.");
 assert.match(app, /admin-overview-tab[\s\S]*?Overview[\s\S]*?admin-classifier-tab[\s\S]*?Classifier/,
   "Admin must contain only useful Overview and Classifier subtabs.");
-assert.match(app, /DeBERTa Classifier[\s\S]*?Start background backfill/);
+assert.match(app, /RegEx Rules[\s\S]*?Reclassify stale cache[\s\S]*?Validate and hot reload/);
 assert.match(app, /Deep Analyze with LLM/);
 assert.match(index, /✦<\/span> = LLM deep-analysis score/);
 assert.doesNotMatch(`${index}\n${app}`, /AI-generated|AI-powered/,
@@ -44,7 +44,7 @@ assert.match(app, /Job Fit \$\{jobFit\.score\}\/10\$\{llmJobFit \? " ✦" : ""\}
 assert.match(app, /Job Fit TBD/);
 assert.match(app, /fetch\("\/api\/admin\/classifier\/backfill\/status"/);
 assert.match(app, /fetch\("\/api\/admin\/classifier\/backfill", \{ method: "POST" \}\)/);
-assert.match(app, /result\.current[\s\S]*?result\.total[\s\S]*?result\.pending[\s\S]*?result\.unavailable[\s\S]*?result\.running/,
+assert.match(app, /result\.current[\s\S]*?result\.total[\s\S]*?result\.pending[\s\S]*?result\.running/,
   "Classifier status must expose persisted coverage and bounded worker state.");
 assert.doesNotMatch(app, /Training Data|Human Labeling|Machine Labeling|Detector Evaluation|AnnotationLabeling|DetectorEvaluationUi/,
   "Removed experimental Admin workflows must not remain dormant in the application.");
@@ -59,8 +59,10 @@ assert.match(program,
   /MapGet\("\/api\/admin\/classifier\/backfill\/status"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)/);
 assert.match(program,
   /MapPost\("\/api\/admin\/classifier\/backfill"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)[\s\S]*?RequireRateLimiting\("state"\)/);
-assert.doesNotMatch(program, /api\/admin\/(?:annotations|detector-evaluation)/,
-  "Removed annotation and regex-evaluation APIs must not remain reachable.");
+assert.match(program, /MapPost\("\/api\/admin\/regex-rules\/evaluate"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)/);
+assert.match(program, /MapPost\("\/api\/admin\/regex-rules\/reload"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)/);
+assert.doesNotMatch(program, /api\/admin\/annotations/,
+  "Removed annotation APIs must not remain reachable.");
 assert.match(program,
   /MapPost\("\/api\/account\/admin-bootstrap"[\s\S]*?RequireAuthorization\(\)[\s\S]*?RequireRateLimiting\("admin-bootstrap"\)/);
 assert.match(program, /PermitLimit = 5[\s\S]*?Window = TimeSpan\.FromMinutes\(15\)/);
@@ -73,4 +75,4 @@ assert.match(compose,
 assert.doesNotMatch(styles, /annotation-|detector-|training-data-/,
   "Removed experimental Admin styling must not remain.");
 
-console.log("All Admin role and default DeBERTa / opt-in Qwen UI integration tests passed.");
+console.log("All Admin role, RegEx lifecycle, and opt-in Qwen UI integration tests passed.");
