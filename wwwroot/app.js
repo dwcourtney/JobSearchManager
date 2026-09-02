@@ -1260,8 +1260,10 @@ async function loadEvaluationLedger() {
 }
 
 function renderEvaluationNavigation(result) {
-  const llmPollingRequired = !["not-started", "complete", "failed"]
-    .includes(result.llmHoldoutStatus?.state || "not-started");
+  const llmPollingRequired = [result.llmHoldoutStatus, result.llmRtx5080Status]
+    .some(status => !["not-started", "complete", "failed"]
+      .includes(status?.state || "not-started")) ||
+    (result.llmRtx5080Status?.state === "complete" && !result.llmHardwareComparison);
   const wrapper = document.createElement("div");
   const tabs = document.createElement("div");
   tabs.className = "settings-tabs admin-evaluation-subtabs";
@@ -1446,8 +1448,10 @@ function renderLlmEvaluationCard(result) {
   action.setAttribute("aria-busy", String(running));
   action.title = report ? "The first frozen prediction set is retained. A changed model or prompt requires a separately versioned experiment." : purpose.textContent;
   action.addEventListener("click", () => void startLlmHoldoutEvaluation(action));
-  const progress = renderLlmEvaluationProgress(runStatus);
-  gtxPanel.append(action, progress);
+  const gtxIdentity = document.createElement("p");
+  gtxIdentity.textContent = `GPU: NVIDIA GeForce GTX 1070 8 GB · Model: ${model.modelTag || report?.modelTag || "unavailable"}`;
+  const progress = renderLlmEvaluationProgress(runStatus, "gtx1070");
+  gtxPanel.append(gtxIdentity, action, progress);
   if (report) {
     const caution = document.createElement("p");
     caution.textContent = "Apples-to-apples agreement with the same AI-derived references is not absolute human-grounded truth. Treat high-disagreement and low-support concepts cautiously.";
@@ -1466,7 +1470,9 @@ function renderLlmEvaluationCard(result) {
     state: "not-started", displayState: "Not started", completed: 0, total: 200,
     message: "The isolated RTX 5080 benchmark has not been imported."
   };
-  rtxPanel.append(renderLlmEvaluationProgress(rtxStatus));
+  const rtxIdentity = document.createElement("p");
+  rtxIdentity.textContent = `GPU: NVIDIA GeForce RTX 5080 16 GB · Model: ${model.modelTag || rtxReport?.modelTag || "unavailable"}`;
+  rtxPanel.append(rtxIdentity, renderLlmEvaluationProgress(rtxStatus, "rtx5080"));
   if (rtxReport) {
     const rtxCaution = document.createElement("p");
     rtxCaution.textContent = "Same frozen semantic experiment and AI-derived references; only benchmark hardware and unavoidable NVIDIA runtime layers differ.";
@@ -1501,19 +1507,29 @@ function renderLlmHardwareComparison(comparison) {
   agreement.textContent = `Semantic agreement ${formatPercent(comparison.semanticAgreement.agreementRate)} · ${comparison.semanticAgreement.disagreementCount} / ${comparison.semanticAgreement.totalDecisions} concept decisions differ.`;
   const table = document.createElement("table");
   table.className = "admin-compact-table admin-comparison-summary";
+  const gtx = comparison.gtx1070;
+  const rtx = comparison.rtx5080;
+  const resources = comparison.rtx5080Resources;
   const rows = [
-    ["Macro F1", formatMetric(comparison.gtx1070.llmMacro.f1), formatMetric(comparison.rtx5080.llmMacro.f1)],
-    ["Micro F1", formatMetric(comparison.gtx1070.llmMicro.f1), formatMetric(comparison.rtx5080.llmMicro.f1)],
-    ["Elapsed", formatDuration(comparison.gtx1070.runtime.totalElapsedSeconds), formatDuration(comparison.rtx5080.runtime.totalElapsedSeconds)],
-    ["Postings/min", comparison.gtx1070.runtime.postingsPerMinute.toFixed(2), comparison.rtx5080.runtime.postingsPerMinute.toFixed(2)],
-    ["Output tokens/sec", formatMetric(comparison.gtx1070.runtime.weightedOutputTokensPerSecond), formatMetric(comparison.rtx5080.runtime.weightedOutputTokensPerSecond)],
-    ["Peak model VRAM", formatBytes(comparison.gtx1070.runtime.peakModelVramBytes), formatBytes(comparison.rtx5080.runtime.peakModelVramBytes)],
-    ["Ollama RAM", formatBytes(comparison.gtx1070.runtime.peakOllamaContainerRamBytes), formatBytes(comparison.rtx5080.runtime.peakOllamaContainerRamBytes)],
-    ["Average GPU utilization", formatOptionalPercent(comparison.gtx1070.runtime.averageGpuUtilizationPercent), formatOptionalPercent(comparison.rtx5080.runtime.averageGpuUtilizationPercent)]
+    ["Macro F1", formatMetric(gtx.llmMacro.f1), formatMetric(rtx.llmMacro.f1), formatSignedMetric(rtx.llmMacro.f1 - gtx.llmMacro.f1)],
+    ["Micro F1", formatMetric(gtx.llmMicro.f1), formatMetric(rtx.llmMicro.f1), formatSignedMetric(rtx.llmMicro.f1 - gtx.llmMicro.f1)],
+    ["Total runtime", formatDuration(gtx.runtime.totalElapsedSeconds), formatDuration(rtx.runtime.totalElapsedSeconds), formatSignedDuration(rtx.runtime.totalElapsedSeconds - gtx.runtime.totalElapsedSeconds)],
+    ["Average/posting", `${gtx.runtime.averageLatencyMilliseconds.toFixed(0)} ms`, `${rtx.runtime.averageLatencyMilliseconds.toFixed(0)} ms`, formatSignedNumber(rtx.runtime.averageLatencyMilliseconds - gtx.runtime.averageLatencyMilliseconds, " ms", 0)],
+    ["Median", `${gtx.runtime.medianLatencyMilliseconds.toFixed(0)} ms`, `${rtx.runtime.medianLatencyMilliseconds.toFixed(0)} ms`, formatSignedNumber(rtx.runtime.medianLatencyMilliseconds - gtx.runtime.medianLatencyMilliseconds, " ms", 0)],
+    ["P95", `${gtx.runtime.p95LatencyMilliseconds.toFixed(0)} ms`, `${rtx.runtime.p95LatencyMilliseconds.toFixed(0)} ms`, formatSignedNumber(rtx.runtime.p95LatencyMilliseconds - gtx.runtime.p95LatencyMilliseconds, " ms", 0)],
+    ["Postings/min", gtx.runtime.postingsPerMinute.toFixed(2), rtx.runtime.postingsPerMinute.toFixed(2), formatSignedNumber(rtx.runtime.postingsPerMinute - gtx.runtime.postingsPerMinute, "", 2)],
+    ["Output tokens/sec", formatMetric(gtx.runtime.weightedOutputTokensPerSecond), formatMetric(rtx.runtime.weightedOutputTokensPerSecond), formatSignedNumber(rtx.runtime.weightedOutputTokensPerSecond - gtx.runtime.weightedOutputTokensPerSecond, "", 3)],
+    ["Average GPU utilization", formatOptionalPercent(gtx.runtime.averageGpuUtilizationPercent), formatOptionalPercent(rtx.runtime.averageGpuUtilizationPercent), formatSignedNumber(rtx.runtime.averageGpuUtilizationPercent - gtx.runtime.averageGpuUtilizationPercent, " pp", 1)],
+    ["Peak model VRAM", formatBytes(gtx.runtime.peakModelVramBytes), formatBytes(rtx.runtime.peakModelVramBytes), formatSignedBytes(rtx.runtime.peakModelVramBytes - gtx.runtime.peakModelVramBytes)],
+    ["Peak Ollama RAM", formatBytes(gtx.runtime.peakOllamaContainerRamBytes), formatBytes(rtx.runtime.peakOllamaContainerRamBytes), formatSignedBytes(rtx.runtime.peakOllamaContainerRamBytes - gtx.runtime.peakOllamaContainerRamBytes)],
+    ["Peak adapter RAM", formatBytes(gtx.runtime.peakAdapterContainerRamBytes), formatBytes(rtx.runtime.peakAdapterContainerRamBytes), formatSignedBytes(rtx.runtime.peakAdapterContainerRamBytes - gtx.runtime.peakAdapterContainerRamBytes)],
+    ["Average GPU power", "Not measured", formatWatts(resources.averageGpuPowerWatts), "Not comparable"],
+    ["Peak GPU power", "Not measured", formatWatts(resources.peakGpuPowerWatts), "Not comparable"],
+    ["Semantic agreement", "Baseline", `${comparison.semanticAgreement.exactAgreementCount} / ${comparison.semanticAgreement.totalDecisions}`, `${comparison.semanticAgreement.disagreementCount} differences`]
   ];
   const head = document.createElement("thead");
   const header = document.createElement("tr");
-  for (const value of ["Measure", "GTX 1070", "RTX 5080"]) {
+  for (const value of ["Measure", "GTX 1070", "RTX 5080", "Difference (RTX − GTX)"]) {
     const cell = document.createElement("th");
     cell.textContent = value;
     header.append(cell);
@@ -1540,10 +1556,11 @@ function renderLlmHardwareComparison(comparison) {
   return details;
 }
 
-function renderLlmEvaluationProgress(runStatus) {
+function renderLlmEvaluationProgress(runStatus, hardware = "gtx1070") {
   const region = document.createElement("section");
   region.className = "llm-evaluation-progress";
   region.dataset.llmEvaluationProgress = "true";
+  region.dataset.llmHardware = hardware;
   region.setAttribute("aria-label", "LLM holdout evaluation progress");
   const phase = document.createElement("strong");
   phase.className = "llm-evaluation-phase";
@@ -1813,16 +1830,21 @@ async function refreshLlmHoldoutStatus(generation) {
     scheduleLlmHoldoutPoll(generation);
     return;
   }
-  const region = elements.adminEvaluationContent?.querySelector("[data-llm-evaluation-progress]");
-  if (!region) return;
+  const gtxRegion = elements.adminEvaluationContent?.querySelector('[data-llm-hardware="gtx1070"]');
+  const rtxRegion = elements.adminEvaluationContent?.querySelector('[data-llm-hardware="rtx5080"]');
+  if (!gtxRegion && !rtxRegion) return;
   state.llmHoldoutStatusRequestInFlight = true;
   try {
     const response = await fetch("/api/admin/evaluations/llm-holdout/status", { cache: "no-store" });
     if (!response.ok) throw new Error("LLM holdout evaluation status could not be loaded.");
     const result = await response.json();
     if (generation !== state.llmHoldoutPollGeneration) return;
-    updateLlmEvaluationProgress(region, result.status);
+    const rtxStatus = result.rtx5080Status || { state: "not-started", completed: 0, total: 200 };
+    if (gtxRegion) updateLlmEvaluationProgress(gtxRegion, result.status);
+    if (rtxRegion) updateLlmEvaluationProgress(rtxRegion, rtxStatus);
     const running = !["not-started", "complete", "failed"].includes(result.status.state);
+    const rtxRunning = !["not-started", "complete", "failed"].includes(rtxStatus.state) ||
+      (rtxStatus.state === "complete" && !result.hardwareComparison);
     const action = elements.adminEvaluationContent?.querySelector("[data-llm-evaluation-action]");
     if (action) {
       action.disabled = running || result.report !== null;
@@ -1831,13 +1853,13 @@ async function refreshLlmHoldoutStatus(generation) {
         ? "LLM Holdout Evaluation Complete"
         : running ? "LLM Holdout Evaluation Running…" : "Run LLM Holdout Evaluation";
     }
-    if (["complete", "failed"].includes(result.status.state)) {
+    if (!running && !rtxRunning) {
       stopLlmHoldoutPolling();
-      if (result.report) await loadEvaluationLedger();
+      if (result.report || result.hardwareComparison) await loadEvaluationLedger();
       return;
     }
   } catch (error) {
-    const message = region.querySelector("[data-llm-evaluation-message]");
+    const message = (gtxRegion || rtxRegion).querySelector("[data-llm-evaluation-message]");
     if (message) message.textContent = error.message || String(error);
   } finally {
     state.llmHoldoutStatusRequestInFlight = false;
@@ -1862,6 +1884,22 @@ function formatBytes(value) {
 
 function formatOptionalPercent(value) {
   return Number.isFinite(value) ? `${value.toFixed(1)}%` : "unavailable";
+}
+
+function formatSignedDuration(value) {
+  return Number.isFinite(value) ? `${value >= 0 ? "+" : "−"}${formatDuration(Math.abs(value))}` : "unavailable";
+}
+
+function formatSignedNumber(value, suffix = "", digits = 2) {
+  return Number.isFinite(value) ? `${value >= 0 ? "+" : ""}${value.toFixed(digits)}${suffix}` : "unavailable";
+}
+
+function formatSignedBytes(value) {
+  return Number.isFinite(value) ? `${value >= 0 ? "+" : "−"}${formatBytes(Math.abs(value))}` : "unavailable";
+}
+
+function formatWatts(value) {
+  return Number.isFinite(value) ? `${value.toFixed(1)} W` : "unavailable";
 }
 
 function formatSignedMetric(value) {

@@ -846,6 +846,8 @@ app.MapGet("/api/admin/evaluations/llm-holdout/status", (
     {
         status = evaluation.GetStatus(),
         report = evaluation.GetLatestReport(),
+        rtx5080Status = evaluation.GetRtx5080Status(),
+        hardwareComparison = evaluation.GetHardwareComparison(),
         model = evaluation.GetCurrentModelInfo()
     })).RequireAuthorization(AdminAuthorization.Policy);
 

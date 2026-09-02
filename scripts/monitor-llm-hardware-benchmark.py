@@ -10,7 +10,7 @@ import time
 from datetime import datetime, timezone
 
 
-MODEL_DIGEST = "sha256:0edcdef34593c76c4b82c1a8b8210a3d3d707f7f812b74a568798291c05c68ba"
+MODEL_DIGEST = "sha256:0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0"
 
 
 def command(*arguments):

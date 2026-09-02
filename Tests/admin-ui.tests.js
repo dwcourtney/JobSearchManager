@@ -18,7 +18,7 @@ assert.match(index,
   /id="administrator-bootstrap-section"[^>]*hidden[\s\S]*?id="administrator-bootstrap-code"[\s\S]*?minlength="8"[\s\S]*?maxlength="8"[\s\S]*?Claim Administrator/);
 assert.doesNotMatch(index, /annotation-labeling-ui|detector-evaluation-ui/,
   "Removed experimental Admin assets must not load.");
-assert.match(index, /app\.js\?v=48/);
+assert.match(index, /app\.js\?v=49/);
 
 assert.match(app, /synchronizeAdminNavigation\(account\.isAdmin === true\)/);
 assert.match(app, /if \(!isAdmin\)[\s\S]*?adminTab\?\.remove\(\)[\s\S]*?return;/,
@@ -45,8 +45,14 @@ assert.match(app, /aria-label", "LLM evaluation hardware"[\s\S]*?GTX 1070[\s\S]*
   "The LLM evaluation must expose accessible hardware tabs.");
 assert.match(app, /GTX 1070 vs RTX 5080[\s\S]*?Semantic agreement[\s\S]*?Postings\/min/,
   "The LLM evaluation must render a compact hardware comparison.");
+for (const metric of ["Total runtime", "Average/posting", "Median", "P95",
+  "Peak model VRAM", "Peak Ollama RAM", "Peak adapter RAM", "Average GPU power",
+  "Peak GPU power"]) assert.match(app, new RegExp(metric));
+assert.ok(app.includes("Difference (RTX − GTX)"));
+assert.match(app, /dataset\.llmHardware[\s\S]*?rtx5080Status[\s\S]*?updateLlmEvaluationProgress\(rtxRegion/,
+  "Quiet polling must update imported RTX progress in place.");
 assert.match(app, /LLM_HOLDOUT_STATUS_POLL_MS = 2000/);
-assert.match(app, /data-llm-evaluation-progress/);
+assert.match(app, /dataset\.llmEvaluationProgress/);
 assert.match(app, /Completed LLM holdout postings/);
 assert.match(app, /Running LLM predictions[\s\S]*?Freezing predictions[\s\S]*?Scoring against reference labels[\s\S]*?Complete[\s\S]*?Failed/);
 assert.match(app, /Recent .*postings\/minute[\s\S]*?variation <= 0\.35/,
@@ -54,7 +60,7 @@ assert.match(app, /Recent .*postings\/minute[\s\S]*?variation <= 0\.35/,
 assert.doesNotMatch(app, /async function pollLlmHoldoutEvaluation/,
   "The old full-ledger redraw polling loop must be removed.");
 assert.match(app,
-  /async function refreshLlmHoldoutStatus[\s\S]*?updateLlmEvaluationProgress\(region, result\.status\)/,
+  /async function refreshLlmHoldoutStatus[\s\S]*?updateLlmEvaluationProgress\(gtxRegion, result\.status\)/,
   "Normal LLM polling must update the existing progress region in place.");
 assert.match(app, /server-side evaluation continues safely when this page is closed or refreshed/);
 assert.match(styles, /\.llm-evaluation-progress-bar[\s\S]*?--color-loading-progress-track[\s\S]*?--color-loading-progress-fill/);
