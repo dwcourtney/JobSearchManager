@@ -389,17 +389,23 @@ if (( ${#successful_images[@]} > 5 )); then
   mv -f -- "$history_file.tmp" "$history_file"
 fi
 
-if [[ "$previous_classifier_service" == "job-classifier" ]]; then
-  if [[ -d "$legacy_model_root" ]]; then
-    resolved_legacy_model_root="$(realpath -e -- "$legacy_model_root")"
-    [[ "$resolved_legacy_model_root" == "/home/codex/jsm-lab/models/nli-deberta-v3-base" ]] || {
-      echo "Legacy model path resolved outside its exact expected target; refusing cleanup." >&2
-      exit 1
-    }
-    rm -rf -- "$resolved_legacy_model_root"
-  fi
-  [[ -z "$previous_classifier_reference" ]] ||
-    docker image rm "$previous_classifier_reference" >/dev/null 2>&1 || true
+if [[ -d "$legacy_model_root" ]]; then
+  resolved_legacy_model_root="$(realpath -e -- "$legacy_model_root")"
+  [[ "$resolved_legacy_model_root" == "/home/codex/jsm-lab/models/nli-deberta-v3-base" ]] || {
+    echo "Legacy model path resolved outside its exact expected target; refusing cleanup." >&2
+    exit 1
+  }
+  # The retired classifier populated this bind mount as its container user,
+  # so parts of the model cache are not removable by the deploy account.
+  # Keep the exact realpath guard above, then use the host's non-interactive
+  # deployment privilege for this one deliberately retired directory.
+  sudo -n rm -rf -- "$resolved_legacy_model_root"
 fi
+[[ -z "$previous_classifier_reference" ]] ||
+  docker image rm "$previous_classifier_reference" >/dev/null 2>&1 || true
+while IFS= read -r legacy_classifier_image; do
+  docker image rm "$legacy_classifier_image" >/dev/null 2>&1 || true
+done < <(docker image ls --format '{{.Repository}} {{.Tag}}' |
+  awk '$1 == "jsm-classifier" && $2 != "<none>" { print $1 ":" $2 }')
 
 echo "JSM/RegEx and optional deep-analysis deployment succeeded at $target_sha. Mailpit and unrelated Docker resources were not operated."
