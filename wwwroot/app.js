@@ -40,7 +40,10 @@ const state = {
   adminRegexRules: [],
   activeAdminTab: "overview",
   activeEvaluationTab: (() => {
-    try { return window.sessionStorage.getItem("jsm-active-evaluation-tab") === "llm" ? "llm" : "regex"; }
+    try {
+      const value = window.sessionStorage.getItem("jsm-active-evaluation-tab");
+      return ["regex", "llm", "triage"].includes(value) ? value : "regex";
+    }
     catch { return "regex"; }
   })(),
   llmHoldoutPollTimer: null,
@@ -1277,29 +1280,45 @@ function renderEvaluationNavigation(result) {
   llmTab.type = "button";
   llmTab.className = "detail-tab";
   llmTab.textContent = "LLM";
+  const triageTab = document.createElement("button");
+  triageTab.type = "button";
+  triageTab.className = "detail-tab";
+  triageTab.textContent = "Triage";
   const regexPanel = document.createElement("div");
   regexPanel.className = "admin-evaluation-list";
   regexPanel.append(renderCuratedEvaluationCard(result), renderHoldoutEvaluationCard(result));
   const llmPanel = document.createElement("div");
   llmPanel.className = "admin-evaluation-list";
   llmPanel.append(renderLlmEvaluationCard(result));
+  const triagePanel = document.createElement("div");
+  triagePanel.className = "admin-evaluation-list";
+  triagePanel.append(renderTriageEvaluationCard(result));
   const select = value => {
     state.activeEvaluationTab = value;
     try { window.sessionStorage.setItem("jsm-active-evaluation-tab", value); } catch { /* optional preference */ }
     const regexSelected = value === "regex";
+    const llmSelected = value === "llm";
+    const triageSelected = value === "triage";
     regexPanel.hidden = !regexSelected;
-    llmPanel.hidden = regexSelected;
+    llmPanel.hidden = !llmSelected;
+    triagePanel.hidden = !triageSelected;
     regexTab.classList.toggle("active", regexSelected);
-    llmTab.classList.toggle("active", !regexSelected);
+    llmTab.classList.toggle("active", llmSelected);
+    triageTab.classList.toggle("active", triageSelected);
     regexTab.setAttribute("aria-selected", String(regexSelected));
-    llmTab.setAttribute("aria-selected", String(!regexSelected));
-    if (regexSelected || !llmPollingRequired) stopLlmHoldoutPolling();
+    llmTab.setAttribute("aria-selected", String(llmSelected));
+    triageTab.setAttribute("aria-selected", String(triageSelected));
+    regexTab.tabIndex = regexSelected ? 0 : -1;
+    llmTab.tabIndex = llmSelected ? 0 : -1;
+    triageTab.tabIndex = triageSelected ? 0 : -1;
+    if (!llmSelected || !llmPollingRequired) stopLlmHoldoutPolling();
     else window.setTimeout(startLlmHoldoutPolling, 0);
   };
   regexTab.addEventListener("click", () => select("regex"));
   llmTab.addEventListener("click", () => select("llm"));
-  tabs.append(regexTab, llmTab);
-  wrapper.append(tabs, regexPanel, llmPanel);
+  triageTab.addEventListener("click", () => select("triage"));
+  tabs.append(regexTab, llmTab, triageTab);
+  wrapper.append(tabs, regexPanel, llmPanel, triagePanel);
   select(state.activeEvaluationTab);
   return wrapper;
 }
@@ -1484,6 +1503,204 @@ function renderLlmEvaluationCard(result) {
   if (comparison) article.append(renderLlmHardwareComparison(comparison));
   selectHardware("gtx1070");
   return article;
+}
+
+function renderTriageEvaluationCard(result) {
+  const report = result.triageReport;
+  const status = result.triageStatus || { state: "not-started", displayState: "Not started" };
+  const article = document.createElement("article");
+  article.className = "settings-section admin-evaluation-card triage-evaluation-card";
+  const heading = document.createElement("h4");
+  heading.textContent = "CHEAP HIGH-RECALL TRIAGE";
+  const purpose = document.createElement("p");
+  purpose.textContent = "Diagnostic only: tests whether explainable, sub-millisecond coarse rules can safely avoid expensive Job Fit inference. Ambiguous postings are kept.";
+  const disclaimer = document.createElement("strong");
+  disclaimer.textContent = "Reference labels were generated through prediction-blinded AI review and adjudication. They are not human-ground-truth labels.";
+  const action = document.createElement("button");
+  action.type = "button";
+  action.className = "primary-button admin-evaluation-action";
+  const running = status.state === "running";
+  action.textContent = running ? "Triage Evaluation Running…" : report
+    ? "Rerun Frozen Triage Evaluation" : "Run Triage Evaluation";
+  action.disabled = running;
+  action.setAttribute("aria-busy", String(running));
+  action.addEventListener("click", async () => {
+    action.disabled = true;
+    action.setAttribute("aria-busy", "true");
+    action.textContent = "Triage Evaluation Running…";
+    try {
+      const response = await fetch("/api/admin/evaluations/triage", { method: "POST" });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error || "Triage evaluation could not be started.");
+      }
+      await pollTriageEvaluation();
+    } catch (error) {
+      action.disabled = false;
+      action.setAttribute("aria-busy", "false");
+      action.textContent = "Run Triage Evaluation";
+      action.title = error.message || String(error);
+    }
+  });
+  article.append(heading, purpose, disclaimer, action);
+  if (!report) {
+    const stateText = document.createElement("p");
+    stateText.className = "admin-evaluation-metadata";
+    stateText.textContent = status.message || `Status: ${status.displayState}.`;
+    article.append(stateText);
+    return article;
+  }
+
+  const metrics = document.createElement("dl");
+  metrics.className = "admin-evaluation-metrics triage-evaluation-metrics";
+  for (const [label, value] of [
+    ["Holdout", `${report.postingCount} postings`],
+    ["Plausible / relevant", String(report.relevantCount)],
+    ["Obvious irrelevant", String(report.obviouslyIrrelevantCount)],
+    ["Final recall", formatPercent(report.finalRelevantRecall)],
+    ["False negatives", String(report.finalFalseNegativeCount)],
+    ["Workload reduction", formatPercent(report.workloadReduction)],
+    ["Survivors", `${report.finalSurvivorCount} (${formatPercent(report.finalSurvivorRate)})`],
+    ["Rejection precision", formatPercent(report.rejectionPrecision)],
+    ["Triage latency", `${report.averageMicrosecondsPerPosting.toFixed(0)} µs/posting`]
+  ]) {
+    const item = document.createElement("div");
+    const term = document.createElement("dt");
+    term.textContent = label;
+    const definition = document.createElement("dd");
+    definition.textContent = value;
+    item.append(term, definition);
+    metrics.append(item);
+  }
+  article.append(metrics, renderTriageStages(report.stages),
+    renderTriageRuntimeEstimates(report.runtimeEstimates),
+    renderTriageExamples("Rejected examples", report.rejectedExamples),
+    renderTriageExamples("False negatives", report.falseNegatives),
+    renderTriageExamples("Ambiguous survivors", report.ambiguousSurvivors));
+  const buckets = document.createElement("details");
+  const bucketsSummary = document.createElement("summary");
+  bucketsSummary.textContent = "Broad technical buckets";
+  const bucketList = document.createElement("ul");
+  for (const definition of report.bucketDefinitions) {
+    const item = document.createElement("li");
+    item.textContent = definition;
+    bucketList.append(item);
+  }
+  buckets.append(bucketsSummary, bucketList);
+  const metadata = document.createElement("p");
+  metadata.className = "admin-evaluation-metadata";
+  metadata.textContent = `Reference ${report.referenceFingerprint} · candidate ${report.candidateFingerprint} · evaluated ${formatLongDate(report.evaluatedUtc) || report.evaluatedUtc}. ${report.productionBehavior}`;
+  article.append(buckets, metadata);
+  return article;
+}
+
+async function pollTriageEvaluation() {
+  await new Promise(resolve => window.setTimeout(resolve, 500));
+  const response = await fetch("/api/admin/evaluations/triage/status", { cache: "no-store" });
+  if (!response.ok) throw new Error("Triage status could not be loaded.");
+  const result = await response.json();
+  if (["complete", "failed"].includes(result.status?.state || "failed")) {
+    await loadEvaluationLedger();
+    return;
+  }
+  await pollTriageEvaluation();
+}
+
+function renderTriageStages(stages) {
+  const details = document.createElement("details");
+  details.open = true;
+  const summary = document.createElement("summary");
+  summary.textContent = "Funnel stages";
+  const table = document.createElement("table");
+  table.className = "admin-compact-table";
+  const head = document.createElement("thead");
+  const header = document.createElement("tr");
+  for (const label of ["Stage", "Input", "Rejected", "Survived", "Recall", "False negatives", "Time"]) {
+    const cell = document.createElement("th");
+    cell.textContent = label;
+    header.append(cell);
+  }
+  head.append(header);
+  const body = document.createElement("tbody");
+  for (const stage of stages) {
+    const row = document.createElement("tr");
+    for (const value of [stage.stage, stage.inputCount,
+      `${stage.rejectedCount} (${formatPercent(stage.rejectionRate)})`, stage.survivorCount,
+      formatPercent(stage.relevantRecall), stage.falseNegativeCount,
+      `${stage.elapsedMilliseconds.toFixed(2)} ms`]) {
+      const cell = document.createElement("td");
+      cell.textContent = value;
+      row.append(cell);
+    }
+    body.append(row);
+  }
+  table.append(head, body);
+  details.append(summary, table);
+  return details;
+}
+
+function renderTriageRuntimeEstimates(estimates) {
+  const details = document.createElement("details");
+  const summary = document.createElement("summary");
+  summary.textContent = "1,000-posting LLM workload simulation";
+  const table = document.createElement("table");
+  table.className = "admin-compact-table";
+  const head = document.createElement("thead");
+  const header = document.createElement("tr");
+  for (const label of ["Hardware", "Measured seconds/post", "Before", "After", "Saved"]) {
+    const cell = document.createElement("th");
+    cell.textContent = label;
+    header.append(cell);
+  }
+  head.append(header);
+  const body = document.createElement("tbody");
+  for (const estimate of estimates) {
+    const row = document.createElement("tr");
+    for (const value of [estimate.hardware, estimate.secondsPerPosting.toFixed(3),
+      formatDuration(estimate.beforeSeconds), formatDuration(estimate.afterSeconds),
+      formatDuration(estimate.savedSeconds)]) {
+      const cell = document.createElement("td");
+      cell.textContent = value;
+      row.append(cell);
+    }
+    body.append(row);
+  }
+  table.append(head, body);
+  details.append(summary, table);
+  return details;
+}
+
+function renderTriageExamples(label, examples) {
+  const details = document.createElement("details");
+  const summary = document.createElement("summary");
+  summary.textContent = `${label} (${examples.length})`;
+  const table = document.createElement("table");
+  table.className = "admin-compact-table";
+  const head = document.createElement("thead");
+  const header = document.createElement("tr");
+  for (const value of ["Title", "Company", "Stage", "Reason", "Reference", "Technical evidence"]) {
+    const cell = document.createElement("th");
+    cell.textContent = value;
+    header.append(cell);
+  }
+  head.append(header);
+  const body = document.createElement("tbody");
+  for (const example of examples) {
+    const evidence = example.technicalEvidence.map(item => item.bucket).join(", ") || "None";
+    const row = document.createElement("tr");
+    for (const value of [example.title, example.companyId, example.rejectedAtStage || "Survived",
+      example.rejectionReason || "Ambiguity kept", example.referenceAmbiguousKeep
+        ? "Ambiguous — keep" : example.referenceWorthSending ? "Worth sending" : "Obvious irrelevant",
+      evidence]) {
+      const cell = document.createElement("td");
+      cell.textContent = value;
+      row.append(cell);
+    }
+    body.append(row);
+  }
+  table.append(head, body);
+  details.append(summary, table);
+  return details;
 }
 
 function renderLlmHardwareProvenance(hardware, report) {

@@ -18,7 +18,7 @@ assert.match(index,
   /id="administrator-bootstrap-section"[^>]*hidden[\s\S]*?id="administrator-bootstrap-code"[\s\S]*?minlength="8"[\s\S]*?maxlength="8"[\s\S]*?Claim Administrator/);
 assert.doesNotMatch(index, /annotation-labeling-ui|detector-evaluation-ui/,
   "Removed experimental Admin assets must not load.");
-assert.match(index, /app\.js\?v=49/);
+assert.match(index, /app\.js\?v=50/);
 
 assert.match(app, /synchronizeAdminNavigation\(account\.isAdmin === true\)/);
 assert.match(app, /if \(!isAdmin\)[\s\S]*?adminTab\?\.remove\(\)[\s\S]*?return;/,
@@ -39,7 +39,7 @@ assert.doesNotMatch(`${index}\n${app}`, /Deep Analyze with LLM|LLM deep-analysis
   "LLM execution and arbitration must be absent from the user-facing workflow.");
 assert.match(app, /CURATED REGRESSION BENCHMARK[\s\S]*?AI-ADJUDICATED PRODUCTION HOLDOUT|datasetRoles/);
 assert.match(app, /Run AI-Adjudicated Holdout Evaluation/);
-assert.match(app, /Evaluation classifiers[\s\S]*?RegEx[\s\S]*?LLM/);
+assert.match(app, /Evaluation classifiers[\s\S]*?RegEx[\s\S]*?LLM[\s\S]*?Triage/);
 assert.match(app, /Run LLM Holdout Evaluation/);
 assert.match(app, /aria-label", "LLM evaluation hardware"[\s\S]*?GTX 1070[\s\S]*?RTX 5080/,
   "The LLM evaluation must expose accessible hardware tabs.");
@@ -64,8 +64,10 @@ assert.match(app,
   "Normal LLM polling must update the existing progress region in place.");
 assert.match(app, /server-side evaluation continues safely when this page is closed or refreshed/);
 assert.match(styles, /\.llm-evaluation-progress-bar[\s\S]*?--color-loading-progress-track[\s\S]*?--color-loading-progress-fill/);
-assert.equal((app.match(/primary-button admin-evaluation-action/g) || []).length, 3,
+assert.equal((app.match(/primary-button admin-evaluation-action/g) || []).length, 4,
   "Every Evaluation action must use the shared themed primary-button component.");
+assert.match(app, /CHEAP HIGH-RECALL TRIAGE[\s\S]*?Final recall[\s\S]*?False negatives[\s\S]*?Workload reduction/);
+assert.match(app, /Rejected examples[\s\S]*?False negatives[\s\S]*?Ambiguous survivors/);
 assert.match(app, /LLM Holdout Evaluation Running…[\s\S]*?aria-busy/,
   "The running evaluation action must expose a textual and accessible busy state.");
 assert.match(styles,
@@ -98,6 +100,7 @@ assert.match(program, /MapPost\("\/api\/admin\/regex-rules\/evaluate"[\s\S]*?Req
 assert.match(program, /MapGet\("\/api\/admin\/evaluations"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)/);
 assert.match(program, /MapPost\("\/api\/admin\/evaluations\/ai-holdout"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)[\s\S]*?RequireRateLimiting\("state"\)/);
 assert.match(program, /MapPost\("\/api\/admin\/evaluations\/llm-holdout"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)[\s\S]*?RequireRateLimiting\("state"\)/);
+assert.match(program, /MapPost\("\/api\/admin\/evaluations\/triage"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)[\s\S]*?RequireRateLimiting\("state"\)/);
 assert.match(program, /MapPost\("\/api\/admin\/regex-rules\/reload"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)/);
 assert.doesNotMatch(program, /api\/admin\/annotations/,
   "Removed annotation APIs must not remain reachable.");
