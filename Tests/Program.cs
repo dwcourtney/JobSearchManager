@@ -299,7 +299,10 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Legacy and new accounts default to no administrator roles", TestAccountRoleCompatibilityAsync),
     ("Admin authorization distinguishes anonymous, non-admin, and admin users", TestAdminAuthorizationAsync),
     ("SQLite RegEx rules migrate, reload, evaluate, and track lifecycle telemetry", TestRegexRuleLifecycleAsync),
-    ("Default RegEx is local and LLM deep analysis remains explicit", TestLlmClassifierContractAsync),
+    ("List and detail presentations share immutable RegEx authority", TestRegexPresentationConsistencyAsync),
+    ("Production holdout sampling is reproducible, blinded, and contamination-aware", TestHoldoutSamplingAsync),
+    ("Offline cache reconciliation repairs every stale RegEx record idempotently", TestRegexCacheReconciliationAsync),
+    ("Default RegEx is local while LLM infrastructure remains dormant", TestLlmClassifierContractAsync),
     ("Semantic taxonomy and prompt identity are versioned", TestLlmFixtureMetricsAsync),
     ("First-admin bootstrap is hashed, expiring, single-use, and durable", TestAdminBootstrapLifecycleAsync),
     ("Concurrent first-admin claims grant exactly one account", TestAdminBootstrapConcurrencyAsync),
@@ -968,6 +971,15 @@ static async Task TestRegexRuleLifecycleAsync()
             report.Rules.All(item => item.UniqueTruePositives + item.RedundantTruePositives ==
                 item.TruePositiveMatches),
             $"RegEx evaluation metrics were incomplete or regressed: historical macro={report.HistoricalBenchmarkMacro.F1}, historical micro={report.HistoricalBenchmarkMicro.F1}.");
+        var ledger = await store.ListEvaluationRunsAsync();
+        Assert(report.DatasetRole == EvaluationDatasetRoles.DevelopmentRegression &&
+            report.DatasetDisplayName == "CURATED REGRESSION BENCHMARK" &&
+            report.PostingCount == 148 && report.ConceptDecisionCount == 1740 &&
+            report.PositiveDecisionCount + report.NegativeDecisionCount == report.ConceptDecisionCount &&
+            ledger.Any(item => item.EvaluationRunId == report.EvaluationRunId &&
+                item.DatasetRole == EvaluationDatasetRoles.DevelopmentRegression &&
+                item.DatasetDisplayName == "CURATED REGRESSION BENCHMARK"),
+            "The persisted evaluation ledger did not preserve dataset role, support, and provenance.");
 
         var exported = await store.ExportJsonAsync();
         using var json = JsonDocument.Parse(exported);
@@ -976,6 +988,126 @@ static async Task TestRegexRuleLifecycleAsync()
         var imported = await store.ImportCandidatesAsync(exported, "unit-test-import");
         Assert(imported.Count > 100 && imported.All(item => item.Status == SemanticRuleStatuses.Proposed),
             "Imported rules bypassed candidate/proposed validation.");
+    }
+    finally
+    {
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static Task TestRegexPresentationConsistencyAsync()
+{
+    var predictions = new[]
+    {
+        new SemanticConceptPrediction("role.software-engineering", true),
+        new SemanticConceptPrediction("technical.backend-development", false)
+    };
+    var classification = new SemanticJobClassification("content", 4, "taxonomy", "deterministic-regex",
+        "sqlite-regex-v1", "rules", "rules", "n/a", "n/a", "n/a", DateTimeOffset.UtcNow,
+        "classification", predictions, "regex-config-v1", "config");
+    var qwen = new QwenDeepAnalysis("content", "qwen", "tag", "digest", 4, "taxonomy",
+        "prompt", "prompt-hash", "qwen-result", DateTimeOffset.UtcNow,
+        [new("role.software-engineering", false), new("technical.backend-development", true)], "legacy");
+    var job = CachedJob("leidos", "presentation", "/presentation", "<p>Build software.</p>") with
+    {
+        DetectedConcepts = [new("technical.backend-development", "legacy persisted result")],
+        SemanticClassification = classification,
+        SemanticClassificationStatus = SemanticClassificationStates.Complete,
+        QwenDeepAnalysis = qwen,
+        DeepAnalysisRequest = new(LlmDeepAnalysisStatuses.Completed)
+    };
+    var list = JobListItem.FromJob(job);
+    var staleList = JobListItem.FromJob(job, semanticCurrent: false);
+    var detail = JobPresentation.AuthoritativeRegexDetail(job);
+    var repeated = JobPresentation.AuthoritativeRegexDetail(detail);
+    Assert(list.DetectedConcepts.Select(item => item.ConceptId).SequenceEqual(
+               detail.DetectedConcepts!.Select(item => item.ConceptId)) &&
+           detail.DetectedConcepts!.Select(item => item.ConceptId).SequenceEqual(
+               repeated.DetectedConcepts!.Select(item => item.ConceptId)) &&
+           staleList.SemanticClassificationStatus == SemanticClassificationStates.Pending &&
+           staleList.DetectedConcepts.Count == 0 &&
+           detail.QwenDeepAnalysis is null && detail.DeepAnalysisRequest is null,
+        "Selecting a job changed its authoritative concepts or exposed dormant LLM state.");
+    return Task.CompletedTask;
+}
+
+static async Task TestHoldoutSamplingAsync()
+{
+    var directory = Path.Combine(Path.GetTempPath(), "jsm-holdout-" + Guid.NewGuid().ToString("N"));
+    Directory.CreateDirectory(directory);
+    try
+    {
+        var jobs = Enumerable.Range(1, 12).Select(index =>
+            CachedJob(index % 2 == 0 ? "leidos" : "google", $"sample-{index}", $"/sample/{index}",
+                $"<p>Posting body {index}</p>") with
+            {
+                SemanticClassificationStatus = SemanticClassificationStates.Complete
+            }).ToArray();
+        var cache = new JobsCacheDocument(5, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, 0, jobs);
+        await File.WriteAllTextAsync(Path.Combine(directory, "cache.json"),
+            JsonSerializer.Serialize(cache, new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+        var plan = new HoldoutSamplingPlan(1, "All fixture production-cache postings before output inspection.",
+            null, null, null, "active-and-inactive", 5, "simple-random", 424242);
+        var first = await ProductionHoldoutSampler.SampleAsync(directory, plan);
+        var second = await ProductionHoldoutSampler.SampleAsync(directory, plan);
+        Assert(first.PlanFingerprint == second.PlanFingerprint &&
+               first.PopulationFingerprint == second.PopulationFingerprint &&
+               first.SampleFingerprint == second.SampleFingerprint &&
+               first.Examples.Select(item => item.EvaluationExampleId)
+                   .SequenceEqual(second.Examples.Select(item => item.EvaluationExampleId)) &&
+               first.Examples.All(item => item.LabelStatus == "unresolved" &&
+                   item.LabelProvenance == "unlabeled" && !item.DetectorOutputExposedDuringLabeling &&
+                   !item.UsedForRuleDevelopment && item.ExpectedPresent is null &&
+                   item.PredictionScore is null),
+            "The holdout draw was not reproducible or leaked detector output into labeling data.");
+        var rejected = false;
+        try { EvaluationDatasetValidation.ValidateForUnbiasedHoldoutScoring(first.Examples[0]); }
+        catch (InvalidDataException) { rejected = true; }
+        Assert(rejected, "An unlabeled holdout example was allowed into unbiased scoring.");
+    }
+    finally
+    {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static async Task TestRegexCacheReconciliationAsync()
+{
+    var directory = Path.Combine(Path.GetTempPath(), "jsm-reconcile-" + Guid.NewGuid().ToString("N"));
+    Directory.CreateDirectory(directory);
+    try
+    {
+        var catalog = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+        using var store = new SqliteSemanticRuleStore(Path.Combine(directory, "regex-rules.db"), catalog);
+        store.Initialize(RepositoryAsset("LegacyJobConceptRules.json"));
+        var classifier = new RegexSemanticClassifier(store, catalog);
+        await classifier.InitializeAsync();
+        var cacheDirectory = Path.Combine(directory, "caches");
+        Directory.CreateDirectory(cacheDirectory);
+        var job = CachedJob("leidos", "stale-cache", "/stale-cache",
+            "<p>Software engineer building backend APIs.</p>") with
+        {
+            DetectedConcepts = [new("technical.frontend-development", "stale legacy value")],
+            SemanticClassificationStatus = SemanticClassificationStates.Pending
+        };
+        var cachePath = Path.Combine(cacheDirectory, "cache.json");
+        await File.WriteAllTextAsync(cachePath, JsonSerializer.Serialize(
+            new JobsCacheDocument(5, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, 0, [job]),
+            new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+        var first = await RegexCacheReconciler.ReconcileAsync(cacheDirectory, classifier, catalog);
+        var second = await RegexCacheReconciler.ReconcileAsync(cacheDirectory, classifier, catalog);
+        var revised = JsonSerializer.Deserialize<JobsCacheDocument>(await File.ReadAllTextAsync(cachePath),
+            new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+        var current = revised.Jobs.Single();
+        Assert(first.JobsInspected == 1 && first.StaleResultsFound == 1 &&
+               first.RecomputedResults == 1 && first.InconsistenciesRepaired == 1 &&
+               second.StaleResultsFound == 0 && second.RecomputedResults == 0 &&
+               current.SemanticClassificationStatus == SemanticClassificationStates.Complete &&
+               current.SemanticClassification?.ModelType == "deterministic-regex" &&
+               current.SemanticClassification.ModelDigest == classifier.RulesetFingerprint &&
+               current.DetectedConcepts!.Any(item => item.ConceptId == "role.software-engineering"),
+            "All-cache reconciliation was incomplete, non-idempotent, or retained stale authority.");
     }
     finally
     {

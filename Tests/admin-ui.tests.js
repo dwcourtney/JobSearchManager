@@ -18,7 +18,7 @@ assert.match(index,
   /id="administrator-bootstrap-section"[^>]*hidden[\s\S]*?id="administrator-bootstrap-code"[\s\S]*?minlength="8"[\s\S]*?maxlength="8"[\s\S]*?Claim Administrator/);
 assert.doesNotMatch(index, /annotation-labeling-ui|detector-evaluation-ui/,
   "Removed experimental Admin assets must not load.");
-assert.match(index, /app\.js\?v=42/);
+assert.match(index, /app\.js\?v=43/);
 
 assert.match(app, /synchronizeAdminNavigation\(account\.isAdmin === true\)/);
 assert.match(app, /if \(!isAdmin\)[\s\S]*?adminTab\?\.remove\(\)[\s\S]*?return;/,
@@ -32,15 +32,13 @@ assert.match(app,
 assert.match(app, /postAccountJson\("\/api\/account\/admin-bootstrap"/);
 assert.match(app, /fetch\("\/api\/admin\/status"/,
   "Admin Overview must verify its server authorization endpoint.");
-assert.match(app, /admin-overview-tab[\s\S]*?Overview[\s\S]*?admin-classifier-tab[\s\S]*?Classifier/,
-  "Admin must contain only useful Overview and Classifier subtabs.");
+assert.match(app, /admin-overview-tab[\s\S]*?Overview[\s\S]*?admin-classifier-tab[\s\S]*?RegEx Rules[\s\S]*?admin-evaluation-tab[\s\S]*?Evaluation/,
+  "Admin must separate operations, RegEx lifecycle, and evaluation evidence.");
 assert.match(app, /RegEx Rules[\s\S]*?Reclassify stale cache[\s\S]*?Validate and hot reload/);
-assert.match(app, /Deep Analyze with LLM/);
-assert.match(index, /✦<\/span> = LLM deep-analysis score/);
-assert.doesNotMatch(`${index}\n${app}`, /AI-generated|AI-powered/,
-  "The sparkle must identify optional LLM deep analysis, not AI versus non-AI.");
-assert.match(app, /Job Fit \$\{jobFit\.score\}\/10\$\{llmJobFit \? " ✦" : ""\}/,
-  "Only a current optional LLM result may add the sparkle to a Job Fit badge.");
+assert.doesNotMatch(`${index}\n${app}`, /Deep Analyze with LLM|LLM deep-analysis score|llmJobFit|evaluateLlmJobFit/,
+  "LLM execution and arbitration must be absent from the user-facing workflow.");
+assert.match(app, /CURATED REGRESSION BENCHMARK[\s\S]*?UNSEEN PRODUCTION HOLDOUT|datasetRoles/);
+assert.match(app, /Not production accuracy|not production accuracy/i);
 assert.match(app, /Job Fit TBD/);
 assert.match(app, /fetch\("\/api\/admin\/classifier\/backfill\/status"/);
 assert.match(app, /fetch\("\/api\/admin\/classifier\/backfill", \{ method: "POST" \}\)/);
@@ -60,6 +58,7 @@ assert.match(program,
 assert.match(program,
   /MapPost\("\/api\/admin\/classifier\/backfill"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)[\s\S]*?RequireRateLimiting\("state"\)/);
 assert.match(program, /MapPost\("\/api\/admin\/regex-rules\/evaluate"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)/);
+assert.match(program, /MapGet\("\/api\/admin\/evaluations"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)/);
 assert.match(program, /MapPost\("\/api\/admin\/regex-rules\/reload"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)/);
 assert.doesNotMatch(program, /api\/admin\/annotations/,
   "Removed annotation APIs must not remain reachable.");
@@ -75,4 +74,4 @@ assert.match(compose,
 assert.doesNotMatch(styles, /annotation-|detector-|training-data-/,
   "Removed experimental Admin styling must not remain.");
 
-console.log("All Admin role, RegEx lifecycle, and opt-in Qwen UI integration tests passed.");
+console.log("All Admin role, RegEx lifecycle, and evaluation UI integration tests passed.");

@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "populationDefinition": "All unique readable postings present in JSM production cache snapshots at sampling time, across configured companies, including active and inactive source states; deduplicated by stable posting ID plus content hash before any detector output is inspected.",
+  "sourceCompanies": null,
+  "minimumPostingDate": null,
+  "maximumPostingDate": null,
+  "availabilityCriteria": "active-and-inactive",
+  "sampleSize": 200,
+  "samplingMethod": "simple-random",
+  "randomSeed": 20260902
+}

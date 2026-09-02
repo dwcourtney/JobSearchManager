@@ -14,6 +14,7 @@ public sealed class RegexSemanticClassifier
     private readonly SqliteSemanticRuleStore _store;
     private readonly JobConceptCatalog _catalog;
     private readonly ConcurrentDictionary<string, long> _pendingUsage = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, long> _pendingTimeouts = new(StringComparer.Ordinal);
     private readonly SemaphoreSlim _reloadGate = new(1, 1);
     private CompiledRuleset? _current;
 
@@ -55,13 +56,15 @@ public sealed class RegexSemanticClassifier
         var corpus = string.Join('\n', [title ?? "", description]);
         var results = new Dictionary<string, DetectedJobConcept>(StringComparer.Ordinal);
         var matchedRuleIds = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
+        var timedOutRuleIds = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (var concept in _catalog.Concepts)
         {
             if (!current.ByConcept.TryGetValue(concept.Id, out var rules)) continue;
             var matched = new List<(CompiledRule Rule, string Evidence)>();
             var excluded = rules.Where(item => item.Rule.RuleType == SemanticRuleTypes.Exclusion)
-                .Select(item => (item, Match: FirstMatch(item, title ?? "", rejectLocalNegation: false)))
+                .Select(item => (item, Match: FirstMatch(item, title ?? "",
+                    rejectLocalNegation: false, Timeout)))
                 .Where(item => item.Match is not null)
                 .ToArray();
             if (excluded.Length > 0)
@@ -76,7 +79,8 @@ public sealed class RegexSemanticClassifier
                 var input = rule.Rule.Scope == SemanticRuleScopes.Title ? title ?? "" :
                     rule.Rule.Scope == SemanticRuleScopes.Posting ? description : corpus;
                 var match = FirstMatch(rule, input,
-                    rejectLocalNegation: rule.Rule.RuleType == SemanticRuleTypes.PositiveEvidence);
+                    rejectLocalNegation: rule.Rule.RuleType == SemanticRuleTypes.PositiveEvidence,
+                    Timeout);
                 if (match is not null) matched.Add((rule, NormalizeEvidence(match.Value)));
             }
 
@@ -87,7 +91,8 @@ public sealed class RegexSemanticClassifier
                 {
                     var input = item.Rule.Scope == SemanticRuleScopes.Title ? title ?? "" :
                         item.Rule.Scope == SemanticRuleScopes.Posting ? description : corpus;
-                    return (Rule: item, Match: FirstMatch(item, input, rejectLocalNegation: false));
+                    return (Rule: item, Match: FirstMatch(item, input,
+                        rejectLocalNegation: false, Timeout));
                 }).ToArray();
                 if (groupMatches.All(item => item.Match is not null))
                     matched.AddRange(groupMatches.Select(item => (item.Rule,
@@ -122,7 +127,7 @@ public sealed class RegexSemanticClassifier
         return new(SemanticRulesetFingerprint.PostingContentHash(title ?? "", description),
             current.Fingerprint, DateTimeOffset.UtcNow,
             results.Values.OrderBy(item => item.ConceptId, StringComparer.Ordinal).ToArray(),
-            matchedRuleIds);
+            matchedRuleIds, timedOutRuleIds.OrderBy(item => item, StringComparer.Ordinal).ToArray());
 
         void Count(IEnumerable<string> ids)
         {
@@ -130,19 +135,39 @@ public sealed class RegexSemanticClassifier
             foreach (var id in ids.Distinct(StringComparer.Ordinal))
                 _pendingUsage.AddOrUpdate(id, 1, (_, currentValue) => currentValue + 1);
         }
+
+        void Timeout(string id)
+        {
+            timedOutRuleIds.Add(id);
+            if (productionUsage)
+                _pendingTimeouts.AddOrUpdate(id, 1, (_, currentValue) => currentValue + 1);
+        }
     }
 
     public async Task FlushUsageAsync(CancellationToken cancellationToken = default)
     {
         var batch = new Dictionary<string, long>(StringComparer.Ordinal);
+        var timeoutBatch = new Dictionary<string, long>(StringComparer.Ordinal);
         foreach (var item in _pendingUsage)
             if (_pendingUsage.TryRemove(item.Key, out var count)) batch[item.Key] = count;
-        if (batch.Count == 0) return;
-        try { await _store.ApplyUsageAsync(batch, DateTimeOffset.UtcNow, cancellationToken); }
+        foreach (var item in _pendingTimeouts)
+            if (_pendingTimeouts.TryRemove(item.Key, out var count)) timeoutBatch[item.Key] = count;
+        if (batch.Count == 0 && timeoutBatch.Count == 0) return;
+        var usageApplied = false;
+        try
+        {
+            var now = DateTimeOffset.UtcNow;
+            await _store.ApplyUsageAsync(batch, now, cancellationToken);
+            usageApplied = true;
+            await _store.ApplyTimeoutsAsync(timeoutBatch, now, cancellationToken);
+        }
         catch
         {
-            foreach (var item in batch)
-                _pendingUsage.AddOrUpdate(item.Key, item.Value, (_, current) => current + item.Value);
+            if (!usageApplied)
+                foreach (var item in batch)
+                    _pendingUsage.AddOrUpdate(item.Key, item.Value, (_, current) => current + item.Value);
+            foreach (var item in timeoutBatch)
+                _pendingTimeouts.AddOrUpdate(item.Key, item.Value, (_, current) => current + item.Value);
             throw;
         }
     }
@@ -172,7 +197,8 @@ public sealed class RegexSemanticClassifier
         catch (RegexMatchTimeoutException) { return true; }
     }
 
-    private static Match? FirstMatch(CompiledRule rule, string input, bool rejectLocalNegation)
+    private static Match? FirstMatch(CompiledRule rule, string input, bool rejectLocalNegation,
+        Action<string> onTimeout)
     {
         try
         {
@@ -183,6 +209,7 @@ public sealed class RegexSemanticClassifier
         {
             // A recovered fallback pattern is always bounded. Under transient CPU pressure,
             // isolate its timeout as a non-match instead of discarding every other rule result.
+            onTimeout(rule.Rule.RuleId);
         }
         return null;
     }

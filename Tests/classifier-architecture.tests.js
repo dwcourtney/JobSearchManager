@@ -59,7 +59,8 @@ assert.doesNotMatch(adapter, /torch|transformers|deberta|\/classify/i);
 assert.match(adapterDockerfile, /python:3\.12\.12-alpine3\.23@sha256:/);
 assert.match(adapterDockerfile, /COPY JobConceptCatalog\.json/);
 
-assert.match(program, /\/api\/jobs\/deep-analysis/);
+assert.doesNotMatch(program, /MapPost\("\/api\/jobs\/deep-analysis/,
+  "Normal production HTTP routes must not expose manual LLM execution.");
 assert.match(program, /\/api\/admin\/regex-rules/);
 assert.match(models, /LlmDeepAnalysisRequestState/);
 assert.match(models, /Queued[\s\S]*?Running[\s\S]*?Completed[\s\S]*?Failed/);
@@ -74,4 +75,4 @@ assert.match(ollamaRuntime, /f96e7aa0513b9973a0ccc71be414c2ecb9d65b1a/);
 assert.match(ollamaRuntime, /USER 65532:65532/);
 assert.match(ollamaRuntime, /HEALTHCHECK[\s\S]*?ollama[\s\S]*?list/);
 
-console.log("SQLite RegEx default and opt-in Qwen architecture tests: PASS");
+console.log("SQLite RegEx authority with dormant Qwen infrastructure tests: PASS");

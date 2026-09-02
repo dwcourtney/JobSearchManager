@@ -104,7 +104,6 @@ const state = {
   refreshPollingGeneration: 0,
   overlayHideTimer: null,
   copyFeedbackTimer: null,
-  deepAnalysisTimer: null,
   focusBeforeLoading: null,
   sourceMetadataLoading: false,
   sourceRequestGeneration: 0,
@@ -140,8 +139,11 @@ const elements = {
   adminStatus: null,
   adminOverviewTab: null,
   adminClassifierTab: null,
+  adminEvaluationTab: null,
   adminOverviewPanel: null,
   adminClassifierPanel: null,
+  adminEvaluationPanel: null,
+  adminEvaluationContent: null,
   adminClassifierStatus: null,
   adminClassifierBackfill: null,
   adminRegexStatusFilter: null,
@@ -398,11 +400,6 @@ const elements = {
   copyPostingButton: document.querySelector("#copy-posting-button"),
   copyPostingLabel: document.querySelector("#copy-posting-label"),
   copyPostingStatus: document.querySelector("#copy-posting-status"),
-  qwenDeepAnalysisButton: document.querySelector("#qwen-deep-analysis-button"),
-  qwenDeepAnalysisResult: document.querySelector("#qwen-deep-analysis-result"),
-  llmDeepAnalysisScore: document.querySelector("#llm-deep-analysis-score"),
-  qwenDeepAnalysisProvenance: document.querySelector("#qwen-deep-analysis-provenance"),
-  qwenDeepAnalysisText: document.querySelector("#qwen-deep-analysis-text"),
   sourcePostingLink: document.querySelector("#source-posting-link")
 };
 
@@ -695,7 +692,6 @@ async function initialize() {
   elements.accountSessionPersistence.addEventListener("change", updateSessionPersistence);
   document.querySelector(".detail-tabs").addEventListener("keydown", handleDetailTabKeydown);
   elements.copyPostingButton.addEventListener("click", copySelectedJobPosting);
-  elements.qwenDeepAnalysisButton.addEventListener("click", deepAnalyzeSelectedJob);
   document.addEventListener("visibilitychange", handleVisibilityChange);
   elements.sourcePostingLink.addEventListener("click", () => {
     const job = state.jobs.find(item => item.stableId === state.selectedJobId);
@@ -1012,8 +1008,11 @@ function synchronizeAdminNavigation(isAdmin) {
     elements.adminStatus = null;
     elements.adminOverviewTab = null;
     elements.adminClassifierTab = null;
+    elements.adminEvaluationTab = null;
     elements.adminOverviewPanel = null;
     elements.adminClassifierPanel = null;
+    elements.adminEvaluationPanel = null;
+    elements.adminEvaluationContent = null;
     elements.adminClassifierStatus = null;
     elements.adminClassifierBackfill = null;
     state.adminStatusLoaded = false;
@@ -1065,9 +1064,19 @@ function synchronizeAdminNavigation(isAdmin) {
   classifierTab.setAttribute("aria-controls", "admin-classifier-panel");
   classifierTab.tabIndex = -1;
   classifierTab.textContent = "RegEx Rules";
+  const evaluationTab = document.createElement("button");
+  evaluationTab.id = "admin-evaluation-tab";
+  evaluationTab.className = "detail-tab";
+  evaluationTab.type = "button";
+  evaluationTab.setAttribute("role", "tab");
+  evaluationTab.setAttribute("aria-selected", "false");
+  evaluationTab.setAttribute("aria-controls", "admin-evaluation-panel");
+  evaluationTab.tabIndex = -1;
+  evaluationTab.textContent = "Evaluation";
   overviewTab.addEventListener("click", () => showAdminSection("overview", true));
   classifierTab.addEventListener("click", () => showAdminSection("classifier", true));
-  tabs.append(overviewTab, classifierTab);
+  evaluationTab.addEventListener("click", () => showAdminSection("evaluation", true));
+  tabs.append(overviewTab, classifierTab, evaluationTab);
 
   const overviewPanel = document.createElement("section");
   overviewPanel.id = "admin-overview-panel";
@@ -1096,7 +1105,7 @@ function synchronizeAdminNavigation(isAdmin) {
   const classifierTitle = document.createElement("h3");
   classifierTitle.textContent = "Lifecycle-managed RegEx Rules";
   const classifierIntro = document.createElement("p");
-  classifierIntro.textContent = "Inspect active, review-due, and retired rules. SQLite is authoritative; rule changes are validated before hot reload. LLM analysis remains opt-in per job.";
+  classifierIntro.textContent = "Inspect active, review-due, and retired rules. SQLite is authoritative; rule changes are validated before hot reload. RegEx is the sole Job Fit classifier.";
   const classifierStatus = document.createElement("p");
   classifierStatus.className = "settings-status";
   classifierStatus.setAttribute("role", "status");
@@ -1107,7 +1116,7 @@ function synchronizeAdminNavigation(isAdmin) {
   backfill.addEventListener("click", () => void startClassifierBackfill());
   const evaluate = document.createElement("button");
   evaluate.type = "button";
-  evaluate.textContent = "Run deterministic evaluation";
+  evaluate.textContent = "Run curated regression benchmark";
   evaluate.addEventListener("click", () => void evaluateRegexRules());
   const reload = document.createElement("button");
   reload.type = "button";
@@ -1142,7 +1151,20 @@ function synchronizeAdminNavigation(isAdmin) {
   }
   classifierPanel.append(classifierTitle, classifierIntro, classifierStatus,
     backfill, evaluate, reload, filters, rulesList);
-  surface.append(tabs, overviewPanel, classifierPanel);
+  const evaluationPanel = document.createElement("section");
+  evaluationPanel.id = "admin-evaluation-panel";
+  evaluationPanel.className = "settings-section admin-subtab-panel";
+  evaluationPanel.setAttribute("role", "tabpanel");
+  evaluationPanel.setAttribute("aria-labelledby", "admin-evaluation-tab");
+  evaluationPanel.hidden = true;
+  const evaluationTitle = document.createElement("h3");
+  evaluationTitle.textContent = "RegEx Evaluation Evidence";
+  const evaluationIntro = document.createElement("p");
+  evaluationIntro.textContent = "Metrics stay separated by dataset role. F1 is not accuracy, and known-case regression evidence is not an unseen production estimate.";
+  const evaluationContent = document.createElement("div");
+  evaluationContent.className = "admin-evaluation-list";
+  evaluationPanel.append(evaluationTitle, evaluationIntro, evaluationContent);
+  surface.append(tabs, overviewPanel, classifierPanel, evaluationPanel);
   view.append(surface);
   elements.settingsView.after(view);
 
@@ -1151,8 +1173,11 @@ function synchronizeAdminNavigation(isAdmin) {
   elements.adminStatus = status;
   elements.adminOverviewTab = overviewTab;
   elements.adminClassifierTab = classifierTab;
+  elements.adminEvaluationTab = evaluationTab;
   elements.adminOverviewPanel = overviewPanel;
   elements.adminClassifierPanel = classifierPanel;
+  elements.adminEvaluationPanel = evaluationPanel;
+  elements.adminEvaluationContent = evaluationContent;
   elements.adminClassifierStatus = classifierStatus;
   elements.adminClassifierBackfill = backfill;
   elements.adminRegexStatusFilter = statusFilter;
@@ -1163,24 +1188,75 @@ function synchronizeAdminNavigation(isAdmin) {
   if (window.location.hash === "#admin-classifier") {
     showView("admin", false, { bypassSourceGuard: true });
     showAdminSection("classifier", false);
+  } else if (window.location.hash === "#admin-evaluation") {
+    showView("admin", false, { bypassSourceGuard: true });
+    showAdminSection("evaluation", false);
   }
 }
 
 function showAdminSection(section, updateLocation = false) {
   const classifierSelected = section === "classifier";
-  state.activeAdminTab = classifierSelected ? "classifier" : "overview";
-  elements.adminOverviewPanel.hidden = classifierSelected;
+  const evaluationSelected = section === "evaluation";
+  state.activeAdminTab = classifierSelected ? "classifier" : evaluationSelected ? "evaluation" : "overview";
+  elements.adminOverviewPanel.hidden = classifierSelected || evaluationSelected;
   elements.adminClassifierPanel.hidden = !classifierSelected;
-  elements.adminOverviewTab.classList.toggle("active", !classifierSelected);
+  elements.adminEvaluationPanel.hidden = !evaluationSelected;
+  elements.adminOverviewTab.classList.toggle("active", !classifierSelected && !evaluationSelected);
   elements.adminClassifierTab.classList.toggle("active", classifierSelected);
-  elements.adminOverviewTab.setAttribute("aria-selected", String(!classifierSelected));
+  elements.adminEvaluationTab.classList.toggle("active", evaluationSelected);
+  elements.adminOverviewTab.setAttribute("aria-selected", String(!classifierSelected && !evaluationSelected));
   elements.adminClassifierTab.setAttribute("aria-selected", String(classifierSelected));
-  elements.adminOverviewTab.tabIndex = classifierSelected ? -1 : 0;
+  elements.adminEvaluationTab.setAttribute("aria-selected", String(evaluationSelected));
+  elements.adminOverviewTab.tabIndex = classifierSelected || evaluationSelected ? -1 : 0;
   elements.adminClassifierTab.tabIndex = classifierSelected ? 0 : -1;
+  elements.adminEvaluationTab.tabIndex = evaluationSelected ? 0 : -1;
   if (classifierSelected) void loadClassifierStatus();
+  if (evaluationSelected) void loadEvaluationLedger();
   if (updateLocation) {
-    history.replaceState(null, "", `${window.location.pathname}${window.location.search}${classifierSelected ? "#admin-classifier" : ""}`);
+    const hash = classifierSelected ? "#admin-classifier" : evaluationSelected ? "#admin-evaluation" : "";
+    history.replaceState(null, "", `${window.location.pathname}${window.location.search}${hash}`);
   }
+}
+
+async function loadEvaluationLedger() {
+  if (!elements.adminEvaluationContent) return;
+  elements.adminEvaluationContent.textContent = "Loading evaluation ledger…";
+  try {
+    const response = await fetch("/api/admin/evaluations", { cache: "no-store" });
+    if (!response.ok) throw new Error("Evaluation ledger could not be loaded.");
+    const result = await response.json();
+    elements.adminEvaluationContent.replaceChildren();
+    for (const role of result.datasetRoles) {
+      const latest = result.runs.find(run => run.datasetRole === role.role);
+      const article = document.createElement("article");
+      article.className = "settings-section";
+      const heading = document.createElement("h4");
+      heading.textContent = role.displayName;
+      const status = document.createElement("strong");
+      status.textContent = latest ? "SCORED" : "NOT YET AVAILABLE";
+      const warning = document.createElement("p");
+      warning.textContent = role.warning;
+      article.append(heading, status, warning);
+      if (latest) {
+        const support = document.createElement("p");
+        support.textContent = `Dataset role ${latest.datasetRole} · ${latest.postingCount} postings · ${latest.conceptDecisionCount} concept decisions (${latest.positiveDecisionCount} positive, ${latest.negativeDecisionCount} negative) · ${latest.labelProvenance}.`;
+        const metrics = document.createElement("p");
+        metrics.textContent = `Macro P/R/F1 ${formatMetric(latest.macroPrecision)} / ${formatMetric(latest.macroRecall)} / ${formatMetric(latest.macroF1)} · Micro P/R/F1 ${formatMetric(latest.microPrecision)} / ${formatMetric(latest.microRecall)} / ${formatMetric(latest.microF1)}.`;
+        const historical = document.createElement("p");
+        historical.textContent = `Preserved historical 8-concept subset — Macro P/R/F1 ${formatMetric(latest.historicalMacroPrecision)} / ${formatMetric(latest.historicalMacroRecall)} / ${formatMetric(latest.historicalMacroF1)} · Micro P/R/F1 ${formatMetric(latest.historicalMicroPrecision)} / ${formatMetric(latest.historicalMicroRecall)} / ${formatMetric(latest.historicalMicroF1)}.`;
+        const provenance = document.createElement("p");
+        provenance.textContent = `Dataset ${latest.datasetFingerprint} · ruleset ${latest.rulesetFingerprint} · sampling ${latest.samplingMethod} · seed ${latest.randomSeed ?? "n/a"} · ${formatLongDate(latest.evaluatedUtc) || latest.evaluatedUtc}.`;
+        article.append(support, metrics, historical, provenance);
+      }
+      elements.adminEvaluationContent.append(article);
+    }
+  } catch (error) {
+    elements.adminEvaluationContent.textContent = error.message || String(error);
+  }
+}
+
+function formatMetric(value) {
+  return Number.isFinite(value) ? value.toFixed(6) : "undefined";
 }
 async function loadAdminStatus() {
   if (!elements.adminStatus || state.adminStatusLoaded) return;
@@ -1213,7 +1289,10 @@ async function loadClassifierStatus(force = false) {
     const result = await cacheResponse.json();
     state.adminRegexRules = await rulesResponse.json();
     state.classifierStatusLoaded = true;
-    elements.adminClassifierStatus.textContent = `${overview.activeRuleCount} runtime rules · fingerprint ${overview.rulesetFingerprint.slice(0, 12)}… · ${result.current} of ${result.total} cached postings current · ${result.pending} stale${result.running ? " · reclassification running" : ""}.`;
+    const reconciliation = result.jobsInspected > 0
+      ? ` · last reconciliation: ${result.jobsInspected} inspected, ${result.staleResultsFound} stale, ${result.recomputedResults} recomputed, ${result.inconsistenciesRepaired} repaired in ${Math.round(result.elapsedMilliseconds)} ms`
+      : "";
+    elements.adminClassifierStatus.textContent = `${overview.activeRuleCount} runtime rules · fingerprint ${overview.rulesetFingerprint.slice(0, 12)}… · ${result.current} of ${result.total} cached postings current · ${result.pending} stale${result.running ? " · reclassification running" : reconciliation}.`;
     elements.adminClassifierBackfill.disabled = result.running || result.pending === 0;
     renderAdminRegexRules();
   } catch (error) {
@@ -1323,14 +1402,14 @@ async function reloadRegexRules() {
 }
 
 async function evaluateRegexRules() {
-  elements.adminClassifierStatus.textContent = "Running deterministic corpus evaluation…";
+  elements.adminClassifierStatus.textContent = "Running CURATED REGRESSION BENCHMARK…";
   const response = await fetch("/api/admin/regex-rules/evaluate", { method: "POST" });
   if (!response.ok) {
     elements.adminClassifierStatus.textContent = "RegEx evaluation failed.";
     return;
   }
   const result = await response.json();
-  elements.adminClassifierStatus.textContent = `Evaluation ${result.evaluationRunId.slice(0, 8)} · historical macro F1 ${result.historicalBenchmarkMacro.f1.toFixed(6)} · micro F1 ${result.historicalBenchmarkMicro.f1.toFixed(6)} · full-corpus macro F1 ${result.macro.f1.toFixed(6)}.`;
+  elements.adminClassifierStatus.textContent = `CURATED REGRESSION BENCHMARK ${result.evaluationRunId.slice(0, 8)} · ${result.postingCount} postings · ${result.conceptDecisionCount} concept decisions · macro F1 ${formatMetric(result.historicalBenchmarkMacro.f1)} · micro F1 ${formatMetric(result.historicalBenchmarkMicro.f1)}. Not production accuracy.`;
 }
 async function claimAdministrator(event) {
   event.preventDefault();
@@ -3753,24 +3832,6 @@ function evaluateJobFit(job) {
     state.jobFitConcepts);
 }
 
-function evaluateLlmJobFit(job) {
-  const analysis = job?.qwenDeepAnalysis;
-  const current = job?.semanticClassification;
-  if (!analysis || job?.semanticClassificationStatus !== "complete" ||
-      analysis.postingContentHash !== current?.postingContentHash ||
-      analysis.taxonomyFingerprint !== current?.taxonomyFingerprint ||
-      !Array.isArray(analysis.predictions) || analysis.predictions.length !== 85) return null;
-  return JobFit.evaluate(
-    analysis.predictions.filter(item => item?.matched === true)
-      .map(item => ({ conceptId: item.conceptId, evidence: "LLM deep analysis" })),
-    {
-      enabled: state.jobFitEnabled,
-      signals: state.jobFitSignals,
-      groupHardConflicts: state.jobFitGroupHardConflicts
-    },
-    state.jobFitConcepts);
-}
-
 function createJobListItem(job) {
   const card = document.createElement("div");
   card.className = "job-card";
@@ -3856,17 +3917,13 @@ function createJobListItem(job) {
       closure.closedAt ? `Application closed ${formatDateTime(closure.closedAt)}.` : "Application closed."
     );
   }
-  const defaultJobFit = evaluateJobFit(job);
-  const llmJobFit = evaluateLlmJobFit(job);
-  const jobFit = llmJobFit || defaultJobFit;
+  const jobFit = evaluateJobFit(job);
   if (jobFit) {
     appendJobBadge(
       badges,
-      `job-fit-badge ${JobFit.scoreClass(jobFit.score)}${llmJobFit ? " llm-deep-analysis" : ""}`,
-      `Job Fit ${jobFit.score}/10${llmJobFit ? " ✦" : ""}`,
-      llmJobFit
-        ? `${JobFit.tooltip(jobFit)}\n\n✦ Optional LLM deep-analysis score; the default score remains available in Job Fit details.`
-        : JobFit.tooltip(jobFit));
+      `job-fit-badge ${JobFit.scoreClass(jobFit.score)}`,
+      `Job Fit ${jobFit.score}/10`,
+      JobFit.tooltip(jobFit));
   } else if (state.jobFitEnabled) {
     appendJobBadge(
       badges,
@@ -4450,7 +4507,7 @@ function appendJobFitCalculationRow(list, label, value, className = "") {
 }
 
 function renderJobFitDetail(result, job) {
-  elements.jobFitDetailTab.hidden = !result && !job?.qwenDeepAnalysis;
+  elements.jobFitDetailTab.hidden = !result;
   elements.jobFitDetailContent.replaceChildren();
   if (!result) {
     if (state.detailTab === "fit") state.detailTab = "glance";
@@ -4460,7 +4517,7 @@ function renderJobFitDetail(result, job) {
   const scoreSection = document.createElement("section");
   scoreSection.className = "job-fit-detail-section job-fit-score-section";
   const scoreHeading = document.createElement("h3");
-  scoreHeading.textContent = evaluateLlmJobFit(job) ? "Default Job Fit" : "Job Fit";
+  scoreHeading.textContent = "Job Fit";
   const score = document.createElement("strong");
   score.className = `job-fit-detail-score ${JobFit.scoreClass(result.score)}`;
   score.textContent = `${result.score} / 10`;
@@ -4567,8 +4624,6 @@ function renderDetail(job) {
     state.renderedDetailJobId = null;
     resetCopyFeedback();
     elements.copyPostingButton.disabled = true;
-    elements.qwenDeepAnalysisButton.disabled = true;
-    elements.qwenDeepAnalysisResult.hidden = true;
     elements.detailDescription.replaceChildren();
     return;
   }
@@ -4598,30 +4653,6 @@ function renderDetail(job) {
     : "";
   elements.detailHiddenBadge.hidden = detailWorkflowState !== JobWorkflowState.STATES.hidden;
   elements.copyPostingButton.disabled = !job.descriptionHtml;
-  const deepAnalysisStatus = job.deepAnalysisRequest?.status ||
-    (job.qwenDeepAnalysis ? "completed" : "notRequested");
-  const deepAnalysisRunning = ["queued", "running"].includes(deepAnalysisStatus);
-  elements.qwenDeepAnalysisButton.disabled = !job.descriptionHtml || deepAnalysisRunning;
-  const llmJobFit = evaluateLlmJobFit(job);
-  elements.qwenDeepAnalysisButton.textContent = deepAnalysisStatus === "queued"
-    ? "LLM deep analysis queued…"
-    : deepAnalysisStatus === "running"
-      ? "LLM deep analysis running…"
-      : llmJobFit
-    ? "Refresh LLM Deep Analysis"
-    : "Deep Analyze with LLM";
-  elements.qwenDeepAnalysisResult.hidden = !llmJobFit;
-  elements.llmDeepAnalysisScore.className = llmJobFit
-    ? `job-fit-detail-score ${JobFit.scoreClass(llmJobFit.score)} llm-deep-analysis-score`
-    : "job-fit-detail-score";
-  elements.llmDeepAnalysisScore.textContent = llmJobFit ? `${llmJobFit.score} / 10 ✦` : "";
-  elements.qwenDeepAnalysisProvenance.textContent = llmJobFit
-    ? `Opt-in LLM result from ${job.qwenDeepAnalysis.modelTag}; the default Job Fit result remains separate.`
-    : deepAnalysisStatus === "failed"
-      ? job.deepAnalysisRequest?.error || "LLM deep analysis failed."
-      : deepAnalysisRunning ? "The request is persisted; this page will update when it finishes." : "";
-  elements.qwenDeepAnalysisText.textContent = llmJobFit ? job.qwenDeepAnalysis.analysis : "";
-  if (deepAnalysisRunning) scheduleDeepAnalysisPoll(job.stableId);
   if (!job.descriptionHtml) {
     resetCopyFeedback();
     elements.copyPostingButton.title = "Full job posting is unavailable";
@@ -4825,58 +4856,6 @@ function resetCopyFeedback() {
   elements.copyPostingLabel.textContent = "Copy posting";
   elements.copyPostingButton.title = "Copy full job posting";
   elements.copyPostingStatus.textContent = "";
-}
-
-async function deepAnalyzeSelectedJob() {
-  const job = state.jobs.find(item => item.stableId === state.selectedJobId);
-  if (!job || !job.descriptionHtml) return;
-  elements.qwenDeepAnalysisButton.disabled = true;
-  elements.qwenDeepAnalysisButton.textContent = "LLM deep analysis running…";
-  job.deepAnalysisRequest = { status: "queued", requestedUtc: new Date().toISOString() };
-  scheduleDeepAnalysisPoll(job.stableId);
-  try {
-    const response = await fetch("/api/jobs/deep-analysis", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ stableId: job.stableId })
-    });
-    if (!response.ok) throw new Error("LLM deep analysis is currently unavailable.");
-    job.qwenDeepAnalysis = await response.json();
-    job.deepAnalysisRequest = {
-      status: "completed",
-      completedUtc: job.qwenDeepAnalysis.analyzedUtc,
-      resultFingerprint: job.qwenDeepAnalysis.classificationFingerprint
-    };
-    renderDetail(job);
-    showDetailTab("fit", true);
-  } catch (error) {
-    showClientError(error);
-    elements.qwenDeepAnalysisButton.disabled = false;
-    elements.qwenDeepAnalysisButton.textContent = "Deep Analyze with LLM";
-  }
-}
-
-function scheduleDeepAnalysisPoll(stableId) {
-  if (state.deepAnalysisTimer) return;
-  state.deepAnalysisTimer = setTimeout(async () => {
-    state.deepAnalysisTimer = null;
-    if (state.selectedJobId !== stableId) return;
-    try {
-      const response = await fetch(
-        `/api/jobs/detail?stableId=${encodeURIComponent(stableId)}`, { cache: "no-store" });
-      if (!response.ok) return;
-      const detail = await response.json();
-      const index = state.jobs.findIndex(item => item.stableId === stableId);
-      if (index < 0) return;
-      state.jobs[index] = { ...state.jobs[index], ...detail };
-      renderDetail(state.jobs[index]);
-      if (["queued", "running"].includes(detail.deepAnalysisRequest?.status)) {
-        scheduleDeepAnalysisPoll(stableId);
-      }
-    } catch {
-      scheduleDeepAnalysisPoll(stableId);
-    }
-  }, 2000);
 }
 
 function renderQualificationFit(

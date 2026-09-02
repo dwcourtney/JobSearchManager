@@ -10,8 +10,8 @@ loopback-only Windows desktop mode and a hardened Linux/container deployment.
 - **Persistence:** isolated filesystem workspaces plus a lifecycle-managed SQLite RegEx rule store.
 - **Default Semantic Job Fit:** a deterministic in-process RegEx classifier evaluates the canonical
   85-concept taxonomy. It requires no model service, GPU, or network request.
-- **Optional deep analysis:** pinned Qwen/Ollama runs only after a user selects **Deep Analyze with
-  LLM** for one posting. Its queued/running/completed/failed lifecycle and result survive refresh.
+- **Dormant deep-analysis infrastructure:** pinned Qwen/Ollama remains installed for possible later
+  restoration, but no normal UI or HTTP route invokes it and its stored results do not affect Job Fit.
 - **Deterministic analysis:** salary, clearance, credentials, education, work authorization, remote
   metadata, and extended-location requirements remain ordinary application code.
 - **Administration:** admins can inspect, filter, evaluate, approve, activate, review, retire,
@@ -35,7 +35,7 @@ Ollama, a GPU, or an account.
 ## Linux/container mode
 
 `compose.yaml` is the development example. Production uses `deploy/compose.curiosity.yaml` with exact
-immutable image references. JSM, the optional deep-analysis bridge, and Ollama are non-root,
+immutable image references. JSM, the dormant deep-analysis bridge, and Ollama are non-root,
 read-only, capability-dropped containers. The LLM network is internal and publishes no host port.
 
 Important configuration:
@@ -62,6 +62,11 @@ Persisted job classifications carry posting, ruleset, taxonomy, and classificati
 Changed text, taxonomy, rules, or detector configuration invalidates only the affected cached result.
 Rule match counters are buffered and periodically committed; evaluation traffic never increments
 production usage.
+
+List and detail views project the same current RegEx classification, so selecting a job is
+observational. The Admin evaluation ledger separates the **CURATED REGRESSION BENCHMARK**,
+validation, and unseen production holdout. See `docs/regex-evaluation-methodology.md` for sampling,
+label provenance, contamination, support, metrics, and the PR-curve limitation.
 
 Candidate rules start as proposed. Comparative fixed-corpus evidence must be persisted before they
 can become validated, and an admin must activate them separately. See `docs/semantic-classifier.md`.

@@ -14,16 +14,31 @@ public sealed record RegexValidationFixture(
 
 internal sealed record RegexValidationDocument(
     int Version, IReadOnlyList<RegexValidationFixture> Fixtures,
-    IReadOnlyDictionary<string, IReadOnlyList<string>>? LabelScopes = null);
+    IReadOnlyDictionary<string, IReadOnlyList<string>>? LabelScopes = null,
+    string DatasetId = "curated-regression-v1",
+    string DatasetRole = EvaluationDatasetRoles.DevelopmentRegression,
+    string DisplayName = "CURATED REGRESSION BENCHMARK",
+    string Purpose = "Known-case detector regression protection and development evidence.",
+    string LabelProvenance = "mixed-reviewed-curation",
+    string SamplingMethod = "curated-known-cases-not-random",
+    long? RandomSeed = null,
+    string? Notes = null);
+
+public static class EvaluationDatasetRoles
+{
+    public const string DevelopmentRegression = "development-regression";
+    public const string Validation = "validation";
+    public const string ProductionHoldout = "production-holdout";
+}
 
 public sealed record RegexRuleEvaluationResult(
     string RuleId, int ValidationMatchCount, int TruePositiveMatches,
     int FalsePositiveMatches, double? Precision, int UniqueTruePositives,
     int RedundantTruePositives, IReadOnlyList<string> RepresentativeExamples,
-    IReadOnlyList<string> FalsePositiveExamples);
+    IReadOnlyList<string> FalsePositiveExamples, int TimeoutCount = 0);
 
 public sealed record RegexConceptEvaluationResult(
-    string ConceptId, int TruePositive, int FalsePositive, int FalseNegative, int TrueNegative,
+    string ConceptId, int Support, int TruePositive, int FalsePositive, int FalseNegative, int TrueNegative,
     double? Precision, double? Recall, double? F1);
 
 public sealed record RegexAggregateEvaluation(
@@ -31,13 +46,17 @@ public sealed record RegexAggregateEvaluation(
 
 public sealed record RegexEvaluationReport(
     string EvaluationRunId, DateTimeOffset EvaluatedUtc, string RulesetFingerprint,
-    string ValidationCorpusFingerprint, string TaxonomyFingerprint,
+    string ValidationCorpusFingerprint, string TaxonomyFingerprint, int TaxonomyVersion,
     string ConfigurationFingerprint, int FixtureCount, int RuleCount,
     IReadOnlyList<RegexRuleEvaluationResult> Rules,
     IReadOnlyList<RegexConceptEvaluationResult> Concepts,
     RegexAggregateEvaluation Macro, RegexAggregateEvaluation Micro,
     RegexAggregateEvaluation HistoricalBenchmarkMacro,
-    RegexAggregateEvaluation HistoricalBenchmarkMicro);
+    RegexAggregateEvaluation HistoricalBenchmarkMicro,
+    string DatasetId, string DatasetRole, string DatasetDisplayName, string Purpose,
+    string LabelProvenance, string SamplingMethod, long? RandomSeed,
+    int PostingCount, int ConceptDecisionCount, int PositiveDecisionCount,
+    int NegativeDecisionCount, string EvaluationStatus, string? Notes);
 
 public sealed class RegexEvaluationService
 {
@@ -89,6 +108,12 @@ public sealed class RegexEvaluationService
             var extended = _extended.Analyze(fixture.Title, "", [], html);
             var prediction = _classifier.Classify(fixture.Title, html, remote, extended,
                 productionUsage: false);
+            foreach (var ruleId in prediction.TimedOutRuleIds)
+            {
+                if (!ruleMatches.TryGetValue(ruleId, out var timedOut))
+                    ruleMatches[ruleId] = timedOut = new();
+                timedOut.Timeouts++;
+            }
             var predicted = prediction.Concepts.Select(item => item.ConceptId)
                 .ToHashSet(StringComparer.Ordinal);
             foreach (var label in Expand(document, fixture))
@@ -129,7 +154,7 @@ public sealed class RegexEvaluationService
                     value.TruePositives, value.FalsePositives,
                     Divide(value.TruePositives, value.TruePositives + value.FalsePositives),
                     value.UniqueTruePositives, value.RedundantTruePositives,
-                    value.Examples, value.FalsePositiveExamples);
+                    value.Examples, value.FalsePositiveExamples, value.Timeouts);
             }).OrderBy(item => item.RuleId, StringComparer.Ordinal).ToArray();
         var concepts = labels.GroupBy(item => item.ConceptId, StringComparer.Ordinal)
             .Select(group => Calculate(group.Key, group.ToArray()))
@@ -155,9 +180,13 @@ public sealed class RegexEvaluationService
         var report = new RegexEvaluationReport(Guid.NewGuid().ToString("N"), DateTimeOffset.UtcNow,
             _classifier.RulesetFingerprint,
             Convert.ToHexString(SHA256.HashData(normalized)).ToLowerInvariant(),
-            _catalog.Fingerprint, ConfigurationFingerprint(_store.Policy), document.Fixtures.Count,
+            _catalog.Fingerprint, _catalog.Version, ConfigurationFingerprint(_store.Policy), document.Fixtures.Count,
             ruleResults.Length, ruleResults, concepts, macro, micro,
-            historical.Macro, historical.Micro);
+            historical.Macro, historical.Micro,
+            document.DatasetId, document.DatasetRole, document.DisplayName, document.Purpose,
+            document.LabelProvenance, document.SamplingMethod, document.RandomSeed,
+            document.Fixtures.Count, labels.Count, labels.Count(item => item.Expected),
+            labels.Count(item => !item.Expected), "scored", document.Notes);
         if (persist) await _store.SaveEvaluationAsync(report, cancellationToken);
         return report;
     }
@@ -212,6 +241,11 @@ public sealed class RegexEvaluationService
     {
         if (document.Version < 1 || document.Fixtures.Count == 0)
             throw new InvalidDataException("The RegEx validation corpus is empty.");
+        if (document.DatasetRole != EvaluationDatasetRoles.DevelopmentRegression ||
+            string.IsNullOrWhiteSpace(document.DatasetId) || string.IsNullOrWhiteSpace(document.Purpose) ||
+            string.IsNullOrWhiteSpace(document.LabelProvenance) ||
+            string.IsNullOrWhiteSpace(document.SamplingMethod))
+            throw new InvalidDataException("The RegEx corpus must declare honest development/regression provenance.");
         var scopes = document.LabelScopes ?? new Dictionary<string, IReadOnlyList<string>>();
         if (scopes.Values.SelectMany(item => item).Any(id => !_catalog.Contains(id)))
             throw new InvalidDataException("The RegEx validation corpus references an unknown concept.");
@@ -248,7 +282,7 @@ public sealed class RegexEvaluationService
         var tn = values.Count(item => !item.Expected && !item.Predicted);
         var precision = Divide(tp, tp + fp);
         var recall = Divide(tp, tp + fn);
-        return new(conceptId, tp, fp, fn, tn, precision, recall, Harmonic(precision, recall));
+        return new(conceptId, tp + fn, tp, fp, fn, tn, precision, recall, Harmonic(precision, recall));
     }
 
     private static (RegexAggregateEvaluation Macro, RegexAggregateEvaluation Micro) Aggregate(
@@ -291,6 +325,7 @@ public sealed class RegexEvaluationService
         public int FalsePositives;
         public int UniqueTruePositives;
         public int RedundantTruePositives;
+        public int Timeouts;
         public List<string> Examples { get; } = [];
         public List<string> FalsePositiveExamples { get; } = [];
     }
