@@ -66,6 +66,22 @@ fi
 
 bash scripts/security-scan.sh image "$image" "$security_cache"
 
+benchmark_image="jsm-hardware-benchmark-ci:$expected_sha"
+docker build \
+  --platform linux/amd64 \
+  --build-arg "JSM_IMAGE_REFERENCE=$image" \
+  --tag "$benchmark_image" \
+  --file Dockerfile.hardware-benchmark \
+  .
+benchmark_revision="$(docker image inspect --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' "$benchmark_image")"
+[[ "$benchmark_revision" == "$expected_sha" ]] || {
+  echo "Benchmark image revision $benchmark_revision does not match $expected_sha." >&2
+  exit 1
+}
+docker run --rm --entrypoint /bin/sh "$benchmark_image" -c \
+  'test ! -e /app/LegacyJobConceptRules.json && test ! -e /app/RegexValidationCorpus.json && test ! -e /app/EvaluationHoldoutPlan.example.json'
+bash scripts/security-scan.sh image "$benchmark_image" "$security_cache"
+
 deep_analysis_image="jsm-deep-analysis-ci:$expected_sha"
 deep_analysis_container="jsm-deep-analysis-ci-${GITHUB_RUN_ID:-local}-${GITHUB_RUN_ATTEMPT:-1}"
 docker build \

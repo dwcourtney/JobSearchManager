@@ -18,7 +18,7 @@ assert.match(index,
   /id="administrator-bootstrap-section"[^>]*hidden[\s\S]*?id="administrator-bootstrap-code"[\s\S]*?minlength="8"[\s\S]*?maxlength="8"[\s\S]*?Claim Administrator/);
 assert.doesNotMatch(index, /annotation-labeling-ui|detector-evaluation-ui/,
   "Removed experimental Admin assets must not load.");
-assert.match(index, /app\.js\?v=47/);
+assert.match(index, /app\.js\?v=48/);
 
 assert.match(app, /synchronizeAdminNavigation\(account\.isAdmin === true\)/);
 assert.match(app, /if \(!isAdmin\)[\s\S]*?adminTab\?\.remove\(\)[\s\S]*?return;/,
@@ -41,6 +41,10 @@ assert.match(app, /CURATED REGRESSION BENCHMARK[\s\S]*?AI-ADJUDICATED PRODUCTION
 assert.match(app, /Run AI-Adjudicated Holdout Evaluation/);
 assert.match(app, /Evaluation classifiers[\s\S]*?RegEx[\s\S]*?LLM/);
 assert.match(app, /Run LLM Holdout Evaluation/);
+assert.match(app, /aria-label", "LLM evaluation hardware"[\s\S]*?GTX 1070[\s\S]*?RTX 5080/,
+  "The LLM evaluation must expose accessible hardware tabs.");
+assert.match(app, /GTX 1070 vs RTX 5080[\s\S]*?Semantic agreement[\s\S]*?Postings\/min/,
+  "The LLM evaluation must render a compact hardware comparison.");
 assert.match(app, /LLM_HOLDOUT_STATUS_POLL_MS = 2000/);
 assert.match(app, /data-llm-evaluation-progress/);
 assert.match(app, /Completed LLM holdout postings/);

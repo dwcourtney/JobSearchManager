@@ -227,6 +227,12 @@ public sealed class LlmHoldoutEvaluationService
             : null;
     }
 
+    public LlmHardwareComparisonReport? GetHardwareComparison() =>
+        LlmHardwareBenchmarkRunner.ReadComparison(_directory);
+
+    public LlmHoldoutEvaluationStatus GetRtx5080Status() =>
+        LlmHardwareBenchmarkRunner.GetStatus(_directory);
+
     public bool TryStart()
     {
         if (!_runGate.Wait(0)) return false;

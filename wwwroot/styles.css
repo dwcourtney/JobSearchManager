@@ -2564,6 +2564,11 @@ mark {
 
 .admin-evaluation-list { display: grid; gap: 1rem; margin-top: 1rem; }
 .admin-evaluation-subtabs { margin-top: .75rem; }
+.llm-hardware-tabs { margin-top: .85rem; }
+.llm-hardware-panel { display: grid; gap: .75rem; margin-top: .75rem; }
+.llm-hardware-panel[hidden] { display: none; }
+.llm-hardware-panel > .llm-evaluation-progress { margin-top: 0; }
+.llm-hardware-comparison { margin-top: 1rem; }
 .admin-evaluation-card { border: var(--border-width-default) solid var(--color-border); border-radius: var(--radius-control); }
 .admin-evaluation-card > h4 { margin: 0 0 .55rem; color: var(--color-text-heading); }
 .admin-evaluation-card > strong { display: block; color: var(--color-text-secondary); line-height: var(--line-height-note); }

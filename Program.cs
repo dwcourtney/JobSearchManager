@@ -32,6 +32,56 @@ if (args is ["--healthcheck"])
     return;
 }
 
+// The hardware benchmark entry point deliberately runs before RegEx maintenance.
+// Prediction nodes therefore never initialize or open the RegEx rule database.
+if (args.Length >= 3 && args[0] == "--llm-benchmark")
+{
+    var action = args[1];
+    var benchmarkDirectory = Path.GetFullPath(args[2]);
+    var catalog = JobConceptCatalog.LoadDefault();
+    var jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true };
+    try
+    {
+        switch (action)
+        {
+            case "preflight" when args.Length == 3:
+            case "predict" when args.Length == 3:
+                using (var benchmarkHttp = new HttpClient
+                {
+                    BaseAddress = new Uri(Environment.GetEnvironmentVariable("DEEP_ANALYSIS_URL")
+                        ?? "http://deep-analysis:8081/"),
+                    Timeout = TimeSpan.FromSeconds(300)
+                })
+                {
+                    var client = new ClassifierClient(benchmarkHttp, catalog,
+                        NullLogger<ClassifierClient>.Instance);
+                    object result = action == "preflight"
+                        ? await LlmTechnicalPreflight.RunAsync(benchmarkDirectory,
+                            client.DeepAnalyzeAsync, catalog)
+                        : await new LlmHardwareBenchmarkRunner(benchmarkDirectory,
+                            client.DeepAnalyzeAsync, catalog).RunPredictionsAsync();
+                    Console.WriteLine(JsonSerializer.Serialize(result, jsonOptions));
+                }
+                break;
+            case "score" when args.Length == 4:
+                Console.WriteLine(JsonSerializer.Serialize(
+                    await LlmHardwareBenchmarkRunner.ScoreAsync(benchmarkDirectory,
+                        Path.GetFullPath(args[3]), catalog), jsonOptions));
+                break;
+            default:
+                Console.Error.WriteLine("Usage: --llm-benchmark <preflight|predict> <benchmark-directory> | --llm-benchmark score <benchmark-directory> <production-evaluation-directory>");
+                Environment.ExitCode = 2;
+                break;
+        }
+    }
+    catch (Exception exception)
+    {
+        Console.Error.WriteLine($"LLM hardware benchmark failed: {exception.GetType().Name}: {exception.Message}");
+        Environment.ExitCode = 1;
+    }
+    return;
+}
+
 if (args.Length >= 3 && args[0] == "--regex-maintenance")
 {
     var action = args[1];
@@ -751,6 +801,7 @@ app.MapGet("/api/admin/evaluations", async (
     var holdoutReport = holdout.GetLatestReport();
     var llmHoldoutStatus = llmHoldout.GetStatus();
     var llmHoldoutReport = llmHoldout.GetLatestReport();
+    var llmHardwareComparison = llmHoldout.GetHardwareComparison();
     return Results.Ok(new
     {
         runs,
@@ -758,6 +809,8 @@ app.MapGet("/api/admin/evaluations", async (
         holdoutReport,
         llmHoldoutStatus,
         llmHoldoutReport,
+        llmRtx5080Status = llmHoldout.GetRtx5080Status(),
+        llmHardwareComparison,
         llmModel = llmHoldout.GetCurrentModelInfo(),
         datasetRoles = new object[]
         {
