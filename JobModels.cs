@@ -271,7 +271,7 @@ public sealed record QwenDeepAnalysis(
     string ClassificationFingerprint,
     DateTimeOffset AnalyzedUtc,
     IReadOnlyList<SemanticConceptPrediction> Predictions,
-    string Analysis);
+    string Analysis, QwenInferenceMetrics? Inference = null);
 
 public static class LlmDeepAnalysisStatuses
 {

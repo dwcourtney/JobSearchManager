@@ -18,7 +18,7 @@ assert.match(index,
   /id="administrator-bootstrap-section"[^>]*hidden[\s\S]*?id="administrator-bootstrap-code"[\s\S]*?minlength="8"[\s\S]*?maxlength="8"[\s\S]*?Claim Administrator/);
 assert.doesNotMatch(index, /annotation-labeling-ui|detector-evaluation-ui/,
   "Removed experimental Admin assets must not load.");
-assert.match(index, /app\.js\?v=44/);
+assert.match(index, /app\.js\?v=45/);
 
 assert.match(app, /synchronizeAdminNavigation\(account\.isAdmin === true\)/);
 assert.match(app, /if \(!isAdmin\)[\s\S]*?adminTab\?\.remove\(\)[\s\S]*?return;/,
@@ -39,6 +39,8 @@ assert.doesNotMatch(`${index}\n${app}`, /Deep Analyze with LLM|LLM deep-analysis
   "LLM execution and arbitration must be absent from the user-facing workflow.");
 assert.match(app, /CURATED REGRESSION BENCHMARK[\s\S]*?AI-ADJUDICATED PRODUCTION HOLDOUT|datasetRoles/);
 assert.match(app, /Run AI-Adjudicated Holdout Evaluation/);
+assert.match(app, /Evaluation classifiers[\s\S]*?RegEx[\s\S]*?LLM/);
+assert.match(app, /Run LLM Holdout Evaluation/);
 assert.match(app, /admin-compact-table[\s\S]*?Previous[\s\S]*?Next/,
   "RegEx rules must use a compact paginated table instead of giant cards.");
 assert.match(app, /Worst F1[\s\S]*?Lowest support[\s\S]*?Highest disagreement[\s\S]*?Concept name/);
@@ -65,6 +67,7 @@ assert.match(program,
 assert.match(program, /MapPost\("\/api\/admin\/regex-rules\/evaluate"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)/);
 assert.match(program, /MapGet\("\/api\/admin\/evaluations"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)/);
 assert.match(program, /MapPost\("\/api\/admin\/evaluations\/ai-holdout"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)[\s\S]*?RequireRateLimiting\("state"\)/);
+assert.match(program, /MapPost\("\/api\/admin\/evaluations\/llm-holdout"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)[\s\S]*?RequireRateLimiting\("state"\)/);
 assert.match(program, /MapPost\("\/api\/admin\/regex-rules\/reload"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)/);
 assert.doesNotMatch(program, /api\/admin\/annotations/,
   "Removed annotation APIs must not remain reachable.");

@@ -128,10 +128,16 @@ missing_id_status="$(curl --silent --output /dev/null --write-out '%{http_code}'
 node -e '
 const health = JSON.parse(process.argv[1]);
 const sha = process.argv[2];
-if (health.status !== "healthy" || health.revision !== sha) process.exit(1);
-if (health.serviceVersion !== "3.0.0" || health.protocolVersion !== "7") process.exit(1);
-if (health.purpose !== "opt-in-llm-deep-analysis" || health.conceptCount !== 85) process.exit(1);
-if (!/^[0-9a-f]{64}$/.test(health.taxonomyFingerprint) || !/^[0-9a-f]{64}$/.test(health.promptHash)) process.exit(1);
+const require = (condition, message) => {
+  if (!condition) {
+    console.error(`Deep-analysis identity validation failed: ${message}`);
+    process.exit(1);
+  }
+};
+require(health.status === "healthy" && health.revision === sha, "health or revision mismatch");
+require(health.serviceVersion === "3.1.0" && health.protocolVersion === "8", "service protocol mismatch");
+require(health.purpose === "opt-in-llm-deep-analysis" && health.conceptCount === 85, "purpose or taxonomy size mismatch");
+require(/^[0-9a-f]{64}$/.test(health.taxonomyFingerprint) && /^[0-9a-f]{64}$/.test(health.promptHash), "invalid taxonomy or prompt fingerprint");
 ' "$deep_analysis_health_json" "$expected_sha"
 
 docker run --detach \

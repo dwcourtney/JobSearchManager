@@ -5,8 +5,12 @@ import argparse, datetime, hashlib, json, os, threading, urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
+try:
+    import resource
+except ImportError:  # pragma: no cover - Windows-only local self-test path
+    resource = None
 
-SERVICE_VERSION, PROTOCOL_VERSION = "3.0.0", "7"
+SERVICE_VERSION, PROTOCOL_VERSION = "3.1.0", "8"
 MAX_BODY_BYTES, MAX_TEXT_CHARACTERS = 2_000_000, 500_000
 QWEN_MODEL_ID = "Qwen/Qwen3-4B-Instruct-2507"
 QWEN_MODEL_TAG = "qwen3:4b-instruct-2507-q4_K_M"
@@ -64,6 +68,15 @@ def identity() -> dict[str, Any]:
         "taxonomyVersion": TAXONOMY_VERSION, "taxonomyFingerprint": TAXONOMY_FINGERPRINT,
         "conceptCount": len(CONCEPTS), "promptVersion": QWEN_PROMPT_VERSION, "promptHash": QWEN_PROMPT_HASH}
 
+def ollama_residency() -> tuple[int | None, int | None]:
+    try:
+        with urllib.request.urlopen(f"{OLLAMA_URL}/api/ps", timeout=10) as response:
+            models = json.load(response).get("models", [])
+        model = next((item for item in models if item.get("name") == QWEN_MODEL_TAG), None)
+        return ((model or {}).get("size"), (model or {}).get("size_vram"))
+    except (OSError, ValueError, json.JSONDecodeError):
+        return None, None
+
 def qwen_deep_analysis(job_id: str, title: str, description: str) -> dict[str, Any]:
     request = urllib.request.Request(f"{OLLAMA_URL}/api/chat", data=json.dumps({
         "model": QWEN_MODEL_TAG,
@@ -85,15 +98,28 @@ def qwen_deep_analysis(job_id: str, title: str, description: str) -> dict[str, A
     if not isinstance(predictions, dict) or set(predictions) != set(CONCEPT_IDS) or any(type(predictions[key]) is not bool for key in CONCEPT_IDS) or not isinstance(analysis, str) or not analysis.strip():
         raise RuntimeError("LLM deep-analysis response failed strict validation.")
     content_hash = posting_content_hash(title, description)
+    model_size, model_vram = ollama_residency()
+    eval_count, eval_duration = response_value.get("eval_count"), response_value.get("eval_duration")
+    tokens_per_second = (eval_count * 1_000_000_000 / eval_duration
+        if isinstance(eval_count, int) and isinstance(eval_duration, int) and eval_duration > 0 else None)
     return {"received": True, "jobId": job_id, "title": title, "modelId": QWEN_MODEL_ID,
         "modelTag": QWEN_MODEL_TAG, "modelDigest": QWEN_MODEL_DIGEST, "taxonomyVersion": TAXONOMY_VERSION,
         "taxonomyFingerprint": TAXONOMY_FINGERPRINT, "promptVersion": QWEN_PROMPT_VERSION,
         "promptHash": QWEN_PROMPT_HASH, "analyzedUtc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "postingContentHash": content_hash, "classificationFingerprint": qwen_classification_fingerprint(content_hash),
-        "predictions": [{"conceptId": key, "matched": predictions[key]} for key in CONCEPT_IDS], "analysis": analysis.strip()}
+        "predictions": [{"conceptId": key, "matched": predictions[key]} for key in CONCEPT_IDS], "analysis": analysis.strip(),
+        "inference": {"totalDurationNanoseconds": response_value.get("total_duration"),
+            "loadDurationNanoseconds": response_value.get("load_duration"),
+            "promptTokenCount": response_value.get("prompt_eval_count"),
+            "promptDurationNanoseconds": response_value.get("prompt_eval_duration"),
+            "outputTokenCount": eval_count, "outputDurationNanoseconds": eval_duration,
+            "tokensPerSecond": tokens_per_second, "modelResidentBytes": model_size,
+            "modelVramBytes": model_vram,
+            "adapterPeakResidentBytes": (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * 1024
+                if resource is not None else None)}}
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "JsmDeepAnalysis/3.0"
+    server_version = "JsmDeepAnalysis/3.1"
     def log_message(self, fmt: str, *args: Any) -> None:
         print(f"{self.address_string()} {fmt % args}", flush=True)
     def send_json(self, status: int, payload: dict[str, Any]) -> None:

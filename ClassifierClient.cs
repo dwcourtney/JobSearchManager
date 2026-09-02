@@ -10,13 +10,20 @@ namespace JobSearchManager;
 public sealed record ClassifierRequest(string JobId, string Title, string Description);
 public sealed record SemanticConceptPrediction(string ConceptId, bool Matched, double? Score = null);
 
+public sealed record QwenInferenceMetrics(
+    long? TotalDurationNanoseconds, long? LoadDurationNanoseconds,
+    long? PromptTokenCount, long? PromptDurationNanoseconds,
+    long? OutputTokenCount, long? OutputDurationNanoseconds,
+    double? TokensPerSecond, long? ModelResidentBytes, long? ModelVramBytes,
+    long? AdapterPeakResidentBytes);
+
 public sealed record QwenDeepAnalysisResponse(
     bool Received, string JobId, string Title, string PostingContentHash,
     string ModelId, string ModelTag, string ModelDigest,
     int TaxonomyVersion, string TaxonomyFingerprint,
     string PromptVersion, string PromptHash, string ClassificationFingerprint,
     DateTimeOffset AnalyzedUtc, IReadOnlyList<SemanticConceptPrediction> Predictions,
-    string Analysis);
+    string Analysis, QwenInferenceMetrics? Inference = null);
 
 public static class QwenDeepAnalysisContract
 {
@@ -85,13 +92,13 @@ public sealed class ClassifierClient(
                 value.PromptHash != QwenDeepAnalysisContract.PromptHash || !predictionsValid ||
                 value.ClassificationFingerprint != QwenDeepAnalysisContract.ClassificationFingerprint(
                     contentHash, catalog) ||
-                string.IsNullOrWhiteSpace(value.Analysis))
+                string.IsNullOrWhiteSpace(value.Analysis) || !ValidMetrics(value.Inference))
                 return null;
             return new QwenDeepAnalysis(value.PostingContentHash, value.ModelId,
                 value.ModelTag, value.ModelDigest, value.TaxonomyVersion,
                 value.TaxonomyFingerprint, value.PromptVersion, value.PromptHash,
                 value.ClassificationFingerprint, value.AnalyzedUtc, value.Predictions,
-                value.Analysis);
+                value.Analysis, value.Inference);
         }
         catch (Exception exception) when (
             exception is HttpRequestException or TaskCanceledException or JsonException)
@@ -104,6 +111,13 @@ public sealed class ClassifierClient(
 
     private static string LogValue(string value) =>
         value.Replace('\r', ' ').Replace('\n', ' ')[..Math.Min(value.Length, 160)];
+
+    private static bool ValidMetrics(QwenInferenceMetrics? value) => value is not null &&
+        new long?[] { value.TotalDurationNanoseconds, value.LoadDurationNanoseconds,
+            value.PromptTokenCount, value.PromptDurationNanoseconds, value.OutputTokenCount,
+            value.OutputDurationNanoseconds, value.ModelResidentBytes, value.ModelVramBytes,
+            value.AdapterPeakResidentBytes }.All(item => item is null or >= 0) &&
+        value.TokensPerSecond is null or >= 0;
 }
 
 public sealed record SemanticClassificationAttempt(

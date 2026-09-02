@@ -65,7 +65,7 @@ assert.match(styles,
   /\.job-card\.unseen\.selected:not\(\.dismissed\)[\s\S]*?--shadow-job-selected[\s\S]*?--color-job-selected/);
 assert.match(index, /job-unseen-state\.js\?v=1/);
 assert.match(index, /theme\.css\?v=11/);
-assert.match(index, /styles\.css\?v=35/);
+assert.match(index, /styles\.css\?v=36/);
 assert.match(theme, /--unseen-job-indicator-width:\s*2px/);
 assert.match(theme, /--selected-job-outline-width:\s*2px/);
 assert.match(theme,

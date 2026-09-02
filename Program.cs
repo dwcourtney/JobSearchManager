@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging.Abstractions;
 using JobSearchManager;
 
 if (args is ["--healthcheck"])
@@ -134,6 +135,24 @@ if (args.Length >= 3 && args[0] == "--regex-maintenance")
                 classifier, store, catalog);
             Console.WriteLine(JsonSerializer.Serialize(await aiEvaluation.RunAsync(), jsonOptions));
             break;
+        case "evaluate-llm-holdout" when args.Length == 4:
+            using (var llmHttp = new HttpClient
+            {
+                BaseAddress = new Uri(Environment.GetEnvironmentVariable("DEEP_ANALYSIS_URL")
+                    ?? "http://deep-analysis:8081/"),
+                Timeout = TimeSpan.FromSeconds(300)
+            })
+            {
+                var llmClient = new ClassifierClient(llmHttp, catalog,
+                    NullLogger<ClassifierClient>.Instance);
+                var evaluationDirectory = Path.GetFullPath(args[3]);
+                var regexBaseline = new AiHoldoutEvaluationService(evaluationDirectory,
+                    classifier, store, catalog);
+                var llmEvaluation = new LlmHoldoutEvaluationService(evaluationDirectory,
+                    llmClient.DeepAnalyzeAsync, store, catalog, regexBaseline.GetLatestReport);
+                Console.WriteLine(JsonSerializer.Serialize(await llmEvaluation.RunAsync(), jsonOptions));
+            }
+            break;
         case "reconcile-cache" when args.Length == 4:
             Console.WriteLine(JsonSerializer.Serialize(await RegexCacheReconciler.ReconcileAsync(
                 Path.GetFullPath(args[3]), classifier, catalog), jsonOptions));
@@ -159,7 +178,7 @@ if (args.Length >= 3 && args[0] == "--regex-maintenance")
             Console.WriteLine(JsonSerializer.Serialize(new { backup = Path.GetFullPath(args[3]) }, jsonOptions));
             break;
         default:
-            Console.Error.WriteLine("Usage: --regex-maintenance <overview|evaluate|evaluate-ai-holdout|benchmark-cache|reconcile-cache|sample-holdout|export|import|review-stale|retention|backup> <regex-rules.db> [evaluation-directory|cache-root] [plan.json] [output.json]");
+            Console.Error.WriteLine("Usage: --regex-maintenance <overview|evaluate|evaluate-ai-holdout|evaluate-llm-holdout|benchmark-cache|reconcile-cache|sample-holdout|export|import|review-stale|retention|backup> <regex-rules.db> [evaluation-directory|cache-root] [plan.json] [output.json]");
             Environment.ExitCode = 2;
             break;
     }
@@ -215,6 +234,7 @@ builder.Services.AddSingleton<SqliteSemanticRuleStore>();
 builder.Services.AddSingleton<RegexSemanticClassifier>();
 builder.Services.AddSingleton<RegexEvaluationService>();
 builder.Services.AddSingleton<AiHoldoutEvaluationService>();
+builder.Services.AddSingleton<LlmHoldoutEvaluationService>();
 builder.Services.AddHostedService<RegexTelemetryFlushService>();
 builder.Services.AddSingleton<SemanticClassificationService>();
 builder.Services.AddSingleton<PortableWorkspaceService>();
@@ -692,16 +712,22 @@ app.MapPost("/api/admin/regex-rules/evaluate", async (
     .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
 
 app.MapGet("/api/admin/evaluations", async (
-    SqliteSemanticRuleStore store, AiHoldoutEvaluationService holdout, CancellationToken token) =>
+    SqliteSemanticRuleStore store, AiHoldoutEvaluationService holdout,
+    LlmHoldoutEvaluationService llmHoldout, CancellationToken token) =>
 {
     var runs = await store.ListEvaluationRunsAsync(token);
     var holdoutStatus = holdout.GetStatus();
     var holdoutReport = holdout.GetLatestReport();
+    var llmHoldoutStatus = llmHoldout.GetStatus();
+    var llmHoldoutReport = llmHoldout.GetLatestReport();
     return Results.Ok(new
     {
         runs,
         holdoutStatus,
         holdoutReport,
+        llmHoldoutStatus,
+        llmHoldoutReport,
+        llmModel = llmHoldout.GetCurrentModelInfo(),
         datasetRoles = new object[]
         {
             new { role = EvaluationDatasetRoles.DevelopmentRegression,
@@ -729,6 +755,20 @@ app.MapPost("/api/admin/evaluations/ai-holdout", (
     AiHoldoutEvaluationService evaluation) => evaluation.TryStart()
         ? Results.Accepted(value: evaluation.GetStatus())
         : Results.Conflict(new { error = "An AI-adjudicated holdout evaluation is already running." }))
+    .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapGet("/api/admin/evaluations/llm-holdout/status", (
+    LlmHoldoutEvaluationService evaluation) => Results.Ok(new
+    {
+        status = evaluation.GetStatus(),
+        report = evaluation.GetLatestReport(),
+        model = evaluation.GetCurrentModelInfo()
+    })).RequireAuthorization(AdminAuthorization.Policy);
+
+app.MapPost("/api/admin/evaluations/llm-holdout", (
+    LlmHoldoutEvaluationService evaluation) => evaluation.TryStart()
+        ? Results.Accepted(value: evaluation.GetStatus())
+        : Results.Conflict(new { error = "An LLM holdout evaluation is already running." }))
     .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
 
 app.MapGet("/api/admin/classifier/backfill/status", async (

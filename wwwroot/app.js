@@ -38,6 +38,7 @@ const state = {
   classifierStatusLoaded: false,
   adminRegexRules: [],
   activeAdminTab: "overview",
+  activeEvaluationTab: "regex",
   activeQualificationTab: "basics",
   jobs: [],
   inclusions: [],
@@ -1177,7 +1178,7 @@ function synchronizeAdminNavigation(isAdmin) {
   const evaluationTitle = document.createElement("h3");
   evaluationTitle.textContent = "Evaluation";
   const evaluationIntro = document.createElement("p");
-  evaluationIntro.textContent = "Run and review two scientifically distinct evaluations. F1 is not accuracy, and development evidence is never combined with production-holdout evidence.";
+  evaluationIntro.textContent = "Review RegEx evidence and an apples-to-apples LLM holdout comparison. F1 is not accuracy, and development evidence is never combined with production-holdout evidence.";
   const evaluationContent = document.createElement("div");
   evaluationContent.className = "admin-evaluation-list";
   evaluationPanel.append(evaluationTitle, evaluationIntro, evaluationContent);
@@ -1243,11 +1244,48 @@ async function loadEvaluationLedger() {
     const response = await fetch("/api/admin/evaluations", { cache: "no-store" });
     if (!response.ok) throw new Error("Evaluation ledger could not be loaded.");
     const result = await response.json();
-    elements.adminEvaluationContent.replaceChildren(
-      renderCuratedEvaluationCard(result), renderHoldoutEvaluationCard(result));
+    elements.adminEvaluationContent.replaceChildren(renderEvaluationNavigation(result));
   } catch (error) {
     elements.adminEvaluationContent.textContent = error.message || String(error);
   }
+}
+
+function renderEvaluationNavigation(result) {
+  const wrapper = document.createElement("div");
+  const tabs = document.createElement("div");
+  tabs.className = "settings-tabs admin-evaluation-subtabs";
+  tabs.setAttribute("role", "tablist");
+  tabs.setAttribute("aria-label", "Evaluation classifiers");
+  const regexTab = document.createElement("button");
+  regexTab.type = "button";
+  regexTab.className = "detail-tab";
+  regexTab.textContent = "RegEx";
+  const llmTab = document.createElement("button");
+  llmTab.type = "button";
+  llmTab.className = "detail-tab";
+  llmTab.textContent = "LLM";
+  const regexPanel = document.createElement("div");
+  regexPanel.className = "admin-evaluation-list";
+  regexPanel.append(renderCuratedEvaluationCard(result), renderHoldoutEvaluationCard(result));
+  const llmPanel = document.createElement("div");
+  llmPanel.className = "admin-evaluation-list";
+  llmPanel.append(renderLlmEvaluationCard(result));
+  const select = value => {
+    state.activeEvaluationTab = value;
+    const regexSelected = value === "regex";
+    regexPanel.hidden = !regexSelected;
+    llmPanel.hidden = regexSelected;
+    regexTab.classList.toggle("active", regexSelected);
+    llmTab.classList.toggle("active", !regexSelected);
+    regexTab.setAttribute("aria-selected", String(regexSelected));
+    llmTab.setAttribute("aria-selected", String(!regexSelected));
+  };
+  regexTab.addEventListener("click", () => select("regex"));
+  llmTab.addEventListener("click", () => select("llm"));
+  tabs.append(regexTab, llmTab);
+  wrapper.append(tabs, regexPanel, llmPanel);
+  select(state.activeEvaluationTab);
+  return wrapper;
 }
 
 function renderCuratedEvaluationCard(result) {
@@ -1314,6 +1352,202 @@ function renderHoldoutEvaluationCard(result) {
     article.append(metadata);
   }
   return article;
+}
+
+function renderLlmEvaluationCard(result) {
+  const report = result.llmHoldoutReport;
+  const model = result.llmModel || {};
+  const runStatus = result.llmHoldoutStatus || {
+    state: "not-started", displayState: "Not started", completed: 0, total: 200
+  };
+  const article = document.createElement("article");
+  article.className = "settings-section admin-evaluation-card";
+  const heading = document.createElement("h4");
+  heading.textContent = "LLM PRODUCTION HOLDOUT";
+  const current = document.createElement("p");
+  current.textContent = `Current LLM: ${model.modelTag || "unavailable"}`;
+  const purpose = document.createElement("p");
+  purpose.textContent = "Runs the current local LLM against the existing frozen production holdout. It does not modify reference labels, RegEx rules, or production Job Fit results.";
+  const disclaimer = document.createElement("strong");
+  disclaimer.textContent = "Reference labels were generated through prediction-blinded AI review and adjudication. They are not human-ground-truth labels.";
+  const action = document.createElement("button");
+  action.type = "button";
+  action.textContent = "Run LLM Holdout Evaluation";
+  const running = !["not-started", "complete", "failed"].includes(runStatus.state);
+  action.disabled = running || report !== null;
+  action.title = report ? "The first frozen prediction set is retained. A changed model or prompt requires a separately versioned experiment." : purpose.textContent;
+  action.addEventListener("click", () => void startLlmHoldoutEvaluation(action));
+  const progress = document.createElement("p");
+  progress.className = "settings-status";
+  progress.setAttribute("role", "status");
+  progress.textContent = `${runStatus.displayState}${runStatus.total ? `: ${runStatus.completed} / ${runStatus.total}` : ""}${runStatus.message ? ` · ${runStatus.message}` : ""}`;
+  article.append(heading, current, purpose, disclaimer, action, progress);
+  if (report) {
+    const caution = document.createElement("p");
+    caution.textContent = "Apples-to-apples agreement with the same AI-derived references is not absolute human-grounded truth. Treat high-disagreement and low-support concepts cautiously.";
+    article.append(caution, renderClassifierComparison(report),
+      renderLlmRuntime(report.runtime), renderLlmConceptComparison(report.concepts));
+  }
+  const technical = document.createElement("details");
+  const summary = document.createElement("summary");
+  summary.textContent = "Technical provenance";
+  const metadata = document.createElement("p");
+  metadata.className = "admin-evaluation-metadata";
+  metadata.textContent = `Model ${model.modelId || report?.modelId || "unavailable"} · digest ${model.modelDigest || report?.modelDigest || "unavailable"} · prompt ${model.promptVersion || report?.promptVersion || "unavailable"} / ${model.promptHash || report?.promptHash || "unavailable"} · taxonomy ${model.taxonomyFingerprint || report?.taxonomyFingerprint || "unavailable"}${report ? ` · prediction ${report.predictionFingerprint} · evaluated ${formatLongDate(report.evaluatedUtc) || report.evaluatedUtc}` : ""}`;
+  technical.append(summary, metadata);
+  article.append(technical);
+  return article;
+}
+
+function renderClassifierComparison(report) {
+  const table = document.createElement("table");
+  table.className = "admin-compact-table admin-comparison-summary";
+  const head = document.createElement("thead");
+  const header = document.createElement("tr");
+  for (const value of ["Classifier", "Macro P", "Macro R", "Macro F1", "Micro P", "Micro R", "Micro F1"]) {
+    const cell = document.createElement("th");
+    cell.textContent = value;
+    header.append(cell);
+  }
+  head.append(header);
+  const body = document.createElement("tbody");
+  const rows = [
+    ["RegEx", report.regexMacro.precision, report.regexMacro.recall, report.regexMacro.f1,
+      report.regexMicro.precision, report.regexMicro.recall, report.regexMicro.f1],
+    ["LLM", report.llmMacro.precision, report.llmMacro.recall, report.llmMacro.f1,
+      report.llmMicro.precision, report.llmMicro.recall, report.llmMicro.f1],
+    ["Absolute difference", report.absoluteDifference.macroPrecision,
+      report.absoluteDifference.macroRecall, report.absoluteDifference.macroF1,
+      report.absoluteDifference.microPrecision, report.absoluteDifference.microRecall,
+      report.absoluteDifference.microF1]
+  ];
+  for (const values of rows) {
+    const row = document.createElement("tr");
+    for (const value of values) {
+      const cell = document.createElement("td");
+      cell.textContent = typeof value === "string" ? value : formatMetric(value);
+      row.append(cell);
+    }
+    body.append(row);
+  }
+  table.append(head, body);
+  return table;
+}
+
+function renderLlmRuntime(runtime) {
+  const details = document.createElement("details");
+  const summary = document.createElement("summary");
+  summary.textContent = "Runtime and resources";
+  const text = document.createElement("p");
+  text.textContent = `Elapsed ${formatDuration(runtime.totalElapsedSeconds)} · average ${runtime.averageLatencyMilliseconds.toFixed(0)} ms/posting · median ${runtime.medianLatencyMilliseconds.toFixed(0)} ms · p95 ${runtime.p95LatencyMilliseconds.toFixed(0)} ms · ${runtime.postingsPerMinute.toFixed(2)} postings/minute · ${formatMetric(runtime.weightedOutputTokensPerSecond)} output tokens/sec · ${runtime.approximateInferenceCount} inferences.`;
+  const resources = document.createElement("p");
+  resources.textContent = `Peak model VRAM ${formatBytes(runtime.peakModelVramBytes)} · model residency ${formatBytes(runtime.peakModelResidentBytes)} · Ollama RAM ${formatBytes(runtime.peakOllamaContainerRamBytes)} · adapter RAM ${formatBytes(runtime.peakAdapterContainerRamBytes)} · GPU utilization ${runtime.averageGpuUtilizationPercent == null ? "not available inside the hardened container" : `${runtime.averageGpuUtilizationPercent.toFixed(1)}%`}.`;
+  details.append(summary, text, resources);
+  return details;
+}
+
+function renderLlmConceptComparison(concepts) {
+  const details = document.createElement("details");
+  const summary = document.createElement("summary");
+  summary.textContent = "Per-concept RegEx vs LLM comparison";
+  const controls = document.createElement("div");
+  controls.className = "admin-evaluation-table-controls";
+  const search = document.createElement("input");
+  search.placeholder = "Filter concept";
+  const sort = document.createElement("select");
+  for (const [value, label] of [["llmF1", "Sort: LLM F1"], ["regexF1", "Sort: RegEx F1"],
+    ["difference", "Sort: F1 difference"], ["support", "Sort: support"],
+    ["disagreement", "Sort: labeler disagreement"], ["name", "Sort: concept name"]]) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    sort.append(option);
+  }
+  const table = document.createElement("table");
+  table.className = "admin-compact-table";
+  const render = () => {
+    const query = search.value.trim().toLowerCase();
+    const rows = concepts.filter(item => !query || item.conceptName.toLowerCase().includes(query) || item.conceptId.includes(query));
+    rows.sort((a, b) => sort.value === "regexF1" ? (b.regexF1 ?? -1) - (a.regexF1 ?? -1)
+      : sort.value === "difference" ? (b.f1Difference ?? -Infinity) - (a.f1Difference ?? -Infinity)
+        : sort.value === "support" ? b.support - a.support
+          : sort.value === "disagreement" ? b.referenceLabelDisagreementRate - a.referenceLabelDisagreementRate
+            : sort.value === "name" ? a.conceptName.localeCompare(b.conceptName)
+              : (b.llmF1 ?? -1) - (a.llmF1 ?? -1));
+    table.replaceChildren();
+    const head = document.createElement("thead");
+    const header = document.createElement("tr");
+    for (const value of ["Concept", "Support", "RegEx P", "RegEx R", "RegEx F1",
+      "LLM P", "LLM R", "LLM F1", "F1 Δ", "A/B disagreement"]) {
+      const cell = document.createElement("th");
+      cell.textContent = value;
+      header.append(cell);
+    }
+    head.append(header);
+    const body = document.createElement("tbody");
+    for (const item of rows) {
+      const row = document.createElement("tr");
+      for (const value of [item.conceptName, item.support, formatMetric(item.regexPrecision),
+        formatMetric(item.regexRecall), formatMetric(item.regexF1), formatMetric(item.llmPrecision),
+        formatMetric(item.llmRecall), formatMetric(item.llmF1), formatSignedMetric(item.f1Difference),
+        formatPercent(item.referenceLabelDisagreementRate)]) {
+        const cell = document.createElement("td");
+        cell.textContent = value;
+        row.append(cell);
+      }
+      body.append(row);
+    }
+    table.append(head, body);
+  };
+  search.addEventListener("input", render);
+  sort.addEventListener("change", render);
+  controls.append(search, sort);
+  details.append(summary, controls, table);
+  render();
+  return details;
+}
+
+async function startLlmHoldoutEvaluation(button) {
+  button.disabled = true;
+  try {
+    const response = await fetch("/api/admin/evaluations/llm-holdout", { method: "POST" });
+    if (!response.ok && response.status !== 409) {
+      const failure = await response.json().catch(() => ({}));
+      throw new Error(failure.error || "LLM holdout evaluation could not be started.");
+    }
+    await pollLlmHoldoutEvaluation();
+  } catch (error) {
+    button.disabled = false;
+    elements.adminEvaluationContent.textContent = error.message || String(error);
+  }
+}
+
+async function pollLlmHoldoutEvaluation() {
+  await new Promise(resolve => window.setTimeout(resolve, 1500));
+  const response = await fetch("/api/admin/evaluations/llm-holdout/status", { cache: "no-store" });
+  if (!response.ok) throw new Error("LLM holdout evaluation status could not be loaded.");
+  const result = await response.json();
+  await loadEvaluationLedger();
+  if (!["complete", "failed"].includes(result.status.state)) await pollLlmHoldoutEvaluation();
+}
+
+function formatDuration(seconds) {
+  if (!Number.isFinite(seconds)) return "undefined";
+  const minutes = Math.floor(seconds / 60);
+  return `${minutes}m ${(seconds - minutes * 60).toFixed(1)}s`;
+}
+
+function formatBytes(value) {
+  if (!Number.isFinite(value)) return "unavailable";
+  const units = ["B", "KiB", "MiB", "GiB"];
+  let number = value;
+  let unit = 0;
+  while (number >= 1024 && unit < units.length - 1) { number /= 1024; unit++; }
+  return `${number.toFixed(unit ? 1 : 0)} ${units[unit]}`;
+}
+
+function formatSignedMetric(value) {
+  return Number.isFinite(value) ? `${value >= 0 ? "+" : ""}${value.toFixed(6)}` : "undefined";
 }
 
 function renderEvaluationMetrics(macroPrecision, macroRecall, macroF1,

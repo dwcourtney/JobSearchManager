@@ -51,7 +51,7 @@ assert.match(client, /"sqlite-regex-v1"/);
 assert.doesNotMatch(client, /\/classify|DeBERTa|deberta/i);
 
 assert.match(adapter, /purpose": "opt-in-llm-deep-analysis"/);
-assert.match(adapter, /SERVICE_VERSION, PROTOCOL_VERSION = "3\.0\.0", "7"/);
+assert.match(adapter, /SERVICE_VERSION, PROTOCOL_VERSION = "3\.1\.0", "8"/);
 assert.match(adapter, /QWEN_PROMPT_VERSION = "job-fit-85-deep-analysis-v1"/);
 assert.match(adapter, /QWEN_OUTPUT_SCHEMA/);
 assert.match(adapter, /qwen_classification_fingerprint/);
@@ -75,4 +75,4 @@ assert.match(ollamaRuntime, /f96e7aa0513b9973a0ccc71be414c2ecb9d65b1a/);
 assert.match(ollamaRuntime, /USER 65532:65532/);
 assert.match(ollamaRuntime, /HEALTHCHECK[\s\S]*?ollama[\s\S]*?list/);
 
-console.log("SQLite RegEx authority with dormant Qwen infrastructure tests: PASS");
+console.log("SQLite RegEx authority with evaluation-only Qwen isolation tests: PASS");
