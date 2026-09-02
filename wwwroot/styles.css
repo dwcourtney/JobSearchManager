@@ -2558,3 +2558,15 @@ mark {
   .reset-workspace-content .destructive-button { align-self: flex-start; }
   .workspace-identity-controls { flex-wrap: wrap; }
 }
+.admin-regex-rule-list {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.admin-regex-rule-list code {
+  display: block;
+  margin-top: 0.5rem;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}

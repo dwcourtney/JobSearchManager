@@ -1067,9 +1067,45 @@ public sealed class JobCatalog
         if (_semanticClassification is null) return null;
         var job = await GetJobDetailAsync(stableId, cancellationToken);
         if (job is null || string.IsNullOrWhiteSpace(job.DescriptionHtml)) return null;
-        var analysis = await _semanticClassification.DeepAnalyzeAsync(job, cancellationToken);
-        if (analysis is null) return null;
+        var requested = DateTimeOffset.UtcNow;
+        await PersistDeepAnalysisStateAsync(stableId,
+            new(LlmDeepAnalysisStatuses.Queued, RequestedUtc: requested), null, cancellationToken);
+        var started = DateTimeOffset.UtcNow;
+        await PersistDeepAnalysisStateAsync(stableId,
+            new(LlmDeepAnalysisStatuses.Running, requested, started), null, cancellationToken);
+        QwenDeepAnalysis? analysis;
+        try
+        {
+            analysis = await _semanticClassification.DeepAnalyzeAsync(job, cancellationToken);
+        }
+        catch (Exception exception)
+        {
+            await PersistDeepAnalysisStateAsync(stableId,
+                new(LlmDeepAnalysisStatuses.Failed, requested, started, DateTimeOffset.UtcNow,
+                    exception is OperationCanceledException
+                        ? "LLM deep analysis was canceled."
+                        : "LLM deep analysis failed."), null, CancellationToken.None);
+            throw;
+        }
+        if (analysis is null)
+        {
+            await PersistDeepAnalysisStateAsync(stableId,
+                new(LlmDeepAnalysisStatuses.Failed, requested, started, DateTimeOffset.UtcNow,
+                    "LLM deep analysis is unavailable."), null, cancellationToken);
+            return null;
+        }
+        await PersistDeepAnalysisStateAsync(stableId,
+            new(LlmDeepAnalysisStatuses.Completed, requested, started, analysis.AnalyzedUtc,
+                ResultFingerprint: analysis.ClassificationFingerprint), analysis, cancellationToken);
+        return analysis;
+    }
 
+    private async Task<bool> PersistDeepAnalysisStateAsync(
+        string stableId,
+        LlmDeepAnalysisRequestState state,
+        QwenDeepAnalysis? analysis,
+        CancellationToken cancellationToken)
+    {
         await _sourceOperationGate.WaitAsync(cancellationToken);
         try
         {
@@ -1079,13 +1115,17 @@ public sealed class JobCatalog
             await using var sharedSourceLease =
                 await _sharedSourceRefreshCoordinator.AcquireAsync(sourceKey, cancellationToken);
             var document = await _stateStore.LoadJobsCacheAsync(query);
-            if (document?.Query?.IsEquivalentTo(query, _companyCatalog) != true) return null;
+            if (document?.Query?.IsEquivalentTo(query, _companyCatalog) != true) return false;
             var current = document.Jobs.FirstOrDefault(item => item.StableId == stableId);
-            if (current is null || SemanticClassifierContract.PostingContentHash(
+            if (current is null) return false;
+            if (analysis is not null && SemanticRulesetFingerprint.PostingContentHash(
                     current.Title, JobAnalysis.HtmlToPlainText(current.DescriptionHtml)) !=
-                analysis.PostingContentHash)
-                return null;
-            var updated = current with { QwenDeepAnalysis = analysis };
+                analysis.PostingContentHash) return false;
+            var updated = current with
+            {
+                QwenDeepAnalysis = analysis ?? current.QwenDeepAnalysis,
+                DeepAnalysisRequest = state
+            };
             var jobs = document.Jobs.Select(item => item.StableId == stableId ? updated : item).ToArray();
             await _stateStore.SaveJobsCacheAsync(jobs,
                 document.LastRefreshedUtc ?? document.SavedAtUtc,
@@ -1096,7 +1136,7 @@ public sealed class JobCatalog
                 var visible = VisibleJobs(jobs);
                 _snapshot = _snapshot with { Jobs = visible, TotalJobs = visible.Length };
             }
-            return analysis;
+            return true;
         }
         finally
         {
@@ -1196,7 +1236,7 @@ public sealed class JobCatalog
             if (classification is not null)
             {
                 var description = JobAnalysis.HtmlToPlainText(current.DescriptionHtml);
-                var contentHash = SemanticClassifierContract.PostingContentHash(current.Title, description);
+                var contentHash = SemanticRulesetFingerprint.PostingContentHash(current.Title, description);
                 if (contentHash != classification.PostingContentHash)
                     return;
             }

@@ -20,7 +20,7 @@ services:
       Application__OpenBrowser: "false"
       Application__RefreshOnStartup: "false"
       DOTNET_ENVIRONMENT: Production
-      Classifier__BaseUrl: http://job-classifier:8081/
+      DeepAnalysis__BaseUrl: http://deep-analysis:8081/
     ports:
       - "192.168.1.20:8080:8080"
     volumes:
@@ -33,7 +33,7 @@ services:
       - default
       - classifier
 
-  job-classifier:
+  deep-analysis:
     build:
       context: .
       dockerfile: classifier-service/Dockerfile
@@ -44,8 +44,45 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    environment:
+      OLLAMA_URL: http://ollama:11434
+    depends_on:
+      ollama:
+        condition: service_healthy
+    cpus: 1.0
+    mem_limit: 256m
     tmpfs:
       - /tmp
+    restart: unless-stopped
+    networks:
+      - classifier
+
+  ollama:
+    build:
+      context: ollama-runtime
+      dockerfile: Dockerfile
+    user: "65532:65532"
+    read_only: true
+    init: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    environment:
+      HOME: /tmp
+      OLLAMA_HOST: 0.0.0.0:11434
+      OLLAMA_MODELS: /models
+      OLLAMA_KEEP_ALIVE: "-1"
+      OLLAMA_NOHISTORY: "1"
+    volumes:
+      - "./data/ollama:/models"
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
     restart: unless-stopped
     networks:
       - classifier

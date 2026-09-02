@@ -23,7 +23,7 @@ services:
       Application__OpenBrowser: "false"
       Application__RefreshOnStartup: "false"
       DOTNET_ENVIRONMENT: Production
-      Classifier__BaseUrl: http://job-classifier:8081/
+      DeepAnalysis__BaseUrl: http://deep-analysis:8081/
     ports:
       - "192.168.1.20:8080:8080"
     volumes:
@@ -36,8 +36,8 @@ services:
       - default
       - classifier
 
-  job-classifier:
-    image: ${CLASSIFIER_IMAGE_REFERENCE:?Set CLASSIFIER_IMAGE_REFERENCE to an exact classifier image tag}
+  deep-analysis:
+    image: ${DEEP_ANALYSIS_IMAGE_REFERENCE:?Set DEEP_ANALYSIS_IMAGE_REFERENCE to an exact deep-analysis image tag}
     user: "65532:65532"
     read_only: true
     init: true
@@ -47,19 +47,11 @@ services:
       - ALL
     environment:
       OLLAMA_URL: http://ollama:11434
-      CLASSIFIER_EXPECTED_DEVICE_NAME: NVIDIA GeForce GTX 1070
-      CLASSIFIER_MODEL_ROOT: /models/nli-deberta-v3-base
-      HF_HUB_OFFLINE: "1"
-      TRANSFORMERS_OFFLINE: "1"
-      HOME: /tmp
     depends_on:
       ollama:
         condition: service_healthy
-    gpus: all
-    cpus: 2.0
-    mem_limit: 4g
-    volumes:
-      - "${JSM_LAB_ROOT:-/home/codex/jsm-lab}/models/nli-deberta-v3-base:/models/nli-deberta-v3-base:ro"
+    cpus: 1.0
+    mem_limit: 256m
     tmpfs:
       - /tmp
     restart: unless-stopped

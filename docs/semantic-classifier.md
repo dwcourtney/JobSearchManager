@@ -1,42 +1,48 @@
 # Semantic Job Fit classifiers
 
-## Default: DeBERTa
+## Default: lifecycle-managed RegEx
 
-Automatic Job Fit screening uses `cross-encoder/nli-deberta-v3-base` at immutable revision
-`6c749ce3425cd33b46d187e45b92bbf96ee12ec7`. The pinned weights digest is
-`sha256:d8148c6d49e0a7925134294c56326c71fe0ab1dc390e37355e00c7efbb488afa`.
+Automatic Job Fit screening is deterministic and runs inside JSM. The classifier loads active and
+review-due rules from SQLite, applies the recovered title evidence, exclusions, local negation,
+required-context groups, remote signals, and extended-location signals, and emits matches against the
+canonical 85-concept taxonomy.
 
-The recovered Phase 2B NLI configuration uses 384-token chunks with 64-token overlap, maximum
-entailment aggregation across chunks, eight-concept GPU batches, a 0.5 match threshold, and dynamic entailment/contradiction
-label discovery. Configuration `deberta-85-nli-v1` applies the same definition-based hypothesis
-template to every one of the 85 canonical concepts. Its configuration fingerprint includes model
-identity/revision/digest, chunking, maximum sequence length, threshold, hypothesis template, and
-taxonomy fingerprint.
+Each persisted result includes posting content hash, ruleset fingerprint, taxonomy fingerprint,
+classification fingerprint, timestamp, and all concept predictions. A cache entry is current only
+when every output-affecting fingerprint still matches. Classification remains asynchronous for cache
+backfill, but each individual RegEx evaluation is local and bounded.
 
-Classification is bounded and asynchronous, so source ingestion never waits for model inference.
-Current/new jobs and newer posting dates are processed first. A valid persisted result is reused
-when posting content, taxonomy, model, and configuration fingerprints are unchanged. Otherwise the
-UI displays **Job Fit TBD**, never a synthetic 5/10 baseline. Failure leaves deterministic salary,
-clearance, credentials, education, citizenship, location, browsing, and accounts functional.
+The recovered fixed corpus contains 148 fixtures and 1,740 concept labels. The exact historical
+eight-concept benchmark is preserved:
 
-Persisted default results include posting content hash, taxonomy version/fingerprint, model
-identity/revision/digest, classifier configuration version/fingerprint, classification timestamp,
-classification fingerprint, confidence score, and match decision for all 85 concepts.
+| Aggregate | Precision | Recall | F1 |
+| --- | ---: | ---: | ---: |
+| Macro | 0.995370370370370 | 1.000000000000000 | 0.997641509433962 |
+| Micro | 0.993865030674847 | 1.000000000000000 | 0.996923076923077 |
+
+Across every labeled concept in the recovered corpus, macro F1 is `0.894597869692249` and micro F1 is
+`0.915770609318996`. These are fixed-corpus point metrics, not a precision-recall curve. A curve would
+be misleading because deterministic boolean rules have no calibrated threshold continuum.
+
+Evaluation reports include per-concept TP/FP/FN/TN and precision/recall/F1, plus per-rule match count,
+true/false positives, unique/redundant true positives, and representative examples. Evaluation calls
+are explicitly non-production usage and do not alter rule telemetry.
 
 ## Optional: Qwen/Ollama
 
-`qwen3:4b-instruct-2507-q4_K_M` is retained on the internal classifier network only for the
-explicit **Deep Analyze with LLM** action. It is never scheduled by ingestion or Admin backfill.
-Qwen results are stored separately with their own posting hash, model provenance, timestamp, and
-85-concept predictions. They never replace the persisted DeBERTa classification. When a current
-opt-in result exists, the card presents its derived score with a sparkle and the model-agnostic legend
-`✦ = LLM deep-analysis score`; Job Fit details retain both the default and optional results.
+`qwen3:4b-instruct-2507-q4_K_M` is available only through **Deep Analyze with LLM**. It is never
+scheduled by ingestion or RegEx backfill. Requests persist as queued, running, completed, or failed;
+duplicate work with the same posting/model fingerprint is coalesced. Results retain posting hash,
+model digest, taxonomy and prompt provenance, classification fingerprint, timestamp, all 85 concept
+predictions, and the analysis text.
+
+The adapter exposes only `/healthz` and `/deep-analyze`. The former DeBERTa `/classify` endpoint,
+weights, model mount, CUDA runtime, and automatic model inference are intentionally absent.
 
 ## Quality boundary
 
-The historical DeBERTa evaluation covered an eight-concept subset. The production adapter now
-supports the complete canonical taxonomy structurally, but the definition-derived hypotheses for
-the remaining concepts have not received equivalent per-concept calibration. Scores should be
-treated as screening signals, especially for subtle work-environment and responsibility-shape
-labels. The implementation intentionally uses one general template and does not add fixture-specific
-prompt exceptions.
+The historical subset is a regression contract, not proof of generalization to all possible job
+language. Candidate changes must be tested on the versioned fixed corpus before validation, then
+separately approved for activation. Production usage telemetry and review-due rules provide the
+evidence for ongoing maintenance; additions to the corpus should be reviewed and versioned rather
+than silently tailored to one posting.
