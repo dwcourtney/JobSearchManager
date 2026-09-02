@@ -41,6 +41,8 @@ assert.match(app, /Run LLM Holdout Evaluation/);
 assert.match(app, /LLM evaluation hardware[\s\S]*?GTX 1070[\s\S]*?RTX 5080/);
 assert.match(app, /Semantic agreement[\s\S]*?runtime reduction/);
 assert.match(program, /rtx5080Status = evaluation\.GetRtx5080Status\(\)/);
+assert.match(program, /--llm-benchmark[\s\S]*?requireStablePredictions: false/);
+assert.match(read("LlmTechnicalPreflight.cs"), /passed-with-observed-semantic-variation/);
 assert.match(read("scripts", "monitor-llm-hardware-benchmark.py"),
   /sha256:0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0/);
 assert.match(app, /RegEx P[\s\S]*?LLM P[\s\S]*?F1 Δ/);

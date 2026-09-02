@@ -13,6 +13,7 @@ public sealed record LlmTechnicalPreflightReport(
     int ConceptCount, int ObservationCount, bool CompleteStructuredOutput,
     bool StablePredictions, bool BoundedOutput, bool CheckpointRoundTrip,
     IReadOnlyList<long?> OutputTokenCounts, string InputFingerprint,
+    int SemanticDisagreementCount,
     string Notes);
 
 public static class LlmTechnicalPreflight
@@ -24,7 +25,8 @@ public static class LlmTechnicalPreflight
 
     public static async Task<LlmTechnicalPreflightReport> RunAsync(string directory,
         Func<ClassifierRequest, CancellationToken, Task<QwenDeepAnalysis?>> classify,
-        JobConceptCatalog catalog, CancellationToken token = default)
+        JobConceptCatalog catalog, CancellationToken token = default,
+        bool requireStablePredictions = true)
     {
         Directory.CreateDirectory(directory);
         var id = Guid.NewGuid().ToString("N");
@@ -53,21 +55,27 @@ public static class LlmTechnicalPreflight
         if (!checkpointRoundTrip)
             throw new InvalidDataException("The technical preflight checkpoint changed during its durable round-trip.");
         var stable = PredictionsEqual(roundTrip.FirstObservation.Predictions, second.Predictions);
-        if (!stable)
+        if (!stable && requireStablePredictions)
             throw new InvalidDataException("The deterministic technical preflight produced unstable predictions.");
+        var semanticDisagreements = roundTrip.FirstObservation.Predictions.Zip(second.Predictions)
+            .Count(pair => pair.First.ConceptId != pair.Second.ConceptId ||
+                pair.First.Matched != pair.Second.Matched);
         var counts = new[] { first.Inference!.OutputTokenCount, second.Inference!.OutputTokenCount };
         var bounded = counts.All(value => value.HasValue && value.Value > 0 &&
             value.Value < QwenDeepAnalysisContract.MaximumOutputTokens);
         if (!bounded)
             throw new InvalidDataException("The technical preflight reached or exceeded the output-token bound.");
-        var report = new LlmTechnicalPreflightReport(2, id, DateTimeOffset.UtcNow, "passed",
+        var report = new LlmTechnicalPreflightReport(2, id, DateTimeOffset.UtcNow,
+            stable ? "passed" : "passed-with-observed-semantic-variation",
             QwenDeepAnalysisContract.ModelId, QwenDeepAnalysisContract.ModelTag,
             QwenDeepAnalysisContract.ModelDigest, QwenDeepAnalysisContract.PromptVersion,
             QwenDeepAnalysisContract.PromptHash, QwenDeepAnalysisContract.OutputContractVersion,
             QwenDeepAnalysisContract.OutputSchemaHash, catalog.Concepts.Count, 2, true,
             stable, bounded, checkpointRoundTrip, counts, inputFingerprint,
-            "Two predeclared observations of one synthetic technical input; no holdout posting, " +
-            "reference label, RegEx prediction, rule, or score was loaded or inspected.");
+            semanticDisagreements,
+            "Two predeclared observations of one synthetic technical input; semantic repeat " +
+            "variation is recorded rather than tuned on hardware-comparison runs. No holdout " +
+            "posting, reference label, RegEx prediction, rule, or score was loaded or inspected.");
         await WriteAtomicallyAsync(Path.Combine(directory,
             $"llm-technical-preflight-v2-{id}.json"), report, token);
         await WriteAtomicallyAsync(Path.Combine(directory, LatestName), report, token);
