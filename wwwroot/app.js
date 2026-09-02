@@ -1275,14 +1275,17 @@ function renderEvaluationNavigation(result) {
   const regexTab = document.createElement("button");
   regexTab.type = "button";
   regexTab.className = "detail-tab";
+  regexTab.setAttribute("role", "tab");
   regexTab.textContent = "RegEx";
   const llmTab = document.createElement("button");
   llmTab.type = "button";
   llmTab.className = "detail-tab";
+  llmTab.setAttribute("role", "tab");
   llmTab.textContent = "LLM";
   const triageTab = document.createElement("button");
   triageTab.type = "button";
   triageTab.className = "detail-tab";
+  triageTab.setAttribute("role", "tab");
   triageTab.textContent = "Triage";
   const regexPanel = document.createElement("div");
   regexPanel.className = "admin-evaluation-list";
@@ -1513,7 +1516,7 @@ function renderTriageEvaluationCard(result) {
   const heading = document.createElement("h4");
   heading.textContent = "CHEAP HIGH-RECALL TRIAGE";
   const purpose = document.createElement("p");
-  purpose.textContent = "Diagnostic only: tests whether explainable, sub-millisecond coarse rules can safely avoid expensive Job Fit inference. Ambiguous postings are kept.";
+  purpose.textContent = "Diagnostic only: tests whether explainable, few-millisecond coarse rules can safely avoid expensive Job Fit inference. Ambiguous postings are kept.";
   const disclaimer = document.createElement("strong");
   disclaimer.textContent = "Reference labels were generated through prediction-blinded AI review and adjudication. They are not human-ground-truth labels.";
   const action = document.createElement("button");
