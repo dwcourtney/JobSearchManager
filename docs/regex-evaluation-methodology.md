@@ -80,8 +80,11 @@ Evaluation is explicit Admin/maintenance work. It never runs on normal job reque
 
 Admin -> Evaluation -> LLM uses the same frozen 200 postings, 85 concepts, reference-label
 fingerprint, 97 unresolved exclusions, and metric calculator as the RegEx production-holdout run.
-The established `job-fit-85-deep-analysis-v1` prompt and pinned generation configuration are used
-without holdout-driven changes. Qwen receives only the full posting and canonical taxonomy; it never
+The versioned `job-fit-85-compact-json-v2` prompt uses the same pinned model, temperature, seed,
+context length, and maximum output limit with a bounded, hashed 85-boolean output contract. V1's
+incomplete 25-posting technical run is preserved separately and is never combined with v2. Qwen
+receives only the full posting and canonical taxonomy; the v2 contract was fixed from technical
+failure evidence and synthetic preflight, without reference labels or holdout scores. Qwen never
 receives references, RegEx rules or predictions, RegEx evidence or scores, benchmark results, or
 Codex A/B artifacts.
 
@@ -96,7 +99,7 @@ Latency and Ollama token timing come from the first inference responses. Ollama 
 VRAM allocation come from its private `/api/ps` response; adapter RAM is peak process RSS. GPU
 utilization is deliberately unavailable inside the hardened JSM container rather than granting it
 host or Docker-socket access. An operator may provide the evaluation directory with a validated
-`llm-holdout-resource-observation.json` generated from external `nvidia-smi` and `docker stats`
+`llm-holdout-resource-observation-v2.json` generated from external `nvidia-smi` and `docker stats`
 sampling during the run. The evaluator reads that observation only after predictions are frozen, so
 resource measurement cannot change predictions.
 

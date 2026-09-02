@@ -10,13 +10,14 @@ try:
 except ImportError:  # pragma: no cover - Windows-only local self-test path
     resource = None
 
-SERVICE_VERSION, PROTOCOL_VERSION = "3.1.0", "8"
+SERVICE_VERSION, PROTOCOL_VERSION = "3.2.0", "9"
 MAX_BODY_BYTES, MAX_TEXT_CHARACTERS = 2_000_000, 500_000
 QWEN_MODEL_ID = "Qwen/Qwen3-4B-Instruct-2507"
 QWEN_MODEL_TAG = "qwen3:4b-instruct-2507-q4_K_M"
 QWEN_MODEL_DIGEST = "sha256:0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0"
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://ollama:11434").rstrip("/")
-QWEN_PROMPT_VERSION = "job-fit-85-deep-analysis-v1"
+QWEN_PROMPT_VERSION = "job-fit-85-compact-json-v2"
+QWEN_OUTPUT_CONTRACT_VERSION = "compact-85-boolean-map-v2"
 QWEN_CONTEXT_LENGTH, QWEN_MAX_OUTPUT_TOKENS, QWEN_SEED, QWEN_TEMPERATURE = 8192, 3072, 42, 0
 QWEN_INFERENCE_LOCK = threading.Lock()
 DEFAULT_CATALOG_PATH = Path("/app/JobConceptCatalog.json") if Path("/app/JobConceptCatalog.json").exists() else Path(__file__).resolve().parents[1] / "JobConceptCatalog.json"
@@ -25,8 +26,8 @@ QWEN_SYSTEM_PROMPT = """You are a careful job-posting responsibility classifier.
 Classify the role itself, not technologies merely mentioned as products, customer environments,
 desired awareness, qualifications without assigned duties, team context, or work managed by someone else.
 A label is true only when the posting assigns the candidate responsibility or a work condition matching
-its definition. Multiple overlapping labels may be true. Return exactly the requested JSON object with
-one boolean for every canonical concept plus a concise analysis. Do not add prose outside the JSON."""
+its definition. Multiple overlapping labels may be true. Return exactly the requested compact JSON object
+with one boolean for every canonical concept. Do not provide analysis, explanations, or prose."""
 
 def sha256(value: bytes | str) -> str:
     return hashlib.sha256(value.encode() if isinstance(value, str) else value).hexdigest()
@@ -43,9 +44,11 @@ TAXONOMY_VERSION, TAXONOMY_FINGERPRINT, CONCEPTS = load_catalog()
 CONCEPT_IDS = tuple(item[0] for item in CONCEPTS)
 QWEN_OUTPUT_SCHEMA = {"type": "object", "properties": {
     "concepts": {"type": "object", "properties": {key: {"type": "boolean"} for key in CONCEPT_IDS},
-                 "required": list(CONCEPT_IDS), "additionalProperties": False},
-    "analysis": {"type": "string"}}, "required": ["concepts", "analysis"], "additionalProperties": False}
-QWEN_PROMPT_HASH = sha256(f"{QWEN_PROMPT_VERSION}\n{QWEN_SYSTEM_PROMPT}\n{TAXONOMY_FINGERPRINT}")
+                 "required": list(CONCEPT_IDS), "additionalProperties": False}},
+    "required": ["concepts"], "additionalProperties": False}
+QWEN_OUTPUT_SCHEMA_HASH = sha256(json.dumps(QWEN_OUTPUT_SCHEMA, sort_keys=True, separators=(",", ":")))
+QWEN_PROMPT_HASH = sha256("\n".join((QWEN_PROMPT_VERSION, QWEN_SYSTEM_PROMPT,
+    TAXONOMY_FINGERPRINT, QWEN_OUTPUT_CONTRACT_VERSION, QWEN_OUTPUT_SCHEMA_HASH)))
 
 def posting_content_hash(title: str, description: str) -> str:
     return sha256(f"{title}\n{description}")
@@ -53,20 +56,22 @@ def posting_content_hash(title: str, description: str) -> str:
 def qwen_classification_fingerprint(content_hash: str) -> str:
     return sha256("\n".join((content_hash, str(TAXONOMY_VERSION), TAXONOMY_FINGERPRINT,
         QWEN_MODEL_ID, QWEN_MODEL_TAG, QWEN_MODEL_DIGEST, QWEN_PROMPT_VERSION, QWEN_PROMPT_HASH,
+        QWEN_OUTPUT_CONTRACT_VERSION, QWEN_OUTPUT_SCHEMA_HASH,
         str(QWEN_TEMPERATURE), str(QWEN_SEED), str(QWEN_CONTEXT_LENGTH), str(QWEN_MAX_OUTPUT_TOKENS))))
 
 def qwen_user_prompt(title: str, description: str) -> str:
     definitions = "\n".join(f"- {cid} [{category}] {name}: {definition}" for cid, name, category, definition in CONCEPTS)
     return (f"Canonical concept definitions:\n{definitions}\n\nJob title:\n{title}\n\nFull job posting:\n{description}\n\n"
             "Classify all 85 concepts according to actual candidate responsibilities and work conditions. "
-            "In analysis, briefly summarize the role, responsibility shape, work arrangement, technical domains, and material fit risks.")
+            "Return only the compact structured boolean map required by the schema.")
 
 def identity() -> dict[str, Any]:
     return {"serviceVersion": SERVICE_VERSION, "protocolVersion": PROTOCOL_VERSION,
         "revision": os.environ.get("CLASSIFIER_GIT_SHA", "unknown"), "purpose": "opt-in-llm-deep-analysis",
         "modelId": QWEN_MODEL_ID, "modelTag": QWEN_MODEL_TAG, "modelDigest": QWEN_MODEL_DIGEST,
         "taxonomyVersion": TAXONOMY_VERSION, "taxonomyFingerprint": TAXONOMY_FINGERPRINT,
-        "conceptCount": len(CONCEPTS), "promptVersion": QWEN_PROMPT_VERSION, "promptHash": QWEN_PROMPT_HASH}
+        "conceptCount": len(CONCEPTS), "promptVersion": QWEN_PROMPT_VERSION, "promptHash": QWEN_PROMPT_HASH,
+        "outputContractVersion": QWEN_OUTPUT_CONTRACT_VERSION, "outputSchemaHash": QWEN_OUTPUT_SCHEMA_HASH}
 
 def ollama_residency() -> tuple[int | None, int | None]:
     try:
@@ -87,15 +92,14 @@ def qwen_deep_analysis(job_id: str, title: str, description: str) -> dict[str, A
     with QWEN_INFERENCE_LOCK, urllib.request.urlopen(request, timeout=300) as response:
         response_value = json.load(response)
     content = response_value.get("message", {}).get("content")
-    if response_value.get("done") is not True or not isinstance(content, str):
+    if response_value.get("done") is not True or response_value.get("done_reason") != "stop" or not isinstance(content, str):
         raise RuntimeError("LLM deep-analysis response was incomplete.")
     try:
         result = json.loads(content)
     except json.JSONDecodeError as error:
         raise RuntimeError("LLM deep-analysis response was not valid JSON.") from error
     predictions = result.get("concepts") if isinstance(result, dict) else None
-    analysis = result.get("analysis") if isinstance(result, dict) else None
-    if not isinstance(predictions, dict) or set(predictions) != set(CONCEPT_IDS) or any(type(predictions[key]) is not bool for key in CONCEPT_IDS) or not isinstance(analysis, str) or not analysis.strip():
+    if not isinstance(predictions, dict) or set(predictions) != set(CONCEPT_IDS) or any(type(predictions[key]) is not bool for key in CONCEPT_IDS):
         raise RuntimeError("LLM deep-analysis response failed strict validation.")
     content_hash = posting_content_hash(title, description)
     model_size, model_vram = ollama_residency()
@@ -105,9 +109,12 @@ def qwen_deep_analysis(job_id: str, title: str, description: str) -> dict[str, A
     return {"received": True, "jobId": job_id, "title": title, "modelId": QWEN_MODEL_ID,
         "modelTag": QWEN_MODEL_TAG, "modelDigest": QWEN_MODEL_DIGEST, "taxonomyVersion": TAXONOMY_VERSION,
         "taxonomyFingerprint": TAXONOMY_FINGERPRINT, "promptVersion": QWEN_PROMPT_VERSION,
-        "promptHash": QWEN_PROMPT_HASH, "analyzedUtc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "promptHash": QWEN_PROMPT_HASH, "outputContractVersion": QWEN_OUTPUT_CONTRACT_VERSION,
+        "outputSchemaHash": QWEN_OUTPUT_SCHEMA_HASH,
+        "analyzedUtc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "postingContentHash": content_hash, "classificationFingerprint": qwen_classification_fingerprint(content_hash),
-        "predictions": [{"conceptId": key, "matched": predictions[key]} for key in CONCEPT_IDS], "analysis": analysis.strip(),
+        "predictions": [{"conceptId": key, "matched": predictions[key]} for key in CONCEPT_IDS],
+        "analysis": "Compact deterministic 85-concept structured classification.",
         "inference": {"totalDurationNanoseconds": response_value.get("total_duration"),
             "loadDurationNanoseconds": response_value.get("load_duration"),
             "promptTokenCount": response_value.get("prompt_eval_count"),
@@ -119,7 +126,7 @@ def qwen_deep_analysis(job_id: str, title: str, description: str) -> dict[str, A
                 if resource is not None else None)}}
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "JsmDeepAnalysis/3.1"
+    server_version = "JsmDeepAnalysis/3.2"
     def log_message(self, fmt: str, *args: Any) -> None:
         print(f"{self.address_string()} {fmt % args}", flush=True)
     def send_json(self, status: int, payload: dict[str, Any]) -> None:
@@ -159,6 +166,7 @@ class Handler(BaseHTTPRequestHandler):
 def self_test() -> None:
     assert len(CONCEPTS) == len(set(CONCEPT_IDS)) == 85
     assert QWEN_OUTPUT_SCHEMA["properties"]["concepts"]["required"] == list(CONCEPT_IDS)
+    assert "analysis" not in QWEN_OUTPUT_SCHEMA["properties"]
     assert len(QWEN_PROMPT_HASH) == len(qwen_classification_fingerprint("a" * 64)) == 64
     assert "all 85 concepts" in qwen_user_prompt("title", "description")
     print("Opt-in Qwen deep-analysis adapter self-test: PASS")
