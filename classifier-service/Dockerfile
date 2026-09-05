@@ -1,8 +1,11 @@
 FROM python:3.12.12-alpine3.23@sha256:ba94b66cc4fee436c27cbc42a6e315ead60729e8d2f109e3606a9d1bdba7bf0e
 ARG CLASSIFIER_GIT_SHA=unknown
+# Python's _uuid extension retains libuuid through .python-rundeps.
+# The current official base still predates Alpine's util-linux security fixes.
 RUN apk add --no-cache --upgrade \
     libcrypto3=3.5.8-r0 \
     libssl3=3.5.8-r0 \
+    libuuid=2.41.6-r0 \
     musl=1.2.5-r23 \
     musl-utils=1.2.5-r23 \
     sqlite-libs=3.53.4-r0 \
