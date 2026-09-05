@@ -414,3 +414,57 @@ assert.doesNotMatch(navigationStyles, /#[0-9a-f]{3,8}|rgba?\(/i,
   "Responsive Job Fit navigation must use semantic theme tokens.");
 
 console.log("All Job Fit UI integration tests passed.");
+
+
+// Execute the actual list renderer with a small DOM harness; no click or detail
+// request is permitted while producing the first card.
+const vm = require("node:vm");
+function element() {
+  return { children: [], classList: { add() {} },
+    append(...children) { this.children.push(...children); },
+    setAttribute() {}, addEventListener() {},
+    get childElementCount() { return this.children.length; } };
+}
+const runtime = {
+  JobFit, document: { createElement: element },
+  state: { jobFitEnabled: true, jobFitSignals: [{ conceptId: "technical.machine-learning", preference: "ideal" }],
+    jobFitGroupHardConflicts: [], jobFitConcepts: catalog.concepts, jobStates: new Map(), jobClosures: new Map() },
+  JobWorkflowState: { stateForJob: () => "normal", STATES: { hidden: "hidden", saved: "saved", applied: "applied", closed: "closed" } },
+  JobUnseenState: { applyToCard() {}, isUnseen: () => false },
+  ClearanceFit: { workAuthorizationBadges: () => [], jobCardBadges: () => [] },
+  EducationFit: { jobCardBadge: () => null },
+  ExtendedLocationUi: { listBadge: () => null }, calculateSalaryHeadroom: () => null,
+  CredentialFit: { evaluate() {}, jobCardBadges: () => [] },
+  appendHighlightedText() {}, formatShortDate: () => "", formatPay: () => "",
+  evaluateWorkAuthorizationMatch() {}, currentWorkAuthorizationProfile() {},
+  evaluateClearanceMatch() {}, currentSecurityProfile() {},
+  evaluateEducationMatch() {}, currentEducationProfile() {}, currentCredentialProfile() {},
+  createTrashCanIcon: element, createAppliedIcon: element,
+  fetch() { throw new Error("First list render must not fetch details."); }
+};
+vm.createContext(runtime);
+vm.runInContext(app.slice(app.indexOf("function evaluateJobFit(job)"), app.indexOf("function createAppliedIcon()")), runtime);
+function fitLabel(job) {
+  const card = runtime.createJobListItem(job);
+  function find(node) {
+    if (node.className?.split(" ").includes("job-fit-badge")) return node.textContent;
+    return node.children?.map(find).find(Boolean);
+  }
+  return find(card);
+}
+const scoredJob = { stableId: "scored", analysisPending: false, semanticClassificationStatus: "complete",
+  detectedConcepts: [{ conceptId: "technical.machine-learning", evidence: "Machine learning" }] };
+const expectedScore = JobFit.evaluate(scoredJob.detectedConcepts, {
+  enabled: true, signals: runtime.state.jobFitSignals
+}, catalog.concepts).score;
+assert.equal(fitLabel(scoredJob), `Job Fit ${expectedScore}/10`, "Existing analysis must score on the first render without opening detail.");
+assert.equal(fitLabel({ stableId: "pending", analysisPending: true, detectedConcepts: [] }), "Job Fit TBD");
+assert.equal(fitLabel({ stableId: "missing" }), "Job Fit TBD");
+assert.match(fitLabel({ stableId: "neutral", analysisPending: false, semanticClassificationStatus: "complete", detectedConcepts: [] }), /^Job Fit \d+\/10$/,
+  "Completed analysis with no detected signals is a real neutral score, not TBD.");
+assert.equal(fitLabel({ ...scoredJob, semanticClassificationStatus: "pending" }), "Job Fit TBD",
+  "Stale semantic analysis must not display a score even with detected concepts.");
+assert.equal(fitLabel({ ...scoredJob, semanticClassificationStatus: "unavailable" }), "Job Fit TBD");
+runtime.state.jobFitEnabled = false;
+assert.equal(fitLabel(scoredJob), undefined, "Disabled Job Fit must not display a badge.");
+console.log("All first-render Job Fit regression tests passed.");

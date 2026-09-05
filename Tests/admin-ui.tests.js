@@ -18,7 +18,7 @@ assert.match(index,
   /id="administrator-bootstrap-section"[^>]*hidden[\s\S]*?id="administrator-bootstrap-code"[\s\S]*?minlength="8"[\s\S]*?maxlength="8"[\s\S]*?Claim Administrator/);
 assert.doesNotMatch(index, /annotation-labeling-ui|detector-evaluation-ui/,
   "Removed experimental Admin assets must not load.");
-assert.match(index, /app\.js\?v=51/);
+assert.match(index, /app\.js\?v=52/);
 
 assert.match(app, /synchronizeAdminNavigation\(account\.isAdmin === true\)/);
 assert.match(app, /if \(!isAdmin\)[\s\S]*?adminTab\?\.remove\(\)[\s\S]*?return;/,

@@ -5398,6 +5398,7 @@ async function loadJobDetail(job) {
       state.jobs[index] = {
         ...state.jobs[index],
         ...detail,
+        analysisPending: !detail.descriptionHtml?.trim(),
         descriptionText: descriptionToText(detail.descriptionHtml || ""),
         detailLoaded: true
       };

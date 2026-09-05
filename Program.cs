@@ -532,7 +532,7 @@ app.UseStaticFiles();
 
 app.MapGet("/api/jobs", async (WorkspaceRuntimeProvider provider, CancellationToken token) =>
 {
-    var compact = (await provider.GetAsync(token)).Catalog.CompactSnapshot;
+    var compact = await (await provider.GetAsync(token)).Catalog.GetListSnapshotAsync(token);
     app.Logger.LogInformation(
         "Compact job-list response contains {JobCount} jobs; full descriptions are excluded.",
         compact.Jobs.Count);

@@ -85,6 +85,47 @@ public sealed class JobCatalog
         }
     }
 
+    // List reads must observe analysis persisted by another workspace/detail request,
+    // just as GetJobDetailAsync does, without downloading missing descriptions.
+    public async Task<JobsListSnapshot> GetListSnapshotAsync(CancellationToken cancellationToken = default)
+    {
+        if (Snapshot.IsRefreshing) return CompactSnapshot;
+        await _sourceOperationGate.WaitAsync(cancellationToken);
+        try
+        {
+            JobSourceQuery query;
+            lock (_gate)
+            {
+                if (_snapshot.IsRefreshing) return CompactSnapshot;
+                query = _currentQuery;
+            }
+            var cache = await _stateStore.LoadJobsCacheAsync(query);
+            var sharedJobs = cache?.Query?.IsEquivalentTo(query, _companyCatalog) == true
+                ? CanonicalizeStableIdentities(cache.Jobs, "job list cache")
+                    .ToDictionary(job => job.StableId, StringComparer.Ordinal)
+                : null;
+            lock (_gate)
+            {
+                if (_snapshot.IsRefreshing) return CompactSnapshot;
+                // Keep list membership and workspace history unchanged until refresh.
+                _cachedJobs = _cachedJobs.Select(job => CurrentAnalysis(
+                    sharedJobs?.GetValueOrDefault(job.StableId) ?? job)).ToArray();
+                var available = VisibleJobs(_cachedJobs);
+                _snapshot = _snapshot with { Jobs = available, TotalJobs = available.Length };
+                return CompactSnapshot;
+            }
+        }
+        finally
+        {
+            _sourceOperationGate.Release();
+        }
+    }
+
+    private JobRecord CurrentAnalysis(JobRecord job) =>
+        !string.IsNullOrWhiteSpace(job.DescriptionHtml) && !_jobSourceClient.IsAnalysisCurrent(job)
+            ? _jobSourceClient.Reclassify(job)
+            : job;
+
     public async Task InitializeAsync(JobSourceQuery query)
     {
         var company = _companyCatalog.Get(query.CompanyId);
@@ -237,7 +278,7 @@ public sealed class JobCatalog
                 -_options.SourceSwitchCacheFreshnessMinutes);
             if (cacheMatches && lastRefreshed >= freshAfter)
             {
-                var cachedJobs = CanonicalizeStableIdentities(cache!.Jobs, "recent source cache");
+                var cachedJobs = CanonicalizeStableIdentities(cache!.Jobs.Select(CurrentAnalysis).ToArray(), "recent source cache");
                 var availableJobs = VisibleJobs(cachedJobs);
                 var snapshot = new JobsSnapshot(
                     availableJobs,

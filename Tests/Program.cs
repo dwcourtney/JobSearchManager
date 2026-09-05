@@ -322,6 +322,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Portable workspace exports exclude authentication secrets", TestAccountSecretsExcludedFromExportAsync),
     ("File storage round-trips beside its configured base", TestFileStoreAsync),
     ("Workspace reset deletes only known local state documents", TestFileResetAsync),
+    ("Job lists load current persisted analysis without opening details", TestListAnalysisAsync),
     ("Different workspaces resolve identical sources to one shared cache", TestSharedSourceCacheAsync),
     ("Concurrent workspace refreshes use one provider request", TestSharedRefreshSingleFlightAsync),
     ("Workspace preferences cannot mutate canonical shared source data", TestPreferencesDoNotMutateSharedCacheAsync),
@@ -1984,6 +1985,79 @@ static async Task TestObsoleteAutomaticSettingsIgnoredAsync()
     }
     finally
     {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static async Task TestListAnalysisAsync()
+{
+    var directory = TestDirectory("list-analysis");
+    try
+    {
+        var handler = CreateWorkdayHandler(() => 2);
+        var (_, query) = WorkdaySource();
+        var pending = CachedJob("leidos", "REQ-0000", "/job/0", "");
+        var missing = CachedJob("leidos", "REQ-0001", "/job/1", "");
+        var concepts = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+        using var rules = new SqliteSemanticRuleStore(Path.Combine(directory, "rules.db"), concepts);
+        rules.Initialize(RepositoryAsset("LegacyJobConceptRules.json"));
+        var regex = new RegexSemanticClassifier(rules, concepts);
+        await regex.InitializeAsync();
+        var classifierClient = new ClassifierClient(new HttpClient(new ThrowingHttpMessageHandler()),
+            concepts, NullLogger<ClassifierClient>.Instance);
+        var semantic = new SemanticClassificationService(classifierClient, concepts, regex);
+        var (catalog, _, state) = await CreateTestCatalogAsync(directory, handler, [pending, missing], query,
+            semanticClassification: semantic);
+        var client = CreateSourceClient(new HttpClient(handler));
+        var analyzed = client.Reclassify(pending with
+        {
+            DescriptionHtml = "<p>Python software development and machine learning.</p>"
+        });
+        var result = await semantic.ClassifyAsync(analyzed);
+        analyzed = analyzed with
+        {
+            SemanticClassification = result.Classification,
+            SemanticClassificationStatus = SemanticClassificationStates.Complete
+        };
+        var expected = JobListItem.SemanticDetectedConcepts(analyzed);
+        Assert(expected.Count > 0 && semantic.IsCurrent(analyzed), "Fixture must contain current scoring signals.");
+        // Another workspace persists detail after this catalog was initialized.
+        await state.SaveJobsCacheAsync([analyzed, missing], DateTimeOffset.UtcNow, 0, query);
+        Assert(string.IsNullOrEmpty(catalog.Snapshot.Jobs[0].DescriptionHtml), "Fixture must start with stale list memory.");
+        var list = await catalog.GetListSnapshotAsync();
+        Assert(!list.Jobs[0].AnalysisPending && list.Jobs[0].DetectedConcepts.SequenceEqual(expected) &&
+               list.Jobs[0].SemanticClassificationStatus == SemanticClassificationStates.Complete,
+            "Initial list discarded persisted scoring data until detail was opened.");
+        Assert(list.Jobs[1].AnalysisPending && list.Jobs[1].DetectedConcepts.Count == 0 &&
+               list.Jobs[1].SemanticClassificationStatus == SemanticClassificationStates.Pending,
+            "A genuinely missing analysis must remain pending.");
+        Assert(handler.DetailRequests == 0 && handler.ListingRequests == 0,
+            "Loading existing scoring data must not require any provider request.");
+        var detail = JobPresentation.AuthoritativeRegexDetail((await catalog.GetJobDetailAsync(analyzed.StableId))!);
+        Assert(detail.DetectedConcepts!.SequenceEqual(list.Jobs[0].DetectedConcepts) && handler.DetailRequests == 0,
+            "Opening detail changed the already available list scoring data.");
+        // Upgrade old derived metadata without discarding current semantic scoring.
+        var legacy = analyzed with { AnalysisVersion = 0 };
+        await state.SaveJobsCacheAsync([legacy, missing], DateTimeOffset.UtcNow, 0, query);
+        var upgraded = await catalog.GetListSnapshotAsync();
+        Assert(upgraded.Jobs[0].DetectedConcepts.SequenceEqual(expected),
+            "List did not preserve scoring through cached description analysis upgrades.");
+        await catalog.SwitchSourceAsync(query);
+        Assert(catalog.CompactSnapshot.Jobs[0].DetectedConcepts.SequenceEqual(expected) && handler.DetailRequests == 0,
+            "Recent source switch left scoring data unavailable until detail was opened.");
+        var stale = analyzed with
+        {
+            SemanticClassification = analyzed.SemanticClassification! with { ModelDigest = "obsolete-rules" }
+        };
+        await state.SaveJobsCacheAsync([stale, missing], DateTimeOffset.UtcNow, 0, query);
+        var staleList = await catalog.GetListSnapshotAsync();
+        Assert(staleList.Jobs[0].SemanticClassificationStatus == SemanticClassificationStates.Pending &&
+               staleList.Jobs[0].DetectedConcepts.Count == 0,
+            "List cache refresh bypassed the current ruleset freshness guard.");
+    }
+    finally
+    {
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
         if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
     }
 }
@@ -5105,7 +5179,8 @@ static async Task<(JobCatalog Catalog, FileWorkspaceDataStore Store, AppStateSto
     IReadOnlyList<JobRecord> cachedJobs,
     JobSourceQuery query,
     bool seedCache = true,
-    SharedSourceRefreshCoordinator? coordinator = null)
+    SharedSourceRefreshCoordinator? coordinator = null,
+    SemanticClassificationService? semanticClassification = null)
 {
     var companies = new CompanyCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
     var store = new FileWorkspaceDataStore(directory, NullLogger<FileWorkspaceDataStore>.Instance);
@@ -5137,7 +5212,8 @@ static async Task<(JobCatalog Catalog, FileWorkspaceDataStore Store, AppStateSto
         remote,
         companies,
         Options.Create(new JobSourceOptions()),
-        coordinator);
+        coordinator,
+        semanticClassification);
     await catalog.InitializeAsync(query);
     return (catalog, store, state);
 }
