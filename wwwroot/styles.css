@@ -2618,3 +2618,6 @@ mark {
 .rule-maintenance-dialog textarea { display: block; width: 100%; box-sizing: border-box; margin: 16px 0; }
 .rule-maintenance-dialog button { margin-right: 12px; }
 .rule-maintenance-dialog::backdrop { background: var(--color-confirmation-backdrop); }
+
+.human-review-controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.human-review-controls [aria-pressed="true"] { outline: 2px solid currentColor; outline-offset: 2px; font-weight: bold; }

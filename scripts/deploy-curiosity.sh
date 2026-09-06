@@ -116,6 +116,24 @@ if [[ -f "$lab_root/data/app/regex-rules.db" ]]; then
   mv -- "$lab_root/data/app/$backup_name" "$lab_root/backups/$backup_name"
 fi
 
+# The review store is independent of RegEx storage and must never pass through
+# RegEx initialization/migration. Back it up online with SQLite's backup API.
+review_database_path="$(docker inspect --format '{{range .Config.Env}}{{println .}}{{end}}' "$current_container" | sed -n 's/^HumanReview__DatabasePath=//p')"
+if [[ -n "$review_database_path" && "$review_database_path" != /app/data/cheap-triage-human-review.db ]]; then
+  echo "Custom Human Review database path requires explicit backup mapping; refusing deployment." >&2
+  exit 1
+fi
+if [[ -f "$lab_root/data/app/cheap-triage-human-review.db" ]]; then
+  review_backup_name="human-review-predeploy-${previous_sha:-unknown}-$(date -u +%Y%m%dT%H%M%SZ).db"
+  docker exec "$current_container" dotnet JobSearchManager.dll --human-review-backup \
+    /app/data/cheap-triage-human-review.db "/app/data/$review_backup_name"
+  [[ -f "$lab_root/data/app/$review_backup_name" ]] || {
+    echo "Online Human Review backup was not created; refusing deployment." >&2
+    exit 1
+  }
+  mv -- "$lab_root/data/app/$review_backup_name" "$lab_root/backups/$review_backup_name"
+fi
+
 docker build \
   --platform linux/amd64 \
   --build-arg "JSM_GIT_SHA=$target_sha" \

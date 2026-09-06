@@ -1,0 +1,28 @@
+{
+  "scope": "Unadjudicated preparation only; immutable prior audit preserved",
+  "rows": 29,
+  "families": {
+    "civil-structural-power": 8,
+    "electronics-test-lab": 5,
+    "enterprise-application-support": 1,
+    "field-technicians-training": 5,
+    "manufacturing-quality-analysis": 4,
+    "technical-presales-product": 2,
+    "technical-project-leadership": 4
+  },
+  "priorJudgments": {
+    "QUESTIONABLE": 24,
+    "LIKELY WRONG": 5
+  },
+  "rawSha256": "7724eb681f4f5c3931755b1939ad4243f3a4018ff7665529d9698eb9f1847b0f",
+  "auditSha256": "9ef345f276c15a2750492710cb50d87ba7a144afefd38c4575d59ba10e0fc68b",
+  "workflowInputSha256": "901f217c5a1bad5a94769cb41b24299fb192bba4938d58dcd95d857999d0b742",
+  "rulesetVersion": "1.0.0",
+  "rulesetSha256": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+  "artifactSha256": {
+    "queue.csv": "83e8a956b5726da9d1ffe174036728d40118b8885a1c3561f1fb99fa207caf02",
+    "queue.md": "1720e31262173393e5e8a3c0e65de67e1a529e063421e2d40d2797e8d471f343",
+    "excerpt-provenance.json": "1cafadcc4009c9ff114c41ac235c482f4fc97601fd33dd69be05226a429fe4ab",
+    "workflow-snapshot.json": "5c33f743f57034b027ce6e3cec0ea34e4745003ed7880c7f28cb6de8f513f736"
+  }
+}

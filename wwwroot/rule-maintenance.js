@@ -79,6 +79,11 @@
     status.className = "admin-evaluation-metadata";
     status.textContent = "Loading Cheap Triage status…";
     panel.replaceChildren(title, description, status, createButton(env));
+    if (env.HumanReview) {
+      const humanReview = doc.createElement("section");
+      panel.append(humanReview);
+      env.HumanReview.mount(humanReview, env);
+    }
     try {
       const response = await env.fetch("/api/admin/cheap-triage/status", { cache: "no-store" });
       if (!response.ok) throw new Error("Unavailable");

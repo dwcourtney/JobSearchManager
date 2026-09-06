@@ -1,0 +1,452 @@
+[
+  {
+    "reviewId": "Q01",
+    "stableId": "aecom:J10147449",
+    "auditIndex": 15,
+    "cache": "aecom-3c55b12f8055996ccdc2c365b783b022579f495c3ed94e832674c6cc0ba8efa2",
+    "inputFingerprint": "67b6082d108610e1b6450d557ce30ef80de002c0e351cd3be26445b1f6b130fe",
+    "normalizedBodySha256": "c7404ec36b1efa11542937024114797c941fc4edccb4eecfbfc391f4b91d261a",
+    "excerpts": [
+      {
+        "start": 16,
+        "end": 766,
+        "text": "We are seeking a Senior Structural Engineer with experience in hyperscale and colocation data center facility design to join our growing Data Center practice. The ideal candidate will bring strong technical expertise in large scale concrete and steel structures, a proven track record delivering fast paced technology / industrial projects, and a passion for advancing low carbon and resilient design strategies. This position offers the flexibility of a remote work schedule and can be based from a variety of locations in the US where AECOM has an office. Although the position is primarily remote periodic travel may be required for client meetings, key project milestones, onsite collaboration sessions, or other business‑critical activities. Tra"
+      }
+    ]
+  },
+  {
+    "reviewId": "Q02",
+    "stableId": "aecom:REF59213I",
+    "auditIndex": 95,
+    "cache": "aecom-3c55b12f8055996ccdc2c365b783b022579f495c3ed94e832674c6cc0ba8efa2",
+    "inputFingerprint": "c60baf99bb80a3dd14d87545da8172833eb8bfa089fdf97cd3541c1933595373",
+    "normalizedBodySha256": "e1bd57412ae205086d173df0812bca0b639f51ea0c3312652f4b9ce4056325ac",
+    "excerpts": [
+      {
+        "start": 1505,
+        "end": 2205,
+        "text": "Technical expertise in highway drainage design including, but not limited to: Storm Drain Design, Cross Culvert Analysis and Design, Hydrology, Ditch Design, Bridge Deck Drainage, Temporary Drainage, Stormwater Quantity Control Qualifications Minimum Requirements: CAD Designers: BS Degree or demonstrated equivalency of education and/or experience Junior Level Engineers: BS in Engineering + 2 years of related experience or demonstrated equivalency of education and/or experience Mid-Level Engineers: BS in Engineering + 6 years of related experience or demonstrated equivalency of education and/or experience Senior Level Engineers / Task Leads: BS in Engineering + 10 years of related experience "
+      }
+    ]
+  },
+  {
+    "reviewId": "Q03",
+    "stableId": "aecom:REF59216P",
+    "auditIndex": 96,
+    "cache": "aecom-3c55b12f8055996ccdc2c365b783b022579f495c3ed94e832674c6cc0ba8efa2",
+    "inputFingerprint": "c61822e733f4f882ce7800777fa36525fe468bbcd216ed1ef8efe6c15d59d55e",
+    "normalizedBodySha256": "2dd8114260c75616372937ba49df79ade197ca7a637d75cdb5fee638fb9b4c64",
+    "excerpts": [
+      {
+        "start": 1374,
+        "end": 2074,
+        "text": "Desired skillsets include: Design/Build or Alternative Delivery project experience Experience or interest in complex interstate highway design Experience with Bentley Microstation and Open Roads Experience in Roadway Design calculations including Superelevation, Stopping Sight Distance (SSD), Decision Sight Distance (DSD), Acceleration and Deceleration lanes. Experience using the 2018 AASHTO Green Book. Qualifications Minimum Requirements: Roadway CAD Designers & Roadway Modelers: BS Degree or demonstrated equivalency of education and/or experience Junior Level Engineers: BS in Engineering + 2 years of related experience or demonstrated equivalency of education and/or experience Mid-Level En"
+      }
+    ]
+  },
+  {
+    "reviewId": "Q04",
+    "stableId": "leidos:R-00184335",
+    "auditIndex": 859,
+    "cache": "leidos-697e9a0d8c74997954ef0e68219601eef0c4783b278a6267c3250aae5c876c50",
+    "inputFingerprint": "8a14d0df49da773d33d22432bcccdd789cd05e1fee96d3e25f961bd1344a12f9",
+    "normalizedBodySha256": "d5a5c7b2091081d174f50159aa64d368d62e269c4dcbb332dc72e2c7616f429a",
+    "excerpts": [
+      {
+        "start": 771,
+        "end": 1871,
+        "text": "We are seeking a Substation Civil/Structural Engineer with 2+ years of experience within the utility industry working directly for a utility or consulting company, performing design engineering. The candidate must have a strong educational background in design of steel structures, concrete structures, geotechnical engineering, and foundations. Experience in substation structure design, rigid bus design, foundation design, oil spill containment design, retaining walls, masonry control shelters, and fire-walls is required. This position will consist of performing design of the aforementioned civil/structural components in support of the development of bid/construction packages for substation projects. Candidate will primarily function as an engineer contributing directly to projects, performing design calculations, and providing detail markups. Site-visits to client substation facilities are expected to be part of the work, along with occasional travel for client meetings and industry related events. Candidate must comply with quality control and safe work practices and maintain compli"
+      }
+    ]
+  },
+  {
+    "reviewId": "Q05",
+    "stableId": "leidos:R-00184339",
+    "auditIndex": 860,
+    "cache": "leidos-697e9a0d8c74997954ef0e68219601eef0c4783b278a6267c3250aae5c876c50",
+    "inputFingerprint": "a45e7fc473e4a378b4410afe81cb636c500e3dc35642e5fdb8d7975bc461fa5b",
+    "normalizedBodySha256": "19dbbffac581424c5bb7ddff0f3edd9d9a47f6586b0da89768e832bcdfc60aba",
+    "excerpts": [
+      {
+        "start": 387,
+        "end": 1487,
+        "text": "We are seeking a Licensed Senior Civil/Structural Engineer with 5+ years of experience within the utility industry working directly for a utility or consulting company, doing design engineering and reviews. The candidate must have a strong educational background in design of steel structures, concrete structures, geotechnical engineering, and foundations. Experience reviewing substation structure design, rigid bus design, foundation design, oil spill containment design, retaining walls, masonry control shelters, and firewalls is required. This position will consist of performing design reviews of the aforementioned civil/structural design components in support of the development of bid/construction packages for substation projects. Candidate will primarily function as a senior engineer leading projects, performing design reviews, as well as developing junior staff members. Site-visits to client substation facilities are expected to be part of the work, along with occasional travel for client meetings and industry-related events. Candidate must comply with quality control and safe wor"
+      }
+    ]
+  },
+  {
+    "reviewId": "Q06",
+    "stableId": "leidos:R-00190076",
+    "auditIndex": 998,
+    "cache": "leidos-697e9a0d8c74997954ef0e68219601eef0c4783b278a6267c3250aae5c876c50",
+    "inputFingerprint": "7c7278355d75360c99bbbe237729c4c8271772c7433429758e6af92dd4d142fc",
+    "normalizedBodySha256": "59d4d174d126677d64a013c8f5f2a231f8cb95b0359bc17363dd82372fc620cd",
+    "excerpts": [
+      {
+        "start": 128,
+        "end": 1328,
+        "text": "In this role, you will work alongside Civil engineers to develop site design drawing packages and supporting documentation for electric utility substation projects. Projects range from greenfield substations to brownfield expansions and require coordination with multiple engineering disciplines. (While substation experience is preferred, it is not required) Responsibilities Include: Develop new and modify existing substation civil site plan drawings. Prepare grading, drainage, and stormwater management plans. Develop erosion and sediment control plans in accordance with local and state requirements. Prepare roadway, access drive, and site layout plans. Perform earthwork grading and cut/fill balancing using Civil 3D or OpenRoads/MicroStation workflows. Perform AutoTURN analyses for construction and maintenance vehicle access. Prepare utility layouts including storm sewer, sanitary, and water service plans where required. Develop permit-ready civil drawing packages for utility and agency review. Assist with preparation of permitting exhibits and support environmental and jurisdictional permitting efforts. Coordinate with surveyors, geotechnical engineers, structural engineers, and su"
+      }
+    ]
+  },
+  {
+    "reviewId": "Q07",
+    "stableId": "parsons:R172433",
+    "auditIndex": 1642,
+    "cache": "parsons-cfd0f01f911887bdcef9e5a022443484c49c5a6da0471caba8e9024afa93baf1",
+    "inputFingerprint": "054313dc48d78e8c912a0707af9500e2f4afdf4ee412c4bbf08bfd15b5455c95",
+    "normalizedBodySha256": "3868910e8512e077c23c4063e79856804b713c7047ad7aefed019cc1e35773f8",
+    "excerpts": [
+      {
+        "start": 2238,
+        "end": 3238,
+        "text": "Responsibilities: Independently and collaboratively complete bridge design tasks and plans for road/highway, light rail, and heavy rail projects. Deliverables include calculations, drawings, technical reports, and cost estimates. Coordinate with multidisciplinary teams, including geotechnical, roadway, and drainage designers. Provide technical guidance to CAD Designers/Drafters and Engineers. Perform complex structural analysis and design work efficiently and accurately. Ensure quality and technical oversight of deliverables. Qualifications: Education: Master’s degree in Civil/Structural Engineering. Experience: 3+ years of experience in bridge structure analysis and design. Technical Skills: Proficiency in steel, reinforced concrete, and prestressed concrete design. Licensure: Engineer in Training (EIT) certification with the ability to obtain Professional and/or Structural Engineer licensure. Software Proficiency: Experience with bridge engineering software and Bentley CAD tools. Com"
+      }
+    ]
+  },
+  {
+    "reviewId": "Q08",
+    "stableId": "parsons:R178563",
+    "auditIndex": 1669,
+    "cache": "parsons-cfd0f01f911887bdcef9e5a022443484c49c5a6da0471caba8e9024afa93baf1",
+    "inputFingerprint": "624219e2030c63d4c14fcd84513f80317e648e71dc59c199ef493f0dc8a1eede",
+    "normalizedBodySha256": "2636bfbb96edfae7bb39d16ec7e95ca1a44c92520d96aa8715119f592978deb9",
+    "excerpts": [
+      {
+        "start": 1857,
+        "end": 2857,
+        "text": "Key Responsibilities: This position will focus on drainage design, layouts, calculations, preparation of drainage reports and preparation of Erosion/Sedimentation Control Plans on roadway design projects. Complete a variety of assignments, including drawings, specifications, and other materials for procurement and construction purposes, utilizing CAE/CAD applications as applicable. Prepare standard engineering computations, material quality takeoffs, estimates, surveys, and designs. Develop detailed requisitions for equipment and materials. Perform additional responsibilities as required by the position. Qualifications: Bachelor's degree in Engineering or a related field. Minimum of 3 years of relevant work experience Engineer in Training (EIT) Certificate may be required Proficiency in CAD (Microstation) and other PC software packages commonly used in drainage design and engineering like StormCAD, HY-8, CulvertMaster, etc Experience with NCDOT/SCDOT Drainage design and erosion control"
+      }
+    ]
+  },
+  {
+    "reviewId": "Q09",
+    "stableId": "boeing:JR2026508418",
+    "auditIndex": 227,
+    "cache": "boeing-79fbd27ebfc41219a37002560059254b648175c5d595a65130553bdc88ec82ef",
+    "inputFingerprint": "0bb1a8ad06e7e876e9d2685cfc8ed46e0fdfc7ef5995b633557ea6577677d204",
+    "normalizedBodySha256": "4821e2536297a0234a762f4200404b40f256ea47f1b23cdf7cb38dd665ec5a08",
+    "excerpts": [
+      {
+        "start": 255,
+        "end": 1105,
+        "text": "In this role, you will conduct Non-Destructive Testing (NDT) on aerospace products using cutting edge methods including ultrasonic (UT), eddy current (ET), and radiographic (RT). You will work with digital and automated inspection systems in an aerospace environment aligned with industry standards and regulations. Opportunities for rapid skill growth and progress depending on performance. Employees will be required to obtain Boeing NDT certification and pass a vision exam. Failure to achieve or maintain certification requirements may lead to termination of employment. Candidates must have documented evidence of NDT education and/or OJT hours in UT or RT available for Boeing Level 3 review. Work Environment: May be exposed to noise, dust, fumes, airborne particles, smoke (not over OSHA permissible exposure levels). This position requires t"
+      }
+    ]
+  },
+  {
+    "reviewId": "Q10",
+    "stableId": "boeing:JR2026518584",
+    "auditIndex": 480,
+    "cache": "boeing-79fbd27ebfc41219a37002560059254b648175c5d595a65130553bdc88ec82ef",
+    "inputFingerprint": "4f08950e4a25740cc3b0ee8ce298938ebc17dd07a8969a211ac9c1a4d8f81a12",
+    "normalizedBodySha256": "0673e3d93d3d537056d98bfa74f2c89356e32458288749daf8b3dc9b8b0a9dfa",
+    "excerpts": [
+      {
+        "start": 342,
+        "end": 1542,
+        "text": "Responsibilities: Supports activities to plan, conduct and document tests on products, systems, components, materials, and manufacturing processes and technologies Designs systems, materials, components, software and methodologies to meet customer requirements Participates in test design and performs routine procurement, fabrication and assembly of components, test fixtures and test systems Supports the coordination of test requirements and assists in reviewing test methods and capabilities Facilitates systems integration, fabrication and modification; supports system pre-test setup, integration, checkout, and post test tear-down Conducts routine tests, analyzes data and documents results Troubleshoots and recommends resolution of basic laboratory and test-related problems Works under general supervision Basic Qualifications (Required Skills/Experience): Ability to obtain a U.S. Security Clearance for which the U.S. Government requires U.S. Citizenship 1+ years of experience interpreting electrical engineering drawings, schematics, and definition 1+ years of experience with various types of sensors and instrumentation including strain gages, temperature / pressure measurement, acce"
+      }
+    ]
+  },
+  {
+    "reviewId": "Q11",
+    "stableId": "boeing:JR2026518773",
+    "auditIndex": 496,
+    "cache": "boeing-79fbd27ebfc41219a37002560059254b648175c5d595a65130553bdc88ec82ef",
+    "inputFingerprint": "d40987bfd2acab2b2970f82daeb123a3069067b96e4a15c4d22943fc80fced1d",
+    "normalizedBodySha256": "7e1664ebb00bb88d6775b7e4fc6f6fad4981917b0f3a063cc009b030e69ef524",
+    "excerpts": [
+      {
+        "start": 849,
+        "end": 2049,
+        "text": "Provide support in analysis of process data, metrics, models and flows to identify root causes of complex problems and development and implementation of preventive or corrective actions Review, understand and interpret policies, processes, procedures process specifications, drawings, requirements, international standards, etc. Conduct research, compile and analyze performance reports and process control statistics to continuously improve process capability Ensure work orders are documented properly Provide expertise, guidance, techniques, and fabrication practices to fabrication technicians Analyze data to provide material review dispositions for complex nonconforming materials, parts and equipment Assist in the development of new standard repairs for nonconforming materials, parts and equipment Manufacturing Execution System familiarity for processing work orders and nonconformances Work under minimal direction Basic Qualifications (Required Skills/Experience): Ability to obtain a U.S. Security Clearance for which the U.S. Government requires U.S. Citizenship 5+ years of experience in electrical (wire shop) fabrication and required processes 5+ years of experience with quality sys"
+      },
+      {
+        "start": 2263,
+        "end": 2693,
+        "text": "Experience inspecting, fabricating, installing, routing, terminating, soldering, and repairing electrical wiring harnesses; or any variety of electrical components, and associated equipment Preferred Qualifications (Desired Skills/Experience): An active U.S. Security Clearance in the past 24 months A bachelor’s degree or higher, or equivalent work or military experience Drug Free Workplace: Boeing is a Drug Free Workplace wher"
+      }
+    ]
+  },
+  {
+    "reviewId": "Q12",
+    "stableId": "leidos:R-00182300",
+    "auditIndex": 849,
+    "cache": "leidos-697e9a0d8c74997954ef0e68219601eef0c4783b278a6267c3250aae5c876c50",
+    "inputFingerprint": "0a4f3e287edd1df02c1c3c07ce9f86d20066ac467f84c5b24a918f117cc069b6",
+    "normalizedBodySha256": "a47a2ce80747b18f8a4be1029d2ffdad7dbf83355425d882717d779cf24a7080",
+    "excerpts": [
+      {
+        "start": 1560,
+        "end": 2810,
+        "text": "Primary Responsibilities: Assists in review of research requirements, planning, and scheduling of laboratory support for science projects. Assists in researching, evaluating, justifying, and procuring laboratory and field instruments and equipment. Assists in maintaining appropriate and accurate inventories of spare parts. Installs new and stored lab instruments. Checks functioning and calibration of all instruments before and after grantee use. Troubleshoots all instruments and equipment as needed. Provides emergency repairs for all laboratory instruments as needed. Performs calibrations; writes, updates, and performs preventative maintenance. Maintains instrument maintenance/repair history files and calibration certificates. Packages and tracks capital equipment and instruments for recalibration, repair, replacement, winter storage, and/or transfer to research vessels as needed. Assures all instrument-related entries in the inventory, equipment, and preventative maintenance databases are kept current. Briefs grantees/scientists on safe laboratory practices, and care/maintenance of USAP-owned instrumentation. Provides input to the S&TPS McMurdo Implementation Manager on suggested improvements to the laboratories and the associate"
+      }
+    ]
+  },
+  {
+    "reviewId": "Q13",
+    "stableId": "rtx:01868753",
+    "auditIndex": 2046,
+    "cache": "rtx-363a4d87be07d61263d5c73d01a6a3671f5e5488273aef6ee265d5f49b31c5bc",
+    "inputFingerprint": "471f2ed21d200c50d4b536f0fb0b39d7561fb6e5edc5bf8ddeb25bba91d418bd",
+    "normalizedBodySha256": "387cc26e9bc8a52516c5f603c0b9e3b39407882e1f4611807ca4f1b0299764a8",
+    "excerpts": [
+      {
+        "start": 1131,
+        "end": 2381,
+        "text": "What You Will Do Perform PCB layout tasks of low to medium complexity under close guidance from senior designers Apply ECAD design standards, layout rules, and established workflows while completing assigned work packages Support schematic‑to‑layout implementation including component placement, basic routing, and constraint setup Maintain accuracy by minimizing repeat errors and incorporating checker/mentor feedback effectively Prepare and update ECAD documentation such as fabrication outputs, simple drawings, and design files Communicate progress clearly and seek clarification proactively to ensure work aligns with design intent Contribute to continuous improvement by applying lessons learned and following ECAD best practices Collaborate with ECAD peers in sharing task updates and implementing corrections Support configuration management and adherence to ECAD standards across assigned tasks What You Will Learn How to apply Collins Aerospace ECAD standards, workflows, design rules, and documentation practices Best practices in PCB component placement, routing, and constraint‑driven design using Siemens Xpedition Techniques for multilayer stackup interpretation, routing strategies, and basic high‑speed design fundamentals How to ge"
+      }
+    ]
+  },
+  {
+    "reviewId": "Q14",
+    "stableId": "northrop-grumman:R10245576",
+    "auditIndex": 1108,
+    "cache": "northrop-grumman-c706f3e21f845a6ed5161556b5f5e06e6041bd94f694bb9f108920e6e1e59e11",
+    "inputFingerprint": "2d6a585f858263d35e568f15bc1acd957bc013a32974fbfb3ca94586637a8630",
+    "normalizedBodySha256": "ec3454a9b123a2304d5e44da3753843a3d15e26dc1b5c9a2c633029aec85d572",
+    "excerpts": [
+      {
+        "start": 2099,
+        "end": 3499,
+        "text": "Responsibilities: Integration & Error Management Monitor daily file transfer and integration error reports across VNDLY, Workday, and ServiceNow. Identify root causes of integration issues and drive timely resolution with internal partners and external vendors. Document recurring error patterns and recommend process or configuration improvements. Systems & Integration Knowledge Maintain working knowledge of integrations and data flows between VNDLY, Workday, ServiceNow, and related extended workforce processes. Serve as a subject matter resource on VNDLY integrations. Downstream Dependencies & Issue Resolution Map and maintain documentation of downstream system dependencies related to contingent labor and contract services transactions (e.g. IDM, AAO, ESIS, CPA, LX). Act as point-of-contact for downstream stakeholders to triage issues, coordinate fixes, and communicate impacts and resolution timelines. Reporting & Analytics (VNDLY) Create, run, and analyze ad-hoc reports in VNDLY to support operational oversight and decision-making. Translate data findings into clear insights, summaries, and recommendations for leadership and partner teams. Support audit and compliance-related reporting needs as required. Vendor & Contract Services Support (VNDLY) Assist with vendor management of VNDLY-related contract services, including initiating invites, supporting candidate onboarding work"
+      }
+    ]
+  },
+  {
+    "reviewId": "Q15",
+    "stableId": "aecom:J10150854",
+    "auditIndex": 33,
+    "cache": "aecom-3c55b12f8055996ccdc2c365b783b022579f495c3ed94e832674c6cc0ba8efa2",
+    "inputFingerprint": "64caefbe78373492e19cbfa5f739998a2fc918cb9996f2d155011b9b7a36420d",
+    "normalizedBodySha256": "6b20fc53d6548d89451f2fb3944284a8dcd6b00ba35db180d546778ba691f580",
+    "excerpts": [
+      {
+        "start": 356,
+        "end": 1556,
+        "text": "The candidate will ideally have experience in environmental remediation/sampling, operating various remediation systems and an interest in hands-on mechanical and technical problem-solving and troubleshooting. Typical project work includes operating groundwater treatment systems, soil vapor extraction systems, and various media sampling (groundwater, vapor, surface water, sediment, and soil). The successful candidate will have the ability to communicate effectively with members of the project team and be able to work independently. The job responsibilities for the position will include but are not limited to: Remediation System Operations (Primary responsibilities): Operating various remediation systems, including: Bio-sparge and air sparge/soil vapor extraction systems. Dual and multiphase extraction systems. Groundwater pump-and-treat systems utilize technologies such as granular activated carbon, zeolite, particle filtration, and air stripping with off-gas treatment. System Monitoring & Maintenance (Primary responsibilities): Taking and passing operator exam(s) to demonstrate understanding of system operations and maintenance. Remotely monitoring system performance daily, Respon"
+      }
+    ]
+  },
+  {
+    "reviewId": "Q16",
+    "stableId": "boeing:JR2026518346",
+    "auditIndex": 468,
+    "cache": "boeing-79fbd27ebfc41219a37002560059254b648175c5d595a65130553bdc88ec82ef",
+    "inputFingerprint": "511cd87352042c7b15c25c0a86d54b4025b7d5a2aee5a2ab84b3efd8c6441e4c",
+    "normalizedBodySha256": "51b25bf6e0ef2642541f3e4f978c7d196ecdc2c2ef359ffa8d5476633f7eaeac",
+    "excerpts": [
+      {
+        "start": 972,
+        "end": 2172,
+        "text": "Responsibilities: Identifies and defines customer technical training needs and requirements Develop technical training proposals Evaluates and determines training objectives, content, design, and technologies Uses specialized software technology to research, develop and modify new and existing media and materials Prepares lesson plans and instructs participants Researches, develops, delivers, and evaluates effectiveness of standard technical training Supports developing and documenting training standards and specifications Basic Qualifications (Required Skills/Experience): 3+ years of experience performing aircraft maintenance on USAF and/or USN aircraft Proficiency and experience with Microsoft Office (Excel, Word, PowerPoint) Maintenance/Avionics Experience on any of the following F-22, F-35, F/A-18, F-15 Preferred Qualifications (Desired Skills/Experience): 5+ years of higher education and/or related work experience (Higher education includes college, university, technical school, licensing/certification programs, etc.) (Level 4) Maintenance Instructor Experience Courseware Development Experience Conflict of Interest: Successful candidates for this job must satisfy the Company’s"
+      }
+    ]
+  },
+  {
+    "reviewId": "Q17",
+    "stableId": "boeing:JR2026521254",
+    "auditIndex": 619,
+    "cache": "boeing-79fbd27ebfc41219a37002560059254b648175c5d595a65130553bdc88ec82ef",
+    "inputFingerprint": "5af8a6eefe91813efa0e039958f31732e1f09a10106f911c2c93a224ba30f232",
+    "normalizedBodySha256": "43f8d59356c07864f5fb8ebfa40631fe5844ba3e844bdc707111a7377b01576f",
+    "excerpts": [
+      {
+        "start": 528,
+        "end": 1828,
+        "text": "Position Responsibilities: Assembles, disassembles and/or modifies systems by changing, removing, replacing, or upgrading aerospace vehicle components to correct failures or implement changes. Oversees assembly, disassembly, or overhaul. Configures aerospace vehicles and bench test equipment. Troubleshoot complex pneumatic, hydraulic, and electrical systems to isolate mechanical or electrical faults and repair faulty components. Performs validation/verification testing of systems and components. Documents procedures and established processes to ensure contractual and regulatory compliance (e.g., repairs, test results, applicable modifications, and inspection results). Inspect components and verify repairs for flight worthiness requirements. Oversee on the job training. Perform other duties as assigned in support of squadron operations. Ability to carry out CUT (Cross Utilization Training) as required. Works under general supervision. Basic Qualifications (Required Skills/Experience): This position requires the ability to obtain a US Security Clearance for which the US Government requires US Citizenship Minimum 1 year of experience with fighter aircraft maintenance and or management Must be able to obtain local driver's license Must be willing to work variable shifts, including we"
+      }
+    ]
+  },
+  {
+    "reviewId": "Q18",
+    "stableId": "leidos:R-00187135",
+    "auditIndex": 885,
+    "cache": "leidos-697e9a0d8c74997954ef0e68219601eef0c4783b278a6267c3250aae5c876c50",
+    "inputFingerprint": "5f0a183fedba119ad53cdc1be1c879d0b0734607d2cc1e5cafe412df18da1449",
+    "normalizedBodySha256": "76d5021b57e43c698ca4e7cac27c5f166f48ac52c1b6f72272831a6a3bd99ab4",
+    "excerpts": [
+      {
+        "start": 1239,
+        "end": 2339,
+        "text": "The ASO will be required to execute all assigned preflight, flight, and post flight duties as required to safely and effectively operate an assigned sensor suite supporting a variety of missions. This includes mission planning, pre-briefings, mission system inspection, operation, troubleshooting, post-flight inspections, debriefings, intelligence product preparation and distribution, and mission documentation. The ASO may also assist with performing sensor upgrades and maintenance. WHAT SETS YOU APART (basic qualifications) • Must have a bachelor’s degree and a minimum of 2 years’ experience or 700 flight hours as an aircrew member on a multi-place military or government ISR contract aircraft, and verifiable experience providing direct support to SOF ground forces using E/O-IR FMV sensors (additional years of experience will be considered in lieu of degree) • Have an active Top Secret with SCI • Possess a current FAA Class II/III Medical Certificate issued within 6 months of employment start date • Possess a United States Passport that is valid for 12 months after employment start da"
+      }
+    ]
+  },
+  {
+    "reviewId": "Q19",
+    "stableId": "leidos:R-00188369",
+    "auditIndex": 914,
+    "cache": "leidos-697e9a0d8c74997954ef0e68219601eef0c4783b278a6267c3250aae5c876c50",
+    "inputFingerprint": "edbb5a5209696408790af9ae3491d42b837b2a4e294404c048804e9f952f55bf",
+    "normalizedBodySha256": "187833095b40e165110187ad318ec32dcde28790abe297445b3d385798d8a5b3",
+    "excerpts": [
+      {
+        "start": 1239,
+        "end": 2339,
+        "text": "The ASO will be required to execute all assigned preflight, flight, and post flight duties as required to safely and effectively operate an assigned sensor suite supporting a variety of missions. This includes mission planning, pre-briefings, mission system inspection, operation, troubleshooting, post-flight inspections, debriefings, intelligence product preparation and distribution, and mission documentation. The ASO may also assist with performing sensor upgrades and maintenance. WHAT SETS YOU APART (basic qualifications) • Must have a bachelor’s degree and a minimum of 2 years’ experience or 700 flight hours as an aircrew member on a multi-place military or government ISR contract aircraft, and verifiable experience providing direct support to SOF ground forces using E/O-IR FMV sensors (additional years of experience will be considered in lieu of degree) • Have an active Top Secret with SCI • Possess a current FAA Class II/III Medical Certificate issued within 6 months of employment start date • Possess a United States Passport that is valid for 12 months after employment start da"
+      }
+    ]
+  },
+  {
+    "reviewId": "Q20",
+    "stableId": "boeing:JR2026521115",
+    "auditIndex": 611,
+    "cache": "boeing-79fbd27ebfc41219a37002560059254b648175c5d595a65130553bdc88ec82ef",
+    "inputFingerprint": "fdbe5930a479f893964d3b864b859c4608f9f2d454cad7bcc4197ead8b7b07b6",
+    "normalizedBodySha256": "21f9d098366bdacd0d91f8209846d093e419e18c3da35b89076a8dceb39ad2c5",
+    "excerpts": [
+      {
+        "start": 429,
+        "end": 1829,
+        "text": "Position Responsibilities: Collects information to support definition of requirements for tools, equipment, materials, parts and processes used in the manufacture and engineering design of products. Assists in implementing corrective and preventive actions. Works with organizations to develop strategies, plans and metrics to accomplish company initiatives using Lean methodologies or other applicable tools and processes Works at the appropriate level in the organization to implement strategies and plans Works under general direction Collaborate with cross-functional organizations to develop and execute strategies, plans, and metrics that align with and achieve business objectives. Provide technical expertise and leadership on manufacturing projects that improve organizational efficiency and effectiveness. Develop, maintain, and communicate detailed project plans, milestones, and status reports to stakeholders. Use strong problem-solving, analytical, and negotiation skills to develop innovative solutions to manufacturing challenges. Work with minimal direction, exercising considerable latitude in determining objectives and approaches to assignments. Ensure solutions and recommendations are consistent with organizational goals and have long-lasting impact on the business. This position requires the ability to obtain a U.S. Security Clearance for which the U.S. Government requires "
+      }
+    ]
+  },
+  {
+    "reviewId": "Q21",
+    "stableId": "boeing:JR2026522042",
+    "auditIndex": 663,
+    "cache": "boeing-79fbd27ebfc41219a37002560059254b648175c5d595a65130553bdc88ec82ef",
+    "inputFingerprint": "f0e45159a28ac0a89ca400cef0fb10fba8837e6bc421325430efb078464997a4",
+    "normalizedBodySha256": "96fd91656af7acc1236fe476210a49b3fcf8316bc0a269814dc75be37bf79793",
+    "excerpts": [
+      {
+        "start": 1079,
+        "end": 1979,
+        "text": "Apprentices will learn the following tasks to become proficient as a journey-level graduate of the program: Set up and operate various conventional and numerical control machine tools to fabricate close tolerance, high quality parts from metals, plastics, and composite materials, often in a cellular manufacturing environment. In addition to machine training, the Manufacturing Machinist apprenticeship includes use of precision measuring tools, trade related bench work, inspection, numerical machine programming, heat treat, layout operations, tool grinding, and machine related processes. Applicants should have a strong willingness and aptitude for learning, problem solving, and judgement, as well as a mindset for continuous improvement. Application Instructions: Review the PrepPack (link below) to confirm you meet apprenticeship minimum qualifications and for additional information. To ens"
+      }
+    ]
+  },
+  {
+    "reviewId": "Q22",
+    "stableId": "rtx:01865563",
+    "auditIndex": 2000,
+    "cache": "rtx-363a4d87be07d61263d5c73d01a6a3671f5e5488273aef6ee265d5f49b31c5bc",
+    "inputFingerprint": "a2c3af4b897a1c53f82c2f6645113ac331130e981a0199abe6fa12c1e277c2b8",
+    "normalizedBodySha256": "370eb9806ffa275854af283944fa4d0d08d6747e4d6fe03bcfa11bbc36467de0",
+    "excerpts": [
+      {
+        "start": 1614,
+        "end": 2914,
+        "text": "What Will You Do Conducts supplier assessment, monitoring, escape management, and quality issue resolution processes. Analyzes and makes recommendations on quality data and the development of part / supplier specific quality issue resolution and corrective actions. Provides research on and explanations of root cause analysis & problem solving (Red-X & 8D) in escape management procedures. Develops corrective and / or preventive actions for systemic process and product design problems for product provided by suppliers. Conducts processes and procedures for supplier qualification / certification, source inspection and material release processes, and Correction Action Boards / DQ Clinics with suppliers. Reviews processes and metrics and makes recommendations to ensure supplier is capable to meet all requirements for work transfer and process change management including Resourcing Gate and Production Part Approval Process (PPAP) acceptance. Periodic travel to the suppliers locations in the Northern and Midwestern areas in US. Qualifications Must Have: Typically requires: A University Degree or equivalent experience and minimum 5 years prior relevant experience, or An Advanced Degree in a related field and minimum 3 years experience Experience in a supply chain operations environment ("
+      }
+    ]
+  },
+  {
+    "reviewId": "Q23",
+    "stableId": "rtx:01866857",
+    "auditIndex": 2014,
+    "cache": "rtx-363a4d87be07d61263d5c73d01a6a3671f5e5488273aef6ee265d5f49b31c5bc",
+    "inputFingerprint": "9d7195b041d898f52e17488cf4329ef943bbdac322bd72e3a65e27754ce5aebe",
+    "normalizedBodySha256": "7546d3fbeee0be25dc7fe60d27ef7c9e57b883436410005f181fe19769054820",
+    "excerpts": [
+      {
+        "start": 1865,
+        "end": 3265,
+        "text": "What You Will Do Containment & Recovery: Lead internal and supplier containment actions in collaboration with Operations and Quality. Facilitate supplier kick-off meetings to align expectations and establish rapid response actions. Conduct Root Cause and Corrective Action (RCCA) investigations to resolve critical quality or delivery issues. Coordinate with stakeholders to develop and implement improvement plans and ensure clear communication through plan review checkpoints. Monitor leading and lagging Key Performance Indicators (KPIs) to assess progress. Evaluate whether exit criteria have been achieved for containment efforts. Escalate persistent issues to crisis mode or tiger teams when warranted. Partner with Commodity Teams and SBUs to ensure closed-loop feedback and transition to sustainable operations. Supplier Development & Capability Building: Lead supplier site identification and prioritize development efforts aligned with risk, impact, and strategic commodity needs. Conduct supplier assessments using SRA, SHA, Gemba, etc. Engage suppliers with development roadmaps, training, and targeted actions tied to maturity models and long-term growth. Align with Commodity Managers and Engineering teams on supplier readiness for new programs or volume ramp-ups. Facilitate structured improvement plan development, KPI tracking, and gate reviews. Monitor progress toward achieving ta"
+      }
+    ]
+  },
+  {
+    "reviewId": "Q24",
+    "stableId": "servicenow:JB0074456",
+    "auditIndex": 2136,
+    "cache": "servicenow-a6b6217f7f08ffa370a51d94d2e74aab198a50274bb16b2021f40042af7de90f",
+    "inputFingerprint": "cf1bf980df805b349fed71bb279872d7b20165c79ca20206e26a8ffd4950f398",
+    "normalizedBodySha256": "2c62a4862a04bc393c63564c0b5f9b164806049956f07491098ba3fe68ba76a0",
+    "excerpts": [
+      {
+        "start": 16,
+        "end": 1416,
+        "text": "ROLE SUMMARY EmployeeWorks is transforming how enterprises manage employee experiences. As an Outbound Product Manager in this space, you'll sit at the intersection of product strategy, customer go-to-market, and partner ecosystem development. You'll drive adoption of EmployeeWorks across ServiceNow's AI Native SKU portfolio and build the partner enablement infrastructure that scales our implementation capacity globally. This is a high-impact, highly collaborative role where you'll influence strategy across multiple business units, coordinate customer deployment decisions, and empower our partner ecosystem to deliver at scale. WHAT YOU WILL DO Drive Cross-BU AI Native Strategy & Alignment Partner with product leadership and enablement teams across business units to develop coordinated adoption plans for EmployeeWorks within AI Native positioning Create capability narratives, ROI talking points, and business cases that enable each BU to confidently position EmployeeWorks to their customer base Align cross-BU messaging so the EmployeeWorks story is consistent and compelling across the organization Identify and resolve cross-functional obstacles to adoption—from conflicting positioning to enablement gaps Own the Customer Deployment Funnel & Orchestration Design and operationalize the customer deployment playbook: how we route customers to the right implementation model (Moveworks "
+      },
+      {
+        "start": 2441,
+        "end": 2871,
+        "text": "Coordinate with professional services and partner management teams on resource allocation and scaling decisions WHO YOU ARE Takes extreme ownership – You own outcomes end-to-end and don't wait for permission or perfect alignment to move forward. You drive accountability across teams and don't shy away from hard problems or ambiguous situations. Bias for action – You move fast and iterate. You'd rather make 80% of a good decisi"
+      }
+    ]
+  },
+  {
+    "reviewId": "Q25",
+    "stableId": "servicenow:JB0074536",
+    "auditIndex": 2151,
+    "cache": "servicenow-a6b6217f7f08ffa370a51d94d2e74aab198a50274bb16b2021f40042af7de90f",
+    "inputFingerprint": "fed03f8bef7200f777f25d8d09ec0daaf0fe92d229f245931a1f764a38d4c210",
+    "normalizedBodySha256": "4865a412412e204780968fd7a86dd91c5105e3cff719687177a6e6d100de328f",
+    "excerpts": [
+      {
+        "start": 16,
+        "end": 1416,
+        "text": "About the Role ServiceNow empowers organizations with AI-driven autonomous workflows to streamline operations and achieve results. We seek an experienced solution sales specialist with business expertise and technical skills to drive growth for our Finance, Procurement, and Legal Workflow solutions. This quota carrying sales role will partner with enterprise sales teams to identify opportunities, lead strategic discovery, demonstrate solutions, and close complex deals. Your dual expertise—part consultant, part seller—positions you to bridge technical capability and business value in ways that resonate with executive stakeholders. What You'll Do Build and refine the qualification criteria, account strategy, sales motion, and the pitch. Build pipeline and generate revenue for Autonomous Finance, Procurement, and Legal Workflow solutions. Lead executive discovery sessions to uncover challenges and quantify AI value. Develop account strategies focused on customer transformation. Deliver impactful demonstrations and handle technical questions. Establish trusted relationships with executive sponsors and collaborate across teams. Stay informed about emerging AI technologies and workflow automation trends. What Makes You Successful Balance executive presence with technical know-how. Simplify technology into clear business narratives. Thrive in ambiguous situations and solve complex pro"
+      }
+    ]
+  },
+  {
+    "reviewId": "Q26",
+    "stableId": "aecom:J10155853",
+    "auditIndex": 65,
+    "cache": "aecom-3c55b12f8055996ccdc2c365b783b022579f495c3ed94e832674c6cc0ba8efa2",
+    "inputFingerprint": "d23c3e96dd9933f4744cb32b76d1857e15a09baf694556cbcac98c9daaebe822",
+    "normalizedBodySha256": "3493df5de1f4c19d67f83a304e30ca1be750458652957ace2ebd517e947b2042",
+    "excerpts": [
+      {
+        "start": 16,
+        "end": 1416,
+        "text": "AECOM is seeking a Civil OSP Project Manager – QA/QC Lead to oversee the delivery, quality assurance, and production performance of telecommunications infrastructure design programs. This role will serve as the primary coordination point between engineering teams, production resources, clients, and external stakeholders to ensure Civil OSP deliverables meet contractual requirements, client standards, schedule commitments, and quality expectations. The successful candidate will possess a strong understanding of underground telecommunications infrastructure, design management, quality assurance processes, and project delivery controls. This position requires experience leading multidisciplinary teams through all phases of design development, review, and construction support while maintaining accountability for schedule, budget, and quality performance. Key Responsibilities Project Management & Delivery Oversight Manage multiple Civil OSP design projects simultaneously from initiation through final delivery. Develop and maintain project schedules, production plans, resource forecasts, and delivery milestones. Coordinate engineering, CAD, permitting, utility, and construction support activities. Monitor project performance against scope, schedule, budget, and quality objectives. Identify project risks, develop mitigation strategies, and escalate critical issues when necessary. Serv"
+      }
+    ]
+  },
+  {
+    "reviewId": "Q27",
+    "stableId": "amentum:R0158818",
+    "auditIndex": 105,
+    "cache": "amentum-6508afb282c3aa18510060d27cd39ff410340061a2f2b5c34f8eefe1e012a0e4",
+    "inputFingerprint": "78dc8a0fc15633ff3bef41a8d02a876fe9d9c3a21c0f484113fcdc2209d8dcc7",
+    "normalizedBodySha256": "c10b7c3f4443bfdf15f21fd06f34544d886979d568cdc5bb4755cd2c8ef682e7",
+    "excerpts": [
+      {
+        "start": 2354,
+        "end": 3654,
+        "text": "Assess current-state processes, systems, legacy platforms, and organizational structures to identify gaps, inefficiencies, and integration challenges related to our M&A-driven growth. Lead the end-to-end strategy, planning, and execution of an enterprise-wide finance transformation program. Coordinate and oversee day-to-day activities across project phases, including scope definition, dependency management, resource allocation, and milestone tracking. Drive continuous improvement and modernization initiatives including financial system automation, data governance, and reporting enhancements. Set and track key performance indicators (KPIs) that measure the success of transformation initiatives. Regularly review KPI’s with leadership to communicate program updates, risks, mitigation plans and need to adapt strategies if applicable. Manage diverse stakeholder groups to drive initiatives impacting a variety of end-to-end processes including, but not limited to, Hire-to-Retire (H2R), Procure-to-Pay (P2P), Order-to-Cash (O2C), and Record-to-Report (R2R). Oversee cross-functional project teams, external consultants, and technology vendors. Knowledge, Skills and Abilities: Data-driven and continuous learning mindset — Candidates should demonstrate curiosity, adaptability, and the ability"
+      }
+    ]
+  },
+  {
+    "reviewId": "Q28",
+    "stableId": "parsons:R177999",
+    "auditIndex": 1661,
+    "cache": "parsons-cfd0f01f911887bdcef9e5a022443484c49c5a6da0471caba8e9024afa93baf1",
+    "inputFingerprint": "c192106940efcc7f6d4d5b075ba7ad4fefa8a8efb15bd8c0552d2f46ea284109",
+    "normalizedBodySha256": "39e70e9869b6b88b3cb44c9a1668e1065931e54fffd8522ab97adde778b1267b",
+    "excerpts": [
+      {
+        "start": 1087,
+        "end": 1937,
+        "text": "What You'll Be Doing: Work s with Project Managers, Regional Managers and Technical Managers to appropriately assign engineering staff for the benefit of project delivery and pursuit success. Collaborate s with other managers within the Region to successfully plan, implement, and execute the goals, projects and pursuits of the Region. Collaborate s with other m anagers to provide technical gu idance and quality oversight for projects and pursuits. Seek s opportunities, and foster the same for others, to make presentations and write articles to earn a reputation as an industry leader and promote Parsons as the gold standard in the industry. Engage s and serve s in leadership positions within professional organizations – seek growth opportunities, stay abreast of local industry news, engage with clients and counterparts to raise the profile"
+      },
+      {
+        "start": 3354,
+        "end": 4004,
+        "text": "Serve as Design Manager or Discipline Lead for both traditional and design- build projects to oversee project performance and execution that meet technical, schedule and financial requirements . Supervise and mentor direct reports. What Required Skills You'll Bring: Bachelor's degree in Engineering or related technical field from an accredited institution. Professional registration as a Professional Engineer (PE) in Ohio is required . 15+ years of related project execution and/or program management experience on ODOT and other Road/Highway or Bridge projects with experience on large scope design and projects. Diverse experience in design and "
+      }
+    ]
+  },
+  {
+    "reviewId": "Q29",
+    "stableId": "rtx:01865916",
+    "auditIndex": 2003,
+    "cache": "rtx-363a4d87be07d61263d5c73d01a6a3671f5e5488273aef6ee265d5f49b31c5bc",
+    "inputFingerprint": "fa34b3314a7ce2f3a091b46adbd9e67640c16e52fd93d3e0f52236767b51795b",
+    "normalizedBodySha256": "d07b0a9e3cc604d5fdb2ae562d3eace6ec11f386d8682d77996749ccaf77e920",
+    "excerpts": [
+      {
+        "start": 2482,
+        "end": 3882,
+        "text": "What You Will Do Serve as the primary Digital Technology (DT) touchpoint for all early gate capture support for a Strategic Business Unit (SBU). Partner with SBU Program Architects as part of the DT proposal response Agile workflows Support the Agile initiatives, data capture and workflow management of the DT Front End of the Business (FEOTB) portfolio Inform stakeholders and partner with Proposal Leads when transitioning proposal efforts Support special projects related to Program Architecture, as necessary Proactive engagement across the DT organization as well as related functions and stakeholders Qualifications You Must Have Typically requires a University Degree or equivalent experience and minimum 10 years prior relevant experience, or An Advanced Degree in a related field and minimum 7 years' experience Experience with proposal preparation, IT and Engineering requirements analysis, cost and schedule estimation and technical documentation related to the Statement of Work (SOW). Experience with Contracts, BOEs, IT and Engineering Processes and Practices and facilitating and responding to Requests for Information (RFI) and Request for Proposals (RFP). Active and transferable U.S. government issued security clearance is required prior to start date. U.S. citizenship is required, as only U.S. citizens are eligible for a security clearance. Qualifications We Prefer : Extensive"
+      }
+    ]
+  }
+]

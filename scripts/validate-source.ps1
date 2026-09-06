@@ -542,3 +542,8 @@ if ($LASTEXITCODE -ne 0) { throw "Admin architecture tests failed." }
 
 & $NodePath (Join-Path $repo "Tests/cheap-triage-shadow.tests.js")
 if ($LASTEXITCODE -ne 0) { throw "Cheap Triage Shadow UI tests failed." }
+
+& $NodePath --check (Join-Path $repo "wwwroot/human-review.js")
+if ($LASTEXITCODE -ne 0) { throw "Human review syntax validation failed." }
+& $NodePath (Join-Path $repo "Tests/human-review.tests.js")
+if ($LASTEXITCODE -ne 0) { throw "Human review UI tests failed." }

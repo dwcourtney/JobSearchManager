@@ -17,6 +17,13 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging.Abstractions;
 using JobSearchManager;
 
+if (args is ["--human-review-backup", var reviewSource, var reviewDestination])
+{
+    CheapTriageHumanReview.Backup(reviewSource, reviewDestination);
+    Console.WriteLine("Human review SQLite backup verified.");
+    return;
+}
+
 if (args.Length == 4 && args[0] == "--cheap-triage" && args[1] == "evaluate")
 {
     var cheapRules = CheapRejectRules.Load(Path.GetFullPath(args[2]));
@@ -347,6 +354,7 @@ builder.Services.AddSingleton(services => CheapRejectRules.Load(Path.GetFullPath
     builder.Environment.ContentRootPath)));
 builder.Services.AddSingleton<CheapTriageShadow>();
 builder.Services.AddSingleton<RuleMaintenance>();
+builder.Services.AddSingleton<CheapTriageHumanReview>();
 builder.Services.AddHostedService<RegexTelemetryFlushService>();
 builder.Services.AddSingleton<SemanticClassificationService>();
 builder.Services.AddSingleton<PortableWorkspaceService>();
@@ -709,6 +717,28 @@ app.MapGet("/api/admin/cheap-triage/maintenance-prompt", (RuleMaintenance mainte
     context.Response.Headers.CacheControl = "no-store";
     return Results.Ok(maintenance.Generate());
 }).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+var humanReviewApi = app.MapGroup("/api/admin/cheap-triage/human-review")
+    .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state").DisableCookieRedirect();
+humanReviewApi.AddEndpointFilter(async (context, next) =>
+{
+    context.HttpContext.Response.Headers.CacheControl = "no-store";
+    return await next(context);
+});
+humanReviewApi.MapGet("", (CheapTriageHumanReview review) => Results.Ok(review.Read()));
+humanReviewApi.MapPost("", (HumanReviewSave request, CheapTriageHumanReview review, HttpContext context) =>
+{
+    try
+    {
+        review.Save(request, context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? context.User.Identity?.Name ?? "administrator");
+        return Results.Ok(review.Read());
+    }
+    catch (ArgumentException exception) { return Results.BadRequest(new { error = exception.Message }); }
+    catch (InvalidOperationException exception) { return Results.Conflict(new { error = exception.Message }); }
+});
+humanReviewApi.MapGet("/export", (CheapTriageHumanReview review) => Results.File(
+    JsonSerializer.SerializeToUtf8Bytes(new { exportedAtUtc = DateTimeOffset.UtcNow, report = review.Read() },
+        new JsonSerializerOptions(JsonSerializerDefaults.Web)), "application/json", "jsm-human-review.json"));
 
 app.MapPost("/api/admin/classifier-diagnostic", async Task<IResult> (
     ClassifierRequest request,

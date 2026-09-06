@@ -1,0 +1,250 @@
+{
+  "capturedAtUtc": "2026-09-06T18:24:32.236586+00:00",
+  "scope": "All existing workspace histories; aliases avoid asserting one global/user-specific workflow state. Read-only; default follows JobWorkflowStates.Normalize/GetCheapTriageReport.",
+  "histories": [
+    {
+      "workspaceAlias": "workspace-1",
+      "historySha256": "7ac53dca5bb76f200fb76a6dcada007167683d9e3cf4f85d4fc8b90ad8600500",
+      "jobs": {
+        "aecom:REF59213I": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        },
+        "aecom:J10150854": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        },
+        "aecom:REF59216P": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        },
+        "aecom:J10147449": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        },
+        "amentum:R0158818": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        },
+        "boeing:JR2026518346": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        },
+        "boeing:JR2026521254": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        },
+        "boeing:JR2026522042": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        },
+        "leidos:R-00184335": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        },
+        "leidos:R-00187135": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        },
+        "leidos:R-00184339": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        },
+        "leidos:R-00188369": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        },
+        "leidos:R-00190076": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        },
+        "northrop-grumman:R10245576": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        },
+        "parsons:R178563": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        },
+        "parsons:R177999": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        },
+        "parsons:R172433": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        },
+        "rtx:01868753": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        },
+        "rtx:01865916": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        },
+        "rtx:01865563": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        },
+        "rtx:01866857": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        },
+        "servicenow:JB0074536": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        },
+        "servicenow:JB0074456": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        },
+        "aecom:J10155853": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        },
+        "boeing:JR2026508418": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        },
+        "boeing:JR2026518584": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        },
+        "boeing:JR2026518773": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        },
+        "boeing:JR2026521115": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        },
+        "leidos:R-00182300": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        }
+      }
+    },
+    {
+      "workspaceAlias": "workspace-2",
+      "historySha256": "7f0f5c2c08088acad481e4502d6dfcfafc800e66a6e5082be3e69e7d9c665dfa",
+      "jobs": {
+        "aecom:REF59213I": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        },
+        "aecom:J10150854": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        },
+        "aecom:REF59216P": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        },
+        "aecom:J10147449": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        },
+        "amentum:R0158818": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        },
+        "boeing:JR2026518346": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        },
+        "boeing:JR2026521254": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        },
+        "boeing:JR2026522042": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        },
+        "leidos:R-00184335": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        },
+        "leidos:R-00187135": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        },
+        "leidos:R-00184339": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        },
+        "leidos:R-00188369": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        },
+        "leidos:R-00190076": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        },
+        "northrop-grumman:R10245576": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        },
+        "parsons:R178563": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        },
+        "parsons:R177999": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        },
+        "parsons:R172433": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        },
+        "rtx:01868753": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        },
+        "rtx:01865916": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        },
+        "rtx:01865563": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        },
+        "rtx:01866857": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        },
+        "servicenow:JB0074536": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        },
+        "servicenow:JB0074456": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        },
+        "aecom:J10155853": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        },
+        "boeing:JR2026508418": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        },
+        "boeing:JR2026518584": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        },
+        "boeing:JR2026518773": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        },
+        "boeing:JR2026521115": {
+          "state": "normal",
+          "provenance": "explicit history state"
+        },
+        "leidos:R-00182300": {
+          "state": "normal",
+          "provenance": "default normal: no history entry"
+        }
+      }
+    }
+  ]
+}

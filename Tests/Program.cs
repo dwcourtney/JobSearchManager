@@ -285,6 +285,7 @@ var tests = new (string Name, Func<Task> Run)[]
 {
     ("Declarative cheap triage and maintenance prompts", CheapRejectRuleTests.Run),
     ("Live non-gating Cheap Triage Shadow observations", CheapTriageShadowTests.Run),
+    ("Human review queue, durable revisions and provenance", HumanReviewTests.Run),
     ("Local mode is the safe default", TestLocalDefaultAsync),
     ("Container mode uses filesystem persistence and isolated workspaces", TestContainerConfigurationAsync),
     ("Container workspaces are browser-isolated with non-secure LAN cookies", TestContainerWorkspaceMiddlewareAsync),
