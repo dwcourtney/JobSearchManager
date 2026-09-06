@@ -16,7 +16,7 @@ public sealed record SemanticClassificationBackfillStatus(
     int InconsistenciesRepaired = 0,
     double ElapsedMilliseconds = 0);
 
-public sealed class JobCatalog
+public sealed partial class JobCatalog
 {
     private readonly JobSourceClient _jobSourceClient;
     private readonly AppStateStore _stateStore;
@@ -29,6 +29,7 @@ public sealed class JobCatalog
     private readonly JobSourceOptions _options;
     private readonly SharedSourceRefreshCoordinator _sharedSourceRefreshCoordinator;
     private readonly SemanticClassificationService? _semanticClassification;
+    private readonly CheapTriageShadow? _cheapTriage;
     private readonly object _gate = new();
     private readonly SemaphoreSlim _historyGate = new(1, 1);
     private readonly SemaphoreSlim _sourceOperationGate = new(1, 1);
@@ -59,7 +60,8 @@ public sealed class JobCatalog
         CompanyCatalog companyCatalog,
         IOptions<JobSourceOptions> options,
         SharedSourceRefreshCoordinator? sharedSourceRefreshCoordinator = null,
-        SemanticClassificationService? semanticClassification = null)
+        SemanticClassificationService? semanticClassification = null,
+        CheapTriageShadow? cheapTriage = null)
     {
         _jobSourceClient = jobSourceClient;
         _stateStore = stateStore;
@@ -72,6 +74,7 @@ public sealed class JobCatalog
         _options = options.Value;
         _sharedSourceRefreshCoordinator = sharedSourceRefreshCoordinator ?? new();
         _semanticClassification = semanticClassification;
+        _cheapTriage = cheapTriage;
     }
 
     public JobsSnapshot Snapshot
@@ -118,6 +121,7 @@ public sealed class JobCatalog
         finally
         {
             _sourceOperationGate.Release();
+            ScheduleCheapTriage();
         }
     }
 
@@ -235,6 +239,7 @@ public sealed class JobCatalog
             cachedJobs.Count,
             _stateStore.JobsCachePath);
         ScheduleSemanticClassification();
+        ScheduleCheapTriage();
     }
 
     public Task<JobsSnapshot> RefreshAsync()
@@ -305,6 +310,7 @@ public sealed class JobCatalog
                     "Switched to the recent {Company} cache ({JobCount} jobs, refreshed {LastRefreshed}); no provider listing or detail requests were made.",
                     company.DisplayName, availableJobs.Length, lastRefreshed);
                 ScheduleSemanticClassification();
+                ScheduleCheapTriage();
                 return snapshot;
             }
         }
@@ -436,6 +442,7 @@ public sealed class JobCatalog
                     _companyCatalog.Get(job.CompanyId), job, cancellationToken);
             }
 
+            updated = updated with { CheapTriage = updated.CheapTriage ?? job.CheapTriage };
             IReadOnlyList<JobRecord> cache;
             lock (_gate)
             {
@@ -460,11 +467,13 @@ public sealed class JobCatalog
                 _snapshot.DetailFailureCount,
                 query);
             ScheduleSemanticClassification();
+            ScheduleCheapTriage();
             return updated;
         }
         finally
         {
             _sourceOperationGate.Release();
+            ScheduleCheapTriage();
         }
     }
 
@@ -736,7 +745,7 @@ public sealed class JobCatalog
                 filterSettings: null);
             var result = fetched with
             {
-                Jobs = CanonicalizeStableIdentities(fetched.Jobs, "provider refresh")
+                Jobs = PreserveCheapTriage(cachedJobs, CanonicalizeStableIdentities(fetched.Jobs, "provider refresh"))
             };
             var refreshedAt = DateTimeOffset.UtcNow;
 
@@ -809,6 +818,7 @@ public sealed class JobCatalog
                 cacheChanged,
                 historyChanged);
             ScheduleSemanticClassification();
+            ScheduleCheapTriage();
             return refreshed;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -905,6 +915,7 @@ public sealed class JobCatalog
             "Reused a shared {Company} refresh completed by another workspace; no duplicate provider requests were made.",
             _companyCatalog.Get(query.CompanyId).DisplayName);
         ScheduleSemanticClassification();
+        ScheduleCheapTriage();
         return snapshot;
     }
 
@@ -1039,8 +1050,8 @@ public sealed class JobCatalog
         {
             if (!beforeById.TryGetValue(id, out var oldJob) ||
                 !afterById.TryGetValue(id, out var newJob) ||
-                !JsonSerializer.SerializeToUtf8Bytes(oldJob).AsSpan()
-                    .SequenceEqual(JsonSerializer.SerializeToUtf8Bytes(newJob)))
+                !JsonSerializer.SerializeToUtf8Bytes(oldJob with { CheapTriage = null }).AsSpan()
+                    .SequenceEqual(JsonSerializer.SerializeToUtf8Bytes(newJob with { CheapTriage = null })))
             {
                 changed.Add(id);
             }
@@ -1233,6 +1244,7 @@ public sealed class JobCatalog
     public SemanticClassificationBackfillStatus StartSemanticClassificationBackfill()
     {
         ScheduleSemanticClassification();
+        ScheduleCheapTriage();
         return GetSemanticClassificationStatus();
     }
 

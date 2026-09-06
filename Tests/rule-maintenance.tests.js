@@ -60,8 +60,8 @@ function setup(fetch) {
   const route = program.slice(program.indexOf('app.MapGet("/api/admin/cheap-triage/maintenance-prompt"'));
   assert.match(route.slice(0, 600), /RequireAuthorization\(AdminAuthorization.Policy\)/);
   assert.match(route.slice(0, 600), /RequireRateLimiting\("state"\)/);
-  assert.match(fs.readFileSync(path.join(root, "wwwroot/index.html"), "utf8"), /rule-maintenance.js\?v=2/);
-  assert.match(fs.readFileSync(path.join(root, "wwwroot/app.js"), "utf8"), /RuleMaintenance.renderStatus\(elements.adminCheapPanel\)/);
+  assert.match(fs.readFileSync(path.join(root, "wwwroot/index.html"), "utf8"), /rule-maintenance.js\?v=3/);
+  assert.match(fs.readFileSync(path.join(root, "wwwroot/app.js"), "utf8"), /RuleMaintenance.renderStatus\(elements.adminCheapPanel,/);
   const service = fs.readFileSync(path.join(root, "classifier-service/classifier_service.py"), "utf8");
   assert.match(service, /opt-in-llm-deep-analysis/);
   assert.doesNotMatch(service, /import transformers|AutoModelForSequenceClassification|deberta|bert-tiny/i);
@@ -73,9 +73,9 @@ function setup(fetch) {
   });
   const panel = new Element("section", statusEnv.document);
   await api.renderStatus(panel, statusEnv);
-  assert.match(panel.children[2].textContent, /Not active.*Offline evaluation.*test-hash.*No live decisions/);
+  assert.match(panel.children[2].textContent, /Non-gating.*test-hash.*Off or Shadow/);
   assert.match(panel.children[4].textContent, /99.58%.*99.02%.*100.00%.*9 known false rejects.*13.84%/);
-  assert.equal(panel.children.filter(n => n.tag === "button").length, 1, "Only prompt preparation; no activation control");
+  assert.equal(panel.children.filter(n => n.tag === "button").length, 2, "Prompt and observation refresh; no activation control");
   statusEnv.fetch = async () => ({ ok: true, json: async () => ({ metricsCurrent: false, rulesetVersion: "1.0.1", rulesetFingerprint: "new", frozenEvaluation: baseline }) });
   await api.renderStatus(panel, statusEnv);
   assert.match(panel.children[4].textContent, /do not match/);
@@ -88,10 +88,10 @@ function setup(fetch) {
   await api.renderStatus(panel, statusEnv);
   finishStatus({ ok: true, json: async () => ({ metricsCurrent: true, frozenEvaluation: baseline }) });
   await olderStatus;
-  assert.equal(panel.children.length, 5);
+  assert.equal(panel.children.length, 7);
   assert.match(panel.children[4].textContent, /do not match/);
   const statusRoute = program.slice(program.indexOf('app.MapGet("/api/admin/cheap-triage/status"'));
-  assert.match(statusRoute.slice(0, 400), /no-store/);
-  assert.match(statusRoute.slice(0, 400), /RequireAuthorization\(AdminAuthorization.Policy\)/);
+  assert.match(statusRoute.slice(0, 650), /no-store/);
+  assert.match(statusRoute.slice(0, 650), /RequireAuthorization\(AdminAuthorization.Policy\)/);
   console.log("PASS rule maintenance modal, full clipboard, fallback, close/abort, authorization and retained Job Fit runtime");
 })().catch(error => { console.error(error); process.exitCode = 1; });

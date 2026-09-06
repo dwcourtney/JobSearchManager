@@ -1254,7 +1254,7 @@ function showAdminSection(section, updateLocation = false) {
   }
   if (selected === "classifier") void loadClassifierStatus();
   if (selected === "evaluation") void loadEvaluationLedger();
-  if (selected === "cheap-triage") void RuleMaintenance.renderStatus(elements.adminCheapPanel);
+  if (selected === "cheap-triage") void RuleMaintenance.renderStatus(elements.adminCheapPanel, globalThis, job => evaluateJobFit(job)?.score ?? null);
   if (updateLocation) {
     const hash = selected === "overview" ? "" : `#admin-${selected}`;
     history.replaceState(null, "", `${window.location.pathname}${window.location.search}${hash}`);
@@ -4878,6 +4878,7 @@ function renderJobFitDetail(result, job) {
 }
 
 function renderDetail(job) {
+  void CheapTriage.renderDetail(document.querySelector("#cheap-triage-detail"), job);
   elements.emptyDetail.hidden = Boolean(job);
   elements.jobDetail.hidden = !job;
   if (!job) {

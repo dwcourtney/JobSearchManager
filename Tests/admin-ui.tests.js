@@ -18,7 +18,7 @@ assert.match(index,
   /id="administrator-bootstrap-section"[^>]*hidden[\s\S]*?id="administrator-bootstrap-code"[\s\S]*?minlength="8"[\s\S]*?maxlength="8"[\s\S]*?Claim Administrator/);
 assert.doesNotMatch(index, /annotation-labeling-ui|detector-evaluation-ui/,
   "Removed experimental Admin assets must not load.");
-assert.match(index, /app\.js\?v=54/);
+assert.match(index, /app\.js\?v=55/);
 
 assert.match(app, /synchronizeAdminNavigation\(account\.isAdmin === true\)/);
 assert.match(app, /if \(!isAdmin\)[\s\S]*?adminTab\?\.remove\(\)[\s\S]*?return;/,
@@ -35,7 +35,7 @@ assert.match(app, /fetch\("\/api\/admin\/status"/,
 assert.match(app, /classifierTab.textContent = "Job Fit Rules"/);
 assert.match(app, /evaluationTab.textContent = "Job Fit Evaluation"/);
 assert.match(app, /cheapTab.textContent = "Cheap Triage"/);
-assert.match(app, /RuleMaintenance.renderStatus\(elements.adminCheapPanel\)/);
+assert.match(app, /RuleMaintenance.renderStatus\(elements.adminCheapPanel,/);
 assert.match(app, /These benchmarks do not evaluate Cheap Triage KEEP\/REJECT decisions/);
 assert.match(app, /Run Curated Regression Benchmark/);
 assert.match(app, /Run AI-Adjudicated Holdout Evaluation/);

@@ -10,6 +10,9 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    env_file:
+      - path: /home/codex/jsm-cicd/jsm-runtime.env
+        required: false
     environment:
       JOBSEARCHMANAGER_HOSTING_MODE: Container
       JOBSEARCHMANAGER_DATA_PROTECTION_PATH: /var/lib/jsm/dataprotection

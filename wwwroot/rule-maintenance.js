@@ -70,7 +70,7 @@
     }
     return dialog;
   }
-  async function renderStatus(panel, env = globalThis) {
+  async function renderStatus(panel, env = globalThis, score = () => null) {
     const doc = env.document;
     const title = doc.createElement("h3"); title.textContent = "Cheap Triage";
     const description = doc.createElement("p");
@@ -83,17 +83,22 @@
       const response = await env.fetch("/api/admin/cheap-triage/status", { cache: "no-store" });
       if (!response.ok) throw new Error("Unavailable");
       const value = await response.json();
-      status.textContent = `Not active · Offline evaluation only · Ruleset ${value.rulesetVersion} · SHA-256 ${value.rulesetFingerprint}. No live decisions are recorded; live KEEP/REJECT counts and avoided evaluations are unavailable.`;
+      status.textContent = `Mode: ${value.mode} · Non-gating · Ruleset ${value.rulesetVersion} · SHA-256 ${value.rulesetFingerprint}. Configure CheapTriage:Mode as Off or Shadow and restart to change live observation. Active is not supported.`;
       const metrics = doc.createElement("p");
       const baseline = value.metricsCurrent && value.frozenEvaluation;
       if (baseline) {
         const percent = n => `${(n * 100).toFixed(2)}%`;
-        metrics.textContent = `Frozen provisional evidence: KEEP recall ${percent(baseline.slices.combined.keepRecall)}; described ${percent(baseline.slices.description.keepRecall)}; title-only ${percent(baseline.slices.title_only.keepRecall)}. ${baseline.slices.combined.falseRejects} known false rejects. Old-cache rejection ${percent(baseline.cache.rejectionRate)} is potential volume, not measured production savings. Human review is required before promotion.`;
+        metrics.textContent = `Offline evaluation — frozen provisional evidence: KEEP recall ${percent(baseline.slices.combined.keepRecall)}; described ${percent(baseline.slices.description.keepRecall)}; title-only ${percent(baseline.slices.title_only.keepRecall)}. ${baseline.slices.combined.falseRejects} known false rejects. Old-cache rejection ${percent(baseline.cache.rejectionRate)} is potential volume, not measured production savings. Human review is required before promotion.`;
       } else {
         metrics.textContent = "Frozen metrics do not match the loaded ruleset. Reevaluate before considering promotion.";
       }
       // Each load owns its nodes: an older response cannot overwrite a newer panel.
-      if (status.parentNode === panel) panel.append(metrics);
+      if (status.parentNode === panel) {
+        const refresh = doc.createElement("button"); refresh.type = "button"; refresh.textContent = "Refresh observations";
+        refresh.addEventListener("click", () => renderStatus(panel, env, score));
+        const liveApi = typeof module === "object" && module.exports ? require("./cheap-triage.js") : env.CheapTriage;
+        panel.append(metrics, refresh, liveApi.renderLive(value.live, env, score));
+      }
     } catch {
       status.textContent = "Unable to load Cheap Triage status. Reopen this tab to retry.";
     }

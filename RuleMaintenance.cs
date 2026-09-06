@@ -9,7 +9,7 @@ public sealed record RuleMaintenancePrompt(string TemplateVersion, string Rulese
 /// <summary>Read-only request generation. A future executor consumes this DTO through
 /// a separate reviewed interface; this service never launches processes or edits rules.</summary>
 public sealed class RuleMaintenance(CheapRejectRules rules, IConfiguration configuration,
-    IHostEnvironment environment)
+    IHostEnvironment environment, CheapTriageShadow? shadow = null)
 {
     private readonly string rulesetPath = configuration["CheapTriage:RulesetPath"] ?? CheapRejectRules.DefaultPath;
     private readonly string repositoryPath = configuration["CheapTriage:RepositoryPath"] ?? @"D:\Computer Everything\Programming\CS\JobSearchManager";
@@ -19,7 +19,7 @@ public sealed class RuleMaintenance(CheapRejectRules rules, IConfiguration confi
         using var context = JsonDocument.Parse(File.ReadAllText(Path.Combine(
             environment.ContentRootPath, "CheapTriage", "evaluation-context.json")));
         var current = context.RootElement.GetProperty("rulesetFingerprint").GetString() == rules.Fingerprint;
-        return new("offline-evaluation", false, rules.Version, rules.Fingerprint, current,
+        return new(shadow?.Mode ?? "Off", false, rules.Version, rules.Fingerprint, current,
             current ? context.RootElement.GetProperty("baseline").Clone() : null);
     }
 
@@ -48,4 +48,4 @@ public sealed class RuleMaintenance(CheapRejectRules rules, IConfiguration confi
 }
 
 public sealed record CheapTriageStatus(string Mode, bool ProductionGateAvailable,
-    string RulesetVersion, string RulesetFingerprint, bool MetricsCurrent, JsonElement? FrozenEvaluation);
+    string RulesetVersion, string RulesetFingerprint, bool MetricsCurrent, JsonElement? FrozenEvaluation, CheapTriageLiveReport? Live = null);

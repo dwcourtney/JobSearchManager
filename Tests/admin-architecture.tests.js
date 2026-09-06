@@ -58,6 +58,6 @@ assert.match(program, /--llm-benchmark/);
 assert.doesNotMatch(program, /AddSingleton<(?:LlmHoldoutEvaluationService|TriageEvaluationService)>/);
 for (const file of ["JobCatalog.cs", "ClassifierClient.cs", "JobAnalysis.cs", "RegexCacheReconciler.cs"]) {
   assert.doesNotMatch(fs.readFileSync(path.join(root, file), "utf8"), /CheapRejectRules|CheapTriageStatus/,
-    "Offline decisions must not gate classification, reconciliation, visibility, or deletion.");
+    "Observations must not gate classification, reconciliation, visibility, or deletion.");
 }
 console.log("PASS executable Admin navigation, retired-tab isolation, unchanged downstream boundary, and 241 archived hashes");

@@ -1,6 +1,6 @@
 # Declarative cheap-triage rules
 
-Cheap triage = a declarative RegEx/rule engine. **Temporary implementation pending future learned-model replacement.** The current `electrical-safe` release is **shadow/evaluation only**, with no automatic job discard. This is offline evaluation, not a live Shadow collector; see [current Admin inventory and promotion review](admin-cheap-triage-readiness.md). Production Job Fit scoring has not changed.
+Cheap triage = a declarative RegEx/rule engine. **Temporary implementation pending future learned-model replacement.** The current `electrical-safe` release is **shadow/evaluation only**, with no automatic job discard. Optional live Off/Shadow observations are now integrated; the default is Off. See [live observation architecture and enablement](cheap-triage-shadow.md) and the [historical Admin inventory and promotion review](admin-cheap-triage-readiness.md). Production Job Fit scoring has not changed.
 
 ## Inventory and retirement decision
 

@@ -58,7 +58,7 @@ internal static class CheapRejectRuleTests
             var maintenance = new RuleMaintenance(snapshot, config, env);
             var prompt = maintenance.Generate();
             var status = maintenance.GetStatus();
-            Check(status.Mode == "offline-evaluation" && !status.ProductionGateAvailable, "No live filtering or activation control");
+            Check(status.Mode == "Off" && !status.ProductionGateAvailable, "No live filtering or activation control");
             Check(status.MetricsCurrent && status.RulesetFingerprint == snapshot.Fingerprint &&
                 status.FrozenEvaluation!.Value.GetProperty("slices").GetProperty("combined").GetProperty("falseRejects").GetInt32() == 9,
                 "Status exposes honest frozen provenance and known false rejects");

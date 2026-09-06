@@ -345,6 +345,7 @@ builder.Services.AddSingleton<AiHoldoutEvaluationService>();
 builder.Services.AddSingleton(services => CheapRejectRules.Load(Path.GetFullPath(
     builder.Configuration["CheapTriage:RulesetPath"] ?? CheapRejectRules.DefaultPath,
     builder.Environment.ContentRootPath)));
+builder.Services.AddSingleton<CheapTriageShadow>();
 builder.Services.AddSingleton<RuleMaintenance>();
 builder.Services.AddHostedService<RegexTelemetryFlushService>();
 builder.Services.AddSingleton<SemanticClassificationService>();
@@ -583,6 +584,15 @@ app.MapGet("/api/jobs/detail", async Task<IResult> (
         Results.Ok(JobPresentation.AuthoritativeRegexDetail(detail));
 }).RequireRateLimiting("provider");
 
+app.MapGet("/api/jobs/cheap-triage", async Task<IResult> (
+    string stableId, HttpResponse response, WorkspaceRuntimeProvider provider, CancellationToken token) =>
+{
+    response.Headers.CacheControl = "no-store";
+    var catalog = (await provider.GetAsync(token)).Catalog;
+    var diagnostic = catalog.GetCheapTriageDiagnostic(stableId);
+    return diagnostic is null ? Results.NotFound() : Results.Ok(diagnostic);
+}).RequireRateLimiting("state");
+
 app.MapPost("/api/jobs/description-matches", async (
     DescriptionMatchRequest request,
     WorkspaceRuntimeProvider provider,
@@ -685,10 +695,13 @@ app.MapGet("/api/admin/status", (HttpContext context) =>
     });
 }).RequireAuthorization(AdminAuthorization.Policy);
 
-app.MapGet("/api/admin/cheap-triage/status", (HttpResponse response, RuleMaintenance maintenance) =>
+app.MapGet("/api/admin/cheap-triage/status", async (HttpResponse response, RuleMaintenance maintenance,
+    WorkspaceRuntimeProvider provider, CancellationToken token) =>
 {
     response.Headers.CacheControl = "no-store";
-    return Results.Ok(maintenance.GetStatus());
+    var catalog = (await provider.GetAsync(token)).Catalog;
+    await catalog.GetListSnapshotAsync(token);
+    return Results.Ok(maintenance.GetStatus() with { Live = catalog.GetCheapTriageReport() });
 }).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
 
 app.MapGet("/api/admin/cheap-triage/maintenance-prompt", (RuleMaintenance maintenance, HttpContext context) =>

@@ -226,7 +226,9 @@ public sealed record JobRecord(
     string SemanticClassificationStatus = SemanticClassificationStates.Pending,
     DateTimeOffset? SemanticClassificationLastAttemptUtc = null,
     QwenDeepAnalysis? QwenDeepAnalysis = null,
-    LlmDeepAnalysisRequestState? DeepAnalysisRequest = null)
+    LlmDeepAnalysisRequestState? DeepAnalysisRequest = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    CheapTriageObservation? CheapTriage = null)
 {
     public string StableId => $"{CompanyId}:{(!string.IsNullOrWhiteSpace(RequisitionId)
         ? RequisitionId
