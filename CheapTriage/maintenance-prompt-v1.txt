@@ -1,0 +1,27 @@
+Maintain JSM's declarative cheap-reject rules. Prompt template version: 1.0.0.
+
+Repository: {{repository}}
+Windows is the source checkout. Use ssh curiosity-codex for Linux/Docker validation. Do not configure Docker or WSL on Windows.
+
+Current cheap-triage architecture: deterministic declarative RegEx/rule engine, temporary pending a future safe learned-model replacement. The model-based cheap-triage path is retired. Historical experiments are preserved. Do not invoke Qwen, any generative model, or a training pipeline for this task. Preserve the separate production Job Fit semantic rules and all still-used Job Fit/Qwen features.
+
+Loaded ruleset: {{rulesetVersion}}
+Ruleset location: {{rulesetPath}}
+Loaded content SHA-256: {{fingerprint}}
+Metric freshness: {{metricsStatus}}
+Current packaged evaluation provenance, corpus locations, metrics, and false-reject examples:
+{{evaluationContext}}
+
+Objective: analyze obvious misses and false rejects, and propose conservative rule refinements that reduce downstream workload while preserving nearly all plausible technical roles. Primary duties outweigh employer, product names, or generic technology words. Prefer false keeps over false rejects. Preserve >=99% KEEP recall where supported; never go below 98% for combined or described KEEP without explicitly reporting failure and rejecting the candidate. Do not reduce safety relative to the current validated baseline merely to hit a workload target. Review title-only and described cohorts separately. Provisional labels cannot certify production safety.
+
+Procedure:
+1. Read docs/cheap-triage-rules.md, current rules, current evaluation artifacts, and repository instructions. Verify the source hashes and metric freshness. Never use the blinded production holdout for tuning.
+2. Run the current ruleset through the C# engine against the frozen development, corpus, and old-cache inputs. Use scripts/evaluate-cheap-rules.py --help for exact CLI usage. Preserve this baseline and its rule/hash/version provenance.
+3. Analyze false rejects and obvious misses using the existing audit and review artifacts. Do not invent new ground truth or silently rewrite labels. Report ambiguous labels separately.
+4. Propose candidate changes. Modify only the declarative ruleset unless the engine truly cannot express the change. Preserve all prior version files; add a new semantic version, with stable rule IDs and clear descriptions. Do not overwrite history. Do not change CheapTriage:RulesetPath or the shipped default to activate the candidate during evaluation.
+5. Run the same frozen corpus through both versions. Report KEEP recall, described KEEP recall, title-only KEEP recall, false-reject counts/IDs, rejection rate, old-cache rejection rate, major new leakage, and new false-reject families. Review every changed decision. State provisional-label limitations and never claim unlabeled-cache accuracy.
+6. Reject changes that materially reduce safety. Do not force a positive outcome. Never use retrospective evaluation-selected thresholds as deployment evidence. Do not add brittle exceptions merely to memorize evaluation examples.
+7. Run all .NET tests, source validation, JavaScript/UI tests, repository audits, container/image validation and existing Trivy gates on curiosity, plus git diff --check and checks for new files. Do not suppress security checks. Investigate any unrelated failing required check rather than bypassing it.
+8. Update the provenance/metrics context only after evaluation, tied to the exact candidate hash. Report exact rule IDs added/changed/removed, before/after metrics, representative failures, validation, files changed, diff summary, and git status.
+
+Constraints: no unrelated changes, no Job Fit scoring changes, no model training/inference, no research deletion, no new automatic production discards, no weakened safety thresholds, no force-push. Keep the working tree coherent. Leave production behavior unchanged pending the normal review/merge/deploy workflow. Do not commit, push, deploy, or automatically invoke another Codex process unless I explicitly authorize it. Stop after the reviewed candidate and validation report.

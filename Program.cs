@@ -17,6 +17,23 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging.Abstractions;
 using JobSearchManager;
 
+if (args.Length == 4 && args[0] == "--cheap-triage" && args[1] == "evaluate")
+{
+    var cheapRules = CheapRejectRules.Load(Path.GetFullPath(args[2]));
+    foreach (var line in File.ReadLines(Path.GetFullPath(args[3])))
+    {
+        using var row = JsonDocument.Parse(line);
+        var value = row.RootElement;
+        Console.WriteLine(JsonSerializer.Serialize(new
+        {
+            id = value.GetProperty("id").GetString(),
+            result = cheapRules.Decide(value.GetProperty("title").GetString() ?? "",
+                value.GetProperty("body").GetString() ?? "")
+        }, new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+    }
+    return;
+}
+
 if (args is ["--healthcheck"])
 {
     try
@@ -327,6 +344,10 @@ builder.Services.AddSingleton<RegexEvaluationService>();
 builder.Services.AddSingleton<AiHoldoutEvaluationService>();
 builder.Services.AddSingleton<LlmHoldoutEvaluationService>();
 builder.Services.AddSingleton<TriageEvaluationService>();
+builder.Services.AddSingleton(services => CheapRejectRules.Load(Path.GetFullPath(
+    builder.Configuration["CheapTriage:RulesetPath"] ?? CheapRejectRules.DefaultPath,
+    builder.Environment.ContentRootPath)));
+builder.Services.AddSingleton<RuleMaintenance>();
 builder.Services.AddHostedService<RegexTelemetryFlushService>();
 builder.Services.AddSingleton<SemanticClassificationService>();
 builder.Services.AddSingleton<PortableWorkspaceService>();
@@ -665,6 +686,12 @@ app.MapGet("/api/admin/status", (HttpContext context) =>
         email = account?.Email ?? context.User.FindFirstValue(ClaimTypes.Name)
     });
 }).RequireAuthorization(AdminAuthorization.Policy);
+
+app.MapGet("/api/admin/cheap-triage/maintenance-prompt", (RuleMaintenance maintenance, HttpContext context) =>
+{
+    context.Response.Headers.CacheControl = "no-store";
+    return Results.Ok(maintenance.Generate());
+}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
 
 app.MapPost("/api/admin/classifier-diagnostic", async Task<IResult> (
     ClassifierRequest request,
@@ -1262,6 +1289,8 @@ app.MapPut("/api/history/workflow-state", async (
         : Results.BadRequest())
     .RequireRateLimiting("state");
 
+_ = app.Services.GetRequiredService<CheapRejectRules>();
+_ = app.Services.GetRequiredService<RuleMaintenance>().Generate();
 var dataStores = app.Services.GetRequiredService<IWorkspaceDataStoreFactory>();
 await app.Services.GetRequiredService<RegexSemanticClassifier>().InitializeAsync();
 await dataStores.ValidateAsync();

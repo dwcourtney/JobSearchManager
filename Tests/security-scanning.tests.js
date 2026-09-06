@@ -58,5 +58,5 @@ console.log("Security scanning integration tests passed.");
 const deepAnalysisDockerfile = fs.readFileSync(path.join(repo, "classifier-service", "Dockerfile"), "utf8");
 assert.match(deepAnalysisDockerfile, /FROM python:3\.12\.12-alpine3\.23@sha256:[a-f0-9]{64}/,
   "Deep-analysis base must remain pinned to an immutable digest.");
-assert.match(deepAnalysisDockerfile, /apk add --no-cache --upgrade[\s\S]*?libuuid=2\.41\.6-r0(?:\s|$)/,
+assert.match(deepAnalysisDockerfile, /apk add --no-cache --upgrade[\s\S]*?libuuid=2\.41\.6-r1(?:\s|$)/,
   "Python's inherited libuuid runtime dependency must receive the pinned Alpine security fix.");

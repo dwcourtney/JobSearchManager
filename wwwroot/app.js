@@ -1178,7 +1178,10 @@ function synchronizeAdminNavigation(isAdmin) {
     });
     filters.append(control);
   }
-  classifierPanel.append(classifierTitle, classifierIntro, classifierStatus,
+  const cheapRuleUpdate = RuleMaintenance.createButton();
+  const cheapRuleHelp = document.createElement("p");
+  cheapRuleHelp.textContent = "Cheap triage: declarative rules in shadow evaluation. Temporary pending a safe future learned replacement. Prepare a Codex maintenance prompt; no automatic updates or discards.";
+  classifierPanel.append(cheapRuleUpdate, cheapRuleHelp, classifierTitle, classifierIntro, classifierStatus,
     backfill, evaluate, reload, actionHelp, filters, rulesList);
   const evaluationPanel = document.createElement("section");
   evaluationPanel.id = "admin-evaluation-panel";
@@ -1516,7 +1519,7 @@ function renderTriageEvaluationCard(result) {
   const heading = document.createElement("h4");
   heading.textContent = "CHEAP HIGH-RECALL TRIAGE";
   const purpose = document.createElement("p");
-  purpose.textContent = "Diagnostic only: tests whether explainable, few-millisecond coarse rules can safely avoid expensive Job Fit inference. Ambiguous postings are kept.";
+  purpose.textContent = "Historical two-stage prototype, retained for reproducibility. Current electrical-safe cheap rejection is evaluated separately with the versioned ruleset; use Update RegEx Rules for that workflow. Ambiguous postings are kept.";
   const disclaimer = document.createElement("strong");
   disclaimer.textContent = "Reference labels were generated through prediction-blinded AI review and adjudication. They are not human-ground-truth labels.";
   const action = document.createElement("button");

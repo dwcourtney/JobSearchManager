@@ -283,6 +283,7 @@ if (args.Length >= 2 && args[0] == "--authorization-corpus")
 
 var tests = new (string Name, Func<Task> Run)[]
 {
+    ("Declarative cheap triage and maintenance prompts", CheapRejectRuleTests.Run),
     ("Local mode is the safe default", TestLocalDefaultAsync),
     ("Container mode uses filesystem persistence and isolated workspaces", TestContainerConfigurationAsync),
     ("Container workspaces are browser-isolated with non-secure LAN cookies", TestContainerWorkspaceMiddlewareAsync),

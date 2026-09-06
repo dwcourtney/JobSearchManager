@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "JSM cheap-reject rules schema 1",
+  "description": "C# additionally validates unique IDs/orders, reference graph, regex syntax, and guard ordering.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "rulesetVersion",
+    "name",
+    "status",
+    "description",
+    "defaultReason",
+    "predicates",
+    "rules"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "rulesetVersion": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "const": "shadow-only"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "defaultReason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "predicates": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 512,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "scope",
+              "pattern"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]{0,79}$"
+              },
+              "scope": {
+                "enum": [
+                  "title",
+                  "body",
+                  "titlePrefix"
+                ]
+              },
+              "pattern": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              "ignorePattern": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]{0,79}$"
+              },
+              "all": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9-]{0,79}$"
+                }
+              },
+              "any": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9-]{0,79}$"
+                }
+              },
+              "none": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9-]{0,79}$"
+                }
+              }
+            },
+            "anyOf": [
+              {
+                "required": [
+                  "all"
+                ],
+                "properties": {
+                  "all": {
+                    "minItems": 1
+                  }
+                }
+              },
+              {
+                "required": [
+                  "any"
+                ],
+                "properties": {
+                  "any": {
+                    "minItems": 1
+                  }
+                }
+              },
+              {
+                "required": [
+                  "none"
+                ],
+                "properties": {
+                  "none": {
+                    "minItems": 1
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "order",
+          "decision",
+          "category",
+          "reason",
+          "when"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]{0,79}$"
+          },
+          "order": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "decision": {
+            "enum": [
+              "KEEP",
+              "REJECT"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "when": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]{0,79}$"
+          }
+        }
+      }
+    }
+  }
+}

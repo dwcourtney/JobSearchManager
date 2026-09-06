@@ -5,7 +5,7 @@ ARG CLASSIFIER_GIT_SHA=unknown
 RUN apk add --no-cache --upgrade \
     libcrypto3=3.5.8-r0 \
     libssl3=3.5.8-r0 \
-    libuuid=2.41.6-r0 \
+    libuuid=2.41.6-r1 \
     musl=1.2.5-r23 \
     musl-utils=1.2.5-r23 \
     sqlite-libs=3.53.4-r0 \

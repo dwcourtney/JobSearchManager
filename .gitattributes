@@ -6,6 +6,7 @@ docs/cheap-reject-investigation.md -text whitespace=blank-at-eol,blank-at-eof,sp
 docs/cheap-reject-leakage.md -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 docs/deberta-cheap-reject-experiment.md -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 docs/supervised-cheap-reject-experiment.md -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+CheapTriage/** text eol=lf
 
 # Preserve three frozen historical EOF blank lines covered by artifact hashes.
 Tests/cheap_reject_evaluation/input_v3/train.py whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol

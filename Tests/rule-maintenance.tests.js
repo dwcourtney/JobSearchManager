@@ -1,0 +1,69 @@
+"use strict";
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const api = require("../wwwroot/rule-maintenance.js");
+class Element {
+  constructor(tag, doc) { this.tag = tag; this.doc = doc; this.children = []; this.handlers = {}; this.disabled = false; }
+  setAttribute(k, v) { this[k] = v; }
+  addEventListener(k, fn) { this.handlers[k] = fn; }
+  append(...children) { this.children.push(...children); }
+  appendChild(child) { this.append(child); }
+  focus() { this.doc.activeElement = this; }
+  select() { this.selected = true; }
+  showModal() { this.modal = true; }
+  close() { this.handlers.close(); }
+  remove() { this.removed = true; }
+  async click() { if (!this.disabled) await this.handlers.click(); }
+}
+function setup(fetch) {
+  const doc = { createElement(tag) { return new Element(tag, this); }, execCommand() { return true; } };
+  doc.body = new Element("body", doc);
+  const env = { document: doc, fetch, navigator: { clipboard: { async writeText(text) { env.copied = text; } } } };
+  return env;
+}
+(async () => {
+  const full = "Complete\n<script>literal, never HTML</script>\n" + "x".repeat(12000);
+  let request;
+  const env = setup(async (url, options) => { request = { url, options }; return { ok: true, async json() { return { prompt: full, rulesetVersion: "1.0.0", templateVersion: "1.0.0" }; } }; });
+  const opener = api.createButton(env);
+  assert.equal(opener.textContent, "Update RegEx Rules");
+  await opener.click();
+  const dialog = env.document.body.children[0];
+  const [, status, textarea, copy, close] = dialog.children;
+  assert.equal(dialog.modal, true);
+  assert.equal(textarea.value, full);
+  assert.equal(textarea.readOnly, true);
+  assert.match(status.textContent, /Ruleset 1.0.0/);
+  assert.equal(request.url, "/api/admin/cheap-triage/maintenance-prompt");
+  assert.equal(request.options.cache, "no-store");
+  await copy.click(); assert.equal(env.copied, full);
+  env.navigator.clipboard.writeText = async () => { throw new Error("denied"); };
+  await copy.click(); assert.equal(textarea.selected, true);
+  env.document.execCommand = () => false;
+  await copy.click(); assert.match(status.textContent, /manually/);
+  await close.click(); assert.equal(dialog.removed, true); assert.equal(opener.disabled, false);
+  assert.equal(env.document.activeElement, opener); assert.equal(request.options.signal.aborted, true);
+  const failed = setup(async () => ({ ok: false }));
+  const bad = await api.open(api.createButton(failed), failed);
+  assert.match(bad.children[1].textContent, /Unable/); assert.equal(bad.children[3].disabled, true);
+  await bad.children[4].click(); assert.equal(bad.removed, true);
+  let complete;
+  const pending = setup(() => new Promise(resolve => { complete = resolve; }));
+  const pendingButton = api.createButton(pending); const open = api.open(pendingButton, pending);
+  const pendingDialog = pending.document.body.children[0]; pendingDialog.close();
+  complete({ ok: true, async json() { return { prompt: full }; } }); await open;
+  assert.equal(pendingButton.disabled, false); assert.equal(pendingDialog.children[2].value, undefined);
+  const root = path.join(__dirname, "..");
+  const program = fs.readFileSync(path.join(root, "Program.cs"), "utf8");
+  const route = program.slice(program.indexOf('app.MapGet("/api/admin/cheap-triage/maintenance-prompt"'));
+  assert.match(route.slice(0, 600), /RequireAuthorization\(AdminAuthorization.Policy\)/);
+  assert.match(route.slice(0, 600), /RequireRateLimiting\("state"\)/);
+  assert.match(fs.readFileSync(path.join(root, "wwwroot/index.html"), "utf8"), /rule-maintenance.js\?v=1/);
+  assert.match(fs.readFileSync(path.join(root, "wwwroot/app.js"), "utf8"), /RuleMaintenance.createButton\(\)/);
+  const service = fs.readFileSync(path.join(root, "classifier-service/classifier_service.py"), "utf8");
+  assert.match(service, /opt-in-llm-deep-analysis/);
+  assert.doesNotMatch(service, /import transformers|AutoModelForSequenceClassification|deberta|bert-tiny/i);
+  assert.match(fs.readFileSync(path.join(root, "ClassifierClient.cs"), "utf8"), /DeepAnalyzeAsync/);
+  console.log("PASS rule maintenance modal, full clipboard, fallback, close/abort, authorization and retained Job Fit runtime");
+})().catch(error => { console.error(error); process.exitCode = 1; });
