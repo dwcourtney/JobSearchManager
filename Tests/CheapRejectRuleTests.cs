@@ -57,6 +57,13 @@ internal static class CheapRejectRuleTests
             var env = new TestEnvironment { ContentRootPath = temp };
             var maintenance = new RuleMaintenance(snapshot, config, env);
             var prompt = maintenance.Generate();
+            var status = maintenance.GetStatus();
+            Check(status.Mode == "offline-evaluation" && !status.ProductionGateAvailable, "No live filtering or activation control");
+            Check(status.MetricsCurrent && status.RulesetFingerprint == snapshot.Fingerprint &&
+                status.FrozenEvaluation!.Value.GetProperty("slices").GetProperty("combined").GetProperty("falseRejects").GetInt32() == 9,
+                "Status exposes honest frozen provenance and known false rejects");
+            var staleStatus = new RuleMaintenance(reload, config, env).GetStatus();
+            Check(!staleStatus.MetricsCurrent && staleStatus.FrozenEvaluation is null, "Changed hash never reports old metrics as current");
             config["CheapTriage:RulesetPath"] = "not-loaded.json";
             Check(maintenance.Generate().RulesetPath == prompt.RulesetPath, "Config reload cannot misidentify the loaded snapshot path");
             Check(!prompt.Prompt.Contains("STALE baseline"), "Packaged metrics match the shipped rules bytes on every platform");

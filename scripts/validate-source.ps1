@@ -275,7 +275,7 @@ $credentialFitScript = $index.IndexOf('src="/credential-fit.js?v=2"')
 $clearanceFitScript = $index.IndexOf('src="/clearance-fit.js?v=1"')
 $jobFitScript = $index.IndexOf('src="/job-fit.js?v=11"')
 $clipboardTextScript = $index.IndexOf('src="/clipboard-text.js?v=1"')
-$appScript = $index.IndexOf('src="/app.js?v=53"')
+$appScript = $index.IndexOf('src="/app.js?v=54"')
 if ($countryOrderingScript -lt 0 -or $appScript -le $countryOrderingScript) {
     throw "The versioned country-ordering.js asset must load before app.js."
 }
@@ -536,3 +536,6 @@ Write-Output "Browser text encoding audit: PASS"
 
 & $NodePath (Join-Path $repo "Tests/rule-maintenance.tests.js")
 if ($LASTEXITCODE -ne 0) { throw "Rule maintenance UI tests failed." }
+
+& $NodePath (Join-Path $repo "Tests/admin-architecture.tests.js")
+if ($LASTEXITCODE -ne 0) { throw "Admin architecture tests failed." }

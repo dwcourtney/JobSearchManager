@@ -342,8 +342,6 @@ builder.Services.AddSingleton<SqliteSemanticRuleStore>();
 builder.Services.AddSingleton<RegexSemanticClassifier>();
 builder.Services.AddSingleton<RegexEvaluationService>();
 builder.Services.AddSingleton<AiHoldoutEvaluationService>();
-builder.Services.AddSingleton<LlmHoldoutEvaluationService>();
-builder.Services.AddSingleton<TriageEvaluationService>();
 builder.Services.AddSingleton(services => CheapRejectRules.Load(Path.GetFullPath(
     builder.Configuration["CheapTriage:RulesetPath"] ?? CheapRejectRules.DefaultPath,
     builder.Environment.ContentRootPath)));
@@ -687,6 +685,12 @@ app.MapGet("/api/admin/status", (HttpContext context) =>
     });
 }).RequireAuthorization(AdminAuthorization.Policy);
 
+app.MapGet("/api/admin/cheap-triage/status", (HttpResponse response, RuleMaintenance maintenance) =>
+{
+    response.Headers.CacheControl = "no-store";
+    return Results.Ok(maintenance.GetStatus());
+}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
 app.MapGet("/api/admin/cheap-triage/maintenance-prompt", (RuleMaintenance maintenance, HttpContext context) =>
 {
     context.Response.Headers.CacheControl = "no-store";
@@ -832,27 +836,16 @@ app.MapPost("/api/admin/regex-rules/evaluate", async (
 
 app.MapGet("/api/admin/evaluations", async (
     SqliteSemanticRuleStore store, AiHoldoutEvaluationService holdout,
-    LlmHoldoutEvaluationService llmHoldout, TriageEvaluationService triage,
     CancellationToken token) =>
 {
     var runs = await store.ListEvaluationRunsAsync(token);
     var holdoutStatus = holdout.GetStatus();
     var holdoutReport = holdout.GetLatestReport();
-    var llmHoldoutStatus = llmHoldout.GetStatus();
-    var llmHoldoutReport = llmHoldout.GetLatestReport();
-    var llmHardwareComparison = llmHoldout.GetHardwareComparison();
     return Results.Ok(new
     {
         runs,
         holdoutStatus,
         holdoutReport,
-        llmHoldoutStatus,
-        llmHoldoutReport,
-        llmRtx5080Status = llmHoldout.GetRtx5080Status(),
-        llmHardwareComparison,
-        llmModel = llmHoldout.GetCurrentModelInfo(),
-        triageStatus = triage.GetStatus(),
-        triageReport = triage.GetLatestReport(),
         datasetRoles = new object[]
         {
             new { role = EvaluationDatasetRoles.DevelopmentRegression,
@@ -880,35 +873,6 @@ app.MapPost("/api/admin/evaluations/ai-holdout", (
     AiHoldoutEvaluationService evaluation) => evaluation.TryStart()
         ? Results.Accepted(value: evaluation.GetStatus())
         : Results.Conflict(new { error = "An AI-adjudicated holdout evaluation is already running." }))
-    .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
-
-app.MapGet("/api/admin/evaluations/llm-holdout/status", (
-    LlmHoldoutEvaluationService evaluation) => Results.Ok(new
-    {
-        status = evaluation.GetStatus(),
-        report = evaluation.GetLatestReport(),
-        rtx5080Status = evaluation.GetRtx5080Status(),
-        hardwareComparison = evaluation.GetHardwareComparison(),
-        model = evaluation.GetCurrentModelInfo()
-    })).RequireAuthorization(AdminAuthorization.Policy);
-
-app.MapPost("/api/admin/evaluations/llm-holdout", (
-    LlmHoldoutEvaluationService evaluation) => evaluation.TryStart()
-        ? Results.Accepted(value: evaluation.GetStatus())
-        : Results.Conflict(new { error = "An LLM holdout evaluation is already running." }))
-    .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
-
-app.MapGet("/api/admin/evaluations/triage/status", (
-    TriageEvaluationService evaluation) => Results.Ok(new
-    {
-        status = evaluation.GetStatus(),
-        report = evaluation.GetLatestReport()
-    })).RequireAuthorization(AdminAuthorization.Policy);
-
-app.MapPost("/api/admin/evaluations/triage", (
-    TriageEvaluationService evaluation) => evaluation.TryStart()
-        ? Results.Accepted(value: evaluation.GetStatus())
-        : Results.Conflict(new { error = "A triage evaluation is already running." }))
     .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
 
 app.MapGet("/api/admin/classifier/backfill/status", async (

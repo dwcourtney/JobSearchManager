@@ -18,7 +18,7 @@ assert.match(index,
   /id="administrator-bootstrap-section"[^>]*hidden[\s\S]*?id="administrator-bootstrap-code"[\s\S]*?minlength="8"[\s\S]*?maxlength="8"[\s\S]*?Claim Administrator/);
 assert.doesNotMatch(index, /annotation-labeling-ui|detector-evaluation-ui/,
   "Removed experimental Admin assets must not load.");
-assert.match(index, /app\.js\?v=53/);
+assert.match(index, /app\.js\?v=54/);
 
 assert.match(app, /synchronizeAdminNavigation\(account\.isAdmin === true\)/);
 assert.match(app, /if \(!isAdmin\)[\s\S]*?adminTab\?\.remove\(\)[\s\S]*?return;/,
@@ -32,47 +32,17 @@ assert.match(app,
 assert.match(app, /postAccountJson\("\/api\/account\/admin-bootstrap"/);
 assert.match(app, /fetch\("\/api\/admin\/status"/,
   "Admin Overview must verify its server authorization endpoint.");
-assert.match(app, /admin-overview-tab[\s\S]*?Overview[\s\S]*?admin-classifier-tab[\s\S]*?RegEx Rules[\s\S]*?admin-evaluation-tab[\s\S]*?Evaluation/,
-  "Admin must separate operations, RegEx lifecycle, and evaluation evidence.");
-assert.match(app, /RegEx Rules[\s\S]*?Reclassify stale cache[\s\S]*?Run Curated Regression Benchmark[\s\S]*?Verify and Apply Current Rule Set/);
-assert.doesNotMatch(`${index}\n${app}`, /Deep Analyze with LLM|LLM deep-analysis score|llmJobFit|evaluateLlmJobFit/,
-  "LLM execution and arbitration must be absent from the user-facing workflow.");
-assert.match(app, /CURATED REGRESSION BENCHMARK[\s\S]*?AI-ADJUDICATED PRODUCTION HOLDOUT|datasetRoles/);
+assert.match(app, /classifierTab.textContent = "Job Fit Rules"/);
+assert.match(app, /evaluationTab.textContent = "Job Fit Evaluation"/);
+assert.match(app, /cheapTab.textContent = "Cheap Triage"/);
+assert.match(app, /RuleMaintenance.renderStatus\(elements.adminCheapPanel\)/);
+assert.match(app, /These benchmarks do not evaluate Cheap Triage KEEP\/REJECT decisions/);
+assert.match(app, /Run Curated Regression Benchmark/);
 assert.match(app, /Run AI-Adjudicated Holdout Evaluation/);
-assert.match(app, /Evaluation classifiers[\s\S]*?RegEx[\s\S]*?LLM[\s\S]*?Triage/);
-assert.match(app, /Run LLM Holdout Evaluation/);
-assert.match(app, /aria-label", "LLM evaluation hardware"[\s\S]*?GTX 1070[\s\S]*?RTX 5080/,
-  "The LLM evaluation must expose accessible hardware tabs.");
-assert.match(app, /GTX 1070 vs RTX 5080[\s\S]*?Semantic agreement[\s\S]*?Postings\/min/,
-  "The LLM evaluation must render a compact hardware comparison.");
-for (const metric of ["Total runtime", "Average/posting", "Median", "P95",
-  "Peak model VRAM", "Peak Ollama RAM", "Peak adapter RAM", "Average GPU power",
-  "Peak GPU power"]) assert.match(app, new RegExp(metric));
-assert.ok(app.includes("Difference (RTX − GTX)"));
-assert.match(app, /dataset\.llmHardware[\s\S]*?rtx5080Status[\s\S]*?updateLlmEvaluationProgress\(rtxRegion/,
-  "Quiet polling must update imported RTX progress in place.");
-assert.match(app, /LLM_HOLDOUT_STATUS_POLL_MS = 2000/);
-assert.match(app, /dataset\.llmEvaluationProgress/);
-assert.match(app, /Completed LLM holdout postings/);
-assert.match(app, /Running LLM predictions[\s\S]*?Freezing predictions[\s\S]*?Scoring against reference labels[\s\S]*?Complete[\s\S]*?Failed/);
-assert.match(app, /Recent .*postings\/minute[\s\S]*?variation <= 0\.35/,
-  "ETA must be based on measured, stability-checked progress rather than a fixed assumption.");
-assert.doesNotMatch(app, /async function pollLlmHoldoutEvaluation/,
-  "The old full-ledger redraw polling loop must be removed.");
-assert.match(app,
-  /async function refreshLlmHoldoutStatus[\s\S]*?updateLlmEvaluationProgress\(gtxRegion, result\.status\)/,
-  "Normal LLM polling must update the existing progress region in place.");
-assert.match(app, /server-side evaluation continues safely when this page is closed or refreshed/);
-assert.match(styles, /\.llm-evaluation-progress-bar[\s\S]*?--color-loading-progress-track[\s\S]*?--color-loading-progress-fill/);
-assert.equal((app.match(/primary-button admin-evaluation-action/g) || []).length, 4,
-  "Every Evaluation action must use the shared themed primary-button component.");
-assert.match(app, /CHEAP HIGH-RECALL TRIAGE[\s\S]*?Final recall[\s\S]*?False negatives[\s\S]*?Workload reduction/);
-assert.match(app, /Rejected examples[\s\S]*?False negatives[\s\S]*?Ambiguous survivors/);
-assert.match(app, /LLM Holdout Evaluation Running…[\s\S]*?aria-busy/,
-  "The running evaluation action must expose a textual and accessible busy state.");
-assert.match(styles,
-  /\.admin-evaluation-filter-input[\s\S]*?--color-input-text[\s\S]*?--color-input-background/,
-  "Evaluation filters must use semantic form-control tokens.");
+assert.doesNotMatch(app, /renderLlm|renderTriage|llmHoldout|LLM_HOLDOUT|activeEvaluationTab|Run LLM Holdout|CHEAP HIGH-RECALL TRIAGE|Deep Analyze with LLM/,
+  "Retired workflows must have no controls, polling, or remembered tab in shipped UI.");
+assert.doesNotMatch(styles, /\.llm-|\.admin-evaluation-subtabs/);
+assert.equal((app.match(/primary-button admin-evaluation-action/g) || []).length, 2);
 assert.match(app, /admin-compact-table[\s\S]*?Previous[\s\S]*?Next/,
   "RegEx rules must use a compact paginated table instead of giant cards.");
 assert.match(app, /Worst F1[\s\S]*?Lowest support[\s\S]*?Highest disagreement[\s\S]*?Concept name/);
@@ -99,8 +69,6 @@ assert.match(program,
 assert.match(program, /MapPost\("\/api\/admin\/regex-rules\/evaluate"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)/);
 assert.match(program, /MapGet\("\/api\/admin\/evaluations"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)/);
 assert.match(program, /MapPost\("\/api\/admin\/evaluations\/ai-holdout"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)[\s\S]*?RequireRateLimiting\("state"\)/);
-assert.match(program, /MapPost\("\/api\/admin\/evaluations\/llm-holdout"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)[\s\S]*?RequireRateLimiting\("state"\)/);
-assert.match(program, /MapPost\("\/api\/admin\/evaluations\/triage"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)[\s\S]*?RequireRateLimiting\("state"\)/);
 assert.match(program, /MapPost\("\/api\/admin\/regex-rules\/reload"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)/);
 assert.doesNotMatch(program, /api\/admin\/annotations/,
   "Removed annotation APIs must not remain reachable.");
@@ -116,4 +84,6 @@ assert.match(compose,
 assert.doesNotMatch(styles, /annotation-|detector-|training-data-/,
   "Removed experimental Admin styling must not remain.");
 
-console.log("All Admin role, RegEx lifecycle, and evaluation UI integration tests passed.");
+assert.doesNotMatch(program, /app.Map(?:Get|Post)\("\/api\/admin\/evaluations\/(?:llm-holdout|triage)/,
+  "Retired research run/status APIs must not remain in the normal web host.");
+console.log("All Admin role, Job Fit maintenance/evaluation, and cheap-triage separation tests passed.");

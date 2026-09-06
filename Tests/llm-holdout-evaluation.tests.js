@@ -35,18 +35,13 @@ assert.match(hardware, /First valid prediction per posting is retained; no retry
 assert.ok(hardware.indexOf("WriteAtomicallyAsync(frozenPath, frozen") <
   hardware.indexOf("public static async Task<LlmHardwareComparisonReport> ScoreAsync"),
   "RTX predictions must be frozen in the prediction path before the separate scorer can open references.");
-assert.match(program, /MapPost\("\/api\/admin\/evaluations\/llm-holdout"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)[\s\S]*?RequireRateLimiting\("state"\)/);
-assert.match(app, /Evaluation classifiers[\s\S]*?RegEx[\s\S]*?LLM/);
-assert.match(app, /Run LLM Holdout Evaluation/);
-assert.match(app, /LLM evaluation hardware[\s\S]*?GTX 1070[\s\S]*?RTX 5080/);
-assert.match(app, /Semantic agreement[\s\S]*?runtime reduction/);
-assert.match(program, /rtx5080Status = evaluation\.GetRtx5080Status\(\)/);
 assert.match(program, /--llm-benchmark[\s\S]*?requireStablePredictions: false/);
 assert.match(read("LlmTechnicalPreflight.cs"), /passed-with-observed-semantic-variation/);
 assert.match(read("scripts", "monitor-llm-hardware-benchmark.py"),
   /sha256:0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0/);
-assert.match(app, /RegEx P[\s\S]*?LLM P[\s\S]*?F1 Δ/);
 for (const marker of [/total_duration/, /eval_count/, /size_vram/]) assert.match(adapter, marker);
 assert.doesNotMatch(program, /MapPost\("\/api\/jobs\/deep-analysis/,
   "Normal Jobs must not expose an LLM deep-analysis endpoint.");
 console.log("Prediction-blinded LLM holdout architecture tests: PASS");
+
+assert.doesNotMatch(app, /renderLlmEvaluationCard|Run LLM Holdout Evaluation/);

@@ -5,7 +5,6 @@ const SETTINGS_SAVE_DEBOUNCE_MS = 400;
 const OVERLAY_TRANSITION_MS = 180;
 const COPY_FEEDBACK_MS = 2000;
 const REFRESH_STATUS_POLL_MS = 1000;
-const LLM_HOLDOUT_STATUS_POLL_MS = 2000;
 const ALL_COUNTRIES_LABEL = "All countries";
 const ALL_LOCATIONS_LABEL = "All locations";
 const SUPPORTED_THEME_MODES = new Set([
@@ -39,16 +38,6 @@ const state = {
   classifierStatusLoaded: false,
   adminRegexRules: [],
   activeAdminTab: "overview",
-  activeEvaluationTab: (() => {
-    try {
-      const value = window.sessionStorage.getItem("jsm-active-evaluation-tab");
-      return ["regex", "llm", "triage"].includes(value) ? value : "regex";
-    }
-    catch { return "regex"; }
-  })(),
-  llmHoldoutPollTimer: null,
-  llmHoldoutPollGeneration: 0,
-  llmHoldoutStatusRequestInFlight: false,
   activeQualificationTab: "basics",
   jobs: [],
   inclusions: [],
@@ -1020,6 +1009,8 @@ function synchronizeAdminNavigation(isAdmin) {
     elements.adminOverviewTab = null;
     elements.adminClassifierTab = null;
     elements.adminEvaluationTab = null;
+    elements.adminCheapTab = null;
+    elements.adminCheapPanel = null;
     elements.adminOverviewPanel = null;
     elements.adminClassifierPanel = null;
     elements.adminEvaluationPanel = null;
@@ -1074,7 +1065,7 @@ function synchronizeAdminNavigation(isAdmin) {
   classifierTab.setAttribute("aria-selected", "false");
   classifierTab.setAttribute("aria-controls", "admin-classifier-panel");
   classifierTab.tabIndex = -1;
-  classifierTab.textContent = "RegEx Rules";
+  classifierTab.textContent = "Job Fit Rules";
   const evaluationTab = document.createElement("button");
   evaluationTab.id = "admin-evaluation-tab";
   evaluationTab.className = "detail-tab";
@@ -1083,11 +1074,21 @@ function synchronizeAdminNavigation(isAdmin) {
   evaluationTab.setAttribute("aria-selected", "false");
   evaluationTab.setAttribute("aria-controls", "admin-evaluation-panel");
   evaluationTab.tabIndex = -1;
-  evaluationTab.textContent = "Evaluation";
+  evaluationTab.textContent = "Job Fit Evaluation";
   overviewTab.addEventListener("click", () => showAdminSection("overview", true));
   classifierTab.addEventListener("click", () => showAdminSection("classifier", true));
   evaluationTab.addEventListener("click", () => showAdminSection("evaluation", true));
-  tabs.append(overviewTab, classifierTab, evaluationTab);
+  const cheapTab = document.createElement("button");
+  cheapTab.id = "admin-cheap-triage-tab";
+  cheapTab.className = "detail-tab";
+  cheapTab.type = "button";
+  cheapTab.textContent = "Cheap Triage";
+  cheapTab.setAttribute("role", "tab");
+  cheapTab.setAttribute("aria-controls", "admin-cheap-triage-panel");
+  cheapTab.setAttribute("aria-selected", "false");
+  cheapTab.tabIndex = -1;
+  cheapTab.addEventListener("click", () => showAdminSection("cheap-triage", true));
+  tabs.append(overviewTab, classifierTab, evaluationTab, cheapTab);
 
   const overviewPanel = document.createElement("section");
   overviewPanel.id = "admin-overview-panel";
@@ -1114,7 +1115,7 @@ function synchronizeAdminNavigation(isAdmin) {
   classifierPanel.setAttribute("aria-labelledby", "admin-classifier-tab");
   classifierPanel.hidden = true;
   const classifierTitle = document.createElement("h3");
-  classifierTitle.textContent = "RegEx Rules";
+  classifierTitle.textContent = "Job Fit Rules";
   const classifierIntro = document.createElement("p");
   classifierIntro.textContent = "Search and inspect the production Job Fit rules. Open a row for its full pattern, provenance, lifecycle details, and carefully scoped controls.";
   const classifierStatus = document.createElement("p");
@@ -1178,11 +1179,14 @@ function synchronizeAdminNavigation(isAdmin) {
     });
     filters.append(control);
   }
-  const cheapRuleUpdate = RuleMaintenance.createButton();
-  const cheapRuleHelp = document.createElement("p");
-  cheapRuleHelp.textContent = "Cheap triage: declarative rules in shadow evaluation. Temporary pending a safe future learned replacement. Prepare a Codex maintenance prompt; no automatic updates or discards.";
-  classifierPanel.append(cheapRuleUpdate, cheapRuleHelp, classifierTitle, classifierIntro, classifierStatus,
+  classifierPanel.append(classifierTitle, classifierIntro, classifierStatus,
     backfill, evaluate, reload, actionHelp, filters, rulesList);
+  const cheapPanel = document.createElement("section");
+  cheapPanel.id = "admin-cheap-triage-panel";
+  cheapPanel.className = "settings-section admin-subtab-panel";
+  cheapPanel.setAttribute("role", "tabpanel");
+  cheapPanel.setAttribute("aria-labelledby", "admin-cheap-triage-tab");
+  cheapPanel.hidden = true;
   const evaluationPanel = document.createElement("section");
   evaluationPanel.id = "admin-evaluation-panel";
   evaluationPanel.className = "settings-section admin-subtab-panel";
@@ -1190,13 +1194,13 @@ function synchronizeAdminNavigation(isAdmin) {
   evaluationPanel.setAttribute("aria-labelledby", "admin-evaluation-tab");
   evaluationPanel.hidden = true;
   const evaluationTitle = document.createElement("h3");
-  evaluationTitle.textContent = "Evaluation";
+  evaluationTitle.textContent = "Job Fit Evaluation";
   const evaluationIntro = document.createElement("p");
-  evaluationIntro.textContent = "Review RegEx evidence and an apples-to-apples LLM holdout comparison. F1 is not accuracy, and development evidence is never combined with production-holdout evidence.";
+  evaluationIntro.textContent = "Evaluate production Job Fit concept detection. These benchmarks do not evaluate Cheap Triage KEEP/REJECT decisions. Development regression is not a production accuracy estimate; the frozen holdout uses provisional machine labels.";
   const evaluationContent = document.createElement("div");
   evaluationContent.className = "admin-evaluation-list";
   evaluationPanel.append(evaluationTitle, evaluationIntro, evaluationContent);
-  surface.append(tabs, overviewPanel, classifierPanel, evaluationPanel);
+  surface.append(tabs, overviewPanel, classifierPanel, evaluationPanel, cheapPanel);
   view.append(surface);
   elements.settingsView.after(view);
 
@@ -1206,6 +1210,8 @@ function synchronizeAdminNavigation(isAdmin) {
   elements.adminOverviewTab = overviewTab;
   elements.adminClassifierTab = classifierTab;
   elements.adminEvaluationTab = evaluationTab;
+  elements.adminCheapTab = cheapTab;
+  elements.adminCheapPanel = cheapPanel;
   elements.adminOverviewPanel = overviewPanel;
   elements.adminClassifierPanel = classifierPanel;
   elements.adminEvaluationPanel = evaluationPanel;
@@ -1221,6 +1227,9 @@ function synchronizeAdminNavigation(isAdmin) {
   if (window.location.hash === "#admin-classifier") {
     showView("admin", false, { bypassSourceGuard: true });
     showAdminSection("classifier", false);
+  } else if (window.location.hash === "#admin-cheap-triage") {
+    showView("admin", false, { bypassSourceGuard: true });
+    showAdminSection("cheap-triage", false);
   } else if (window.location.hash === "#admin-evaluation") {
     showView("admin", false, { bypassSourceGuard: true });
     showAdminSection("evaluation", false);
@@ -1228,26 +1237,26 @@ function synchronizeAdminNavigation(isAdmin) {
 }
 
 function showAdminSection(section, updateLocation = false) {
-  const classifierSelected = section === "classifier";
-  const evaluationSelected = section === "evaluation";
-  state.activeAdminTab = classifierSelected ? "classifier" : evaluationSelected ? "evaluation" : "overview";
-  elements.adminOverviewPanel.hidden = classifierSelected || evaluationSelected;
-  elements.adminClassifierPanel.hidden = !classifierSelected;
-  elements.adminEvaluationPanel.hidden = !evaluationSelected;
-  elements.adminOverviewTab.classList.toggle("active", !classifierSelected && !evaluationSelected);
-  elements.adminClassifierTab.classList.toggle("active", classifierSelected);
-  elements.adminEvaluationTab.classList.toggle("active", evaluationSelected);
-  elements.adminOverviewTab.setAttribute("aria-selected", String(!classifierSelected && !evaluationSelected));
-  elements.adminClassifierTab.setAttribute("aria-selected", String(classifierSelected));
-  elements.adminEvaluationTab.setAttribute("aria-selected", String(evaluationSelected));
-  elements.adminOverviewTab.tabIndex = classifierSelected || evaluationSelected ? -1 : 0;
-  elements.adminClassifierTab.tabIndex = classifierSelected ? 0 : -1;
-  elements.adminEvaluationTab.tabIndex = evaluationSelected ? 0 : -1;
-  if (classifierSelected) void loadClassifierStatus();
-  if (evaluationSelected) void loadEvaluationLedger();
-  if (!evaluationSelected) stopLlmHoldoutPolling();
+  const sections = {
+    overview: [elements.adminOverviewTab, elements.adminOverviewPanel],
+    classifier: [elements.adminClassifierTab, elements.adminClassifierPanel],
+    evaluation: [elements.adminEvaluationTab, elements.adminEvaluationPanel],
+    "cheap-triage": [elements.adminCheapTab, elements.adminCheapPanel]
+  };
+  const selected = Object.hasOwn(sections, section) ? section : "overview";
+  state.activeAdminTab = selected;
+  for (const [name, [tab, panel]] of Object.entries(sections)) {
+    const active = name === selected;
+    panel.hidden = !active;
+    tab.classList.toggle("active", active);
+    tab.setAttribute("aria-selected", String(active));
+    tab.tabIndex = active ? 0 : -1;
+  }
+  if (selected === "classifier") void loadClassifierStatus();
+  if (selected === "evaluation") void loadEvaluationLedger();
+  if (selected === "cheap-triage") void RuleMaintenance.renderStatus(elements.adminCheapPanel);
   if (updateLocation) {
-    const hash = classifierSelected ? "#admin-classifier" : evaluationSelected ? "#admin-evaluation" : "";
+    const hash = selected === "overview" ? "" : `#admin-${selected}`;
     history.replaceState(null, "", `${window.location.pathname}${window.location.search}${hash}`);
   }
 }
@@ -1266,66 +1275,9 @@ async function loadEvaluationLedger() {
 }
 
 function renderEvaluationNavigation(result) {
-  const llmPollingRequired = [result.llmHoldoutStatus, result.llmRtx5080Status]
-    .some(status => !["not-started", "complete", "failed"]
-      .includes(status?.state || "not-started")) ||
-    (result.llmRtx5080Status?.state === "complete" && !result.llmHardwareComparison);
   const wrapper = document.createElement("div");
-  const tabs = document.createElement("div");
-  tabs.className = "settings-tabs admin-evaluation-subtabs";
-  tabs.setAttribute("role", "tablist");
-  tabs.setAttribute("aria-label", "Evaluation classifiers");
-  const regexTab = document.createElement("button");
-  regexTab.type = "button";
-  regexTab.className = "detail-tab";
-  regexTab.setAttribute("role", "tab");
-  regexTab.textContent = "RegEx";
-  const llmTab = document.createElement("button");
-  llmTab.type = "button";
-  llmTab.className = "detail-tab";
-  llmTab.setAttribute("role", "tab");
-  llmTab.textContent = "LLM";
-  const triageTab = document.createElement("button");
-  triageTab.type = "button";
-  triageTab.className = "detail-tab";
-  triageTab.setAttribute("role", "tab");
-  triageTab.textContent = "Triage";
-  const regexPanel = document.createElement("div");
-  regexPanel.className = "admin-evaluation-list";
-  regexPanel.append(renderCuratedEvaluationCard(result), renderHoldoutEvaluationCard(result));
-  const llmPanel = document.createElement("div");
-  llmPanel.className = "admin-evaluation-list";
-  llmPanel.append(renderLlmEvaluationCard(result));
-  const triagePanel = document.createElement("div");
-  triagePanel.className = "admin-evaluation-list";
-  triagePanel.append(renderTriageEvaluationCard(result));
-  const select = value => {
-    state.activeEvaluationTab = value;
-    try { window.sessionStorage.setItem("jsm-active-evaluation-tab", value); } catch { /* optional preference */ }
-    const regexSelected = value === "regex";
-    const llmSelected = value === "llm";
-    const triageSelected = value === "triage";
-    regexPanel.hidden = !regexSelected;
-    llmPanel.hidden = !llmSelected;
-    triagePanel.hidden = !triageSelected;
-    regexTab.classList.toggle("active", regexSelected);
-    llmTab.classList.toggle("active", llmSelected);
-    triageTab.classList.toggle("active", triageSelected);
-    regexTab.setAttribute("aria-selected", String(regexSelected));
-    llmTab.setAttribute("aria-selected", String(llmSelected));
-    triageTab.setAttribute("aria-selected", String(triageSelected));
-    regexTab.tabIndex = regexSelected ? 0 : -1;
-    llmTab.tabIndex = llmSelected ? 0 : -1;
-    triageTab.tabIndex = triageSelected ? 0 : -1;
-    if (!llmSelected || !llmPollingRequired) stopLlmHoldoutPolling();
-    else window.setTimeout(startLlmHoldoutPolling, 0);
-  };
-  regexTab.addEventListener("click", () => select("regex"));
-  llmTab.addEventListener("click", () => select("llm"));
-  triageTab.addEventListener("click", () => select("triage"));
-  tabs.append(regexTab, llmTab, triageTab);
-  wrapper.append(tabs, regexPanel, llmPanel, triagePanel);
-  select(state.activeEvaluationTab);
+  wrapper.className = "admin-evaluation-list";
+  wrapper.append(renderCuratedEvaluationCard(result), renderHoldoutEvaluationCard(result));
   return wrapper;
 }
 
@@ -1406,727 +1358,6 @@ function renderHoldoutEvaluationCard(result) {
     article.append(metadata);
   }
   return article;
-}
-
-function renderLlmEvaluationCard(result) {
-  const report = result.llmHoldoutReport;
-  const comparison = result.llmHardwareComparison;
-  const rtxReport = comparison?.rtx5080 || null;
-  const model = result.llmModel || {};
-  const runStatus = result.llmHoldoutStatus || {
-    state: "not-started", displayState: "Not started", completed: 0, total: 200
-  };
-  const article = document.createElement("article");
-  article.className = "settings-section admin-evaluation-card llm-evaluation-card";
-  article.dataset.llmEvaluationCard = "true";
-  const heading = document.createElement("h4");
-  heading.textContent = "LLM PRODUCTION HOLDOUT";
-  const current = document.createElement("p");
-  current.textContent = `Current LLM: ${model.modelTag || "unavailable"}`;
-  const purpose = document.createElement("p");
-  purpose.textContent = "Runs the current local LLM against the existing frozen production holdout. It does not modify reference labels, RegEx rules, or production Job Fit results.";
-  const disclaimer = document.createElement("strong");
-  disclaimer.textContent = "Reference labels were generated through prediction-blinded AI review and adjudication. They are not human-ground-truth labels.";
-  const hardwareTabs = document.createElement("div");
-  hardwareTabs.className = "settings-tabs llm-hardware-tabs";
-  hardwareTabs.setAttribute("role", "tablist");
-  hardwareTabs.setAttribute("aria-label", "LLM evaluation hardware");
-  const gtxTab = document.createElement("button");
-  gtxTab.type = "button";
-  gtxTab.className = "detail-tab";
-  gtxTab.setAttribute("role", "tab");
-  gtxTab.textContent = "GTX 1070";
-  const rtxTab = document.createElement("button");
-  rtxTab.type = "button";
-  rtxTab.className = "detail-tab";
-  rtxTab.setAttribute("role", "tab");
-  rtxTab.textContent = "RTX 5080";
-  const gtxPanel = document.createElement("section");
-  gtxPanel.className = "llm-hardware-panel";
-  gtxPanel.setAttribute("role", "tabpanel");
-  const rtxPanel = document.createElement("section");
-  rtxPanel.className = "llm-hardware-panel";
-  rtxPanel.setAttribute("role", "tabpanel");
-  const selectHardware = key => {
-    const gtxSelected = key === "gtx1070";
-    gtxPanel.hidden = !gtxSelected;
-    rtxPanel.hidden = gtxSelected;
-    gtxTab.classList.toggle("active", gtxSelected);
-    rtxTab.classList.toggle("active", !gtxSelected);
-    gtxTab.setAttribute("aria-selected", String(gtxSelected));
-    rtxTab.setAttribute("aria-selected", String(!gtxSelected));
-    gtxTab.tabIndex = gtxSelected ? 0 : -1;
-    rtxTab.tabIndex = gtxSelected ? -1 : 0;
-  };
-  gtxTab.addEventListener("click", () => selectHardware("gtx1070"));
-  rtxTab.addEventListener("click", () => selectHardware("rtx5080"));
-  hardwareTabs.append(gtxTab, rtxTab);
-  const action = document.createElement("button");
-  action.type = "button";
-  action.className = "primary-button admin-evaluation-action";
-  action.dataset.llmEvaluationAction = "true";
-  const running = !["not-started", "complete", "failed"].includes(runStatus.state);
-  action.textContent = report
-    ? "LLM Holdout Evaluation Complete"
-    : running ? "LLM Holdout Evaluation Running…" : "Run LLM Holdout Evaluation";
-  action.disabled = running || report !== null;
-  action.setAttribute("aria-busy", String(running));
-  action.title = report ? "The first frozen prediction set is retained. A changed model or prompt requires a separately versioned experiment." : purpose.textContent;
-  action.addEventListener("click", () => void startLlmHoldoutEvaluation(action));
-  const gtxIdentity = document.createElement("p");
-  gtxIdentity.textContent = `GPU: NVIDIA GeForce GTX 1070 8 GB · Model: ${model.modelTag || report?.modelTag || "unavailable"}`;
-  const progress = renderLlmEvaluationProgress(runStatus, "gtx1070");
-  gtxPanel.append(gtxIdentity, action, progress);
-  if (report) {
-    const caution = document.createElement("p");
-    caution.textContent = "Apples-to-apples agreement with the same AI-derived references is not absolute human-grounded truth. Treat high-disagreement and low-support concepts cautiously.";
-    gtxPanel.append(caution, renderClassifierComparison(report),
-      renderLlmRuntime(report.runtime), renderLlmConceptComparison(report.concepts));
-  }
-  const technical = document.createElement("details");
-  const summary = document.createElement("summary");
-  summary.textContent = "Technical provenance";
-  const metadata = document.createElement("p");
-  metadata.className = "admin-evaluation-metadata";
-  metadata.textContent = `Model ${model.modelId || report?.modelId || "unavailable"} · digest ${model.modelDigest || report?.modelDigest || "unavailable"} · prompt ${model.promptVersion || report?.promptVersion || "unavailable"} / ${model.promptHash || report?.promptHash || "unavailable"} · taxonomy ${model.taxonomyFingerprint || report?.taxonomyFingerprint || "unavailable"}${report ? ` · prediction ${report.predictionFingerprint} · evaluated ${formatLongDate(report.evaluatedUtc) || report.evaluatedUtc}` : ""}`;
-  technical.append(summary, metadata);
-  gtxPanel.append(technical);
-  const rtxStatus = result.llmRtx5080Status || {
-    state: "not-started", displayState: "Not started", completed: 0, total: 200,
-    message: "The isolated RTX 5080 benchmark has not been imported."
-  };
-  const rtxIdentity = document.createElement("p");
-  rtxIdentity.textContent = `GPU: NVIDIA GeForce RTX 5080 16 GB · Model: ${model.modelTag || rtxReport?.modelTag || "unavailable"}`;
-  rtxPanel.append(rtxIdentity, renderLlmEvaluationProgress(rtxStatus, "rtx5080"));
-  if (rtxReport) {
-    const rtxCaution = document.createElement("p");
-    rtxCaution.textContent = "Same frozen semantic experiment and AI-derived references; only benchmark hardware and unavoidable NVIDIA runtime layers differ.";
-    rtxPanel.append(rtxCaution, renderClassifierComparison(rtxReport),
-      renderLlmRuntime(rtxReport.runtime), renderLlmConceptComparison(rtxReport.concepts),
-      renderLlmHardwareProvenance(comparison.rtx5080Hardware, rtxReport));
-  }
-  article.append(heading, current, purpose, disclaimer, hardwareTabs, gtxPanel, rtxPanel);
-  if (comparison) article.append(renderLlmHardwareComparison(comparison));
-  selectHardware("gtx1070");
-  return article;
-}
-
-function renderTriageEvaluationCard(result) {
-  const report = result.triageReport;
-  const status = result.triageStatus || { state: "not-started", displayState: "Not started" };
-  const article = document.createElement("article");
-  article.className = "settings-section admin-evaluation-card triage-evaluation-card";
-  const heading = document.createElement("h4");
-  heading.textContent = "CHEAP HIGH-RECALL TRIAGE";
-  const purpose = document.createElement("p");
-  purpose.textContent = "Historical two-stage prototype, retained for reproducibility. Current electrical-safe cheap rejection is evaluated separately with the versioned ruleset; use Update RegEx Rules for that workflow. Ambiguous postings are kept.";
-  const disclaimer = document.createElement("strong");
-  disclaimer.textContent = "Reference labels were generated through prediction-blinded AI review and adjudication. They are not human-ground-truth labels.";
-  const action = document.createElement("button");
-  action.type = "button";
-  action.className = "primary-button admin-evaluation-action";
-  const running = status.state === "running";
-  action.textContent = running ? "Triage Evaluation Running…" : report
-    ? "Rerun Frozen Triage Evaluation" : "Run Triage Evaluation";
-  action.disabled = running;
-  action.setAttribute("aria-busy", String(running));
-  action.addEventListener("click", async () => {
-    action.disabled = true;
-    action.setAttribute("aria-busy", "true");
-    action.textContent = "Triage Evaluation Running…";
-    try {
-      const response = await fetch("/api/admin/evaluations/triage", { method: "POST" });
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.error || "Triage evaluation could not be started.");
-      }
-      await pollTriageEvaluation();
-    } catch (error) {
-      action.disabled = false;
-      action.setAttribute("aria-busy", "false");
-      action.textContent = "Run Triage Evaluation";
-      action.title = error.message || String(error);
-    }
-  });
-  article.append(heading, purpose, disclaimer, action);
-  if (!report) {
-    const stateText = document.createElement("p");
-    stateText.className = "admin-evaluation-metadata";
-    stateText.textContent = status.message || `Status: ${status.displayState}.`;
-    article.append(stateText);
-    return article;
-  }
-
-  const metrics = document.createElement("dl");
-  metrics.className = "admin-evaluation-metrics triage-evaluation-metrics";
-  for (const [label, value] of [
-    ["Holdout", `${report.postingCount} postings`],
-    ["Plausible / relevant", String(report.relevantCount)],
-    ["Obvious irrelevant", String(report.obviouslyIrrelevantCount)],
-    ["Final recall", formatPercent(report.finalRelevantRecall)],
-    ["False negatives", String(report.finalFalseNegativeCount)],
-    ["Workload reduction", formatPercent(report.workloadReduction)],
-    ["Survivors", `${report.finalSurvivorCount} (${formatPercent(report.finalSurvivorRate)})`],
-    ["Rejection precision", formatPercent(report.rejectionPrecision)],
-    ["Triage latency", `${report.averageMicrosecondsPerPosting.toFixed(0)} µs/posting`]
-  ]) {
-    const item = document.createElement("div");
-    const term = document.createElement("dt");
-    term.textContent = label;
-    const definition = document.createElement("dd");
-    definition.textContent = value;
-    item.append(term, definition);
-    metrics.append(item);
-  }
-  article.append(metrics, renderTriageStages(report.stages),
-    renderTriageRuntimeEstimates(report.runtimeEstimates),
-    renderTriageExamples("Rejected examples", report.rejectedExamples),
-    renderTriageExamples("False negatives", report.falseNegatives),
-    renderTriageExamples("Ambiguous survivors", report.ambiguousSurvivors));
-  const buckets = document.createElement("details");
-  const bucketsSummary = document.createElement("summary");
-  bucketsSummary.textContent = "Broad technical buckets";
-  const bucketList = document.createElement("ul");
-  for (const definition of report.bucketDefinitions) {
-    const item = document.createElement("li");
-    item.textContent = definition;
-    bucketList.append(item);
-  }
-  buckets.append(bucketsSummary, bucketList);
-  const metadata = document.createElement("p");
-  metadata.className = "admin-evaluation-metadata";
-  metadata.textContent = `Reference ${report.referenceFingerprint} · candidate ${report.candidateFingerprint} · evaluated ${formatLongDate(report.evaluatedUtc) || report.evaluatedUtc}. ${report.productionBehavior}`;
-  article.append(buckets, metadata);
-  return article;
-}
-
-async function pollTriageEvaluation() {
-  await new Promise(resolve => window.setTimeout(resolve, 500));
-  const response = await fetch("/api/admin/evaluations/triage/status", { cache: "no-store" });
-  if (!response.ok) throw new Error("Triage status could not be loaded.");
-  const result = await response.json();
-  if (["complete", "failed"].includes(result.status?.state || "failed")) {
-    await loadEvaluationLedger();
-    return;
-  }
-  await pollTriageEvaluation();
-}
-
-function renderTriageStages(stages) {
-  const details = document.createElement("details");
-  details.open = true;
-  const summary = document.createElement("summary");
-  summary.textContent = "Funnel stages";
-  const table = document.createElement("table");
-  table.className = "admin-compact-table";
-  const head = document.createElement("thead");
-  const header = document.createElement("tr");
-  for (const label of ["Stage", "Input", "Rejected", "Survived", "Recall", "False negatives", "Time"]) {
-    const cell = document.createElement("th");
-    cell.textContent = label;
-    header.append(cell);
-  }
-  head.append(header);
-  const body = document.createElement("tbody");
-  for (const stage of stages) {
-    const row = document.createElement("tr");
-    for (const value of [stage.stage, stage.inputCount,
-      `${stage.rejectedCount} (${formatPercent(stage.rejectionRate)})`, stage.survivorCount,
-      formatPercent(stage.relevantRecall), stage.falseNegativeCount,
-      `${stage.elapsedMilliseconds.toFixed(2)} ms`]) {
-      const cell = document.createElement("td");
-      cell.textContent = value;
-      row.append(cell);
-    }
-    body.append(row);
-  }
-  table.append(head, body);
-  details.append(summary, table);
-  return details;
-}
-
-function renderTriageRuntimeEstimates(estimates) {
-  const details = document.createElement("details");
-  const summary = document.createElement("summary");
-  summary.textContent = "1,000-posting LLM workload simulation";
-  const table = document.createElement("table");
-  table.className = "admin-compact-table";
-  const head = document.createElement("thead");
-  const header = document.createElement("tr");
-  for (const label of ["Hardware", "Measured seconds/post", "Before", "After", "Saved"]) {
-    const cell = document.createElement("th");
-    cell.textContent = label;
-    header.append(cell);
-  }
-  head.append(header);
-  const body = document.createElement("tbody");
-  for (const estimate of estimates) {
-    const row = document.createElement("tr");
-    for (const value of [estimate.hardware, estimate.secondsPerPosting.toFixed(3),
-      formatDuration(estimate.beforeSeconds), formatDuration(estimate.afterSeconds),
-      formatDuration(estimate.savedSeconds)]) {
-      const cell = document.createElement("td");
-      cell.textContent = value;
-      row.append(cell);
-    }
-    body.append(row);
-  }
-  table.append(head, body);
-  details.append(summary, table);
-  return details;
-}
-
-function renderTriageExamples(label, examples) {
-  const details = document.createElement("details");
-  const summary = document.createElement("summary");
-  summary.textContent = `${label} (${examples.length})`;
-  const table = document.createElement("table");
-  table.className = "admin-compact-table";
-  const head = document.createElement("thead");
-  const header = document.createElement("tr");
-  for (const value of ["Title", "Company", "Stage", "Reason", "Reference", "Technical evidence"]) {
-    const cell = document.createElement("th");
-    cell.textContent = value;
-    header.append(cell);
-  }
-  head.append(header);
-  const body = document.createElement("tbody");
-  for (const example of examples) {
-    const evidence = example.technicalEvidence.map(item => item.bucket).join(", ") || "None";
-    const row = document.createElement("tr");
-    for (const value of [example.title, example.companyId, example.rejectedAtStage || "Survived",
-      example.rejectionReason || "Ambiguity kept", example.referenceAmbiguousKeep
-        ? "Ambiguous — keep" : example.referenceWorthSending ? "Worth sending" : "Obvious irrelevant",
-      evidence]) {
-      const cell = document.createElement("td");
-      cell.textContent = value;
-      row.append(cell);
-    }
-    body.append(row);
-  }
-  table.append(head, body);
-  details.append(summary, table);
-  return details;
-}
-
-function renderLlmHardwareProvenance(hardware, report) {
-  const details = document.createElement("details");
-  const summary = document.createElement("summary");
-  summary.textContent = "RTX 5080 technical provenance";
-  const metadata = document.createElement("p");
-  metadata.className = "admin-evaluation-metadata";
-  metadata.textContent = `${hardware.gpuName} · driver ${hardware.driverVersion} · CUDA ${hardware.cudaVersion} · Docker ${hardware.dockerVersion} · NVIDIA Container Toolkit ${hardware.nvidiaContainerToolkitVersion} · model ${report.modelTag} / ${report.modelDigest} · prediction ${report.predictionFingerprint}`;
-  details.append(summary, metadata);
-  return details;
-}
-
-function renderLlmHardwareComparison(comparison) {
-  const details = document.createElement("details");
-  details.className = "llm-hardware-comparison";
-  details.open = true;
-  const summary = document.createElement("summary");
-  summary.textContent = "GTX 1070 vs RTX 5080";
-  const agreement = document.createElement("p");
-  agreement.textContent = `Semantic agreement ${formatPercent(comparison.semanticAgreement.agreementRate)} · ${comparison.semanticAgreement.disagreementCount} / ${comparison.semanticAgreement.totalDecisions} concept decisions differ.`;
-  const table = document.createElement("table");
-  table.className = "admin-compact-table admin-comparison-summary";
-  const gtx = comparison.gtx1070;
-  const rtx = comparison.rtx5080;
-  const resources = comparison.rtx5080Resources;
-  const rows = [
-    ["Macro F1", formatMetric(gtx.llmMacro.f1), formatMetric(rtx.llmMacro.f1), formatSignedMetric(rtx.llmMacro.f1 - gtx.llmMacro.f1)],
-    ["Micro F1", formatMetric(gtx.llmMicro.f1), formatMetric(rtx.llmMicro.f1), formatSignedMetric(rtx.llmMicro.f1 - gtx.llmMicro.f1)],
-    ["Total runtime", formatDuration(gtx.runtime.totalElapsedSeconds), formatDuration(rtx.runtime.totalElapsedSeconds), formatSignedDuration(rtx.runtime.totalElapsedSeconds - gtx.runtime.totalElapsedSeconds)],
-    ["Average/posting", `${gtx.runtime.averageLatencyMilliseconds.toFixed(0)} ms`, `${rtx.runtime.averageLatencyMilliseconds.toFixed(0)} ms`, formatSignedNumber(rtx.runtime.averageLatencyMilliseconds - gtx.runtime.averageLatencyMilliseconds, " ms", 0)],
-    ["Median", `${gtx.runtime.medianLatencyMilliseconds.toFixed(0)} ms`, `${rtx.runtime.medianLatencyMilliseconds.toFixed(0)} ms`, formatSignedNumber(rtx.runtime.medianLatencyMilliseconds - gtx.runtime.medianLatencyMilliseconds, " ms", 0)],
-    ["P95", `${gtx.runtime.p95LatencyMilliseconds.toFixed(0)} ms`, `${rtx.runtime.p95LatencyMilliseconds.toFixed(0)} ms`, formatSignedNumber(rtx.runtime.p95LatencyMilliseconds - gtx.runtime.p95LatencyMilliseconds, " ms", 0)],
-    ["Postings/min", gtx.runtime.postingsPerMinute.toFixed(2), rtx.runtime.postingsPerMinute.toFixed(2), formatSignedNumber(rtx.runtime.postingsPerMinute - gtx.runtime.postingsPerMinute, "", 2)],
-    ["Output tokens/sec", formatMetric(gtx.runtime.weightedOutputTokensPerSecond), formatMetric(rtx.runtime.weightedOutputTokensPerSecond), formatSignedNumber(rtx.runtime.weightedOutputTokensPerSecond - gtx.runtime.weightedOutputTokensPerSecond, "", 3)],
-    ["Average GPU utilization", formatOptionalPercent(gtx.runtime.averageGpuUtilizationPercent), formatOptionalPercent(rtx.runtime.averageGpuUtilizationPercent), formatSignedNumber(rtx.runtime.averageGpuUtilizationPercent - gtx.runtime.averageGpuUtilizationPercent, " pp", 1)],
-    ["Peak model VRAM", formatBytes(gtx.runtime.peakModelVramBytes), formatBytes(rtx.runtime.peakModelVramBytes), formatSignedBytes(rtx.runtime.peakModelVramBytes - gtx.runtime.peakModelVramBytes)],
-    ["Peak Ollama RAM", formatBytes(gtx.runtime.peakOllamaContainerRamBytes), formatBytes(rtx.runtime.peakOllamaContainerRamBytes), formatSignedBytes(rtx.runtime.peakOllamaContainerRamBytes - gtx.runtime.peakOllamaContainerRamBytes)],
-    ["Peak adapter RAM", formatBytes(gtx.runtime.peakAdapterContainerRamBytes), formatBytes(rtx.runtime.peakAdapterContainerRamBytes), formatSignedBytes(rtx.runtime.peakAdapterContainerRamBytes - gtx.runtime.peakAdapterContainerRamBytes)],
-    ["Average GPU power", "Not measured", formatWatts(resources.averageGpuPowerWatts), "Not comparable"],
-    ["Peak GPU power", "Not measured", formatWatts(resources.peakGpuPowerWatts), "Not comparable"],
-    ["Semantic agreement", "Baseline", `${comparison.semanticAgreement.exactAgreementCount} / ${comparison.semanticAgreement.totalDecisions}`, `${comparison.semanticAgreement.disagreementCount} differences`]
-  ];
-  const head = document.createElement("thead");
-  const header = document.createElement("tr");
-  for (const value of ["Measure", "GTX 1070", "RTX 5080", "Difference (RTX − GTX)"]) {
-    const cell = document.createElement("th");
-    cell.textContent = value;
-    header.append(cell);
-  }
-  head.append(header);
-  const body = document.createElement("tbody");
-  for (const values of rows) {
-    const row = document.createElement("tr");
-    for (const value of values) {
-      const cell = document.createElement("td");
-      cell.textContent = value;
-      row.append(cell);
-    }
-    body.append(row);
-  }
-  table.append(head, body);
-  const speed = document.createElement("p");
-  speed.className = "admin-evaluation-metadata";
-  const energy = Number.isFinite(comparison.rtx5080Resources.approximateGpuEnergyWattHours)
-    ? `${comparison.rtx5080Resources.approximateGpuEnergyWattHours.toFixed(2)} Wh`
-    : "unavailable";
-  speed.textContent = `${comparison.performance.speedupMultiplier.toFixed(2)}× speedup · ${comparison.performance.runtimeReductionPercent.toFixed(1)}% runtime reduction · RTX board energy ${energy} (sampled).`;
-  details.append(summary, agreement, table, speed);
-  return details;
-}
-
-function renderLlmEvaluationProgress(runStatus, hardware = "gtx1070") {
-  const region = document.createElement("section");
-  region.className = "llm-evaluation-progress";
-  region.dataset.llmEvaluationProgress = "true";
-  region.dataset.llmHardware = hardware;
-  region.setAttribute("aria-label", "LLM holdout evaluation progress");
-  const phase = document.createElement("strong");
-  phase.className = "llm-evaluation-phase";
-  phase.dataset.llmEvaluationPhase = "true";
-  const summary = document.createElement("div");
-  summary.className = "llm-evaluation-progress-summary";
-  const count = document.createElement("span");
-  count.dataset.llmEvaluationCount = "true";
-  const percentage = document.createElement("span");
-  percentage.dataset.llmEvaluationPercentage = "true";
-  const bar = document.createElement("progress");
-  bar.className = "llm-evaluation-progress-bar";
-  bar.dataset.llmEvaluationBar = "true";
-  bar.setAttribute("aria-label", "Completed LLM holdout postings");
-  const message = document.createElement("p");
-  message.className = "settings-status llm-evaluation-message";
-  message.dataset.llmEvaluationMessage = "true";
-  message.setAttribute("role", "status");
-  message.setAttribute("aria-live", "polite");
-  const timing = document.createElement("p");
-  timing.className = "admin-evaluation-metadata llm-evaluation-timing";
-  timing.dataset.llmEvaluationTiming = "true";
-  const continuity = document.createElement("p");
-  continuity.className = "admin-evaluation-metadata llm-evaluation-continuity";
-  continuity.textContent = "The server-side evaluation continues safely when this page is closed or refreshed.";
-  summary.append(count, percentage);
-  region.append(phase, summary, bar, message, timing, continuity);
-  updateLlmEvaluationProgress(region, runStatus);
-  return region;
-}
-
-function llmEvaluationPhase(status) {
-  const phases = {
-    "not-started": "Not started",
-    "preparing-frozen-holdout": "Preparing frozen holdout",
-    "running-llm-predictions": "Running LLM predictions",
-    "freezing-predictions": "Freezing predictions",
-    "scoring-reference-labels": "Scoring against reference labels",
-    complete: "Complete",
-    failed: "Failed"
-  };
-  return phases[status?.state] || status?.displayState || "Status unavailable";
-}
-
-function updateLlmEvaluationProgress(region, status) {
-  if (!region || !status) return;
-  const total = Number.isFinite(status.total) && status.total > 0 ? status.total : 200;
-  const completed = Number.isFinite(status.completed)
-    ? Math.min(total, Math.max(0, status.completed)) : 0;
-  const percent = total ? completed / total * 100 : 0;
-  region.querySelector("[data-llm-evaluation-phase]").textContent = llmEvaluationPhase(status);
-  region.querySelector("[data-llm-evaluation-count]").textContent = `${completed} / ${total}`;
-  region.querySelector("[data-llm-evaluation-percentage]").textContent = `${percent.toFixed(1)}%`;
-  const bar = region.querySelector("[data-llm-evaluation-bar]");
-  bar.max = total;
-  bar.value = completed;
-  bar.setAttribute("aria-valuetext", `${completed} of ${total} postings, ${percent.toFixed(1)} percent`);
-  region.querySelector("[data-llm-evaluation-message]").textContent = status.message || "";
-  const timing = llmEvaluationTiming(status, completed, total);
-  const timingElement = region.querySelector("[data-llm-evaluation-timing]");
-  timingElement.textContent = timing;
-  timingElement.hidden = !timing;
-  region.dataset.state = status.state || "unknown";
-}
-
-function llmEvaluationTiming(status, completed, total) {
-  const started = Date.parse(status.startedUtc || "");
-  if (!Number.isFinite(started)) return "";
-  const terminal = ["complete", "failed"].includes(status.state);
-  const updated = Date.parse(status.updatedUtc || "");
-  const now = terminal && Number.isFinite(updated) ? updated : Date.now();
-  const parts = [`Elapsed ${formatDuration(Math.max(0, (now - started) / 1000))}`];
-  const history = recordLlmProgressSample(status, completed);
-  const intervals = [];
-  for (let index = 1; index < history.length; index++) {
-    const count = history[index].completed - history[index - 1].completed;
-    const seconds = (history[index].updated - history[index - 1].updated) / 1000;
-    if (count > 0 && seconds > 0) intervals.push(seconds / count);
-  }
-  if (intervals.length) {
-    const recent = intervals.slice(-8);
-    const mean = recent.reduce((sum, value) => sum + value, 0) / recent.length;
-    parts.push(`Recent ${(60 / mean).toFixed(2)} postings/minute`);
-    if (!terminal && recent.length >= 4 && completed < total) {
-      const variance = recent.reduce((sum, value) => sum + (value - mean) ** 2, 0) / recent.length;
-      const variation = Math.sqrt(variance) / mean;
-      if (variation <= 0.35) parts.push(`ETA ${formatDuration((total - completed) * mean)}`);
-    }
-  }
-  return parts.join(" · ");
-}
-
-function recordLlmProgressSample(status, completed) {
-  if (!status.evaluationRunId) return [];
-  const key = `jsm-llm-holdout-progress-${status.evaluationRunId}`;
-  let history = [];
-  try { history = JSON.parse(window.sessionStorage.getItem(key) || "[]"); }
-  catch { history = []; }
-  if (!Array.isArray(history)) history = [];
-  history = history.filter(item => Number.isFinite(item.completed) && Number.isFinite(item.updated));
-  const updated = Date.parse(status.updatedUtc || "");
-  const last = history.at(-1);
-  if (Number.isFinite(updated) && (!last || last.completed !== completed)) {
-    history.push({ completed, updated });
-    history = history.slice(-12);
-    try { window.sessionStorage.setItem(key, JSON.stringify(history)); } catch { /* optional timing cache */ }
-  }
-  return history;
-}
-
-function renderClassifierComparison(report) {
-  const table = document.createElement("table");
-  table.className = "admin-compact-table admin-comparison-summary";
-  const head = document.createElement("thead");
-  const header = document.createElement("tr");
-  for (const value of ["Classifier", "Macro P", "Macro R", "Macro F1", "Micro P", "Micro R", "Micro F1"]) {
-    const cell = document.createElement("th");
-    cell.textContent = value;
-    header.append(cell);
-  }
-  head.append(header);
-  const body = document.createElement("tbody");
-  const rows = [
-    ["RegEx", report.regexMacro.precision, report.regexMacro.recall, report.regexMacro.f1,
-      report.regexMicro.precision, report.regexMicro.recall, report.regexMicro.f1],
-    ["LLM", report.llmMacro.precision, report.llmMacro.recall, report.llmMacro.f1,
-      report.llmMicro.precision, report.llmMicro.recall, report.llmMicro.f1],
-    ["Absolute difference", report.absoluteDifference.macroPrecision,
-      report.absoluteDifference.macroRecall, report.absoluteDifference.macroF1,
-      report.absoluteDifference.microPrecision, report.absoluteDifference.microRecall,
-      report.absoluteDifference.microF1]
-  ];
-  for (const values of rows) {
-    const row = document.createElement("tr");
-    for (const value of values) {
-      const cell = document.createElement("td");
-      cell.textContent = typeof value === "string" ? value : formatMetric(value);
-      row.append(cell);
-    }
-    body.append(row);
-  }
-  table.append(head, body);
-  return table;
-}
-
-function renderLlmRuntime(runtime) {
-  const details = document.createElement("details");
-  const summary = document.createElement("summary");
-  summary.textContent = "Runtime and resources";
-  const text = document.createElement("p");
-  text.textContent = `Elapsed ${formatDuration(runtime.totalElapsedSeconds)} · average ${runtime.averageLatencyMilliseconds.toFixed(0)} ms/posting · median ${runtime.medianLatencyMilliseconds.toFixed(0)} ms · p95 ${runtime.p95LatencyMilliseconds.toFixed(0)} ms · ${runtime.postingsPerMinute.toFixed(2)} postings/minute · ${formatMetric(runtime.weightedOutputTokensPerSecond)} output tokens/sec · ${runtime.approximateInferenceCount} inferences.`;
-  const resources = document.createElement("p");
-  resources.textContent = `Peak model VRAM ${formatBytes(runtime.peakModelVramBytes)} · model residency ${formatBytes(runtime.peakModelResidentBytes)} · Ollama RAM ${formatBytes(runtime.peakOllamaContainerRamBytes)} · adapter RAM ${formatBytes(runtime.peakAdapterContainerRamBytes)} · GPU utilization ${runtime.averageGpuUtilizationPercent == null ? "not available inside the hardened container" : `${runtime.averageGpuUtilizationPercent.toFixed(1)}%`}.`;
-  details.append(summary, text, resources);
-  return details;
-}
-
-function renderLlmConceptComparison(concepts) {
-  const details = document.createElement("details");
-  const summary = document.createElement("summary");
-  summary.textContent = "Per-concept RegEx vs LLM comparison";
-  const controls = document.createElement("div");
-  controls.className = "admin-evaluation-table-controls";
-  const search = document.createElement("input");
-  search.className = "admin-evaluation-filter-input";
-  search.placeholder = "Filter concept";
-  search.setAttribute("aria-label", "Filter LLM comparison concepts");
-  const sort = document.createElement("select");
-  sort.className = "admin-evaluation-filter-select";
-  sort.setAttribute("aria-label", "Sort LLM comparison concepts");
-  for (const [value, label] of [["llmF1", "Sort: LLM F1"], ["regexF1", "Sort: RegEx F1"],
-    ["difference", "Sort: F1 difference"], ["support", "Sort: support"],
-    ["disagreement", "Sort: labeler disagreement"], ["name", "Sort: concept name"]]) {
-    const option = document.createElement("option");
-    option.value = value;
-    option.textContent = label;
-    sort.append(option);
-  }
-  const table = document.createElement("table");
-  table.className = "admin-compact-table";
-  const render = () => {
-    const query = search.value.trim().toLowerCase();
-    const rows = concepts.filter(item => !query || item.conceptName.toLowerCase().includes(query) || item.conceptId.includes(query));
-    rows.sort((a, b) => sort.value === "regexF1" ? (b.regexF1 ?? -1) - (a.regexF1 ?? -1)
-      : sort.value === "difference" ? (b.f1Difference ?? -Infinity) - (a.f1Difference ?? -Infinity)
-        : sort.value === "support" ? b.support - a.support
-          : sort.value === "disagreement" ? b.referenceLabelDisagreementRate - a.referenceLabelDisagreementRate
-            : sort.value === "name" ? a.conceptName.localeCompare(b.conceptName)
-              : (b.llmF1 ?? -1) - (a.llmF1 ?? -1));
-    table.replaceChildren();
-    const head = document.createElement("thead");
-    const header = document.createElement("tr");
-    for (const value of ["Concept", "Support", "RegEx P", "RegEx R", "RegEx F1",
-      "LLM P", "LLM R", "LLM F1", "F1 Δ", "A/B disagreement"]) {
-      const cell = document.createElement("th");
-      cell.textContent = value;
-      header.append(cell);
-    }
-    head.append(header);
-    const body = document.createElement("tbody");
-    for (const item of rows) {
-      const row = document.createElement("tr");
-      for (const value of [item.conceptName, item.support, formatMetric(item.regexPrecision),
-        formatMetric(item.regexRecall), formatMetric(item.regexF1), formatMetric(item.llmPrecision),
-        formatMetric(item.llmRecall), formatMetric(item.llmF1), formatSignedMetric(item.f1Difference),
-        formatPercent(item.referenceLabelDisagreementRate)]) {
-        const cell = document.createElement("td");
-        cell.textContent = value;
-        row.append(cell);
-      }
-      body.append(row);
-    }
-    table.append(head, body);
-  };
-  search.addEventListener("input", render);
-  sort.addEventListener("change", render);
-  controls.append(search, sort);
-  details.append(summary, controls, table);
-  render();
-  return details;
-}
-
-async function startLlmHoldoutEvaluation(button) {
-  button.disabled = true;
-  button.setAttribute("aria-busy", "true");
-  button.textContent = "LLM Holdout Evaluation Running…";
-  try {
-    const response = await fetch("/api/admin/evaluations/llm-holdout", { method: "POST" });
-    if (!response.ok && response.status !== 409) {
-      const failure = await response.json().catch(() => ({}));
-      throw new Error(failure.error || "LLM holdout evaluation could not be started.");
-    }
-    startLlmHoldoutPolling();
-  } catch (error) {
-    button.disabled = false;
-    button.setAttribute("aria-busy", "false");
-    button.textContent = "Run LLM Holdout Evaluation";
-    const message = elements.adminEvaluationContent?.querySelector("[data-llm-evaluation-message]");
-    if (message) message.textContent = error.message || String(error);
-  }
-}
-
-function stopLlmHoldoutPolling() {
-  state.llmHoldoutPollGeneration++;
-  if (state.llmHoldoutPollTimer !== null) {
-    window.clearTimeout(state.llmHoldoutPollTimer);
-    state.llmHoldoutPollTimer = null;
-  }
-}
-
-function startLlmHoldoutPolling() {
-  stopLlmHoldoutPolling();
-  const generation = state.llmHoldoutPollGeneration;
-  void refreshLlmHoldoutStatus(generation);
-}
-
-function scheduleLlmHoldoutPoll(generation) {
-  if (generation !== state.llmHoldoutPollGeneration) return;
-  state.llmHoldoutPollTimer = window.setTimeout(
-    () => void refreshLlmHoldoutStatus(generation), LLM_HOLDOUT_STATUS_POLL_MS);
-}
-
-async function refreshLlmHoldoutStatus(generation) {
-  if (generation !== state.llmHoldoutPollGeneration || state.activeView !== "admin" ||
-      state.activeAdminTab !== "evaluation" || state.activeEvaluationTab !== "llm") return;
-  if (state.llmHoldoutStatusRequestInFlight) {
-    scheduleLlmHoldoutPoll(generation);
-    return;
-  }
-  const gtxRegion = elements.adminEvaluationContent?.querySelector('[data-llm-hardware="gtx1070"]');
-  const rtxRegion = elements.adminEvaluationContent?.querySelector('[data-llm-hardware="rtx5080"]');
-  if (!gtxRegion && !rtxRegion) return;
-  state.llmHoldoutStatusRequestInFlight = true;
-  try {
-    const response = await fetch("/api/admin/evaluations/llm-holdout/status", { cache: "no-store" });
-    if (!response.ok) throw new Error("LLM holdout evaluation status could not be loaded.");
-    const result = await response.json();
-    if (generation !== state.llmHoldoutPollGeneration) return;
-    const rtxStatus = result.rtx5080Status || { state: "not-started", completed: 0, total: 200 };
-    if (gtxRegion) updateLlmEvaluationProgress(gtxRegion, result.status);
-    if (rtxRegion) updateLlmEvaluationProgress(rtxRegion, rtxStatus);
-    const running = !["not-started", "complete", "failed"].includes(result.status.state);
-    const rtxRunning = !["not-started", "complete", "failed"].includes(rtxStatus.state) ||
-      (rtxStatus.state === "complete" && !result.hardwareComparison);
-    const action = elements.adminEvaluationContent?.querySelector("[data-llm-evaluation-action]");
-    if (action) {
-      action.disabled = running || result.report !== null;
-      action.setAttribute("aria-busy", String(running));
-      action.textContent = result.report
-        ? "LLM Holdout Evaluation Complete"
-        : running ? "LLM Holdout Evaluation Running…" : "Run LLM Holdout Evaluation";
-    }
-    if (!running && !rtxRunning) {
-      stopLlmHoldoutPolling();
-      if (result.report || result.hardwareComparison) await loadEvaluationLedger();
-      return;
-    }
-  } catch (error) {
-    const message = (gtxRegion || rtxRegion).querySelector("[data-llm-evaluation-message]");
-    if (message) message.textContent = error.message || String(error);
-  } finally {
-    state.llmHoldoutStatusRequestInFlight = false;
-  }
-  scheduleLlmHoldoutPoll(generation);
-}
-
-function formatDuration(seconds) {
-  if (!Number.isFinite(seconds)) return "undefined";
-  const minutes = Math.floor(seconds / 60);
-  return `${minutes}m ${(seconds - minutes * 60).toFixed(1)}s`;
-}
-
-function formatBytes(value) {
-  if (!Number.isFinite(value)) return "unavailable";
-  const units = ["B", "KiB", "MiB", "GiB"];
-  let number = value;
-  let unit = 0;
-  while (number >= 1024 && unit < units.length - 1) { number /= 1024; unit++; }
-  return `${number.toFixed(unit ? 1 : 0)} ${units[unit]}`;
-}
-
-function formatOptionalPercent(value) {
-  return Number.isFinite(value) ? `${value.toFixed(1)}%` : "unavailable";
-}
-
-function formatSignedDuration(value) {
-  return Number.isFinite(value) ? `${value >= 0 ? "+" : "−"}${formatDuration(Math.abs(value))}` : "unavailable";
-}
-
-function formatSignedNumber(value, suffix = "", digits = 2) {
-  return Number.isFinite(value) ? `${value >= 0 ? "+" : ""}${value.toFixed(digits)}${suffix}` : "unavailable";
-}
-
-function formatSignedBytes(value) {
-  return Number.isFinite(value) ? `${value >= 0 ? "+" : "−"}${formatBytes(Math.abs(value))}` : "unavailable";
-}
-
-function formatWatts(value) {
-  return Number.isFinite(value) ? `${value.toFixed(1)} W` : "unavailable";
-}
-
-function formatSignedMetric(value) {
-  return Number.isFinite(value) ? `${value >= 0 ? "+" : ""}${value.toFixed(6)}` : "undefined";
 }
 
 function renderEvaluationMetrics(macroPrecision, macroRecall, macroF1,

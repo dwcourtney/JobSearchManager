@@ -70,5 +70,33 @@
     }
     return dialog;
   }
-  return { createButton, open };
+  async function renderStatus(panel, env = globalThis) {
+    const doc = env.document;
+    const title = doc.createElement("h3"); title.textContent = "Cheap Triage";
+    const description = doc.createElement("p");
+    description.textContent = "A separate KEEP/REJECT prefilter under review. It does not drive Job Fit scoring. All jobs continue through the existing Job Fit workflow.";
+    const status = doc.createElement("p"); status.setAttribute("role", "status");
+    status.className = "admin-evaluation-metadata";
+    status.textContent = "Loading Cheap Triage status…";
+    panel.replaceChildren(title, description, status, createButton(env));
+    try {
+      const response = await env.fetch("/api/admin/cheap-triage/status", { cache: "no-store" });
+      if (!response.ok) throw new Error("Unavailable");
+      const value = await response.json();
+      status.textContent = `Not active · Offline evaluation only · Ruleset ${value.rulesetVersion} · SHA-256 ${value.rulesetFingerprint}. No live decisions are recorded; live KEEP/REJECT counts and avoided evaluations are unavailable.`;
+      const metrics = doc.createElement("p");
+      const baseline = value.metricsCurrent && value.frozenEvaluation;
+      if (baseline) {
+        const percent = n => `${(n * 100).toFixed(2)}%`;
+        metrics.textContent = `Frozen provisional evidence: KEEP recall ${percent(baseline.slices.combined.keepRecall)}; described ${percent(baseline.slices.description.keepRecall)}; title-only ${percent(baseline.slices.title_only.keepRecall)}. ${baseline.slices.combined.falseRejects} known false rejects. Old-cache rejection ${percent(baseline.cache.rejectionRate)} is potential volume, not measured production savings. Human review is required before promotion.`;
+      } else {
+        metrics.textContent = "Frozen metrics do not match the loaded ruleset. Reevaluate before considering promotion.";
+      }
+      // Each load owns its nodes: an older response cannot overwrite a newer panel.
+      if (status.parentNode === panel) panel.append(metrics);
+    } catch {
+      status.textContent = "Unable to load Cheap Triage status. Reopen this tab to retry.";
+    }
+  }
+  return { createButton, open, renderStatus };
 });
