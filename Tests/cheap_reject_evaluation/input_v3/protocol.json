@@ -1,0 +1,92 @@
+{
+  "experiment": "jsm-input-representation-v3",
+  "seed": 20260905,
+  "models": {
+    "deberta-small": {
+      "name": "cross-encoder/nli-deberta-v3-small",
+      "revision": "fa2804872c3b4bd748f38c0185cc85775361e735",
+      "weightSha256": "ebc79588dd73ccfb6a3f6078519cfbf512c5305384c5ea1845bc71cd32216e86",
+      "learningRate": 2e-05,
+      "epochs": 4,
+      "initialization": "NLI encoder and pooler reused; three-way NLI classifier replaced with a seeded random binary KEEP/REJECT head. All parameters fine-tuned."
+    }
+  },
+  "views": [
+    "prefix256",
+    "headtail256",
+    "headmidtail256",
+    "prefix384",
+    "prefix512",
+    "sections256"
+  ],
+  "maxLength": 256,
+  "truncation": "See inputs.py: title fully preserved, body spans selected only from title/body and literal generic section headings. Gold evidence is used only in audit.py after inputs are fixed.",
+  "microBatch": 4,
+  "gradientAccumulation": 4,
+  "inferenceBatch": 16,
+  "dtype": "float32",
+  "optimizer": "AdamW",
+  "weightDecay": 0.01,
+  "warmupFraction": 0.1,
+  "gradientClip": 1.0,
+  "loss": "Training-only inverse-frequency binary class weights, mean normalized to one. All binary rows; no quality weighting, to isolate input effect.",
+  "checkpointSelection": "Lowest validation cross entropy among fixed epochs; no evaluation-label access for checkpoint or threshold selection.",
+  "thresholds": [
+    0,
+    0.001,
+    0.005,
+    0.01,
+    0.025,
+    0.05,
+    0.1,
+    0.15,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9,
+    0.95,
+    0.975,
+    0.99,
+    0.995,
+    0.999,
+    1.0
+  ],
+  "operatingPoints": "For each fold, choose largest threshold satisfying validation KEEP recall >=99%, >=98%, and 100%, using grid plus validation KEEP-score boundary. Freeze it before scoring employer-held-out evaluation. Aggregate held-out predictions; never adjust thresholds to fix evaluation errors.",
+  "cache": "Previously holdout-excluded 1503 cache, scored only by employer-out fold; never training. Corpus 3198 also cross-fitted, AMBIGUOUS outside binary metrics.",
+  "diagnostics": "Evidence coverage and paired held-out errors, employer masking. No tail-only perturbation.",
+  "selectionBoundary": "15 new fits: five deterministic representations x three frozen folds. Reuse three exact all-data prefix256 baseline fits. No adaptive representation or training changes from evaluation scores.",
+  "regimes": [
+    "all"
+  ],
+  "qualityBEqualsC": true,
+  "representations": {
+    "prefix256": {
+      "limit": 256,
+      "strategy": "prefix"
+    },
+    "headtail256": {
+      "limit": 256,
+      "strategy": "headtail"
+    },
+    "headmidtail256": {
+      "limit": 256,
+      "strategy": "headmidtail"
+    },
+    "prefix384": {
+      "limit": 384,
+      "strategy": "prefix"
+    },
+    "prefix512": {
+      "limit": 512,
+      "strategy": "prefix"
+    },
+    "sections256": {
+      "limit": 256,
+      "strategy": "sections"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "experiment": "jsm-deberta-cheap-reject-v1",
+  "model": "cross-encoder/nli-deberta-v3-small",
+  "revision": "fa2804872c3b4bd748f38c0185cc85775361e735",
+  "expected_weight_sha256": "ebc79588dd73ccfb6a3f6078519cfbf512c5305384c5ea1845bc71cd32216e86",
+  "hypotheses": [
+    "This job involves software development, computer systems, information technology, automation, or related technical engineering and support.",
+    "This job is unrelated to software development, computer systems, information technology, automation, and related technical engineering and support."
+  ],
+  "views": ["title", "title_body_head", "title_body_head_tail"],
+  "max_length": 512,
+  "batch_postings": 8,
+  "dtype": "float32",
+  "paired_keep_thresholds": [0.01, 0.025, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5],
+  "reject_entailment_thresholds": [0.7, 0.8, 0.9, 0.95, 0.99],
+  "max_keep_entailment_for_reject_gate": 0.1,
+  "truncation": "Reserve both hypotheses and special tokens first; keep complete Title prefix/title. Fill remaining premise budget with Body prefix and either body beginning or equally divided beginning/end tokens. Title overflow fails open. The same premise budget is used for both hypotheses. No occupational parsing or rule preprocessing.",
+  "selection": "Hypotheses, views and threshold grids fixed before predictions. No training, prompt iteration or blinded holdout use. Threshold comparisons are development evidence, not independent validation."
+}

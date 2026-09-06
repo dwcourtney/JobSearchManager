@@ -1,0 +1,30 @@
+{
+  "corpusVersion": "jsm-codex-adjudication-v1-20260905",
+  "adjudicator": "Codex in this task; no external/local model API or inference service",
+  "checkpoint": "Exact backend model revision not exposed in task; no checkpoint claim is made.",
+  "definitions": {
+    "KEEP": "Plausibly within the user's realistic technical search space; continue downstream.",
+    "REJECT": "Clearly unrelated primary occupational duties; safe cheap-triage rejection.",
+    "AMBIGUOUS": "Insufficient, mixed or unclear evidence; never force into a binary training class."
+  },
+  "evidencePolicy": "Every title reviewed. Available bodies reviewed through recorded deterministic excerpts, with targeted additional spans. Not an exhaustive full-description review. Missing descriptions: medium confidence at most; uncertain duties: AMBIGUOUS/low.",
+  "scope": "Occupational plausibility, not final personal eligibility, clearance, seniority, location, or Job Fit scoring.",
+  "samplingManifest": "sampling-manifest.json",
+  "preservedDistribution": "Census of deduplicated eligible cache frame, no class balancing. Not representative of the entire job market; missingness and employer selection bias remain.",
+  "excludedData": "Production holdout and prior evaluation examples excluded by frozen hashed indexes; their labels not used for adjudication.",
+  "reproducibility": "Frozen explicit decision ledger + targeted-review ledger reproduce corpus exactly. Scripts never infer new labels. A fresh Codex adjudication is not guaranteed identical.",
+  "sha256": {
+    "sample-unlabeled.jsonl": "161ec56b60a74c76a7a27de45a91853a3e005020213ebad7d12160e58925c6ff",
+    "sampling-manifest.json": "4f2b711fc82b5ed1d8defdf5192d8cde4f572ec8cd6dc4f6ef568774d7c61dc8",
+    "production-holdout-exclusions.json": "140eb3e3fdceeba3c2ad69682e1abf9855d0f0c8c003e6c032513e3b9ff08c3a",
+    "prior-evaluation-exclusions.json": "b3b404f283480c512a0b795cba1d6149132678cdd3a91affe15d30b661ae5406",
+    "codex-decisions.jsonl": "5e784584ca80e9378dec9e31159f22aab049b325cd6728048d2f6874b9cb6219",
+    "codex-quality-reviews.jsonl": "676fa0012c2c4323ec2393f54fa477755a8d9ad3e694f4ea0c50305aeff3e2a5",
+    "machine-labeled.jsonl": "910358341c8e5f26403514e6987d0b79a2d1d7cb233b3a914b4692940f331a33",
+    "human-review.jsonl": "838e7b516e6917df24f5c038f1cbb31855f4a7339c134b9c22ea0c5a41be6cdc",
+    "adjudicate.py": "47a41372e427fe4bc00af365f55559ebd943f566634bfb228b6d2c7f1e8d97db",
+    "quality_reviews.py": "c7a7d06f78e1574f76541b07051e3019c91d262131cfafa4d798f25fa59aa9c0",
+    "build_labeled_corpus.py": "1dd79028abc40f60aba532e10056517234cddd3d532556d70b91f1fb14b7e915",
+    "test_adjudication.py": "73d5eff314084d498ae702ce8b0a7525f81bde7e686f6454c52e60453616cc5c"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "sources": {
+    "machine_corpus_v1/machine-labeled.jsonl": {
+      "sha256": "910358341c8e5f26403514e6987d0b79a2d1d7cb233b3a914b4692940f331a33",
+      "usage": "frozen input/provenance; prior corrected labels evaluation-only"
+    },
+    "machine_corpus_v1/adjudication-manifest.json": {
+      "sha256": "b304957752ebabac7f59f860b25fe4c21cdaf7ea48d9725b5778ed968b5bdfd8",
+      "usage": "frozen input/provenance; prior corrected labels evaluation-only"
+    },
+    "machine_corpus_v1/sampling-manifest.json": {
+      "sha256": "4f2b711fc82b5ed1d8defdf5192d8cde4f572ec8cd6dc4f6ef568774d7c61dc8",
+      "usage": "frozen input/provenance; prior corrected labels evaluation-only"
+    },
+    "deberta_v1/eligible.json.gz": {
+      "sha256": "91c3207ef30e812f797f8af597026d6800b154b0e3c4c2e0bd5ec5ede3666139",
+      "usage": "frozen input/provenance; prior corrected labels evaluation-only"
+    },
+    "supervised_v1/corrected.jsonl": {
+      "sha256": "b799eff22271b7b47e3fdff2dbde18e3bb3826b472a38599f6ac79a09c8952f9",
+      "usage": "frozen input/provenance; prior corrected labels evaluation-only"
+    },
+    "leakage.py": {
+      "sha256": "784d66e97a5f07968b41f9f8dd823fa62f0b45373de0f0409667e76fa7ed31a7",
+      "usage": "frozen input/provenance; prior corrected labels evaluation-only"
+    },
+    "evaluate.py": {
+      "sha256": "14aef6d27a0127d353e5215ef26efad1dad47f611953f44e425d7614fd79c137",
+      "usage": "frozen input/provenance; prior corrected labels evaluation-only"
+    }
+  },
+  "productionHoldout": "not read; using previously exclusion-validated corpus/cache",
+  "labels": "No new adjudication or label changes in this experiment"
+}

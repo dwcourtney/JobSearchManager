@@ -1,0 +1,400 @@
+START deberta-small-title-description-fold0
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+You're using a DebertaV2TokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+deberta-small-title-description-fold0 epoch 1 validationCE 0.45373
+deberta-small-title-description-fold0 epoch 2 validationCE 0.42734
+deberta-small-title-description-fold0 epoch 3 validationCE 0.48464
+deberta-small-title-description-fold0 epoch 4 validationCE 0.4911
+DONE deberta-small-title-description-fold0 trainSeconds 59.7
+START deberta-small-title-description-fold1
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-title-description-fold1 epoch 1 validationCE 0.29076
+deberta-small-title-description-fold1 epoch 2 validationCE 0.17333
+deberta-small-title-description-fold1 epoch 3 validationCE 0.17685
+deberta-small-title-description-fold1 epoch 4 validationCE 0.16157
+DONE deberta-small-title-description-fold1 trainSeconds 49.4
+START deberta-small-title-description-fold2
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-title-description-fold2 epoch 1 validationCE 0.6827
+deberta-small-title-description-fold2 epoch 2 validationCE 0.85963
+deberta-small-title-description-fold2 epoch 3 validationCE 1.07097
+deberta-small-title-description-fold2 epoch 4 validationCE 1.35551
+DONE deberta-small-title-description-fold2 trainSeconds 34.4
+START deberta-small-title-all-fold0
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-title-all-fold0 epoch 1 validationCE 0.50903
+deberta-small-title-all-fold0 epoch 2 validationCE 0.45588
+deberta-small-title-all-fold0 epoch 3 validationCE 0.43325
+deberta-small-title-all-fold0 epoch 4 validationCE 0.47259
+DONE deberta-small-title-all-fold0 trainSeconds 61.7
+START deberta-small-title-all-fold1
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-title-all-fold1 epoch 1 validationCE 0.10602
+deberta-small-title-all-fold1 epoch 2 validationCE 0.19916
+deberta-small-title-all-fold1 epoch 3 validationCE 0.14751
+deberta-small-title-all-fold1 epoch 4 validationCE 0.19043
+DONE deberta-small-title-all-fold1 trainSeconds 127.0
+START deberta-small-title-all-fold2
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-title-all-fold2 epoch 1 validationCE 1.49501
+deberta-small-title-all-fold2 epoch 2 validationCE 1.66817
+deberta-small-title-all-fold2 epoch 3 validationCE 1.98857
+deberta-small-title-all-fold2 epoch 4 validationCE 1.8786
+DONE deberta-small-title-all-fold2 trainSeconds 143.7
+START deberta-small-title-weighted-fold0
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-title-weighted-fold0 epoch 1 validationCE 0.49249
+deberta-small-title-weighted-fold0 epoch 2 validationCE 0.43956
+deberta-small-title-weighted-fold0 epoch 3 validationCE 0.43198
+deberta-small-title-weighted-fold0 epoch 4 validationCE 0.47548
+DONE deberta-small-title-weighted-fold0 trainSeconds 61.3
+START deberta-small-title-weighted-fold1
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-title-weighted-fold1 epoch 1 validationCE 0.12186
+deberta-small-title-weighted-fold1 epoch 2 validationCE 0.16427
+deberta-small-title-weighted-fold1 epoch 3 validationCE 0.15891
+deberta-small-title-weighted-fold1 epoch 4 validationCE 0.22331
+DONE deberta-small-title-weighted-fold1 trainSeconds 126.6
+START deberta-small-title-weighted-fold2
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-title-weighted-fold2 epoch 1 validationCE 1.59066
+deberta-small-title-weighted-fold2 epoch 2 validationCE 1.78258
+deberta-small-title-weighted-fold2 epoch 3 validationCE 2.20575
+deberta-small-title-weighted-fold2 epoch 4 validationCE 1.69867
+DONE deberta-small-title-weighted-fold2 trainSeconds 143.9
+Token indices sequence length is longer than the specified maximum sequence length for this model (1172 > 512). Running this sequence through the model will result in indexing errors
+START deberta-small-title_body-description-fold0
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-title_body-description-fold0 epoch 1 validationCE 0.74612
+deberta-small-title_body-description-fold0 epoch 2 validationCE 0.66623
+deberta-small-title_body-description-fold0 epoch 3 validationCE 0.64881
+deberta-small-title_body-description-fold0 epoch 4 validationCE 0.63384
+DONE deberta-small-title_body-description-fold0 trainSeconds 261.6
+START deberta-small-title_body-description-fold1
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-title_body-description-fold1 epoch 1 validationCE 0.51368
+deberta-small-title_body-description-fold1 epoch 2 validationCE 0.42157
+deberta-small-title_body-description-fold1 epoch 3 validationCE 0.22171
+deberta-small-title_body-description-fold1 epoch 4 validationCE 0.19887
+DONE deberta-small-title_body-description-fold1 trainSeconds 209.1
+START deberta-small-title_body-description-fold2
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-title_body-description-fold2 epoch 1 validationCE 0.72317
+deberta-small-title_body-description-fold2 epoch 2 validationCE 0.71766
+deberta-small-title_body-description-fold2 epoch 3 validationCE 0.77021
+deberta-small-title_body-description-fold2 epoch 4 validationCE 0.76788
+DONE deberta-small-title_body-description-fold2 trainSeconds 150.6
+START deberta-small-title_body-all-fold0
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-title_body-all-fold0 epoch 1 validationCE 0.59374
+deberta-small-title_body-all-fold0 epoch 2 validationCE 0.43052
+deberta-small-title_body-all-fold0 epoch 3 validationCE 0.41092
+deberta-small-title_body-all-fold0 epoch 4 validationCE 0.43866
+DONE deberta-small-title_body-all-fold0 trainSeconds 261.7
+START deberta-small-title_body-all-fold1
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-title_body-all-fold1 epoch 1 validationCE 0.19842
+deberta-small-title_body-all-fold1 epoch 2 validationCE 0.09448
+deberta-small-title_body-all-fold1 epoch 3 validationCE 0.17369
+deberta-small-title_body-all-fold1 epoch 4 validationCE 0.20993
+DONE deberta-small-title_body-all-fold1 trainSeconds 481.1
+START deberta-small-title_body-all-fold2
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-title_body-all-fold2 epoch 1 validationCE 0.7129
+deberta-small-title_body-all-fold2 epoch 2 validationCE 0.7942
+deberta-small-title_body-all-fold2 epoch 3 validationCE 0.53004
+deberta-small-title_body-all-fold2 epoch 4 validationCE 0.54154
+DONE deberta-small-title_body-all-fold2 trainSeconds 457.4
+START deberta-small-title_body-weighted-fold0
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-title_body-weighted-fold0 epoch 1 validationCE 0.64629
+deberta-small-title_body-weighted-fold0 epoch 2 validationCE 0.5519
+deberta-small-title_body-weighted-fold0 epoch 3 validationCE 0.42807
+deberta-small-title_body-weighted-fold0 epoch 4 validationCE 0.4027
+DONE deberta-small-title_body-weighted-fold0 trainSeconds 263.9
+START deberta-small-title_body-weighted-fold1
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-title_body-weighted-fold1 epoch 1 validationCE 0.1958
+deberta-small-title_body-weighted-fold1 epoch 2 validationCE 0.10588
+deberta-small-title_body-weighted-fold1 epoch 3 validationCE 0.16954
+deberta-small-title_body-weighted-fold1 epoch 4 validationCE 0.21798
+DONE deberta-small-title_body-weighted-fold1 trainSeconds 481.4
+START deberta-small-title_body-weighted-fold2
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-title_body-weighted-fold2 epoch 1 validationCE 0.67544
+deberta-small-title_body-weighted-fold2 epoch 2 validationCE 0.87533
+deberta-small-title_body-weighted-fold2 epoch 3 validationCE 0.70628
+deberta-small-title_body-weighted-fold2 epoch 4 validationCE 0.76282
+DONE deberta-small-title_body-weighted-fold2 trainSeconds 455.8
+START bert-tiny-title-description-fold0
+Some weights of BertForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--google--bert_uncased_L-2_H-128_A-2/snapshots/30b0a37ccaaa32f332884b96992754e246e48c5f and are newly initialized: ['classifier.bias', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+You're using a BertTokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+bert-tiny-title-description-fold0 epoch 1 validationCE 0.63712
+bert-tiny-title-description-fold0 epoch 2 validationCE 0.32454
+bert-tiny-title-description-fold0 epoch 3 validationCE 0.26637
+bert-tiny-title-description-fold0 epoch 4 validationCE 0.27063
+bert-tiny-title-description-fold0 epoch 5 validationCE 0.25121
+bert-tiny-title-description-fold0 epoch 6 validationCE 0.29844
+bert-tiny-title-description-fold0 epoch 7 validationCE 0.29484
+bert-tiny-title-description-fold0 epoch 8 validationCE 0.29078
+DONE bert-tiny-title-description-fold0 trainSeconds 38.1
+START bert-tiny-title-description-fold1
+Some weights of BertForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--google--bert_uncased_L-2_H-128_A-2/snapshots/30b0a37ccaaa32f332884b96992754e246e48c5f and are newly initialized: ['classifier.bias', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+bert-tiny-title-description-fold1 epoch 1 validationCE 0.61163
+bert-tiny-title-description-fold1 epoch 2 validationCE 0.44656
+bert-tiny-title-description-fold1 epoch 3 validationCE 0.41887
+bert-tiny-title-description-fold1 epoch 4 validationCE 0.31699
+bert-tiny-title-description-fold1 epoch 5 validationCE 0.30848
+bert-tiny-title-description-fold1 epoch 6 validationCE 0.25658
+bert-tiny-title-description-fold1 epoch 7 validationCE 0.22625
+bert-tiny-title-description-fold1 epoch 8 validationCE 0.21796
+DONE bert-tiny-title-description-fold1 trainSeconds 29.8
+START bert-tiny-title-description-fold2
+Some weights of BertForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--google--bert_uncased_L-2_H-128_A-2/snapshots/30b0a37ccaaa32f332884b96992754e246e48c5f and are newly initialized: ['classifier.bias', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+bert-tiny-title-description-fold2 epoch 1 validationCE 0.66947
+bert-tiny-title-description-fold2 epoch 2 validationCE 0.61375
+bert-tiny-title-description-fold2 epoch 3 validationCE 0.55931
+bert-tiny-title-description-fold2 epoch 4 validationCE 0.50326
+bert-tiny-title-description-fold2 epoch 5 validationCE 0.49583
+bert-tiny-title-description-fold2 epoch 6 validationCE 0.4793
+bert-tiny-title-description-fold2 epoch 7 validationCE 0.48141
+bert-tiny-title-description-fold2 epoch 8 validationCE 0.48374
+DONE bert-tiny-title-description-fold2 trainSeconds 23.3
+START bert-tiny-title-all-fold0
+Some weights of BertForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--google--bert_uncased_L-2_H-128_A-2/snapshots/30b0a37ccaaa32f332884b96992754e246e48c5f and are newly initialized: ['classifier.bias', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+bert-tiny-title-all-fold0 epoch 1 validationCE 0.61035
+bert-tiny-title-all-fold0 epoch 2 validationCE 0.32061
+bert-tiny-title-all-fold0 epoch 3 validationCE 0.26791
+bert-tiny-title-all-fold0 epoch 4 validationCE 0.27058
+bert-tiny-title-all-fold0 epoch 5 validationCE 0.26777
+bert-tiny-title-all-fold0 epoch 6 validationCE 0.26143
+bert-tiny-title-all-fold0 epoch 7 validationCE 0.28503
+bert-tiny-title-all-fold0 epoch 8 validationCE 0.29569
+DONE bert-tiny-title-all-fold0 trainSeconds 39.4
+START bert-tiny-title-all-fold1
+Some weights of BertForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--google--bert_uncased_L-2_H-128_A-2/snapshots/30b0a37ccaaa32f332884b96992754e246e48c5f and are newly initialized: ['classifier.bias', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+bert-tiny-title-all-fold1 epoch 1 validationCE 0.55479
+bert-tiny-title-all-fold1 epoch 2 validationCE 0.20414
+bert-tiny-title-all-fold1 epoch 3 validationCE 0.1599
+bert-tiny-title-all-fold1 epoch 4 validationCE 0.11054
+bert-tiny-title-all-fold1 epoch 5 validationCE 0.08423
+bert-tiny-title-all-fold1 epoch 6 validationCE 0.07928
+bert-tiny-title-all-fold1 epoch 7 validationCE 0.08303
+bert-tiny-title-all-fold1 epoch 8 validationCE 0.0868
+DONE bert-tiny-title-all-fold1 trainSeconds 87.3
+START bert-tiny-title-all-fold2
+Some weights of BertForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--google--bert_uncased_L-2_H-128_A-2/snapshots/30b0a37ccaaa32f332884b96992754e246e48c5f and are newly initialized: ['classifier.bias', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+bert-tiny-title-all-fold2 epoch 1 validationCE 0.55749
+bert-tiny-title-all-fold2 epoch 2 validationCE 0.6421
+bert-tiny-title-all-fold2 epoch 3 validationCE 0.8825
+bert-tiny-title-all-fold2 epoch 4 validationCE 1.10351
+bert-tiny-title-all-fold2 epoch 5 validationCE 1.06512
+bert-tiny-title-all-fold2 epoch 6 validationCE 1.05305
+bert-tiny-title-all-fold2 epoch 7 validationCE 1.07502
+bert-tiny-title-all-fold2 epoch 8 validationCE 1.08174
+DONE bert-tiny-title-all-fold2 trainSeconds 99.2
+START bert-tiny-title-weighted-fold0
+Some weights of BertForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--google--bert_uncased_L-2_H-128_A-2/snapshots/30b0a37ccaaa32f332884b96992754e246e48c5f and are newly initialized: ['classifier.bias', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+bert-tiny-title-weighted-fold0 epoch 1 validationCE 0.61346
+bert-tiny-title-weighted-fold0 epoch 2 validationCE 0.32235
+bert-tiny-title-weighted-fold0 epoch 3 validationCE 0.26715
+bert-tiny-title-weighted-fold0 epoch 4 validationCE 0.26927
+bert-tiny-title-weighted-fold0 epoch 5 validationCE 0.26516
+bert-tiny-title-weighted-fold0 epoch 6 validationCE 0.262
+bert-tiny-title-weighted-fold0 epoch 7 validationCE 0.28464
+bert-tiny-title-weighted-fold0 epoch 8 validationCE 0.29385
+DONE bert-tiny-title-weighted-fold0 trainSeconds 40.4
+START bert-tiny-title-weighted-fold1
+Some weights of BertForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--google--bert_uncased_L-2_H-128_A-2/snapshots/30b0a37ccaaa32f332884b96992754e246e48c5f and are newly initialized: ['classifier.bias', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+bert-tiny-title-weighted-fold1 epoch 1 validationCE 0.58668
+bert-tiny-title-weighted-fold1 epoch 2 validationCE 0.2313
+bert-tiny-title-weighted-fold1 epoch 3 validationCE 0.20184
+bert-tiny-title-weighted-fold1 epoch 4 validationCE 0.12904
+bert-tiny-title-weighted-fold1 epoch 5 validationCE 0.09783
+bert-tiny-title-weighted-fold1 epoch 6 validationCE 0.09543
+bert-tiny-title-weighted-fold1 epoch 7 validationCE 0.09979
+bert-tiny-title-weighted-fold1 epoch 8 validationCE 0.09573
+DONE bert-tiny-title-weighted-fold1 trainSeconds 87.1
+START bert-tiny-title-weighted-fold2
+Some weights of BertForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--google--bert_uncased_L-2_H-128_A-2/snapshots/30b0a37ccaaa32f332884b96992754e246e48c5f and are newly initialized: ['classifier.bias', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+bert-tiny-title-weighted-fold2 epoch 1 validationCE 0.56505
+bert-tiny-title-weighted-fold2 epoch 2 validationCE 0.61837
+bert-tiny-title-weighted-fold2 epoch 3 validationCE 0.80082
+bert-tiny-title-weighted-fold2 epoch 4 validationCE 1.1608
+bert-tiny-title-weighted-fold2 epoch 5 validationCE 1.05381
+bert-tiny-title-weighted-fold2 epoch 6 validationCE 1.04218
+bert-tiny-title-weighted-fold2 epoch 7 validationCE 1.09138
+bert-tiny-title-weighted-fold2 epoch 8 validationCE 1.09771
+DONE bert-tiny-title-weighted-fold2 trainSeconds 93.3
+START bert-tiny-title_body-description-fold0
+Some weights of BertForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--google--bert_uncased_L-2_H-128_A-2/snapshots/30b0a37ccaaa32f332884b96992754e246e48c5f and are newly initialized: ['classifier.bias', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+bert-tiny-title_body-description-fold0 epoch 1 validationCE 0.64677
+bert-tiny-title_body-description-fold0 epoch 2 validationCE 0.39444
+bert-tiny-title_body-description-fold0 epoch 3 validationCE 0.32945
+bert-tiny-title_body-description-fold0 epoch 4 validationCE 0.3232
+bert-tiny-title_body-description-fold0 epoch 5 validationCE 0.32613
+bert-tiny-title_body-description-fold0 epoch 6 validationCE 0.3522
+bert-tiny-title_body-description-fold0 epoch 7 validationCE 0.39062
+bert-tiny-title_body-description-fold0 epoch 8 validationCE 0.37787
+DONE bert-tiny-title_body-description-fold0 trainSeconds 37.2
+START bert-tiny-title_body-description-fold1
+Some weights of BertForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--google--bert_uncased_L-2_H-128_A-2/snapshots/30b0a37ccaaa32f332884b96992754e246e48c5f and are newly initialized: ['classifier.bias', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+bert-tiny-title_body-description-fold1 epoch 1 validationCE 0.57387
+bert-tiny-title_body-description-fold1 epoch 2 validationCE 0.41585
+bert-tiny-title_body-description-fold1 epoch 3 validationCE 0.29235
+bert-tiny-title_body-description-fold1 epoch 4 validationCE 0.21109
+bert-tiny-title_body-description-fold1 epoch 5 validationCE 0.16717
+bert-tiny-title_body-description-fold1 epoch 6 validationCE 0.15336
+bert-tiny-title_body-description-fold1 epoch 7 validationCE 0.14311
+bert-tiny-title_body-description-fold1 epoch 8 validationCE 0.14224
+DONE bert-tiny-title_body-description-fold1 trainSeconds 31.2
+START bert-tiny-title_body-description-fold2
+Some weights of BertForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--google--bert_uncased_L-2_H-128_A-2/snapshots/30b0a37ccaaa32f332884b96992754e246e48c5f and are newly initialized: ['classifier.bias', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+bert-tiny-title_body-description-fold2 epoch 1 validationCE 0.69028
+bert-tiny-title_body-description-fold2 epoch 2 validationCE 0.67813
+bert-tiny-title_body-description-fold2 epoch 3 validationCE 0.69394
+bert-tiny-title_body-description-fold2 epoch 4 validationCE 0.58913
+bert-tiny-title_body-description-fold2 epoch 5 validationCE 0.58827
+bert-tiny-title_body-description-fold2 epoch 6 validationCE 0.61099
+bert-tiny-title_body-description-fold2 epoch 7 validationCE 0.64075
+bert-tiny-title_body-description-fold2 epoch 8 validationCE 0.64941
+DONE bert-tiny-title_body-description-fold2 trainSeconds 24.1
+START bert-tiny-title_body-all-fold0
+Some weights of BertForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--google--bert_uncased_L-2_H-128_A-2/snapshots/30b0a37ccaaa32f332884b96992754e246e48c5f and are newly initialized: ['classifier.bias', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+bert-tiny-title_body-all-fold0 epoch 1 validationCE 0.62334
+bert-tiny-title_body-all-fold0 epoch 2 validationCE 0.4088
+bert-tiny-title_body-all-fold0 epoch 3 validationCE 0.33965
+bert-tiny-title_body-all-fold0 epoch 4 validationCE 0.38244
+bert-tiny-title_body-all-fold0 epoch 5 validationCE 0.3566
+bert-tiny-title_body-all-fold0 epoch 6 validationCE 0.37595
+bert-tiny-title_body-all-fold0 epoch 7 validationCE 0.38294
+bert-tiny-title_body-all-fold0 epoch 8 validationCE 0.39525
+DONE bert-tiny-title_body-all-fold0 trainSeconds 38.2
+START bert-tiny-title_body-all-fold1
+Some weights of BertForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--google--bert_uncased_L-2_H-128_A-2/snapshots/30b0a37ccaaa32f332884b96992754e246e48c5f and are newly initialized: ['classifier.bias', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+bert-tiny-title_body-all-fold1 epoch 1 validationCE 0.6383
+bert-tiny-title_body-all-fold1 epoch 2 validationCE 0.15485
+bert-tiny-title_body-all-fold1 epoch 3 validationCE 0.09015
+bert-tiny-title_body-all-fold1 epoch 4 validationCE 0.0813
+bert-tiny-title_body-all-fold1 epoch 5 validationCE 0.07943
+bert-tiny-title_body-all-fold1 epoch 6 validationCE 0.09829
+bert-tiny-title_body-all-fold1 epoch 7 validationCE 0.08553
+bert-tiny-title_body-all-fold1 epoch 8 validationCE 0.09867
+DONE bert-tiny-title_body-all-fold1 trainSeconds 86.2
+START bert-tiny-title_body-all-fold2
+Some weights of BertForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--google--bert_uncased_L-2_H-128_A-2/snapshots/30b0a37ccaaa32f332884b96992754e246e48c5f and are newly initialized: ['classifier.bias', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+bert-tiny-title_body-all-fold2 epoch 1 validationCE 0.59631
+bert-tiny-title_body-all-fold2 epoch 2 validationCE 0.53663
+bert-tiny-title_body-all-fold2 epoch 3 validationCE 0.83259
+bert-tiny-title_body-all-fold2 epoch 4 validationCE 0.69681
+bert-tiny-title_body-all-fold2 epoch 5 validationCE 0.72051
+bert-tiny-title_body-all-fold2 epoch 6 validationCE 0.75235
+bert-tiny-title_body-all-fold2 epoch 7 validationCE 0.72023
+bert-tiny-title_body-all-fold2 epoch 8 validationCE 0.73298
+DONE bert-tiny-title_body-all-fold2 trainSeconds 97.1
+START bert-tiny-title_body-weighted-fold0
+Some weights of BertForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--google--bert_uncased_L-2_H-128_A-2/snapshots/30b0a37ccaaa32f332884b96992754e246e48c5f and are newly initialized: ['classifier.bias', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+bert-tiny-title_body-weighted-fold0 epoch 1 validationCE 0.63283
+bert-tiny-title_body-weighted-fold0 epoch 2 validationCE 0.41224
+bert-tiny-title_body-weighted-fold0 epoch 3 validationCE 0.32567
+bert-tiny-title_body-weighted-fold0 epoch 4 validationCE 0.36532
+bert-tiny-title_body-weighted-fold0 epoch 5 validationCE 0.33493
+bert-tiny-title_body-weighted-fold0 epoch 6 validationCE 0.34784
+bert-tiny-title_body-weighted-fold0 epoch 7 validationCE 0.35312
+bert-tiny-title_body-weighted-fold0 epoch 8 validationCE 0.36749
+DONE bert-tiny-title_body-weighted-fold0 trainSeconds 35.8
+START bert-tiny-title_body-weighted-fold1
+Some weights of BertForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--google--bert_uncased_L-2_H-128_A-2/snapshots/30b0a37ccaaa32f332884b96992754e246e48c5f and are newly initialized: ['classifier.bias', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+bert-tiny-title_body-weighted-fold1 epoch 1 validationCE 0.59676
+bert-tiny-title_body-weighted-fold1 epoch 2 validationCE 0.18202
+bert-tiny-title_body-weighted-fold1 epoch 3 validationCE 0.11346
+bert-tiny-title_body-weighted-fold1 epoch 4 validationCE 0.11287
+bert-tiny-title_body-weighted-fold1 epoch 5 validationCE 0.1125
+bert-tiny-title_body-weighted-fold1 epoch 6 validationCE 0.11244
+bert-tiny-title_body-weighted-fold1 epoch 7 validationCE 0.11369
+bert-tiny-title_body-weighted-fold1 epoch 8 validationCE 0.11919
+DONE bert-tiny-title_body-weighted-fold1 trainSeconds 83.5
+START bert-tiny-title_body-weighted-fold2
+Some weights of BertForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--google--bert_uncased_L-2_H-128_A-2/snapshots/30b0a37ccaaa32f332884b96992754e246e48c5f and are newly initialized: ['classifier.bias', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+bert-tiny-title_body-weighted-fold2 epoch 1 validationCE 0.58367
+bert-tiny-title_body-weighted-fold2 epoch 2 validationCE 0.59874
+bert-tiny-title_body-weighted-fold2 epoch 3 validationCE 0.91047
+bert-tiny-title_body-weighted-fold2 epoch 4 validationCE 0.93721
+bert-tiny-title_body-weighted-fold2 epoch 5 validationCE 0.67083
+bert-tiny-title_body-weighted-fold2 epoch 6 validationCE 0.88639
+bert-tiny-title_body-weighted-fold2 epoch 7 validationCE 0.88729
+bert-tiny-title_body-weighted-fold2 epoch 8 validationCE 0.76092
+DONE bert-tiny-title_body-weighted-fold2 trainSeconds 98.1
+ALL COMPLETE

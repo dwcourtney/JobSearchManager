@@ -1,0 +1,65 @@
+{
+  "host": "curiosity",
+  "checkpoints": [
+    {
+      "tag": "deberta-small-title-fold0",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/cheap-reject-supervised-v1-20260905/deberta-small-title-fold0",
+      "sha256": "4fb293c7b751b3cbe8d76a946be417d58334e2d6416839e6887bd26ef9eb4a70"
+    },
+    {
+      "tag": "deberta-small-title-fold1",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/cheap-reject-supervised-v1-20260905/deberta-small-title-fold1",
+      "sha256": "d3c78cb0e5b81c18d7a9bf4b1dee5d98e0bed939bba9db1601f619e1e46102ca"
+    },
+    {
+      "tag": "deberta-small-title-fold2",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/cheap-reject-supervised-v1-20260905/deberta-small-title-fold2",
+      "sha256": "7ea5b5bd930c24a1c4bf0f6e4877482f938cd0c91a59ee9b59aa1ed19d20873b"
+    },
+    {
+      "tag": "deberta-small-title_body-fold0",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/cheap-reject-supervised-v1-20260905/deberta-small-title_body-fold0",
+      "sha256": "23d8c9cd430abbdbd07dafe1a041d798bf1652277694a5ac9e1bc85a217a22c5"
+    },
+    {
+      "tag": "deberta-small-title_body-fold1",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/cheap-reject-supervised-v1-20260905/deberta-small-title_body-fold1",
+      "sha256": "07fdc404f275ea49ed60a34ddb034bc16d527b984f06ab9c3001167ce92f5b51"
+    },
+    {
+      "tag": "deberta-small-title_body-fold2",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/cheap-reject-supervised-v1-20260905/deberta-small-title_body-fold2",
+      "sha256": "a8dc8250744a9fc8100273ae6a9b67316e4ca94c5b5fd8d3d21a08f03ab2b7ae"
+    },
+    {
+      "tag": "bert-tiny-title-fold0",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/cheap-reject-supervised-v1-20260905/bert-tiny-title-fold0",
+      "sha256": "eacb621d0bfc1daad2aa4d1c00627d55978b9d0ece2d3a1fba4fb48728316278"
+    },
+    {
+      "tag": "bert-tiny-title-fold1",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/cheap-reject-supervised-v1-20260905/bert-tiny-title-fold1",
+      "sha256": "fd4b8977af4dfb032736b636ecbb2d7867f577c5d1d4195b5711504d7ce14e7c"
+    },
+    {
+      "tag": "bert-tiny-title-fold2",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/cheap-reject-supervised-v1-20260905/bert-tiny-title-fold2",
+      "sha256": "8543d3c8dbb478727884676f8465d2593c02b8bada210e0353aba8f1939ee5f9"
+    },
+    {
+      "tag": "bert-tiny-title_body-fold0",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/cheap-reject-supervised-v1-20260905/bert-tiny-title_body-fold0",
+      "sha256": "2608bfc8af9ad1fbba5fe295e8856608eaec3e85efe7d09fd20090fdd24d26ed"
+    },
+    {
+      "tag": "bert-tiny-title_body-fold1",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/cheap-reject-supervised-v1-20260905/bert-tiny-title_body-fold1",
+      "sha256": "209e2516a8e67c8781e87e22db78384d7759b4a51c40558880ab3b3f1a94d2a9"
+    },
+    {
+      "tag": "bert-tiny-title_body-fold2",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/cheap-reject-supervised-v1-20260905/bert-tiny-title_body-fold2",
+      "sha256": "a351a6d1f7c30cc7e019194adfcea157b8f91b9aae69eb9f5ae6e84fc7558f11"
+    }
+  ]
+}

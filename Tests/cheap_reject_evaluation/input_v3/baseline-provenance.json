@@ -1,0 +1,12 @@
+{
+  "corpus.jsonl": "3d0ef7252e53bb8e8e25a5ff387f688e72952455f0ae0da05dcf2517003ea4ec",
+  "cache.jsonl": "8d16ae356fa4726550332109c404c4b995e7321e04e06a0936ff112fef1b617f",
+  "splits.json": "831545b3bc39675c6a20cc64ee54824156d87efc6da21f9bc6e342f54b136fcf",
+  "baseline.json": "354c3b409dd21d108f4de72d0f375ea7dda08e7ac54e6271ae90cc1bdeed6f28",
+  "protocol.json": "e74e44c8c6fdc35787a24b3ae47762f604c4465292dd5260524db0da6a889aa9",
+  "train.py": "d34f8207fef8e8a610efef3f013cfb31c2066ef4ad59fcd631e2444673fe3673",
+  "deberta-small-title_body-all-fold0": "2efeedf2730494424d5d1cac1c32aeb9cd40b4b47b0acea3058b019754eff3cb",
+  "deberta-small-title_body-all-fold1": "67ba3b33a9b0ac1bd099728cf374a26d622a8fcc0e891325a36dad197e1826ed",
+  "deberta-small-title_body-all-fold2": "92d77194ddab8c125369cf645c3122c254e2e8769d4c95f838ffacfddac43d59",
+  "output/rules-benchmark.json": "d43cc5a2ef8949d8ddfca9c8ef7917d63df020a1698533762d262230e5de22cc"
+}

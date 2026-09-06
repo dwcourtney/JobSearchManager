@@ -1,0 +1,15 @@
+{
+  "tag": "deberta-small-title-description-fold2",
+  "n": 40,
+  "gpuBatchMsPerPosting": 1.4615581749239936,
+  "gpuThroughput": 684.2012977362352,
+  "gpuSingleMedianMs": 14.767779495741706,
+  "gpuPeakAllocatedMiB": 641.67919921875,
+  "gpuPeakReservedMiB": 670.0,
+  "processPeakRssMiB": 1284.41015625,
+  "includesTokenization": true,
+  "cpuThreads": 4,
+  "cpuSingleMedianMs": 45.93602899694815,
+  "cpuThroughput": 21.62894734593025,
+  "processPeakRssAfterCpuMiB": 1602.31640625
+}

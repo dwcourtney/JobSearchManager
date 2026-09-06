@@ -1,0 +1,13 @@
+{
+  "host": "curiosity via curiosity-codex",
+  "gpu": "NVIDIA GeForce GTX 1070",
+  "gpuMemoryMiB": 8192,
+  "cpu": "Intel Core i7-4770K @ 3.50GHz",
+  "physicalCores": 4,
+  "logicalCpus": 8,
+  "ramMiB": 32037,
+  "experimentCpuThreads": 4,
+  "torch": "2.5.1+cu121",
+  "transformers": "4.46.3",
+  "windowsRole": "source and artifact workspace only; rule timing recorded separately on Windows"
+}

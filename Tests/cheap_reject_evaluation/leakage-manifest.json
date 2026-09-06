@@ -1,0 +1,26 @@
+{
+  "purpose": "First-stage offline leakage investigation; no second-stage classifier, inference or production changes.",
+  "poolSnapshot": "Original 1503-row holdout-excluded public cache snapshot from 2026-09-05, same canonical hash as manifest.json. No new holdout access.",
+  "samplingSeed": "jsm-leakage-audit-v1",
+  "sampling": "Stratified SHA256(seed|id) ordering: 70 no-family survivors, 35 title-veto survivors, all 22 duty-veto and all 9 insufficient-body survivors; 60 of 130 baseline rejects. Each row carries N/n design weight.",
+  "review": "Coding-assistant editorial title/duties review. Not human ground truth; ambiguity stays KEEP. Labels fixed before refinement scores for the initial audit. Delta audit follows scoring and is a development safety census, not independent validation.",
+  "auditCounts": {
+    "REJECT": 122,
+    "KEEP": 74
+  },
+  "deltaCounts": {
+    "REJECT": 40,
+    "KEEP": 1
+  },
+  "priorDevOverlap": 54,
+  "deltaSelection": "All 41 newly rejected procurement-context records outside the initial audit, reviewed exhaustively; selected using candidate predictions, never used for prevalence estimation.",
+  "labelPolicy": "Same conservative technical/adjacent engineering scope. Explicit civil construction design is outside; uncertain electrical/mechanical engineering, technical integration/presales/support survive. Old frozen labels are unchanged; audit flags the General Finance disagreement.",
+  "limitations": [
+    "Single reviewer; no independent adjudication.",
+    "Development/audit overlap and post-result refinement prohibit independent generalization claims.",
+    "Real cache snapshot is employer-specific, not all future arrivals.",
+    "Binomial intervals for reviewed reject risk describe sampling uncertainty only, not label correctness or model-selection uncertainty."
+  ],
+  "leakage-audit.jsonlSha256": "3d98302bac8a063c5a7f4a52b2cfbcbcfc50b31005ae19d96ab929bb9769aae1",
+  "leakage-delta-audit.jsonlSha256": "006c4798989924817b786e422021bdad1d8d4bd64686abe452c3f0c6024c743a"
+}

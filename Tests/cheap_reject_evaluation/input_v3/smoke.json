@@ -1,0 +1,7 @@
+{
+  "maxPositionEmbeddings": 512,
+  "batch": 4,
+  "tokens": 512,
+  "trainingPeakAllocatedMiB": 2941.158203125,
+  "trainingPeakReservedMiB": 4578.0
+}

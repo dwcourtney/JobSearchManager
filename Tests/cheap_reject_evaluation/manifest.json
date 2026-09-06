@@ -1,0 +1,82 @@
+{
+  "role": "development-only",
+  "date": "2026-09-05",
+  "eligible": 1503,
+  "excludedRecords": 250,
+  "excludedTitleGroups": 198,
+  "exclusion": "All title groups from both existing frozen holdout manifests removed before any development text is viewed. No holdout references or predictions exported.",
+  "source": "public posting caches; classifier fields excluded",
+  "seed": "jsm-cheap-reject-dev-v1",
+  "samplingFamilies": {
+    "clinical": "nurse|clinical|physician|therapist|pharmac|dental|medical assistant",
+    "driving": "driver|truck|chauffeur",
+    "construction": "construction|electrician|plumber|carpenter|welder|machinist|mechanic|lineman|inspector|civil engineer",
+    "finance": "accountant|accounting|financial|finance|tax|payroll|bookkeep|auditor",
+    "sales": "sales|account executive|business development",
+    "hr": "human resources|recruit|talent acquisition",
+    "hospitality": "cook|chef|food|catering|housekeep|hotel|bartender|restaurant",
+    "physical-security": "security officer|security guard|police|armed|protective",
+    "operator-technician": "technician|operator|assembler|warehouse|material handler",
+    "core-technical": "software|developer|devops|devsecops|platform|cloud|systems|integration|automation|machine learning|data engineer|network|administrator|cyber|artificial intelligence"
+  },
+  "labelProvenance": "Codex editorial review of title and public duties, before candidate scores; provisional, not independently human-adjudicated ground truth. No external LLM inference or model-generated cache fields used.",
+  "labelDefinition": "KEEP technical/software/systems/integration/automation/IT duties and ambiguous adjacent engineering/support; REJECT explicit unrelated primary occupation. Product/employer industry and merely using software/AI are not technical duties. No seniority, travel, location, education or certification disqualifiers.",
+  "selection": "Stable SHA256(seed|id) order, unique normalized titles; sequential stratum quotas 15, technical 60, background 30. No selection based on labels or classifier predictions.",
+  "counts": {
+    "REJECT": 81,
+    "KEEP": 85
+  },
+  "strata": {
+    "clinical": 5,
+    "driving": 4,
+    "construction": 15,
+    "finance": 15,
+    "sales": 15,
+    "hr": 6,
+    "physical-security": 1,
+    "operator-technician": 15,
+    "core-technical": 60,
+    "background": 30
+  },
+  "syntheticCounts": {
+    "REJECT": 30,
+    "KEEP": 30
+  },
+  "exclusionVerification": "Sampler removed matching stableId, content hash, and every normalized title group from both frozen holdout manifests before exporting eligible text. Holdout examples/labels/predictions were never read for candidate development.",
+  "limitations": [
+    "Single editorial reviewer; uncertainty maps to KEEP.",
+    "Purposive negative-rich development sample, not a prevalence estimate.",
+    "No hospitality and only one security-title match in real strata; synthetic tests report separately.",
+    "Exact-title exclusion does not prove semantic independence from historical holdout; use fresh prospective evidence before deployment."
+  ],
+  "development.jsonlSha256": "e082078496d5186a2e1e9465c145053b57659259cb78c6bd4f3e9ad56e6decbc",
+  "fixtures.jsonlSha256": "eaf4189d0fc532c70aaf3d072085376d4bf1cbb008572364320da654e9850118",
+  "exclusionAudit": {
+    "excludedRecords": 253,
+    "excludedTitleGroups": 198,
+    "exclusionManifests": [
+      {
+        "name": "holdout.json",
+        "sha256": "5be7fa382048eee4cd104d901c33367b522c5a4fb1a9962f63521c069bcde88b"
+      },
+      {
+        "name": "production-holdout-unlabeled-20260902.json",
+        "sha256": "5be7fa382048eee4cd104d901c33367b522c5a4fb1a9962f63521c069bcde88b"
+      }
+    ]
+  },
+  "exclusionCountNote": "Original count 250 excludes only nonempty descriptions; audited count 253 also includes three excluded empty-description records. Both yield the identical 1503-row eligible pool.",
+  "eligiblePoolCanonicalSha256": "838a06ce3bf564c92ebc2bdfebd7f2f310d40192876e1e0ddc8e92ab87ca94d5",
+  "developmentCompanies": [
+    "aecom",
+    "amentum",
+    "boeing",
+    "kbr",
+    "leidos",
+    "northrop-grumman",
+    "nvidia",
+    "parsons",
+    "rtx",
+    "servicenow"
+  ]
+}

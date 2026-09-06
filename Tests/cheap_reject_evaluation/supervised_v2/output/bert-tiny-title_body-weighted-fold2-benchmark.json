@@ -1,0 +1,15 @@
+{
+  "tag": "bert-tiny-title_body-weighted-fold2",
+  "n": 40,
+  "gpuBatchMsPerPosting": 2.7747696000005817,
+  "gpuThroughput": 360.39028249400974,
+  "gpuSingleMedianMs": 5.13138399401214,
+  "gpuPeakAllocatedMiB": 70.802734375,
+  "gpuPeakReservedMiB": 96.0,
+  "processPeakRssMiB": 867.359375,
+  "includesTokenization": true,
+  "cpuThreads": 4,
+  "cpuSingleMedianMs": 5.087737001304049,
+  "cpuThroughput": 191.12925729051912,
+  "processPeakRssAfterCpuMiB": 892.484375
+}

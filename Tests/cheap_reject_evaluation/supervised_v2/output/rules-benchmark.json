@@ -1,0 +1,12 @@
+{
+  "host": "curiosity",
+  "n": 4701,
+  "passes": 5,
+  "medianSeconds": 0.4293624620040646,
+  "msPerPosting": 0.0913342824939512,
+  "postingsPerSecond": 10948.791326698461,
+  "sourceHashes": {
+    "leakage.py": "784d66e97a5f07968b41f9f8dd823fa62f0b45373de0f0409667e76fa7ed31a7",
+    "evaluate.py": "14aef6d27a0127d353e5215ef26efad1dad47f611953f44e425d7614fd79c137"
+  }
+}

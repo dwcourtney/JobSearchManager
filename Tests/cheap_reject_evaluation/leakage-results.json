@@ -1,0 +1,3636 @@
+{
+  "poolCount": 1503,
+  "poolSha256": "838a06ce3bf564c92ebc2bdfebd7f2f310d40192876e1e0ddc8e92ab87ca94d5",
+  "auditSha256": "3d98302bac8a063c5a7f4a52b2cfbcbcfc50b31005ae19d96ab929bb9769aae1",
+  "candidateSha256": "784d66e97a5f07968b41f9f8dd823fa62f0b45373de0f0409667e76fa7ed31a7",
+  "estimates": {
+    "strata": {
+      "KEEP: explicit technical implementation/support evidence": {
+        "population": 22,
+        "sample": 22,
+        "reviewedReject": 18,
+        "reviewedKeep": 4,
+        "estimatedReject": 18.0
+      },
+      "KEEP: missing corroborating occupational body evidence": {
+        "population": 9,
+        "sample": 9,
+        "reviewedReject": 8,
+        "reviewedKeep": 1,
+        "estimatedReject": 8.0
+      },
+      "KEEP: no explicit unrelated title family": {
+        "population": 1236,
+        "sample": 70,
+        "reviewedReject": 13,
+        "reviewedKeep": 57,
+        "estimatedReject": 229.54285714285714
+      },
+      "KEEP: protected technical/engineering title": {
+        "population": 106,
+        "sample": 35,
+        "reviewedReject": 25,
+        "reviewedKeep": 10,
+        "estimatedReject": 75.71428571428571
+      },
+      "REJECT": {
+        "population": 130,
+        "sample": 60,
+        "reviewedReject": 58,
+        "reviewedKeep": 2,
+        "estimatedReject": 125.66666666666666
+      }
+    },
+    "estimatedUnrelatedKept": 331.25714285714287,
+    "estimatedKeeps": 1046.0761904761905,
+    "estimatedFalseRejects": 4.333333333333333,
+    "estimatedKeepRecall": 0.9958575356434021,
+    "leakageFamilies": {
+      "hr-recruiting": 1.0,
+      "civil-construction": 111.97142857142849,
+      "procurement-supplier-admin": 41.34285714285714,
+      "finance-scheduling": 57.971428571428575,
+      "sales-marketing-communications": 60.0,
+      "clinical": 2.0,
+      "environment-field-safety": 37.31428571428572,
+      "physical-maintenance-production": 19.65714285714286
+    },
+    "warning": "Design-weighted editorial sample estimates, not independent human-validated accuracy. Do not use raw oversampled counts as prevalence."
+  },
+  "variants": {
+    "baseline": {
+      "development": {
+        "n": 166,
+        "keeps": 85,
+        "falseRejects": 0,
+        "rejected": 49,
+        "keepRecall": 1.0,
+        "rejectionRate": 0.29518072289156627,
+        "rejectPrecision": 1.0,
+        "negativeRecall": 0.6049382716049383
+      },
+      "developmentFalseRejects": [],
+      "audit": {
+        "n": 196,
+        "keeps": 74,
+        "falseRejects": 2,
+        "rejected": 60,
+        "keepRecall": 0.972972972972973,
+        "rejectionRate": 0.30612244897959184,
+        "rejectPrecision": 0.9666666666666667,
+        "negativeRecall": 0.47540983606557374
+      },
+      "auditFalseRejects": [
+        {
+          "id": "a641029d359d4837",
+          "title": "Field Technician 4",
+          "reason": "Field Technician title hides mechanical field engineering, root-cause analysis, custom tooling design and control-system analysis; ambiguous specialist engineering stays KEEP."
+        },
+        {
+          "id": "d44a1bd2c6c20832",
+          "title": "Principal Specialist, General Finance",
+          "reason": "Explicit SQL reporting, financial-system module/configuration maintenance, advanced systems support and troubleshooting: KEEP. Earlier dev REJECT label is too coarse."
+        }
+      ],
+      "deltaAudit": {
+        "n": 41,
+        "keeps": 1,
+        "falseRejects": 0,
+        "rejected": 0,
+        "keepRecall": 1.0,
+        "rejectionRate": 0.0,
+        "rejectPrecision": null,
+        "negativeRecall": 0.0
+      },
+      "deltaAuditFalseRejects": [],
+      "synthetic": {
+        "n": 60,
+        "keeps": 30,
+        "falseRejects": 0,
+        "rejected": 30,
+        "keepRecall": 1.0,
+        "rejectionRate": 0.5,
+        "rejectPrecision": 1.0,
+        "negativeRecall": 1.0
+      },
+      "syntheticFalseRejects": [],
+      "cache": {
+        "rejected": 130,
+        "rejectionRate": 0.08649367930805056
+      },
+      "latency": {
+        "medianUs": 27.2,
+        "p95Us": 940.3,
+        "batchPerSecond": 3552.8768667935133
+      }
+    },
+    "safety": {
+      "development": {
+        "n": 166,
+        "keeps": 85,
+        "falseRejects": 0,
+        "rejected": 48,
+        "keepRecall": 1.0,
+        "rejectionRate": 0.2891566265060241,
+        "rejectPrecision": 1.0,
+        "negativeRecall": 0.5925925925925926
+      },
+      "developmentFalseRejects": [],
+      "audit": {
+        "n": 196,
+        "keeps": 74,
+        "falseRejects": 0,
+        "rejected": 58,
+        "keepRecall": 1.0,
+        "rejectionRate": 0.29591836734693877,
+        "rejectPrecision": 1.0,
+        "negativeRecall": 0.47540983606557374
+      },
+      "auditFalseRejects": [],
+      "deltaAudit": {
+        "n": 41,
+        "keeps": 1,
+        "falseRejects": 0,
+        "rejected": 0,
+        "keepRecall": 1.0,
+        "rejectionRate": 0.0,
+        "rejectPrecision": null,
+        "negativeRecall": 0.0
+      },
+      "deltaAuditFalseRejects": [],
+      "synthetic": {
+        "n": 60,
+        "keeps": 30,
+        "falseRejects": 0,
+        "rejected": 30,
+        "keepRecall": 1.0,
+        "rejectionRate": 0.5,
+        "rejectPrecision": 1.0,
+        "negativeRecall": 1.0
+      },
+      "syntheticFalseRejects": [],
+      "cache": {
+        "rejected": 127,
+        "rejectionRate": 0.08449767132401863
+      },
+      "latency": {
+        "medianUs": 31.95,
+        "p95Us": 1711.5,
+        "batchPerSecond": 2126.9643996067216
+      }
+    },
+    "families": {
+      "development": {
+        "n": 166,
+        "keeps": 85,
+        "falseRejects": 0,
+        "rejected": 48,
+        "keepRecall": 1.0,
+        "rejectionRate": 0.2891566265060241,
+        "rejectPrecision": 1.0,
+        "negativeRecall": 0.5925925925925926
+      },
+      "developmentFalseRejects": [],
+      "audit": {
+        "n": 196,
+        "keeps": 74,
+        "falseRejects": 0,
+        "rejected": 67,
+        "keepRecall": 1.0,
+        "rejectionRate": 0.34183673469387754,
+        "rejectPrecision": 1.0,
+        "negativeRecall": 0.5491803278688525
+      },
+      "auditFalseRejects": [],
+      "deltaAudit": {
+        "n": 41,
+        "keeps": 1,
+        "falseRejects": 0,
+        "rejected": 5,
+        "keepRecall": 1.0,
+        "rejectionRate": 0.12195121951219512,
+        "rejectPrecision": 1.0,
+        "negativeRecall": 0.125
+      },
+      "deltaAuditFalseRejects": [],
+      "synthetic": {
+        "n": 60,
+        "keeps": 30,
+        "falseRejects": 0,
+        "rejected": 30,
+        "keepRecall": 1.0,
+        "rejectionRate": 0.5,
+        "rejectPrecision": 1.0,
+        "negativeRecall": 1.0
+      },
+      "syntheticFalseRejects": [],
+      "cache": {
+        "rejected": 141,
+        "rejectionRate": 0.09381237524950099
+      },
+      "latency": {
+        "medianUs": 33.650000000000006,
+        "p95Us": 1346.1,
+        "batchPerSecond": 2463.1930698678666
+      }
+    },
+    "body-context": {
+      "development": {
+        "n": 166,
+        "keeps": 85,
+        "falseRejects": 0,
+        "rejected": 52,
+        "keepRecall": 1.0,
+        "rejectionRate": 0.3132530120481928,
+        "rejectPrecision": 1.0,
+        "negativeRecall": 0.6419753086419753
+      },
+      "developmentFalseRejects": [],
+      "audit": {
+        "n": 196,
+        "keeps": 74,
+        "falseRejects": 0,
+        "rejected": 75,
+        "keepRecall": 1.0,
+        "rejectionRate": 0.3826530612244898,
+        "rejectPrecision": 1.0,
+        "negativeRecall": 0.6147540983606558
+      },
+      "auditFalseRejects": [],
+      "deltaAudit": {
+        "n": 41,
+        "keeps": 1,
+        "falseRejects": 0,
+        "rejected": 6,
+        "keepRecall": 1.0,
+        "rejectionRate": 0.14634146341463414,
+        "rejectPrecision": 1.0,
+        "negativeRecall": 0.15
+      },
+      "deltaAuditFalseRejects": [],
+      "synthetic": {
+        "n": 60,
+        "keeps": 30,
+        "falseRejects": 0,
+        "rejected": 30,
+        "keepRecall": 1.0,
+        "rejectionRate": 0.5,
+        "rejectPrecision": 1.0,
+        "negativeRecall": 1.0
+      },
+      "syntheticFalseRejects": [],
+      "cache": {
+        "rejected": 150,
+        "rejectionRate": 0.0998003992015968
+      },
+      "latency": {
+        "medianUs": 34.25,
+        "p95Us": 1339.7,
+        "batchPerSecond": 2501.408927670014
+      }
+    },
+    "civil-context": {
+      "development": {
+        "n": 166,
+        "keeps": 85,
+        "falseRejects": 0,
+        "rejected": 56,
+        "keepRecall": 1.0,
+        "rejectionRate": 0.3373493975903614,
+        "rejectPrecision": 1.0,
+        "negativeRecall": 0.691358024691358
+      },
+      "developmentFalseRejects": [],
+      "audit": {
+        "n": 196,
+        "keeps": 74,
+        "falseRejects": 0,
+        "rejected": 98,
+        "keepRecall": 1.0,
+        "rejectionRate": 0.5,
+        "rejectPrecision": 1.0,
+        "negativeRecall": 0.8032786885245902
+      },
+      "auditFalseRejects": [],
+      "deltaAudit": {
+        "n": 41,
+        "keeps": 1,
+        "falseRejects": 1,
+        "rejected": 41,
+        "keepRecall": 0.0,
+        "rejectionRate": 1.0,
+        "rejectPrecision": 0.975609756097561,
+        "negativeRecall": 1.0
+      },
+      "deltaAuditFalseRejects": [
+        {
+          "id": "d251048a6dec6c90",
+          "title": "Roadway Lighting Engineers and Designers",
+          "reason": "Conservative KEEP: roadway lighting is adjacent electrical design engineering, not sufficient grounds for cheap rejection."
+        }
+      ],
+      "synthetic": {
+        "n": 60,
+        "keeps": 30,
+        "falseRejects": 0,
+        "rejected": 30,
+        "keepRecall": 1.0,
+        "rejectionRate": 0.5,
+        "rejectPrecision": 1.0,
+        "negativeRecall": 1.0
+      },
+      "syntheticFalseRejects": [],
+      "cache": {
+        "rejected": 208,
+        "rejectionRate": 0.1383898868928809
+      },
+      "latency": {
+        "medianUs": 39.0,
+        "p95Us": 1376.3,
+        "batchPerSecond": 2208.6069142010333
+      }
+    },
+    "procurement-context": {
+      "development": {
+        "n": 166,
+        "keeps": 85,
+        "falseRejects": 0,
+        "rejected": 56,
+        "keepRecall": 1.0,
+        "rejectionRate": 0.3373493975903614,
+        "rejectPrecision": 1.0,
+        "negativeRecall": 0.691358024691358
+      },
+      "developmentFalseRejects": [],
+      "audit": {
+        "n": 196,
+        "keeps": 74,
+        "falseRejects": 0,
+        "rejected": 99,
+        "keepRecall": 1.0,
+        "rejectionRate": 0.5051020408163265,
+        "rejectPrecision": 1.0,
+        "negativeRecall": 0.8114754098360656
+      },
+      "auditFalseRejects": [],
+      "deltaAudit": {
+        "n": 41,
+        "keeps": 1,
+        "falseRejects": 1,
+        "rejected": 41,
+        "keepRecall": 0.0,
+        "rejectionRate": 1.0,
+        "rejectPrecision": 0.975609756097561,
+        "negativeRecall": 1.0
+      },
+      "deltaAuditFalseRejects": [
+        {
+          "id": "d251048a6dec6c90",
+          "title": "Roadway Lighting Engineers and Designers",
+          "reason": "Conservative KEEP: roadway lighting is adjacent electrical design engineering, not sufficient grounds for cheap rejection."
+        }
+      ],
+      "synthetic": {
+        "n": 60,
+        "keeps": 30,
+        "falseRejects": 0,
+        "rejected": 30,
+        "keepRecall": 1.0,
+        "rejectionRate": 0.5,
+        "rejectPrecision": 1.0,
+        "negativeRecall": 1.0
+      },
+      "syntheticFalseRejects": [],
+      "cache": {
+        "rejected": 209,
+        "rejectionRate": 0.13905522288755823
+      },
+      "latency": {
+        "medianUs": 39.4,
+        "p95Us": 1353.3,
+        "batchPerSecond": 2222.56735909954
+      }
+    },
+    "aggressive-commercial": {
+      "development": {
+        "n": 166,
+        "keeps": 85,
+        "falseRejects": 0,
+        "rejected": 57,
+        "keepRecall": 1.0,
+        "rejectionRate": 0.3433734939759036,
+        "rejectPrecision": 1.0,
+        "negativeRecall": 0.7037037037037037
+      },
+      "developmentFalseRejects": [],
+      "audit": {
+        "n": 196,
+        "keeps": 74,
+        "falseRejects": 1,
+        "rejected": 101,
+        "keepRecall": 0.9864864864864865,
+        "rejectionRate": 0.5153061224489796,
+        "rejectPrecision": 0.9900990099009901,
+        "negativeRecall": 0.819672131147541
+      },
+      "auditFalseRejects": [
+        {
+          "id": "c28c937c0128cf79",
+          "title": "Federal Physical AI Business Development Lead",
+          "reason": "Technical partner demonstrations and stack integration mixed with business development; conservative KEEP."
+        }
+      ],
+      "deltaAudit": {
+        "n": 41,
+        "keeps": 1,
+        "falseRejects": 1,
+        "rejected": 41,
+        "keepRecall": 0.0,
+        "rejectionRate": 1.0,
+        "rejectPrecision": 0.975609756097561,
+        "negativeRecall": 1.0
+      },
+      "deltaAuditFalseRejects": [
+        {
+          "id": "d251048a6dec6c90",
+          "title": "Roadway Lighting Engineers and Designers",
+          "reason": "Conservative KEEP: roadway lighting is adjacent electrical design engineering, not sufficient grounds for cheap rejection."
+        }
+      ],
+      "synthetic": {
+        "n": 60,
+        "keeps": 30,
+        "falseRejects": 0,
+        "rejected": 30,
+        "keepRecall": 1.0,
+        "rejectionRate": 0.5,
+        "rejectPrecision": 1.0,
+        "negativeRecall": 1.0
+      },
+      "syntheticFalseRejects": [],
+      "cache": {
+        "rejected": 211,
+        "rejectionRate": 0.14038589487691283
+      },
+      "latency": {
+        "medianUs": 41.45,
+        "p95Us": 1384.4,
+        "batchPerSecond": 2098.381211626669
+      }
+    },
+    "electrical-safe": {
+      "development": {
+        "n": 166,
+        "keeps": 85,
+        "falseRejects": 0,
+        "rejected": 56,
+        "keepRecall": 1.0,
+        "rejectionRate": 0.3373493975903614,
+        "rejectPrecision": 1.0,
+        "negativeRecall": 0.691358024691358
+      },
+      "developmentFalseRejects": [],
+      "audit": {
+        "n": 196,
+        "keeps": 74,
+        "falseRejects": 0,
+        "rejected": 99,
+        "keepRecall": 1.0,
+        "rejectionRate": 0.5051020408163265,
+        "rejectPrecision": 1.0,
+        "negativeRecall": 0.8114754098360656
+      },
+      "auditFalseRejects": [],
+      "deltaAudit": {
+        "n": 41,
+        "keeps": 1,
+        "falseRejects": 0,
+        "rejected": 40,
+        "keepRecall": 1.0,
+        "rejectionRate": 0.975609756097561,
+        "rejectPrecision": 1.0,
+        "negativeRecall": 1.0
+      },
+      "deltaAuditFalseRejects": [],
+      "synthetic": {
+        "n": 60,
+        "keeps": 30,
+        "falseRejects": 0,
+        "rejected": 30,
+        "keepRecall": 1.0,
+        "rejectionRate": 0.5,
+        "rejectPrecision": 1.0,
+        "negativeRecall": 1.0
+      },
+      "syntheticFalseRejects": [],
+      "cache": {
+        "rejected": 208,
+        "rejectionRate": 0.1383898868928809
+      },
+      "latency": {
+        "medianUs": 37.6,
+        "p95Us": 1327.8,
+        "batchPerSecond": 2236.8048755357413
+      }
+    }
+  },
+  "transitions": [
+    {
+      "id": "8b46f0c707852392",
+      "title": "Procurement Specialist (Buyer)",
+      "variant": "safety",
+      "baselineKeep": false,
+      "keep": true,
+      "reason": "KEEP: explicit ERP/SQL/configuration/support evidence"
+    },
+    {
+      "id": "a641029d359d4837",
+      "title": "Field Technician 4",
+      "variant": "safety",
+      "baselineKeep": false,
+      "keep": true,
+      "reason": "KEEP: ambiguous technical support title"
+    },
+    {
+      "id": "d44a1bd2c6c20832",
+      "title": "Principal Specialist, General Finance",
+      "variant": "safety",
+      "baselineKeep": false,
+      "keep": true,
+      "reason": "KEEP: explicit ERP/SQL/configuration/support evidence"
+    },
+    {
+      "id": "021b95a212f06805",
+      "title": "Environmental Project Manager - NEPA and wetlands",
+      "variant": "families",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: environment-field"
+    },
+    {
+      "id": "06d73e859d7e1bb2",
+      "title": "Maintenance Customer Technical Training Specialist (Mid-Level & Senior)",
+      "variant": "families",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: aircraft-maintenance-training"
+    },
+    {
+      "id": "14c7bdb15c2357e7",
+      "title": "Sr Marketing Specialist, ABX (Armis)",
+      "variant": "families",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: marketing-communications"
+    },
+    {
+      "id": "2ba147ebaa3ed4cd",
+      "title": "Operation, Maintenance, and Monitoring (OMM) Technician",
+      "variant": "families",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: environment-field"
+    },
+    {
+      "id": "39c2aa2998b3180e",
+      "title": "Project Control Specialist (Remote)",
+      "variant": "families",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: cost-scheduling-payroll"
+    },
+    {
+      "id": "45bf38786912b4d6",
+      "title": "Principal Public Relations Representative (19792)",
+      "variant": "families",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: marketing-communications"
+    },
+    {
+      "id": "7a05748487c9d7f5",
+      "title": "Supplier Development Program Lead (SDPL) (Remote)",
+      "variant": "families",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "8b46f0c707852392",
+      "title": "Procurement Specialist (Buyer)",
+      "variant": "families",
+      "baselineKeep": false,
+      "keep": true,
+      "reason": "KEEP: explicit ERP/SQL/configuration/support evidence"
+    },
+    {
+      "id": "8c0358a7a060371e",
+      "title": "Project Control Specialist",
+      "variant": "families",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: cost-scheduling-payroll"
+    },
+    {
+      "id": "8de73fe187f9e65f",
+      "title": "Time & Pay Solutions Specialist",
+      "variant": "families",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: cost-scheduling-payroll"
+    },
+    {
+      "id": "a641029d359d4837",
+      "title": "Field Technician 4",
+      "variant": "families",
+      "baselineKeep": false,
+      "keep": true,
+      "reason": "KEEP: ambiguous technical support title"
+    },
+    {
+      "id": "b01e846ce88151b0",
+      "title": "Supplier Development Lead (Remote - Residing in the within the Midwest, USA area)",
+      "variant": "families",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "d44a1bd2c6c20832",
+      "title": "Principal Specialist, General Finance",
+      "variant": "families",
+      "baselineKeep": false,
+      "keep": true,
+      "reason": "KEEP: explicit ERP/SQL/configuration/support evidence"
+    },
+    {
+      "id": "e811e893eb39b306",
+      "title": "Supplier Development Lead",
+      "variant": "families",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "f3b9764831dfbdb1",
+      "title": "Supplier Development Lead (Remote - Residing in NY, NJ, or PA areas)",
+      "variant": "families",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "f70405bc8f9e2af3",
+      "title": "Principal Specialist, Supplier Quality & Development (Remote)",
+      "variant": "families",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "fb499e34b3237d45",
+      "title": "Senior Manager, Defense Public Relations (Remote)",
+      "variant": "families",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: marketing-communications"
+    },
+    {
+      "id": "021b95a212f06805",
+      "title": "Environmental Project Manager - NEPA and wetlands",
+      "variant": "body-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: environment-field"
+    },
+    {
+      "id": "06d73e859d7e1bb2",
+      "title": "Maintenance Customer Technical Training Specialist (Mid-Level & Senior)",
+      "variant": "body-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: aircraft-maintenance-training"
+    },
+    {
+      "id": "14c7bdb15c2357e7",
+      "title": "Sr Marketing Specialist, ABX (Armis)",
+      "variant": "body-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: marketing-communications"
+    },
+    {
+      "id": "2ba147ebaa3ed4cd",
+      "title": "Operation, Maintenance, and Monitoring (OMM) Technician",
+      "variant": "body-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: environment-field"
+    },
+    {
+      "id": "39c2aa2998b3180e",
+      "title": "Project Control Specialist (Remote)",
+      "variant": "body-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: cost-scheduling-payroll"
+    },
+    {
+      "id": "3c02e58c27a8eca3",
+      "title": "Boeing Summer 2027 Internship Program (PAID) – Finance (Evergreen)",
+      "variant": "body-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: finance"
+    },
+    {
+      "id": "45bf38786912b4d6",
+      "title": "Principal Public Relations Representative (19792)",
+      "variant": "body-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: marketing-communications"
+    },
+    {
+      "id": "503f2a30eb9fc457",
+      "title": "Senior Talent Acquisition Specialist – National Security & Operations",
+      "variant": "body-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: hr"
+    },
+    {
+      "id": "6724aa24c2c1d5c9",
+      "title": "Bridge Drafter (REMOTE)",
+      "variant": "body-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction"
+    },
+    {
+      "id": "7a05748487c9d7f5",
+      "title": "Supplier Development Program Lead (SDPL) (Remote)",
+      "variant": "body-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "8b46f0c707852392",
+      "title": "Procurement Specialist (Buyer)",
+      "variant": "body-context",
+      "baselineKeep": false,
+      "keep": true,
+      "reason": "KEEP: explicit ERP/SQL/configuration/support evidence"
+    },
+    {
+      "id": "8c0358a7a060371e",
+      "title": "Project Control Specialist",
+      "variant": "body-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: cost-scheduling-payroll"
+    },
+    {
+      "id": "8de73fe187f9e65f",
+      "title": "Time & Pay Solutions Specialist",
+      "variant": "body-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: cost-scheduling-payroll"
+    },
+    {
+      "id": "972ab857529124d1",
+      "title": "Manager Supply Chain Programs 2",
+      "variant": "body-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: business-other"
+    },
+    {
+      "id": "a641029d359d4837",
+      "title": "Field Technician 4",
+      "variant": "body-context",
+      "baselineKeep": false,
+      "keep": true,
+      "reason": "KEEP: ambiguous technical support title"
+    },
+    {
+      "id": "a8ebc44e871def22",
+      "title": "Manager, Program Finance & Control Cost Analyst (Remote)",
+      "variant": "body-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: finance"
+    },
+    {
+      "id": "b01e846ce88151b0",
+      "title": "Supplier Development Lead (Remote - Residing in the within the Midwest, USA area)",
+      "variant": "body-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "c4a2a23d19e49f42",
+      "title": "Program Lead, Construction Management Services (Owners Agent)",
+      "variant": "body-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction"
+    },
+    {
+      "id": "cfa4adadb25ded35",
+      "title": "Mid-level Archaeologist",
+      "variant": "body-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: environment-field"
+    },
+    {
+      "id": "d44a1bd2c6c20832",
+      "title": "Principal Specialist, General Finance",
+      "variant": "body-context",
+      "baselineKeep": false,
+      "keep": true,
+      "reason": "KEEP: explicit ERP/SQL/configuration/support evidence"
+    },
+    {
+      "id": "e0b465087fd743f5",
+      "title": "Mid-level Archaeology Technician (on-call)",
+      "variant": "body-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: environment-field"
+    },
+    {
+      "id": "e811e893eb39b306",
+      "title": "Supplier Development Lead",
+      "variant": "body-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "f28012c138767988",
+      "title": "Senior Construction Manager",
+      "variant": "body-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction"
+    },
+    {
+      "id": "f3b9764831dfbdb1",
+      "title": "Supplier Development Lead (Remote - Residing in NY, NJ, or PA areas)",
+      "variant": "body-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "f70405bc8f9e2af3",
+      "title": "Principal Specialist, Supplier Quality & Development (Remote)",
+      "variant": "body-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "fb499e34b3237d45",
+      "title": "Senior Manager, Defense Public Relations (Remote)",
+      "variant": "body-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: marketing-communications"
+    },
+    {
+      "id": "021b95a212f06805",
+      "title": "Environmental Project Manager - NEPA and wetlands",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: environment-field"
+    },
+    {
+      "id": "044007be5afb64e0",
+      "title": "Civil / Geotechnical Engineer",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "06d73e859d7e1bb2",
+      "title": "Maintenance Customer Technical Training Specialist (Mid-Level & Senior)",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: aircraft-maintenance-training"
+    },
+    {
+      "id": "098f681c0cb6c50f",
+      "title": "Supervising Bridge Engineer - North Carolina",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "09eaaabd12fa5548",
+      "title": "Bridge Engineer",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "0b2bcadf50a70f67",
+      "title": "Associate Roadway Engineer",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "14c7bdb15c2357e7",
+      "title": "Sr Marketing Specialist, ABX (Armis)",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: marketing-communications"
+    },
+    {
+      "id": "19656a7f97d7d8a4",
+      "title": "Structural Engineers and Designers",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "1c9adb7e3b3f178a",
+      "title": "Drainage Engineer II - Road/Highway",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "26d9b5711377c81a",
+      "title": "Associate Substation Civil/Structural Engineer",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "27907d770c813873",
+      "title": "Senior Civil/Structural Engineer",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "2a23f977eeab99fd",
+      "title": "Senior Structural Engineer",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "2b43cbb2baf25a79",
+      "title": "Drainage Engineer II",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "2ba147ebaa3ed4cd",
+      "title": "Operation, Maintenance, and Monitoring (OMM) Technician",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: environment-field"
+    },
+    {
+      "id": "2d2ef1128e14c602",
+      "title": "Senior Structural Engineer, Data Centers - Remote (U.S.)",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "3411aa8d8e516bd2",
+      "title": "Associate Roadway Engineer",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "39c2aa2998b3180e",
+      "title": "Project Control Specialist (Remote)",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: cost-scheduling-payroll"
+    },
+    {
+      "id": "3b9406dbf8f78e5c",
+      "title": "Substation Senior Structural Engineer",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "3c02e58c27a8eca3",
+      "title": "Boeing Summer 2027 Internship Program (PAID) – Finance (Evergreen)",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: finance"
+    },
+    {
+      "id": "45bf38786912b4d6",
+      "title": "Principal Public Relations Representative (19792)",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: marketing-communications"
+    },
+    {
+      "id": "4d811063890569c7",
+      "title": "Substation Civil Structural Engineer",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "503f2a30eb9fc457",
+      "title": "Senior Talent Acquisition Specialist – National Security & Operations",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: hr"
+    },
+    {
+      "id": "54d35c1ce5d8f3ec",
+      "title": "Bridge Engineer II",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "55045767193d386d",
+      "title": "Drainage Engineer I",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "5b7c7980b9578f4a",
+      "title": "Bridge Project Engineer - NY",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "61df66d1c644276b",
+      "title": "Structural Engineer",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "61ec5843d105671d",
+      "title": "Structural Engineer I - Rail and Transit (Hybrid/Remote)",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "646b69f4d4eaf306",
+      "title": "Senior Bridge Engineer",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "659ab5c385037618",
+      "title": "Roadway Engineer II",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "65f7f73e076a6d4b",
+      "title": "Transmission and Distribution Civil Engineer - Remote (U.S.)",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "6724aa24c2c1d5c9",
+      "title": "Bridge Drafter (REMOTE)",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "67777d4f277a7d55",
+      "title": "Bridge Engineer 2",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "69ec1abc71743a1d",
+      "title": "Drainage Engineer II",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "6e3c3294b2f2980e",
+      "title": "Bridge Engineer 1",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "6fc794cd4d9847db",
+      "title": "Drainage Engineer",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "775b9888b33fbc14",
+      "title": "Senior Drainage Engineer",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "7a05748487c9d7f5",
+      "title": "Supplier Development Program Lead (SDPL) (Remote)",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "7c0152aa7d0dd4e1",
+      "title": "Senior Structural Engineer (Substation Focus) - Remote (US)",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "82c7cda4597b64fd",
+      "title": "Substation Senior Structural Engineer",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "834a381a7e08245b",
+      "title": "Roadway Engineer",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "8ad6d329c5ce9cf5",
+      "title": "Senior Bridge Engineer (REMOTE)",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "8b46f0c707852392",
+      "title": "Procurement Specialist (Buyer)",
+      "variant": "civil-context",
+      "baselineKeep": false,
+      "keep": true,
+      "reason": "KEEP: explicit ERP/SQL/configuration/support evidence"
+    },
+    {
+      "id": "8ba1810740794572",
+      "title": "Senior Civil Design Engineer",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "8c0358a7a060371e",
+      "title": "Project Control Specialist",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: cost-scheduling-payroll"
+    },
+    {
+      "id": "8de73fe187f9e65f",
+      "title": "Time & Pay Solutions Specialist",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: cost-scheduling-payroll"
+    },
+    {
+      "id": "91848a67b1634036",
+      "title": "Principal Project Engineer - Bridge (REMOTE)",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "93d551cc28129cfa",
+      "title": "Roadway Project Manager",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "972ab857529124d1",
+      "title": "Manager Supply Chain Programs 2",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: business-other"
+    },
+    {
+      "id": "99cbdc687e7e9550",
+      "title": "Engineering Manager - Bridge Design/Build/Construction",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "9aa179d2efcde305",
+      "title": "Senior Civil Engineer",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "9b6c7ff19f37eae3",
+      "title": "Bridge Structural Engineer - Transportation",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "a641029d359d4837",
+      "title": "Field Technician 4",
+      "variant": "civil-context",
+      "baselineKeep": false,
+      "keep": true,
+      "reason": "KEEP: ambiguous technical support title"
+    },
+    {
+      "id": "a8ebc44e871def22",
+      "title": "Manager, Program Finance & Control Cost Analyst (Remote)",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: finance"
+    },
+    {
+      "id": "a988572ffb8131b1",
+      "title": "Roadway Section Manager",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "a9b244561d698bcf",
+      "title": "Roadway Engineer I",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "b01e846ce88151b0",
+      "title": "Supplier Development Lead (Remote - Residing in the within the Midwest, USA area)",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "b1bcd62fc887fdfb",
+      "title": "Supervising Structural Bridge Engineer - North Carolina",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "b8ae6b301ec609e0",
+      "title": "Drainage Engineer I",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "bf1f8cafeca0c94c",
+      "title": "Senior Bridge Engineer",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "c2bf7db3bf284833",
+      "title": "Senior Civil Engineer",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "c4a2a23d19e49f42",
+      "title": "Program Lead, Construction Management Services (Owners Agent)",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction"
+    },
+    {
+      "id": "c4da4cf7dfa9877a",
+      "title": "Drainage Engineer",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "c5b18840167f5244",
+      "title": "Engineering Team Lead - Roadway/Highway/Transportation Design/Build",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "c97fa2b16a30fdc0",
+      "title": "Structural Engineer (Substation Focus) - Remote (US)",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "cca284d18b62d71a",
+      "title": "Senior Bridge Engineer",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "cd0bb9a1975fd034",
+      "title": "Substation Civil Site Engineer",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "cfa4adadb25ded35",
+      "title": "Mid-level Archaeologist",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: environment-field"
+    },
+    {
+      "id": "d14002bb9b826342",
+      "title": "Project Manager - Bridge Design/Build/Engineer",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "d251048a6dec6c90",
+      "title": "Roadway Lighting Engineers and Designers",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "d44a1bd2c6c20832",
+      "title": "Principal Specialist, General Finance",
+      "variant": "civil-context",
+      "baselineKeep": false,
+      "keep": true,
+      "reason": "KEEP: explicit ERP/SQL/configuration/support evidence"
+    },
+    {
+      "id": "d7dee428e797a6ab",
+      "title": "Roadway Engineer - Sr. / Principal (Remote)",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "d84e0eee0eb506fe",
+      "title": "Drainage Project Engineer",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "d9c27525846e7fa6",
+      "title": "Roadway Engineers and Designers",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "e0b465087fd743f5",
+      "title": "Mid-level Archaeology Technician (on-call)",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: environment-field"
+    },
+    {
+      "id": "e2ffbe5438e71b4d",
+      "title": "Drainage Engineers and Designers ",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "e54c2f33cbb1d580",
+      "title": "Transmission and Distribution Civil Engineer - Hybrid (U.S.)",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "e59afc2122b02617",
+      "title": "Civil Engineer",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "e811e893eb39b306",
+      "title": "Supplier Development Lead",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "ec65603cf6a3eaa8",
+      "title": "Structural Engineer, Data Centers - Remote (U.S.)",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "ee2800597995ac8f",
+      "title": "Senior Civil Engineer",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "f28012c138767988",
+      "title": "Senior Construction Manager",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction"
+    },
+    {
+      "id": "f3b9764831dfbdb1",
+      "title": "Supplier Development Lead (Remote - Residing in NY, NJ, or PA areas)",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "f70405bc8f9e2af3",
+      "title": "Principal Specialist, Supplier Quality & Development (Remote)",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "fb499e34b3237d45",
+      "title": "Senior Manager, Defense Public Relations (Remote)",
+      "variant": "civil-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: marketing-communications"
+    },
+    {
+      "id": "021b95a212f06805",
+      "title": "Environmental Project Manager - NEPA and wetlands",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: environment-field"
+    },
+    {
+      "id": "044007be5afb64e0",
+      "title": "Civil / Geotechnical Engineer",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "06d73e859d7e1bb2",
+      "title": "Maintenance Customer Technical Training Specialist (Mid-Level & Senior)",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: aircraft-maintenance-training"
+    },
+    {
+      "id": "098f681c0cb6c50f",
+      "title": "Supervising Bridge Engineer - North Carolina",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "09eaaabd12fa5548",
+      "title": "Bridge Engineer",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "0b2bcadf50a70f67",
+      "title": "Associate Roadway Engineer",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "14c7bdb15c2357e7",
+      "title": "Sr Marketing Specialist, ABX (Armis)",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: marketing-communications"
+    },
+    {
+      "id": "19656a7f97d7d8a4",
+      "title": "Structural Engineers and Designers",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "1c9adb7e3b3f178a",
+      "title": "Drainage Engineer II - Road/Highway",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "26d9b5711377c81a",
+      "title": "Associate Substation Civil/Structural Engineer",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "27907d770c813873",
+      "title": "Senior Civil/Structural Engineer",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "2a23f977eeab99fd",
+      "title": "Senior Structural Engineer",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "2b43cbb2baf25a79",
+      "title": "Drainage Engineer II",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "2ba147ebaa3ed4cd",
+      "title": "Operation, Maintenance, and Monitoring (OMM) Technician",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: environment-field"
+    },
+    {
+      "id": "2d2ef1128e14c602",
+      "title": "Senior Structural Engineer, Data Centers - Remote (U.S.)",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "3411aa8d8e516bd2",
+      "title": "Associate Roadway Engineer",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "39c2aa2998b3180e",
+      "title": "Project Control Specialist (Remote)",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: cost-scheduling-payroll"
+    },
+    {
+      "id": "3b9406dbf8f78e5c",
+      "title": "Substation Senior Structural Engineer",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "3c02e58c27a8eca3",
+      "title": "Boeing Summer 2027 Internship Program (PAID) – Finance (Evergreen)",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: finance"
+    },
+    {
+      "id": "3c0a83f325173f27",
+      "title": "Procurement Agent - Millennium Space Systems",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: business-other"
+    },
+    {
+      "id": "45bf38786912b4d6",
+      "title": "Principal Public Relations Representative (19792)",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: marketing-communications"
+    },
+    {
+      "id": "4d811063890569c7",
+      "title": "Substation Civil Structural Engineer",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "503f2a30eb9fc457",
+      "title": "Senior Talent Acquisition Specialist – National Security & Operations",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: hr"
+    },
+    {
+      "id": "54d35c1ce5d8f3ec",
+      "title": "Bridge Engineer II",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "55045767193d386d",
+      "title": "Drainage Engineer I",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "5b7c7980b9578f4a",
+      "title": "Bridge Project Engineer - NY",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "61df66d1c644276b",
+      "title": "Structural Engineer",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "61ec5843d105671d",
+      "title": "Structural Engineer I - Rail and Transit (Hybrid/Remote)",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "646b69f4d4eaf306",
+      "title": "Senior Bridge Engineer",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "659ab5c385037618",
+      "title": "Roadway Engineer II",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "65f7f73e076a6d4b",
+      "title": "Transmission and Distribution Civil Engineer - Remote (U.S.)",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "6724aa24c2c1d5c9",
+      "title": "Bridge Drafter (REMOTE)",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "67777d4f277a7d55",
+      "title": "Bridge Engineer 2",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "69ec1abc71743a1d",
+      "title": "Drainage Engineer II",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "6e3c3294b2f2980e",
+      "title": "Bridge Engineer 1",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "6fc794cd4d9847db",
+      "title": "Drainage Engineer",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "775b9888b33fbc14",
+      "title": "Senior Drainage Engineer",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "7a05748487c9d7f5",
+      "title": "Supplier Development Program Lead (SDPL) (Remote)",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "7c0152aa7d0dd4e1",
+      "title": "Senior Structural Engineer (Substation Focus) - Remote (US)",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "82c7cda4597b64fd",
+      "title": "Substation Senior Structural Engineer",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "834a381a7e08245b",
+      "title": "Roadway Engineer",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "8ad6d329c5ce9cf5",
+      "title": "Senior Bridge Engineer (REMOTE)",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "8b46f0c707852392",
+      "title": "Procurement Specialist (Buyer)",
+      "variant": "procurement-context",
+      "baselineKeep": false,
+      "keep": true,
+      "reason": "KEEP: explicit ERP/SQL/configuration/support evidence"
+    },
+    {
+      "id": "8ba1810740794572",
+      "title": "Senior Civil Design Engineer",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "8c0358a7a060371e",
+      "title": "Project Control Specialist",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: cost-scheduling-payroll"
+    },
+    {
+      "id": "8de73fe187f9e65f",
+      "title": "Time & Pay Solutions Specialist",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: cost-scheduling-payroll"
+    },
+    {
+      "id": "91848a67b1634036",
+      "title": "Principal Project Engineer - Bridge (REMOTE)",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "93d551cc28129cfa",
+      "title": "Roadway Project Manager",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "972ab857529124d1",
+      "title": "Manager Supply Chain Programs 2",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: business-other"
+    },
+    {
+      "id": "99cbdc687e7e9550",
+      "title": "Engineering Manager - Bridge Design/Build/Construction",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "9aa179d2efcde305",
+      "title": "Senior Civil Engineer",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "9b6c7ff19f37eae3",
+      "title": "Bridge Structural Engineer - Transportation",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "a641029d359d4837",
+      "title": "Field Technician 4",
+      "variant": "procurement-context",
+      "baselineKeep": false,
+      "keep": true,
+      "reason": "KEEP: ambiguous technical support title"
+    },
+    {
+      "id": "a8ebc44e871def22",
+      "title": "Manager, Program Finance & Control Cost Analyst (Remote)",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: finance"
+    },
+    {
+      "id": "a988572ffb8131b1",
+      "title": "Roadway Section Manager",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "a9b244561d698bcf",
+      "title": "Roadway Engineer I",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "b01e846ce88151b0",
+      "title": "Supplier Development Lead (Remote - Residing in the within the Midwest, USA area)",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "b1bcd62fc887fdfb",
+      "title": "Supervising Structural Bridge Engineer - North Carolina",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "b8ae6b301ec609e0",
+      "title": "Drainage Engineer I",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "bf1f8cafeca0c94c",
+      "title": "Senior Bridge Engineer",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "c2bf7db3bf284833",
+      "title": "Senior Civil Engineer",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "c4a2a23d19e49f42",
+      "title": "Program Lead, Construction Management Services (Owners Agent)",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction"
+    },
+    {
+      "id": "c4da4cf7dfa9877a",
+      "title": "Drainage Engineer",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "c5b18840167f5244",
+      "title": "Engineering Team Lead - Roadway/Highway/Transportation Design/Build",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "c97fa2b16a30fdc0",
+      "title": "Structural Engineer (Substation Focus) - Remote (US)",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "cca284d18b62d71a",
+      "title": "Senior Bridge Engineer",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "cd0bb9a1975fd034",
+      "title": "Substation Civil Site Engineer",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "cfa4adadb25ded35",
+      "title": "Mid-level Archaeologist",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: environment-field"
+    },
+    {
+      "id": "d14002bb9b826342",
+      "title": "Project Manager - Bridge Design/Build/Engineer",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "d251048a6dec6c90",
+      "title": "Roadway Lighting Engineers and Designers",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "d44a1bd2c6c20832",
+      "title": "Principal Specialist, General Finance",
+      "variant": "procurement-context",
+      "baselineKeep": false,
+      "keep": true,
+      "reason": "KEEP: explicit ERP/SQL/configuration/support evidence"
+    },
+    {
+      "id": "d7dee428e797a6ab",
+      "title": "Roadway Engineer - Sr. / Principal (Remote)",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "d84e0eee0eb506fe",
+      "title": "Drainage Project Engineer",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "d9c27525846e7fa6",
+      "title": "Roadway Engineers and Designers",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "e0b465087fd743f5",
+      "title": "Mid-level Archaeology Technician (on-call)",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: environment-field"
+    },
+    {
+      "id": "e2ffbe5438e71b4d",
+      "title": "Drainage Engineers and Designers ",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "e54c2f33cbb1d580",
+      "title": "Transmission and Distribution Civil Engineer - Hybrid (U.S.)",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "e59afc2122b02617",
+      "title": "Civil Engineer",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "e811e893eb39b306",
+      "title": "Supplier Development Lead",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "ec65603cf6a3eaa8",
+      "title": "Structural Engineer, Data Centers - Remote (U.S.)",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "ee2800597995ac8f",
+      "title": "Senior Civil Engineer",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "f28012c138767988",
+      "title": "Senior Construction Manager",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction"
+    },
+    {
+      "id": "f3b9764831dfbdb1",
+      "title": "Supplier Development Lead (Remote - Residing in NY, NJ, or PA areas)",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "f70405bc8f9e2af3",
+      "title": "Principal Specialist, Supplier Quality & Development (Remote)",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "fb499e34b3237d45",
+      "title": "Senior Manager, Defense Public Relations (Remote)",
+      "variant": "procurement-context",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: marketing-communications"
+    },
+    {
+      "id": "021b95a212f06805",
+      "title": "Environmental Project Manager - NEPA and wetlands",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: environment-field"
+    },
+    {
+      "id": "044007be5afb64e0",
+      "title": "Civil / Geotechnical Engineer",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "06d73e859d7e1bb2",
+      "title": "Maintenance Customer Technical Training Specialist (Mid-Level & Senior)",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: aircraft-maintenance-training"
+    },
+    {
+      "id": "098f681c0cb6c50f",
+      "title": "Supervising Bridge Engineer - North Carolina",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "09eaaabd12fa5548",
+      "title": "Bridge Engineer",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "0b2bcadf50a70f67",
+      "title": "Associate Roadway Engineer",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "0eaece2fa3ee42a1",
+      "title": "Federal Civilian BD Director-Data Analytics and AI",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: commercial-role"
+    },
+    {
+      "id": "14c7bdb15c2357e7",
+      "title": "Sr Marketing Specialist, ABX (Armis)",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: marketing-communications"
+    },
+    {
+      "id": "19656a7f97d7d8a4",
+      "title": "Structural Engineers and Designers",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "1c9adb7e3b3f178a",
+      "title": "Drainage Engineer II - Road/Highway",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "26d9b5711377c81a",
+      "title": "Associate Substation Civil/Structural Engineer",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "27907d770c813873",
+      "title": "Senior Civil/Structural Engineer",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "2a23f977eeab99fd",
+      "title": "Senior Structural Engineer",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "2b43cbb2baf25a79",
+      "title": "Drainage Engineer II",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "2ba147ebaa3ed4cd",
+      "title": "Operation, Maintenance, and Monitoring (OMM) Technician",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: environment-field"
+    },
+    {
+      "id": "2d2ef1128e14c602",
+      "title": "Senior Structural Engineer, Data Centers - Remote (U.S.)",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "3411aa8d8e516bd2",
+      "title": "Associate Roadway Engineer",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "39c2aa2998b3180e",
+      "title": "Project Control Specialist (Remote)",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: cost-scheduling-payroll"
+    },
+    {
+      "id": "3b9406dbf8f78e5c",
+      "title": "Substation Senior Structural Engineer",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "3c02e58c27a8eca3",
+      "title": "Boeing Summer 2027 Internship Program (PAID) – Finance (Evergreen)",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: finance"
+    },
+    {
+      "id": "3c0a83f325173f27",
+      "title": "Procurement Agent - Millennium Space Systems",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: business-other"
+    },
+    {
+      "id": "45bf38786912b4d6",
+      "title": "Principal Public Relations Representative (19792)",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: marketing-communications"
+    },
+    {
+      "id": "4d811063890569c7",
+      "title": "Substation Civil Structural Engineer",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "503f2a30eb9fc457",
+      "title": "Senior Talent Acquisition Specialist – National Security & Operations",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: hr"
+    },
+    {
+      "id": "54d35c1ce5d8f3ec",
+      "title": "Bridge Engineer II",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "55045767193d386d",
+      "title": "Drainage Engineer I",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "5b7c7980b9578f4a",
+      "title": "Bridge Project Engineer - NY",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "61df66d1c644276b",
+      "title": "Structural Engineer",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "61ec5843d105671d",
+      "title": "Structural Engineer I - Rail and Transit (Hybrid/Remote)",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "646b69f4d4eaf306",
+      "title": "Senior Bridge Engineer",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "659ab5c385037618",
+      "title": "Roadway Engineer II",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "65f7f73e076a6d4b",
+      "title": "Transmission and Distribution Civil Engineer - Remote (U.S.)",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "6724aa24c2c1d5c9",
+      "title": "Bridge Drafter (REMOTE)",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "67777d4f277a7d55",
+      "title": "Bridge Engineer 2",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "69ec1abc71743a1d",
+      "title": "Drainage Engineer II",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "6e3c3294b2f2980e",
+      "title": "Bridge Engineer 1",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "6fc794cd4d9847db",
+      "title": "Drainage Engineer",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "775b9888b33fbc14",
+      "title": "Senior Drainage Engineer",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "7a05748487c9d7f5",
+      "title": "Supplier Development Program Lead (SDPL) (Remote)",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "7c0152aa7d0dd4e1",
+      "title": "Senior Structural Engineer (Substation Focus) - Remote (US)",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "82c7cda4597b64fd",
+      "title": "Substation Senior Structural Engineer",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "834a381a7e08245b",
+      "title": "Roadway Engineer",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "8ad6d329c5ce9cf5",
+      "title": "Senior Bridge Engineer (REMOTE)",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "8b46f0c707852392",
+      "title": "Procurement Specialist (Buyer)",
+      "variant": "aggressive-commercial",
+      "baselineKeep": false,
+      "keep": true,
+      "reason": "KEEP: explicit ERP/SQL/configuration/support evidence"
+    },
+    {
+      "id": "8ba1810740794572",
+      "title": "Senior Civil Design Engineer",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "8c0358a7a060371e",
+      "title": "Project Control Specialist",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: cost-scheduling-payroll"
+    },
+    {
+      "id": "8de73fe187f9e65f",
+      "title": "Time & Pay Solutions Specialist",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: cost-scheduling-payroll"
+    },
+    {
+      "id": "91848a67b1634036",
+      "title": "Principal Project Engineer - Bridge (REMOTE)",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "93d551cc28129cfa",
+      "title": "Roadway Project Manager",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "972ab857529124d1",
+      "title": "Manager Supply Chain Programs 2",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: business-other"
+    },
+    {
+      "id": "99cbdc687e7e9550",
+      "title": "Engineering Manager - Bridge Design/Build/Construction",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "9aa179d2efcde305",
+      "title": "Senior Civil Engineer",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "9b6c7ff19f37eae3",
+      "title": "Bridge Structural Engineer - Transportation",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "a641029d359d4837",
+      "title": "Field Technician 4",
+      "variant": "aggressive-commercial",
+      "baselineKeep": false,
+      "keep": true,
+      "reason": "KEEP: ambiguous technical support title"
+    },
+    {
+      "id": "a8ebc44e871def22",
+      "title": "Manager, Program Finance & Control Cost Analyst (Remote)",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: finance"
+    },
+    {
+      "id": "a988572ffb8131b1",
+      "title": "Roadway Section Manager",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "a9b244561d698bcf",
+      "title": "Roadway Engineer I",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "b01e846ce88151b0",
+      "title": "Supplier Development Lead (Remote - Residing in the within the Midwest, USA area)",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "b1bcd62fc887fdfb",
+      "title": "Supervising Structural Bridge Engineer - North Carolina",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "b8ae6b301ec609e0",
+      "title": "Drainage Engineer I",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "bf1f8cafeca0c94c",
+      "title": "Senior Bridge Engineer",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "c28c937c0128cf79",
+      "title": "Federal Physical AI Business Development Lead",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: sales"
+    },
+    {
+      "id": "c2bf7db3bf284833",
+      "title": "Senior Civil Engineer",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "c4a2a23d19e49f42",
+      "title": "Program Lead, Construction Management Services (Owners Agent)",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction"
+    },
+    {
+      "id": "c4da4cf7dfa9877a",
+      "title": "Drainage Engineer",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "c5b18840167f5244",
+      "title": "Engineering Team Lead - Roadway/Highway/Transportation Design/Build",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "c97fa2b16a30fdc0",
+      "title": "Structural Engineer (Substation Focus) - Remote (US)",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "cca284d18b62d71a",
+      "title": "Senior Bridge Engineer",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "cd0bb9a1975fd034",
+      "title": "Substation Civil Site Engineer",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "cfa4adadb25ded35",
+      "title": "Mid-level Archaeologist",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: environment-field"
+    },
+    {
+      "id": "d14002bb9b826342",
+      "title": "Project Manager - Bridge Design/Build/Engineer",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "d251048a6dec6c90",
+      "title": "Roadway Lighting Engineers and Designers",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "d44a1bd2c6c20832",
+      "title": "Principal Specialist, General Finance",
+      "variant": "aggressive-commercial",
+      "baselineKeep": false,
+      "keep": true,
+      "reason": "KEEP: explicit ERP/SQL/configuration/support evidence"
+    },
+    {
+      "id": "d7dee428e797a6ab",
+      "title": "Roadway Engineer - Sr. / Principal (Remote)",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "d84e0eee0eb506fe",
+      "title": "Drainage Project Engineer",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "d9c27525846e7fa6",
+      "title": "Roadway Engineers and Designers",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "e0b465087fd743f5",
+      "title": "Mid-level Archaeology Technician (on-call)",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: environment-field"
+    },
+    {
+      "id": "e2ffbe5438e71b4d",
+      "title": "Drainage Engineers and Designers ",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "e54c2f33cbb1d580",
+      "title": "Transmission and Distribution Civil Engineer - Hybrid (U.S.)",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "e59afc2122b02617",
+      "title": "Civil Engineer",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "e811e893eb39b306",
+      "title": "Supplier Development Lead",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "ec65603cf6a3eaa8",
+      "title": "Structural Engineer, Data Centers - Remote (U.S.)",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "ee2800597995ac8f",
+      "title": "Senior Civil Engineer",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "f28012c138767988",
+      "title": "Senior Construction Manager",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction"
+    },
+    {
+      "id": "f3b9764831dfbdb1",
+      "title": "Supplier Development Lead (Remote - Residing in NY, NJ, or PA areas)",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "f70405bc8f9e2af3",
+      "title": "Principal Specialist, Supplier Quality & Development (Remote)",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "fb499e34b3237d45",
+      "title": "Senior Manager, Defense Public Relations (Remote)",
+      "variant": "aggressive-commercial",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: marketing-communications"
+    },
+    {
+      "id": "021b95a212f06805",
+      "title": "Environmental Project Manager - NEPA and wetlands",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: environment-field"
+    },
+    {
+      "id": "044007be5afb64e0",
+      "title": "Civil / Geotechnical Engineer",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "06d73e859d7e1bb2",
+      "title": "Maintenance Customer Technical Training Specialist (Mid-Level & Senior)",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: aircraft-maintenance-training"
+    },
+    {
+      "id": "098f681c0cb6c50f",
+      "title": "Supervising Bridge Engineer - North Carolina",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "09eaaabd12fa5548",
+      "title": "Bridge Engineer",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "0b2bcadf50a70f67",
+      "title": "Associate Roadway Engineer",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "14c7bdb15c2357e7",
+      "title": "Sr Marketing Specialist, ABX (Armis)",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: marketing-communications"
+    },
+    {
+      "id": "19656a7f97d7d8a4",
+      "title": "Structural Engineers and Designers",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "1c9adb7e3b3f178a",
+      "title": "Drainage Engineer II - Road/Highway",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "26d9b5711377c81a",
+      "title": "Associate Substation Civil/Structural Engineer",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "27907d770c813873",
+      "title": "Senior Civil/Structural Engineer",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "2a23f977eeab99fd",
+      "title": "Senior Structural Engineer",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "2b43cbb2baf25a79",
+      "title": "Drainage Engineer II",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "2ba147ebaa3ed4cd",
+      "title": "Operation, Maintenance, and Monitoring (OMM) Technician",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: environment-field"
+    },
+    {
+      "id": "2d2ef1128e14c602",
+      "title": "Senior Structural Engineer, Data Centers - Remote (U.S.)",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "3411aa8d8e516bd2",
+      "title": "Associate Roadway Engineer",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "39c2aa2998b3180e",
+      "title": "Project Control Specialist (Remote)",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: cost-scheduling-payroll"
+    },
+    {
+      "id": "3b9406dbf8f78e5c",
+      "title": "Substation Senior Structural Engineer",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "3c02e58c27a8eca3",
+      "title": "Boeing Summer 2027 Internship Program (PAID) – Finance (Evergreen)",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: finance"
+    },
+    {
+      "id": "3c0a83f325173f27",
+      "title": "Procurement Agent - Millennium Space Systems",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: business-other"
+    },
+    {
+      "id": "45bf38786912b4d6",
+      "title": "Principal Public Relations Representative (19792)",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: marketing-communications"
+    },
+    {
+      "id": "4d811063890569c7",
+      "title": "Substation Civil Structural Engineer",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "503f2a30eb9fc457",
+      "title": "Senior Talent Acquisition Specialist – National Security & Operations",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: hr"
+    },
+    {
+      "id": "54d35c1ce5d8f3ec",
+      "title": "Bridge Engineer II",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "55045767193d386d",
+      "title": "Drainage Engineer I",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "5b7c7980b9578f4a",
+      "title": "Bridge Project Engineer - NY",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "61df66d1c644276b",
+      "title": "Structural Engineer",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "61ec5843d105671d",
+      "title": "Structural Engineer I - Rail and Transit (Hybrid/Remote)",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "646b69f4d4eaf306",
+      "title": "Senior Bridge Engineer",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "659ab5c385037618",
+      "title": "Roadway Engineer II",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "65f7f73e076a6d4b",
+      "title": "Transmission and Distribution Civil Engineer - Remote (U.S.)",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "6724aa24c2c1d5c9",
+      "title": "Bridge Drafter (REMOTE)",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "67777d4f277a7d55",
+      "title": "Bridge Engineer 2",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "69ec1abc71743a1d",
+      "title": "Drainage Engineer II",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "6e3c3294b2f2980e",
+      "title": "Bridge Engineer 1",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "6fc794cd4d9847db",
+      "title": "Drainage Engineer",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "775b9888b33fbc14",
+      "title": "Senior Drainage Engineer",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "7a05748487c9d7f5",
+      "title": "Supplier Development Program Lead (SDPL) (Remote)",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "7c0152aa7d0dd4e1",
+      "title": "Senior Structural Engineer (Substation Focus) - Remote (US)",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "82c7cda4597b64fd",
+      "title": "Substation Senior Structural Engineer",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "834a381a7e08245b",
+      "title": "Roadway Engineer",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "8ad6d329c5ce9cf5",
+      "title": "Senior Bridge Engineer (REMOTE)",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "8b46f0c707852392",
+      "title": "Procurement Specialist (Buyer)",
+      "variant": "electrical-safe",
+      "baselineKeep": false,
+      "keep": true,
+      "reason": "KEEP: explicit ERP/SQL/configuration/support evidence"
+    },
+    {
+      "id": "8ba1810740794572",
+      "title": "Senior Civil Design Engineer",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "8c0358a7a060371e",
+      "title": "Project Control Specialist",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: cost-scheduling-payroll"
+    },
+    {
+      "id": "8de73fe187f9e65f",
+      "title": "Time & Pay Solutions Specialist",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: cost-scheduling-payroll"
+    },
+    {
+      "id": "91848a67b1634036",
+      "title": "Principal Project Engineer - Bridge (REMOTE)",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "93d551cc28129cfa",
+      "title": "Roadway Project Manager",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "972ab857529124d1",
+      "title": "Manager Supply Chain Programs 2",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: business-other"
+    },
+    {
+      "id": "99cbdc687e7e9550",
+      "title": "Engineering Manager - Bridge Design/Build/Construction",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "9aa179d2efcde305",
+      "title": "Senior Civil Engineer",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "9b6c7ff19f37eae3",
+      "title": "Bridge Structural Engineer - Transportation",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "a641029d359d4837",
+      "title": "Field Technician 4",
+      "variant": "electrical-safe",
+      "baselineKeep": false,
+      "keep": true,
+      "reason": "KEEP: ambiguous technical support title"
+    },
+    {
+      "id": "a8ebc44e871def22",
+      "title": "Manager, Program Finance & Control Cost Analyst (Remote)",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: finance"
+    },
+    {
+      "id": "a988572ffb8131b1",
+      "title": "Roadway Section Manager",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "a9b244561d698bcf",
+      "title": "Roadway Engineer I",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "b01e846ce88151b0",
+      "title": "Supplier Development Lead (Remote - Residing in the within the Midwest, USA area)",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "b1bcd62fc887fdfb",
+      "title": "Supervising Structural Bridge Engineer - North Carolina",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "b8ae6b301ec609e0",
+      "title": "Drainage Engineer I",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "bf1f8cafeca0c94c",
+      "title": "Senior Bridge Engineer",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "c2bf7db3bf284833",
+      "title": "Senior Civil Engineer",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "c4a2a23d19e49f42",
+      "title": "Program Lead, Construction Management Services (Owners Agent)",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction"
+    },
+    {
+      "id": "c4da4cf7dfa9877a",
+      "title": "Drainage Engineer",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "c5b18840167f5244",
+      "title": "Engineering Team Lead - Roadway/Highway/Transportation Design/Build",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "c97fa2b16a30fdc0",
+      "title": "Structural Engineer (Substation Focus) - Remote (US)",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "cca284d18b62d71a",
+      "title": "Senior Bridge Engineer",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "cd0bb9a1975fd034",
+      "title": "Substation Civil Site Engineer",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "cfa4adadb25ded35",
+      "title": "Mid-level Archaeologist",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: environment-field"
+    },
+    {
+      "id": "d14002bb9b826342",
+      "title": "Project Manager - Bridge Design/Build/Engineer",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "d44a1bd2c6c20832",
+      "title": "Principal Specialist, General Finance",
+      "variant": "electrical-safe",
+      "baselineKeep": false,
+      "keep": true,
+      "reason": "KEEP: explicit ERP/SQL/configuration/support evidence"
+    },
+    {
+      "id": "d7dee428e797a6ab",
+      "title": "Roadway Engineer - Sr. / Principal (Remote)",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "d84e0eee0eb506fe",
+      "title": "Drainage Project Engineer",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "d9c27525846e7fa6",
+      "title": "Roadway Engineers and Designers",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "e0b465087fd743f5",
+      "title": "Mid-level Archaeology Technician (on-call)",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: environment-field"
+    },
+    {
+      "id": "e2ffbe5438e71b4d",
+      "title": "Drainage Engineers and Designers ",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: civil-domain"
+    },
+    {
+      "id": "e54c2f33cbb1d580",
+      "title": "Transmission and Distribution Civil Engineer - Hybrid (U.S.)",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "e59afc2122b02617",
+      "title": "Civil Engineer",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "e811e893eb39b306",
+      "title": "Supplier Development Lead",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "ec65603cf6a3eaa8",
+      "title": "Structural Engineer, Data Centers - Remote (U.S.)",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "ee2800597995ac8f",
+      "title": "Senior Civil Engineer",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction, civil-domain"
+    },
+    {
+      "id": "f28012c138767988",
+      "title": "Senior Construction Manager",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: trades-construction"
+    },
+    {
+      "id": "f3b9764831dfbdb1",
+      "title": "Supplier Development Lead (Remote - Residing in NY, NJ, or PA areas)",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "f70405bc8f9e2af3",
+      "title": "Principal Specialist, Supplier Quality & Development (Remote)",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: supplier-administration"
+    },
+    {
+      "id": "fb499e34b3237d45",
+      "title": "Senior Manager, Defense Public Relations (Remote)",
+      "variant": "electrical-safe",
+      "baselineKeep": true,
+      "keep": false,
+      "reason": "REJECT: marketing-communications"
+    }
+  ],
+  "labelDisagreements": [
+    {
+      "id": "d44a1bd2c6c20832",
+      "title": "Principal Specialist, General Finance",
+      "frozenLabel": "REJECT",
+      "auditLabel": "KEEP",
+      "reason": "Explicit SQL reporting, financial-system module/configuration maintenance, advanced systems support and troubleshooting: KEEP. Earlier dev REJECT label is too coarse."
+    }
+  ]
+}

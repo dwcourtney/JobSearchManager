@@ -1,0 +1,194 @@
+[
+  {
+    "representation": "prefix256",
+    "threshold": 0.03507828712463379,
+    "combined": {
+      "n": 2669,
+      "keeps": 2121,
+      "falseRejects": 9,
+      "rejected": 115,
+      "keepRecall": 0.9957567185289957,
+      "rejectionRate": 0.043087298613713,
+      "rejectPrecision": 0.9217391304347826
+    },
+    "description": {
+      "n": 1159,
+      "keeps": 914,
+      "falseRejects": 8,
+      "rejected": 65,
+      "keepRecall": 0.9912472647702407,
+      "rejectionRate": 0.056082830025884385,
+      "rejectPrecision": 0.8769230769230769
+    },
+    "cache": {
+      "n": 1503,
+      "keeps": 150,
+      "falseRejects": null,
+      "rejected": 114,
+      "keepRecall": null,
+      "rejectionRate": 0.07584830339321358,
+      "rejectPrecision": null
+    },
+    "warning": "Evaluation-selected diagnostic only; match rule false-reject count."
+  },
+  {
+    "representation": "headtail256",
+    "threshold": 0.05353637412190437,
+    "combined": {
+      "n": 2669,
+      "keeps": 2121,
+      "falseRejects": 9,
+      "rejected": 91,
+      "keepRecall": 0.9957567185289957,
+      "rejectionRate": 0.034095166729112024,
+      "rejectPrecision": 0.9010989010989011
+    },
+    "description": {
+      "n": 1159,
+      "keeps": 914,
+      "falseRejects": 6,
+      "rejected": 38,
+      "keepRecall": 0.9934354485776805,
+      "rejectionRate": 0.03278688524590164,
+      "rejectPrecision": 0.8421052631578947
+    },
+    "cache": {
+      "n": 1503,
+      "keeps": 150,
+      "falseRejects": null,
+      "rejected": 77,
+      "keepRecall": null,
+      "rejectionRate": 0.05123087159015303,
+      "rejectPrecision": null
+    },
+    "warning": "Evaluation-selected diagnostic only; match rule false-reject count."
+  },
+  {
+    "representation": "headmidtail256",
+    "threshold": 0.003785943379625678,
+    "combined": {
+      "n": 2669,
+      "keeps": 2121,
+      "falseRejects": 9,
+      "rejected": 40,
+      "keepRecall": 0.9957567185289957,
+      "rejectionRate": 0.014986886474334956,
+      "rejectPrecision": 0.775
+    },
+    "description": {
+      "n": 1159,
+      "keeps": 914,
+      "falseRejects": 9,
+      "rejected": 40,
+      "keepRecall": 0.9901531728665208,
+      "rejectionRate": 0.03451251078515962,
+      "rejectPrecision": 0.775
+    },
+    "cache": {
+      "n": 1503,
+      "keeps": 150,
+      "falseRejects": null,
+      "rejected": 69,
+      "keepRecall": null,
+      "rejectionRate": 0.04590818363273453,
+      "rejectPrecision": null
+    },
+    "warning": "Evaluation-selected diagnostic only; match rule false-reject count."
+  },
+  {
+    "representation": "prefix384",
+    "threshold": 0.0683639794588089,
+    "combined": {
+      "n": 2669,
+      "keeps": 2121,
+      "falseRejects": 9,
+      "rejected": 108,
+      "keepRecall": 0.9957567185289957,
+      "rejectionRate": 0.040464593480704386,
+      "rejectPrecision": 0.9166666666666666
+    },
+    "description": {
+      "n": 1159,
+      "keeps": 914,
+      "falseRejects": 9,
+      "rejected": 59,
+      "keepRecall": 0.9901531728665208,
+      "rejectionRate": 0.05090595340811044,
+      "rejectPrecision": 0.847457627118644
+    },
+    "cache": {
+      "n": 1503,
+      "keeps": 150,
+      "falseRejects": null,
+      "rejected": 88,
+      "keepRecall": null,
+      "rejectionRate": 0.05854956753160346,
+      "rejectPrecision": null
+    },
+    "warning": "Evaluation-selected diagnostic only; match rule false-reject count."
+  },
+  {
+    "representation": "prefix512",
+    "threshold": 0.0562654510140419,
+    "combined": {
+      "n": 2669,
+      "keeps": 2121,
+      "falseRejects": 9,
+      "rejected": 101,
+      "keepRecall": 0.9957567185289957,
+      "rejectionRate": 0.037841888347695765,
+      "rejectPrecision": 0.9108910891089109
+    },
+    "description": {
+      "n": 1159,
+      "keeps": 914,
+      "falseRejects": 8,
+      "rejected": 58,
+      "keepRecall": 0.9912472647702407,
+      "rejectionRate": 0.05004314063848145,
+      "rejectPrecision": 0.8620689655172413
+    },
+    "cache": {
+      "n": 1503,
+      "keeps": 150,
+      "falseRejects": null,
+      "rejected": 92,
+      "keepRecall": null,
+      "rejectionRate": 0.06121091151031271,
+      "rejectPrecision": null
+    },
+    "warning": "Evaluation-selected diagnostic only; match rule false-reject count."
+  },
+  {
+    "representation": "sections256",
+    "threshold": 0.022924812510609627,
+    "combined": {
+      "n": 2669,
+      "keeps": 2121,
+      "falseRejects": 9,
+      "rejected": 115,
+      "keepRecall": 0.9957567185289957,
+      "rejectionRate": 0.043087298613713,
+      "rejectPrecision": 0.9217391304347826
+    },
+    "description": {
+      "n": 1159,
+      "keeps": 914,
+      "falseRejects": 9,
+      "rejected": 79,
+      "keepRecall": 0.9901531728665208,
+      "rejectionRate": 0.06816220880069025,
+      "rejectPrecision": 0.8860759493670886
+    },
+    "cache": {
+      "n": 1503,
+      "keeps": 150,
+      "falseRejects": null,
+      "rejected": 144,
+      "keepRecall": null,
+      "rejectionRate": 0.09580838323353294,
+      "rejectPrecision": null
+    },
+    "warning": "Evaluation-selected diagnostic only; match rule false-reject count."
+  }
+]

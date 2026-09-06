@@ -1,0 +1,214 @@
+[
+  {
+    "fold": 0,
+    "partitions": {
+      "train": {
+        "categories": {
+          "technical-leadership": 168,
+          "sales-marketing": 53,
+          "engineering": 125,
+          "business-administration": 55,
+          "cybersecurity": 21,
+          "software": 139,
+          "finance-accounting": 29,
+          "infrastructure-support": 52,
+          "physical-operations": 16,
+          "data-ai": 30,
+          "personal-services": 2,
+          "hr-recruiting": 6,
+          "clinical": 1,
+          "physical-security": 2,
+          "nontechnical-training": 1
+        },
+        "confidence": {
+          "high": 610,
+          "medium": 90
+        }
+      },
+      "validation": {
+        "categories": {
+          "physical-operations": 49,
+          "engineering": 267,
+          "business-administration": 30,
+          "clinical": 1,
+          "infrastructure-support": 18,
+          "technical-leadership": 37,
+          "software": 58,
+          "sales-marketing": 1,
+          "cybersecurity": 9,
+          "hr-recruiting": 2,
+          "physical-security": 3,
+          "finance-accounting": 3,
+          "data-ai": 3
+        },
+        "confidence": {
+          "high": 111,
+          "medium": 370
+        }
+      },
+      "evaluation": {
+        "categories": {
+          "engineering": 359,
+          "business-administration": 93,
+          "software": 228,
+          "data-ai": 69,
+          "infrastructure-support": 305,
+          "physical-operations": 54,
+          "language-services": 51,
+          "cybersecurity": 140,
+          "clinical": 59,
+          "sales-marketing": 3,
+          "technical-leadership": 51,
+          "physical-security": 11,
+          "nontechnical-training": 6,
+          "personal-services": 3,
+          "hr-recruiting": 3,
+          "finance-accounting": 6
+        },
+        "confidence": {
+          "medium": 1176,
+          "high": 265
+        }
+      }
+    }
+  },
+  {
+    "fold": 1,
+    "partitions": {
+      "train": {
+        "categories": {
+          "engineering": 422,
+          "business-administration": 142,
+          "sales-marketing": 12,
+          "data-ai": 57,
+          "infrastructure-support": 327,
+          "physical-operations": 67,
+          "language-services": 51,
+          "software": 200,
+          "cybersecurity": 136,
+          "technical-leadership": 65,
+          "clinical": 59,
+          "finance-accounting": 27,
+          "physical-security": 13,
+          "hr-recruiting": 8,
+          "nontechnical-training": 6,
+          "personal-services": 3
+        },
+        "confidence": {
+          "high": 451,
+          "medium": 1144
+        }
+      },
+      "validation": {
+        "categories": {
+          "sales-marketing": 11,
+          "technical-leadership": 111,
+          "software": 119,
+          "infrastructure-support": 25,
+          "engineering": 45,
+          "data-ai": 22,
+          "personal-services": 2,
+          "cybersecurity": 5,
+          "business-administration": 7,
+          "finance-accounting": 3,
+          "clinical": 1
+        },
+        "confidence": {
+          "high": 336,
+          "medium": 15
+        }
+      },
+      "evaluation": {
+        "categories": {
+          "technical-leadership": 73,
+          "physical-operations": 49,
+          "engineering": 272,
+          "business-administration": 34,
+          "clinical": 1,
+          "finance-accounting": 8,
+          "infrastructure-support": 22,
+          "software": 69,
+          "sales-marketing": 34,
+          "cybersecurity": 17,
+          "hr-recruiting": 3,
+          "physical-security": 3,
+          "data-ai": 6,
+          "nontechnical-training": 1
+        },
+        "confidence": {
+          "high": 189,
+          "medium": 403
+        }
+      }
+    }
+  },
+  {
+    "fold": 2,
+    "partitions": {
+      "train": {
+        "categories": {
+          "physical-operations": 103,
+          "engineering": 607,
+          "business-administration": 117,
+          "data-ai": 71,
+          "infrastructure-support": 318,
+          "language-services": 51,
+          "software": 227,
+          "clinical": 60,
+          "cybersecurity": 148,
+          "sales-marketing": 7,
+          "technical-leadership": 84,
+          "physical-security": 14,
+          "nontechnical-training": 6,
+          "hr-recruiting": 5,
+          "finance-accounting": 9,
+          "personal-services": 3
+        },
+        "confidence": {
+          "high": 369,
+          "medium": 1461
+        }
+      },
+      "validation": {
+        "categories": {
+          "technical-leadership": 31,
+          "finance-accounting": 5,
+          "business-administration": 4,
+          "sales-marketing": 30,
+          "software": 2,
+          "hr-recruiting": 1,
+          "cybersecurity": 6,
+          "infrastructure-support": 2,
+          "data-ai": 1,
+          "nontechnical-training": 1
+        },
+        "confidence": {
+          "high": 69,
+          "medium": 14
+        }
+      },
+      "evaluation": {
+        "categories": {
+          "sales-marketing": 20,
+          "engineering": 129,
+          "business-administration": 56,
+          "technical-leadership": 138,
+          "cybersecurity": 19,
+          "software": 142,
+          "infrastructure-support": 52,
+          "physical-operations": 16,
+          "finance-accounting": 24,
+          "data-ai": 30,
+          "personal-services": 2,
+          "hr-recruiting": 5,
+          "clinical": 1,
+          "physical-security": 2
+        },
+        "confidence": {
+          "high": 560,
+          "medium": 76
+        }
+      }
+    }
+  }
+]

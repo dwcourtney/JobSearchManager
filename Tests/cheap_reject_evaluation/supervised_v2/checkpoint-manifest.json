@@ -1,0 +1,221 @@
+{
+  "host": "curiosity",
+  "checkpoints": [
+    {
+      "tag": "bert-tiny-title-all-fold0",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/bert-tiny-title-all-fold0",
+      "sha256": "d4676317878cf9c1ff835b460c219d862cd4156032c8b33f50fdef3cbbe7c513",
+      "baseRevision": "30b0a37ccaaa32f332884b96992754e246e48c5f"
+    },
+    {
+      "tag": "bert-tiny-title-all-fold1",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/bert-tiny-title-all-fold1",
+      "sha256": "f52daabddd1c5954634c99392ccbb4aa18f7a2f4f102cf2387d23ddbbf74d2f9",
+      "baseRevision": "30b0a37ccaaa32f332884b96992754e246e48c5f"
+    },
+    {
+      "tag": "bert-tiny-title-all-fold2",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/bert-tiny-title-all-fold2",
+      "sha256": "f708b4fbd0d900b4fe7c3e95e39caf72c1330d5c1501a865d3daf9bcf7dffdaf",
+      "baseRevision": "30b0a37ccaaa32f332884b96992754e246e48c5f"
+    },
+    {
+      "tag": "bert-tiny-title-description-fold0",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/bert-tiny-title-description-fold0",
+      "sha256": "55ddb5d94ad55c9a01a2f7fb144276f07852f02b65b2fe848d597c2d2ddd3d74",
+      "baseRevision": "30b0a37ccaaa32f332884b96992754e246e48c5f"
+    },
+    {
+      "tag": "bert-tiny-title-description-fold1",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/bert-tiny-title-description-fold1",
+      "sha256": "e8511ea16785d3b18430a274444351b9abb362b91b5a9366f3c807d30812d2e2",
+      "baseRevision": "30b0a37ccaaa32f332884b96992754e246e48c5f"
+    },
+    {
+      "tag": "bert-tiny-title-description-fold2",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/bert-tiny-title-description-fold2",
+      "sha256": "31a57766f7f3564a002f3c226e2581bfd3b1fcf930dcb013d0c90665109cf21d",
+      "baseRevision": "30b0a37ccaaa32f332884b96992754e246e48c5f"
+    },
+    {
+      "tag": "bert-tiny-title-weighted-fold0",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/bert-tiny-title-weighted-fold0",
+      "sha256": "cc520408799883cd82e59496d8789915db3eaf7747253c83931210f0b53fde11",
+      "baseRevision": "30b0a37ccaaa32f332884b96992754e246e48c5f"
+    },
+    {
+      "tag": "bert-tiny-title-weighted-fold1",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/bert-tiny-title-weighted-fold1",
+      "sha256": "5c99f0d05e0959628c3a3d9bbb97d68edb24b7dd6d9050f9c2a0cf29e49b697b",
+      "baseRevision": "30b0a37ccaaa32f332884b96992754e246e48c5f"
+    },
+    {
+      "tag": "bert-tiny-title-weighted-fold2",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/bert-tiny-title-weighted-fold2",
+      "sha256": "c2c05e2506538740523bee31c6c394123c8e75046463d9a2e7293e66c5231d49",
+      "baseRevision": "30b0a37ccaaa32f332884b96992754e246e48c5f"
+    },
+    {
+      "tag": "bert-tiny-title_body-all-fold0",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/bert-tiny-title_body-all-fold0",
+      "sha256": "dfb718e3076ff4717552ec4fccf6c8b663f8a7a60ddeafe3bac4d666369755ed",
+      "baseRevision": "30b0a37ccaaa32f332884b96992754e246e48c5f"
+    },
+    {
+      "tag": "bert-tiny-title_body-all-fold1",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/bert-tiny-title_body-all-fold1",
+      "sha256": "707ffa2248a81aa55baf42c769334ef61b36fd88b5c21b4324186c3e160f11eb",
+      "baseRevision": "30b0a37ccaaa32f332884b96992754e246e48c5f"
+    },
+    {
+      "tag": "bert-tiny-title_body-all-fold2",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/bert-tiny-title_body-all-fold2",
+      "sha256": "504f5a4f392bff5fc722be0d52ccf562fa79111e4a7bb5dda91cf4f7f5829199",
+      "baseRevision": "30b0a37ccaaa32f332884b96992754e246e48c5f"
+    },
+    {
+      "tag": "bert-tiny-title_body-description-fold0",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/bert-tiny-title_body-description-fold0",
+      "sha256": "b2ee82a3f40e59222c26c5f59359d96f63815dfc36eab11d1b0fd9adabe1d1ae",
+      "baseRevision": "30b0a37ccaaa32f332884b96992754e246e48c5f"
+    },
+    {
+      "tag": "bert-tiny-title_body-description-fold1",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/bert-tiny-title_body-description-fold1",
+      "sha256": "2fcec44378c70d6b8683a04989fa22e04d264b7617c018e788edfbeae53011c7",
+      "baseRevision": "30b0a37ccaaa32f332884b96992754e246e48c5f"
+    },
+    {
+      "tag": "bert-tiny-title_body-description-fold2",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/bert-tiny-title_body-description-fold2",
+      "sha256": "c63144d2a25854707f92300d9537556ed9c32241a114d61f5dca3d8fbb411ef6",
+      "baseRevision": "30b0a37ccaaa32f332884b96992754e246e48c5f"
+    },
+    {
+      "tag": "bert-tiny-title_body-weighted-fold0",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/bert-tiny-title_body-weighted-fold0",
+      "sha256": "4bdd5672401dd1d9feb9cce6eab53f0d679c26559b2bd2608d0770bfe2f81ed8",
+      "baseRevision": "30b0a37ccaaa32f332884b96992754e246e48c5f"
+    },
+    {
+      "tag": "bert-tiny-title_body-weighted-fold1",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/bert-tiny-title_body-weighted-fold1",
+      "sha256": "a73d54196a2ac8352d905e68c5db9f9b578b928853a72e563f0077cd13652796",
+      "baseRevision": "30b0a37ccaaa32f332884b96992754e246e48c5f"
+    },
+    {
+      "tag": "bert-tiny-title_body-weighted-fold2",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/bert-tiny-title_body-weighted-fold2",
+      "sha256": "27ce7a98196c683a4d16fb3b068378c95c081561c009f7c20a87b1f6f8c8707a",
+      "baseRevision": "30b0a37ccaaa32f332884b96992754e246e48c5f"
+    },
+    {
+      "tag": "deberta-small-title-all-fold0",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/deberta-small-title-all-fold0",
+      "sha256": "b83f9925335e2c2c2c9e764d4243053e038632d2ecf749d345033d9565f2b9bb",
+      "baseRevision": "fa2804872c3b4bd748f38c0185cc85775361e735"
+    },
+    {
+      "tag": "deberta-small-title-all-fold1",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/deberta-small-title-all-fold1",
+      "sha256": "c2f72826c78e75d3da261cbd419e537c5bcdb5655311d710ceafa80683b55353",
+      "baseRevision": "fa2804872c3b4bd748f38c0185cc85775361e735"
+    },
+    {
+      "tag": "deberta-small-title-all-fold2",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/deberta-small-title-all-fold2",
+      "sha256": "3a91abe0dcbb534324176f7c12dfb67d4242a85bfd9381f68eb756ae35e91c54",
+      "baseRevision": "fa2804872c3b4bd748f38c0185cc85775361e735"
+    },
+    {
+      "tag": "deberta-small-title-description-fold0",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/deberta-small-title-description-fold0",
+      "sha256": "33a0cb178014d7d22e60271b3fde371159565a36914107c86798220a70c25d26",
+      "baseRevision": "fa2804872c3b4bd748f38c0185cc85775361e735"
+    },
+    {
+      "tag": "deberta-small-title-description-fold1",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/deberta-small-title-description-fold1",
+      "sha256": "46cf21748ab58dd22a872aa5ad4a359aa29854078ca98ec38c820d5b11db9112",
+      "baseRevision": "fa2804872c3b4bd748f38c0185cc85775361e735"
+    },
+    {
+      "tag": "deberta-small-title-description-fold2",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/deberta-small-title-description-fold2",
+      "sha256": "f811887f61c66837507f7945769ef161558e30b730062c771452c4c2b161c0e2",
+      "baseRevision": "fa2804872c3b4bd748f38c0185cc85775361e735"
+    },
+    {
+      "tag": "deberta-small-title-weighted-fold0",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/deberta-small-title-weighted-fold0",
+      "sha256": "6a88fee2b7da4ae88902d04534e3cf49396860d9c80cf748852c5aadd698c871",
+      "baseRevision": "fa2804872c3b4bd748f38c0185cc85775361e735"
+    },
+    {
+      "tag": "deberta-small-title-weighted-fold1",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/deberta-small-title-weighted-fold1",
+      "sha256": "daadbc71e42ad1519bd1dc3aa6b5863003f67002a5188ef6e504826a080e3497",
+      "baseRevision": "fa2804872c3b4bd748f38c0185cc85775361e735"
+    },
+    {
+      "tag": "deberta-small-title-weighted-fold2",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/deberta-small-title-weighted-fold2",
+      "sha256": "1cf17539c3992997c9ed9e7dc22fd776d0c4c72b58bd9ea44b34245844182b1a",
+      "baseRevision": "fa2804872c3b4bd748f38c0185cc85775361e735"
+    },
+    {
+      "tag": "deberta-small-title_body-all-fold0",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/deberta-small-title_body-all-fold0",
+      "sha256": "bf71c05599b43fc9f136635a4b6f4a1a20923bdc0a60f2bb445de9d583d7b7c0",
+      "baseRevision": "fa2804872c3b4bd748f38c0185cc85775361e735"
+    },
+    {
+      "tag": "deberta-small-title_body-all-fold1",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/deberta-small-title_body-all-fold1",
+      "sha256": "89b82a9b39d8ea9a3e95d79c6c049eb4c88970173c01d9d89c71b03ca96335a5",
+      "baseRevision": "fa2804872c3b4bd748f38c0185cc85775361e735"
+    },
+    {
+      "tag": "deberta-small-title_body-all-fold2",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/deberta-small-title_body-all-fold2",
+      "sha256": "b97cb80de153aebae18daecc15c1275043076af084531361d5a62e9497a77181",
+      "baseRevision": "fa2804872c3b4bd748f38c0185cc85775361e735"
+    },
+    {
+      "tag": "deberta-small-title_body-description-fold0",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/deberta-small-title_body-description-fold0",
+      "sha256": "1e00df3e28a8cd48c614aeb7ddc4c83a2e68b60e96422e8c14dcc26ce7af86de",
+      "baseRevision": "fa2804872c3b4bd748f38c0185cc85775361e735"
+    },
+    {
+      "tag": "deberta-small-title_body-description-fold1",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/deberta-small-title_body-description-fold1",
+      "sha256": "93a3b43f57c7e28b03d485bf6940a3e4c5064ae675d27c10ecb406d7278844d9",
+      "baseRevision": "fa2804872c3b4bd748f38c0185cc85775361e735"
+    },
+    {
+      "tag": "deberta-small-title_body-description-fold2",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/deberta-small-title_body-description-fold2",
+      "sha256": "a19144c8baa7810ef8365bd6d70aad3119b26ef1f2c5e014f0630003c7ca392c",
+      "baseRevision": "fa2804872c3b4bd748f38c0185cc85775361e735"
+    },
+    {
+      "tag": "deberta-small-title_body-weighted-fold0",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/deberta-small-title_body-weighted-fold0",
+      "sha256": "a3b31af79573e637cb797ca5603a016f674c11006cbd236f2bd70364b18fac5f",
+      "baseRevision": "fa2804872c3b4bd748f38c0185cc85775361e735"
+    },
+    {
+      "tag": "deberta-small-title_body-weighted-fold1",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/deberta-small-title_body-weighted-fold1",
+      "sha256": "7d46548ef9733ec93dc37659d5e0bd32732f682f7743997b281741238ad25602",
+      "baseRevision": "fa2804872c3b4bd748f38c0185cc85775361e735"
+    },
+    {
+      "tag": "deberta-small-title_body-weighted-fold2",
+      "checkpointPath": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/deberta-small-title_body-weighted-fold2",
+      "sha256": "1f941de297616ad2d7c16b7201a1fb3ad4edd48b79074af7187af178637a10f7",
+      "baseRevision": "fa2804872c3b4bd748f38c0185cc85775361e735"
+    }
+  ]
+}

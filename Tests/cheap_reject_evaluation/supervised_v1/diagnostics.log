@@ -1,0 +1,47 @@
+Token indices sequence length is longer than the specified maximum sequence length for this model (1002 > 512). Running this sequence through the model will result in indexing errors
+You're using a DebertaV2TokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+deberta-small-title-fold0 diagnostics PASS
+Token indices sequence length is longer than the specified maximum sequence length for this model (1002 > 512). Running this sequence through the model will result in indexing errors
+You're using a DebertaV2TokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+deberta-small-title-fold1 diagnostics PASS
+Token indices sequence length is longer than the specified maximum sequence length for this model (1002 > 512). Running this sequence through the model will result in indexing errors
+You're using a DebertaV2TokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+deberta-small-title-fold2 diagnostics PASS
+Token indices sequence length is longer than the specified maximum sequence length for this model (1002 > 512). Running this sequence through the model will result in indexing errors
+You're using a DebertaV2TokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+deberta-small-title_body-fold0 diagnostics PASS
+Token indices sequence length is longer than the specified maximum sequence length for this model (1002 > 512). Running this sequence through the model will result in indexing errors
+You're using a DebertaV2TokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+deberta-small-title_body-fold1 diagnostics PASS
+Token indices sequence length is longer than the specified maximum sequence length for this model (1002 > 512). Running this sequence through the model will result in indexing errors
+You're using a DebertaV2TokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+deberta-small-title_body-fold2 diagnostics PASS
+You're using a BertTokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+bert-tiny-title-fold0 diagnostics PASS
+You're using a BertTokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+bert-tiny-title-fold1 diagnostics PASS
+You're using a BertTokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+bert-tiny-title-fold2 diagnostics PASS
+You're using a BertTokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+bert-tiny-title_body-fold0 diagnostics PASS
+You're using a BertTokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+bert-tiny-title_body-fold1 diagnostics PASS
+You're using a BertTokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+bert-tiny-title_body-fold2 diagnostics PASS
+deberta-small title
+1.0 {'n': 347, 'keeps': 150, 'falseRejects': 10, 'rejected': 93, 'keepRecall': 0.9333333333333333, 'rejectionRate': 0.2680115273775216, 'rejectPrecision': 0.8924731182795699} cache 303
+0.99 {'n': 347, 'keeps': 150, 'falseRejects': 10, 'rejected': 93, 'keepRecall': 0.9333333333333333, 'rejectionRate': 0.2680115273775216, 'rejectPrecision': 0.8924731182795699} cache 303
+0.98 {'n': 347, 'keeps': 150, 'falseRejects': 10, 'rejected': 93, 'keepRecall': 0.9333333333333333, 'rejectionRate': 0.2680115273775216, 'rejectPrecision': 0.8924731182795699} cache 303
+deberta-small title_body
+1.0 {'n': 347, 'keeps': 150, 'falseRejects': 3, 'rejected': 28, 'keepRecall': 0.98, 'rejectionRate': 0.08069164265129683, 'rejectPrecision': 0.8928571428571429} cache 98
+0.99 {'n': 347, 'keeps': 150, 'falseRejects': 3, 'rejected': 28, 'keepRecall': 0.98, 'rejectionRate': 0.08069164265129683, 'rejectPrecision': 0.8928571428571429} cache 98
+0.98 {'n': 347, 'keeps': 150, 'falseRejects': 3, 'rejected': 28, 'keepRecall': 0.98, 'rejectionRate': 0.08069164265129683, 'rejectPrecision': 0.8928571428571429} cache 98
+bert-tiny title
+1.0 {'n': 347, 'keeps': 150, 'falseRejects': 5, 'rejected': 37, 'keepRecall': 0.9666666666666667, 'rejectionRate': 0.10662824207492795, 'rejectPrecision': 0.8648648648648649} cache 137
+0.99 {'n': 347, 'keeps': 150, 'falseRejects': 5, 'rejected': 37, 'keepRecall': 0.9666666666666667, 'rejectionRate': 0.10662824207492795, 'rejectPrecision': 0.8648648648648649} cache 137
+0.98 {'n': 347, 'keeps': 150, 'falseRejects': 5, 'rejected': 37, 'keepRecall': 0.9666666666666667, 'rejectionRate': 0.10662824207492795, 'rejectPrecision': 0.8648648648648649} cache 137
+bert-tiny title_body
+1.0 {'n': 347, 'keeps': 150, 'falseRejects': 12, 'rejected': 104, 'keepRecall': 0.92, 'rejectionRate': 0.29971181556195964, 'rejectPrecision': 0.8846153846153846} cache 350
+0.99 {'n': 347, 'keeps': 150, 'falseRejects': 12, 'rejected': 104, 'keepRecall': 0.92, 'rejectionRate': 0.29971181556195964, 'rejectPrecision': 0.8846153846153846} cache 350
+0.98 {'n': 347, 'keeps': 150, 'falseRejects': 12, 'rejected': 104, 'keepRecall': 0.92, 'rejectionRate': 0.29971181556195964, 'rejectPrecision': 0.8846153846153846} cache 350
+All clean-process diagnostics complete

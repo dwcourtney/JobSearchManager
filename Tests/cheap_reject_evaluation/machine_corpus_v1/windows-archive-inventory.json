@@ -1,0 +1,68 @@
+[
+  {
+    "path": "azure-storage-audit-20260819\\workspaces\\27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78\\job-caches\\leidos\\697e9a0d8c74997954ef0e68219601eef0c4783b278a6267c3250aae5c876c50.json",
+    "sha256": "19bbdd884c819198badc7efc3bb16a2255059ef302e02f62ea911334012191ae",
+    "bytes": 1219932,
+    "kind": "job-cache",
+    "records": 153,
+    "withBody": 153,
+    "companies": {
+      "leidos": 153
+    }
+  },
+  {
+    "path": "azure-storage-audit-20260819\\workspaces\\27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78\\job-caches\\northrop-grumman\\c706f3e21f845a6ed5161556b5f5e06e6041bd94f694bb9f108920e6e1e59e11.json",
+    "sha256": "1ad5852de19e311f9167e66c40dec6bf80b9baf31bb5de8f315cfd91b21dbfee",
+    "bytes": 110686,
+    "kind": "job-cache",
+    "records": 11,
+    "withBody": 11,
+    "companies": {
+      "northrop-grumman": 11
+    }
+  },
+  {
+    "path": "azure-storage-audit-20260819\\workspaces\\27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78\\job-caches\\northrop-grumman\\d584b38c82b2dc5d66976b4304dec82c70056d9321ff3ac1a63d1a51016df7c5.json",
+    "sha256": "6c65d5c4159dc073228d74f697c15f593cfae9d5df072f3af1347d3ca07d7dce",
+    "bytes": 187847,
+    "kind": "job-cache",
+    "records": 21,
+    "withBody": 21,
+    "companies": {
+      "northrop-grumman": 21
+    }
+  },
+  {
+    "path": "azure-storage-audit-20260819\\workspaces\\27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78\\job-caches\\nvidia\\68d60566b13a1d569a81a9438cd17b67666dd1e1e73bc4e69f8622c9be964cf8.json",
+    "sha256": "52069e3797f05632611dece886a1b14b81fb6a832bac6dba045c9cddd8a4ba0a",
+    "bytes": 1582613,
+    "kind": "job-cache",
+    "records": 394,
+    "withBody": 200,
+    "companies": {
+      "nvidia": 394
+    }
+  },
+  {
+    "path": "azure-storage-audit-20260819\\workspaces\\27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78\\job-caches\\parsons\\cfd0f01f911887bdcef9e5a022443484c49c5a6da0471caba8e9024afa93baf1.json",
+    "sha256": "62330119a7cfcdbcda1b045d16fdad2333d0bdd704be2ba9aaaf01e59d84d8d4",
+    "bytes": 1458837,
+    "kind": "job-cache",
+    "records": 200,
+    "withBody": 200,
+    "companies": {
+      "parsons": 200
+    }
+  },
+  {
+    "path": "azure-storage-audit-20260819\\workspaces\\27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78\\job-caches\\rtx\\363a4d87be07d61263d5c73d01a6a3671f5e5488273aef6ee265d5f49b31c5bc.json",
+    "sha256": "3cd17b470145a71e10e643a9bee54903ec6ff539431cfcb959763c17ed662757",
+    "bytes": 1041816,
+    "kind": "job-cache",
+    "records": 114,
+    "withBody": 114,
+    "companies": {
+      "rtx": 114
+    }
+  }
+]

@@ -1,0 +1,105 @@
+{
+  "counts": {
+    "inputRecords": 2283,
+    "exportedRecords": 1633,
+    "exportedWithBody": 1180,
+    "excludedByIdentityOrTitle": 647,
+    "excludedByContent": 3
+  },
+  "sources": [
+    {
+      "path": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/aecom/3c55b12f8055996ccdc2c365b783b022579f495c3ed94e832674c6cc0ba8efa2.json",
+      "sha256": "b1a2e9d802350b947382dcdeacc3230aeb693d8a3be69d0a137076607cdded4a",
+      "savedAtUtc": "2026-08-31T22:14:23.7407651+00:00",
+      "records": 90
+    },
+    {
+      "path": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/aecom/e06784f416eb9f0717083a1a136095b6116dee8313c76fd99b88642394f49fca.json",
+      "sha256": "6de6dabf54652cbf5ccbc27fc67045f7dfec03a51e076aaea36c1535c5ae07e6",
+      "savedAtUtc": "2026-08-27T00:03:49.8502993+00:00",
+      "records": 77
+    },
+    {
+      "path": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/amentum/6508afb282c3aa18510060d27cd39ff410340061a2f2b5c34f8eefe1e012a0e4.json",
+      "sha256": "10cc5a982fb2df1fd94d0d5fc4de24b37c850c3a04b0f95ad4b86218820aa772",
+      "savedAtUtc": "2026-08-27T00:46:08.838947+00:00",
+      "records": 14
+    },
+    {
+      "path": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/boeing/4d21f41f376cd401ed6e020e6254ec1e70c2e07eb6c34a2f1b6d743cc1d1d718.json",
+      "sha256": "e027f64e9d54945b69323923ee907aabec90d40a115c12819cda442e53b99fc2",
+      "savedAtUtc": "2026-09-04T00:08:26.9930202+00:00",
+      "records": 17
+    },
+    {
+      "path": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/boeing/887541f2dc785e4555ddc3335ac156d667708970b1216138b2540382ca5cf66f.json",
+      "sha256": "5c3250dc81ff1f73e128f7c2f0e4d57b6f8c6a2f82f09f3ad97fabe472d4f943",
+      "savedAtUtc": "2026-08-30T21:02:05.8817966+00:00",
+      "records": 3
+    },
+    {
+      "path": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/kbr/b694b75d628deb174d3609d5da833907cc60ca21abd24951a3a31ca305bc2f24.json",
+      "sha256": "af1fdae2dc4949866d6e0bbed7a74cbca8510e76b9c00647289cfe00a43d1e18",
+      "savedAtUtc": "2026-08-27T00:46:50.8081719+00:00",
+      "records": 48
+    },
+    {
+      "path": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/leidos/697e9a0d8c74997954ef0e68219601eef0c4783b278a6267c3250aae5c876c50.json",
+      "sha256": "985a50c96061ad31ff4165eb5dab4253bf393823248d884287d04d40514f9b6c",
+      "savedAtUtc": "2026-09-05T12:07:55.9426926+00:00",
+      "records": 275
+    },
+    {
+      "path": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/northrop-grumman/c706f3e21f845a6ed5161556b5f5e06e6041bd94f694bb9f108920e6e1e59e11.json",
+      "sha256": "fcd649213b924869fca296628917d0e65400bddb5061c48569997a8223253c2e",
+      "savedAtUtc": "2026-09-05T12:51:25.7087545+00:00",
+      "records": 44
+    },
+    {
+      "path": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/nvidia/68d60566b13a1d569a81a9438cd17b67666dd1e1e73bc4e69f8622c9be964cf8.json",
+      "sha256": "875f8563590f7234ea57387f027bbe47f0b853d63e0421dadaae1b06042833eb",
+      "savedAtUtc": "2026-08-31T22:22:39.1023154+00:00",
+      "records": 482
+    },
+    {
+      "path": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/nxp-semiconductors/31fff07f6d5ca527d753690928be4bef8bbe993077cf673788f60fb1873d2447.json",
+      "sha256": "4f1655f37bd3b031387d57141a906e41fdc6a08cb13d4271ecd9b2e050e32168",
+      "savedAtUtc": "2026-08-31T22:21:46.2513891+00:00",
+      "records": 12
+    },
+    {
+      "path": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/parsons/cfd0f01f911887bdcef9e5a022443484c49c5a6da0471caba8e9024afa93baf1.json",
+      "sha256": "7e203d1754bdc98376b070394285f6bf6d1430106dc95b616bfc4aa5201d1f32",
+      "savedAtUtc": "2026-09-04T13:47:14.525507+00:00",
+      "records": 267
+    },
+    {
+      "path": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/rtx/363a4d87be07d61263d5c73d01a6a3671f5e5488273aef6ee265d5f49b31c5bc.json",
+      "sha256": "2b34086c2ecdcab94a8d7c9376dc0159e344a2bbd78cda00e943010cfe62b6bf",
+      "savedAtUtc": "2026-08-27T00:02:48.6258757+00:00",
+      "records": 158
+    },
+    {
+      "path": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/servicenow/a6b6217f7f08ffa370a51d94d2e74aab198a50274bb16b2021f40042af7de90f.json",
+      "sha256": "d63c5d4197d722d59d8a36d50e0f3f4a58ec655a8c7c46770efd4a5c12923d5c",
+      "savedAtUtc": "2026-08-31T22:20:35.050209+00:00",
+      "records": 143
+    },
+    {
+      "path": "/home/codex/jsm-lab/data/app/workspaces/a0a5c7e770c8057bf6829752bb04cc79908b96848f56ae0fd2883ce8a950a838/shared/job-caches/boeing/79fbd27ebfc41219a37002560059254b648175c5d595a65130553bdc88ec82ef.json",
+      "sha256": "08cd6cec8171e43a428ab99e41660e5fe621d424166eeb5b8ec8b056d6e695c8",
+      "savedAtUtc": "2026-08-31T02:20:47.6346783+00:00",
+      "records": 653
+    }
+  ],
+  "exclusionFiles": [
+    {
+      "path": "/tmp/jsm-corpus-20260905/production-holdout-exclusions.json",
+      "sha256": "140eb3e3fdceeba3c2ad69682e1abf9855d0f0c8c003e6c032513e3b9ff08c3a"
+    },
+    {
+      "path": "/tmp/jsm-corpus-20260905/prior-evaluation-exclusions.json",
+      "sha256": "b3b404f283480c512a0b795cba1d6149132678cdd3a91affe15d30b661ae5406"
+    }
+  ]
+}

@@ -1,0 +1,638 @@
+[
+  {
+    "model": "deberta-small",
+    "view": "title",
+    "targetRecall": 1.0,
+    "falseRejects": 0,
+    "keepRecall": 1.0,
+    "evaluationRejected": 40,
+    "cacheRejected": 134,
+    "folds": [
+      {
+        "fold": 0,
+        "threshold": 0.19478754699230194,
+        "evaluation": {
+          "n": 77,
+          "keeps": 18,
+          "falseRejects": 0,
+          "rejected": 34,
+          "keepRecall": 1.0,
+          "rejectionRate": 0.44155844155844154,
+          "rejectPrecision": 1.0
+        },
+        "cacheRejected": 108
+      },
+      {
+        "fold": 1,
+        "threshold": 0.33626917004585266,
+        "evaluation": {
+          "n": 164,
+          "keeps": 50,
+          "falseRejects": 0,
+          "rejected": 6,
+          "keepRecall": 1.0,
+          "rejectionRate": 0.036585365853658534,
+          "rejectPrecision": 1.0
+        },
+        "cacheRejected": 19
+      },
+      {
+        "fold": 2,
+        "threshold": 0.2279839962720871,
+        "evaluation": {
+          "n": 106,
+          "keeps": 82,
+          "falseRejects": 0,
+          "rejected": 0,
+          "keepRecall": 1.0,
+          "rejectionRate": 0.0,
+          "rejectPrecision": null
+        },
+        "cacheRejected": 7
+      }
+    ]
+  },
+  {
+    "model": "deberta-small",
+    "view": "title",
+    "targetRecall": 0.99,
+    "falseRejects": 1,
+    "keepRecall": 0.9933333333333333,
+    "evaluationRejected": 46,
+    "cacheRejected": 163,
+    "folds": [
+      {
+        "fold": 0,
+        "threshold": 0.47234249114990234,
+        "evaluation": {
+          "n": 77,
+          "keeps": 18,
+          "falseRejects": 1,
+          "rejected": 40,
+          "keepRecall": 0.9444444444444444,
+          "rejectionRate": 0.5194805194805194,
+          "rejectPrecision": 0.975
+        },
+        "cacheRejected": 137
+      },
+      {
+        "fold": 1,
+        "threshold": 0.33626917004585266,
+        "evaluation": {
+          "n": 164,
+          "keeps": 50,
+          "falseRejects": 0,
+          "rejected": 6,
+          "keepRecall": 1.0,
+          "rejectionRate": 0.036585365853658534,
+          "rejectPrecision": 1.0
+        },
+        "cacheRejected": 19
+      },
+      {
+        "fold": 2,
+        "threshold": 0.2279839962720871,
+        "evaluation": {
+          "n": 106,
+          "keeps": 82,
+          "falseRejects": 0,
+          "rejected": 0,
+          "keepRecall": 1.0,
+          "rejectionRate": 0.0,
+          "rejectPrecision": null
+        },
+        "cacheRejected": 7
+      }
+    ]
+  },
+  {
+    "model": "deberta-small",
+    "view": "title",
+    "targetRecall": 0.98,
+    "falseRejects": 3,
+    "keepRecall": 0.98,
+    "evaluationRejected": 55,
+    "cacheRejected": 204,
+    "folds": [
+      {
+        "fold": 0,
+        "threshold": 0.8567327857017517,
+        "evaluation": {
+          "n": 77,
+          "keeps": 18,
+          "falseRejects": 3,
+          "rejected": 49,
+          "keepRecall": 0.8333333333333334,
+          "rejectionRate": 0.6363636363636364,
+          "rejectPrecision": 0.9387755102040817
+        },
+        "cacheRejected": 178
+      },
+      {
+        "fold": 1,
+        "threshold": 0.33626917004585266,
+        "evaluation": {
+          "n": 164,
+          "keeps": 50,
+          "falseRejects": 0,
+          "rejected": 6,
+          "keepRecall": 1.0,
+          "rejectionRate": 0.036585365853658534,
+          "rejectPrecision": 1.0
+        },
+        "cacheRejected": 19
+      },
+      {
+        "fold": 2,
+        "threshold": 0.2279839962720871,
+        "evaluation": {
+          "n": 106,
+          "keeps": 82,
+          "falseRejects": 0,
+          "rejected": 0,
+          "keepRecall": 1.0,
+          "rejectionRate": 0.0,
+          "rejectPrecision": null
+        },
+        "cacheRejected": 7
+      }
+    ]
+  },
+  {
+    "model": "deberta-small",
+    "view": "title_body",
+    "targetRecall": 1.0,
+    "falseRejects": 0,
+    "keepRecall": 1.0,
+    "evaluationRejected": 29,
+    "cacheRejected": 91,
+    "folds": [
+      {
+        "fold": 0,
+        "threshold": 0.08994530886411667,
+        "evaluation": {
+          "n": 77,
+          "keeps": 18,
+          "falseRejects": 0,
+          "rejected": 2,
+          "keepRecall": 1.0,
+          "rejectionRate": 0.025974025974025976,
+          "rejectPrecision": 1.0
+        },
+        "cacheRejected": 4
+      },
+      {
+        "fold": 1,
+        "threshold": 0.2815167009830475,
+        "evaluation": {
+          "n": 164,
+          "keeps": 50,
+          "falseRejects": 0,
+          "rejected": 16,
+          "keepRecall": 1.0,
+          "rejectionRate": 0.0975609756097561,
+          "rejectPrecision": 1.0
+        },
+        "cacheRejected": 46
+      },
+      {
+        "fold": 2,
+        "threshold": 0.40488502383232117,
+        "evaluation": {
+          "n": 106,
+          "keeps": 82,
+          "falseRejects": 0,
+          "rejected": 11,
+          "keepRecall": 1.0,
+          "rejectionRate": 0.10377358490566038,
+          "rejectPrecision": 1.0
+        },
+        "cacheRejected": 41
+      }
+    ]
+  },
+  {
+    "model": "deberta-small",
+    "view": "title_body",
+    "targetRecall": 0.99,
+    "falseRejects": 1,
+    "keepRecall": 0.9933333333333333,
+    "evaluationRejected": 45,
+    "cacheRejected": 145,
+    "folds": [
+      {
+        "fold": 0,
+        "threshold": 0.1288796067237854,
+        "evaluation": {
+          "n": 77,
+          "keeps": 18,
+          "falseRejects": 1,
+          "rejected": 18,
+          "keepRecall": 0.9444444444444444,
+          "rejectionRate": 0.23376623376623376,
+          "rejectPrecision": 0.9444444444444444
+        },
+        "cacheRejected": 58
+      },
+      {
+        "fold": 1,
+        "threshold": 0.2815167009830475,
+        "evaluation": {
+          "n": 164,
+          "keeps": 50,
+          "falseRejects": 0,
+          "rejected": 16,
+          "keepRecall": 1.0,
+          "rejectionRate": 0.0975609756097561,
+          "rejectPrecision": 1.0
+        },
+        "cacheRejected": 46
+      },
+      {
+        "fold": 2,
+        "threshold": 0.40488502383232117,
+        "evaluation": {
+          "n": 106,
+          "keeps": 82,
+          "falseRejects": 0,
+          "rejected": 11,
+          "keepRecall": 1.0,
+          "rejectionRate": 0.10377358490566038,
+          "rejectPrecision": 1.0
+        },
+        "cacheRejected": 41
+      }
+    ]
+  },
+  {
+    "model": "deberta-small",
+    "view": "title_body",
+    "targetRecall": 0.98,
+    "falseRejects": 3,
+    "keepRecall": 0.98,
+    "evaluationRejected": 63,
+    "cacheRejected": 196,
+    "folds": [
+      {
+        "fold": 0,
+        "threshold": 0.1806924045085907,
+        "evaluation": {
+          "n": 77,
+          "keeps": 18,
+          "falseRejects": 2,
+          "rejected": 32,
+          "keepRecall": 0.8888888888888888,
+          "rejectionRate": 0.4155844155844156,
+          "rejectPrecision": 0.9375
+        },
+        "cacheRejected": 86
+      },
+      {
+        "fold": 1,
+        "threshold": 0.30231550335884094,
+        "evaluation": {
+          "n": 164,
+          "keeps": 50,
+          "falseRejects": 1,
+          "rejected": 20,
+          "keepRecall": 0.98,
+          "rejectionRate": 0.12195121951219512,
+          "rejectPrecision": 0.95
+        },
+        "cacheRejected": 69
+      },
+      {
+        "fold": 2,
+        "threshold": 0.40488502383232117,
+        "evaluation": {
+          "n": 106,
+          "keeps": 82,
+          "falseRejects": 0,
+          "rejected": 11,
+          "keepRecall": 1.0,
+          "rejectionRate": 0.10377358490566038,
+          "rejectPrecision": 1.0
+        },
+        "cacheRejected": 41
+      }
+    ]
+  },
+  {
+    "model": "bert-tiny",
+    "view": "title",
+    "targetRecall": 1.0,
+    "falseRejects": 0,
+    "keepRecall": 1.0,
+    "evaluationRejected": 21,
+    "cacheRejected": 104,
+    "folds": [
+      {
+        "fold": 0,
+        "threshold": 0.22830288112163544,
+        "evaluation": {
+          "n": 77,
+          "keeps": 18,
+          "falseRejects": 0,
+          "rejected": 14,
+          "keepRecall": 1.0,
+          "rejectionRate": 0.18181818181818182,
+          "rejectPrecision": 1.0
+        },
+        "cacheRejected": 54
+      },
+      {
+        "fold": 1,
+        "threshold": 0.3396969735622406,
+        "evaluation": {
+          "n": 164,
+          "keeps": 50,
+          "falseRejects": 0,
+          "rejected": 2,
+          "keepRecall": 1.0,
+          "rejectionRate": 0.012195121951219513,
+          "rejectPrecision": 1.0
+        },
+        "cacheRejected": 14
+      },
+      {
+        "fold": 2,
+        "threshold": 0.3002004623413086,
+        "evaluation": {
+          "n": 106,
+          "keeps": 82,
+          "falseRejects": 0,
+          "rejected": 5,
+          "keepRecall": 1.0,
+          "rejectionRate": 0.04716981132075472,
+          "rejectPrecision": 1.0
+        },
+        "cacheRejected": 36
+      }
+    ]
+  },
+  {
+    "model": "bert-tiny",
+    "view": "title",
+    "targetRecall": 0.99,
+    "falseRejects": 1,
+    "keepRecall": 0.9933333333333333,
+    "evaluationRejected": 25,
+    "cacheRejected": 116,
+    "folds": [
+      {
+        "fold": 0,
+        "threshold": 0.22830288112163544,
+        "evaluation": {
+          "n": 77,
+          "keeps": 18,
+          "falseRejects": 0,
+          "rejected": 14,
+          "keepRecall": 1.0,
+          "rejectionRate": 0.18181818181818182,
+          "rejectPrecision": 1.0
+        },
+        "cacheRejected": 54
+      },
+      {
+        "fold": 1,
+        "threshold": 0.3528221845626831,
+        "evaluation": {
+          "n": 164,
+          "keeps": 50,
+          "falseRejects": 1,
+          "rejected": 6,
+          "keepRecall": 0.98,
+          "rejectionRate": 0.036585365853658534,
+          "rejectPrecision": 0.8333333333333334
+        },
+        "cacheRejected": 26
+      },
+      {
+        "fold": 2,
+        "threshold": 0.3002004623413086,
+        "evaluation": {
+          "n": 106,
+          "keeps": 82,
+          "falseRejects": 0,
+          "rejected": 5,
+          "keepRecall": 1.0,
+          "rejectionRate": 0.04716981132075472,
+          "rejectPrecision": 1.0
+        },
+        "cacheRejected": 36
+      }
+    ]
+  },
+  {
+    "model": "bert-tiny",
+    "view": "title",
+    "targetRecall": 0.98,
+    "falseRejects": 3,
+    "keepRecall": 0.98,
+    "evaluationRejected": 51,
+    "cacheRejected": 187,
+    "folds": [
+      {
+        "fold": 0,
+        "threshold": 0.4469009041786194,
+        "evaluation": {
+          "n": 77,
+          "keeps": 18,
+          "falseRejects": 3,
+          "rejected": 44,
+          "keepRecall": 0.8333333333333334,
+          "rejectionRate": 0.5714285714285714,
+          "rejectPrecision": 0.9318181818181818
+        },
+        "cacheRejected": 137
+      },
+      {
+        "fold": 1,
+        "threshold": 0.3396969735622406,
+        "evaluation": {
+          "n": 164,
+          "keeps": 50,
+          "falseRejects": 0,
+          "rejected": 2,
+          "keepRecall": 1.0,
+          "rejectionRate": 0.012195121951219513,
+          "rejectPrecision": 1.0
+        },
+        "cacheRejected": 14
+      },
+      {
+        "fold": 2,
+        "threshold": 0.3002004623413086,
+        "evaluation": {
+          "n": 106,
+          "keeps": 82,
+          "falseRejects": 0,
+          "rejected": 5,
+          "keepRecall": 1.0,
+          "rejectionRate": 0.04716981132075472,
+          "rejectPrecision": 1.0
+        },
+        "cacheRejected": 36
+      }
+    ]
+  },
+  {
+    "model": "bert-tiny",
+    "view": "title_body",
+    "targetRecall": 1.0,
+    "falseRejects": 0,
+    "keepRecall": 1.0,
+    "evaluationRejected": 31,
+    "cacheRejected": 115,
+    "folds": [
+      {
+        "fold": 0,
+        "threshold": 0.150728240609169,
+        "evaluation": {
+          "n": 77,
+          "keeps": 18,
+          "falseRejects": 0,
+          "rejected": 15,
+          "keepRecall": 1.0,
+          "rejectionRate": 0.19480519480519481,
+          "rejectPrecision": 1.0
+        },
+        "cacheRejected": 58
+      },
+      {
+        "fold": 1,
+        "threshold": 0.2825138568878174,
+        "evaluation": {
+          "n": 164,
+          "keeps": 50,
+          "falseRejects": 0,
+          "rejected": 8,
+          "keepRecall": 1.0,
+          "rejectionRate": 0.04878048780487805,
+          "rejectPrecision": 1.0
+        },
+        "cacheRejected": 20
+      },
+      {
+        "fold": 2,
+        "threshold": 0.30171898007392883,
+        "evaluation": {
+          "n": 106,
+          "keeps": 82,
+          "falseRejects": 0,
+          "rejected": 8,
+          "keepRecall": 1.0,
+          "rejectionRate": 0.07547169811320754,
+          "rejectPrecision": 1.0
+        },
+        "cacheRejected": 37
+      }
+    ]
+  },
+  {
+    "model": "bert-tiny",
+    "view": "title_body",
+    "targetRecall": 0.99,
+    "falseRejects": 1,
+    "keepRecall": 0.9933333333333333,
+    "evaluationRejected": 37,
+    "cacheRejected": 129,
+    "folds": [
+      {
+        "fold": 0,
+        "threshold": 0.18169741332530975,
+        "evaluation": {
+          "n": 77,
+          "keeps": 18,
+          "falseRejects": 1,
+          "rejected": 21,
+          "keepRecall": 0.9444444444444444,
+          "rejectionRate": 0.2727272727272727,
+          "rejectPrecision": 0.9523809523809523
+        },
+        "cacheRejected": 72
+      },
+      {
+        "fold": 1,
+        "threshold": 0.2825138568878174,
+        "evaluation": {
+          "n": 164,
+          "keeps": 50,
+          "falseRejects": 0,
+          "rejected": 8,
+          "keepRecall": 1.0,
+          "rejectionRate": 0.04878048780487805,
+          "rejectPrecision": 1.0
+        },
+        "cacheRejected": 20
+      },
+      {
+        "fold": 2,
+        "threshold": 0.30171898007392883,
+        "evaluation": {
+          "n": 106,
+          "keeps": 82,
+          "falseRejects": 0,
+          "rejected": 8,
+          "keepRecall": 1.0,
+          "rejectionRate": 0.07547169811320754,
+          "rejectPrecision": 1.0
+        },
+        "cacheRejected": 37
+      }
+    ]
+  },
+  {
+    "model": "bert-tiny",
+    "view": "title_body",
+    "targetRecall": 0.98,
+    "falseRejects": 3,
+    "keepRecall": 0.98,
+    "evaluationRejected": 52,
+    "cacheRejected": 167,
+    "folds": [
+      {
+        "fold": 0,
+        "threshold": 0.36121007800102234,
+        "evaluation": {
+          "n": 77,
+          "keeps": 18,
+          "falseRejects": 3,
+          "rejected": 36,
+          "keepRecall": 0.8333333333333334,
+          "rejectionRate": 0.4675324675324675,
+          "rejectPrecision": 0.9166666666666666
+        },
+        "cacheRejected": 110
+      },
+      {
+        "fold": 1,
+        "threshold": 0.2825138568878174,
+        "evaluation": {
+          "n": 164,
+          "keeps": 50,
+          "falseRejects": 0,
+          "rejected": 8,
+          "keepRecall": 1.0,
+          "rejectionRate": 0.04878048780487805,
+          "rejectPrecision": 1.0
+        },
+        "cacheRejected": 20
+      },
+      {
+        "fold": 2,
+        "threshold": 0.30171898007392883,
+        "evaluation": {
+          "n": 106,
+          "keeps": 82,
+          "falseRejects": 0,
+          "rejected": 8,
+          "keepRecall": 1.0,
+          "rejectionRate": 0.07547169811320754,
+          "rejectPrecision": 1.0
+        },
+        "cacheRejected": 37
+      }
+    ]
+  }
+]

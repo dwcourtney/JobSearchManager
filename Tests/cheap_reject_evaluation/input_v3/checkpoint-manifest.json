@@ -1,0 +1,112 @@
+{
+  "checkpoints": [
+    {
+      "tag": "deberta-small-headmidtail256-all-fold0",
+      "path": "/home/codex/jsm-lab/experiments/input-v3-20260905/deberta-small-headmidtail256-all-fold0",
+      "sha256": "f92131d57b8583623acda7896b6986e0d2b2dd015b7c7eecb7804b21017626bd",
+      "reused": false
+    },
+    {
+      "tag": "deberta-small-headmidtail256-all-fold1",
+      "path": "/home/codex/jsm-lab/experiments/input-v3-20260905/deberta-small-headmidtail256-all-fold1",
+      "sha256": "521ff4aedb490a2831d58357911b85c8cc5fa0cacb75b2cb3423eb67a1a5a999",
+      "reused": false
+    },
+    {
+      "tag": "deberta-small-headmidtail256-all-fold2",
+      "path": "/home/codex/jsm-lab/experiments/input-v3-20260905/deberta-small-headmidtail256-all-fold2",
+      "sha256": "bf0d7c1ebb170d246594419861268383d10db30ff0854f1f2a6f098873088286",
+      "reused": false
+    },
+    {
+      "tag": "deberta-small-headtail256-all-fold0",
+      "path": "/home/codex/jsm-lab/experiments/input-v3-20260905/deberta-small-headtail256-all-fold0",
+      "sha256": "f3ab79eee6fe91c6395909219eea63112f92a914deb42ea6f145634b0fd6a699",
+      "reused": false
+    },
+    {
+      "tag": "deberta-small-headtail256-all-fold1",
+      "path": "/home/codex/jsm-lab/experiments/input-v3-20260905/deberta-small-headtail256-all-fold1",
+      "sha256": "55854321146858d08086dd27ca425262314f015a57bdc5e26035fde95647fafc",
+      "reused": false
+    },
+    {
+      "tag": "deberta-small-headtail256-all-fold2",
+      "path": "/home/codex/jsm-lab/experiments/input-v3-20260905/deberta-small-headtail256-all-fold2",
+      "sha256": "31bbf4b9adb164a1e4d634558f5e025e90249c634f886b9ca36133959884ccc6",
+      "reused": false
+    },
+    {
+      "tag": "deberta-small-prefix256-all-fold0",
+      "path": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/deberta-small-title_body-all-fold0",
+      "sha256": "bf71c05599b43fc9f136635a4b6f4a1a20923bdc0a60f2bb445de9d583d7b7c0",
+      "reused": true
+    },
+    {
+      "tag": "deberta-small-prefix256-all-fold1",
+      "path": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/deberta-small-title_body-all-fold1",
+      "sha256": "89b82a9b39d8ea9a3e95d79c6c049eb4c88970173c01d9d89c71b03ca96335a5",
+      "reused": true
+    },
+    {
+      "tag": "deberta-small-prefix256-all-fold2",
+      "path": "/home/codex/jsm-lab/experiments/supervised-corpus-v2-20260905/deberta-small-title_body-all-fold2",
+      "sha256": "b97cb80de153aebae18daecc15c1275043076af084531361d5a62e9497a77181",
+      "reused": true
+    },
+    {
+      "tag": "deberta-small-prefix384-all-fold0",
+      "path": "/home/codex/jsm-lab/experiments/input-v3-20260905/deberta-small-prefix384-all-fold0",
+      "sha256": "1edb9ac2358045115879a6d632391cb2c371547b7d62e4d1206adf1f4b39b178",
+      "reused": false
+    },
+    {
+      "tag": "deberta-small-prefix384-all-fold1",
+      "path": "/home/codex/jsm-lab/experiments/input-v3-20260905/deberta-small-prefix384-all-fold1",
+      "sha256": "0868b1d2c30f68ffa152101193d2b7fe42bb4b7bf69ea6d70216002bfbce9679",
+      "reused": false
+    },
+    {
+      "tag": "deberta-small-prefix384-all-fold2",
+      "path": "/home/codex/jsm-lab/experiments/input-v3-20260905/deberta-small-prefix384-all-fold2",
+      "sha256": "ff4ae357d0d25ff6ad31a0b8eed556234e6c08a63624505b895e4e950f437ae4",
+      "reused": false
+    },
+    {
+      "tag": "deberta-small-prefix512-all-fold0",
+      "path": "/home/codex/jsm-lab/experiments/input-v3-20260905/deberta-small-prefix512-all-fold0",
+      "sha256": "2fc231ae2b3b730df60eb58ba5463edc7f73890babcc9acd7174e086e37c56da",
+      "reused": false
+    },
+    {
+      "tag": "deberta-small-prefix512-all-fold1",
+      "path": "/home/codex/jsm-lab/experiments/input-v3-20260905/deberta-small-prefix512-all-fold1",
+      "sha256": "f24ecc17d0b52ab063158350571cba293d6c28e103abefb86dffda7391757ce1",
+      "reused": false
+    },
+    {
+      "tag": "deberta-small-prefix512-all-fold2",
+      "path": "/home/codex/jsm-lab/experiments/input-v3-20260905/deberta-small-prefix512-all-fold2",
+      "sha256": "8c76e68a5bbe43844cf7583f779b7450b0a9a62d8acbefc35255a1abf0321681",
+      "reused": false
+    },
+    {
+      "tag": "deberta-small-sections256-all-fold0",
+      "path": "/home/codex/jsm-lab/experiments/input-v3-20260905/deberta-small-sections256-all-fold0",
+      "sha256": "7a48fa0f8c0d171a8f0b43844d5c7eb6ac67990728469b8f133cc1bdb1295c0f",
+      "reused": false
+    },
+    {
+      "tag": "deberta-small-sections256-all-fold1",
+      "path": "/home/codex/jsm-lab/experiments/input-v3-20260905/deberta-small-sections256-all-fold1",
+      "sha256": "443c641117beb0faa069a1daddda20f80341127aac441ef7772042b158e19979",
+      "reused": false
+    },
+    {
+      "tag": "deberta-small-sections256-all-fold2",
+      "path": "/home/codex/jsm-lab/experiments/input-v3-20260905/deberta-small-sections256-all-fold2",
+      "sha256": "33f80f6c5b1d1fb0290428fbeaaeaba9e7fa8839a3cbc81434f1a51da219ca53",
+      "reused": false
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "counts": {
+    "inputRecords": 3503,
+    "exportedRecords": 2739,
+    "exportedWithBody": 1087,
+    "excludedByIdentityOrTitle": 761,
+    "excludedByContent": 3
+  },
+  "sources": [
+    {
+      "path": ".corpus-analysis\\leidos.json",
+      "sha256": "6f4307c075abf8744d48b4a44ac88ca34b6a0f1da94431fcec40803c546824ea",
+      "savedAtUtc": "2026-08-18T20:38:48.6390475+00:00",
+      "records": 151
+    },
+    {
+      "path": ".corpus-analysis\\northrop-grumman-central-florida.json",
+      "sha256": "6c65d5c4159dc073228d74f697c15f593cfae9d5df072f3af1347d3ca07d7dce",
+      "savedAtUtc": "2026-08-17T20:50:39.4472713+00:00",
+      "records": 21
+    },
+    {
+      "path": ".corpus-analysis\\northrop-grumman.json",
+      "sha256": "1ad5852de19e311f9167e66c40dec6bf80b9baf31bb5de8f315cfd91b21dbfee",
+      "savedAtUtc": "2026-08-18T00:46:19.7309801+00:00",
+      "records": 11
+    },
+    {
+      "path": ".corpus-analysis\\parsons-live-after-deploy.json",
+      "sha256": "5f2b073216dfe763cc65d289ead6f78498e297fbcd581726180b3254268e5b21",
+      "savedAtUtc": "2026-08-18T21:41:30.9835706+00:00",
+      "records": 200
+    },
+    {
+      "path": ".corpus-analysis\\parsons.json",
+      "sha256": "f08e74055fd513b0754a444ce55f7c0a0633d06c0affed1ebf21f0dcbdac1e61",
+      "savedAtUtc": "2026-08-18T20:46:34.5231934+00:00",
+      "records": 200
+    },
+    {
+      "path": "D:\\Computer Everything\\Programming\\CS\\JobSearchManager\\bin\\Release\\net10.0\\data\\job-caches\\aecom\\e06784f416eb9f0717083a1a136095b6116dee8313c76fd99b88642394f49fca.json",
+      "sha256": "77dcf0a65cf67c54281b8f408e22da6d66a1284b3c1f8fd3a8e698f1568abfc8",
+      "savedAtUtc": "2026-08-17T01:23:12.2776798+00:00",
+      "records": 82
+    },
+    {
+      "path": "D:\\Computer Everything\\Programming\\CS\\JobSearchManager\\bin\\Release\\net10.0\\data\\job-caches\\leidos\\73651aa837b6693dfc831975b80d56112638c5bca7b2838c1673f73b4e62d1c1.json",
+      "sha256": "d072b04d461a58ecf071ef20da06bb4b11e88b479f1a0018b388fc7d340889f2",
+      "savedAtUtc": "2026-08-17T20:27:11.2031915+00:00",
+      "records": 1817
+    },
+    {
+      "path": "D:\\Computer Everything\\Programming\\CS\\JobSearchManager\\bin\\Release\\net10.0\\data\\job-caches\\leidos\\b97d34b7c28a93c13cea6a60ff0b9f5765e4bae1fb2c4831c27b1fb376b0716e.json",
+      "sha256": "40da3523cb7ab7555977f6dadcbb2a582673bb293a97e20b1e071140d553a8bf",
+      "savedAtUtc": "2026-08-17T18:26:00.0828788+00:00",
+      "records": 128
+    },
+    {
+      "path": "azure-storage-audit-20260819\\workspaces\\27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78\\job-caches\\leidos\\697e9a0d8c74997954ef0e68219601eef0c4783b278a6267c3250aae5c876c50.json",
+      "sha256": "19bbdd884c819198badc7efc3bb16a2255059ef302e02f62ea911334012191ae",
+      "savedAtUtc": "2026-08-19T12:46:13.7407745+00:00",
+      "records": 153
+    },
+    {
+      "path": "azure-storage-audit-20260819\\workspaces\\27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78\\job-caches\\northrop-grumman\\c706f3e21f845a6ed5161556b5f5e06e6041bd94f694bb9f108920e6e1e59e11.json",
+      "sha256": "1ad5852de19e311f9167e66c40dec6bf80b9baf31bb5de8f315cfd91b21dbfee",
+      "savedAtUtc": "2026-08-18T00:46:19.7309801+00:00",
+      "records": 11
+    },
+    {
+      "path": "azure-storage-audit-20260819\\workspaces\\27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78\\job-caches\\northrop-grumman\\d584b38c82b2dc5d66976b4304dec82c70056d9321ff3ac1a63d1a51016df7c5.json",
+      "sha256": "6c65d5c4159dc073228d74f697c15f593cfae9d5df072f3af1347d3ca07d7dce",
+      "savedAtUtc": "2026-08-17T20:50:39.4472713+00:00",
+      "records": 21
+    },
+    {
+      "path": "azure-storage-audit-20260819\\workspaces\\27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78\\job-caches\\nvidia\\68d60566b13a1d569a81a9438cd17b67666dd1e1e73bc4e69f8622c9be964cf8.json",
+      "sha256": "52069e3797f05632611dece886a1b14b81fb6a832bac6dba045c9cddd8a4ba0a",
+      "savedAtUtc": "2026-08-18T23:17:21.2376092+00:00",
+      "records": 394
+    },
+    {
+      "path": "azure-storage-audit-20260819\\workspaces\\27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78\\job-caches\\parsons\\cfd0f01f911887bdcef9e5a022443484c49c5a6da0471caba8e9024afa93baf1.json",
+      "sha256": "62330119a7cfcdbcda1b045d16fdad2333d0bdd704be2ba9aaaf01e59d84d8d4",
+      "savedAtUtc": "2026-08-19T12:35:47.1555095+00:00",
+      "records": 200
+    },
+    {
+      "path": "azure-storage-audit-20260819\\workspaces\\27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78\\job-caches\\rtx\\363a4d87be07d61263d5c73d01a6a3671f5e5488273aef6ee265d5f49b31c5bc.json",
+      "sha256": "3cd17b470145a71e10e643a9bee54903ec6ff539431cfcb959763c17ed662757",
+      "savedAtUtc": "2026-08-18T23:24:57.4417659+00:00",
+      "records": 114
+    }
+  ],
+  "exclusionFiles": [
+    {
+      "path": "corpus-work\\production-holdout-exclusions.json",
+      "sha256": "140eb3e3fdceeba3c2ad69682e1abf9855d0f0c8c003e6c032513e3b9ff08c3a"
+    },
+    {
+      "path": "corpus-work\\prior-evaluation-exclusions.json",
+      "sha256": "b3b404f283480c512a0b795cba1d6149132678cdd3a91affe15d30b661ae5406"
+    }
+  ]
+}

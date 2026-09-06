@@ -1,0 +1,61 @@
+{
+  "total": 3198,
+  "labels": {
+    "AMBIGUOUS": 529,
+    "KEEP": 2121,
+    "REJECT": 548
+  },
+  "confidence": {
+    "high": 1014,
+    "low": 529,
+    "medium": 1655
+  },
+  "byDescription": {
+    "False": {
+      "total": 1886,
+      "labels": {
+        "AMBIGUOUS": 376,
+        "KEEP": 1207,
+        "REJECT": 303
+      },
+      "confidence": {
+        "low": 376,
+        "medium": 1510
+      }
+    },
+    "True": {
+      "total": 1312,
+      "labels": {
+        "AMBIGUOUS": 153,
+        "KEEP": 914,
+        "REJECT": 245
+      },
+      "confidence": {
+        "high": 1014,
+        "low": 153,
+        "medium": 145
+      }
+    }
+  },
+  "titleOnlyMissingDescription": 1886,
+  "titleOnlyDespiteAvailableDescription": 1,
+  "employerCounts": {
+    "aecom": 78,
+    "amentum": 11,
+    "boeing": 581,
+    "kbr": 27,
+    "leidos": 1789,
+    "northrop-grumman": 38,
+    "nvidia": 340,
+    "nxp-semiconductors": 7,
+    "parsons": 141,
+    "rtx": 99,
+    "servicenow": 87
+  },
+  "distinctTitles": 2659,
+  "lexicalTitleFamilies": 2139,
+  "reviewQueue": 281,
+  "reviewQueueLowConfidence": 201,
+  "titleBodyConflicts": 10,
+  "jargonDutiesConflicts": 91
+}

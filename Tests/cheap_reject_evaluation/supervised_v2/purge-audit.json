@@ -1,0 +1,23 @@
+[
+  {
+    "fold": 0,
+    "rawEmployerTrain": 727,
+    "purgedTrain": 27,
+    "rawEmployerValidation": 501,
+    "purgedValidation": 20
+  },
+  {
+    "fold": 1,
+    "rawEmployerTrain": 1721,
+    "purgedTrain": 126,
+    "rawEmployerValidation": 356,
+    "purgedValidation": 5
+  },
+  {
+    "fold": 2,
+    "rawEmployerTrain": 1949,
+    "purgedTrain": 119,
+    "rawEmployerValidation": 84,
+    "purgedValidation": 1
+  }
+]

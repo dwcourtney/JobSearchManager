@@ -1,0 +1,6 @@
+{
+  "phase": "supplemental-development-threshold-sweep",
+  "reason": "Initial fixed sweep up to 0.5 showed most KEEP scores above 0.5. Extend score coverage using the same frozen predictions; no model, input, hypothesis, or holdout changes.",
+  "paired_keep_thresholds": [0.01, 0.025, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.975, 0.99, 0.995, 0.999, 0.9995, 0.9999],
+  "selection": "Report best cache rejection at both 98% and 99% recall, requiring the target on original development, explicitly corrected development, and the deduplicated audited reference. Development-only threshold selection; not calibrated confidence or independent validation."
+}

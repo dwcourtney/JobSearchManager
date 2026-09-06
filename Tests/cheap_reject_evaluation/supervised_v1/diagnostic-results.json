@@ -1,0 +1,1020 @@
+[
+  {
+    "model": "deberta-small",
+    "view": "title",
+    "modes": {
+      "original": {
+        "evaluation": {
+          "n": 347,
+          "keeps": 150,
+          "falseRejects": 10,
+          "rejected": 93,
+          "keepRecall": 0.9333333333333333,
+          "rejectionRate": 0.2680115273775216,
+          "rejectPrecision": 0.8924731182795699
+        },
+        "meanAbsoluteScoreChange": 3.074706459595078e-08,
+        "maxAbsoluteScoreChange": 6.556510925292969e-07,
+        "decisionChanges": 0,
+        "examples": []
+      },
+      "company_mask_preserve_case": {
+        "evaluation": {
+          "n": 347,
+          "keeps": 150,
+          "falseRejects": 11,
+          "rejected": 95,
+          "keepRecall": 0.9266666666666666,
+          "rejectionRate": 0.2737752161383285,
+          "rejectPrecision": 0.8842105263157894
+        },
+        "meanAbsoluteScoreChange": 0.0013642233369673363,
+        "maxAbsoluteScoreChange": 0.349635511636734,
+        "decisionChanges": 2,
+        "examples": [
+          {
+            "id": "2ab3f84d9038af73",
+            "title": "Senior ServiceNow Developer",
+            "company": "leidos",
+            "label": "KEEP",
+            "oldScore": 0.8158582448959351,
+            "newScore": 0.46622273325920105
+          },
+          {
+            "id": "dd1980e316a6f16d",
+            "title": "Assistant Construction Project Manager II- AECOM Hunt",
+            "company": "aecom",
+            "label": "REJECT",
+            "oldScore": 0.09507998824119568,
+            "newScore": 0.07439474761486053
+          }
+        ]
+      },
+      "casefold_control": {
+        "evaluation": {
+          "n": 347,
+          "keeps": 150,
+          "falseRejects": 24,
+          "rejected": 112,
+          "keepRecall": 0.84,
+          "rejectionRate": 0.3227665706051873,
+          "rejectPrecision": 0.7857142857142857
+        },
+        "meanAbsoluteScoreChange": 0.0874520910189887,
+        "maxAbsoluteScoreChange": 0.8391471803188324,
+        "decisionChanges": 57,
+        "examples": [
+          {
+            "id": "047ff2c7e0891986",
+            "title": "Civil Construction Engineer",
+            "company": "parsons",
+            "label": "REJECT",
+            "oldScore": 0.4967898726463318,
+            "newScore": 0.379182904958725
+          },
+          {
+            "id": "09eaaabd12fa5548",
+            "title": "Bridge Engineer",
+            "company": "parsons",
+            "label": "REJECT",
+            "oldScore": 0.4867543578147888,
+            "newScore": 0.46570223569869995
+          },
+          {
+            "id": "0edfedb28397ff58",
+            "title": "Enterprise Account Executive - Manufacturing - IL ",
+            "company": "servicenow",
+            "label": "REJECT",
+            "oldScore": 0.08291799575090408,
+            "newScore": 0.12700986862182617
+          },
+          {
+            "id": "0f1a60e3a2249763",
+            "title": "Principal Construction Estimator",
+            "company": "parsons",
+            "label": "REJECT",
+            "oldScore": 0.5173982977867126,
+            "newScore": 0.3986613154411316
+          },
+          {
+            "id": "14c7bdb15c2357e7",
+            "title": "Sr Marketing Specialist, ABX (Armis)",
+            "company": "servicenow",
+            "label": "REJECT",
+            "oldScore": 0.06494966149330139,
+            "newScore": 0.18954065442085266
+          },
+          {
+            "id": "19656a7f97d7d8a4",
+            "title": "Structural Engineers and Designers",
+            "company": "aecom",
+            "label": "REJECT",
+            "oldScore": 0.08796670287847519,
+            "newScore": 0.21732965111732483
+          },
+          {
+            "id": "1db7e4f9a5a34fb5",
+            "title": "Sr Principal HR Business Partner",
+            "company": "northrop-grumman",
+            "label": "REJECT",
+            "oldScore": 0.13993610441684723,
+            "newScore": 0.06421744078397751
+          },
+          {
+            "id": "1e638462d7a3cd7a",
+            "title": "Program Manager – Construction Management Services (CMS)",
+            "company": "parsons",
+            "label": "REJECT",
+            "oldScore": 0.5355834364891052,
+            "newScore": 0.37855538725852966
+          },
+          {
+            "id": "26d9b5711377c81a",
+            "title": "Associate Substation Civil/Structural Engineer",
+            "company": "leidos",
+            "label": "REJECT",
+            "oldScore": 0.5000441074371338,
+            "newScore": 0.44555771350860596
+          },
+          {
+            "id": "2ab3f84d9038af73",
+            "title": "Senior ServiceNow Developer",
+            "company": "leidos",
+            "label": "KEEP",
+            "oldScore": 0.8158582448959351,
+            "newScore": 0.3420213758945465
+          },
+          {
+            "id": "311d762c6951d9e5",
+            "title": "Global Head Asset Management (AM) GTM Lead ",
+            "company": "servicenow",
+            "label": "REJECT",
+            "oldScore": 0.07782907783985138,
+            "newScore": 0.783664882183075
+          },
+          {
+            "id": "31fd2410012c14e5",
+            "title": "Sr Analyst, Procurement",
+            "company": "rtx",
+            "label": "REJECT",
+            "oldScore": 0.7152031660079956,
+            "newScore": 0.34677329659461975
+          },
+          {
+            "id": "37942ffd4bfd1fc9",
+            "title": "GIS Technician",
+            "company": "leidos",
+            "label": "KEEP",
+            "oldScore": 0.5467963814735413,
+            "newScore": 0.3625418245792389
+          },
+          {
+            "id": "3c0a83f325173f27",
+            "title": "Procurement Agent - Millennium Space Systems",
+            "company": "boeing",
+            "label": "REJECT",
+            "oldScore": 0.46574291586875916,
+            "newScore": 0.21575909852981567
+          },
+          {
+            "id": "435a4f3fd3782507",
+            "title": "Senior Cost Estimating Specialist - Millennium Space Systems",
+            "company": "boeing",
+            "label": "REJECT",
+            "oldScore": 0.29869595170021057,
+            "newScore": 0.22553269565105438
+          },
+          {
+            "id": "45bf38786912b4d6",
+            "title": "Principal Public Relations Representative (19792)",
+            "company": "northrop-grumman",
+            "label": "REJECT",
+            "oldScore": 0.1266830861568451,
+            "newScore": 0.06471521407365799
+          },
+          {
+            "id": "4d21e97cb3de70b9",
+            "title": "Sr Enterprise Account Executive - Manufacturing",
+            "company": "servicenow",
+            "label": "REJECT",
+            "oldScore": 0.08245555311441422,
+            "newScore": 0.11023979634046555
+          },
+          {
+            "id": "5040f43253d8ed27",
+            "title": "Program Finance Analyst",
+            "company": "leidos",
+            "label": "REJECT",
+            "oldScore": 0.5458279252052307,
+            "newScore": 0.43288883566856384
+          },
+          {
+            "id": "51874eedd9440b95",
+            "title": "MES Systems Analyst - PLM Process Planning (Remote)",
+            "company": "rtx",
+            "label": "KEEP",
+            "oldScore": 0.5725172162055969,
+            "newScore": 0.3250614106655121
+          },
+          {
+            "id": "5af5918b8b7726cb",
+            "title": "QA/QC Manager (Construction)",
+            "company": "parsons",
+            "label": "REJECT",
+            "oldScore": 0.5099477767944336,
+            "newScore": 0.387347549200058
+          },
+          {
+            "id": "61df66d1c644276b",
+            "title": "Structural Engineer",
+            "company": "aecom",
+            "label": "REJECT",
+            "oldScore": 0.07086580991744995,
+            "newScore": 0.10016649961471558
+          },
+          {
+            "id": "6e3c3294b2f2980e",
+            "title": "Bridge Engineer 1",
+            "company": "parsons",
+            "label": "REJECT",
+            "oldScore": 0.5028449892997742,
+            "newScore": 0.45869508385658264
+          },
+          {
+            "id": "7a05748487c9d7f5",
+            "title": "Supplier Development Program Lead (SDPL) (Remote)",
+            "company": "rtx",
+            "label": "REJECT",
+            "oldScore": 0.5442908406257629,
+            "newScore": 0.3240858316421509
+          },
+          {
+            "id": "834a381a7e08245b",
+            "title": "Roadway Engineer",
+            "company": "parsons",
+            "label": "REJECT",
+            "oldScore": 0.5263379812240601,
+            "newScore": 0.4237702488899231
+          },
+          {
+            "id": "8ad6d329c5ce9cf5",
+            "title": "Senior Bridge Engineer (REMOTE)",
+            "company": "parsons",
+            "label": "REJECT",
+            "oldScore": 0.45095497369766235,
+            "newScore": 0.5271720886230469
+          },
+          {
+            "id": "8b0de5774c10e7e6",
+            "title": "Project Director",
+            "company": "parsons",
+            "label": "REJECT",
+            "oldScore": 0.46730706095695496,
+            "newScore": 0.4800187647342682
+          },
+          {
+            "id": "8de73fe187f9e65f",
+            "title": "Time & Pay Solutions Specialist",
+            "company": "leidos",
+            "label": "REJECT",
+            "oldScore": 0.5841872096061707,
+            "newScore": 0.3969351053237915
+          },
+          {
+            "id": "9000937889fdaa15",
+            "title": "Senior Construction Estimator",
+            "company": "parsons",
+            "label": "REJECT",
+            "oldScore": 0.640346109867096,
+            "newScore": 0.4756658971309662
+          },
+          {
+            "id": "91848a67b1634036",
+            "title": "Principal Project Engineer - Bridge (REMOTE)",
+            "company": "parsons",
+            "label": "REJECT",
+            "oldScore": 0.45719239115715027,
+            "newScore": 0.6851400136947632
+          },
+          {
+            "id": "9aa179d2efcde305",
+            "title": "Senior Civil Engineer",
+            "company": "aecom",
+            "label": "REJECT",
+            "oldScore": 0.05937584489583969,
+            "newScore": 0.8163755536079407
+          },
+          {
+            "id": "9c653af2519452ad",
+            "title": "Travel Construction Manager (Civil Engineer)",
+            "company": "leidos",
+            "label": "REJECT",
+            "oldScore": 0.5105704665184021,
+            "newScore": 0.38223204016685486
+          },
+          {
+            "id": "9df2098f1862ca8e",
+            "title": "Business Readiness Director - Process and Systems Transformation (PST) (Program Management)",
+            "company": "rtx",
+            "label": "KEEP",
+            "oldScore": 0.49234381318092346,
+            "newScore": 0.365570604801178
+          },
+          {
+            "id": "a13918a7bb7c6129",
+            "title": "Field Service Technician I",
+            "company": "leidos",
+            "label": "KEEP",
+            "oldScore": 0.47700005769729614,
+            "newScore": 0.43896692991256714
+          },
+          {
+            "id": "aac1a3f56edebf5e",
+            "title": "Tricentis Service Lead / Test Automation Platform Lead",
+            "company": "rtx",
+            "label": "KEEP",
+            "oldScore": 0.5555493235588074,
+            "newScore": 0.4305029511451721
+          },
+          {
+            "id": "b16454b1f005895e",
+            "title": "Senior Mechanical Engineer - Hybrid Washington, DC",
+            "company": "parsons",
+            "label": "KEEP",
+            "oldScore": 0.6248850226402283,
+            "newScore": 0.4088882505893707
+          },
+          {
+            "id": "b1bcd62fc887fdfb",
+            "title": "Supervising Structural Bridge Engineer - North Carolina",
+            "company": "parsons",
+            "label": "REJECT",
+            "oldScore": 0.44826290011405945,
+            "newScore": 0.5522962808609009
+          },
+          {
+            "id": "b297c1d43db153e9",
+            "title": "AI Solutions Architect — Programs & Delivery",
+            "company": "amentum",
+            "label": "KEEP",
+            "oldScore": 0.6075615882873535,
+            "newScore": 0.37617871165275574
+          },
+          {
+            "id": "ba2aa80869559063",
+            "title": "Technical Product Manager",
+            "company": "parsons",
+            "label": "KEEP",
+            "oldScore": 0.5251134634017944,
+            "newScore": 0.4529532194137573
+          },
+          {
+            "id": "c2bf7db3bf284833",
+            "title": "Senior Civil Engineer",
+            "company": "aecom",
+            "label": "REJECT",
+            "oldScore": 0.05937584489583969,
+            "newScore": 0.8163755536079407
+          },
+          {
+            "id": "c693e80c12e88b35",
+            "title": "Cybersecurity Risk & Compliance PM",
+            "company": "parsons",
+            "label": "KEEP",
+            "oldScore": 0.4917357861995697,
+            "newScore": 0.3965258002281189
+          },
+          {
+            "id": "c746367fb1690379",
+            "title": "GIS Technician",
+            "company": "leidos",
+            "label": "KEEP",
+            "oldScore": 0.5467963814735413,
+            "newScore": 0.36254191398620605
+          },
+          {
+            "id": "c93a8868ba701675",
+            "title": "Sr Dir, Sales Training (Armis/Veza)",
+            "company": "servicenow",
+            "label": "REJECT",
+            "oldScore": 0.09262780845165253,
+            "newScore": 0.3634093105792999
+          },
+          {
+            "id": "cbcd74d3d47223c6",
+            "title": "Supply Chain Procurement Specialist",
+            "company": "northrop-grumman",
+            "label": "REJECT",
+            "oldScore": 0.09894318133592606,
+            "newScore": 0.0935957208275795
+          },
+          {
+            "id": "d2b3c529e0a077d0",
+            "title": "Senior GTS Configuration Lead (Implementation & Maintenance)",
+            "company": "rtx",
+            "label": "KEEP",
+            "oldScore": 0.5214046835899353,
+            "newScore": 0.39197903871536255
+          },
+          {
+            "id": "d3f87bc330bb1f55",
+            "title": "Special Operations Nurse Case Manager / Case Manager (Fort Bragg, NC)",
+            "company": "kbr",
+            "label": "REJECT",
+            "oldScore": 0.09171617776155472,
+            "newScore": 0.6926919221878052
+          },
+          {
+            "id": "d83261bc917da121",
+            "title": "Principal Specialist, Talent Acquisition (Remote)",
+            "company": "rtx",
+            "label": "REJECT",
+            "oldScore": 0.507439136505127,
+            "newScore": 0.4501606225967407
+          },
+          {
+            "id": "dedf650cedd36112",
+            "title": "Senior Director, Capture - High Consequence Missions",
+            "company": "parsons",
+            "label": "REJECT",
+            "oldScore": 0.5436797142028809,
+            "newScore": 0.4201214611530304
+          },
+          {
+            "id": "e092b2e357f736b4",
+            "title": "Prin Talent Acquisition Business Partner Sourcing - (SkillBridge)",
+            "company": "northrop-grumman",
+            "label": "REJECT",
+            "oldScore": 0.0834256038069725,
+            "newScore": 0.10438206046819687
+          },
+          {
+            "id": "e2ffbe5438e71b4d",
+            "title": "Drainage Engineers and Designers ",
+            "company": "aecom",
+            "label": "REJECT",
+            "oldScore": 0.07791048288345337,
+            "newScore": 0.43762195110321045
+          },
+          {
+            "id": "e59afc2122b02617",
+            "title": "Civil Engineer",
+            "company": "aecom",
+            "label": "REJECT",
+            "oldScore": 0.08804283291101456,
+            "newScore": 0.40750983357429504
+          },
+          {
+            "id": "e811e893eb39b306",
+            "title": "Supplier Development Lead",
+            "company": "rtx",
+            "label": "REJECT",
+            "oldScore": 0.6440953016281128,
+            "newScore": 0.4661978781223297
+          },
+          {
+            "id": "ed8012b8ddc67c58",
+            "title": "Costpoint Financial Systems Analyst – Core CP Analyst",
+            "company": "kbr",
+            "label": "KEEP",
+            "oldScore": 0.47234249114990234,
+            "newScore": 0.07619985193014145
+          },
+          {
+            "id": "ee2800597995ac8f",
+            "title": "Senior Civil Engineer",
+            "company": "aecom",
+            "label": "REJECT",
+            "oldScore": 0.05937584489583969,
+            "newScore": 0.8163755536079407
+          },
+          {
+            "id": "f64a2c15fa47532a",
+            "title": "Senior Growth Solutions Architect - Electric Power / Grid",
+            "company": "leidos",
+            "label": "KEEP",
+            "oldScore": 0.8249163031578064,
+            "newScore": 0.41401222348213196
+          },
+          {
+            "id": "f70405bc8f9e2af3",
+            "title": "Principal Specialist, Supplier Quality & Development (Remote)",
+            "company": "rtx",
+            "label": "REJECT",
+            "oldScore": 0.5103232264518738,
+            "newScore": 0.40887683629989624
+          },
+          {
+            "id": "fc80a41ef8f272e3",
+            "title": "Financial Planning and Analysis  Principal Specialist",
+            "company": "rtx",
+            "label": "REJECT",
+            "oldScore": 0.554968535900116,
+            "newScore": 0.42987075448036194
+          },
+          {
+            "id": "fca1bd2b1a41cff3",
+            "title": "Senior Project Manager - Environmental Remediation - Oil and Gas",
+            "company": "aecom",
+            "label": "REJECT",
+            "oldScore": 0.09058822691440582,
+            "newScore": 0.13982908427715302
+          }
+        ]
+      }
+    },
+    "benchmark": {
+      "n": 40,
+      "batch": 16,
+      "gpuBatchMsPerPosting": 1.4727714500622824,
+      "gpuThroughput": 678.9919779866121,
+      "gpuSingleMedianMs": 14.392740500625223,
+      "gpuSingleP95Ms": 14.880663398071189,
+      "peakGpuAllocatedMiB": 642.60400390625,
+      "peakGpuReservedMiB": 670.0,
+      "processRssHighWaterMiB": 1252.98828125,
+      "cpuSingleMedianMs": 45.8723949996056,
+      "cpuSingleP95Ms": 47.67400670971256,
+      "cpuSequentialPerSecond": 21.640080469889323,
+      "cpuThreads": 4,
+      "processRssHighWaterAfterCpuMiB": 1572.47265625
+    }
+  },
+  {
+    "model": "deberta-small",
+    "view": "title_body",
+    "modes": {
+      "original": {
+        "evaluation": {
+          "n": 347,
+          "keeps": 150,
+          "falseRejects": 3,
+          "rejected": 28,
+          "keepRecall": 0.98,
+          "rejectionRate": 0.08069164265129683,
+          "rejectPrecision": 0.8928571428571429
+        },
+        "meanAbsoluteScoreChange": 0.0,
+        "maxAbsoluteScoreChange": 0.0,
+        "decisionChanges": 0,
+        "examples": []
+      },
+      "company_mask_preserve_case": {
+        "evaluation": {
+          "n": 347,
+          "keeps": 150,
+          "falseRejects": 3,
+          "rejected": 32,
+          "keepRecall": 0.98,
+          "rejectionRate": 0.09221902017291066,
+          "rejectPrecision": 0.90625
+        },
+        "meanAbsoluteScoreChange": 0.020988595438450146,
+        "maxAbsoluteScoreChange": 0.45519427955150604,
+        "decisionChanges": 6,
+        "examples": [
+          {
+            "id": "0c67a622ba025e56",
+            "title": "Principal Project Manager - Highway Design/Construction - Transportation",
+            "company": "parsons",
+            "label": "REJECT",
+            "oldScore": 0.33771657943725586,
+            "newScore": 0.29994773864746094
+          },
+          {
+            "id": "39c2aa2998b3180e",
+            "title": "Project Control Specialist (Remote)",
+            "company": "parsons",
+            "label": "REJECT",
+            "oldScore": 0.3052264153957367,
+            "newScore": 0.297125905752182
+          },
+          {
+            "id": "b1bcd62fc887fdfb",
+            "title": "Supervising Structural Bridge Engineer - North Carolina",
+            "company": "parsons",
+            "label": "REJECT",
+            "oldScore": 0.32571494579315186,
+            "newScore": 0.2910771071910858
+          },
+          {
+            "id": "c2bf7db3bf284833",
+            "title": "Senior Civil Engineer",
+            "company": "aecom",
+            "label": "REJECT",
+            "oldScore": 0.09957657754421234,
+            "newScore": 0.10244286805391312
+          },
+          {
+            "id": "dd3ac88de98b699a",
+            "title": "Construction Manager, Airports",
+            "company": "parsons",
+            "label": "REJECT",
+            "oldScore": 0.3080082833766937,
+            "newScore": 0.294352263212204
+          },
+          {
+            "id": "e092b2e357f736b4",
+            "title": "Prin Talent Acquisition Business Partner Sourcing - (SkillBridge)",
+            "company": "northrop-grumman",
+            "label": "REJECT",
+            "oldScore": 0.10677742958068848,
+            "newScore": 0.09914518892765045
+          }
+        ]
+      },
+      "casefold_control": {
+        "evaluation": {
+          "n": 347,
+          "keeps": 150,
+          "falseRejects": 2,
+          "rejected": 27,
+          "keepRecall": 0.9866666666666667,
+          "rejectionRate": 0.07780979827089338,
+          "rejectPrecision": 0.9259259259259259
+        },
+        "meanAbsoluteScoreChange": 0.00801632078820759,
+        "maxAbsoluteScoreChange": 0.14972388744354248,
+        "decisionChanges": 1,
+        "examples": [
+          {
+            "id": "b16454b1f005895e",
+            "title": "Senior Mechanical Engineer - Hybrid Washington, DC",
+            "company": "parsons",
+            "label": "KEEP",
+            "oldScore": 0.30231550335884094,
+            "newScore": 0.3107272684574127
+          }
+        ]
+      }
+    },
+    "benchmark": {
+      "n": 40,
+      "batch": 16,
+      "gpuBatchMsPerPosting": 21.255682600167347,
+      "gpuThroughput": 47.046242588893705,
+      "gpuSingleMedianMs": 24.554873001761734,
+      "gpuSingleP95Ms": 25.874035504239146,
+      "peakGpuAllocatedMiB": 1386.64404296875,
+      "peakGpuReservedMiB": 1488.0,
+      "processRssHighWaterMiB": 1253.98828125,
+      "cpuSingleMedianMs": 279.2436675008503,
+      "cpuSingleP95Ms": 357.3713071462407,
+      "cpuSequentialPerSecond": 3.4418713838816632,
+      "cpuThreads": 4,
+      "processRssHighWaterAfterCpuMiB": 1636.27734375
+    }
+  },
+  {
+    "model": "bert-tiny",
+    "view": "title",
+    "modes": {
+      "original": {
+        "evaluation": {
+          "n": 347,
+          "keeps": 150,
+          "falseRejects": 5,
+          "rejected": 37,
+          "keepRecall": 0.9666666666666667,
+          "rejectionRate": 0.10662824207492795,
+          "rejectPrecision": 0.8648648648648649
+        },
+        "meanAbsoluteScoreChange": 2.2244384721651544e-08,
+        "maxAbsoluteScoreChange": 2.682209014892578e-07,
+        "decisionChanges": 0,
+        "examples": []
+      },
+      "company_mask_preserve_case": {
+        "evaluation": {
+          "n": 347,
+          "keeps": 150,
+          "falseRejects": 5,
+          "rejected": 38,
+          "keepRecall": 0.9666666666666667,
+          "rejectionRate": 0.10951008645533142,
+          "rejectPrecision": 0.868421052631579
+        },
+        "meanAbsoluteScoreChange": 0.0003005353792943597,
+        "maxAbsoluteScoreChange": 0.05882757902145386,
+        "decisionChanges": 1,
+        "examples": [
+          {
+            "id": "3c02e58c27a8eca3",
+            "title": "Boeing Summer 2027 Internship Program (PAID) – Finance (Evergreen)",
+            "company": "boeing",
+            "label": "REJECT",
+            "oldScore": 0.2706890404224396,
+            "newScore": 0.25759968161582947
+          }
+        ]
+      },
+      "casefold_control": {
+        "evaluation": {
+          "n": 347,
+          "keeps": 150,
+          "falseRejects": 5,
+          "rejected": 37,
+          "keepRecall": 0.9666666666666667,
+          "rejectionRate": 0.10662824207492795,
+          "rejectPrecision": 0.8648648648648649
+        },
+        "meanAbsoluteScoreChange": 2.2244384721651544e-08,
+        "maxAbsoluteScoreChange": 2.682209014892578e-07,
+        "decisionChanges": 0,
+        "examples": []
+      }
+    },
+    "benchmark": {
+      "n": 40,
+      "batch": 16,
+      "gpuBatchMsPerPosting": 0.29894527506257873,
+      "gpuThroughput": 3345.0938463257808,
+      "gpuSingleMedianMs": 2.7306355113978498,
+      "gpuSingleP95Ms": 2.8393946027790657,
+      "peakGpuAllocatedMiB": 51.0859375,
+      "peakGpuReservedMiB": 54.0,
+      "processRssHighWaterMiB": 843.75390625,
+      "cpuSingleMedianMs": 1.2250119980308227,
+      "cpuSingleP95Ms": 1.372730302682612,
+      "cpuSequentialPerSecond": 799.6234733361742,
+      "cpuThreads": 4,
+      "processRssHighWaterAfterCpuMiB": 866.87890625
+    }
+  },
+  {
+    "model": "bert-tiny",
+    "view": "title_body",
+    "modes": {
+      "original": {
+        "evaluation": {
+          "n": 347,
+          "keeps": 150,
+          "falseRejects": 12,
+          "rejected": 104,
+          "keepRecall": 0.92,
+          "rejectionRate": 0.29971181556195964,
+          "rejectPrecision": 0.8846153846153846
+        },
+        "meanAbsoluteScoreChange": 0.0,
+        "maxAbsoluteScoreChange": 0.0,
+        "decisionChanges": 0,
+        "examples": []
+      },
+      "company_mask_preserve_case": {
+        "evaluation": {
+          "n": 347,
+          "keeps": 150,
+          "falseRejects": 17,
+          "rejected": 130,
+          "keepRecall": 0.8866666666666667,
+          "rejectionRate": 0.3746397694524496,
+          "rejectPrecision": 0.8692307692307693
+        },
+        "meanAbsoluteScoreChange": 0.04971876390471582,
+        "maxAbsoluteScoreChange": 0.6442652493715286,
+        "decisionChanges": 26,
+        "examples": [
+          {
+            "id": "0570417ac16c6bcf",
+            "title": "Special Operations Clinical Psychologist (75th Ranger Regiment, Fort Moore,GA)",
+            "company": "kbr",
+            "label": "REJECT",
+            "oldScore": 0.1813170164823532,
+            "newScore": 0.12905104458332062
+          },
+          {
+            "id": "0c67a622ba025e56",
+            "title": "Principal Project Manager - Highway Design/Construction - Transportation",
+            "company": "parsons",
+            "label": "REJECT",
+            "oldScore": 0.4158661365509033,
+            "newScore": 0.36714187264442444
+          },
+          {
+            "id": "19656a7f97d7d8a4",
+            "title": "Structural Engineers and Designers",
+            "company": "aecom",
+            "label": "REJECT",
+            "oldScore": 0.6736848950386047,
+            "newScore": 0.11151758581399918
+          },
+          {
+            "id": "1db7e4f9a5a34fb5",
+            "title": "Sr Principal HR Business Partner",
+            "company": "northrop-grumman",
+            "label": "REJECT",
+            "oldScore": 0.21269096434116364,
+            "newScore": 0.11284779012203217
+          },
+          {
+            "id": "3c02e58c27a8eca3",
+            "title": "Boeing Summer 2027 Internship Program (PAID) – Finance (Evergreen)",
+            "company": "boeing",
+            "label": "REJECT",
+            "oldScore": 0.2852518856525421,
+            "newScore": 0.24900469183921814
+          },
+          {
+            "id": "4493f43bec3181bf",
+            "title": "Senior Account Manager, Global AI Factory Technical Sales and Strategy",
+            "company": "nvidia",
+            "label": "KEEP",
+            "oldScore": 0.30171898007392883,
+            "newScore": 0.24238350987434387
+          },
+          {
+            "id": "45bf38786912b4d6",
+            "title": "Principal Public Relations Representative (19792)",
+            "company": "northrop-grumman",
+            "label": "REJECT",
+            "oldScore": 0.22119681537151337,
+            "newScore": 0.10623838752508163
+          },
+          {
+            "id": "6d5d84496370a45a",
+            "title": "Roadway Engineer II",
+            "company": "parsons",
+            "label": "REJECT",
+            "oldScore": 0.4000362753868103,
+            "newScore": 0.38068002462387085
+          },
+          {
+            "id": "6f9ff26aa43ca287",
+            "title": "CEI Senior Inspector",
+            "company": "aecom",
+            "label": "REJECT",
+            "oldScore": 0.1449635773897171,
+            "newScore": 0.12057354301214218
+          },
+          {
+            "id": "7c0152aa7d0dd4e1",
+            "title": "Senior Structural Engineer (Substation Focus) - Remote (US)",
+            "company": "aecom",
+            "label": "REJECT",
+            "oldScore": 0.19254350662231445,
+            "newScore": 0.10486587136983871
+          },
+          {
+            "id": "9aa179d2efcde305",
+            "title": "Senior Civil Engineer",
+            "company": "aecom",
+            "label": "REJECT",
+            "oldScore": 0.3344850242137909,
+            "newScore": 0.10158039629459381
+          },
+          {
+            "id": "a641029d359d4837",
+            "title": "Field Technician 4",
+            "company": "northrop-grumman",
+            "label": "KEEP",
+            "oldScore": 0.6241239905357361,
+            "newScore": 0.10258588194847107
+          },
+          {
+            "id": "aca9599865d7a5d1",
+            "title": "Sr Services Sales Executive",
+            "company": "servicenow",
+            "label": "REJECT",
+            "oldScore": 0.15358464419841766,
+            "newScore": 0.12297796458005905
+          },
+          {
+            "id": "c97fa2b16a30fdc0",
+            "title": "Structural Engineer (Substation Focus) - Remote (US)",
+            "company": "aecom",
+            "label": "REJECT",
+            "oldScore": 0.144678995013237,
+            "newScore": 0.10478191822767258
+          },
+          {
+            "id": "cbcd74d3d47223c6",
+            "title": "Supply Chain Procurement Specialist",
+            "company": "northrop-grumman",
+            "label": "REJECT",
+            "oldScore": 0.368534117937088,
+            "newScore": 0.10211072117090225
+          },
+          {
+            "id": "ce9c002093e85626",
+            "title": "Senior Power BI Developer",
+            "company": "kbr",
+            "label": "KEEP",
+            "oldScore": 0.150728240609169,
+            "newScore": 0.13224415481090546
+          },
+          {
+            "id": "d251048a6dec6c90",
+            "title": "Roadway Lighting Engineers and Designers",
+            "company": "aecom",
+            "label": "KEEP",
+            "oldScore": 0.5355210900306702,
+            "newScore": 0.11425459384918213
+          },
+          {
+            "id": "d7e1049bc7c490ee",
+            "title": "Senior Director, Business Development: NSA, USCYBERCOM, and Intelligence Community",
+            "company": "parsons",
+            "label": "REJECT",
+            "oldScore": 0.4070839285850525,
+            "newScore": 0.38937610387802124
+          },
+          {
+            "id": "d83261bc917da121",
+            "title": "Principal Specialist, Talent Acquisition (Remote)",
+            "company": "rtx",
+            "label": "REJECT",
+            "oldScore": 0.4066867232322693,
+            "newScore": 0.3435406982898712
+          },
+          {
+            "id": "d9c27525846e7fa6",
+            "title": "Roadway Engineers and Designers",
+            "company": "aecom",
+            "label": "REJECT",
+            "oldScore": 0.4250006079673767,
+            "newScore": 0.11134251207113266
+          },
+          {
+            "id": "dd1980e316a6f16d",
+            "title": "Assistant Construction Project Manager II- AECOM Hunt",
+            "company": "aecom",
+            "label": "REJECT",
+            "oldScore": 0.13756854832172394,
+            "newScore": 0.11231696605682373
+          },
+          {
+            "id": "e0b465087fd743f5",
+            "title": "Mid-level Archaeology Technician (on-call)",
+            "company": "aecom",
+            "label": "REJECT",
+            "oldScore": 0.5490284562110901,
+            "newScore": 0.10666332393884659
+          },
+          {
+            "id": "e2ffbe5438e71b4d",
+            "title": "Drainage Engineers and Designers ",
+            "company": "aecom",
+            "label": "REJECT",
+            "oldScore": 0.49237918853759766,
+            "newScore": 0.1263916790485382
+          },
+          {
+            "id": "e59afc2122b02617",
+            "title": "Civil Engineer",
+            "company": "aecom",
+            "label": "REJECT",
+            "oldScore": 0.5768519639968872,
+            "newScore": 0.09998214244842529
+          },
+          {
+            "id": "eabce67dc668529b",
+            "title": "Advisory Solution Consultant - Finance & Supply Chain Solutions",
+            "company": "servicenow",
+            "label": "KEEP",
+            "oldScore": 0.36121007800102234,
+            "newScore": 0.1119183897972107
+          },
+          {
+            "id": "ee2800597995ac8f",
+            "title": "Senior Civil Engineer",
+            "company": "aecom",
+            "label": "REJECT",
+            "oldScore": 0.3344850242137909,
+            "newScore": 0.10158039629459381
+          }
+        ]
+      },
+      "casefold_control": {
+        "evaluation": {
+          "n": 347,
+          "keeps": 150,
+          "falseRejects": 12,
+          "rejected": 104,
+          "keepRecall": 0.92,
+          "rejectionRate": 0.29971181556195964,
+          "rejectPrecision": 0.8846153846153846
+        },
+        "meanAbsoluteScoreChange": 0.0,
+        "maxAbsoluteScoreChange": 0.0,
+        "decisionChanges": 0,
+        "examples": []
+      }
+    },
+    "benchmark": {
+      "n": 40,
+      "batch": 16,
+      "gpuBatchMsPerPosting": 2.785749249960645,
+      "gpuThroughput": 358.96985344755177,
+      "gpuSingleMedianMs": 4.796931498276535,
+      "gpuSingleP95Ms": 6.9588388985721386,
+      "peakGpuAllocatedMiB": 81.833984375,
+      "peakGpuReservedMiB": 98.0,
+      "processRssHighWaterMiB": 839.6171875,
+      "cpuSingleMedianMs": 5.926676007220522,
+      "cpuSingleP95Ms": 7.711070495861348,
+      "cpuSequentialPerSecond": 160.91883819185685,
+      "cpuThreads": 4,
+      "processRssHighWaterAfterCpuMiB": 866.2421875
+    }
+  }
+]

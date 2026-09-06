@@ -1,0 +1,20 @@
+{
+  "pythonSyntax": "PASS",
+  "unitTests": 13,
+  "reportReplay": "byte-identical",
+  "reportHashes": {
+    "results.json": "451dddd6a72bf250bdd623c0b984e6e1b36ca46f2f2a510c92f927b90850a3a8",
+    "report.md": "1621b6b99f6b25547c2affeece45e2e2fe34de0ea349b159aab4571cb0ee6123",
+    "paired-error-analysis.json": "b1a425f47a8e52defffea4b832196e6c5ba54dbec81a544cff7368a5944ec228",
+    "selected-thresholds.csv": "7168d7a835efa46fb2875a3c8f68b25d6e87514ec0360ac98b1692a73849323a",
+    "diagnostic-frontiers.csv": "8bdea4ad58593f97e413c44f73a532690ff03cce9efa320dd6a8ea10a19071c6",
+    "fixed-threshold-sweep.csv": "70909241861f70c13f380bd284899d2f15180134dd5e33854be4f38731a9525f",
+    "rule-matched-diagnostic.json": "98c7e8afd7858a5ac344751cb2f0146c68b193bb552a9c59ef491dd20a857b70"
+  },
+  "whitespace": "PASS",
+  "tokenizerValidation": {
+    "postings": 4701,
+    "prefix256ExactParity": true,
+    "fullTitlePreserved": true
+  }
+}

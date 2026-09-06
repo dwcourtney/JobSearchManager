@@ -1,0 +1,196 @@
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+Token indices sequence length is longer than the specified maximum sequence length for this model (12000 > 512). Running this sequence through the model will result in indexing errors
+You're using a DebertaV2TokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+{'maxPositionEmbeddings': 512, 'batch': 4, 'tokens': 512, 'trainingPeakAllocatedMiB': 2941.158203125, 'trainingPeakReservedMiB': 4578.0}
+Token indices sequence length is longer than the specified maximum sequence length for this model (1172 > 512). Running this sequence through the model will result in indexing errors
+prefix256 {'n': 1159, 'anyEvidence': 0.722174288179465, 'halfEvidence': 0.5522001725625539, 'fullEvidence': 0.3796376186367558, 'meanFraction': 0.5548527020910711, 'truncated': 0.999137187230371}
+headtail256 {'n': 1159, 'anyEvidence': 0.3546160483175151, 'halfEvidence': 0.1984469370146678, 'fullEvidence': 0.11044003451251079, 'meanFraction': 0.21477225153629403, 'truncated': 0.999137187230371}
+headmidtail256 {'n': 1159, 'anyEvidence': 0.3028472821397757, 'halfEvidence': 0.16566005176876616, 'fullEvidence': 0.0008628127696289905, 'meanFraction': 0.14219905333104477, 'truncated': 0.999137187230371}
+prefix384 {'n': 1159, 'anyEvidence': 0.9309749784296808, 'halfEvidence': 0.8645383951682485, 'fullEvidence': 0.7566867989646247, 'meanFraction': 0.8573786974951392, 'truncated': 0.999137187230371}
+prefix512 {'n': 1159, 'anyEvidence': 0.9723899913718723, 'halfEvidence': 0.9568593615185504, 'fullEvidence': 0.9249352890422778, 'meanFraction': 0.954228868880157, 'truncated': 0.997411561691113}
+sections256 {'n': 1159, 'anyEvidence': 0.7575496117342536, 'halfEvidence': 0.5711820534943917, 'fullEvidence': 0.08886971527178603, 'meanFraction': 0.5623082383572084, 'truncated': 0.999137187230371}
+Token indices sequence length is longer than the specified maximum sequence length for this model (1172 > 512). Running this sequence through the model will result in indexing errors
+SKIP complete deberta-small-prefix256-all-fold0
+SKIP complete deberta-small-prefix256-all-fold1
+SKIP complete deberta-small-prefix256-all-fold2
+START deberta-small-headtail256-all-fold0
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+You're using a DebertaV2TokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+deberta-small-headtail256-all-fold0 epoch 1 validationCE 0.72706
+deberta-small-headtail256-all-fold0 epoch 2 validationCE 0.69252
+deberta-small-headtail256-all-fold0 epoch 3 validationCE 0.52199
+deberta-small-headtail256-all-fold0 epoch 4 validationCE 0.50281
+DONE deberta-small-headtail256-all-fold0 trainSeconds 262.8
+START deberta-small-headtail256-all-fold1
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-headtail256-all-fold1 epoch 1 validationCE 0.64497
+deberta-small-headtail256-all-fold1 epoch 2 validationCE 0.13223
+deberta-small-headtail256-all-fold1 epoch 3 validationCE 0.18307
+deberta-small-headtail256-all-fold1 epoch 4 validationCE 0.19191
+DONE deberta-small-headtail256-all-fold1 trainSeconds 481.4
+START deberta-small-headtail256-all-fold2
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-headtail256-all-fold2 epoch 1 validationCE 0.73421
+deberta-small-headtail256-all-fold2 epoch 2 validationCE 0.59896
+deberta-small-headtail256-all-fold2 epoch 3 validationCE 0.7996
+deberta-small-headtail256-all-fold2 epoch 4 validationCE 0.9693
+DONE deberta-small-headtail256-all-fold2 trainSeconds 458.6
+START deberta-small-headmidtail256-all-fold0
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-headmidtail256-all-fold0 epoch 1 validationCE 0.69368
+deberta-small-headmidtail256-all-fold0 epoch 2 validationCE 0.59686
+deberta-small-headmidtail256-all-fold0 epoch 3 validationCE 0.58345
+deberta-small-headmidtail256-all-fold0 epoch 4 validationCE 0.57659
+DONE deberta-small-headmidtail256-all-fold0 trainSeconds 263.8
+START deberta-small-headmidtail256-all-fold1
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-headmidtail256-all-fold1 epoch 1 validationCE 0.63845
+deberta-small-headmidtail256-all-fold1 epoch 2 validationCE 0.1721
+deberta-small-headmidtail256-all-fold1 epoch 3 validationCE 0.1983
+deberta-small-headmidtail256-all-fold1 epoch 4 validationCE 0.21486
+DONE deberta-small-headmidtail256-all-fold1 trainSeconds 482.3
+START deberta-small-headmidtail256-all-fold2
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-headmidtail256-all-fold2 epoch 1 validationCE 0.73733
+deberta-small-headmidtail256-all-fold2 epoch 2 validationCE 0.6487
+deberta-small-headmidtail256-all-fold2 epoch 3 validationCE 0.62352
+deberta-small-headmidtail256-all-fold2 epoch 4 validationCE 0.70341
+DONE deberta-small-headmidtail256-all-fold2 trainSeconds 460.6
+START deberta-small-prefix384-all-fold0
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-prefix384-all-fold0 epoch 1 validationCE 0.50619
+deberta-small-prefix384-all-fold0 epoch 2 validationCE 0.43169
+deberta-small-prefix384-all-fold0 epoch 3 validationCE 0.49698
+deberta-small-prefix384-all-fold0 epoch 4 validationCE 0.55449
+DONE deberta-small-prefix384-all-fold0 trainSeconds 494.4
+START deberta-small-prefix384-all-fold1
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-prefix384-all-fold1 epoch 1 validationCE 0.2095
+deberta-small-prefix384-all-fold1 epoch 2 validationCE 0.08786
+deberta-small-prefix384-all-fold1 epoch 3 validationCE 0.18343
+deberta-small-prefix384-all-fold1 epoch 4 validationCE 0.21691
+DONE deberta-small-prefix384-all-fold1 trainSeconds 901.0
+START deberta-small-prefix384-all-fold2
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-prefix384-all-fold2 epoch 1 validationCE 0.68571
+deberta-small-prefix384-all-fold2 epoch 2 validationCE 1.06004
+deberta-small-prefix384-all-fold2 epoch 3 validationCE 0.75392
+deberta-small-prefix384-all-fold2 epoch 4 validationCE 0.83164
+DONE deberta-small-prefix384-all-fold2 trainSeconds 830.4
+START deberta-small-prefix512-all-fold0
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-prefix512-all-fold0 epoch 1 validationCE 0.50447
+deberta-small-prefix512-all-fold0 epoch 2 validationCE 0.4355
+deberta-small-prefix512-all-fold0 epoch 3 validationCE 0.476
+deberta-small-prefix512-all-fold0 epoch 4 validationCE 0.52363
+DONE deberta-small-prefix512-all-fold0 trainSeconds 801.0
+START deberta-small-prefix512-all-fold1
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-prefix512-all-fold1 epoch 1 validationCE 0.18322
+deberta-small-prefix512-all-fold1 epoch 2 validationCE 0.18048
+deberta-small-prefix512-all-fold1 epoch 3 validationCE 0.15499
+deberta-small-prefix512-all-fold1 epoch 4 validationCE 0.22908
+DONE deberta-small-prefix512-all-fold1 trainSeconds 1451.4
+START deberta-small-prefix512-all-fold2
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-prefix512-all-fold2 epoch 1 validationCE 0.64702
+deberta-small-prefix512-all-fold2 epoch 2 validationCE 0.49067
+deberta-small-prefix512-all-fold2 epoch 3 validationCE 0.59948
+deberta-small-prefix512-all-fold2 epoch 4 validationCE 0.65703
+DONE deberta-small-prefix512-all-fold2 trainSeconds 1322.1
+START deberta-small-sections256-all-fold0
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-sections256-all-fold0 epoch 1 validationCE 0.6865
+deberta-small-sections256-all-fold0 epoch 2 validationCE 0.45266
+deberta-small-sections256-all-fold0 epoch 3 validationCE 0.41129
+deberta-small-sections256-all-fold0 epoch 4 validationCE 0.43425
+DONE deberta-small-sections256-all-fold0 trainSeconds 262.3
+START deberta-small-sections256-all-fold1
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-sections256-all-fold1 epoch 1 validationCE 0.18433
+deberta-small-sections256-all-fold1 epoch 2 validationCE 0.14562
+deberta-small-sections256-all-fold1 epoch 3 validationCE 0.18796
+deberta-small-sections256-all-fold1 epoch 4 validationCE 0.18192
+DONE deberta-small-sections256-all-fold1 trainSeconds 479.6
+START deberta-small-sections256-all-fold2
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /tmp/jsm-deberta.dxVPsh/model-cache/models--cross-encoder--nli-deberta-v3-small/snapshots/fa2804872c3b4bd748f38c0185cc85775361e735 and are newly initialized because the shapes did not match:
+- classifier.bias: found shape torch.Size([3]) in the checkpoint and torch.Size([2]) in the model instantiated
+- classifier.weight: found shape torch.Size([3, 768]) in the checkpoint and torch.Size([2, 768]) in the model instantiated
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+deberta-small-sections256-all-fold2 epoch 1 validationCE 0.85008
+deberta-small-sections256-all-fold2 epoch 2 validationCE 0.98352
+deberta-small-sections256-all-fold2 epoch 3 validationCE 0.60058
+deberta-small-sections256-all-fold2 epoch 4 validationCE 0.67751
+DONE deberta-small-sections256-all-fold2 trainSeconds 456.2
+ALL COMPLETE
+deberta-small headmidtail256 all {'n': 2669, 'keeps': 2121, 'falseRejects': 49, 'rejected': 190, 'keepRecall': 0.976897689768977, 'rejectionRate': 0.07118771075309105, 'rejectPrecision': 0.7421052631578947} cache 0.1437125748502994
+deberta-small headtail256 all {'n': 2669, 'keeps': 2121, 'falseRejects': 51, 'rejected': 176, 'keepRecall': 0.9759547383309759, 'rejectionRate': 0.06594230048707381, 'rejectPrecision': 0.7102272727272727} cache 0.11443779108449767
+deberta-small prefix256 all {'n': 2669, 'keeps': 2121, 'falseRejects': 48, 'rejected': 201, 'keepRecall': 0.9773691654879774, 'rejectionRate': 0.07530910453353316, 'rejectPrecision': 0.7611940298507462} cache 0.13572854291417166
+deberta-small prefix384 all {'n': 2669, 'keeps': 2121, 'falseRejects': 65, 'rejected': 220, 'keepRecall': 0.9693540782649693, 'rejectionRate': 0.08242787560884227, 'rejectPrecision': 0.7045454545454546} cache 0.15701929474384566
+deberta-small prefix512 all {'n': 2669, 'keeps': 2121, 'falseRejects': 64, 'rejected': 262, 'keepRecall': 0.9698255539839699, 'rejectionRate': 0.09816410640689396, 'rejectPrecision': 0.7557251908396947} cache 0.20159680638722555
+deberta-small sections256 all {'n': 2669, 'keeps': 2121, 'falseRejects': 79, 'rejected': 302, 'keepRecall': 0.9627534181989628, 'rejectionRate': 0.11315099288122893, 'rejectPrecision': 0.7384105960264901} cache 0.24484364604125083
+Token indices sequence length is longer than the specified maximum sequence length for this model (1002 > 512). Running this sequence through the model will result in indexing errors
+You're using a DebertaV2TokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+deberta-small-prefix256-all-fold2 benchmark PASS
+Token indices sequence length is longer than the specified maximum sequence length for this model (1002 > 512). Running this sequence through the model will result in indexing errors
+You're using a DebertaV2TokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+deberta-small-headtail256-all-fold2 benchmark PASS
+Token indices sequence length is longer than the specified maximum sequence length for this model (1002 > 512). Running this sequence through the model will result in indexing errors
+You're using a DebertaV2TokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+deberta-small-headmidtail256-all-fold2 benchmark PASS
+Token indices sequence length is longer than the specified maximum sequence length for this model (1002 > 512). Running this sequence through the model will result in indexing errors
+You're using a DebertaV2TokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+deberta-small-prefix384-all-fold2 benchmark PASS
+Token indices sequence length is longer than the specified maximum sequence length for this model (1002 > 512). Running this sequence through the model will result in indexing errors
+You're using a DebertaV2TokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+deberta-small-prefix512-all-fold2 benchmark PASS
+Token indices sequence length is longer than the specified maximum sequence length for this model (1002 > 512). Running this sequence through the model will result in indexing errors
+You're using a DebertaV2TokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+deberta-small-sections256-all-fold2 benchmark PASS
+ARCHIVED 18
+PIPELINE COMPLETE

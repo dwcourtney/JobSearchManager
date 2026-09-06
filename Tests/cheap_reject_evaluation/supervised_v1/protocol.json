@@ -1,0 +1,39 @@
+{
+  "experiment": "jsm-supervised-cheap-reject-v1",
+  "seed": 20260905,
+  "models": {
+    "deberta-small": {
+      "name": "cross-encoder/nli-deberta-v3-small",
+      "revision": "fa2804872c3b4bd748f38c0185cc85775361e735",
+      "weightSha256": "ebc79588dd73ccfb6a3f6078519cfbf512c5305384c5ea1845bc71cd32216e86",
+      "learningRate": 0.00002,
+      "epochs": 8,
+      "initialization": "NLI encoder and pooler reused; three-way NLI classifier replaced with a seeded random binary KEEP/REJECT head. All parameters fine-tuned."
+    },
+    "bert-tiny": {
+      "name": "google/bert_uncased_L-2_H-128_A-2",
+      "revision": "30b0a37ccaaa32f332884b96992754e246e48c5f",
+      "learningRate": 0.0001,
+      "epochs": 12,
+      "initialization": "Pretrained encoder with seeded random binary sequence classifier; all parameters fine-tuned."
+    }
+  },
+  "views": ["title", "title_body"],
+  "maxLength": 384,
+  "truncation": "Complete Title prefix/title first, then Body prefix and beginning of body within 384 tokens including specials; no hypothesis. Overlong title fails open at inference and is an error in training. No occupational extraction.",
+  "microBatch": 4,
+  "gradientAccumulation": 4,
+  "inferenceBatch": 16,
+  "dtype": "float32",
+  "optimizer": "AdamW",
+  "weightDecay": 0.01,
+  "warmupFraction": 0.1,
+  "gradientClip": 1.0,
+  "loss": "Cross entropy with inverse-frequency weights computed only on each training partition. Validation uses unweighted cross entropy.",
+  "checkpointSelection": "Lowest validation cross entropy among fixed epochs; no evaluation-label access for checkpoint or threshold selection.",
+  "thresholds": [0, 0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.975, 0.99, 0.995, 0.999, 1.0],
+  "operatingPoints": "For each fold, choose largest threshold satisfying validation KEEP recall >=99%, >=98%, and 100%, using grid plus validation KEEP-score boundary. Freeze it before scoring employer-held-out evaluation. Aggregate held-out predictions; never adjust thresholds to fix evaluation errors.",
+  "cache": "Assign each cache posting to the model whose evaluation fold excludes its employer from training and validation. Report full 1503 snapshot and unlabeled-only subset excluding all 347 references. No full-data fit or in-training cache score used as evidence.",
+  "diagnostics": "On evaluation rows only, compare masking known company identifiers with neutral text and replacing body beginning with body end. Use train-only title TF-IDF similarity for lexical novelty slices, not a claimed occupation-family holdout. No new rules or post-result model/hyperparameter changes.",
+  "selectionBoundary": "Protocol and splits frozen before training; same splits for four candidates. All results are development research, not the blinded production holdout. No generative model labeling/inference."
+}

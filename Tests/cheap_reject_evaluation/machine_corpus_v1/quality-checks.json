@@ -1,0 +1,317 @@
+{
+  "reviewed": 45,
+  "labelChanges": [
+    {
+      "id": "333e7cd800bb37029653e02c",
+      "title": "Senior Proposal Manager (I&C)",
+      "beforeLabel": "AMBIGUOUS",
+      "afterLabel": "REJECT",
+      "beforeConfidence": "low",
+      "afterConfidence": "high"
+    },
+    {
+      "id": "4fa0732179717c6d16ee40c8",
+      "title": "Supply Chain Project Manager - Level 5",
+      "beforeLabel": "REJECT",
+      "afterLabel": "AMBIGUOUS",
+      "beforeConfidence": "medium",
+      "afterConfidence": "low"
+    },
+    {
+      "id": "12d7f2b7130d0ec586f36fc6",
+      "title": "Manager Business Management 2",
+      "beforeLabel": "AMBIGUOUS",
+      "afterLabel": "REJECT",
+      "beforeConfidence": "low",
+      "afterConfidence": "high"
+    },
+    {
+      "id": "233c7aafbf5ff7087ce3d7b0",
+      "title": "Chinese Cultural/Language SME",
+      "beforeLabel": "AMBIGUOUS",
+      "afterLabel": "REJECT",
+      "beforeConfidence": "low",
+      "afterConfidence": "high"
+    },
+    {
+      "id": "d269446fa5f5603467b970af",
+      "title": "ICITAP Senior Law Enforcement Development Coordinator",
+      "beforeLabel": "AMBIGUOUS",
+      "afterLabel": "REJECT",
+      "beforeConfidence": "low",
+      "afterConfidence": "high"
+    },
+    {
+      "id": "069507020254e4e842f2c5d8",
+      "title": "Electronic Systems Technician (OCONUS)",
+      "beforeLabel": "AMBIGUOUS",
+      "afterLabel": "KEEP",
+      "beforeConfidence": "low",
+      "afterConfidence": "high"
+    },
+    {
+      "id": "f66612845bc3e9f6d9021c05",
+      "title": "Consulting Engineer - On Call",
+      "beforeLabel": "AMBIGUOUS",
+      "afterLabel": "KEEP",
+      "beforeConfidence": "low",
+      "afterConfidence": "high"
+    },
+    {
+      "id": "ed6c05af0c863ef58767cf5a",
+      "title": "Antarctic Airfield Manager",
+      "beforeLabel": "AMBIGUOUS",
+      "afterLabel": "REJECT",
+      "beforeConfidence": "low",
+      "afterConfidence": "high"
+    },
+    {
+      "id": "09780b5015557ff8ee6b65ab",
+      "title": "Counterintelligence Officer",
+      "beforeLabel": "AMBIGUOUS",
+      "afterLabel": "REJECT",
+      "beforeConfidence": "low",
+      "afterConfidence": "high"
+    },
+    {
+      "id": "98a06844d4045310fd0ba1b7",
+      "title": "Engineer Industrial",
+      "beforeLabel": "AMBIGUOUS",
+      "afterLabel": "KEEP",
+      "beforeConfidence": "low",
+      "afterConfidence": "medium"
+    },
+    {
+      "id": "49e5b8b40486e115cc7dfdbc",
+      "title": "Civil/Structural Engineer",
+      "beforeLabel": "AMBIGUOUS",
+      "afterLabel": "KEEP",
+      "beforeConfidence": "low",
+      "afterConfidence": "high"
+    },
+    {
+      "id": "aecc32f4859fd2588d79338a",
+      "title": "Winter Site Manager (Antarctica)- Alternate",
+      "beforeLabel": "AMBIGUOUS",
+      "afterLabel": "REJECT",
+      "beforeConfidence": "low",
+      "afterConfidence": "high"
+    },
+    {
+      "id": "40a4e12248dbc15959d09073",
+      "title": "Extended Workforce Solutions HR Project Manager",
+      "beforeLabel": "REJECT",
+      "afterLabel": "KEEP",
+      "beforeConfidence": "medium",
+      "afterConfidence": "high"
+    }
+  ],
+  "repeatedTitleOnlyGroups": 207,
+  "repeatedTitleOnlyRows": 602,
+  "inconsistentTitleOnlyGroups": 0,
+  "repeatedBodyGroups": 2,
+  "inconsistentIdenticalBodyGroups": 0,
+  "crossPartitionTitleDisagreements": [
+    {
+      "title": "targeting officer",
+      "postings": [
+        {
+          "id": "a5023a034bbf65c168394e0b",
+          "label": "REJECT",
+          "bodyAvailable": true
+        },
+        {
+          "id": "6b8437bc211e98be17d7b25d",
+          "label": "AMBIGUOUS",
+          "bodyAvailable": false
+        },
+        {
+          "id": "016c78bb6b8757468ce0f565",
+          "label": "AMBIGUOUS",
+          "bodyAvailable": false
+        },
+        {
+          "id": "b758b6e6a53537bacb2128eb",
+          "label": "AMBIGUOUS",
+          "bodyAvailable": false
+        },
+        {
+          "id": "08b5e77e3b9f28eaf382bdc7",
+          "label": "AMBIGUOUS",
+          "bodyAvailable": false
+        },
+        {
+          "id": "0f5834cd26e60071501a5cec",
+          "label": "AMBIGUOUS",
+          "bodyAvailable": true
+        },
+        {
+          "id": "7240af5f20d36f369a4bbdfa",
+          "label": "REJECT",
+          "bodyAvailable": true
+        },
+        {
+          "id": "7d10d57b964d9099a225144d",
+          "label": "AMBIGUOUS",
+          "bodyAvailable": false
+        },
+        {
+          "id": "cc02cdce6e4ddb8bf8334ddd",
+          "label": "AMBIGUOUS",
+          "bodyAvailable": false
+        },
+        {
+          "id": "f03f67440650e27dabd4d6c2",
+          "label": "AMBIGUOUS",
+          "bodyAvailable": false
+        },
+        {
+          "id": "0db8f3d09b4a1a8d43c0d7eb",
+          "label": "AMBIGUOUS",
+          "bodyAvailable": false
+        }
+      ]
+    },
+    {
+      "title": "exercise planner",
+      "postings": [
+        {
+          "id": "aa779109ffc86bac1c698b02",
+          "label": "REJECT",
+          "bodyAvailable": true
+        },
+        {
+          "id": "e973bf9dfa7a052779126bd4",
+          "label": "AMBIGUOUS",
+          "bodyAvailable": false
+        }
+      ]
+    },
+    {
+      "title": "desk officer",
+      "postings": [
+        {
+          "id": "68e1e91c288eb585a793a0e0",
+          "label": "AMBIGUOUS",
+          "bodyAvailable": false
+        },
+        {
+          "id": "a0290a4b3e17b92d89f7bc45",
+          "label": "REJECT",
+          "bodyAvailable": true
+        }
+      ]
+    },
+    {
+      "title": "senior program manager",
+      "postings": [
+        {
+          "id": "6572f06036c7ec2a91554c5f",
+          "label": "AMBIGUOUS",
+          "bodyAvailable": false
+        },
+        {
+          "id": "fb2458b34c20f4bb19f6bf6c",
+          "label": "AMBIGUOUS",
+          "bodyAvailable": false
+        },
+        {
+          "id": "cf9bb5b0422723c513d9e175",
+          "label": "KEEP",
+          "bodyAvailable": true
+        }
+      ]
+    },
+    {
+      "title": "counterintelligence officer",
+      "postings": [
+        {
+          "id": "67d561ae63b3927a1ee9ead5",
+          "label": "AMBIGUOUS",
+          "bodyAvailable": false
+        },
+        {
+          "id": "1e77346acb85870861eaf8d0",
+          "label": "AMBIGUOUS",
+          "bodyAvailable": false
+        },
+        {
+          "id": "ee023e02f28d2c71e2c75677",
+          "label": "REJECT",
+          "bodyAvailable": true
+        },
+        {
+          "id": "09780b5015557ff8ee6b65ab",
+          "label": "REJECT",
+          "bodyAvailable": true
+        }
+      ]
+    },
+    {
+      "title": "material project manager",
+      "postings": [
+        {
+          "id": "0a98e5f08eda899f40548681",
+          "label": "AMBIGUOUS",
+          "bodyAvailable": false
+        },
+        {
+          "id": "0a19cec56b315b55e47b4562",
+          "label": "AMBIGUOUS",
+          "bodyAvailable": false
+        },
+        {
+          "id": "989e432eda5073feb26f71c2",
+          "label": "AMBIGUOUS",
+          "bodyAvailable": false
+        },
+        {
+          "id": "ae391ab73a0e7bd6c9dc885e",
+          "label": "AMBIGUOUS",
+          "bodyAvailable": false
+        },
+        {
+          "id": "557536f8ee6019e2d96f4b6e",
+          "label": "AMBIGUOUS",
+          "bodyAvailable": false
+        },
+        {
+          "id": "71b578804943276a7b1c1da6",
+          "label": "REJECT",
+          "bodyAvailable": true
+        }
+      ]
+    },
+    {
+      "title": "civil/structural engineer",
+      "postings": [
+        {
+          "id": "27eaeba5488288f0267b65e7",
+          "label": "AMBIGUOUS",
+          "bodyAvailable": false
+        },
+        {
+          "id": "49e5b8b40486e115cc7dfdbc",
+          "label": "KEEP",
+          "bodyAvailable": true
+        }
+      ]
+    },
+    {
+      "title": "mid cartographic analyst",
+      "postings": [
+        {
+          "id": "3148ac4872b8ee526bb31432",
+          "label": "KEEP",
+          "bodyAvailable": true
+        },
+        {
+          "id": "5589685e21e94f340a85d82d",
+          "label": "AMBIGUOUS",
+          "bodyAvailable": false
+        }
+      ]
+    }
+  ],
+  "interpretation": "Internal consistency only. Same Codex reviewer; no independent human accuracy, recall, or false-reject estimate."
+}
