@@ -1,0 +1,1342 @@
+using System.Diagnostics;
+using System.IO.Compression;
+using System.Net;
+using System.Net.Sockets;
+using System.Security.Claims;
+using System.Text.Json;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.Extensions.Options;
+using JobSearchManager;
+
+if (args is ["--human-review-backup", var reviewSource, var reviewDestination])
+{
+    CheapTriageHumanReview.Backup(reviewSource, reviewDestination);
+    Console.WriteLine("Human review SQLite backup verified.");
+    return;
+}
+
+if (args.Length == 4 && args[0] == "--cheap-triage" && args[1] == "evaluate")
+{
+    var cheapRules = CheapRejectRules.Load(Path.GetFullPath(args[2]));
+    foreach (var line in File.ReadLines(Path.GetFullPath(args[3])))
+    {
+        using var row = JsonDocument.Parse(line);
+        var value = row.RootElement;
+        Console.WriteLine(JsonSerializer.Serialize(new
+        {
+            id = value.GetProperty("id").GetString(),
+            result = cheapRules.Decide(value.GetProperty("title").GetString() ?? "",
+                value.GetProperty("body").GetString() ?? "")
+        }, new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+    }
+    return;
+}
+
+if (args is ["--healthcheck"])
+{
+    try
+    {
+        using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+        using var response = await client.GetAsync("http://127.0.0.1:8080/healthz");
+        Environment.ExitCode = response.IsSuccessStatusCode ? 0 : 1;
+    }
+    catch
+    {
+        Environment.ExitCode = 1;
+    }
+    return;
+}
+
+if (args.Length >= 3 && args[0] == "--regex-maintenance")
+{
+    var action = args[1];
+    var databasePath = Path.GetFullPath(args[2]);
+    var catalog = JobConceptCatalog.LoadDefault();
+    using var store = new SqliteSemanticRuleStore(databasePath, catalog);
+    store.Initialize(Path.Combine(AppContext.BaseDirectory, "LegacyJobConceptRules.json"));
+    var classifier = new RegexSemanticClassifier(store, catalog);
+    await classifier.InitializeAsync();
+    var jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true };
+    switch (action)
+    {
+        case "overview":
+            var rules = await store.ListRulesAsync();
+            Console.WriteLine(JsonSerializer.Serialize(new
+            {
+                databasePath,
+                classifier.RulesetFingerprint,
+                classifier.ActiveRuleCount,
+                statuses = rules.GroupBy(item => item.Status, StringComparer.Ordinal)
+                    .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal)
+            }, jsonOptions));
+            break;
+        case "evaluate":
+            var evaluation = new RegexEvaluationService(
+                Path.Combine(AppContext.BaseDirectory, "RegexValidationCorpus.json"),
+                classifier, store, catalog);
+            Console.WriteLine(JsonSerializer.Serialize(await evaluation.EvaluateAsync(), jsonOptions));
+            break;
+        case "benchmark-cache" when args.Length == 4:
+            var cacheRoot = Path.GetFullPath(args[3]);
+            var cacheFiles = Directory.EnumerateFiles(cacheRoot, "*.json", SearchOption.AllDirectories)
+                .OrderBy(path => path, StringComparer.Ordinal).ToArray();
+            var benchmarkJobs = new List<JobRecord>();
+            foreach (var path in cacheFiles)
+            {
+                try
+                {
+                    var document = JsonSerializer.Deserialize<JobsCacheDocument>(
+                        await File.ReadAllBytesAsync(path),
+                        new JsonSerializerOptions(JsonSerializerDefaults.Web));
+                    if (document?.Jobs is { } jobs) benchmarkJobs.AddRange(jobs);
+                }
+                catch (JsonException) { }
+            }
+            var classifiedJobs = 0;
+            var matchedConcepts = 0;
+            var benchmarkTimer = Stopwatch.StartNew();
+            foreach (var job in benchmarkJobs)
+            {
+                var description = job.DescriptionHtml;
+                if (string.IsNullOrWhiteSpace(description) &&
+                    !string.IsNullOrWhiteSpace(job.CompressedDescriptionHtml))
+                {
+                    using var input = new MemoryStream(Convert.FromBase64String(job.CompressedDescriptionHtml));
+                    using var gzip = new GZipStream(input, CompressionMode.Decompress);
+                    using var reader = new StreamReader(gzip);
+                    description = await reader.ReadToEndAsync();
+                }
+                if (string.IsNullOrWhiteSpace(description)) continue;
+                var result = classifier.Classify(job.Title, description, job.RemoteWork,
+                    job.ExtendedLocationRequirement, productionUsage: false);
+                classifiedJobs++;
+                matchedConcepts += result.Concepts.Count;
+            }
+            benchmarkTimer.Stop();
+            Console.WriteLine(JsonSerializer.Serialize(new
+            {
+                cacheRoot,
+                cacheFileCount = cacheFiles.Length,
+                jobRecordCount = benchmarkJobs.Count,
+                classifiedJobs,
+                matchedConcepts,
+                elapsedMilliseconds = benchmarkTimer.Elapsed.TotalMilliseconds,
+                millisecondsPerJob = classifiedJobs == 0 ? 0 :
+                    benchmarkTimer.Elapsed.TotalMilliseconds / classifiedJobs,
+                jobsPerSecond = benchmarkTimer.Elapsed.TotalSeconds == 0 ? 0 :
+                    classifiedJobs / benchmarkTimer.Elapsed.TotalSeconds,
+                classifier.RulesetFingerprint,
+                classifier.ActiveRuleCount
+            }, jsonOptions));
+            break;
+        case "sample-holdout" when args.Length == 6:
+            var holdoutPlan = JsonSerializer.Deserialize<HoldoutSamplingPlan>(
+                await File.ReadAllTextAsync(Path.GetFullPath(args[4])), jsonOptions)
+                ?? throw new InvalidDataException("The holdout sampling plan is empty.");
+            var holdout = await ProductionHoldoutSampler.SampleAsync(Path.GetFullPath(args[3]),
+                holdoutPlan);
+            await ProductionHoldoutSampler.WriteAtomicallyAsync(holdout,
+                Path.GetFullPath(args[5]));
+            Console.WriteLine(JsonSerializer.Serialize(new
+            {
+                output = Path.GetFullPath(args[5]), holdout.SamplingRunId,
+                holdout.PopulationSize, sampleSize = holdout.Examples.Count,
+                holdout.PlanFingerprint, holdout.PopulationFingerprint, holdout.SampleFingerprint,
+                holdout.DatasetStatus
+            }, jsonOptions));
+            break;
+        case "evaluate-ai-holdout" when args.Length == 4:
+            var aiEvaluation = new AiHoldoutEvaluationService(Path.GetFullPath(args[3]),
+                classifier, store, catalog);
+            Console.WriteLine(JsonSerializer.Serialize(await aiEvaluation.RunAsync(), jsonOptions));
+            break;
+        case "freeze-triage-reference" when args.Length == 4:
+            var triageReference = new TriageEvaluationService(Path.GetFullPath(args[3]));
+            Console.WriteLine(JsonSerializer.Serialize(
+                await triageReference.FreezeReferenceAsync(), jsonOptions));
+            break;
+        case "evaluate-triage" when args.Length == 4:
+            var triageEvaluation = new TriageEvaluationService(Path.GetFullPath(args[3]));
+            Console.WriteLine(JsonSerializer.Serialize(await triageEvaluation.RunAsync(), jsonOptions));
+            break;
+        case "reconcile-cache" when args.Length == 4:
+            Console.WriteLine(JsonSerializer.Serialize(await RegexCacheReconciler.ReconcileAsync(
+                Path.GetFullPath(args[3]), classifier, catalog), jsonOptions));
+            break;
+        case "export":
+            Console.WriteLine(await store.ExportJsonAsync());
+            break;
+        case "import" when args.Length == 4:
+            Console.WriteLine(JsonSerializer.Serialize(await store.ImportCandidatesAsync(
+                await File.ReadAllTextAsync(Path.GetFullPath(args[3])), "maintenance-cli-import"),
+                jsonOptions));
+            break;
+        case "review-stale":
+            Console.WriteLine(JsonSerializer.Serialize(new
+            { reviewDue = await store.MarkReviewDueAsync(DateTimeOffset.UtcNow) }, jsonOptions));
+            break;
+        case "retention":
+            Console.WriteLine(JsonSerializer.Serialize(new
+            { deleted = await store.ApplyRetiredRetentionAsync(DateTimeOffset.UtcNow) }, jsonOptions));
+            break;
+        case "backup" when args.Length == 4:
+            await store.BackupAsync(Path.GetFullPath(args[3]));
+            Console.WriteLine(JsonSerializer.Serialize(new { backup = Path.GetFullPath(args[3]) }, jsonOptions));
+            break;
+        default:
+            Console.Error.WriteLine("Usage: --regex-maintenance <overview|evaluate|evaluate-ai-holdout|freeze-triage-reference|evaluate-triage|benchmark-cache|reconcile-cache|sample-holdout|export|import|review-stale|retention|backup> <regex-rules.db> [evaluation-directory|cache-root] [plan.json] [output.json]");
+            Environment.ExitCode = 2;
+            break;
+    }
+    return;
+}
+
+const int ApplicationPort = 54321;
+const string ApplicationUrl = "http://127.0.0.1:54321";
+
+var builder = WebApplication.CreateBuilder(args);
+var hosting = HostingConfiguration.FromConfiguration(builder.Configuration);
+
+if (hosting.IsLocal)
+{
+    // Local mode retains its authoritative fixed loopback endpoint regardless
+    // of launchSettings.json, the current directory, or shell configuration.
+    builder.WebHost.ConfigureKestrel(options =>
+        options.Listen(IPAddress.Loopback, ApplicationPort));
+}
+
+builder.Services.AddSingleton(hosting);
+var jobSourceConfiguration = builder.Configuration.GetSection("JobSource");
+if (!jobSourceConfiguration.Exists())
+{
+    // Compatibility for deployments that supplied the pre-rebrand provider section.
+    jobSourceConfiguration = builder.Configuration.GetSection("Workday");
+}
+builder.Services.Configure<JobSourceOptions>(jobSourceConfiguration);
+builder.Services.AddHttpClient<JobSourceClient>((services, client) =>
+{
+    var options = services.GetRequiredService<IOptions<JobSourceOptions>>().Value;
+    client.Timeout = TimeSpan.FromSeconds(Math.Clamp(options.RequestTimeoutSeconds, 5, 120));
+    client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("JobSearchManager/1.0");
+});
+builder.Services.AddSingleton<CompanyCatalog>();
+builder.Services.AddSingleton<CredentialDetector>();
+builder.Services.AddSingleton<AcademicQualificationDetector>();
+builder.Services.AddSingleton<WorkAuthorizationDetector>();
+builder.Services.AddSingleton<RemoteWorkDetector>();
+builder.Services.AddSingleton<ExtendedLocationRequirementDetector>();
+builder.Services.AddSingleton<JobConceptCatalog>();
+builder.Services.AddSingleton<SqliteSemanticRuleStore>();
+builder.Services.AddSingleton<RegexSemanticClassifier>();
+builder.Services.AddSingleton<RegexEvaluationService>();
+builder.Services.AddSingleton<AiHoldoutEvaluationService>();
+builder.Services.AddSingleton(services => CheapRejectRules.Load(Path.GetFullPath(
+    builder.Configuration["CheapTriage:RulesetPath"] ?? CheapRejectRules.DefaultPath,
+    builder.Environment.ContentRootPath)));
+builder.Services.AddSingleton<CheapTriageShadow>();
+builder.Services.AddSingleton<RuleMaintenance>();
+builder.Services.AddSingleton<CheapTriageMaintenance>();
+builder.Services.AddSingleton<CheapTriageHumanReview>();
+// Automatic discovery reads persisted Shadow caches only; it never opens a job source.
+builder.Services.AddSingleton<CheapTriageMaintenanceDetector>();
+builder.Services.AddHostedService(services => services.GetRequiredService<CheapTriageMaintenanceDetector>());
+builder.Services.AddHostedService<RegexTelemetryFlushService>();
+builder.Services.AddSingleton<SemanticClassificationService>();
+builder.Services.AddSingleton<PortableWorkspaceService>();
+builder.Services.AddSingleton<SharedSourceRefreshCoordinator>();
+builder.Services.AddJobSearchManagerDataProtection(hosting);
+builder.Services.AddScoped<WorkspaceContext>();
+builder.Services.AddScoped<WorkspaceRuntimeProvider>();
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<IPasswordHasher<AccountRecord>, PasswordHasher<AccountRecord>>();
+builder.Services.AddSingleton<IAccountEmailSender, SmtpAccountEmailSender>();
+
+builder.Services.AddSingleton<IWorkspaceDataStoreFactory, FileWorkspaceDataStoreFactory>();
+builder.Services.AddSingleton<IAccountRegistryStore, FileAccountRegistryStore>();
+
+builder.Services.AddSingleton<WorkspaceRuntimeManager>();
+builder.Services.AddSingleton<AccountService>();
+builder.Services.AddSingleton<AdminBootstrapService>();
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.Cookie.Name = AccountAuthentication.CookieName;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.IsEssential = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        options.ExpireTimeSpan = TimeSpan.FromDays(180);
+        options.SlidingExpiration = true;
+        options.Events.OnRedirectToLogin = context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return Task.CompletedTask;
+        };
+        options.Events.OnValidatePrincipal = async context =>
+        {
+            if (!context.HttpContext.Request.Path.StartsWithSegments("/api")) return;
+            var accountId = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+            var versionText = context.Principal?.FindFirstValue(AccountAuthentication.SecurityVersionClaim);
+            var accounts = context.HttpContext.RequestServices.GetRequiredService<AccountService>();
+            var account = await accounts.GetByIdAsync(accountId, context.HttpContext.RequestAborted);
+            if (account is null || !int.TryParse(versionText, out var version) ||
+                version != account.SecurityVersion)
+            {
+                context.RejectPrincipal();
+            }
+            else
+            {
+                context.HttpContext.Items[AccountAuthentication.ResolvedAccountItem] = account;
+            }
+        };
+    });
+builder.Services.AddSingleton<IAuthorizationHandler, AdminAuthorizationHandler>();
+builder.Services.AddAuthorization(options =>
+    options.AddPolicy(AdminAuthorization.Policy, policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.AddRequirements(new AdminRequirement());
+    }));
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.ContentType = "application/json";
+        await context.HttpContext.Response.WriteAsJsonAsync(
+            new { error = "Too many requests. Wait briefly and try again." },
+            cancellationToken);
+    };
+    options.AddPolicy("provider", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 12,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+    options.AddPolicy("state", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 60,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+    options.AddPolicy("authentication", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(5),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+    options.AddPolicy("admin-bootstrap", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(15),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+});
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+});
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<GzipCompressionProvider>();
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(["application/json"]);
+});
+builder.Services.Configure<GzipCompressionProviderOptions>(options =>
+    options.Level = CompressionLevel.Fastest);
+
+var app = builder.Build();
+var versionInfo = VersionEndpoint.Create(builder.Configuration, hosting);
+
+app.Use(async (context, next) =>
+{
+    if (await HealthEndpoint.TryHandleAsync(context)) return;
+    if (await VersionEndpoint.TryHandleAsync(context, versionInfo)) return;
+    await next();
+});
+
+app.UseResponseCompression();
+
+app.UseExceptionHandler(errorApp => errorApp.Run(async context =>
+{
+    var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
+    var (status, message) = exception switch
+    {
+        WorkspaceConcurrencyException => (
+            StatusCodes.Status409Conflict,
+            "Workspace state changed in another request. Reload and try again."),
+        WorkspaceBusyException => (
+            StatusCodes.Status409Conflict,
+            "The workspace cannot be reset while a job refresh is in progress. Try again when it finishes."),
+        WorkspaceStorageException => (
+            StatusCodes.Status503ServiceUnavailable,
+            "Workspace storage is temporarily unavailable. Your workspace was not changed."),
+        _ => (
+            StatusCodes.Status500InternalServerError,
+            "The server could not complete the request.")
+    };
+    context.Response.StatusCode = status;
+    context.Response.ContentType = "application/json";
+    context.Response.Headers.CacheControl = "no-store";
+    await context.Response.WriteAsJsonAsync(new { error = message });
+}));
+
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.ContentSecurityPolicy =
+        "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; " +
+        "connect-src 'self'; font-src 'self'; object-src 'none'; frame-src 'none'; " +
+        "base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
+    context.Response.Headers.XContentTypeOptions = "nosniff";
+    context.Response.Headers["Referrer-Policy"] = "no-referrer";
+    context.Response.Headers.XFrameOptions = "DENY";
+    if (context.Request.Path.StartsWithSegments("/api"))
+    {
+        context.Response.Headers.CacheControl = "no-store";
+    }
+
+    await next();
+});
+
+app.UseAuthentication();
+app.UseMiddleware<WorkspaceIdentityMiddleware>();
+
+if (hosting.RequiresSameOriginProtection)
+{
+    app.Use(async (context, next) =>
+    {
+        if (RequestSecurity.IsStateChangingApiRequest(context.Request))
+        {
+            if (!RequestSecurity.HasSameOrigin(context.Request))
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                await context.Response.WriteAsJsonAsync(new
+                {
+                    error = "The state-changing request did not originate from this application."
+                });
+                return;
+            }
+        }
+
+        await next();
+    });
+}
+
+app.UseRateLimiter();
+app.UseAuthorization();
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
+app.MapGet("/api/jobs", async (WorkspaceRuntimeProvider provider, CancellationToken token) =>
+{
+    var compact = await (await provider.GetAsync(token)).Catalog.GetListSnapshotAsync(token);
+    app.Logger.LogInformation(
+        "Compact job-list response contains {JobCount} jobs; full descriptions are excluded.",
+        compact.Jobs.Count);
+    return Results.Ok(compact);
+});
+
+app.MapGet("/api/jobs/status", async (
+    WorkspaceRuntimeProvider provider,
+    CancellationToken token) =>
+{
+    var snapshot = (await provider.GetAsync(token)).Catalog.Snapshot;
+    return Results.Ok(new
+    {
+        snapshot.IsRefreshing,
+        snapshot.Error,
+        snapshot.RefreshProgress,
+        snapshot.LastRefreshedUtc,
+        snapshot.Metrics
+    });
+});
+
+app.MapGet("/api/jobs/detail", async Task<IResult> (
+    string stableId,
+    WorkspaceRuntimeProvider provider,
+    CancellationToken token) =>
+{
+    var detail = await (await provider.GetAsync(token)).Catalog.GetJobDetailAsync(stableId, token);
+    return detail is null ? Results.NotFound() :
+        Results.Ok(JobPresentation.AuthoritativeRegexDetail(detail));
+}).RequireRateLimiting("provider");
+
+app.MapGet("/api/jobs/cheap-triage", async Task<IResult> (
+    string stableId, HttpResponse response, WorkspaceRuntimeProvider provider, CancellationToken token) =>
+{
+    response.Headers.CacheControl = "no-store";
+    var catalog = (await provider.GetAsync(token)).Catalog;
+    var diagnostic = catalog.GetCheapTriageDiagnostic(stableId);
+    return diagnostic is null ? Results.NotFound() : Results.Ok(diagnostic);
+}).RequireRateLimiting("state");
+
+app.MapPost("/api/jobs/description-matches", async (
+    DescriptionMatchRequest request,
+    WorkspaceRuntimeProvider provider,
+    CancellationToken token) =>
+    Results.Ok((await provider.GetAsync(token)).Catalog.GetDescriptionMatches(request)))
+    .RequireRateLimiting("state");
+
+app.MapGet("/api/companies", (CompanyCatalog companies) => Results.Ok(
+    companies.Companies.Select(company => new
+    {
+        company.Id,
+        company.DisplayName,
+        company.IndustryCategory,
+        company.PublicSiteUrl
+    })));
+
+app.MapGet("/api/credentials", (CredentialDetector credentials) =>
+    Results.Ok(credentials.CatalogItems));
+
+app.MapGet("/api/job-fit/concepts", (JobConceptCatalog concepts) =>
+    Results.Ok(concepts.Options));
+
+app.MapGet("/api/workspace/identity", (WorkspaceContext workspace, HttpContext context) =>
+{
+    var authenticated = context.User.Identity?.IsAuthenticated == true;
+    return Results.Ok(new
+    {
+        workspaceId = authenticated ? null : workspace.WorkspaceId,
+        internalWorkspaceId = authenticated && WorkspaceIdentity.IsValid(workspace.WorkspaceId)
+            ? WorkspaceIdentity.Redact(workspace.WorkspaceId) : null,
+        accessMode = authenticated ? "authenticated" : "anonymous",
+        canCopyWorkspaceId = !authenticated
+    });
+});
+
+app.MapGet("/api/account/status", async (
+    HttpContext context,
+    WorkspaceContext workspace,
+    AccountService accounts,
+    AdminBootstrapService adminBootstrap,
+    CancellationToken token) =>
+{
+    var accountId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var account = accountId is null
+        ? null
+        : context.Items[AccountAuthentication.ResolvedAccountItem] as AccountRecord ??
+            await accounts.GetByIdAsync(accountId, token);
+    var bootstrapAvailable = account is not null &&
+        await adminBootstrap.IsAvailableAsync(token);
+    return Results.Ok(account is null
+        ? (object)new
+        {
+            authenticated = false,
+            email = (string?)null,
+            emailVerified = false,
+            workspace = "anonymous",
+            persistence = AccountPersistence.Session,
+            emailDeliveryConfigured = accounts.EmailDeliveryConfigured,
+            isAdmin = false,
+            administratorBootstrapAvailable = false
+        }
+        : (object)new
+        {
+            authenticated = true,
+            email = account.Email,
+            emailVerified = account.EmailVerified,
+            workspace = "authenticated",
+            persistence = AccountPersistence.Normalize(
+                context.User.FindFirstValue(AccountAuthentication.PersistenceClaim)),
+            emailDeliveryConfigured = accounts.EmailDeliveryConfigured,
+            isAdmin = AccountRoles.IsAdmin(account),
+            administratorBootstrapAvailable = bootstrapAvailable
+        });
+});
+
+app.MapPost("/api/account/admin-bootstrap", async Task<IResult> (
+    AdminBootstrapRequest request,
+    HttpContext context,
+    AdminBootstrapService adminBootstrap,
+    CancellationToken token) =>
+{
+    var result = await adminBootstrap.ClaimAsync(
+        context.User.FindFirstValue(ClaimTypes.NameIdentifier)!, request.Code, token);
+    return result.Succeeded
+        ? Results.Ok(new
+        {
+            isAdmin = true,
+            administratorBootstrapAvailable = false
+        })
+        : Results.BadRequest(new { error = result.Error });
+}).RequireAuthorization().RequireRateLimiting("admin-bootstrap");
+
+app.MapGet("/api/admin/status", (HttpContext context) =>
+{
+    var account = context.Items[AccountAuthentication.ResolvedAccountItem] as AccountRecord;
+    return Results.Ok(new
+    {
+        administrator = true,
+        email = account?.Email ?? context.User.FindFirstValue(ClaimTypes.Name)
+    });
+}).RequireAuthorization(AdminAuthorization.Policy);
+
+app.MapGet("/api/admin/cheap-triage/status", async (HttpResponse response, RuleMaintenance maintenance,
+    WorkspaceRuntimeProvider provider, CancellationToken token) =>
+{
+    response.Headers.CacheControl = "no-store";
+    var catalog = (await provider.GetAsync(token)).Catalog;
+    await catalog.GetListSnapshotAsync(token);
+    return Results.Ok(maintenance.GetStatus() with { Live = catalog.GetCheapTriageReport() });
+}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapGet("/api/admin/cheap-triage/maintenance-prompt", (RuleMaintenance maintenance, HttpContext context) =>
+{
+    context.Response.Headers.CacheControl = "no-store";
+    return Results.Ok(maintenance.Generate());
+}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+var humanReviewApi = app.MapGroup("/api/admin/cheap-triage/human-review")
+    .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state").DisableCookieRedirect();
+humanReviewApi.AddEndpointFilter(async (context, next) =>
+{
+    context.HttpContext.Response.Headers.CacheControl = "no-store";
+    return await next(context);
+});
+humanReviewApi.MapGet("", (CheapTriageHumanReview review) => Results.Ok(review.Read()));
+humanReviewApi.MapPost("", (HumanReviewSave request, CheapTriageHumanReview review, HttpContext context) =>
+{
+    try
+    {
+        review.Save(request, context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? context.User.Identity?.Name ?? "administrator");
+        return Results.Ok(review.Read());
+    }
+    catch (ArgumentException exception) { return Results.BadRequest(new { error = exception.Message }); }
+    catch (InvalidOperationException exception) { return Results.Conflict(new { error = exception.Message }); }
+});
+humanReviewApi.MapGet("/maintenance-prompt", async Task<IResult> (CheapTriageHumanReview review,
+    RuleMaintenance maintenance, WorkspaceRuntimeProvider provider, CancellationToken token) =>
+{
+    var report = review.Read();
+    if (!report.Complete) return Results.Conflict(new { error = "Complete Human Review before preparing a rule update." });
+    var catalog = (await provider.GetAsync(token)).Catalog;
+    return Results.Ok(maintenance.GenerateReviewed(report, catalog.GetCheapTriageReport()));
+});
+var maintenanceWorkflow = humanReviewApi.MapGroup("/workflow");
+maintenanceWorkflow.AddEndpointFilter(async (context, next) =>
+{
+    try { return await next(context); }
+    catch (InvalidOperationException e) { return Results.Conflict(new { error = e.Message }); }
+    catch (Exception e) when (e is InvalidDataException or JsonException or ArgumentException)
+    { return Results.BadRequest(new { error = "Invalid maintenance result: " + e.Message }); }
+});
+maintenanceWorkflow.MapGet("", (CheapTriageHumanReview review, CheapTriageMaintenance workflow, CheapTriageMaintenanceDetector detector) => Results.Ok(workflow.Read(review.Read()) with { Detection = detector.Status }));
+maintenanceWorkflow.MapPost("/prepare", async (WorkflowRevision request, CheapTriageHumanReview review,
+    CheapTriageMaintenance workflow, RuleMaintenance maintenance, WorkspaceRuntimeProvider provider, HttpContext context, CancellationToken token) =>
+{
+    var report = review.Read();
+    if (!report.Complete) return Results.Conflict(new { error = "Complete Human Review first." });
+    var catalog = (await provider.GetAsync(token)).Catalog;
+    return Results.Ok(workflow.Prepare(report, request, maintenance.GenerateReviewed(report, catalog.GetCheapTriageReport()),
+        context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "administrator"));
+});
+maintenanceWorkflow.MapPost("/prepare-release", (WorkflowRevision request, CheapTriageHumanReview review,
+    CheapTriageMaintenance workflow, HttpContext context) => Results.Ok(workflow.PrepareRelease(review.Read(), request,
+        context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "administrator")));
+maintenanceWorkflow.MapPost("/candidate", (CandidateImport request, CheapTriageHumanReview review,
+    CheapTriageMaintenance workflow, HttpContext context) => Results.Ok(workflow.Import(review.Read(), request,
+        context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "administrator")));
+maintenanceWorkflow.MapPost("/result", (MaintenanceResultImport request, CheapTriageHumanReview review,
+    CheapTriageMaintenance workflow, HttpContext context) => Results.Ok(workflow.ImportResult(review.Read(), request,
+        context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "administrator")));
+maintenanceWorkflow.MapPost("/import-synced", (WorkflowRevision request, CheapTriageHumanReview review,
+    CheapTriageMaintenance workflow, HttpContext context) => Results.Ok(workflow.ImportResult(review.Read(),
+        new(request.Key, request.Revision, workflow.ReadInbox()), context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "administrator")));
+maintenanceWorkflow.MapPost("/decision", (CandidateDisposition request, CheapTriageHumanReview review,
+    CheapTriageMaintenance workflow, HttpContext context) => Results.Ok(workflow.Decide(review.Read(), request,
+        context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "administrator")));
+
+humanReviewApi.MapGet("/export", (CheapTriageHumanReview review) => Results.File(
+    JsonSerializer.SerializeToUtf8Bytes(new { exportedAtUtc = DateTimeOffset.UtcNow, report = review.Read() },
+        new JsonSerializerOptions(JsonSerializerDefaults.Web)), "application/json", "jsm-human-review.json"));
+
+app.MapPost("/api/admin/classifier-diagnostic", async Task<IResult> (
+    ConceptDiagnosticRequest request,
+    RegexSemanticClassifier classifier,
+    RemoteWorkDetector remoteDetector,
+    ExtendedLocationRequirementDetector extendedDetector,
+    CancellationToken token) =>
+{
+    if (string.IsNullOrWhiteSpace(request.JobId) || string.IsNullOrWhiteSpace(request.Title) ||
+        request.Description is null)
+    {
+        return Results.BadRequest(new { error = "jobId, title, and description are required." });
+    }
+    token.ThrowIfCancellationRequested();
+    var html = $"<p>{System.Net.WebUtility.HtmlEncode(request.Description)}</p>";
+    var result = classifier.Classify(request.Title, html,
+        remoteDetector.Analyze(request.Title, "", [], html),
+        extendedDetector.Analyze(request.Title, "", [], html), productionUsage: false);
+    return Results.Ok(result);
+}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapGet("/api/admin/regex-rules", async (
+    string? status, string? conceptId, SqliteSemanticRuleStore store, CancellationToken token) =>
+    Results.Ok(await store.ListRulesAsync(status, conceptId, token)))
+    .RequireAuthorization(AdminAuthorization.Policy);
+
+app.MapGet("/api/admin/regex-rules/overview", async (
+    SqliteSemanticRuleStore store, RegexSemanticClassifier classifier, CancellationToken token) =>
+{
+    var rules = await store.ListRulesAsync(cancellationToken: token);
+    return Results.Ok(new
+    {
+        classifier.RulesetFingerprint,
+        classifier.ActiveRuleCount,
+        database = Path.GetFileName(store.DatabasePath),
+        statuses = rules.GroupBy(item => item.Status, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal),
+        store.Policy
+    });
+}).RequireAuthorization(AdminAuthorization.Policy);
+
+app.MapPost("/api/admin/regex-rules", async Task<IResult> (
+    SemanticRuleCandidate candidate, SqliteSemanticRuleStore store, CancellationToken token) =>
+{
+    try { return Results.Created($"/api/admin/regex-rules", await store.CreateAsync(candidate, token)); }
+    catch (Exception exception) when (exception is InvalidDataException or ArgumentException)
+    { return Results.BadRequest(new { error = exception.Message }); }
+}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapPost("/api/admin/regex-rules/{ruleId}/transition/{status}", async Task<IResult> (
+    string ruleId, string status, SqliteSemanticRuleStore store,
+    RegexSemanticClassifier classifier, WorkspaceRuntimeProvider provider, CancellationToken token) =>
+{
+    try
+    {
+        var value = await store.TransitionAsync(ruleId, status, token);
+        if (SemanticRuleStatuses.RunsInProduction(value.Status) || value.Status == SemanticRuleStatuses.Retired)
+        {
+            await classifier.ReloadAsync(token);
+            (await provider.GetAsync(token)).Catalog.StartSemanticClassificationBackfill();
+        }
+        return Results.Ok(value);
+    }
+    catch (KeyNotFoundException) { return Results.NotFound(); }
+    catch (Exception exception) when (exception is InvalidOperationException or ArgumentException)
+    { return Results.BadRequest(new { error = exception.Message }); }
+}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapPost("/api/admin/regex-rules/{ruleId}/validate", async Task<IResult> (
+    string ruleId, RegexEvaluationService evaluation, CancellationToken token) =>
+{
+    try { return Results.Ok(await evaluation.ValidateCandidateAsync(ruleId, token)); }
+    catch (KeyNotFoundException) { return Results.NotFound(); }
+    catch (Exception exception) when (exception is InvalidOperationException or InvalidDataException)
+    { return Results.BadRequest(new { error = exception.Message }); }
+}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapPost("/api/admin/regex-rules/relationships", async Task<IResult> (
+    SemanticRuleRelationshipCandidate relationship, SqliteSemanticRuleStore store,
+    CancellationToken token) =>
+{
+    try
+    {
+        await store.AddRelationshipAsync(relationship.SourceRuleId, relationship.TargetRuleId,
+            relationship.RelationshipType, token);
+        return Results.NoContent();
+    }
+    catch (KeyNotFoundException) { return Results.NotFound(); }
+    catch (InvalidDataException exception) { return Results.BadRequest(new { error = exception.Message }); }
+}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapPost("/api/admin/regex-rules/reload", async (
+    RegexSemanticClassifier classifier, WorkspaceRuntimeProvider provider, CancellationToken token) =>
+{
+    var rulesetFingerprint = await classifier.ReloadAsync(token);
+    var reconciliation = (await provider.GetAsync(token)).Catalog.StartSemanticClassificationBackfill();
+    return Results.Ok(new { rulesetFingerprint, reconciliation });
+})
+    .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapPost("/api/admin/regex-rules/review-stale", async (
+    SqliteSemanticRuleStore store, RegexSemanticClassifier classifier,
+    WorkspaceRuntimeProvider provider, CancellationToken token) =>
+{
+    var count = await store.MarkReviewDueAsync(DateTimeOffset.UtcNow, token);
+    if (count > 0)
+    {
+        await classifier.ReloadAsync(token);
+        (await provider.GetAsync(token)).Catalog.StartSemanticClassificationBackfill();
+    }
+    return Results.Ok(new { reviewDue = count });
+}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapPost("/api/admin/regex-rules/retention", async (
+    SqliteSemanticRuleStore store, CancellationToken token) =>
+    Results.Ok(new { deleted = await store.ApplyRetiredRetentionAsync(DateTimeOffset.UtcNow, token) }))
+    .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapGet("/api/admin/regex-rules/export", async (
+    SqliteSemanticRuleStore store, CancellationToken token) =>
+    Results.Text(await store.ExportJsonAsync(token), "application/json"))
+    .RequireAuthorization(AdminAuthorization.Policy);
+
+app.MapPost("/api/admin/regex-rules/import", async Task<IResult> (
+    HttpRequest request, SqliteSemanticRuleStore store, CancellationToken token) =>
+{
+    using var reader = new StreamReader(request.Body);
+    var json = await reader.ReadToEndAsync(token);
+    if (json.Length > 5_000_000) return Results.BadRequest(new { error = "Rule import is too large." });
+    try { return Results.Ok(await store.ImportCandidatesAsync(json, "admin-json-import", token)); }
+    catch (InvalidDataException exception) { return Results.BadRequest(new { error = exception.Message }); }
+}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapPost("/api/admin/regex-rules/evaluate", async (
+    RegexEvaluationService evaluation, CancellationToken token) =>
+    Results.Ok(await evaluation.EvaluateAsync(persist: true, cancellationToken: token)))
+    .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapGet("/api/admin/evaluations", async (
+    SqliteSemanticRuleStore store, AiHoldoutEvaluationService holdout,
+    CancellationToken token) =>
+{
+    var runs = await store.ListEvaluationRunsAsync(token);
+    var holdoutStatus = holdout.GetStatus();
+    var holdoutReport = holdout.GetLatestReport();
+    return Results.Ok(new
+    {
+        runs,
+        holdoutStatus,
+        holdoutReport,
+        datasetRoles = new object[]
+        {
+            new { role = EvaluationDatasetRoles.DevelopmentRegression,
+                displayName = "CURATED REGRESSION BENCHMARK", status = "available",
+                warning = "Known-case development/regression evidence; not production accuracy." },
+            new { role = EvaluationDatasetRoles.Validation, displayName = "VALIDATION",
+                status = "not-yet-available",
+                warning = "An independently maintained labeled validation dataset has not been established." },
+            new { role = EvaluationDatasetRoles.ProductionHoldout,
+                displayName = "AI-ADJUDICATED PRODUCTION HOLDOUT",
+                status = holdoutReport is null ? holdoutStatus.State : "available",
+                warning = AiHoldoutEvaluationService.ExactDisclaimer }
+        }
+    });
+}).RequireAuthorization(AdminAuthorization.Policy);
+
+app.MapGet("/api/admin/evaluations/ai-holdout/status", (
+    AiHoldoutEvaluationService evaluation) => Results.Ok(new
+    {
+        status = evaluation.GetStatus(),
+        report = evaluation.GetLatestReport()
+    })).RequireAuthorization(AdminAuthorization.Policy);
+
+app.MapPost("/api/admin/evaluations/ai-holdout", (
+    AiHoldoutEvaluationService evaluation) => evaluation.TryStart()
+        ? Results.Accepted(value: evaluation.GetStatus())
+        : Results.Conflict(new { error = "An AI-adjudicated holdout evaluation is already running." }))
+    .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapGet("/api/admin/classifier/backfill/status", async (
+    WorkspaceRuntimeProvider provider,
+    CancellationToken token) =>
+    Results.Ok((await provider.GetAsync(token)).Catalog.GetSemanticClassificationStatus()))
+    .RequireAuthorization(AdminAuthorization.Policy);
+
+app.MapPost("/api/admin/classifier/backfill", async (
+    WorkspaceRuntimeProvider provider,
+    CancellationToken token) =>
+    Results.Accepted(value:
+        (await provider.GetAsync(token)).Catalog.StartSemanticClassificationBackfill()))
+    .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+
+app.MapPost("/api/account/create", async Task<IResult> (
+    CreateAccountRequest request,
+    HttpContext context,
+    WorkspaceContext workspace,
+    AccountService accounts,
+    IConfiguration configuration,
+    CancellationToken token) =>
+{
+    if (!string.Equals(request.Password, request.ConfirmPassword, StringComparison.Ordinal))
+        return Results.BadRequest(new { error = "The password confirmation does not match." });
+    var result = await accounts.CreateAsync(
+        workspace.WorkspaceId, request.Email, request.Password,
+        PublicBaseUri(context.Request, configuration), token);
+    if (!result.Succeeded) return Results.BadRequest(new { error = result.Error });
+    var persistence = AccountPersistence.Normalize(request.Persistence);
+    await SignInAccountAsync(context, result.Account!, persistence);
+    context.Response.Cookies.Delete(
+        WorkspaceIdentity.CookieName, WorkspaceIdentity.CreateCookieOptions(secure: false));
+    return Results.Ok(new
+    {
+        authenticated = true,
+        email = result.Account!.Email,
+        emailVerified = result.Account.EmailVerified,
+        workspace = "authenticated",
+        persistence,
+        emailDeliveryConfigured = accounts.EmailDeliveryConfigured
+    });
+}).RequireRateLimiting("authentication");
+
+app.MapPost("/api/account/login", async Task<IResult> (
+    LoginRequest request,
+    HttpContext context,
+    AccountService accounts,
+    CancellationToken token) =>
+{
+    var account = await accounts.AuthenticateAsync(request.Email, request.Password, token);
+    if (account is null) return Results.Json(
+        new { error = "The email or password is incorrect." }, statusCode: StatusCodes.Status401Unauthorized);
+    var persistence = AccountPersistence.Normalize(request.Persistence);
+    await SignInAccountAsync(context, account, persistence);
+    context.Response.Cookies.Delete(
+        WorkspaceIdentity.CookieName, WorkspaceIdentity.CreateCookieOptions(secure: false));
+    return Results.Ok(new { authenticated = true, account.Email, account.EmailVerified, persistence });
+}).RequireRateLimiting("authentication");
+
+app.MapPost("/api/account/logout", async (HttpContext context) =>
+{
+    await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    context.Response.Cookies.Delete(
+        WorkspaceIdentity.CookieName, WorkspaceIdentity.CreateCookieOptions(secure: false));
+    return Results.NoContent();
+}).RequireRateLimiting("state");
+
+app.MapPost("/api/account/forgot-password", async (
+    EmailRequest request,
+    HttpContext context,
+    AccountService accounts,
+    IConfiguration configuration,
+    CancellationToken token) =>
+{
+    await accounts.RequestPasswordResetAsync(
+        request.Email, PublicBaseUri(context.Request, configuration), token);
+    return Results.Ok(new
+    {
+        message = "If an account exists for that email, a reset message has been sent."
+    });
+}).RequireRateLimiting("authentication");
+
+app.MapPost("/api/account/reset-password", async Task<IResult> (
+    ResetPasswordRequest request,
+    AccountService accounts,
+    CancellationToken token) =>
+{
+    if (!string.Equals(request.Password, request.ConfirmPassword, StringComparison.Ordinal))
+        return Results.BadRequest(new { error = "The password confirmation does not match." });
+    var result = await accounts.ResetPasswordAsync(request.Token, request.Password, token);
+    return result.Succeeded
+        ? Results.Ok(new { message = "Your password has been reset. Sign in with the new password." })
+        : Results.BadRequest(new { error = result.Error });
+}).RequireRateLimiting("authentication");
+
+app.MapPost("/api/account/change-password", async Task<IResult> (
+    ChangePasswordRequest request,
+    HttpContext context,
+    AccountService accounts,
+    CancellationToken token) =>
+{
+    if (!string.Equals(request.Password, request.ConfirmPassword, StringComparison.Ordinal))
+        return Results.BadRequest(new { error = "The password confirmation does not match." });
+    var accountId = context.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+    var result = await accounts.ChangePasswordAsync(
+        accountId, request.CurrentPassword, request.Password, token);
+    if (!result.Succeeded) return Results.BadRequest(new { error = result.Error });
+    await SignInAccountAsync(
+        context, result.Account!, AccountPersistence.Normalize(request.Persistence));
+    return Results.Ok(new { message = "Password changed. Other signed-in sessions are no longer valid." });
+}).RequireAuthorization().RequireRateLimiting("authentication");
+
+app.MapPost("/api/account/session", async Task<IResult> (
+    SessionPersistenceRequest request,
+    HttpContext context,
+    AccountService accounts,
+    CancellationToken token) =>
+{
+    var account = await accounts.GetByIdAsync(
+        context.User.FindFirstValue(ClaimTypes.NameIdentifier), token);
+    if (account is null) return Results.Unauthorized();
+    var persistence = AccountPersistence.Normalize(request.Persistence);
+    await SignInAccountAsync(context, account, persistence);
+    return Results.Ok(new { persistence });
+}).RequireAuthorization().RequireRateLimiting("state");
+
+app.MapPost("/api/account/request-verification", async (
+    HttpContext context,
+    AccountService accounts,
+    IConfiguration configuration,
+    CancellationToken token) =>
+{
+    await accounts.RequestVerificationAsync(
+        context.User.FindFirstValue(ClaimTypes.NameIdentifier)!,
+        PublicBaseUri(context.Request, configuration), token);
+    return Results.Ok(new { message = "If email delivery is configured, a verification message has been sent." });
+}).RequireAuthorization().RequireRateLimiting("authentication");
+
+app.MapPost("/api/account/verify-email", async Task<IResult> (
+    TokenRequest request,
+    AccountService accounts,
+    CancellationToken token) =>
+{
+    var result = await accounts.VerifyEmailAsync(request.Token, token);
+    return result.Succeeded
+        ? Results.Ok(new { message = "Email address verified." })
+        : Results.BadRequest(new { error = result.Error });
+}).RequireRateLimiting("authentication");
+
+app.MapPost("/api/refresh", async (
+    WorkspaceRuntimeProvider provider,
+    CancellationToken token) =>
+{
+    var runtime = await provider.GetAsync(token);
+    var settings = await runtime.StateStore.LoadSettingsAsync();
+    if (settings.HasConfiguredSource != true)
+    {
+        return Results.Conflict(new { error = "Configure and apply a job source before refreshing jobs." });
+    }
+    var snapshot = await runtime.Catalog.RefreshAsync(token);
+    return Results.Ok(JobsListSnapshot.FromSnapshot(snapshot));
+}).RequireRateLimiting("provider");
+
+app.MapGet("/api/location-facets", async Task<IResult> (
+    string companyId,
+    string? countryId,
+    JobSourceClient jobSourceClient,
+    CompanyCatalog companies,
+    CancellationToken token) =>
+{
+    if (!companies.TryGet(companyId, out var company))
+    {
+        return Results.BadRequest(new { error = "Choose a supported company." });
+    }
+
+    return Results.Ok(await jobSourceClient.FetchLocationFacetsAsync(company, countryId, token));
+}).RequireRateLimiting("provider");
+
+app.MapGet("/api/source/{companyId}", async Task<IResult> (
+    string companyId,
+    WorkspaceRuntimeProvider provider,
+    CompanyCatalog companies,
+    CancellationToken token) =>
+{
+    if (!companies.TryGet(companyId, out var company))
+    {
+        return Results.NotFound();
+    }
+
+    var stateStore = (await provider.GetAsync(token)).StateStore;
+    var settings = await stateStore.LoadSettingsAsync();
+    var hasSavedCompanySource = settings.CompanySources?.ContainsKey(company.Id) == true;
+    var source = settings.HasConfiguredSource != true && !hasSavedCompanySource
+        ? new CompanySourceSettings(company.DefaultCountry, false, false, [])
+        : stateStore.GetSourceSettings(settings, company.Id);
+    return Results.Ok(new
+    {
+        company.Id,
+        company.DisplayName,
+        source
+    });
+});
+
+app.MapPost("/api/query", async Task<IResult> (
+    JobSourceQuery requestedQuery,
+    WorkspaceRuntimeProvider provider,
+    CompanyCatalog companies,
+    CancellationToken token) =>
+{
+    if (!companies.TryGet(requestedQuery.CompanyId, out var company))
+    {
+        return Results.BadRequest(new { error = "Choose a supported company." });
+    }
+
+    var query = requestedQuery.Normalize(company);
+    if (!query.IncludeAllLocations && query.EffectiveLocationIds(company).Count == 0)
+    {
+        return Results.BadRequest(new
+        {
+            error = "Choose at least one physical location, include remote jobs when available, or include all locations."
+        });
+    }
+
+    var runtime = await provider.GetAsync(token);
+    var stateStore = runtime.StateStore;
+    var current = await stateStore.LoadSettingsAsync();
+    var source = new CompanySourceSettings(
+        new FacetSelection(query.CountryId, query.CountryLabel),
+        query.IncludeAllLocations,
+        query.IncludeRemote,
+        query.PhysicalLocations ?? []);
+    var companySources = new Dictionary<string, CompanySourceSettings>(
+        current.CompanySources ?? new Dictionary<string, CompanySourceSettings>(),
+        StringComparer.OrdinalIgnoreCase)
+    {
+        [company.Id] = source
+    };
+    var updated = stateStore.NormalizeSettings(current with
+    {
+        CompanyId = company.Id,
+        Country = new FacetSelection(query.CountryId, query.CountryLabel),
+        Location = null,
+        IncludeAllLocations = query.IncludeAllLocations,
+        IncludeRemote = query.IncludeRemote,
+        SelectedPhysicalLocations = query.PhysicalLocations,
+        CompanySources = companySources,
+        HasConfiguredSource = true,
+        PendingSource = null
+    });
+    await stateStore.SaveSettingsAsync(updated);
+    var snapshot = await runtime.Catalog.SwitchSourceAsync(
+        JobSourceQuery.FromSettings(updated, companies), token);
+    if (snapshot.Error is not null)
+    {
+        await stateStore.SaveSettingsAsync(current);
+    }
+    return Results.Ok(JobsListSnapshot.FromSnapshot(snapshot));
+}).RequireRateLimiting("provider");
+
+app.MapGet("/api/settings", async (
+    WorkspaceRuntimeProvider provider,
+    CancellationToken token) =>
+    Results.Ok(await (await provider.GetAsync(token)).StateStore.LoadSettingsAsync()));
+
+app.MapPut("/api/settings", async (
+    ViewerSettings settings,
+    WorkspaceRuntimeProvider provider,
+    CancellationToken token) =>
+{
+    var runtime = await provider.GetAsync(token);
+    var current = await runtime.StateStore.LoadSettingsAsync();
+    var normalized = runtime.StateStore.NormalizeSettings(settings with
+    {
+        CompanySources = current.CompanySources,
+        HasConfiguredSource = current.HasConfiguredSource,
+        PendingSource = current.PendingSource
+    });
+    await runtime.StateStore.SaveSettingsAsync(normalized);
+    return Results.NoContent();
+}).RequireRateLimiting("state");
+
+app.MapGet("/api/workspace/export", async (
+    WorkspaceRuntimeProvider provider,
+    PortableWorkspaceService portableWorkspace,
+    CancellationToken token) =>
+{
+    var runtime = await provider.GetAsync(token);
+    var settings = await runtime.StateStore.LoadSettingsAsync();
+    var history = await runtime.StateStore.LoadJobHistoryAsync();
+    return Results.Ok(portableWorkspace.Export(settings, history));
+});
+
+app.MapPost("/api/workspace/import", async Task<IResult> (
+    HttpRequest request,
+    WorkspaceRuntimeProvider provider,
+    PortableWorkspaceService portableWorkspace,
+    CancellationToken token) =>
+{
+    if (request.ContentLength is > PortableWorkspaceService.MaximumImportBytes)
+    {
+        return Results.BadRequest(new { error = "The workspace file is too large." });
+    }
+    using var reader = new StreamReader(request.Body);
+    var json = await reader.ReadToEndAsync(token);
+    if (json.Length > PortableWorkspaceService.MaximumImportBytes)
+    {
+        return Results.BadRequest(new { error = "The workspace file is too large." });
+    }
+
+    var runtime = await provider.GetAsync(token);
+    var currentSettings = await runtime.StateStore.LoadSettingsAsync();
+    var currentHistory = await runtime.StateStore.LoadJobHistoryAsync();
+    try
+    {
+        // Validate the complete document before either durable file is changed.
+        var imported = portableWorkspace.ImportJson(json, currentSettings, currentHistory);
+        var normalized = runtime.StateStore.NormalizeSettings(imported.Settings);
+        try
+        {
+            await runtime.StateStore.SaveJobHistoryAsync(imported.History);
+            await runtime.StateStore.SaveSettingsAsync(normalized);
+        }
+        catch
+        {
+            // Restore both prior documents if a valid import cannot be persisted completely.
+            await runtime.StateStore.SaveJobHistoryAsync(currentHistory);
+            await runtime.StateStore.SaveSettingsAsync(currentSettings);
+            throw;
+        }
+        await runtime.Catalog.ReloadHistoryAsync();
+        return Results.Ok(new
+        {
+            settings = normalized,
+            snapshot = JobsListSnapshot.FromSnapshot(runtime.Catalog.Snapshot),
+            curatedJobCount = imported.History.Jobs.Count(pair =>
+                JobWorkflowStates.Normalize(pair.Value.WorkflowState) != JobWorkflowStates.Normal)
+        });
+    }
+    catch (WorkspaceImportException ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+}).RequireRateLimiting("state");
+
+app.MapDelete("/api/workspace", async (
+    WorkspaceContext workspace,
+    WorkspaceRuntimeManager runtimes,
+    HttpContext context,
+    CancellationToken token) =>
+{
+    var deletedDocuments = await runtimes.ResetAsync(workspace.WorkspaceId, token);
+    if (hosting.UsesPerBrowserWorkspaces && context.User.Identity?.IsAuthenticated != true)
+    {
+        context.Response.Cookies.Delete(
+            WorkspaceIdentity.CookieName,
+            WorkspaceIdentity.CreateCookieOptions(secure: false));
+    }
+    return Results.Ok(new { deletedDocuments });
+}).RequireRateLimiting("state");
+
+app.MapPost("/api/history/viewed", async (
+    ViewedJobRequest request,
+    WorkspaceRuntimeProvider provider,
+    CancellationToken token) =>
+    await (await provider.GetAsync(token)).Catalog.MarkViewedAsync(request.StableId)
+        ? Results.NoContent()
+        : Results.NotFound())
+    .RequireRateLimiting("state");
+
+app.MapPut("/api/history/workflow-state", async (
+    JobWorkflowStateRequest request,
+    WorkspaceRuntimeProvider provider,
+    CancellationToken token) =>
+    await (await provider.GetAsync(token)).Catalog.SetWorkflowStateAsync(
+        request.StableId, request.State, request.CloseReason)
+        ? Results.NoContent()
+        : Results.BadRequest())
+    .RequireRateLimiting("state");
+
+_ = app.Services.GetRequiredService<CheapRejectRules>();
+_ = app.Services.GetRequiredService<RuleMaintenance>().Generate();
+var dataStores = app.Services.GetRequiredService<IWorkspaceDataStoreFactory>();
+await app.Services.GetRequiredService<RegexSemanticClassifier>().InitializeAsync();
+await dataStores.ValidateAsync();
+await app.Services.GetRequiredService<IAccountRegistryStore>().ValidateAsync();
+await app.Services.GetRequiredService<AdminBootstrapService>().InitializeAsync();
+WorkspaceRuntime? localRuntime = null;
+if (hosting.IsLocal)
+{
+    localRuntime = await app.Services.GetRequiredService<WorkspaceRuntimeManager>()
+        .GetAsync(WorkspaceContext.LocalWorkspaceId);
+}
+
+try
+{
+    await app.StartAsync();
+}
+catch (Exception ex) when (hosting.IsLocal && IsAddressInUse(ex))
+{
+    const string message =
+        "Job Search Manager could not start because TCP port 54321 is already in use. " +
+        "Close the other program using http://127.0.0.1:54321 and try again.";
+    app.Logger.LogCritical(ex, "{StartupError}", message);
+    Console.Error.WriteLine(message);
+    Environment.ExitCode = 1;
+    return;
+}
+
+if (hosting.IsLocal)
+{
+    app.Logger.LogInformation("Job Search Manager is available at {ApplicationUrl}", ApplicationUrl);
+    app.Logger.LogInformation(
+        "Persistent state directory: {DataDirectory}",
+        localRuntime!.StateStore.DataDirectory);
+    if (builder.Configuration.GetValue("Application:RefreshOnStartup", true) &&
+        (await localRuntime.StateStore.LoadSettingsAsync()).HasConfiguredSource == true)
+    {
+        _ = localRuntime.Catalog.RefreshAsync();
+    }
+
+    if (builder.Configuration.GetValue("Application:OpenBrowser", true))
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(ApplicationUrl) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogWarning(
+                ex,
+                "Could not open the default browser. Open {ApplicationUrl} manually.",
+                ApplicationUrl);
+        }
+    }
+}
+else
+{
+    app.Logger.LogInformation(
+        "Job Search Manager started in Container mode with browser-isolated workspaces, local filesystem persistence, and Data Protection keys at {DataProtectionPath}.",
+        hosting.DataProtectionPath);
+}
+
+await app.WaitForShutdownAsync();
+
+static bool IsAddressInUse(Exception exception)
+{
+    for (var current = exception; current is not null; current = current.InnerException!)
+    {
+        if (current is SocketException { SocketErrorCode: SocketError.AddressAlreadyInUse } ||
+            string.Equals(current.GetType().Name, "AddressInUseException", StringComparison.Ordinal))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static async Task SignInAccountAsync(HttpContext context, AccountRecord account, string persistence)
+{
+    var claims = new[]
+    {
+        new Claim(ClaimTypes.NameIdentifier, account.AccountId),
+        new Claim(ClaimTypes.Name, account.Email),
+        new Claim(AccountAuthentication.SecurityVersionClaim, account.SecurityVersion.ToString()),
+        new Claim(AccountAuthentication.PersistenceClaim, persistence)
+    };
+    var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+    var lifetime = AccountPersistence.Lifetime(persistence);
+    await context.SignInAsync(
+        CookieAuthenticationDefaults.AuthenticationScheme,
+        new ClaimsPrincipal(identity),
+        new AuthenticationProperties
+        {
+            IsPersistent = lifetime.HasValue,
+            ExpiresUtc = lifetime.HasValue ? DateTimeOffset.UtcNow.Add(lifetime.Value) : null,
+            AllowRefresh = lifetime.HasValue
+        });
+}
+
+static Uri PublicBaseUri(HttpRequest request, IConfiguration configuration)
+{
+    var configured = configuration["JOBSEARCHMANAGER_PUBLIC_BASE_URL"]?.Trim();
+    if (Uri.TryCreate(configured, UriKind.Absolute, out var publicUri) &&
+        publicUri.Scheme is "https" or "http") return new Uri(publicUri, "/");
+    return new Uri($"{request.Scheme}://{request.Host}/", UriKind.Absolute);
+}

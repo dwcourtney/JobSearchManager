@@ -44,7 +44,6 @@ $securityScanningTestsPath = Join-Path $repo "Tests\security-scanning.tests.js"
 $codeqlScanningTestsPath = Join-Path $repo "Tests\codeql-scanning.tests.js"
 $classifierArchitectureTestsPath = Join-Path $repo "Tests\classifier-architecture.tests.js"
 $aiHoldoutEvaluationTestsPath = Join-Path $repo "Tests\ai-holdout-evaluation.tests.js"
-$llmHoldoutEvaluationTestsPath = Join-Path $repo "Tests\llm-holdout-evaluation.tests.js"
 
 foreach ($scriptPath in @(
     $appPath,
@@ -80,8 +79,7 @@ foreach ($scriptPath in @(
     $securityScanningTestsPath,
     $codeqlScanningTestsPath,
     $classifierArchitectureTestsPath,
-    $aiHoldoutEvaluationTestsPath,
-    $llmHoldoutEvaluationTestsPath)) {
+    $aiHoldoutEvaluationTestsPath)) {
     & $NodePath --check $scriptPath
     if ($LASTEXITCODE -ne 0) {
         throw "JavaScript syntax validation failed for $scriptPath."
@@ -203,10 +201,6 @@ if ($LASTEXITCODE -ne 0) {
     throw "AI-adjudicated holdout scientific-boundary tests failed."
 }
 
-& $NodePath $llmHoldoutEvaluationTestsPath
-if ($LASTEXITCODE -ne 0) {
-    throw "LLM holdout prediction-blinding and UI architecture tests failed."
-}
 
 $styles = Get-Content -LiteralPath $stylesPath -Raw -Encoding UTF8
 $theme = Get-Content -LiteralPath $themePath -Raw -Encoding UTF8
@@ -275,7 +269,7 @@ $credentialFitScript = $index.IndexOf('src="/credential-fit.js?v=2"')
 $clearanceFitScript = $index.IndexOf('src="/clearance-fit.js?v=1"')
 $jobFitScript = $index.IndexOf('src="/job-fit.js?v=11"')
 $clipboardTextScript = $index.IndexOf('src="/clipboard-text.js?v=1"')
-$appScript = $index.IndexOf('src="/app.js?v=56"')
+$appScript = $index.IndexOf('src="/app.js?v=57"')
 if ($countryOrderingScript -lt 0 -or $appScript -le $countryOrderingScript) {
     throw "The versioned country-ordering.js asset must load before app.js."
 }
@@ -534,20 +528,11 @@ Write-Output "Source modal/loading race audit: PASS"
 Write-Output "Posting normalization/sanitization order audit: PASS"
 Write-Output "Browser text encoding audit: PASS"
 
-& $NodePath (Join-Path $repo "Tests/rule-maintenance.tests.js")
-if ($LASTEXITCODE -ne 0) { throw "Rule maintenance UI tests failed." }
-
 & $NodePath (Join-Path $repo "Tests/admin-architecture.tests.js")
 if ($LASTEXITCODE -ne 0) { throw "Admin architecture tests failed." }
 
-& $NodePath (Join-Path $repo "Tests/cheap-triage-shadow.tests.js")
-if ($LASTEXITCODE -ne 0) { throw "Cheap Triage Shadow UI tests failed." }
-
-& $NodePath --check (Join-Path $repo "wwwroot/human-review.js")
-if ($LASTEXITCODE -ne 0) { throw "Human review syntax validation failed." }
-& $NodePath (Join-Path $repo "Tests/human-review.tests.js")
-if ($LASTEXITCODE -ne 0) { throw "Human review UI tests failed." }
-& $NodePath (Join-Path $repo "Tests/cheap-triage-workflow.tests.js")
-if ($LASTEXITCODE -ne 0) { throw "Guided Cheap Triage workflow UI tests failed." }
 & $NodePath (Join-Path $repo "Tests/job-fit-rules-ui.tests.js")
 if ($LASTEXITCODE -ne 0) { throw "Job Fit Rules theme/UI tests failed." }
+
+& $NodePath (Join-Path $repo "Tests/retired-triage.tests.js")
+if ($LASTEXITCODE -ne 0) { throw "Retired triage boundary tests failed." }

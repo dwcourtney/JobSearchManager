@@ -102,8 +102,7 @@ internal static class CheapTriageShadowTests
             using var semanticStore = new SqliteSemanticRuleStore(Path.Combine(directory, "rules.db"), concepts);
             semanticStore.Initialize(Path.Combine(AppContext.BaseDirectory, "LegacyJobConceptRules.json"));
             var regex = new RegexSemanticClassifier(semanticStore, concepts); await regex.InitializeAsync();
-            var semantic = new SemanticClassificationService(new ClassifierClient(new HttpClient(http), concepts,
-                NullLogger<ClassifierClient>.Instance), concepts, regex);
+            var semantic = new SemanticClassificationService(concepts, regex);
             var normal = new JobCatalog(client, store, NullLogger<JobCatalog>.Instance, credentials, academic,
                 authorization, remote, companies, options, coordinator, semantic, Service(newRules, "Shadow"));
             await normal.InitializeAsync(query); await normal.WaitForCheapTriageAsync();

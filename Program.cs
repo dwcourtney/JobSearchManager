@@ -14,32 +14,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Logging.Abstractions;
 using JobSearchManager;
-
-if (args is ["--human-review-backup", var reviewSource, var reviewDestination])
-{
-    CheapTriageHumanReview.Backup(reviewSource, reviewDestination);
-    Console.WriteLine("Human review SQLite backup verified.");
-    return;
-}
-
-if (args.Length == 4 && args[0] == "--cheap-triage" && args[1] == "evaluate")
-{
-    var cheapRules = CheapRejectRules.Load(Path.GetFullPath(args[2]));
-    foreach (var line in File.ReadLines(Path.GetFullPath(args[3])))
-    {
-        using var row = JsonDocument.Parse(line);
-        var value = row.RootElement;
-        Console.WriteLine(JsonSerializer.Serialize(new
-        {
-            id = value.GetProperty("id").GetString(),
-            result = cheapRules.Decide(value.GetProperty("title").GetString() ?? "",
-                value.GetProperty("body").GetString() ?? "")
-        }, new JsonSerializerOptions(JsonSerializerDefaults.Web)));
-    }
-    return;
-}
 
 if (args is ["--healthcheck"])
 {
@@ -51,57 +26,6 @@ if (args is ["--healthcheck"])
     }
     catch
     {
-        Environment.ExitCode = 1;
-    }
-    return;
-}
-
-// The hardware benchmark entry point deliberately runs before RegEx maintenance.
-// Prediction nodes therefore never initialize or open the RegEx rule database.
-if (args.Length >= 3 && args[0] == "--llm-benchmark")
-{
-    var action = args[1];
-    var benchmarkDirectory = Path.GetFullPath(args[2]);
-    var catalog = JobConceptCatalog.LoadDefault();
-    var jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true };
-    try
-    {
-        switch (action)
-        {
-            case "preflight" when args.Length == 3:
-            case "predict" when args.Length == 3:
-                using (var benchmarkHttp = new HttpClient
-                {
-                    BaseAddress = new Uri(Environment.GetEnvironmentVariable("DEEP_ANALYSIS_URL")
-                        ?? "http://deep-analysis:8081/"),
-                    Timeout = TimeSpan.FromSeconds(300)
-                })
-                {
-                    var client = new ClassifierClient(benchmarkHttp, catalog,
-                        NullLogger<ClassifierClient>.Instance);
-                    object result = action == "preflight"
-                        ? await LlmTechnicalPreflight.RunAsync(benchmarkDirectory,
-                            client.DeepAnalyzeAsync, catalog,
-                            requireStablePredictions: false)
-                        : await new LlmHardwareBenchmarkRunner(benchmarkDirectory,
-                            client.DeepAnalyzeAsync, catalog).RunPredictionsAsync();
-                    Console.WriteLine(JsonSerializer.Serialize(result, jsonOptions));
-                }
-                break;
-            case "score" when args.Length == 4:
-                Console.WriteLine(JsonSerializer.Serialize(
-                    await LlmHardwareBenchmarkRunner.ScoreAsync(benchmarkDirectory,
-                        Path.GetFullPath(args[3]), catalog), jsonOptions));
-                break;
-            default:
-                Console.Error.WriteLine("Usage: --llm-benchmark <preflight|predict> <benchmark-directory> | --llm-benchmark score <benchmark-directory> <production-evaluation-directory>");
-                Environment.ExitCode = 2;
-                break;
-        }
-    }
-    catch (Exception exception)
-    {
-        Console.Error.WriteLine($"LLM hardware benchmark failed: {exception.GetType().Name}: {exception.Message}");
         Environment.ExitCode = 1;
     }
     return;
@@ -210,64 +134,6 @@ if (args.Length >= 3 && args[0] == "--regex-maintenance")
                 classifier, store, catalog);
             Console.WriteLine(JsonSerializer.Serialize(await aiEvaluation.RunAsync(), jsonOptions));
             break;
-        case "evaluate-llm-holdout" when args.Length == 4:
-            using (var llmHttp = new HttpClient
-            {
-                BaseAddress = new Uri(Environment.GetEnvironmentVariable("DEEP_ANALYSIS_URL")
-                    ?? "http://deep-analysis:8081/"),
-                Timeout = TimeSpan.FromSeconds(300)
-            })
-            {
-                var llmClient = new ClassifierClient(llmHttp, catalog,
-                    NullLogger<ClassifierClient>.Instance);
-                var evaluationDirectory = Path.GetFullPath(args[3]);
-                var regexBaseline = new AiHoldoutEvaluationService(evaluationDirectory,
-                    classifier, store, catalog);
-                var llmEvaluation = new LlmHoldoutEvaluationService(evaluationDirectory,
-                    llmClient.DeepAnalyzeAsync, store, catalog, regexBaseline.GetLatestReport);
-                try
-                {
-                    Console.WriteLine(JsonSerializer.Serialize(
-                        await llmEvaluation.RunAsync(), jsonOptions));
-                }
-                catch (Exception exception)
-                {
-                    Console.Error.WriteLine($"LLM holdout evaluation failed: {exception.GetType().Name}: {exception.Message}");
-                    Environment.ExitCode = 1;
-                }
-            }
-            break;
-        case "preflight-llm-holdout" when args.Length == 4:
-            using (var preflightHttp = new HttpClient
-            {
-                BaseAddress = new Uri(Environment.GetEnvironmentVariable("DEEP_ANALYSIS_URL")
-                    ?? "http://deep-analysis:8081/"),
-                Timeout = TimeSpan.FromSeconds(300)
-            })
-            {
-                var preflightClient = new ClassifierClient(preflightHttp, catalog,
-                    NullLogger<ClassifierClient>.Instance);
-                try
-                {
-                    Console.WriteLine(JsonSerializer.Serialize(await LlmTechnicalPreflight.RunAsync(
-                        Path.GetFullPath(args[3]), preflightClient.DeepAnalyzeAsync, catalog), jsonOptions));
-                }
-                catch (Exception exception)
-                {
-                    Console.Error.WriteLine($"LLM technical preflight failed: {exception.GetType().Name}: {exception.Message}");
-                    Environment.ExitCode = 1;
-                }
-            }
-            break;
-        case "freeze-triage-reference" when args.Length == 4:
-            var triageReference = new TriageEvaluationService(Path.GetFullPath(args[3]));
-            Console.WriteLine(JsonSerializer.Serialize(
-                await triageReference.FreezeReferenceAsync(), jsonOptions));
-            break;
-        case "evaluate-triage" when args.Length == 4:
-            var triageEvaluation = new TriageEvaluationService(Path.GetFullPath(args[3]));
-            Console.WriteLine(JsonSerializer.Serialize(await triageEvaluation.RunAsync(), jsonOptions));
-            break;
         case "reconcile-cache" when args.Length == 4:
             Console.WriteLine(JsonSerializer.Serialize(await RegexCacheReconciler.ReconcileAsync(
                 Path.GetFullPath(args[3]), classifier, catalog), jsonOptions));
@@ -293,7 +159,7 @@ if (args.Length >= 3 && args[0] == "--regex-maintenance")
             Console.WriteLine(JsonSerializer.Serialize(new { backup = Path.GetFullPath(args[3]) }, jsonOptions));
             break;
         default:
-            Console.Error.WriteLine("Usage: --regex-maintenance <overview|evaluate|evaluate-ai-holdout|evaluate-llm-holdout|preflight-llm-holdout|freeze-triage-reference|evaluate-triage|benchmark-cache|reconcile-cache|sample-holdout|export|import|review-stale|retention|backup> <regex-rules.db> [evaluation-directory|cache-root] [plan.json] [output.json]");
+            Console.Error.WriteLine("Usage: --regex-maintenance <overview|evaluate|evaluate-ai-holdout|benchmark-cache|reconcile-cache|sample-holdout|export|import|review-stale|retention|backup> <regex-rules.db> [evaluation-directory|cache-root] [plan.json] [output.json]");
             Environment.ExitCode = 2;
             break;
     }
@@ -329,15 +195,6 @@ builder.Services.AddHttpClient<JobSourceClient>((services, client) =>
     client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
     client.DefaultRequestHeaders.UserAgent.ParseAdd("JobSearchManager/1.0");
 });
-builder.Services.AddHttpClient<ClassifierClient>((services, client) =>
-{
-    var baseUrl = services.GetRequiredService<IConfiguration>()["DeepAnalysis:BaseUrl"]
-        ?? "http://deep-analysis:8081/";
-    client.BaseAddress = new Uri(baseUrl, UriKind.Absolute);
-    client.Timeout = TimeSpan.FromSeconds(300);
-    client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
-    client.DefaultRequestHeaders.UserAgent.ParseAdd("JobSearchManager/1.0");
-});
 builder.Services.AddSingleton<CompanyCatalog>();
 builder.Services.AddSingleton<CredentialDetector>();
 builder.Services.AddSingleton<AcademicQualificationDetector>();
@@ -349,13 +206,6 @@ builder.Services.AddSingleton<SqliteSemanticRuleStore>();
 builder.Services.AddSingleton<RegexSemanticClassifier>();
 builder.Services.AddSingleton<RegexEvaluationService>();
 builder.Services.AddSingleton<AiHoldoutEvaluationService>();
-builder.Services.AddSingleton(services => CheapRejectRules.Load(Path.GetFullPath(
-    builder.Configuration["CheapTriage:RulesetPath"] ?? CheapRejectRules.DefaultPath,
-    builder.Environment.ContentRootPath)));
-builder.Services.AddSingleton<CheapTriageShadow>();
-builder.Services.AddSingleton<RuleMaintenance>();
-builder.Services.AddSingleton<CheapTriageMaintenance>();
-builder.Services.AddSingleton<CheapTriageHumanReview>();
 builder.Services.AddHostedService<RegexTelemetryFlushService>();
 builder.Services.AddSingleton<SemanticClassificationService>();
 builder.Services.AddSingleton<PortableWorkspaceService>();
@@ -593,15 +443,6 @@ app.MapGet("/api/jobs/detail", async Task<IResult> (
         Results.Ok(JobPresentation.AuthoritativeRegexDetail(detail));
 }).RequireRateLimiting("provider");
 
-app.MapGet("/api/jobs/cheap-triage", async Task<IResult> (
-    string stableId, HttpResponse response, WorkspaceRuntimeProvider provider, CancellationToken token) =>
-{
-    response.Headers.CacheControl = "no-store";
-    var catalog = (await provider.GetAsync(token)).Catalog;
-    var diagnostic = catalog.GetCheapTriageDiagnostic(stableId);
-    return diagnostic is null ? Results.NotFound() : Results.Ok(diagnostic);
-}).RequireRateLimiting("state");
-
 app.MapPost("/api/jobs/description-matches", async (
     DescriptionMatchRequest request,
     WorkspaceRuntimeProvider provider,
@@ -704,87 +545,8 @@ app.MapGet("/api/admin/status", (HttpContext context) =>
     });
 }).RequireAuthorization(AdminAuthorization.Policy);
 
-app.MapGet("/api/admin/cheap-triage/status", async (HttpResponse response, RuleMaintenance maintenance,
-    WorkspaceRuntimeProvider provider, CancellationToken token) =>
-{
-    response.Headers.CacheControl = "no-store";
-    var catalog = (await provider.GetAsync(token)).Catalog;
-    await catalog.GetListSnapshotAsync(token);
-    return Results.Ok(maintenance.GetStatus() with { Live = catalog.GetCheapTriageReport() });
-}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
-
-app.MapGet("/api/admin/cheap-triage/maintenance-prompt", (RuleMaintenance maintenance, HttpContext context) =>
-{
-    context.Response.Headers.CacheControl = "no-store";
-    return Results.Ok(maintenance.Generate());
-}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
-
-var humanReviewApi = app.MapGroup("/api/admin/cheap-triage/human-review")
-    .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state").DisableCookieRedirect();
-humanReviewApi.AddEndpointFilter(async (context, next) =>
-{
-    context.HttpContext.Response.Headers.CacheControl = "no-store";
-    return await next(context);
-});
-humanReviewApi.MapGet("", (CheapTriageHumanReview review) => Results.Ok(review.Read()));
-humanReviewApi.MapPost("", (HumanReviewSave request, CheapTriageHumanReview review, HttpContext context) =>
-{
-    try
-    {
-        review.Save(request, context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? context.User.Identity?.Name ?? "administrator");
-        return Results.Ok(review.Read());
-    }
-    catch (ArgumentException exception) { return Results.BadRequest(new { error = exception.Message }); }
-    catch (InvalidOperationException exception) { return Results.Conflict(new { error = exception.Message }); }
-});
-humanReviewApi.MapGet("/maintenance-prompt", async Task<IResult> (CheapTriageHumanReview review,
-    RuleMaintenance maintenance, WorkspaceRuntimeProvider provider, CancellationToken token) =>
-{
-    var report = review.Read();
-    if (!report.Complete) return Results.Conflict(new { error = "Complete Human Review before preparing a rule update." });
-    var catalog = (await provider.GetAsync(token)).Catalog;
-    return Results.Ok(maintenance.GenerateReviewed(report, catalog.GetCheapTriageReport()));
-});
-var maintenanceWorkflow = humanReviewApi.MapGroup("/workflow");
-maintenanceWorkflow.AddEndpointFilter(async (context, next) =>
-{
-    try { return await next(context); }
-    catch (InvalidOperationException e) { return Results.Conflict(new { error = e.Message }); }
-    catch (Exception e) when (e is InvalidDataException or JsonException or ArgumentException)
-    { return Results.BadRequest(new { error = "Invalid maintenance result: " + e.Message }); }
-});
-maintenanceWorkflow.MapGet("", (CheapTriageHumanReview review, CheapTriageMaintenance workflow) => Results.Ok(workflow.Read(review.Read())));
-maintenanceWorkflow.MapPost("/prepare", async (WorkflowRevision request, CheapTriageHumanReview review,
-    CheapTriageMaintenance workflow, RuleMaintenance maintenance, WorkspaceRuntimeProvider provider, HttpContext context, CancellationToken token) =>
-{
-    var report = review.Read();
-    if (!report.Complete) return Results.Conflict(new { error = "Complete Human Review first." });
-    var catalog = (await provider.GetAsync(token)).Catalog;
-    return Results.Ok(workflow.Prepare(report, request, maintenance.GenerateReviewed(report, catalog.GetCheapTriageReport()),
-        context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "administrator"));
-});
-maintenanceWorkflow.MapPost("/prepare-release", (WorkflowRevision request, CheapTriageHumanReview review,
-    CheapTriageMaintenance workflow, HttpContext context) => Results.Ok(workflow.PrepareRelease(review.Read(), request,
-        context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "administrator")));
-maintenanceWorkflow.MapPost("/candidate", (CandidateImport request, CheapTriageHumanReview review,
-    CheapTriageMaintenance workflow, HttpContext context) => Results.Ok(workflow.Import(review.Read(), request,
-        context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "administrator")));
-maintenanceWorkflow.MapPost("/result", (MaintenanceResultImport request, CheapTriageHumanReview review,
-    CheapTriageMaintenance workflow, HttpContext context) => Results.Ok(workflow.ImportResult(review.Read(), request,
-        context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "administrator")));
-maintenanceWorkflow.MapPost("/import-synced", (WorkflowRevision request, CheapTriageHumanReview review,
-    CheapTriageMaintenance workflow, HttpContext context) => Results.Ok(workflow.ImportResult(review.Read(),
-        new(request.Key, request.Revision, workflow.ReadInbox()), context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "administrator")));
-maintenanceWorkflow.MapPost("/decision", (CandidateDisposition request, CheapTriageHumanReview review,
-    CheapTriageMaintenance workflow, HttpContext context) => Results.Ok(workflow.Decide(review.Read(), request,
-        context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "administrator")));
-
-humanReviewApi.MapGet("/export", (CheapTriageHumanReview review) => Results.File(
-    JsonSerializer.SerializeToUtf8Bytes(new { exportedAtUtc = DateTimeOffset.UtcNow, report = review.Read() },
-        new JsonSerializerOptions(JsonSerializerDefaults.Web)), "application/json", "jsm-human-review.json"));
-
 app.MapPost("/api/admin/classifier-diagnostic", async Task<IResult> (
-    ClassifierRequest request,
+    ConceptDiagnosticRequest request,
     RegexSemanticClassifier classifier,
     RemoteWorkDetector remoteDetector,
     ExtendedLocationRequirementDetector extendedDetector,
@@ -1339,8 +1101,6 @@ app.MapPut("/api/history/workflow-state", async (
         : Results.BadRequest())
     .RequireRateLimiting("state");
 
-_ = app.Services.GetRequiredService<CheapRejectRules>();
-_ = app.Services.GetRequiredService<RuleMaintenance>().Generate();
 var dataStores = app.Services.GetRequiredService<IWorkspaceDataStoreFactory>();
 await app.Services.GetRequiredService<RegexSemanticClassifier>().InitializeAsync();
 await dataStores.ValidateAsync();

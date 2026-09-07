@@ -10,12 +10,17 @@ loopback-only Windows desktop mode and a hardened Linux/container deployment.
 - **Persistence:** isolated filesystem workspaces plus a lifecycle-managed SQLite RegEx rule store.
 - **Default Semantic Job Fit:** a deterministic in-process RegEx classifier evaluates the canonical
   85-concept taxonomy. It requires no model service, GPU, or network request.
-- **Dormant deep-analysis infrastructure:** pinned Qwen/Ollama remains installed for possible later
-  restoration, but no normal UI or HTTP route invokes it and its stored results do not affect Job Fit.
+- **Model research:** Qwen/Ollama tooling is isolated in the explicit `research/qwen/` workflow.
+  Normal builds, startup and deployment require no model services or GPU tooling.
 - **Deterministic analysis:** salary, clearance, credentials, education, work authorization, remote
   metadata, and extended-location requirements remain ordinary application code.
 - **Administration:** admins can inspect, filter, evaluate, approve, activate, review, retire,
   export, import, back up, and atomically hot-reload RegEx rules.
+
+Cheap Triage, Human Review and maintenance/discovery are research-only. Normal JSM contains no
+triage execution or Admin workflow and needs no triage rules, queues or databases. Historical
+artifacts and passive cache compatibility are preserved; see
+[`research/cheap-triage/README.md`](research/cheap-triage/README.md).
 
 DeBERTa and the former automatic model-classifier service are not part of the runtime architecture.
 
@@ -35,8 +40,9 @@ Ollama, a GPU, or an account.
 ## Linux/container mode
 
 `compose.yaml` is the development example. Production uses `deploy/compose.curiosity.yaml` with exact
-immutable image references. JSM, the dormant deep-analysis bridge, and Ollama are non-root,
-read-only, capability-dropped containers. The LLM network is internal and publishes no host port.
+immutable image references. Both normal manifests declare only JSM, running non-root, read-only
+and capability-dropped. Existing Mailpit/SMTP integration remains on the normal network.
+Model experiments use the separate `research/qwen/compose.yaml` project.
 
 Important configuration:
 
@@ -46,7 +52,6 @@ Important configuration:
 | `JOBSEARCHMANAGER_DATA_PROTECTION_PATH` | Persists cookie-protection keys across replacement. |
 | `JOBSEARCHMANAGER_PUBLIC_BASE_URL` | Builds account verification and recovery links. |
 | `JOBSEARCHMANAGER_ADMIN_BOOTSTRAP_PATH` | Enables the physical-host one-time Admin claim. |
-| `DeepAnalysis__BaseUrl` | Internal, optional Qwen deep-analysis bridge. |
 
 The SQLite database defaults to `/app/data/regex-rules.db` in container mode, so it shares the
 existing persistent application bind mount. See `docs/curiosity-cicd.md` for exact-SHA deployment and
@@ -67,10 +72,9 @@ List and detail views project the same current RegEx classification, so selectin
 observational. The Admin evaluation ledger separates the **CURATED REGRESSION BENCHMARK**,
 validation, and **AI-ADJUDICATED PRODUCTION HOLDOUT**. The holdout uses prediction-blinded Codex A/B
 passes plus disagreement adjudication; its machine-derived references are not human ground truth.
-Admin -> Evaluation is split into **RegEx** and **LLM**. The LLM page can freeze the current pinned
-local model's first complete 85-concept prediction set before comparing it with those exact same
-references and exclusions. This explicit experiment does not re-enable LLM Job Fit or change the
-production classifier.
+LLM comparison and hardware preflight commands belong to the separate research executable; see
+[`research/qwen/README.md`](research/qwen/README.md). Persisted model fields remain readable for
+cache compatibility and do not affect production Job Fit.
 See `docs/regex-evaluation-methodology.md` for sampling,
 label provenance, contamination, support, metrics, and the PR-curve limitation.
 
@@ -84,23 +88,25 @@ dotnet restore JobSearchManager.csproj --locked-mode
 dotnet restore Tests/JobSearchManager.Tests.csproj --locked-mode
 dotnet build Tests/JobSearchManager.Tests.csproj --configuration Release --no-restore
 dotnet run --project Tests/JobSearchManager.Tests.csproj --configuration Release --no-build
-python classifier-service/classifier_service.py --self-test
+python Tests/deployment-script.tests.py
 pwsh -NoLogo -NoProfile -File scripts/validate-source.ps1
 pwsh -NoLogo -NoProfile -File scripts/audit-repository.ps1
 ```
 
 Hosted CI additionally runs the JavaScript architecture tests, CodeQL, Trivy, Linux image health,
-exact-commit identity checks, and confirms the removed `/classify` model endpoint remains absent.
+exact-commit identity checks, and JSM-only Compose/deployment checks. Model validation runs only
+through the separate research workflow.
 
 ## Repository map
 
 - `SemanticRules.cs`, `SqliteSemanticRuleStore.cs`, `RegexSemanticClassifier.cs` — rule schema,
   lifecycle, hot reload, fingerprints, and telemetry.
 - `LegacyJobConceptRules.json`, `RegexValidationCorpus.json`, `RegexEvaluation.cs`,
-  `AiHoldoutEvaluation.cs`, `LlmHoldoutEvaluation.cs` — recovered source catalog, curated regression
-  evaluation, frozen references, and the durable apples-to-apples LLM holdout pipeline.
-- `ClassifierClient.cs`, `classifier-service/` — in-process default RegEx integration and opt-in Qwen
-  bridge.
+  `AiHoldoutEvaluation.cs`, `HoldoutMetrics.cs` — recovered source catalog, curated regression
+  evaluation and frozen-reference metrics.
+- `SemanticClassificationService.cs`, `SemanticClassificationContracts.cs` — deterministic RegEx integration.
+- `research/qwen/` — isolated model executable, Compose, provisioning and validation. Historical
+  model source paths and artifacts are retained and excluded from normal compilation/builds.
 - `Program.cs`, `JobCatalog.cs`, `JobModels.cs` — HTTP application, ingestion, cache, workflow, and
-  persistent LLM request lifecycle.
+  compatible historical model fields (without model execution).
 - `wwwroot/`, `Tests/`, `deploy/`, `scripts/` — browser UI, regression coverage, and operations.

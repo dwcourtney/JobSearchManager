@@ -8,12 +8,6 @@ using System.Text.RegularExpressions;
 
 namespace JobSearchManager;
 
-public sealed record CheapRejectEvidence(string PredicateId, string Scope, string Text);
-public sealed record CheapRejectDecision(string RulesetVersion, string RulesetFingerprint,
-    string PostingFingerprint, string Decision, string Category, string Reason,
-    IReadOnlyList<string> RuleIds, IReadOnlyList<CheapRejectEvidence> Evidence,
-    IReadOnlyList<string> Guards, bool FailOpen);
-
 /// <summary>A bounded Boolean matcher for the declarative cheap-reject rules only.
 /// Not the Job Fit semantic classifier; never discards or writes jobs.</summary>
 public sealed class CheapRejectRules

@@ -1009,8 +1009,6 @@ function synchronizeAdminNavigation(isAdmin) {
     elements.adminOverviewTab = null;
     elements.adminClassifierTab = null;
     elements.adminEvaluationTab = null;
-    elements.adminCheapTab = null;
-    elements.adminCheapPanel = null;
     elements.adminOverviewPanel = null;
     elements.adminClassifierPanel = null;
     elements.adminEvaluationPanel = null;
@@ -1078,17 +1076,7 @@ function synchronizeAdminNavigation(isAdmin) {
   overviewTab.addEventListener("click", () => showAdminSection("overview", true));
   classifierTab.addEventListener("click", () => showAdminSection("classifier", true));
   evaluationTab.addEventListener("click", () => showAdminSection("evaluation", true));
-  const cheapTab = document.createElement("button");
-  cheapTab.id = "admin-cheap-triage-tab";
-  cheapTab.className = "detail-tab";
-  cheapTab.type = "button";
-  cheapTab.textContent = "Cheap Triage";
-  cheapTab.setAttribute("role", "tab");
-  cheapTab.setAttribute("aria-controls", "admin-cheap-triage-panel");
-  cheapTab.setAttribute("aria-selected", "false");
-  cheapTab.tabIndex = -1;
-  cheapTab.addEventListener("click", () => showAdminSection("cheap-triage", true));
-  tabs.append(overviewTab, classifierTab, evaluationTab, cheapTab);
+  tabs.append(overviewTab, classifierTab, evaluationTab);
 
   const overviewPanel = document.createElement("section");
   overviewPanel.id = "admin-overview-panel";
@@ -1194,12 +1182,6 @@ function synchronizeAdminNavigation(isAdmin) {
   const rulesTitle = document.createElement("h4"); rulesTitle.textContent = "Browse rules";
   rulesPanel.append(rulesTitle, filters, rulesList);
   classifierPanel.append(classifierTitle, classifierIntro, summaryPanel, actionPanel, rulesPanel);
-  const cheapPanel = document.createElement("section");
-  cheapPanel.id = "admin-cheap-triage-panel";
-  cheapPanel.className = "settings-section admin-subtab-panel";
-  cheapPanel.setAttribute("role", "tabpanel");
-  cheapPanel.setAttribute("aria-labelledby", "admin-cheap-triage-tab");
-  cheapPanel.hidden = true;
   const evaluationPanel = document.createElement("section");
   evaluationPanel.id = "admin-evaluation-panel";
   evaluationPanel.className = "settings-section admin-subtab-panel";
@@ -1209,11 +1191,11 @@ function synchronizeAdminNavigation(isAdmin) {
   const evaluationTitle = document.createElement("h3");
   evaluationTitle.textContent = "Job Fit Evaluation";
   const evaluationIntro = document.createElement("p");
-  evaluationIntro.textContent = "Evaluate production Job Fit concept detection. These benchmarks do not evaluate Cheap Triage KEEP/REJECT decisions. Development regression is not a production accuracy estimate; the frozen holdout uses provisional machine labels.";
+  evaluationIntro.textContent = "Evaluate production Job Fit concept detection. Development regression is not a production accuracy estimate; the frozen holdout uses provisional machine labels.";
   const evaluationContent = document.createElement("div");
   evaluationContent.className = "admin-evaluation-list";
   evaluationPanel.append(evaluationTitle, evaluationIntro, evaluationContent);
-  surface.append(tabs, overviewPanel, classifierPanel, evaluationPanel, cheapPanel);
+  surface.append(tabs, overviewPanel, classifierPanel, evaluationPanel);
   view.append(surface);
   elements.settingsView.after(view);
 
@@ -1223,8 +1205,6 @@ function synchronizeAdminNavigation(isAdmin) {
   elements.adminOverviewTab = overviewTab;
   elements.adminClassifierTab = classifierTab;
   elements.adminEvaluationTab = evaluationTab;
-  elements.adminCheapTab = cheapTab;
-  elements.adminCheapPanel = cheapPanel;
   elements.adminOverviewPanel = overviewPanel;
   elements.adminClassifierPanel = classifierPanel;
   elements.adminEvaluationPanel = evaluationPanel;
@@ -1240,9 +1220,6 @@ function synchronizeAdminNavigation(isAdmin) {
   if (window.location.hash === "#admin-classifier") {
     showView("admin", false, { bypassSourceGuard: true });
     showAdminSection("classifier", false);
-  } else if (window.location.hash === "#admin-cheap-triage") {
-    showView("admin", false, { bypassSourceGuard: true });
-    showAdminSection("cheap-triage", false);
   } else if (window.location.hash === "#admin-evaluation") {
     showView("admin", false, { bypassSourceGuard: true });
     showAdminSection("evaluation", false);
@@ -1253,8 +1230,7 @@ function showAdminSection(section, updateLocation = false) {
   const sections = {
     overview: [elements.adminOverviewTab, elements.adminOverviewPanel],
     classifier: [elements.adminClassifierTab, elements.adminClassifierPanel],
-    evaluation: [elements.adminEvaluationTab, elements.adminEvaluationPanel],
-    "cheap-triage": [elements.adminCheapTab, elements.adminCheapPanel]
+    evaluation: [elements.adminEvaluationTab, elements.adminEvaluationPanel]
   };
   const selected = Object.hasOwn(sections, section) ? section : "overview";
   state.activeAdminTab = selected;
@@ -1267,7 +1243,6 @@ function showAdminSection(section, updateLocation = false) {
   }
   if (selected === "classifier") void loadClassifierStatus();
   if (selected === "evaluation") void loadEvaluationLedger();
-  if (selected === "cheap-triage") void RuleMaintenance.renderStatus(elements.adminCheapPanel, globalThis, job => evaluateJobFit(job)?.score ?? null);
   if (updateLocation) {
     const hash = selected === "overview" ? "" : `#admin-${selected}`;
     history.replaceState(null, "", `${window.location.pathname}${window.location.search}${hash}`);
@@ -4930,7 +4905,6 @@ function renderJobFitDetail(result, job) {
 }
 
 function renderDetail(job) {
-  void CheapTriage.renderDetail(document.querySelector("#cheap-triage-detail"), job);
   elements.emptyDetail.hidden = Boolean(job);
   elements.jobDetail.hidden = !job;
   if (!job) {

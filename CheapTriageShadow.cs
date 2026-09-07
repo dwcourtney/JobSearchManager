@@ -3,12 +3,6 @@ using System.Text.Json;
 
 namespace JobSearchManager;
 
-public sealed record CheapTriageObservation(int AnalysisVersion, DateTimeOffset AnalyzedAtUtc,
-    bool DescriptionAvailable, CheapRejectDecision Result)
-{
-    public string Decision => Result.FailOpen ? "UNDETERMINED" : Result.Decision;
-}
-
 /// <summary>Observations only. Configuration and rules are immutable startup snapshots.</summary>
 public sealed class CheapTriageShadow
 {

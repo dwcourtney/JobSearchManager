@@ -51,17 +51,20 @@ scan_source() {
     exit 2
   }
 
+  # Research model dependencies/config are validated by the explicit research workflow.
+  # The all-source secret gate below deliberately remains repository-wide.
+  local -a runtime_scope=(--skip-dirs research --skip-dirs classifier-service --skip-dirs ollama-runtime --skip-files Dockerfile.hardware-benchmark)
   echo "Security report: tracked source dependencies and secrets (all severities; fixed vulnerabilities only)."
   trivy "$source_directory:/workspace:ro" \
-    fs --scanners vuln,secret --severity "$all_severities" --ignore-unfixed --exit-code 0 /workspace
+    fs --scanners vuln,secret --severity "$all_severities" --ignore-unfixed --exit-code 0 "${runtime_scope[@]}" /workspace
 
   echo "Security report: source configuration (all severities)."
   trivy "$source_directory:/workspace:ro" \
-    config --severity "$all_severities" --exit-code 0 /workspace
+    config --severity "$all_severities" --exit-code 0 "${runtime_scope[@]}" /workspace
 
   echo "Security gate: fixed High/Critical source dependency vulnerabilities."
   trivy "$source_directory:/workspace:ro" \
-    fs --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 /workspace
+    fs --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 "${runtime_scope[@]}" /workspace
 
   echo "Security gate: source secrets at any severity."
   trivy "$source_directory:/workspace:ro" \
@@ -69,7 +72,7 @@ scan_source() {
 
   echo "Security gate: High/Critical source configuration findings."
   trivy "$source_directory:/workspace:ro" \
-    config --severity HIGH,CRITICAL --exit-code 1 /workspace
+    config --severity HIGH,CRITICAL --exit-code 1 "${runtime_scope[@]}" /workspace
 }
 
 scan_image() {

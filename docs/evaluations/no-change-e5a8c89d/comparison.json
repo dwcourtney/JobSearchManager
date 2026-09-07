@@ -1,0 +1,1677 @@
+{
+  "schemaVersion": 1,
+  "labelWarning": "Provisional Codex labels, title-only evidence weak; unlabeled cache has no accuracy claim. No holdout used.",
+  "sourceHashes": {
+    "corpus.jsonl": "3d0ef7252e53bb8e8e25a5ff387f688e72952455f0ae0da05dcf2517003ea4ec",
+    "cache.jsonl": "8d16ae356fa4726550332109c404c4b995e7321e04e06a0936ff112fef1b617f",
+    "splits.json": "831545b3bc39675c6a20cc64ee54824156d87efc6da21f9bc6e342f54b136fcf",
+    "baseline.json": "354c3b409dd21d108f4de72d0f375ea7dda08e7ac54e6271ae90cc1bdeed6f28",
+    "development.jsonl": "e082078496d5186a2e1e9465c145053b57659259cb78c6bd4f3e9ad56e6decbc",
+    "leakage-audit.jsonl": "3d98302bac8a063c5a7f4a52b2cfbcbcfc50b31005ae19d96ab929bb9769aae1",
+    "leakage-delta-audit.jsonl": "006c4798989924817b786e422021bdad1d8d4bd64686abe452c3f0c6024c743a",
+    "fixtures.jsonl": "eaf4189d0fc532c70aaf3d072085376d4bf1cbb008572364320da654e9850118"
+  },
+  "frozenParityMismatches": [],
+  "runs": {
+    "baseline": {
+      "rulesetVersion": "1.0.1",
+      "rulesetSha256": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "wallSecondsIncludingStartupAndDiagnostics": 1.79461379989516,
+      "postingsPerSecondIncludingStartupAndDiagnostics": 2619.5050992445445,
+      "cohorts": {
+        "binary": {
+          "n": 2669,
+          "keepCount": 2121,
+          "keepRecall": 0.9971711456859972,
+          "falseRejectCount": 6,
+          "rejectionCount": 39,
+          "rejectionRate": 0.014612214312476583,
+          "rejectPrecision": 0.8461538461538461,
+          "falseRejects": [
+            {
+              "id": "9d0215801cd4ecf4c649e049",
+              "title": "Civil Site Lead, Power Delivery",
+              "label": "KEEP",
+              "decision": {
+                "rulesetVersion": "1.0.1",
+                "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+                "postingFingerprint": "499296837089a77c77e3e563c112a25defef3bbd2dde4ddd6622c92fac170a33",
+                "decision": "REJECT",
+                "category": "trades-construction, civil-domain",
+                "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+                "ruleIds": [
+                  "reject-trades-construction",
+                  "reject-civil"
+                ],
+                "evidence": [
+                  {
+                    "predicateId": "trades-construction-title",
+                    "scope": "title",
+                    "text": "civil"
+                  },
+                  {
+                    "predicateId": "trades-construction-body",
+                    "scope": "body",
+                    "text": "construction"
+                  },
+                  {
+                    "predicateId": "civil-title",
+                    "scope": "title",
+                    "text": "civil"
+                  },
+                  {
+                    "predicateId": "civil-object",
+                    "scope": "body",
+                    "text": "stormwater"
+                  },
+                  {
+                    "predicateId": "civil-work",
+                    "scope": "body",
+                    "text": "grading"
+                  }
+                ],
+                "guards": [],
+                "failOpen": false
+              }
+            },
+            {
+              "id": "5b5f3d0cb938b7f44d42ef89",
+              "title": "Cable Test Technician-2nd shift",
+              "label": "KEEP",
+              "decision": {
+                "rulesetVersion": "1.0.1",
+                "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+                "postingFingerprint": "1f339a5c73fc7ae3248ce365c5d5d259659915b417c14040f94912aa57151bab",
+                "decision": "REJECT",
+                "category": "operator-technician",
+                "reason": "Corroborated unrelated occupational duties: operator-technician",
+                "ruleIds": [
+                  "reject-operator-technician"
+                ],
+                "evidence": [
+                  {
+                    "predicateId": "operator-technician-title",
+                    "scope": "title",
+                    "text": "technician"
+                  },
+                  {
+                    "predicateId": "reviewed-test-systems-title",
+                    "scope": "title",
+                    "text": "test"
+                  },
+                  {
+                    "predicateId": "reviewed-test-systems-object",
+                    "scope": "body",
+                    "text": "electrical schematics"
+                  },
+                  {
+                    "predicateId": "operator-technician-body",
+                    "scope": "body",
+                    "text": "manufacturing"
+                  }
+                ],
+                "guards": [],
+                "failOpen": false
+              }
+            },
+            {
+              "id": "72005173e60e4cf83cee1699",
+              "title": "Nondestructive Test (NDT) Technician - UT & RT",
+              "label": "KEEP",
+              "decision": {
+                "rulesetVersion": "1.0.1",
+                "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+                "postingFingerprint": "b49e382c7789edc9026ceab171bf73239840ec92dd87de4895960f5c831cdfe4",
+                "decision": "REJECT",
+                "category": "operator-technician",
+                "reason": "Corroborated unrelated occupational duties: operator-technician",
+                "ruleIds": [
+                  "reject-operator-technician"
+                ],
+                "evidence": [
+                  {
+                    "predicateId": "operator-technician-title",
+                    "scope": "title",
+                    "text": "technician"
+                  },
+                  {
+                    "predicateId": "reviewed-test-systems-title",
+                    "scope": "title",
+                    "text": "test"
+                  },
+                  {
+                    "predicateId": "operator-technician-body",
+                    "scope": "body",
+                    "text": "repairs"
+                  }
+                ],
+                "guards": [],
+                "failOpen": false
+              }
+            },
+            {
+              "id": "18452bbf4534bab7c96f42da",
+              "title": "McMurdo Seasonal Instrument Technician",
+              "label": "KEEP",
+              "decision": {
+                "rulesetVersion": "1.0.1",
+                "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+                "postingFingerprint": "e61dff11e02174ae89b7803c7118ed19ade8a783aa9dd3344dfa6f8a998a62b5",
+                "decision": "REJECT",
+                "category": "operator-technician",
+                "reason": "Corroborated unrelated occupational duties: operator-technician",
+                "ruleIds": [
+                  "reject-operator-technician"
+                ],
+                "evidence": [
+                  {
+                    "predicateId": "operator-technician-title",
+                    "scope": "title",
+                    "text": "technician"
+                  },
+                  {
+                    "predicateId": "operator-technician-body",
+                    "scope": "body",
+                    "text": "repairs"
+                  }
+                ],
+                "guards": [],
+                "failOpen": false
+              }
+            },
+            {
+              "id": "3ffbe13f6fc1ba15d707cd2d",
+              "title": "Substation Structural Designer",
+              "label": "KEEP",
+              "decision": {
+                "rulesetVersion": "1.0.1",
+                "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+                "postingFingerprint": "c84bc7738f5bbdadf21ce309acd0ea61fd5cfb53cbd730fdd8075039c8618501",
+                "decision": "REJECT",
+                "category": "trades-construction, civil-domain",
+                "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+                "ruleIds": [
+                  "reject-trades-construction",
+                  "reject-civil"
+                ],
+                "evidence": [
+                  {
+                    "predicateId": "trades-construction-title",
+                    "scope": "title",
+                    "text": "structural"
+                  },
+                  {
+                    "predicateId": "trades-construction-body",
+                    "scope": "body",
+                    "text": "construction"
+                  },
+                  {
+                    "predicateId": "civil-title",
+                    "scope": "title",
+                    "text": "structural"
+                  },
+                  {
+                    "predicateId": "civil-object",
+                    "scope": "body",
+                    "text": "foundation"
+                  },
+                  {
+                    "predicateId": "civil-work",
+                    "scope": "body",
+                    "text": "designer"
+                  }
+                ],
+                "guards": [],
+                "failOpen": false
+              }
+            },
+            {
+              "id": "23872427616e788205970739",
+              "title": "Structural Engineer - Power Delivery",
+              "label": "KEEP",
+              "decision": {
+                "rulesetVersion": "1.0.1",
+                "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+                "postingFingerprint": "f30262504ae8901eea3448f8b60ee349765bfec0ad733c76c54da12cbb9363f4",
+                "decision": "REJECT",
+                "category": "trades-construction, civil-domain",
+                "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+                "ruleIds": [
+                  "reject-trades-construction",
+                  "reject-civil"
+                ],
+                "evidence": [
+                  {
+                    "predicateId": "trades-construction-title",
+                    "scope": "title",
+                    "text": "structural"
+                  },
+                  {
+                    "predicateId": "protected-title",
+                    "scope": "title",
+                    "text": "engineer"
+                  },
+                  {
+                    "predicateId": "civil-title",
+                    "scope": "title",
+                    "text": "structural"
+                  },
+                  {
+                    "predicateId": "civil-object",
+                    "scope": "body",
+                    "text": "steel structures"
+                  },
+                  {
+                    "predicateId": "civil-work",
+                    "scope": "body",
+                    "text": "design"
+                  },
+                  {
+                    "predicateId": "trades-construction-body",
+                    "scope": "body",
+                    "text": "structural steel"
+                  }
+                ],
+                "guards": [],
+                "failOpen": false
+              }
+            }
+          ]
+        },
+        "described": {
+          "n": 1159,
+          "keepCount": 914,
+          "keepRecall": 0.9934354485776805,
+          "falseRejectCount": 6,
+          "rejectionCount": 39,
+          "rejectionRate": 0.03364969801553063,
+          "rejectPrecision": 0.8461538461538461,
+          "falseRejects": [
+            {
+              "id": "9d0215801cd4ecf4c649e049",
+              "title": "Civil Site Lead, Power Delivery",
+              "label": "KEEP",
+              "decision": {
+                "rulesetVersion": "1.0.1",
+                "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+                "postingFingerprint": "499296837089a77c77e3e563c112a25defef3bbd2dde4ddd6622c92fac170a33",
+                "decision": "REJECT",
+                "category": "trades-construction, civil-domain",
+                "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+                "ruleIds": [
+                  "reject-trades-construction",
+                  "reject-civil"
+                ],
+                "evidence": [
+                  {
+                    "predicateId": "trades-construction-title",
+                    "scope": "title",
+                    "text": "civil"
+                  },
+                  {
+                    "predicateId": "trades-construction-body",
+                    "scope": "body",
+                    "text": "construction"
+                  },
+                  {
+                    "predicateId": "civil-title",
+                    "scope": "title",
+                    "text": "civil"
+                  },
+                  {
+                    "predicateId": "civil-object",
+                    "scope": "body",
+                    "text": "stormwater"
+                  },
+                  {
+                    "predicateId": "civil-work",
+                    "scope": "body",
+                    "text": "grading"
+                  }
+                ],
+                "guards": [],
+                "failOpen": false
+              }
+            },
+            {
+              "id": "5b5f3d0cb938b7f44d42ef89",
+              "title": "Cable Test Technician-2nd shift",
+              "label": "KEEP",
+              "decision": {
+                "rulesetVersion": "1.0.1",
+                "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+                "postingFingerprint": "1f339a5c73fc7ae3248ce365c5d5d259659915b417c14040f94912aa57151bab",
+                "decision": "REJECT",
+                "category": "operator-technician",
+                "reason": "Corroborated unrelated occupational duties: operator-technician",
+                "ruleIds": [
+                  "reject-operator-technician"
+                ],
+                "evidence": [
+                  {
+                    "predicateId": "operator-technician-title",
+                    "scope": "title",
+                    "text": "technician"
+                  },
+                  {
+                    "predicateId": "reviewed-test-systems-title",
+                    "scope": "title",
+                    "text": "test"
+                  },
+                  {
+                    "predicateId": "reviewed-test-systems-object",
+                    "scope": "body",
+                    "text": "electrical schematics"
+                  },
+                  {
+                    "predicateId": "operator-technician-body",
+                    "scope": "body",
+                    "text": "manufacturing"
+                  }
+                ],
+                "guards": [],
+                "failOpen": false
+              }
+            },
+            {
+              "id": "72005173e60e4cf83cee1699",
+              "title": "Nondestructive Test (NDT) Technician - UT & RT",
+              "label": "KEEP",
+              "decision": {
+                "rulesetVersion": "1.0.1",
+                "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+                "postingFingerprint": "b49e382c7789edc9026ceab171bf73239840ec92dd87de4895960f5c831cdfe4",
+                "decision": "REJECT",
+                "category": "operator-technician",
+                "reason": "Corroborated unrelated occupational duties: operator-technician",
+                "ruleIds": [
+                  "reject-operator-technician"
+                ],
+                "evidence": [
+                  {
+                    "predicateId": "operator-technician-title",
+                    "scope": "title",
+                    "text": "technician"
+                  },
+                  {
+                    "predicateId": "reviewed-test-systems-title",
+                    "scope": "title",
+                    "text": "test"
+                  },
+                  {
+                    "predicateId": "operator-technician-body",
+                    "scope": "body",
+                    "text": "repairs"
+                  }
+                ],
+                "guards": [],
+                "failOpen": false
+              }
+            },
+            {
+              "id": "18452bbf4534bab7c96f42da",
+              "title": "McMurdo Seasonal Instrument Technician",
+              "label": "KEEP",
+              "decision": {
+                "rulesetVersion": "1.0.1",
+                "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+                "postingFingerprint": "e61dff11e02174ae89b7803c7118ed19ade8a783aa9dd3344dfa6f8a998a62b5",
+                "decision": "REJECT",
+                "category": "operator-technician",
+                "reason": "Corroborated unrelated occupational duties: operator-technician",
+                "ruleIds": [
+                  "reject-operator-technician"
+                ],
+                "evidence": [
+                  {
+                    "predicateId": "operator-technician-title",
+                    "scope": "title",
+                    "text": "technician"
+                  },
+                  {
+                    "predicateId": "operator-technician-body",
+                    "scope": "body",
+                    "text": "repairs"
+                  }
+                ],
+                "guards": [],
+                "failOpen": false
+              }
+            },
+            {
+              "id": "3ffbe13f6fc1ba15d707cd2d",
+              "title": "Substation Structural Designer",
+              "label": "KEEP",
+              "decision": {
+                "rulesetVersion": "1.0.1",
+                "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+                "postingFingerprint": "c84bc7738f5bbdadf21ce309acd0ea61fd5cfb53cbd730fdd8075039c8618501",
+                "decision": "REJECT",
+                "category": "trades-construction, civil-domain",
+                "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+                "ruleIds": [
+                  "reject-trades-construction",
+                  "reject-civil"
+                ],
+                "evidence": [
+                  {
+                    "predicateId": "trades-construction-title",
+                    "scope": "title",
+                    "text": "structural"
+                  },
+                  {
+                    "predicateId": "trades-construction-body",
+                    "scope": "body",
+                    "text": "construction"
+                  },
+                  {
+                    "predicateId": "civil-title",
+                    "scope": "title",
+                    "text": "structural"
+                  },
+                  {
+                    "predicateId": "civil-object",
+                    "scope": "body",
+                    "text": "foundation"
+                  },
+                  {
+                    "predicateId": "civil-work",
+                    "scope": "body",
+                    "text": "designer"
+                  }
+                ],
+                "guards": [],
+                "failOpen": false
+              }
+            },
+            {
+              "id": "23872427616e788205970739",
+              "title": "Structural Engineer - Power Delivery",
+              "label": "KEEP",
+              "decision": {
+                "rulesetVersion": "1.0.1",
+                "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+                "postingFingerprint": "f30262504ae8901eea3448f8b60ee349765bfec0ad733c76c54da12cbb9363f4",
+                "decision": "REJECT",
+                "category": "trades-construction, civil-domain",
+                "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+                "ruleIds": [
+                  "reject-trades-construction",
+                  "reject-civil"
+                ],
+                "evidence": [
+                  {
+                    "predicateId": "trades-construction-title",
+                    "scope": "title",
+                    "text": "structural"
+                  },
+                  {
+                    "predicateId": "protected-title",
+                    "scope": "title",
+                    "text": "engineer"
+                  },
+                  {
+                    "predicateId": "civil-title",
+                    "scope": "title",
+                    "text": "structural"
+                  },
+                  {
+                    "predicateId": "civil-object",
+                    "scope": "body",
+                    "text": "steel structures"
+                  },
+                  {
+                    "predicateId": "civil-work",
+                    "scope": "body",
+                    "text": "design"
+                  },
+                  {
+                    "predicateId": "trades-construction-body",
+                    "scope": "body",
+                    "text": "structural steel"
+                  }
+                ],
+                "guards": [],
+                "failOpen": false
+              }
+            }
+          ]
+        },
+        "titleOnly": {
+          "n": 1510,
+          "keepCount": 1207,
+          "keepRecall": 1.0,
+          "falseRejectCount": 0,
+          "rejectionCount": 0,
+          "rejectionRate": 0.0,
+          "rejectPrecision": null,
+          "falseRejects": []
+        },
+        "ambiguous": {
+          "n": 529,
+          "keepCount": 0,
+          "keepRecall": null,
+          "falseRejectCount": 0,
+          "rejectionCount": 8,
+          "rejectionRate": 0.015122873345935728,
+          "rejectPrecision": null,
+          "falseRejects": []
+        },
+        "oldCache": {
+          "n": 1503,
+          "keepCount": 150,
+          "keepRecall": 1.0,
+          "falseRejectCount": 0,
+          "rejectionCount": 203,
+          "rejectionRate": 0.13506320691949433,
+          "rejectPrecision": 1.0,
+          "falseRejects": []
+        },
+        "development": {
+          "n": 166,
+          "keepCount": 85,
+          "keepRecall": 1.0,
+          "falseRejectCount": 0,
+          "rejectionCount": 56,
+          "rejectionRate": 0.3373493975903614,
+          "rejectPrecision": 1.0,
+          "falseRejects": [],
+          "changedDecisions": []
+        },
+        "leakage-audit": {
+          "n": 196,
+          "keepCount": 74,
+          "keepRecall": 1.0,
+          "falseRejectCount": 0,
+          "rejectionCount": 99,
+          "rejectionRate": 0.5051020408163265,
+          "rejectPrecision": 1.0,
+          "falseRejects": [],
+          "changedDecisions": []
+        },
+        "leakage-delta-audit": {
+          "n": 41,
+          "keepCount": 1,
+          "keepRecall": 1.0,
+          "falseRejectCount": 0,
+          "rejectionCount": 40,
+          "rejectionRate": 0.975609756097561,
+          "rejectPrecision": 1.0,
+          "falseRejects": [],
+          "changedDecisions": []
+        },
+        "fixtures": {
+          "n": 60,
+          "keepCount": 30,
+          "keepRecall": 1.0,
+          "falseRejectCount": 0,
+          "rejectionCount": 30,
+          "rejectionRate": 0.5,
+          "rejectPrecision": 1.0,
+          "falseRejects": [],
+          "changedDecisions": []
+        }
+      },
+      "failOpenCount": 0,
+      "changedDecisions": []
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetSha256": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "wallSecondsIncludingStartupAndDiagnostics": 1.6497039998648688,
+      "postingsPerSecondIncludingStartupAndDiagnostics": 2849.602110672624,
+      "cohorts": {
+        "binary": {
+          "n": 2669,
+          "keepCount": 2121,
+          "keepRecall": 0.9971711456859972,
+          "falseRejectCount": 6,
+          "rejectionCount": 39,
+          "rejectionRate": 0.014612214312476583,
+          "rejectPrecision": 0.8461538461538461,
+          "falseRejects": [
+            {
+              "id": "9d0215801cd4ecf4c649e049",
+              "title": "Civil Site Lead, Power Delivery",
+              "label": "KEEP",
+              "decision": {
+                "rulesetVersion": "1.0.1",
+                "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+                "postingFingerprint": "499296837089a77c77e3e563c112a25defef3bbd2dde4ddd6622c92fac170a33",
+                "decision": "REJECT",
+                "category": "trades-construction, civil-domain",
+                "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+                "ruleIds": [
+                  "reject-trades-construction",
+                  "reject-civil"
+                ],
+                "evidence": [
+                  {
+                    "predicateId": "trades-construction-title",
+                    "scope": "title",
+                    "text": "civil"
+                  },
+                  {
+                    "predicateId": "trades-construction-body",
+                    "scope": "body",
+                    "text": "construction"
+                  },
+                  {
+                    "predicateId": "civil-title",
+                    "scope": "title",
+                    "text": "civil"
+                  },
+                  {
+                    "predicateId": "civil-object",
+                    "scope": "body",
+                    "text": "stormwater"
+                  },
+                  {
+                    "predicateId": "civil-work",
+                    "scope": "body",
+                    "text": "grading"
+                  }
+                ],
+                "guards": [],
+                "failOpen": false
+              }
+            },
+            {
+              "id": "5b5f3d0cb938b7f44d42ef89",
+              "title": "Cable Test Technician-2nd shift",
+              "label": "KEEP",
+              "decision": {
+                "rulesetVersion": "1.0.1",
+                "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+                "postingFingerprint": "1f339a5c73fc7ae3248ce365c5d5d259659915b417c14040f94912aa57151bab",
+                "decision": "REJECT",
+                "category": "operator-technician",
+                "reason": "Corroborated unrelated occupational duties: operator-technician",
+                "ruleIds": [
+                  "reject-operator-technician"
+                ],
+                "evidence": [
+                  {
+                    "predicateId": "operator-technician-title",
+                    "scope": "title",
+                    "text": "technician"
+                  },
+                  {
+                    "predicateId": "reviewed-test-systems-title",
+                    "scope": "title",
+                    "text": "test"
+                  },
+                  {
+                    "predicateId": "reviewed-test-systems-object",
+                    "scope": "body",
+                    "text": "electrical schematics"
+                  },
+                  {
+                    "predicateId": "operator-technician-body",
+                    "scope": "body",
+                    "text": "manufacturing"
+                  }
+                ],
+                "guards": [],
+                "failOpen": false
+              }
+            },
+            {
+              "id": "72005173e60e4cf83cee1699",
+              "title": "Nondestructive Test (NDT) Technician - UT & RT",
+              "label": "KEEP",
+              "decision": {
+                "rulesetVersion": "1.0.1",
+                "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+                "postingFingerprint": "b49e382c7789edc9026ceab171bf73239840ec92dd87de4895960f5c831cdfe4",
+                "decision": "REJECT",
+                "category": "operator-technician",
+                "reason": "Corroborated unrelated occupational duties: operator-technician",
+                "ruleIds": [
+                  "reject-operator-technician"
+                ],
+                "evidence": [
+                  {
+                    "predicateId": "operator-technician-title",
+                    "scope": "title",
+                    "text": "technician"
+                  },
+                  {
+                    "predicateId": "reviewed-test-systems-title",
+                    "scope": "title",
+                    "text": "test"
+                  },
+                  {
+                    "predicateId": "operator-technician-body",
+                    "scope": "body",
+                    "text": "repairs"
+                  }
+                ],
+                "guards": [],
+                "failOpen": false
+              }
+            },
+            {
+              "id": "18452bbf4534bab7c96f42da",
+              "title": "McMurdo Seasonal Instrument Technician",
+              "label": "KEEP",
+              "decision": {
+                "rulesetVersion": "1.0.1",
+                "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+                "postingFingerprint": "e61dff11e02174ae89b7803c7118ed19ade8a783aa9dd3344dfa6f8a998a62b5",
+                "decision": "REJECT",
+                "category": "operator-technician",
+                "reason": "Corroborated unrelated occupational duties: operator-technician",
+                "ruleIds": [
+                  "reject-operator-technician"
+                ],
+                "evidence": [
+                  {
+                    "predicateId": "operator-technician-title",
+                    "scope": "title",
+                    "text": "technician"
+                  },
+                  {
+                    "predicateId": "operator-technician-body",
+                    "scope": "body",
+                    "text": "repairs"
+                  }
+                ],
+                "guards": [],
+                "failOpen": false
+              }
+            },
+            {
+              "id": "3ffbe13f6fc1ba15d707cd2d",
+              "title": "Substation Structural Designer",
+              "label": "KEEP",
+              "decision": {
+                "rulesetVersion": "1.0.1",
+                "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+                "postingFingerprint": "c84bc7738f5bbdadf21ce309acd0ea61fd5cfb53cbd730fdd8075039c8618501",
+                "decision": "REJECT",
+                "category": "trades-construction, civil-domain",
+                "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+                "ruleIds": [
+                  "reject-trades-construction",
+                  "reject-civil"
+                ],
+                "evidence": [
+                  {
+                    "predicateId": "trades-construction-title",
+                    "scope": "title",
+                    "text": "structural"
+                  },
+                  {
+                    "predicateId": "trades-construction-body",
+                    "scope": "body",
+                    "text": "construction"
+                  },
+                  {
+                    "predicateId": "civil-title",
+                    "scope": "title",
+                    "text": "structural"
+                  },
+                  {
+                    "predicateId": "civil-object",
+                    "scope": "body",
+                    "text": "foundation"
+                  },
+                  {
+                    "predicateId": "civil-work",
+                    "scope": "body",
+                    "text": "designer"
+                  }
+                ],
+                "guards": [],
+                "failOpen": false
+              }
+            },
+            {
+              "id": "23872427616e788205970739",
+              "title": "Structural Engineer - Power Delivery",
+              "label": "KEEP",
+              "decision": {
+                "rulesetVersion": "1.0.1",
+                "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+                "postingFingerprint": "f30262504ae8901eea3448f8b60ee349765bfec0ad733c76c54da12cbb9363f4",
+                "decision": "REJECT",
+                "category": "trades-construction, civil-domain",
+                "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+                "ruleIds": [
+                  "reject-trades-construction",
+                  "reject-civil"
+                ],
+                "evidence": [
+                  {
+                    "predicateId": "trades-construction-title",
+                    "scope": "title",
+                    "text": "structural"
+                  },
+                  {
+                    "predicateId": "protected-title",
+                    "scope": "title",
+                    "text": "engineer"
+                  },
+                  {
+                    "predicateId": "civil-title",
+                    "scope": "title",
+                    "text": "structural"
+                  },
+                  {
+                    "predicateId": "civil-object",
+                    "scope": "body",
+                    "text": "steel structures"
+                  },
+                  {
+                    "predicateId": "civil-work",
+                    "scope": "body",
+                    "text": "design"
+                  },
+                  {
+                    "predicateId": "trades-construction-body",
+                    "scope": "body",
+                    "text": "structural steel"
+                  }
+                ],
+                "guards": [],
+                "failOpen": false
+              }
+            }
+          ]
+        },
+        "described": {
+          "n": 1159,
+          "keepCount": 914,
+          "keepRecall": 0.9934354485776805,
+          "falseRejectCount": 6,
+          "rejectionCount": 39,
+          "rejectionRate": 0.03364969801553063,
+          "rejectPrecision": 0.8461538461538461,
+          "falseRejects": [
+            {
+              "id": "9d0215801cd4ecf4c649e049",
+              "title": "Civil Site Lead, Power Delivery",
+              "label": "KEEP",
+              "decision": {
+                "rulesetVersion": "1.0.1",
+                "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+                "postingFingerprint": "499296837089a77c77e3e563c112a25defef3bbd2dde4ddd6622c92fac170a33",
+                "decision": "REJECT",
+                "category": "trades-construction, civil-domain",
+                "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+                "ruleIds": [
+                  "reject-trades-construction",
+                  "reject-civil"
+                ],
+                "evidence": [
+                  {
+                    "predicateId": "trades-construction-title",
+                    "scope": "title",
+                    "text": "civil"
+                  },
+                  {
+                    "predicateId": "trades-construction-body",
+                    "scope": "body",
+                    "text": "construction"
+                  },
+                  {
+                    "predicateId": "civil-title",
+                    "scope": "title",
+                    "text": "civil"
+                  },
+                  {
+                    "predicateId": "civil-object",
+                    "scope": "body",
+                    "text": "stormwater"
+                  },
+                  {
+                    "predicateId": "civil-work",
+                    "scope": "body",
+                    "text": "grading"
+                  }
+                ],
+                "guards": [],
+                "failOpen": false
+              }
+            },
+            {
+              "id": "5b5f3d0cb938b7f44d42ef89",
+              "title": "Cable Test Technician-2nd shift",
+              "label": "KEEP",
+              "decision": {
+                "rulesetVersion": "1.0.1",
+                "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+                "postingFingerprint": "1f339a5c73fc7ae3248ce365c5d5d259659915b417c14040f94912aa57151bab",
+                "decision": "REJECT",
+                "category": "operator-technician",
+                "reason": "Corroborated unrelated occupational duties: operator-technician",
+                "ruleIds": [
+                  "reject-operator-technician"
+                ],
+                "evidence": [
+                  {
+                    "predicateId": "operator-technician-title",
+                    "scope": "title",
+                    "text": "technician"
+                  },
+                  {
+                    "predicateId": "reviewed-test-systems-title",
+                    "scope": "title",
+                    "text": "test"
+                  },
+                  {
+                    "predicateId": "reviewed-test-systems-object",
+                    "scope": "body",
+                    "text": "electrical schematics"
+                  },
+                  {
+                    "predicateId": "operator-technician-body",
+                    "scope": "body",
+                    "text": "manufacturing"
+                  }
+                ],
+                "guards": [],
+                "failOpen": false
+              }
+            },
+            {
+              "id": "72005173e60e4cf83cee1699",
+              "title": "Nondestructive Test (NDT) Technician - UT & RT",
+              "label": "KEEP",
+              "decision": {
+                "rulesetVersion": "1.0.1",
+                "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+                "postingFingerprint": "b49e382c7789edc9026ceab171bf73239840ec92dd87de4895960f5c831cdfe4",
+                "decision": "REJECT",
+                "category": "operator-technician",
+                "reason": "Corroborated unrelated occupational duties: operator-technician",
+                "ruleIds": [
+                  "reject-operator-technician"
+                ],
+                "evidence": [
+                  {
+                    "predicateId": "operator-technician-title",
+                    "scope": "title",
+                    "text": "technician"
+                  },
+                  {
+                    "predicateId": "reviewed-test-systems-title",
+                    "scope": "title",
+                    "text": "test"
+                  },
+                  {
+                    "predicateId": "operator-technician-body",
+                    "scope": "body",
+                    "text": "repairs"
+                  }
+                ],
+                "guards": [],
+                "failOpen": false
+              }
+            },
+            {
+              "id": "18452bbf4534bab7c96f42da",
+              "title": "McMurdo Seasonal Instrument Technician",
+              "label": "KEEP",
+              "decision": {
+                "rulesetVersion": "1.0.1",
+                "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+                "postingFingerprint": "e61dff11e02174ae89b7803c7118ed19ade8a783aa9dd3344dfa6f8a998a62b5",
+                "decision": "REJECT",
+                "category": "operator-technician",
+                "reason": "Corroborated unrelated occupational duties: operator-technician",
+                "ruleIds": [
+                  "reject-operator-technician"
+                ],
+                "evidence": [
+                  {
+                    "predicateId": "operator-technician-title",
+                    "scope": "title",
+                    "text": "technician"
+                  },
+                  {
+                    "predicateId": "operator-technician-body",
+                    "scope": "body",
+                    "text": "repairs"
+                  }
+                ],
+                "guards": [],
+                "failOpen": false
+              }
+            },
+            {
+              "id": "3ffbe13f6fc1ba15d707cd2d",
+              "title": "Substation Structural Designer",
+              "label": "KEEP",
+              "decision": {
+                "rulesetVersion": "1.0.1",
+                "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+                "postingFingerprint": "c84bc7738f5bbdadf21ce309acd0ea61fd5cfb53cbd730fdd8075039c8618501",
+                "decision": "REJECT",
+                "category": "trades-construction, civil-domain",
+                "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+                "ruleIds": [
+                  "reject-trades-construction",
+                  "reject-civil"
+                ],
+                "evidence": [
+                  {
+                    "predicateId": "trades-construction-title",
+                    "scope": "title",
+                    "text": "structural"
+                  },
+                  {
+                    "predicateId": "trades-construction-body",
+                    "scope": "body",
+                    "text": "construction"
+                  },
+                  {
+                    "predicateId": "civil-title",
+                    "scope": "title",
+                    "text": "structural"
+                  },
+                  {
+                    "predicateId": "civil-object",
+                    "scope": "body",
+                    "text": "foundation"
+                  },
+                  {
+                    "predicateId": "civil-work",
+                    "scope": "body",
+                    "text": "designer"
+                  }
+                ],
+                "guards": [],
+                "failOpen": false
+              }
+            },
+            {
+              "id": "23872427616e788205970739",
+              "title": "Structural Engineer - Power Delivery",
+              "label": "KEEP",
+              "decision": {
+                "rulesetVersion": "1.0.1",
+                "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+                "postingFingerprint": "f30262504ae8901eea3448f8b60ee349765bfec0ad733c76c54da12cbb9363f4",
+                "decision": "REJECT",
+                "category": "trades-construction, civil-domain",
+                "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+                "ruleIds": [
+                  "reject-trades-construction",
+                  "reject-civil"
+                ],
+                "evidence": [
+                  {
+                    "predicateId": "trades-construction-title",
+                    "scope": "title",
+                    "text": "structural"
+                  },
+                  {
+                    "predicateId": "protected-title",
+                    "scope": "title",
+                    "text": "engineer"
+                  },
+                  {
+                    "predicateId": "civil-title",
+                    "scope": "title",
+                    "text": "structural"
+                  },
+                  {
+                    "predicateId": "civil-object",
+                    "scope": "body",
+                    "text": "steel structures"
+                  },
+                  {
+                    "predicateId": "civil-work",
+                    "scope": "body",
+                    "text": "design"
+                  },
+                  {
+                    "predicateId": "trades-construction-body",
+                    "scope": "body",
+                    "text": "structural steel"
+                  }
+                ],
+                "guards": [],
+                "failOpen": false
+              }
+            }
+          ]
+        },
+        "titleOnly": {
+          "n": 1510,
+          "keepCount": 1207,
+          "keepRecall": 1.0,
+          "falseRejectCount": 0,
+          "rejectionCount": 0,
+          "rejectionRate": 0.0,
+          "rejectPrecision": null,
+          "falseRejects": []
+        },
+        "ambiguous": {
+          "n": 529,
+          "keepCount": 0,
+          "keepRecall": null,
+          "falseRejectCount": 0,
+          "rejectionCount": 8,
+          "rejectionRate": 0.015122873345935728,
+          "rejectPrecision": null,
+          "falseRejects": []
+        },
+        "oldCache": {
+          "n": 1503,
+          "keepCount": 150,
+          "keepRecall": 1.0,
+          "falseRejectCount": 0,
+          "rejectionCount": 203,
+          "rejectionRate": 0.13506320691949433,
+          "rejectPrecision": 1.0,
+          "falseRejects": []
+        },
+        "development": {
+          "n": 166,
+          "keepCount": 85,
+          "keepRecall": 1.0,
+          "falseRejectCount": 0,
+          "rejectionCount": 56,
+          "rejectionRate": 0.3373493975903614,
+          "rejectPrecision": 1.0,
+          "falseRejects": [],
+          "changedDecisions": []
+        },
+        "leakage-audit": {
+          "n": 196,
+          "keepCount": 74,
+          "keepRecall": 1.0,
+          "falseRejectCount": 0,
+          "rejectionCount": 99,
+          "rejectionRate": 0.5051020408163265,
+          "rejectPrecision": 1.0,
+          "falseRejects": [],
+          "changedDecisions": []
+        },
+        "leakage-delta-audit": {
+          "n": 41,
+          "keepCount": 1,
+          "keepRecall": 1.0,
+          "falseRejectCount": 0,
+          "rejectionCount": 40,
+          "rejectionRate": 0.975609756097561,
+          "rejectPrecision": 1.0,
+          "falseRejects": [],
+          "changedDecisions": []
+        },
+        "fixtures": {
+          "n": 60,
+          "keepCount": 30,
+          "keepRecall": 1.0,
+          "falseRejectCount": 0,
+          "rejectionCount": 30,
+          "rejectionRate": 0.5,
+          "rejectPrecision": 1.0,
+          "falseRejects": [],
+          "changedDecisions": []
+        }
+      },
+      "failOpenCount": 0,
+      "changedDecisions": [],
+      "proposal": "Retain the exact existing 1.0.1 ruleset; not a new version or release candidate."
+    }
+  },
+  "candidateSafetyRegression": false,
+  "legacyElectricalSafeDifferences": [
+    {
+      "id": "74e39fc92e769ae36ee74581",
+      "title": "Digital Technology Capture Engagement Lead, Program Architecture (FEOTB) Naval Power, Remote",
+      "frozen": {
+        "keep": false,
+        "reason": "REJECT: sales"
+      },
+      "actual": {
+        "rulesetVersion": "1.0.1",
+        "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+        "postingFingerprint": "d63bef69b35b28990804a21884146cb8a11dd3871868a3e7217b9b7c1827ad96",
+        "decision": "KEEP",
+        "category": "technology-safety",
+        "reason": "KEEP: corroborated it architecture duties",
+        "ruleIds": [
+          "keep-reviewed-it-architecture"
+        ],
+        "evidence": [
+          {
+            "predicateId": "sales-title",
+            "scope": "title",
+            "text": "capture"
+          },
+          {
+            "predicateId": "reviewed-it-architecture-title",
+            "scope": "title",
+            "text": "digital technology"
+          },
+          {
+            "predicateId": "reviewed-it-architecture-object",
+            "scope": "body",
+            "text": "program architects"
+          },
+          {
+            "predicateId": "reviewed-it-architecture-duty",
+            "scope": "body",
+            "text": "proposal response"
+          }
+        ],
+        "guards": [
+          "keep-reviewed-it-architecture"
+        ],
+        "failOpen": false
+      }
+    },
+    {
+      "id": "86e66d42c78951f977ba6e5b",
+      "title": "Senior Staff Outbound Product Manager - EmployeeWorks GTM",
+      "frozen": {
+        "keep": false,
+        "reason": "REJECT: business-other"
+      },
+      "actual": {
+        "rulesetVersion": "1.0.1",
+        "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+        "postingFingerprint": "1e7c0f8b276fed92fdc9e3ca10d3ec71f5483d7fa3c1b81d1e43a656772c39e7",
+        "decision": "KEEP",
+        "category": "technology-safety",
+        "reason": "KEEP: corroborated software product duties",
+        "ruleIds": [
+          "keep-reviewed-software-product"
+        ],
+        "evidence": [
+          {
+            "predicateId": "business-other-title",
+            "scope": "title",
+            "text": "gtm"
+          },
+          {
+            "predicateId": "reviewed-software-product-title",
+            "scope": "title",
+            "text": "product manager"
+          },
+          {
+            "predicateId": "reviewed-software-product-object",
+            "scope": "body",
+            "text": "ai native"
+          },
+          {
+            "predicateId": "reviewed-software-product-duty",
+            "scope": "body",
+            "text": "product strategy"
+          }
+        ],
+        "guards": [
+          "keep-reviewed-software-product"
+        ],
+        "failOpen": false
+      }
+    },
+    {
+      "id": "1e8d2877f53a6d11c2e23f34",
+      "title": "Associate Test and Evaluation Laboratory Technician",
+      "frozen": {
+        "keep": false,
+        "reason": "REJECT: operator-technician"
+      },
+      "actual": {
+        "rulesetVersion": "1.0.1",
+        "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+        "postingFingerprint": "7afe6cf0b9f5ca24965907b6013b54c32caea839ef41a68683a972f13fc7fbfd",
+        "decision": "KEEP",
+        "category": "technology-safety",
+        "reason": "KEEP: corroborated test systems duties",
+        "ruleIds": [
+          "keep-reviewed-test-systems"
+        ],
+        "evidence": [
+          {
+            "predicateId": "operator-technician-title",
+            "scope": "title",
+            "text": "technician"
+          },
+          {
+            "predicateId": "reviewed-test-systems-title",
+            "scope": "title",
+            "text": "test"
+          },
+          {
+            "predicateId": "reviewed-test-systems-object",
+            "scope": "body",
+            "text": "electrical engineering drawings"
+          },
+          {
+            "predicateId": "reviewed-test-systems-duty",
+            "scope": "body",
+            "text": "designs systems"
+          }
+        ],
+        "guards": [
+          "keep-reviewed-test-systems"
+        ],
+        "failOpen": false
+      }
+    },
+    {
+      "id": "afc5e30631d0feea140b1bb7",
+      "title": "ECAD Layout Designer Technician, Draft/Product Definition (Remote)",
+      "frozen": {
+        "keep": false,
+        "reason": "REJECT: operator-technician"
+      },
+      "actual": {
+        "rulesetVersion": "1.0.1",
+        "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+        "postingFingerprint": "717b6c19c266bef044620bc83192d927a7a141ea397c6d2b76fb566d843e6c68",
+        "decision": "KEEP",
+        "category": "technology-safety",
+        "reason": "KEEP: corroborated electronic design duties",
+        "ruleIds": [
+          "keep-reviewed-electronic-design"
+        ],
+        "evidence": [
+          {
+            "predicateId": "operator-technician-title",
+            "scope": "title",
+            "text": "technician"
+          },
+          {
+            "predicateId": "reviewed-electronic-design-title",
+            "scope": "title",
+            "text": "ecad"
+          },
+          {
+            "predicateId": "reviewed-electronic-design-object",
+            "scope": "body",
+            "text": "pcb"
+          },
+          {
+            "predicateId": "reviewed-electronic-design-duty",
+            "scope": "body",
+            "text": "layout"
+          }
+        ],
+        "guards": [
+          "keep-reviewed-electronic-design"
+        ],
+        "failOpen": false
+      }
+    },
+    {
+      "id": "40a4e12248dbc15959d09073",
+      "title": "Extended Workforce Solutions HR Project Manager",
+      "frozen": {
+        "keep": false,
+        "reason": "REJECT: hr"
+      },
+      "actual": {
+        "rulesetVersion": "1.0.1",
+        "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+        "postingFingerprint": "ec271befb1a50e90d22ee7e173c574942f00f809caa215d3a4f0afcb8e96d6ee",
+        "decision": "KEEP",
+        "category": "technology-safety",
+        "reason": "KEEP: corroborated application integration duties",
+        "ruleIds": [
+          "keep-reviewed-application-integration"
+        ],
+        "evidence": [
+          {
+            "predicateId": "hr-title",
+            "scope": "title",
+            "text": "hr"
+          },
+          {
+            "predicateId": "reviewed-application-integration-title",
+            "scope": "title",
+            "text": "project manager"
+          },
+          {
+            "predicateId": "reviewed-application-integration-object",
+            "scope": "body",
+            "text": "file transfer"
+          },
+          {
+            "predicateId": "reviewed-application-integration-duty",
+            "scope": "body",
+            "text": "integration error"
+          }
+        ],
+        "guards": [
+          "keep-reviewed-application-integration"
+        ],
+        "failOpen": false
+      }
+    },
+    {
+      "id": "legacy:0326edd5236a248c",
+      "title": "Extended Workforce Solutions HR Project Manager",
+      "frozen": {
+        "keep": false,
+        "reason": "REJECT: hr"
+      },
+      "actual": {
+        "rulesetVersion": "1.0.1",
+        "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+        "postingFingerprint": "ec271befb1a50e90d22ee7e173c574942f00f809caa215d3a4f0afcb8e96d6ee",
+        "decision": "KEEP",
+        "category": "technology-safety",
+        "reason": "KEEP: corroborated application integration duties",
+        "ruleIds": [
+          "keep-reviewed-application-integration"
+        ],
+        "evidence": [
+          {
+            "predicateId": "hr-title",
+            "scope": "title",
+            "text": "hr"
+          },
+          {
+            "predicateId": "reviewed-application-integration-title",
+            "scope": "title",
+            "text": "project manager"
+          },
+          {
+            "predicateId": "reviewed-application-integration-object",
+            "scope": "body",
+            "text": "file transfer"
+          },
+          {
+            "predicateId": "reviewed-application-integration-duty",
+            "scope": "body",
+            "text": "integration error"
+          }
+        ],
+        "guards": [
+          "keep-reviewed-application-integration"
+        ],
+        "failOpen": false
+      }
+    },
+    {
+      "id": "legacy:04d90d4b9a0514e7",
+      "title": "Digital Technology Capture Engagement Lead, Program Architecture (FEOTB) Naval Power, Remote",
+      "frozen": {
+        "keep": false,
+        "reason": "REJECT: sales"
+      },
+      "actual": {
+        "rulesetVersion": "1.0.1",
+        "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+        "postingFingerprint": "d63bef69b35b28990804a21884146cb8a11dd3871868a3e7217b9b7c1827ad96",
+        "decision": "KEEP",
+        "category": "technology-safety",
+        "reason": "KEEP: corroborated it architecture duties",
+        "ruleIds": [
+          "keep-reviewed-it-architecture"
+        ],
+        "evidence": [
+          {
+            "predicateId": "sales-title",
+            "scope": "title",
+            "text": "capture"
+          },
+          {
+            "predicateId": "reviewed-it-architecture-title",
+            "scope": "title",
+            "text": "digital technology"
+          },
+          {
+            "predicateId": "reviewed-it-architecture-object",
+            "scope": "body",
+            "text": "program architects"
+          },
+          {
+            "predicateId": "reviewed-it-architecture-duty",
+            "scope": "body",
+            "text": "proposal response"
+          }
+        ],
+        "guards": [
+          "keep-reviewed-it-architecture"
+        ],
+        "failOpen": false
+      }
+    },
+    {
+      "id": "legacy:18879303447a1a97",
+      "title": "Associate Test and Evaluation Laboratory Technician",
+      "frozen": {
+        "keep": false,
+        "reason": "REJECT: operator-technician"
+      },
+      "actual": {
+        "rulesetVersion": "1.0.1",
+        "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+        "postingFingerprint": "7afe6cf0b9f5ca24965907b6013b54c32caea839ef41a68683a972f13fc7fbfd",
+        "decision": "KEEP",
+        "category": "technology-safety",
+        "reason": "KEEP: corroborated test systems duties",
+        "ruleIds": [
+          "keep-reviewed-test-systems"
+        ],
+        "evidence": [
+          {
+            "predicateId": "operator-technician-title",
+            "scope": "title",
+            "text": "technician"
+          },
+          {
+            "predicateId": "reviewed-test-systems-title",
+            "scope": "title",
+            "text": "test"
+          },
+          {
+            "predicateId": "reviewed-test-systems-object",
+            "scope": "body",
+            "text": "electrical engineering drawings"
+          },
+          {
+            "predicateId": "reviewed-test-systems-duty",
+            "scope": "body",
+            "text": "designs systems"
+          }
+        ],
+        "guards": [
+          "keep-reviewed-test-systems"
+        ],
+        "failOpen": false
+      }
+    },
+    {
+      "id": "legacy:d1f94efab39334b5",
+      "title": "Senior Staff Outbound Product Manager - EmployeeWorks GTM",
+      "frozen": {
+        "keep": false,
+        "reason": "REJECT: business-other"
+      },
+      "actual": {
+        "rulesetVersion": "1.0.1",
+        "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+        "postingFingerprint": "1e7c0f8b276fed92fdc9e3ca10d3ec71f5483d7fa3c1b81d1e43a656772c39e7",
+        "decision": "KEEP",
+        "category": "technology-safety",
+        "reason": "KEEP: corroborated software product duties",
+        "ruleIds": [
+          "keep-reviewed-software-product"
+        ],
+        "evidence": [
+          {
+            "predicateId": "business-other-title",
+            "scope": "title",
+            "text": "gtm"
+          },
+          {
+            "predicateId": "reviewed-software-product-title",
+            "scope": "title",
+            "text": "product manager"
+          },
+          {
+            "predicateId": "reviewed-software-product-object",
+            "scope": "body",
+            "text": "ai native"
+          },
+          {
+            "predicateId": "reviewed-software-product-duty",
+            "scope": "body",
+            "text": "product strategy"
+          }
+        ],
+        "guards": [
+          "keep-reviewed-software-product"
+        ],
+        "failOpen": false
+      }
+    },
+    {
+      "id": "legacy:f90e425031a8b006",
+      "title": "ECAD Layout Designer Technician, Draft/Product Definition (Remote)",
+      "frozen": {
+        "keep": false,
+        "reason": "REJECT: operator-technician"
+      },
+      "actual": {
+        "rulesetVersion": "1.0.1",
+        "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+        "postingFingerprint": "717b6c19c266bef044620bc83192d927a7a141ea397c6d2b76fb566d843e6c68",
+        "decision": "KEEP",
+        "category": "technology-safety",
+        "reason": "KEEP: corroborated electronic design duties",
+        "ruleIds": [
+          "keep-reviewed-electronic-design"
+        ],
+        "evidence": [
+          {
+            "predicateId": "operator-technician-title",
+            "scope": "title",
+            "text": "technician"
+          },
+          {
+            "predicateId": "reviewed-electronic-design-title",
+            "scope": "title",
+            "text": "ecad"
+          },
+          {
+            "predicateId": "reviewed-electronic-design-object",
+            "scope": "body",
+            "text": "pcb"
+          },
+          {
+            "predicateId": "reviewed-electronic-design-duty",
+            "scope": "body",
+            "text": "layout"
+          }
+        ],
+        "guards": [
+          "keep-reviewed-electronic-design"
+        ],
+        "failOpen": false
+      }
+    }
+  ],
+  "parityReference": "Approved 1.0.1; legacy 1.0.0 differences are retained separately and exactly match prior approved changed decisions.",
+  "recommendation": "NO_CHANGE_REQUIRED"
+}

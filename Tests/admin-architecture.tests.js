@@ -35,26 +35,25 @@ vm.runInContext(["synchronizeAdminNavigation", "showAdminSection", "renderEvalua
 context.synchronizeAdminNavigation(true);
 assert.equal(elements.adminClassifierTab.textContent, "Job Fit Rules");
 assert.equal(elements.adminEvaluationTab.textContent, "Job Fit Evaluation");
-assert.equal(elements.adminCheapTab.textContent, "Cheap Triage");
+assert.equal(elements.adminCheapTab, undefined);
+assert.equal(elements.adminCheapPanel, undefined);
 context.showAdminSection("cheap-triage", true);
-assert.equal(cheapLoads, 1); assert.equal(jobFitLoads, 0);
-assert.equal(elements.adminCheapPanel.hidden, false); assert.equal(elements.adminClassifierPanel.hidden, true);
-assert.equal(elements.adminCheapTab.attrs["aria-selected"], "true");
-context.showAdminSection("classifier"); assert.equal(jobFitLoads, 1); assert.equal(elements.adminCheapPanel.hidden, true);
+assert.equal(state.activeAdminTab, "overview");
+assert.equal(cheapLoads, 0); assert.equal(jobFitLoads, 0);
+context.showAdminSection("classifier"); assert.equal(jobFitLoads, 1);
 const ledger = context.renderEvaluationNavigation({ llmHoldoutReport: {}, triageReport: {} });
 assert.deepEqual(ledger.children, ["curated-job-fit", "frozen-job-fit"]);
-const cheapTab = elements.adminCheapTab;
 context.synchronizeAdminNavigation(false);
-assert.equal(elements.adminCheapTab, null); assert.equal(elements.adminCheapPanel, null);
-assert.equal(cheapTab.textContent, "Cheap Triage");
+assert.equal(elements.adminView, null);
 // Audit archive preservation without opening the blinded holdout or running inference.
 const inventory = JSON.parse(fs.readFileSync(path.join(root, "docs/cheap-triage-research-inventory.json"), "utf8"));
 const archived = inventory.files.filter(f => f.disposition === "commit");
 for (const f of archived) assert.equal(crypto.createHash("sha256").update(fs.readFileSync(path.join(root, f.path))).digest("hex"), f.sha256, f.path);
 assert.equal(archived.length, 241);
 const program = fs.readFileSync(path.join(root, "Program.cs"), "utf8");
-assert.match(program, /case "evaluate-triage"/);
-assert.match(program, /--llm-benchmark/);
+assert.doesNotMatch(program, /case "evaluate-triage"/);
+assert.doesNotMatch(program, /--llm-benchmark/);
+assert.match(fs.readFileSync(path.join(root, "research/qwen/Program.cs"), "utf8"), /--llm-benchmark/);
 assert.doesNotMatch(program, /AddSingleton<(?:LlmHoldoutEvaluationService|TriageEvaluationService)>/);
 for (const file of ["JobCatalog.cs", "ClassifierClient.cs", "JobAnalysis.cs", "RegexCacheReconciler.cs"]) {
   assert.doesNotMatch(fs.readFileSync(path.join(root, file), "utf8"), /CheapRejectRules|CheapTriageStatus/,

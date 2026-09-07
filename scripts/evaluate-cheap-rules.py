@@ -65,7 +65,7 @@ def main():
             raise ValueError(f"Frozen input hash mismatch: {path}")
     corpus, cache = [read_rows(p) for p in inputs]
     allrows = corpus+cache
-    dll = repo / "bin/Release/net10.0/JobSearchManager.dll"
+    dll = repo / "research/cheap-triage/bin/Release/net10.0/Jsm.CheapTriage.Research.dll"
     baseline = (repo / args.baseline).resolve()
     base, elapsed = run(repo, dll, baseline, inputs)
     if set(base) != {r["id"] for r in allrows}:

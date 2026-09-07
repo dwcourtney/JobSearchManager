@@ -1,0 +1,1018 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Job Search Manager</title>
+  <link rel="icon" href="/favicon.ico?v=1" sizes="any">
+  <link rel="icon" type="image/png" href="/icons/favicon-32.png?v=1" sizes="32x32">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png?v=1" sizes="180x180">
+  <link rel="manifest" href="/site.webmanifest?v=1">
+  <script src="/theme-bootstrap.js"></script>
+  <link rel="stylesheet" href="/theme.css?v=11">
+  <link rel="stylesheet" href="/styles.css?v=51">
+  <script src="/vendor/purify.min.js" defer></script>
+  <script src="/country-ordering.js?v=2" defer></script>
+  <script src="/company-selector.js?v=1" defer></script>
+  <script src="/job-posting-text.js" defer></script>
+  <script src="/job-workflow-state.js?v=2" defer></script>
+  <script src="/job-unseen-state.js?v=1" defer></script>
+  <script src="/job-source-state.js" defer></script>
+  <script src="/credential-fit.js?v=2" defer></script>
+  <script src="/clearance-fit.js?v=1" defer></script>
+  <script src="/extended-location-ui.js?v=5" defer></script>
+  <script src="/education-fit.js?v=2" defer></script>
+  <script src="/job-fit.js?v=11" defer></script>
+  <script src="/clipboard-text.js?v=1" defer></script>
+  <script src="/cheap-triage.js?v=2" defer></script>
+  <script src="/cheap-triage-workflow.js?v=8" defer></script>
+  <script src="/human-review.js?v=7" defer></script>
+  <script src="/rule-maintenance.js?v=10" defer></script>
+  <script src="/app.js?v=56" defer></script>
+</head>
+<body>
+  <main id="app-shell" class="app-shell" aria-busy="true" inert>
+    <header class="app-header">
+      <h1>Job Search Manager</h1>
+      <nav class="app-tabs" role="tablist" aria-label="Application views">
+        <button id="jobs-tab" class="app-tab active" type="button" role="tab"
+                aria-selected="true" aria-controls="jobs-view">Jobs</button>
+        <button id="settings-tab" class="app-tab" type="button" role="tab"
+                aria-selected="false" aria-controls="settings-view">Settings</button>
+      </nav>
+      <p class="subtle header-status">
+        <span id="last-refreshed">Starting…</span>
+        <span id="cache-status" class="cache-status" hidden>Using cache</span>
+      </p>
+      <button id="refresh-button" class="primary-button" type="button">Refresh</button>
+    </header>
+
+    <div class="global-status">
+      <div id="error-banner" class="error-banner" role="alert" hidden></div>
+      <div id="cache-banner" class="cache-banner" aria-live="polite" hidden></div>
+    </div>
+
+    <section id="jobs-view" class="app-view jobs-view" role="tabpanel" aria-labelledby="jobs-tab">
+      <div class="jobs-context-bar">
+        <button id="source-settings-link" class="source-link" type="button">
+          <span>Source:</span>
+          <strong id="source-summary">Loading…</strong>
+          <span class="source-link-action">Change in Settings</span>
+        </button>
+        <div class="results-summary">
+          <strong id="result-count">0 of 0 jobs</strong>
+          <span>Newest first</span>
+        </div>
+      </div>
+
+      <section class="filter-section" aria-labelledby="filter-heading">
+        <button id="filter-toggle" class="filter-toggle" type="button"
+                aria-expanded="true" aria-controls="filter-content">
+          <span class="filter-toggle-title">
+            <span id="filter-chevron" class="filter-chevron" aria-hidden="true">▼</span>
+            <span id="filter-heading">Search &amp; Filters</span>
+          </span>
+          <span id="filter-summary" class="filter-summary"></span>
+          <span id="filter-toggle-action" class="filter-toggle-action">Collapse</span>
+        </button>
+        <div id="filter-content" class="filter-panel">
+          <div class="keyword-filter include-filter">
+            <div class="keyword-heading">
+              <label for="include-input">Include keywords</label>
+              <label class="highlight-option">
+                <input id="highlight-inclusions" type="checkbox" checked>
+                Highlight matches
+              </label>
+            </div>
+            <div class="input-group">
+              <input id="include-input" type="text" autocomplete="off"
+                     placeholder="e.g. windows, backup">
+              <button id="add-inclusion" type="button">Add</button>
+            </div>
+            <div id="inclusion-chips" class="chips" aria-live="polite"></div>
+          </div>
+          <div class="keyword-filter exclude-filter">
+            <label for="exclude-input">Exclude keywords</label>
+            <div class="input-group">
+              <input id="exclude-input" type="text" autocomplete="off"
+                     placeholder="e.g. substation, transmission line">
+              <button id="add-exclusion" type="button">Add</button>
+            </div>
+            <div id="exclusion-chips" class="chips" aria-live="polite"></div>
+          </div>
+          <fieldset class="scope-options">
+            <legend>Match keywords in</legend>
+            <label><input type="radio" name="scope" value="metadata" checked> Title and metadata</label>
+            <label><input type="radio" name="scope" value="description"> Metadata and full description</label>
+          </fieldset>
+          <fieldset class="location-options">
+            <legend>Remote location</legend>
+            <label><input type="radio" name="location-mode" value="all" checked> All jobs</label>
+            <label><input type="radio" name="location-mode" value="hide-restricted"> Hide location-restricted</label>
+            <label><input type="radio" name="location-mode" value="only-restricted"> Only location-restricted</label>
+          </fieldset>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <aside class="results-pane" aria-label="Job results">
+          <div class="pane-heading">
+            <div class="results-tabs" role="tablist" aria-label="Job result views">
+              <button id="all-results-tab" class="results-tab active" type="button" role="tab"
+                      aria-selected="true" aria-controls="results-tab-panel">
+                All Jobs <span id="all-job-count">(0)</span>
+              </button>
+              <button id="saved-results-tab" class="results-tab" type="button" role="tab"
+                      aria-selected="false" aria-controls="results-tab-panel" tabindex="-1">
+                Saved <span id="saved-job-count">(0)</span>
+              </button>
+              <button id="applied-results-tab" class="results-tab" type="button" role="tab"
+                      aria-selected="false" aria-controls="results-tab-panel" tabindex="-1">
+                Applied <span id="applied-job-count">(0)</span>
+              </button>
+              <button id="closed-results-tab" class="results-tab" type="button" role="tab"
+                      aria-selected="false" aria-controls="results-tab-panel" tabindex="-1">
+                Closed <span id="closed-job-count">(0)</span>
+              </button>
+              <button id="hidden-results-tab" class="results-tab" type="button" role="tab"
+                      aria-selected="false" aria-controls="results-tab-panel" tabindex="-1">
+                Hidden <span id="hidden-job-count">(0)</span>
+              </button>
+            </div>
+          </div>
+          <div id="results-tab-panel" class="results-tab-panel" role="tabpanel"
+               aria-labelledby="all-results-tab">
+            <div id="job-list" class="job-list" aria-label="Filtered jobs"></div>
+          </div>
+        </aside>
+
+        <article class="detail-pane" aria-live="polite">
+          <div id="empty-detail" class="empty-state">
+            Select a job to review it.
+          </div>
+          <div id="job-detail" class="job-detail" hidden>
+            <header class="detail-header">
+              <div class="detail-title-row">
+                <div>
+                  <h2 id="detail-title"></h2>
+                  <p class="detail-identity">
+                    <span id="detail-saved-badge" class="saved-badge" hidden>Saved</span>
+                    <span id="detail-applied-badge" class="applied-badge" hidden>Applied</span>
+                    <span id="detail-closed-badge" class="closed-badge" hidden>Closed</span>
+                    <span id="detail-close-reason-badge" class="close-reason-badge" hidden></span>
+                    <span id="detail-hidden-badge" class="hidden-badge" hidden>Hidden</span>
+                    <span id="detail-requisition" class="requisition"></span>
+                  </p>
+                </div>
+                <div class="detail-actions">
+                  <button id="copy-posting-button" class="copy-posting-button" type="button"
+                          aria-label="Copy full job posting" title="Copy full job posting">
+                    <svg class="detail-action-icon" viewBox="0 0 24 24" aria-hidden="true"
+                         focusable="false" fill="none" stroke="currentColor"
+                         stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="8" y="8" width="11" height="11" rx="1"></rect>
+                      <path d="M16 8V5H5v11h3"></path>
+                    </svg>
+                    <span id="copy-posting-label">Copy posting</span>
+                  </button>
+                  <a id="source-posting-link" class="source-posting-button" target="_blank" rel="noopener noreferrer">
+                    Open original posting
+                  </a>
+                </div>
+              </div>
+              <span id="copy-posting-status" class="visually-hidden" role="status" aria-live="polite"></span>
+              <div class="detail-tabs" role="tablist" aria-label="Selected job detail views">
+                <button id="at-a-glance-tab" class="detail-tab active" type="button" role="tab"
+                        aria-selected="true" aria-controls="at-a-glance-panel">At a Glance</button>
+                <button id="job-fit-detail-tab" class="detail-tab" type="button" role="tab"
+                        aria-selected="false" aria-controls="job-fit-detail-panel"
+                        tabindex="-1" hidden>Job Fit</button>
+                <button id="full-posting-tab" class="detail-tab" type="button" role="tab"
+                        aria-selected="false" aria-controls="full-posting-panel" tabindex="-1">Full Posting</button>
+              </div>
+            </header>
+            <section id="at-a-glance-panel" class="detail-tab-panel at-a-glance-panel"
+                     role="tabpanel" aria-labelledby="at-a-glance-tab">
+              <article class="summary-dossier" aria-label="Job qualification summary">
+                <section class="summary-section" aria-labelledby="job-details-heading">
+                  <h3 id="job-details-heading">Job Details</h3>
+                  <dl class="summary-rows">
+                    <div><dt>Posted</dt><dd id="detail-date"></dd></div>
+                    <div><dt>Pay</dt><dd id="detail-pay"></dd></div>
+                    <div><dt>Location</dt><dd id="detail-location"></dd></div>
+                    <div><dt>Additional</dt><dd id="detail-additional"></dd></div>
+                    <div><dt>Time type</dt><dd id="detail-time-type"></dd></div>
+                  </dl>
+                </section>
+
+                <section class="summary-section fit-section" aria-labelledby="fit-heading">
+                  <h3 id="fit-heading">Qualification Fit</h3>
+                  <div id="detail-fit-summary" class="fit-summary">
+                    <strong id="detail-fit-title"></strong>
+                    <span id="detail-fit-text"></span>
+                  </div>
+                </section>
+
+                <section id="detail-clearance-note" class="summary-section"
+                         aria-labelledby="clearance-heading" hidden>
+                  <h3 id="clearance-heading">Clearance</h3>
+                  <dl class="summary-rows">
+                    <div id="detail-clearance-row"><dt>Level</dt><dd id="detail-clearance"></dd></div>
+                    <div id="detail-clearance-status-row"><dt>Requirement</dt><dd id="detail-clearance-status"></dd></div>
+                    <div><dt>Your status</dt><dd id="detail-user-clearance"></dd></div>
+                    <div><dt>Assessment</dt><dd id="detail-clearance-comparison"></dd></div>
+                    <div id="detail-polygraph-row" hidden><dt>Polygraph</dt><dd id="detail-polygraph"></dd></div>
+                  </dl>
+                  <details id="detail-clearance-evidence" class="evidence-disclosure">
+                    <summary>Show evidence</summary>
+                    <p id="detail-clearance-note-text"></p>
+                  </details>
+                </section>
+
+                <section id="detail-extended-location-requirement" class="summary-section"
+                         aria-labelledby="extended-location-requirement-heading" hidden>
+                  <h3 id="extended-location-requirement-heading">Deployment / Relocation</h3>
+                  <div id="detail-extended-location-destination" class="extended-location-destination"></div>
+                  <p id="detail-extended-location-summary" class="extended-location-summary"></p>
+                  <details class="evidence-disclosure">
+                    <summary>Show evidence</summary>
+                    <div id="detail-extended-location-evidence" class="disclosure-evidence"></div>
+                  </details>
+                </section>
+
+                <section id="detail-work-authorization" class="summary-section"
+                         aria-labelledby="work-authorization-heading" hidden>
+                  <h3 id="work-authorization-heading">Work Authorization / Citizenship</h3>
+                  <dl class="summary-rows">
+                    <div><dt>Posting</dt><dd id="detail-work-authorization-requirement"></dd></div>
+                    <div><dt>Your status</dt><dd id="detail-user-work-authorization"></dd></div>
+                    <div><dt>Assessment</dt><dd id="detail-work-authorization-comparison"></dd></div>
+                  </dl>
+                  <details id="detail-work-authorization-evidence" class="evidence-disclosure">
+                    <summary>Show evidence</summary>
+                    <div id="detail-work-authorization-evidence-text" class="disclosure-evidence"></div>
+                  </details>
+                </section>
+
+                <section id="detail-academic" class="summary-section"
+                         aria-labelledby="academic-heading">
+                  <h3 id="academic-heading">Academic Qualifications</h3>
+                  <div id="detail-academic-content" class="academic-summary"></div>
+                </section>
+
+                <section id="detail-credentials" class="summary-section"
+                         aria-labelledby="credentials-heading" hidden>
+                  <h3 id="credentials-heading">Credentials / Licenses</h3>
+                  <div id="detail-credentials-list" class="credential-summary"></div>
+                </section>
+
+                <section id="detail-flags" class="summary-section notes-section"
+                         aria-labelledby="flags-heading" hidden>
+                  <h3 id="flags-heading">Notes / Warnings</h3>
+                  <div class="summary-notes">
+                    <div id="detail-education-mismatch" class="summary-note mismatch" hidden>
+                      <strong>Education mismatch</strong>
+                      <p id="detail-education-mismatch-text"></p>
+                    </div>
+                    <div id="detail-clearance-mismatch" class="summary-note mismatch" hidden>
+                      <strong>Clearance mismatch</strong>
+                      <p id="detail-clearance-mismatch-text"></p>
+                    </div>
+                    <div id="detail-work-authorization-mismatch" class="summary-note mismatch" hidden>
+                      <strong>Work authorization mismatch</strong>
+                      <p id="detail-work-authorization-mismatch-text"></p>
+                    </div>
+                    <div id="detail-credential-note" class="summary-note caution" hidden>
+                      <strong id="detail-credential-note-title">Credential review</strong>
+                      <p id="detail-credential-note-text"></p>
+                    </div>
+                    <div id="detail-location-note" class="summary-note warning" hidden>
+                      <strong>Remote location restriction</strong>
+                      <p id="detail-location-note-text"></p>
+                    </div>
+                    <div id="detail-remote-work-note" class="summary-note warning" hidden>
+                      <strong id="detail-remote-work-note-title">Remote work warning</strong>
+                      <p id="detail-remote-work-note-text"></p>
+                    </div>
+                    <div id="detail-headroom-note" class="summary-note caution" hidden>
+                      <strong>Limited salary headroom</strong>
+                      <p id="detail-headroom-note-text"></p>
+                    </div>
+                    <p id="detail-warning" class="summary-note error" hidden></p>
+                  </div>
+                </section>
+              </article>
+            </section>
+            <section id="cheap-triage-detail" class="admin-evaluation-metadata" aria-label="Cheap Triage observation"></section>
+            <section id="job-fit-detail-panel" class="detail-tab-panel job-fit-detail-panel"
+                     role="tabpanel" aria-labelledby="job-fit-detail-tab" hidden>
+              <article id="job-fit-detail-content" class="job-fit-detail-dossier"
+                       aria-label="Job Fit score breakdown"></article>
+            </section>
+            <section id="full-posting-panel" class="detail-tab-panel full-posting-panel"
+                     role="tabpanel" aria-labelledby="full-posting-tab" hidden>
+              <div class="posting-source-strip">
+                Original job posting — sanitized for safe display
+              </div>
+              <div id="detail-description" class="description"></div>
+            </section>
+          </div>
+        </article>
+      </section>
+    </section>
+
+    <section id="settings-view" class="app-view settings-view" role="tabpanel"
+             aria-labelledby="settings-tab" hidden>
+      <header class="settings-header">
+        <p>Application preferences and the source used for job retrieval.</p>
+      </header>
+      <div class="settings-surface">
+        <div class="settings-tabs" role="tablist" aria-label="Settings categories">
+          <button id="job-search-settings-tab" class="detail-tab active" type="button" role="tab"
+                  aria-selected="true" aria-controls="job-search-settings-panel">
+            Job Source
+          </button>
+          <button id="qualifications-settings-tab" class="detail-tab" type="button" role="tab"
+                  aria-selected="false" aria-controls="qualifications-settings-panel" tabindex="-1">
+            My Qualifications
+          </button>
+          <button id="preferences-settings-tab" class="detail-tab" type="button" role="tab"
+                  aria-selected="false" aria-controls="preferences-settings-panel" tabindex="-1">
+            My Preferences
+          </button>
+          <button id="job-fit-settings-tab" class="detail-tab" type="button" role="tab"
+                  aria-selected="false" aria-controls="job-fit-settings-panel" tabindex="-1">
+            Job Fit
+          </button>
+          <button id="account-settings-tab" class="detail-tab" type="button" role="tab"
+                  aria-selected="false" aria-controls="account-settings-panel" tabindex="-1">
+            Account
+          </button>
+        </div>
+
+        <div id="job-search-settings-panel" class="settings-tab-panel" role="tabpanel"
+             aria-labelledby="job-search-settings-tab">
+        <div class="settings-section">
+          <div class="settings-row">
+            <label for="company-select">Company</label>
+            <div class="settings-control source-facet-filter">
+              <select id="company-select" disabled>
+                <option>Loading companies...</option>
+              </select>
+            </div>
+          </div>
+          <div class="settings-row">
+            <label for="country-select">Country</label>
+            <div class="settings-control source-facet-filter">
+              <select id="country-select" disabled>
+                <option>Loading countries…</option>
+              </select>
+            </div>
+          </div>
+          <div class="settings-row">
+            <span class="settings-row-label">Location coverage</span>
+            <div class="settings-control source-coverage-options">
+              <label class="settings-check source-coverage-option">
+                <input id="include-all-locations" type="checkbox" disabled>
+                <span>
+                  Include all locations in this country
+                  <small>Uses the broadest available location query.</small>
+                </span>
+              </label>
+              <label id="include-remote-option" class="settings-check source-coverage-option">
+                <input id="include-remote" type="checkbox" disabled>
+                <span>
+                  Include remote jobs
+                  <small>Can be combined with one or more physical locations.</small>
+                </span>
+              </label>
+            </div>
+          </div>
+          <div class="settings-row">
+            <label for="location-search">Physical locations</label>
+            <div class="settings-control physical-location-control">
+              <input id="location-search" type="search" autocomplete="off" disabled
+                     placeholder="Search locations…" aria-describedby="physical-location-help">
+              <small id="physical-location-help">
+                Select several locations, or use country-wide coverage above.
+              </small>
+              <div id="selected-location-summary" class="selected-location-summary"
+                   aria-live="polite">No physical locations selected.</div>
+              <div id="location-groups" class="location-group-list"
+                   aria-label="Available physical locations"></div>
+            </div>
+          </div>
+        </div>
+
+        <section id="apply-source-section" class="settings-section apply-source-section"
+                 aria-labelledby="apply-source-heading">
+          <h3 id="apply-source-heading">Apply Job Source</h3>
+          <div class="apply-source-content">
+            <div>
+              <p>Apply the selected company and location settings to reload the job source.</p>
+              <small>Job-source changes are applied manually because reloading may take several seconds.</small>
+              <small id="facet-status" aria-live="polite">Loading job-source location choices…</small>
+            </div>
+            <button id="apply-location" class="apply-source-button" type="button" disabled>
+              Loading Job Source…
+            </button>
+          </div>
+        </section>
+        </div>
+
+        <div id="qualifications-settings-panel" class="settings-tab-panel" role="tabpanel"
+             aria-labelledby="qualifications-settings-tab" hidden>
+          <p class="settings-save-note qualifications-save-note">Changes on this tab are saved automatically.</p>
+          <div class="settings-tabs qualification-subtabs" role="tablist" aria-label="Qualification categories">
+            <button id="qualification-basics-tab" class="detail-tab active" type="button" role="tab"
+                    aria-selected="true" aria-controls="qualification-basics-panel">
+              Basics
+            </button>
+            <button id="qualification-credentials-tab" class="detail-tab" type="button" role="tab"
+                    aria-selected="false" aria-controls="qualification-credentials-panel" tabindex="-1">
+              Certifications &amp; Licenses
+            </button>
+          </div>
+          <div id="qualification-basics-panel" class="qualification-subtab-panel" role="tabpanel"
+               aria-labelledby="qualification-basics-tab">
+        <section class="settings-section" aria-labelledby="education-heading">
+          <h3 id="education-heading">Education</h3>
+          <div class="settings-row">
+            <label for="education-level">Highest completed education</label>
+            <div class="settings-control">
+              <select id="education-level">
+                <option value="notSpecified">Not configured</option>
+                <option value="noCredential">No high school credential</option>
+                <option value="ged">GED</option>
+                <option value="highSchool">High school diploma</option>
+                <option value="associate">Associate degree</option>
+                <option value="bachelor">Bachelor's degree</option>
+                <option value="master">Master's degree</option>
+                <option value="doctorate">Doctorate</option>
+              </select>
+            </div>
+          </div>
+          <div id="doctorate-type-field" class="settings-row" hidden>
+            <label for="doctorate-type">Doctorate type</label>
+            <div class="settings-control">
+              <select id="doctorate-type">
+                <option value="">Not specified</option>
+                <option value="phD">Ph.D.</option>
+              </select>
+            </div>
+          </div>
+          <div class="settings-check-list qualification-screening-option">
+            <label class="settings-check">
+              <input id="hide-strict-education-mismatch" type="checkbox">
+              <span>
+                Hide jobs with strict education requirements above my completed level
+                <small>Jobs will not be hidden if no education requirement is listed, or if the requirement is preferred, flexible, or uncertain.</small>
+              </span>
+            </label>
+          </div>
+        </section>
+
+        <section class="settings-section" aria-labelledby="citizenship-sponsorship-heading">
+          <h3 id="citizenship-sponsorship-heading">Citizenship / Sponsorship</h3>
+          <div class="settings-row">
+            <label for="us-work-authorization-status">U.S. work status</label>
+            <div class="settings-control">
+              <select id="us-work-authorization-status">
+                <option value="notSpecified">Not configured</option>
+                <option value="usCitizen">U.S. citizen</option>
+                <option value="permanentResident">U.S. permanent resident / Green Card holder</option>
+                <option value="otherAuthorized">Other U.S. work authorization</option>
+                <option value="notAuthorized">Not authorized to work in the U.S.</option>
+              </select>
+            </div>
+          </div>
+          <div class="settings-row">
+            <label for="sponsorship-profile">Employment sponsorship</label>
+            <div class="settings-control">
+              <select id="sponsorship-profile">
+                <option value="unknown">Unknown / not configured</option>
+                <option value="notRequired">I do not require sponsorship</option>
+                <option value="required">I require sponsorship now or in the future</option>
+              </select>
+            </div>
+          </div>
+          <div class="settings-check-list qualification-screening-option">
+            <label class="settings-check">
+              <input id="hide-strict-work-authorization-mismatch" type="checkbox">
+              <span>
+                Hide jobs with confidently incompatible strict work-authorization requirements
+                <small>Jobs will not be hidden if no work-authorization requirement is listed, or if the wording is preferred, export-control, U.S.-person, non-U.S., or uncertain.</small>
+              </span>
+            </label>
+          </div>
+        </section>
+
+        <section class="settings-section" aria-labelledby="security-clearance-heading">
+          <h3 id="security-clearance-heading">Security Clearance</h3>
+          <div class="settings-row">
+            <label for="clearance-profile-level">National-security clearance</label>
+            <div class="settings-control">
+              <select id="clearance-profile-level">
+                <option value="notSpecified">Not configured</option>
+                <option value="none">None</option>
+                <option value="secret">Secret</option>
+                <option value="topSecret">Top Secret</option>
+                <option value="topSecretSCI">TS/SCI</option>
+                <option value="otherUnknown">Other / Unknown</option>
+              </select>
+            </div>
+          </div>
+          <div class="settings-row">
+            <label for="public-trust-profile">Public Trust status</label>
+            <div class="settings-control">
+              <select id="public-trust-profile">
+                <option value="none">Not currently held</option>
+                <option value="current">Currently held / active</option>
+                <option value="unknown">Unknown</option>
+              </select>
+            </div>
+          </div>
+          <div class="settings-check-list qualification-screening-option">
+            <label class="settings-check">
+              <input id="hide-strict-clearance-mismatch" type="checkbox">
+              <span>
+                Hide jobs with unmet strict day-one clearance requirements
+                <small>Jobs will not be hidden if no clearance requirement is listed, or if the clearance is obtainable, preferred, or uncertain.</small>
+              </span>
+            </label>
+          </div>
+        </section>
+          </div>
+
+          <div id="qualification-credentials-panel" class="qualification-subtab-panel" role="tabpanel"
+               aria-labelledby="qualification-credentials-tab" hidden>
+            <section class="settings-section" aria-labelledby="credential-profile-heading">
+              <h3 id="credential-profile-heading">Certifications &amp; Licenses</h3>
+              <div class="settings-row">
+                <label for="credential-inventory-status">Credential inventory</label>
+                <div class="settings-control">
+                  <select id="credential-inventory-status">
+                    <option value="notConfigured">Not configured</option>
+                    <option value="none">I hold none</option>
+                    <option value="complete">Complete inventory configured</option>
+                  </select>
+                  <small>A complete inventory lets Qualification Fit distinguish held, missing, preferred, post-hire, and equivalent credential requirements.</small>
+                </div>
+              </div>
+              <div id="held-credentials-field" class="settings-row" hidden>
+                <label for="credential-search">Credentials held</label>
+                <div class="settings-control credential-inventory-control">
+                  <input id="credential-search" type="search" autocomplete="off"
+                         placeholder="Search credentials, issuers, or categories…"
+                         aria-describedby="held-credentials-help credential-selection-summary">
+                  <small id="held-credentials-help">Select every current certification, license, or endorsement you hold. Categories reflect credentials found in the current catalog and job corpus.</small>
+                  <div id="credential-selection-summary" class="selected-location-summary" aria-live="polite">No credentials selected.</div>
+                  <div id="held-credentials" class="credential-inventory-list"
+                       aria-label="Credential inventory"></div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <div id="preferences-settings-panel" class="settings-tab-panel" role="tabpanel"
+             aria-labelledby="preferences-settings-tab" hidden>
+        <section class="settings-section" aria-labelledby="compensation-heading">
+          <p class="settings-save-note">Changes on this tab are saved automatically.</p>
+          <h3 id="compensation-heading">Compensation</h3>
+          <div class="settings-row">
+            <label for="minimum-pay">Minimum acceptable annual pay</label>
+            <div class="settings-control salary-filter">
+              <div class="currency-input">
+                <span aria-hidden="true">$</span>
+                <input id="minimum-pay" type="text" inputmode="numeric" autocomplete="off"
+                       placeholder="0" aria-describedby="minimum-pay-help">
+              </div>
+              <small id="minimum-pay-help">Jobs will not be hidden if no annual salary is listed or if the posting only provides non-annual pay.</small>
+            </div>
+          </div>
+        </section>
+
+        <section class="settings-section" aria-labelledby="appearance-heading">
+          <h3 id="appearance-heading">Appearance</h3>
+          <div class="settings-row">
+            <label for="theme-mode">Theme</label>
+            <div class="settings-control compact-control">
+              <select id="theme-mode">
+                  <option value="light">Light</option>
+                  <option value="dark">Dark</option>
+                  <option value="nord-polar-night">Nord — Polar Night</option>
+                  <option value="nord-snow-storm">Nord — Snow Storm</option>
+                  <option value="dracula">Dracula</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        </div>
+
+        <div id="job-fit-settings-panel" class="settings-tab-panel" role="tabpanel"
+             aria-labelledby="job-fit-settings-tab" hidden>
+          <section class="settings-section job-fit-scoring-section" aria-labelledby="job-fit-heading">
+            <p class="settings-save-note">Changes on this tab are saved automatically.</p>
+            <h3 id="job-fit-heading">Job Fit Scoring</h3>
+            <label class="settings-check">
+              <input id="job-fit-enabled" type="checkbox">
+              <span>
+                Enable Job Fit scoring for this workspace
+                <small>When disabled, Job Fit scoring and its subordinate controls are inactive. Stored preferences are preserved.</small>
+              </span>
+            </label>
+            <div id="job-fit-configuration" class="job-fit-subordinate" aria-disabled="true">
+              <section id="work-arrangement-filtering" class="job-fit-subsection"
+                       aria-labelledby="work-arrangement-filtering-heading">
+                <h3 id="work-arrangement-filtering-heading">Work Arrangement Filtering</h3>
+                <div class="settings-check-list">
+                  <label class="settings-check">
+                    <input id="exclude-strong-extended-location-requirements" type="checkbox">
+                    <span>
+                      Exclude strong work-arrangement conflicts
+                      <small>Hide jobs with strong work-arrangement conflicts such as deployment, rotation, relocation, or extended away-from-home assignments. Ordinary business travel is not excluded.</small>
+                    </span>
+                  </label>
+                </div>
+              </section>
+              <section class="job-fit-subsection" aria-labelledby="job-fit-signals-heading">
+                <h3 id="job-fit-signals-heading">Job Fit Preferences</h3>
+                <p class="job-fit-introduction">
+                  Preferences are organized by the work they describe. Not set means unreviewed; choosing Neutral explicitly records a reviewed zero-impact preference.
+                </p>
+                <label class="job-fit-search-label" for="job-fit-concept-search">Search all Job Fit preferences</label>
+                <input id="job-fit-concept-search" class="job-fit-search" type="search"
+                       autocomplete="off" placeholder="Try Linux, AI, management, or SCUBA…">
+                <p id="job-fit-survey-status" class="job-fit-survey-status" aria-live="polite"></p>
+                <div class="job-fit-section-chooser">
+                  <label for="job-fit-section-select">Job Fit section</label>
+                  <select id="job-fit-section-select"></select>
+                </div>
+                <div id="job-fit-tab-list" class="detail-tabs job-fit-tabs" role="tablist"
+                     aria-label="Job Fit preference categories"></div>
+                <div id="job-fit-survey" class="job-fit-survey"
+                     aria-describedby="job-fit-survey-status"></div>
+              </section>
+            </div>
+          </section>
+        </div>
+
+        <div id="account-settings-panel" class="settings-tab-panel" role="tabpanel"
+             aria-labelledby="account-settings-tab" hidden>
+          <section id="anonymous-account-section" class="settings-section account-section"
+                   aria-labelledby="anonymous-account-heading">
+            <h3 id="anonymous-account-heading">Optional Account</h3>
+            <p>You are using an anonymous workspace. You can continue without an account.</p>
+            <p class="account-help">Creating an account claims this exact workspace. Your settings, qualifications, Job Fit preferences, and curated jobs stay in place.</p>
+            <dl class="account-summary">
+              <div><dt>Current Workspace ID</dt><dd id="anonymous-account-workspace-id">Loading…</dd></div>
+            </dl>
+            <div class="account-mode-actions">
+              <button id="show-create-account" class="primary-button" type="button">Create Account</button>
+              <button id="show-login" type="button">Sign In</button>
+            </div>
+          </section>
+
+          <section id="create-account-section" class="settings-section account-section"
+                   aria-labelledby="create-account-heading" hidden>
+            <h3 id="create-account-heading">Create Account</h3>
+            <form id="create-account-form" class="account-form">
+              <label for="create-account-email">Email</label>
+              <input id="create-account-email" type="email" autocomplete="email" maxlength="254" required>
+              <label for="create-account-password">Password</label>
+              <input id="create-account-password" type="password" autocomplete="new-password"
+                     minlength="12" maxlength="128" required aria-describedby="account-password-help">
+              <small id="account-password-help">Use 12–128 characters. Long passphrases and password managers are welcome.</small>
+              <label for="create-account-confirm">Confirm password</label>
+              <input id="create-account-confirm" type="password" autocomplete="new-password"
+                     minlength="12" maxlength="128" required>
+              <label for="create-account-persistence">Stay signed in</label>
+              <select id="create-account-persistence" class="account-persistence">
+                <option value="session">This browser session only</option>
+                <option value="day1">1 day</option>
+                <option value="days7">7 days</option>
+                <option value="days14">14 days</option>
+                <option value="days30">30 days</option>
+                <option value="keep">Keep me signed in</option>
+              </select>
+              <p id="create-account-status" class="settings-status" role="status" aria-live="polite"></p>
+              <div class="account-form-actions">
+                <button class="primary-button" type="submit">Create Account</button>
+                <button id="cancel-create-account" type="button">Cancel</button>
+              </div>
+            </form>
+          </section>
+
+          <section id="login-account-section" class="settings-section account-section"
+                   aria-labelledby="login-account-heading" hidden>
+            <h3 id="login-account-heading">Sign In</h3>
+            <form id="login-account-form" class="account-form">
+              <label for="login-account-email">Email</label>
+              <input id="login-account-email" type="email" autocomplete="username" maxlength="254" required>
+              <label for="login-account-password">Password</label>
+              <input id="login-account-password" type="password" autocomplete="current-password"
+                     maxlength="128" required>
+              <label for="login-account-persistence">Stay signed in</label>
+              <select id="login-account-persistence" class="account-persistence">
+                <option value="session">This browser session only</option>
+                <option value="day1">1 day</option>
+                <option value="days7">7 days</option>
+                <option value="days14">14 days</option>
+                <option value="days30">30 days</option>
+                <option value="keep">Keep me signed in</option>
+              </select>
+              <p id="login-account-status" class="settings-status" role="status" aria-live="polite"></p>
+              <div class="account-form-actions">
+                <button class="primary-button" type="submit">Sign In</button>
+                <button id="show-forgot-password" type="button">Forgot Password</button>
+                <button id="cancel-login" type="button">Cancel</button>
+              </div>
+            </form>
+          </section>
+
+          <section id="forgot-password-section" class="settings-section account-section"
+                   aria-labelledby="forgot-password-heading" hidden>
+            <h3 id="forgot-password-heading">Forgot Password</h3>
+            <form id="forgot-password-form" class="account-form">
+              <label for="forgot-password-email">Email</label>
+              <input id="forgot-password-email" type="email" autocomplete="email" maxlength="254" required>
+              <p id="forgot-password-status" class="settings-status" role="status" aria-live="polite"></p>
+              <div class="account-form-actions">
+                <button class="primary-button" type="submit">Send Reset Link</button>
+                <button id="cancel-forgot-password" type="button">Back to Sign In</button>
+              </div>
+            </form>
+          </section>
+
+          <section id="reset-password-section" class="settings-section account-section"
+                   aria-labelledby="reset-password-heading" hidden>
+            <h3 id="reset-password-heading">Choose a New Password</h3>
+            <form id="reset-password-form" class="account-form">
+              <label for="reset-account-password">New password</label>
+              <input id="reset-account-password" type="password" autocomplete="new-password"
+                     minlength="12" maxlength="128" required>
+              <label for="reset-account-confirm">Confirm new password</label>
+              <input id="reset-account-confirm" type="password" autocomplete="new-password"
+                     minlength="12" maxlength="128" required>
+              <p id="reset-password-status" class="settings-status" role="status" aria-live="polite"></p>
+              <div class="account-form-actions">
+                <button class="primary-button" type="submit">Reset Password</button>
+                <button id="cancel-reset-password" type="button">Cancel</button>
+              </div>
+            </form>
+          </section>
+
+          <section id="authenticated-account-section" class="settings-section account-section"
+                   aria-labelledby="authenticated-account-heading" hidden>
+            <h3 id="authenticated-account-heading">Account</h3>
+            <dl class="account-summary">
+              <div><dt>Email</dt><dd id="account-email"></dd></div>
+              <div><dt>Email status</dt><dd id="account-email-status"></dd></div>
+              <div><dt>Workspace access</dt><dd>Authenticated owner</dd></div>
+              <div><dt>Internal workspace ID</dt><dd id="account-workspace-id">Loading…</dd></div>
+            </dl>
+            <div id="email-verification-actions" class="account-inline-action" hidden>
+              <p>Email verification is needed for reliable password recovery.</p>
+              <button id="request-email-verification" type="button">Send Verification Email</button>
+            </div>
+            <div class="account-form account-session-form">
+              <label for="account-session-persistence">Login persistence on this browser</label>
+              <select id="account-session-persistence" class="account-persistence">
+                <option value="session">This browser session only</option>
+                <option value="day1">1 day</option>
+                <option value="days7">7 days</option>
+                <option value="days14">14 days</option>
+                <option value="days30">30 days</option>
+                <option value="keep">Keep me signed in</option>
+              </select>
+            </div>
+            <p id="authenticated-account-status" class="settings-status" role="status" aria-live="polite"></p>
+            <div class="account-mode-actions">
+              <button id="show-change-password" type="button">Change Password</button>
+              <button id="sign-out-account" class="destructive-button" type="button">Sign Out</button>
+            </div>
+          </section>
+
+          <section id="change-password-section" class="settings-section account-section"
+                   aria-labelledby="change-password-heading" hidden>
+            <h3 id="change-password-heading">Change Password</h3>
+            <form id="change-password-form" class="account-form">
+              <label for="current-account-password">Current password</label>
+              <input id="current-account-password" type="password" autocomplete="current-password"
+                     maxlength="128" required>
+              <label for="new-account-password">New password</label>
+              <input id="new-account-password" type="password" autocomplete="new-password"
+                     minlength="12" maxlength="128" required>
+              <label for="new-account-confirm">Confirm new password</label>
+              <input id="new-account-confirm" type="password" autocomplete="new-password"
+                     minlength="12" maxlength="128" required>
+              <p id="change-password-status" class="settings-status" role="status" aria-live="polite"></p>
+              <div class="account-form-actions">
+                <button class="primary-button" type="submit">Change Password</button>
+                <button id="cancel-change-password" type="button">Cancel</button>
+              </div>
+            </form>
+          </section>
+
+          <section id="administrator-bootstrap-section" class="settings-section account-section"
+                   aria-labelledby="administrator-bootstrap-heading" hidden>
+            <h3 id="administrator-bootstrap-heading">Administrator Bootstrap</h3>
+            <p>No administrator has been configured for this JSM instance.</p>
+            <p class="account-help">If you control the server, obtain the one-time administrator bootstrap code from the server and enter it below.</p>
+            <form id="administrator-bootstrap-form" class="account-form administrator-bootstrap-form">
+              <label for="administrator-bootstrap-code">One-time code</label>
+              <input id="administrator-bootstrap-code" type="text" autocomplete="off"
+                     autocapitalize="characters" spellcheck="false" minlength="8" maxlength="8" required>
+              <p id="administrator-bootstrap-status" class="settings-status" role="status"
+                 aria-live="polite"></p>
+              <div class="account-form-actions">
+                <button class="primary-button" type="submit">Claim Administrator</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="settings-section account-privacy-note" aria-labelledby="account-privacy-heading">
+            <h3 id="account-privacy-heading">Account Privacy</h3>
+            <p>Email is used only for sign-in, verification, and password recovery. Authentication secrets are stored separately and are never included in workspace exports.</p>
+            <p id="account-email-configuration-note" class="account-help" hidden>Email delivery is not configured on this deployment. Account access works, but verification and password-reset messages cannot be delivered until an administrator configures the email provider.</p>
+          </section>
+
+          <section class="settings-section" aria-labelledby="import-export-heading">
+            <h3 id="import-export-heading">Import / Export</h3>
+            <div class="portable-preferences-content">
+              <div>
+                <p>Back up portable settings and curated jobs to one JSON file, or restore them in another workspace.</p>
+                <small>Import replaces current portable settings and curated states. Saved, Applied, Closed, and Hidden jobs are included; the live catalog and full descriptions are excluded.</small>
+                <p id="portable-workspace-status" class="settings-status" role="status" aria-live="polite"></p>
+              </div>
+              <div class="portable-preferences-actions">
+                <button id="import-workspace-button" type="button">Import Workspace</button>
+                <button id="export-workspace-button" type="button">Export Workspace</button>
+                <input id="import-workspace-file" type="file" accept="application/json,.json" hidden>
+              </div>
+            </div>
+          </section>
+
+          <section class="settings-section reset-workspace-section" aria-labelledby="reset-workspace-heading">
+            <h3 id="reset-workspace-heading">Reset Workspace</h3>
+            <div class="reset-workspace-content">
+              <div class="reset-workspace-details">
+                <p>Delete all settings, history, cached jobs, and preferences for this workspace without deleting the authenticated account.</p>
+                <small>The application will reload the workspace with first-run defaults. The account will remain available, but the workspace reset cannot be undone.</small>
+                <div class="workspace-identity">
+                  <label for="workspace-id">Current Workspace ID</label>
+                  <div class="workspace-identity-controls">
+                    <input id="workspace-id" type="text" value="Loading…" readonly
+                           autocomplete="off" spellcheck="false" aria-describedby="workspace-id-status">
+                    <button id="copy-workspace-id-button" class="confirmation-secondary-button" type="button"
+                            disabled>Copy</button>
+                  </div>
+                  <span id="workspace-id-status" class="workspace-identity-status" role="status"
+                        aria-live="polite"></span>
+                </div>
+              </div>
+              <button id="reset-workspace-button" class="destructive-button" type="button">
+                Reset Current Workspace
+              </button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="loading-overlay" class="loading-overlay visible" role="dialog" aria-modal="true"
+       aria-labelledby="loading-title" aria-describedby="loading-phase loading-note" tabindex="-1">
+    <section class="loading-panel">
+      <span class="loading-spinner" aria-hidden="true"></span>
+      <h2 id="loading-title">Loading jobs</h2>
+      <p id="loading-phase" class="loading-phase" aria-live="polite">
+        Connecting to the local application…
+      </p>
+      <div class="loading-progress" aria-hidden="true">
+        <span></span>
+      </div>
+      <p id="loading-note" class="loading-note">This may take a moment.</p>
+    </section>
+  </div>
+
+  <div id="source-loading-overlay" class="loading-overlay" role="dialog" aria-modal="true"
+       aria-hidden="true" aria-labelledby="source-loading-title"
+       aria-describedby="source-loading-phase source-loading-note" tabindex="-1" hidden>
+    <section class="loading-panel">
+      <span class="loading-spinner" aria-hidden="true"></span>
+      <h2 id="source-loading-title">Loading job source</h2>
+      <p id="source-loading-phase" class="loading-phase" aria-live="polite">
+        Retrieving available countries and locations...
+      </p>
+      <div class="loading-progress" aria-hidden="true">
+        <span></span>
+      </div>
+      <p id="source-loading-note" class="loading-note">
+        Source choices will be available shortly.
+      </p>
+    </section>
+  </div>
+
+  <div id="source-confirmation-overlay" class="loading-overlay confirmation-overlay"
+       role="dialog" aria-modal="true" aria-hidden="true"
+       aria-labelledby="source-confirmation-title"
+       aria-describedby="source-confirmation-copy source-confirmation-question"
+       tabindex="-1" hidden>
+    <section class="loading-panel confirmation-panel">
+      <h2 id="source-confirmation-title">Unapplied job source changes</h2>
+      <p id="source-confirmation-copy" class="confirmation-copy">
+        You changed the job source.
+      </p>
+      <div id="source-confirmation-comparison" class="confirmation-source-comparison">
+        <div class="confirmation-source-row">
+          <span>Current</span>
+          <strong id="source-confirmation-current"></strong>
+        </div>
+        <div class="confirmation-source-row pending">
+          <span>Pending</span>
+          <strong id="source-confirmation-pending"></strong>
+        </div>
+      </div>
+      <p id="source-confirmation-question" class="confirmation-copy">
+        Apply the new source before returning to Jobs?
+      </p>
+      <div class="confirmation-actions">
+        <button id="source-confirmation-stay" class="confirmation-secondary-button" type="button">
+          Stay in Settings
+        </button>
+        <button id="source-confirmation-discard" class="confirmation-secondary-button" type="button">
+          Discard Changes and go to Jobs
+        </button>
+        <button id="source-confirmation-apply" class="primary-button" type="button">
+          Apply and go to Jobs
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <div id="reset-confirmation-overlay" class="loading-overlay confirmation-overlay reset-confirmation-overlay"
+       role="dialog" aria-modal="true" aria-hidden="true"
+       aria-labelledby="reset-confirmation-title"
+       aria-describedby="reset-confirmation-copy reset-confirmation-warning"
+       tabindex="-1" hidden>
+    <section class="loading-panel confirmation-panel reset-confirmation-panel">
+      <h2 id="reset-confirmation-title">Reset current workspace?</h2>
+      <p id="reset-confirmation-copy" class="confirmation-copy">
+        This will permanently delete this workspace's:
+      </p>
+      <ul class="reset-confirmation-list">
+        <li>settings and preferences</li>
+        <li>job history and hidden jobs</li>
+        <li>cached jobs and qualification profile</li>
+      </ul>
+      <p id="reset-confirmation-warning" class="reset-confirmation-warning">
+        This cannot be undone.
+      </p>
+      <p id="reset-confirmation-error" class="reset-confirmation-error" role="alert" hidden></p>
+      <div class="confirmation-actions">
+        <button id="reset-confirmation-cancel" class="confirmation-secondary-button" type="button">
+          Cancel
+        </button>
+        <button id="reset-confirmation-submit" class="destructive-button" type="button">
+          Reset Current Workspace
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <div id="close-application-overlay" class="loading-overlay confirmation-overlay"
+       role="dialog" aria-modal="true" aria-hidden="true"
+       aria-labelledby="close-application-title"
+       aria-describedby="close-application-copy close-application-error"
+       tabindex="-1" hidden>
+    <section class="loading-panel confirmation-panel close-application-panel">
+      <h2 id="close-application-title">Close application?</h2>
+      <p id="close-application-copy" class="confirmation-copy"></p>
+      <label class="close-application-reason" for="close-application-reason">
+        <span>Close reason</span>
+        <select id="close-application-reason">
+          <option value="PositionWithdrawn">Position Withdrawn — company canceled or withdrew the position</option>
+          <option value="NotSelected">Not Selected — no longer considered before screening or interview</option>
+          <option value="ScreenedOut">Screened Out — screening occurred and they did not proceed</option>
+          <option value="InterviewedOut">Interviewed Out — an interview occurred and they did not proceed</option>
+          <option value="Ghosted">Ghosted — no response for long enough to consider it closed</option>
+          <option value="Withdrew">Withdrew — you withdrew the application</option>
+          <option value="Other">Other</option>
+        </select>
+      </label>
+      <p id="close-application-error" class="reset-confirmation-error" role="alert" hidden></p>
+      <div class="confirmation-actions">
+        <button id="close-application-cancel" class="confirmation-secondary-button" type="button">
+          Cancel
+        </button>
+        <button id="close-application-submit" class="primary-button" type="button">
+          Close Application
+        </button>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

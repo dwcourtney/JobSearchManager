@@ -856,7 +856,8 @@ public static class JobPresentation
     {
         DetectedConcepts = JobListItem.SemanticDetectedConcepts(job),
         QwenDeepAnalysis = null,
-        DeepAnalysisRequest = null
+        DeepAnalysisRequest = null,
+        CheapTriage = null
     };
 }
 

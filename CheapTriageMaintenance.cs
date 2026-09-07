@@ -29,6 +29,7 @@ public sealed record MaintenanceWorkflowState(string Key, int Revision, string S
     public MaintenanceReleaseReceipt? Release { get; init; }
     public MaintenanceNoUpdate? NoUpdate { get; init; }
     public string? ResultHash { get; init; }
+    public MaintenanceDetectionStatus? Detection { get; init; }
 }
 public sealed record MaintenanceReleaseReceipt(string WorkflowKey, string CandidateHash, string RulesetVersion, string DeploymentIdentity, string ValidationStatus);
 public sealed record WorkflowRevision(string Key, int Revision);

@@ -1,11 +1,13 @@
-ARG JSM_IMAGE_REFERENCE
-FROM ${JSM_IMAGE_REFERENCE}
-
-USER 0:0
-RUN rm -f \
-    /app/LegacyJobConceptRules.json \
-    /app/RegexValidationCorpus.json \
-    /app/EvaluationHoldoutPlan.example.json
-
-LABEL org.opencontainers.image.purpose="isolated-llm-hardware-benchmark"
+FROM mcr.microsoft.com/dotnet/sdk:10.0.400-noble@sha256:0e53453ccfc8ff2d51319fe80c678971c6d0f8008dff3565fa88e15840b69854 AS build
+ARG JSM_GIT_SHA=unknown
+WORKDIR /src
+COPY . ./
+RUN dotnet restore research/qwen/Jsm.Qwen.Research.csproj --locked-mode && dotnet publish research/qwen/Jsm.Qwen.Research.csproj -c Release --no-restore -o /out /p:UseAppHost=false /p:SourceRevisionId=${JSM_GIT_SHA}
+RUN rm -f /out/LegacyJobConceptRules.json /out/RegexValidationCorpus.json /out/EvaluationHoldoutPlan.example.json
+FROM mcr.microsoft.com/dotnet/aspnet:10.0.11-noble@sha256:1dcd9841b075d1d1013caa170b86ae58b8a8a563de9a3e319fd46a45e7ecc130
+ARG JSM_GIT_SHA=unknown
+WORKDIR /app
+COPY --from=build /out ./
+LABEL org.opencontainers.image.revision=${JSM_GIT_SHA} org.opencontainers.image.purpose="isolated-llm-hardware-benchmark"
 USER 1001:1001
+ENTRYPOINT ["dotnet", "Jsm.Qwen.Research.dll"]

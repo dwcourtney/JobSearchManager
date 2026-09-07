@@ -242,11 +242,16 @@ manual dispatch intentionally revalidates the target.
 
 ## Host deployment behavior
 
-The controlled manifest is `deploy/compose.curiosity.yaml`. It declares JSM plus the internal,
-opt-in deep-analysis bridge and Ollama runtime in Compose project `jsm-lab`. Deployment updates only those
-three named services and never invokes `down`, `--remove-orphans`, or a broad cleanup, so the
-existing Mailpit service is not recreated. `ai801` is outside this Compose project and is never
-selected or cleaned.
+The controlled manifest is `deploy/compose.curiosity.yaml`. It declares only JSM in Compose
+project `jsm-lab`. Deployment replaces and verifies only `jsm`, without model image variables,
+GPU checks, provisioning, model health checks or model cleanup. It never invokes `down` or
+`--remove-orphans`. Existing Mailpit/SMTP, `ai801`, legacy research containers and model data
+remain untouched. Research experiments use the separate `research/qwen/compose.yaml` project;
+see [`research/qwen/README.md`](../research/qwen/README.md).
+
+Rollback projects the prior manifest into a JSM-only manifest before replacement, retaining
+application service settings and mounts. It restores the previous image and verifies health/version
+without requiring retired model variables, even when the prior manifest included model services.
 
 The manifest bind-mounts the existing paths without copying, deleting, or replacing
 them:
@@ -330,3 +335,11 @@ from `main` history, which is revalidated before deployment.
 Never commit environment files, credentials, account stores, runtime data, Data
 Protection keys, Mailpit state, bundles, runner configuration, or deployment state.
 Never place cloud credentials in GitHub Actions; this deployment does not require them.
+
+## Retired Cheap Triage persistence
+
+Normal deployment does not open or back up the retired Human Review database as an active store.
+The active RegEx backup, data/key mounts, exact-image/security gates and health/version rollback
+remain. Existing triage files are never deleted or rewritten by deployment. The retirement smoke
+creates a verified archival snapshot plus full data/key backup, retaining compatibility for at least
+30 days through 2026-10-07; see `research/cheap-triage/README.md` for the preservation contract.

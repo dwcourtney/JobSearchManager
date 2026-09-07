@@ -9,4 +9,5 @@
     <ProjectReference Include="..\JobSearchManager.csproj" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
+  <ItemGroup><Compile Remove="CheapRejectRuleTests.cs;CheapTriageShadowTests.cs;HumanReviewTests.cs;MaintenanceDetectionTests.cs" /></ItemGroup>
 </Project>

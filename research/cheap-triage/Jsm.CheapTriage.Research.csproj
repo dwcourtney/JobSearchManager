@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+  <ItemGroup><ProjectReference Include="../../JobSearchManager.csproj" /><FrameworkReference Include="Microsoft.AspNetCore.App" /></ItemGroup>
+  <ItemGroup><Using Include="Microsoft.Extensions.Configuration" /><Using Include="Microsoft.Extensions.Hosting" /><Using Include="Microsoft.Extensions.Logging" /><Using Include="Microsoft.AspNetCore.Hosting" /></ItemGroup>
+  <ItemGroup><InternalsVisibleTo Include="Jsm.CheapTriage.Research.Tests" /></ItemGroup>
+  <ItemGroup><Compile Remove="Tests/**/*.cs;archive/**/*.cs" /></ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../CheapRejectRules.cs" Link="CheapRejectRules.cs" />
+    <Compile Include="../../CheapTriageShadow.cs" Link="CheapTriageShadow.cs" />
+    <Compile Include="../../CheapTriageHumanReview.cs" Link="CheapTriageHumanReview.cs" />
+    <Compile Include="../../CheapTriageMaintenance.cs" Link="CheapTriageMaintenance.cs" />
+    <Compile Include="../../CheapTriageMaintenanceDetector.cs" Link="CheapTriageMaintenanceDetector.cs" />
+    <Compile Include="../../RuleMaintenance.cs" Link="RuleMaintenance.cs" />
+    <Compile Include="../../TriageEvaluation.cs" Link="TriageEvaluation.cs" />
+    <Content Include="../../CheapTriage/**/*" Link="CheapTriage/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

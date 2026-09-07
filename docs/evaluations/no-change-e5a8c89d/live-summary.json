@@ -1,0 +1,21 @@
+{
+  "historical-live": {
+    "n": 2205,
+    "counts": {
+      "KEEP": 1977,
+      "REJECT": 228
+    },
+    "failOpen": 0,
+    "inputSha256": "74e179387458058789620a3d46d8989bc19b0451f87ba4e422e8394d9159abdc"
+  },
+  "snapshot-cache": {
+    "n": 275,
+    "counts": {
+      "KEEP": 252,
+      "REJECT": 23
+    },
+    "failOpen": 0,
+    "inputSha256": "9e1e784fcb1684b1a0557335a70758728734d27c435e809c750a3548b4f86101",
+    "snapshotFullRejectEvidenceMatches": 23
+  }
+}

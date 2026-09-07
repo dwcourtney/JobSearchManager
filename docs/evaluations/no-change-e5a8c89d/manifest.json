@@ -1,0 +1,15 @@
+{
+  "recommendation": "NO_CHANGE_REQUIRED",
+  "importableCandidate": false,
+  "rulesetVersion": "1.0.1",
+  "rulesetSha256": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+  "snapshotBundle": "e5a8c89ddebabc0587b12a8fe6483c86c921c7a69af0bc35d4ba79c77fa221e6",
+  "artifacts": {
+    "candidate-result.json": "aa494ddac1530f20f5638814df6009ccc78a9b90f3f4eccfaa0b0120ffd441cb",
+    "changed-decisions.json": "a5338d955b09046ec0b16f3a9625b7955c763aae07dc722e474e6078745f932f",
+    "comparison.json": "7397cdaef817fbff174869d8c2471cc671cd0635f5cf1f35e24e09d485c6388f",
+    "human-comparison.json": "e2e88475913becf579cd1ac53cd48f3b74bf19d21e73a07051a08829bb2208f6",
+    "live-summary.json": "3d6254ac752476adb5610477616aadb73c011d6a3466bc4ad4c87de255a53a6a",
+    "README.md": "244b1be86161af9289eefd17dc96dc8c0510841a801e5413dd1e371b85edb12b"
+  }
+}

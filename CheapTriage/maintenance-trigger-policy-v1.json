@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "version": "1.0.0",
+  "pollSeconds": 300,
+  "minimumNewObservations": 50,
+  "minimumCases": 12,
+  "minimumEmployers": 3,
+  "maximumCases": 24,
+  "maximumPerEmployer": 6,
+  "maximumPerRuleCombination": 6,
+  "minimumScore": 5,
+  "underReviewedCount": 3,
+  "duplicateTitleSimilarity": 0.8,
+  "duplicateDutySimilarity": 0.65,
+  "priorKeepSimilarity": 0.45,
+  "ignoredTokens": ["senior", "junior", "sr", "jr", "ii", "iii", "iv", "the", "and", "of", "in", "to", "for", "with", "a", "an"],
+  "riskRuleIds": ["reject-operator-technician", "reject-business-other", "reject-environment-field"],
+  "riskPredicateIds": ["protected-title"],
+  "weights": {
+    "novel-pattern": 2,
+    "new-reject": 1,
+    "under-reviewed-rule": 3,
+    "prior-keep-rule": 3,
+    "prior-keep-pattern": 4,
+    "novel-combination": 2,
+    "risk-family": 3,
+    "fail-open": 4
+  }
+}

@@ -6,7 +6,7 @@ const root = path.resolve(__dirname, "..");
 const read = (...parts) => fs.readFileSync(path.join(root, ...parts), "utf8");
 const source = read("LlmHoldoutEvaluation.cs");
 const hardware = read("LlmHardwareBenchmark.cs");
-const program = read("Program.cs");
+const program = read("research", "qwen", "Program.cs");
 const app = read("wwwroot", "app.js");
 const adapter = read("classifier-service", "classifier_service.py");
 
@@ -45,3 +45,16 @@ assert.doesNotMatch(program, /MapPost\("\/api\/jobs\/deep-analysis/,
 console.log("Prediction-blinded LLM holdout architecture tests: PASS");
 
 assert.doesNotMatch(app, /renderLlmEvaluationCard|Run LLM Holdout Evaluation/);
+
+const repo = root;
+const benchmarkDockerfile=read("Dockerfile.hardware-benchmark");
+const benchmarkCompose=read("research","qwen","compose.yaml");
+assert.match(benchmarkDockerfile,/Jsm.Qwen.Research.csproj/);
+assert.match(benchmarkDockerfile,/rm -f[\s\S]*?LegacyJobConceptRules\.json[\s\S]*?RegexValidationCorpus\.json/);
+assert.doesNotMatch(benchmarkCompose,/ports:|network_mode:\s*host|mailpit|jsm-lab\/data/);
+assert.match(benchmarkCompose,/internal:\s*true/);
+const deepAnalysisDockerfile = fs.readFileSync(path.join(repo, "classifier-service", "Dockerfile"), "utf8");
+assert.match(deepAnalysisDockerfile, /FROM python:3\.12\.12-alpine3\.23@sha256:[a-f0-9]{64}/,
+  "Deep-analysis base must remain pinned to an immutable digest.");
+assert.match(deepAnalysisDockerfile, /apk add --no-cache --upgrade[\s\S]*?libuuid=2\.41\.6-r1(?:\s|$)/,
+  "Python's inherited libuuid runtime dependency must receive the pinned Alpine security fix.");

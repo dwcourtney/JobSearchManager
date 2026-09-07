@@ -478,7 +478,6 @@ runtime.elements = {
 };
 runtime.elements.jobFitDetailContent.replaceChildren = function () { this.children = []; };
 runtime.document.querySelector = element;
-runtime.CheapTriage = { renderDetail() {} };
 runtime.resetCopyFeedback = () => {};
 runtime.formatJobFitImpact = String;
 runtime.appendJobFitCalculationRow = () => {};

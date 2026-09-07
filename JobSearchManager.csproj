@@ -20,8 +20,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Update="CheapTriage/**/*.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="CheapTriage/**/*.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Update="CredentialCatalog.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Update="CompanyCatalog.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Update="JobConceptCatalog.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
@@ -32,9 +30,19 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="JobSearchManager.Tests" />
+    <InternalsVisibleTo Include="Jsm.CheapTriage.Research" />
+    <InternalsVisibleTo Include="Jsm.CheapTriage.Research.Tests" />
+    <InternalsVisibleTo Include="Jsm.Qwen.Research" />
+    <InternalsVisibleTo Include="Jsm.Qwen.Research.Tests" />
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="CheapRejectRules.cs;CheapTriageShadow.cs;CheapTriageHumanReview.cs;CheapTriageMaintenance.cs;CheapTriageMaintenanceDetector.cs;RuleMaintenance.cs;TriageEvaluation.cs;JobCatalog.CheapTriage.cs" />
+    <Content Remove="CheapTriage/**/*" />
+    <None Remove="CheapTriage/**/*" />
+    <Compile Remove="ClassifierClient.cs;LlmHoldoutEvaluation.cs;LlmHardwareBenchmark.cs;LlmTechnicalPreflight.cs;research/**/*.cs" />
+    <Content Remove="research/**/*;ollama-runtime/**/*;Dockerfile.hardware-benchmark" />
+    <None Remove="research/**/*;ollama-runtime/**/*;Dockerfile.hardware-benchmark" />
     <Compile Remove="Tests\**\*.cs" />
     <Compile Remove="classifier-service\**\*.cs" />
     <Content Remove="Tests\**\*" />

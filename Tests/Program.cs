@@ -283,9 +283,7 @@ if (args.Length >= 2 && args[0] == "--authorization-corpus")
 
 var tests = new (string Name, Func<Task> Run)[]
 {
-    ("Declarative cheap triage and maintenance prompts", CheapRejectRuleTests.Run),
-    ("Live non-gating Cheap Triage Shadow observations", CheapTriageShadowTests.Run),
-    ("Human review queue, durable revisions and provenance", HumanReviewTests.Run),
+    ("Retired triage is passive cache data only", TestRetiredTriageAsync),
     ("Local mode is the safe default", TestLocalDefaultAsync),
     ("Container mode uses filesystem persistence and isolated workspaces", TestContainerConfigurationAsync),
     ("Container workspaces are browser-isolated with non-secure LAN cookies", TestContainerWorkspaceMiddlewareAsync),
@@ -305,11 +303,9 @@ var tests = new (string Name, Func<Task> Run)[]
     ("List and detail presentations share immutable RegEx authority", TestRegexPresentationConsistencyAsync),
     ("Production holdout sampling is reproducible, blinded, and contamination-aware", TestHoldoutSamplingAsync),
     ("AI holdout freezes complete A/B references before RegEx scoring", TestAiHoldoutEvaluationAsync),
-    ("Cheap triage is conservative, explainable, deterministic, and model-free", TestCheapTriageAsync),
-    ("LLM holdout freezes all predictions before scoring and reuses them immutably", TestLlmHoldoutEvaluationAsync),
     ("Offline cache reconciliation repairs every stale RegEx record idempotently", TestRegexCacheReconciliationAsync),
-    ("Default RegEx remains local while LLM is isolated to explicit evaluation", TestLlmClassifierContractAsync),
-    ("Semantic taxonomy and prompt identity are versioned", TestLlmFixtureMetricsAsync),
+    ("Default RegEx has no model client dependency", TestDeterministicClassifierContractAsync),
+    ("Semantic taxonomy identity is versioned", TestSemanticTaxonomyAsync),
     ("First-admin bootstrap is hashed, expiring, single-use, and durable", TestAdminBootstrapLifecycleAsync),
     ("Concurrent first-admin claims grant exactly one account", TestAdminBootstrapConcurrencyAsync),
     ("Admin bootstrap requires an explicit server-side path", TestAdminBootstrapConfigurationAsync),
@@ -847,44 +843,43 @@ static async Task TestAdminAuthorizationAsync()
         "The Admin policy rejected an authenticated account with the server-side role.");
 }
 
-static async Task TestLlmClassifierContractAsync()
+static async Task TestDeterministicClassifierContractAsync()
 {
+    var assembly = typeof(SemanticClassificationService).Assembly;
+    foreach (var type in new[] { "ClassifierClient", "QwenDeepAnalysisContract", "LlmHoldoutEvaluationService", "LlmHardwareBenchmarkRunner", "LlmTechnicalPreflightService" })
+        Assert(assembly.GetType("JobSearchManager." + type) is null,
+            "Research model execution must not be compiled into the normal application: " + type);
+    var historical = CachedJob("leidos", "historical", "/historical", "<p>Build APIs.</p>") with
+    {
+        QwenDeepAnalysis = new("posting", "qwen", "historical", "digest", 1, "taxonomy", "prompt", "hash", "fingerprint", DateTimeOffset.UtcNow,
+            Array.Empty<SemanticConceptPrediction>(), "historical analysis", new(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)),
+        DeepAnalysisRequest = new(LlmDeepAnalysisStatuses.Completed)
+    };
+    var restored = JsonSerializer.Deserialize<JobRecord>(JsonSerializer.Serialize(historical))!;
+    Assert(restored.QwenDeepAnalysis?.Inference?.PromptTokenCount == 3 &&
+           restored.QwenDeepAnalysis.Analysis == "historical analysis" &&
+           restored.DeepAnalysisRequest?.Status == LlmDeepAnalysisStatuses.Completed,
+        "Historical persisted Qwen/request fields must survive a cache round trip.");
     var catalog = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
-    var requests = 0;
-    var client = new ClassifierClient(new HttpClient(new StubHttpMessageHandler(request => {
-        Interlocked.Increment(ref requests);
-        Assert(request.RequestUri?.AbsolutePath == "/deep-analyze",
-            "Opt-in LLM request used the wrong isolated endpoint.");
-        Assert(request.Content?.Headers.ContentLength is > 0 &&
-               request.Headers.TransferEncodingChunked is not true,
-            "Semantic request was not bounded and length-delimited.");
-        var posted = JsonSerializer.Deserialize<ClassifierRequest>(
-            request.Content!.ReadAsStringAsync().GetAwaiter().GetResult(),
-            ClassifierClient.JsonOptions)!;
-        return QwenPayload(catalog, posted.JobId, posted.Title, posted.Description);
-    })) { BaseAddress = new Uri("http://deep-analysis:8081/") }, catalog,
-        NullLogger<ClassifierClient>.Instance);
     var testDirectory = Path.Combine(Path.GetTempPath(), "jsm-regex-service-" + Guid.NewGuid().ToString("N"));
     Directory.CreateDirectory(testDirectory);
     var store = new SqliteSemanticRuleStore(Path.Combine(testDirectory, "rules.db"), catalog);
     store.Initialize(RepositoryAsset("LegacyJobConceptRules.json"));
     var regex = new RegexSemanticClassifier(store, catalog);
     await regex.InitializeAsync();
-    var service = new SemanticClassificationService(client, catalog, regex);
+    var service = new SemanticClassificationService(catalog, regex);
     var job = CachedJob("leidos", "fixture", "/fixture", "<p>Build APIs.</p>") with
     {
         Title = "Backend Engineer"
     };
     var result = await service.ClassifyAsync(job);
     var duplicate = await service.ClassifyAsync(job with { RequisitionId = "duplicate" });
-    var deepAnalysis = await service.DeepAnalyzeAsync(job);
     var classified = job with
     {
         SemanticClassification = result.Classification,
         SemanticClassificationStatus = SemanticClassificationStates.Complete
     };
-    Assert(result.Available && duplicate.Available && requests == 1 &&
-           deepAnalysis is { Predictions.Count: 85 } &&
+    Assert(result.Available && duplicate.Available &&
            result.Classification is { Predictions.Count: 85 } &&
            service.IsCurrent(classified) &&
            !service.IsCurrent(classified with { DescriptionHtml = "<p>Build different APIs.</p>" }),
@@ -1148,186 +1143,47 @@ static async Task TestAiHoldoutEvaluationAsync()
     }
 }
 
-static Task TestCheapTriageAsync()
+static async Task TestRetiredTriageAsync()
 {
-    var software = CheapTriageClassifier.Classify("Senior Software Engineer",
-        "Build C# .NET APIs and Azure deployment automation for aircraft systems.");
-    Assert(software.SendToJobFit && software.TechnicalEvidence.Any(item =>
-            item.Bucket == "Software / application development"),
-        "A clearly relevant software role did not survive with explainable evidence.");
-
-    var utility = CheapTriageClassifier.Classify("Substation Technician",
-        "Inspect high-voltage equipment and maintain utility substations in the field.");
-    Assert(!utility.SendToJobFit && utility.RejectedAtStage == "stage-1" &&
-           utility.RejectionReason == "Physical electrical utility field role",
-        "A clear physical utility role was not rejected with the registered reason.");
-
-    var ambiguous = CheapTriageClassifier.Classify("Senior Engineer",
-        "Work with cross-functional teams on complex customer problems.");
-    Assert(ambiguous.SendToJobFit && ambiguous.RejectionReason is null,
-        "An ambiguous posting was rejected instead of conservatively retained.");
-
-    var technicalField = CheapTriageClassifier.Classify("Field Service Technician",
-        "Automate Linux systems with Python, Kubernetes, and CI/CD pipelines.");
-    Assert(technicalField.SendToJobFit,
-        "Technical evidence did not protect an otherwise physical-sounding title.");
-
-    var first = CheapTriageClassifier.Classify("Network Engineer",
-        "Configure Cisco routing, switching, firewalls, DNS, and TCP/IP.");
-    var second = CheapTriageClassifier.Classify("Network Engineer",
-        "Configure Cisco routing, switching, firewalls, DNS, and TCP/IP.");
-    Assert(first.SendToJobFit == second.SendToJobFit &&
-           first.RejectionReason == second.RejectionReason &&
-           first.TechnicalEvidence.Select(item => item.Bucket).SequenceEqual(
-               second.TechnicalEvidence.Select(item => item.Bucket)) &&
-           CheapTriageClassifier.CandidateFingerprint.Length == 64,
-        "Triage decisions or candidate identity were not deterministic.");
-    return Task.CompletedTask;
-}
-
-static async Task TestLlmHoldoutEvaluationAsync()
-{
-    var directory = Path.Combine(Path.GetTempPath(), "jsm-llm-holdout-" + Guid.NewGuid().ToString("N"));
-    var evaluationDirectory = Path.Combine(directory, "evaluation");
-    Directory.CreateDirectory(evaluationDirectory);
+    var assembly = typeof(JobCatalog).Assembly;
+    foreach (var name in new[] { "CheapTriageShadow", "CheapRejectRules", "CheapTriageHumanReview", "CheapTriageMaintenance", "CheapTriageMaintenanceDetector", "RuleMaintenance", "TriageEvaluationService", "CheapTriageClassifier" })
+        Assert(assembly.GetType("JobSearchManager." + name) is null, "Retired runtime type is still compiled: " + name);
+    Assert(typeof(JobCatalog).GetMethods(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic)
+        .All(method => !method.Name.Contains("CheapTriage", StringComparison.Ordinal)), "Catalog still schedules or exposes triage work.");
+    var directory = TestDirectory("retired-triage");
     try
     {
-        static string Hash(string value) => Convert.ToHexString(
-            System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(value)))
-            .ToLowerInvariant();
-        var catalog = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
-        var samplingRunId = "holdout-test-llm-200";
-        var examples = Enumerable.Range(0, 200).Select(index =>
+        var handler = CreateWorkdayHandler(() => 1);
+        var client = CreateSourceClient(new HttpClient(handler));
+        var (company, query) = WorkdaySource();
+        var hydrated = await client.FetchAllJobsAsync(company, query);
+        var observation = new CheapTriageObservation(1, DateTimeOffset.Parse("2026-09-01T00:00:00Z"), true,
+            new("1.0.1", "old-rules", "old-posting", "REJECT", "historic", "Retained evidence", ["old-rule"], [new("predicate", "body", "evidence")], [], false));
+        var job = hydrated.Jobs.Single() with { CheapTriage = observation };
+        var json = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        var expected = JsonSerializer.Serialize(observation, json);
+        var (catalog, store, state) = await CreateTestCatalogAsync(directory, handler, [job], query);
+        var reads = handler.DetailRequests + handler.ListingRequests;
+        store.Diagnostics.Reset();
+        for (var i = 0; i < 3; i++)
         {
-            var id = $"llm-{index:D3}";
-            var title = $"Fixture role {index:D3}";
-            var description = $"<p>Fixture posting {index:D3} with assigned responsibilities.</p>";
-            return new EvaluationExample(id, EvaluationDatasetRoles.ProductionHoldout,
-                samplingRunId, null, "unresolved", "unlabeled", false, false, null, null,
-                Hash($"{title}\n{description}"), "fixture", id, title, description,
-                $"https://example.test/{id}", null, true);
-        }).ToArray();
-        var sampleFingerprint = Hash(string.Join("\n", examples.Select(item =>
-            $"{item.EvaluationExampleId}|{item.PostingContentHash}")));
-        var holdout = new HoldoutSampleDocument(1, EvaluationDatasetRoles.ProductionHoldout,
-            "frozen-unlabeled", samplingRunId, DateTimeOffset.UtcNow,
-            new HoldoutSamplingPlan(1, "Deterministic LLM test population.", null, null, null,
-                "active-and-inactive", 200, "simple-random", 20260902),
-            Hash("plan"), Hash("population"), 200, sampleFingerprint,
-            "Label independently without detector output.", examples);
-        await ProductionHoldoutSampler.WriteAtomicallyAsync(holdout,
-            Path.Combine(evaluationDirectory, "holdout.json"));
-
-        var completed = new DateTimeOffset(2026, 9, 2, 12, 0, 0, TimeSpan.Zero);
-        var reviewerA = new AiReviewerIdentity("Labeler A", "Codex", "isolated",
-            "a-v1", Hash("a"), completed);
-        var reviewerB = new AiReviewerIdentity("Labeler B", "Codex", "isolated",
-            "b-v1", Hash("b"), completed);
-        var adjudicator = new AiReviewerIdentity("Adjudicator", "Codex", "isolated",
-            "c-v1", Hash("c"), completed);
-        var decisions = examples.SelectMany(example => catalog.Concepts.Select(concept =>
-            new AiReferenceDecision(example.EvaluationExampleId, example.PostingContentHash,
-                concept.Id, AiReferenceJudgments.Absent, AiReferenceJudgments.Absent, true,
-                null, AiReferenceJudgments.Absent,
-                "prediction-blinded-codex-a-b-agreement", false, false))).ToArray();
-        var references = new AiReferenceDataset(1, samplingRunId + "-ai-reference-v1",
-            EvaluationDatasetRoles.ProductionHoldout, "AI-ADJUDICATED PRODUCTION HOLDOUT",
-            "frozen-ai-adjudicated-reference-labels", completed, sampleFingerprint,
-            samplingRunId, 20260902, 200, 85, 17_000, catalog.Fingerprint, catalog.Version,
-            reviewerA, reviewerB, adjudicator, 17_000, 0, 0, 0,
-            AiHoldoutEvaluationService.ExactDisclaimer, decisions);
-        references = references with
-        {
-            ReferenceDatasetFingerprint =
-                AiHoldoutEvaluationService.CalculateReferenceFingerprint(references)
-        };
-        await File.WriteAllTextAsync(Path.Combine(evaluationDirectory, "ai-reference-labels-v1.json"),
-            JsonSerializer.Serialize(references, new JsonSerializerOptions(JsonSerializerDefaults.Web)
-            { WriteIndented = true }));
-
-        using var store = new SqliteSemanticRuleStore(Path.Combine(directory, "regex-rules.db"), catalog);
-        store.Initialize(RepositoryAsset("LegacyJobConceptRules.json"));
-        var noPredictions = examples.ToDictionary(item => item.EvaluationExampleId,
-            _ => (IReadOnlySet<string>)new HashSet<string>(StringComparer.Ordinal), StringComparer.Ordinal);
-        var baselineMetrics = HoldoutMetricCalculator.Calculate(catalog, references, noPredictions);
-        var agreement = new AiLabelingAgreement(17_000, 17_000, 0, 0, 0, 0,
-            baselineMetrics.Concepts, []);
-        var baseline = new AiHoldoutEvaluationReport("regex-baseline", completed,
-            references.DatasetId, EvaluationDatasetRoles.ProductionHoldout,
-            references.DatasetDisplayName, "fixture", sampleFingerprint,
-            references.ReferenceDatasetFingerprint, "fixture-rules", catalog.Fingerprint,
-            catalog.Version, "fixture-config", samplingRunId, "simple-random", 20260902,
-            200, "AI-adjudicated reference labels; not human ground truth",
-            AiHoldoutEvaluationService.ExactDisclaimer, reviewerA, reviewerB, adjudicator,
-            agreement, 200, 17_000, 17_000, 0, 0, 17_000, 0, 1,
-            baselineMetrics.Macro, baselineMetrics.Micro, baselineMetrics.Concepts,
-            "one point", "scored", null);
-        var requests = 0;
-        var injectTechnicalFailure = true;
-        async Task<QwenDeepAnalysis?> Predict(ClassifierRequest request, CancellationToken token)
-        {
-            await Task.Yield();
-            token.ThrowIfCancellationRequested();
-            var requestNumber = Interlocked.Increment(ref requests);
-            if (requestNumber == 4 && injectTechnicalFailure)
-            {
-                injectTechnicalFailure = false;
-                return null;
-            }
-            var contentHash = SemanticRulesetFingerprint.PostingContentHash(
-                request.Title, request.Description);
-            return new QwenDeepAnalysis(contentHash, QwenDeepAnalysisContract.ModelId,
-                QwenDeepAnalysisContract.ModelTag, QwenDeepAnalysisContract.ModelDigest,
-                catalog.Version, catalog.Fingerprint, QwenDeepAnalysisContract.PromptVersion,
-                QwenDeepAnalysisContract.PromptHash,
-                QwenDeepAnalysisContract.ClassificationFingerprint(contentHash, catalog),
-                completed, catalog.Concepts.Select(item =>
-                    new SemanticConceptPrediction(item.Id, false)).ToArray(), "fixture",
-                new QwenInferenceMetrics(2_000_000, 0, 100, 1_000_000, 20, 1_000_000,
-                    20, 2_500_000_000, 2_400_000_000, 50_000_000));
+            Assert((await catalog.GetListSnapshotAsync()).Jobs.Single().StableId == job.StableId, "Legacy observation changed visibility.");
+            var detail = await catalog.GetJobDetailAsync(job.StableId);
+            Assert(detail?.DescriptionHtml == job.DescriptionHtml, "Legacy observation changed cached detail.");
+            Assert(JobPresentation.AuthoritativeRegexDetail(detail!).CheapTriage is null, "Legacy triage leaked into normal detail.");
         }
-        var service = new LlmHoldoutEvaluationService(evaluationDirectory, Predict, store,
-            catalog, () => baseline);
-        await AssertThrowsAsync<InvalidDataException>(() => service.RunAsync());
-        var checkpoint = JsonSerializer.Deserialize<IReadOnlyList<LlmHoldoutPredictionItem>>(
-            await File.ReadAllBytesAsync(Path.Combine(evaluationDirectory,
-                "llm-predictions-progress-v2.json")),
-            new JsonSerializerOptions(JsonSerializerDefaults.Web));
-        Assert(checkpoint?.Count == 3 &&
-               service.GetStatus().State == LlmHoldoutEvaluationStates.Failed,
-            "A technical evaluator failure did not preserve the validated checkpoint and durable failed state.");
-        service = new LlmHoldoutEvaluationService(evaluationDirectory, Predict, store,
-            catalog, () => baseline);
-        var first = await service.RunAsync();
-        var frozenPath = Path.Combine(evaluationDirectory, "llm-predictions-v2.json");
-        var frozenBefore = await File.ReadAllBytesAsync(frozenPath);
-        var second = await service.RunAsync();
-        var frozenAfter = await File.ReadAllBytesAsync(frozenPath);
-        var preflight = await LlmTechnicalPreflight.RunAsync(evaluationDirectory,
-            Predict, catalog);
-        await using var connection = new Microsoft.Data.Sqlite.SqliteConnection(
-            $"Data Source={store.DatabasePath}");
-        await connection.OpenAsync();
-        await using var command = connection.CreateCommand();
-        command.CommandText = "SELECT COUNT(*) FROM LlmEvaluationRunDetails;";
-        var ledgerCount = Convert.ToInt32(await command.ExecuteScalarAsync());
-        Assert(requests == 203 && frozenBefore.SequenceEqual(frozenAfter) &&
-               first.PredictionFingerprint == second.PredictionFingerprint &&
-               first.EligibleConceptDecisions == 17_000 && first.PostingCount == 200 &&
-               first.LlmMacro == first.RegexMacro && first.LlmMicro == first.RegexMicro &&
-               first.Runtime.ApproximateInferenceCount == 200 && ledgerCount == 2 &&
-               preflight.Status == "passed" && preflight.CompleteStructuredOutput &&
-               preflight.StablePredictions && preflight.BoundedOutput &&
-               preflight.CheckpointRoundTrip && preflight.OutputTokenCounts.Count == 2 &&
-               preflight.SemanticDisagreementCount == 0 &&
-               service.GetStatus().State == LlmHoldoutEvaluationStates.Complete,
-            "The LLM holdout did not freeze exactly one prediction set before common scoring and ledger persistence.");
+        Assert(store.Diagnostics.Snapshot().Writes == 0 && handler.DetailRequests + handler.ListingRequests == reads,
+            "Reading legacy cache caused Shadow writes or provider traffic.");
+        await catalog.RefreshAsync();
+        var cache = await state.LoadJobsCacheAsync(query);
+        Assert(JsonSerializer.Serialize(cache!.Jobs.Single().CheapTriage, json) == expected,
+            "Ordinary refresh changed or lost a legacy observation needed for rollback.");
+        Assert(cache.Jobs.Single().DescriptionHtml.Length > 0 && cache.Jobs.Single().StableId == job.StableId,
+            "Ordinary cache write lost essential non-triage posting data.");
+        Assert(!Directory.GetFiles(directory, "*", SearchOption.AllDirectories).Any(path => path.Contains("cheap-triage", StringComparison.OrdinalIgnoreCase)),
+            "Normal cache operations created triage persistence.");
     }
-    finally
-    {
-        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
-        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
-    }
+    finally { if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true); }
 }
 
 static async Task TestRegexCacheReconciliationAsync()
@@ -1374,36 +1230,16 @@ static async Task TestRegexCacheReconciliationAsync()
     }
 }
 
-static Task TestLlmFixtureMetricsAsync()
+static Task TestSemanticTaxonomyAsync()
 {
     var catalog = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
     Assert(catalog.Concepts.Count == 85 &&
            catalog.Concepts.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count() == 85 &&
            catalog.Concepts.All(item => !string.IsNullOrWhiteSpace(item.Definition)),
         "The canonical semantic taxonomy did not preserve 85 unique, defined concepts.");
-    Assert(catalog.Fingerprint == "514ed1c8c644d1eec426b5fdcf4d5a2c447aa61ce5572ae70b2d03fc3815a049" &&
-           QwenDeepAnalysisContract.PromptVersion == "job-fit-85-compact-json-v2" &&
-           QwenDeepAnalysisContract.OutputContractVersion == "compact-85-boolean-map-v2",
-        "The canonical taxonomy or opt-in LLM prompt identity changed without an explicit version update.");
+    Assert(catalog.Fingerprint == "514ed1c8c644d1eec426b5fdcf4d5a2c447aa61ce5572ae70b2d03fc3815a049",
+        "The canonical taxonomy identity changed without an explicit version update.");
     return Task.CompletedTask;
-}
-
-static string QwenPayload(
-    JobConceptCatalog catalog, string jobId, string title, string description)
-{
-    var contentHash = SemanticRulesetFingerprint.PostingContentHash(title, description);
-    return JsonSerializer.Serialize(new QwenDeepAnalysisResponse(
-        true, jobId, title, contentHash, QwenDeepAnalysisContract.ModelId,
-        QwenDeepAnalysisContract.ModelTag, QwenDeepAnalysisContract.ModelDigest,
-        catalog.Version, catalog.Fingerprint, QwenDeepAnalysisContract.PromptVersion,
-        QwenDeepAnalysisContract.PromptHash, QwenDeepAnalysisContract.OutputContractVersion,
-        QwenDeepAnalysisContract.OutputSchemaHash,
-        QwenDeepAnalysisContract.ClassificationFingerprint(contentHash, catalog),
-        new DateTimeOffset(2026, 9, 1, 12, 0, 0, TimeSpan.Zero),
-        catalog.Concepts.Select(item => new SemanticConceptPrediction(item.Id, true)).ToArray(),
-        "Opt-in analysis.", new QwenInferenceMetrics(1_000_000, 0, 100, 500_000,
-            20, 500_000, 40, 2_500_000_000, 2_400_000_000, 50_000_000)),
-        ClassifierClient.JsonOptions);
 }
 
 static async Task TestAdminBootstrapLifecycleAsync()
@@ -2006,9 +1842,7 @@ static async Task TestListAnalysisAsync()
         rules.Initialize(RepositoryAsset("LegacyJobConceptRules.json"));
         var regex = new RegexSemanticClassifier(rules, concepts);
         await regex.InitializeAsync();
-        var classifierClient = new ClassifierClient(new HttpClient(new ThrowingHttpMessageHandler()),
-            concepts, NullLogger<ClassifierClient>.Instance);
-        var semantic = new SemanticClassificationService(classifierClient, concepts, regex);
+        var semantic = new SemanticClassificationService(concepts, regex);
         var (catalog, _, state) = await CreateTestCatalogAsync(directory, handler, [pending, missing], query,
             semanticClassification: semantic);
         var client = CreateSourceClient(new HttpClient(handler));

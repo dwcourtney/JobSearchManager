@@ -42,6 +42,12 @@ public sealed class CheapTriageHumanReview
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
     private readonly string categoryName = "Technology";
     private readonly HumanReviewQueue queue;
+    private readonly object queueGate = new();
+    private readonly string originalQueuePath;
+    private readonly string databaseFile;
+    private string? queueDirectory;
+    private CheapTriageHumanReview? active;
+    internal string? ActiveQueueDirectory => queueDirectory;
     private readonly HashSet<string> ids;
     private readonly string connectionString;
     public string QueueFingerprint { get; }
@@ -51,11 +57,13 @@ public sealed class CheapTriageHumanReview
             configuration["HumanReview:DatabasePath"] ?? (hosting.IsContainer ? "/app/data/cheap-triage-human-review.db" :
                 Path.Combine(environment.ContentRootPath, "data", "cheap-triage-human-review.db")))
     {
+        queueDirectory = configuration["HumanReview:QueueDirectory"] ?? Path.Combine(Path.GetDirectoryName(Path.GetFullPath(databaseFile))!, "cheap-triage-review-queues");
         categoryName = configuration["HumanReview:CategoryName"]?.Trim() is { Length: > 0 } name ? name : "Technology";
     }
 
-    internal CheapTriageHumanReview(string queuePath, string databasePath)
+    internal CheapTriageHumanReview(string queuePath, string databasePath, string? dynamicQueueDirectory = null)
     {
+        originalQueuePath = queuePath; databaseFile = databasePath; queueDirectory = dynamicQueueDirectory;
         var bytes = File.ReadAllBytes(queuePath);
         QueueFingerprint = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
         queue = JsonSerializer.Deserialize<HumanReviewQueue>(bytes, Json) ?? throw new InvalidDataException("Missing review queue.");
@@ -65,7 +73,7 @@ public sealed class CheapTriageHumanReview
         foreach (var item in queue.Cases)
         {
             var id = item.GetProperty("stableJobId").GetString();
-            if (string.IsNullOrWhiteSpace(id) || !ids.Add(id) || item.GetProperty("currentDecision").GetString() != "REJECT")
+            if (string.IsNullOrWhiteSpace(id) || !ids.Add(id) || item.GetProperty("currentDecision").GetString() is not ("REJECT" or "UNDETERMINED"))
                 throw new InvalidDataException("Invalid or duplicate review job.");
         }
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(databasePath))!);
@@ -84,9 +92,56 @@ public sealed class CheapTriageHumanReview
         command.ExecuteNonQuery();
     }
 
+    // Queue publication is atomic. Existing queue bytes and review revisions are never rewritten.
+    private void RefreshActive()
+    {
+        if (queueDirectory is null || !File.Exists(Path.Combine(queueDirectory, "active.json"))) return;
+        var hash = JsonSerializer.Deserialize<string>(File.ReadAllBytes(Path.Combine(queueDirectory, "active.json")), Json)!;
+        if (hash is not { Length: 64 } || !hash.All(Uri.IsHexDigit)) throw new InvalidDataException("Invalid active queue identity.");
+        if (active?.QueueFingerprint == hash) return;
+        var next = new CheapTriageHumanReview(Path.Combine(queueDirectory, hash + ".json"), databaseFile);
+        if (next.QueueFingerprint != hash) throw new InvalidDataException("Active queue hash mismatch.");
+        active = next;
+    }
+    public HumanReviewReport Read()
+    {
+        lock (queueGate) { RefreshActive(); return (active?.ReadCurrent() ?? ReadCurrent()) with { CategoryName = categoryName }; }
+    }
+    public void Save(HumanReviewSave request, string reviewer)
+    {
+        lock (queueGate) { RefreshActive(); if (active is null) SaveCurrent(request, reviewer); else active.SaveCurrent(request, reviewer); }
+    }
+    internal HumanReviewReport[] History()
+    {
+        lock (queueGate)
+        {
+            var reports = new List<HumanReviewReport> { ReadCurrent() };
+            if (queueDirectory is not null && Directory.Exists(queueDirectory))
+                foreach (var path in Directory.EnumerateFiles(queueDirectory, "*.json").Where(p => Path.GetFileNameWithoutExtension(p).Length == 64).Order(StringComparer.Ordinal))
+                    reports.Add(new CheapTriageHumanReview(path, databaseFile).ReadCurrent());
+            return reports.ToArray();
+        }
+    }
+    internal string Publish(HumanReviewQueue next, Func<HumanReviewReport, bool> stillEligible)
+    {
+        lock (queueGate)
+        {
+            RefreshActive();
+            if (queueDirectory is null || !stillEligible(active?.ReadCurrent() ?? ReadCurrent())) throw new InvalidOperationException("Maintenance cycle changed during detection.");
+            var bytes = JsonSerializer.SerializeToUtf8Bytes(next, Json); var hash = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
+            Directory.CreateDirectory(queueDirectory); var path = Path.Combine(queueDirectory, hash + ".json");
+            CheapTriageMaintenanceDetector.WriteImmutable(path, bytes);
+            var temporary = Path.Combine(queueDirectory, Guid.NewGuid().ToString("N") + ".tmp");
+            try { File.WriteAllBytes(temporary, JsonSerializer.SerializeToUtf8Bytes(hash, Json));
+                File.Move(temporary, Path.Combine(queueDirectory, "active.json"), true); }
+            finally { if(File.Exists(temporary))File.Delete(temporary); }
+            RefreshActive(); return hash;
+        }
+    }
+
     private SqliteConnection Open() { var c = new SqliteConnection(connectionString); c.Open(); return c; }
 
-    public HumanReviewReport Read()
+    private HumanReviewReport ReadCurrent()
     {
         using var connection = Open();
         using var command = connection.CreateCommand();
@@ -103,7 +158,7 @@ public sealed class CheapTriageHumanReview
             latest.Count, ids.Count - latest.Count, counts, latest.Count == ids.Count) { CategoryName = categoryName };
     }
 
-    public void Save(HumanReviewSave request, string reviewer)
+    private void SaveCurrent(HumanReviewSave request, string reviewer)
     {
         if (request.QueueFingerprint != QueueFingerprint) throw new InvalidOperationException("Queue changed. Reload before reviewing.");
         if (!ids.Contains(request.StableJobId ?? "")) throw new ArgumentException("Unknown review job.");

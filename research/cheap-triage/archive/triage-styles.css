@@ -1,0 +1,81 @@
+.rule-maintenance-dialog { width: min(900px, 90vw); max-height: 85vh; overflow: auto; padding: 24px; border-radius: 12px; }
+.rule-maintenance-dialog textarea { display: block; width: 100%; box-sizing: border-box; margin: 16px 0; }
+.rule-maintenance-dialog button { margin-right: 12px; }
+.rule-maintenance-dialog::backdrop { background: var(--color-confirmation-backdrop); }
+
+.human-review-controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.human-review-controls [aria-pressed="true"] { box-shadow: 0 0 0 var(--focus-ring-width) var(--color-text-primary); font-weight: var(--font-weight-bold); }
+
+.settings-section .human-review-question { font-size: var(--font-size-page-heading); color: var(--color-text-heading); text-transform: none; letter-spacing: normal; }
+.human-review-decisions button { font-size: var(--font-size-detail-heading); padding: .65rem 1.25rem; }
+.human-review-case { display: grid; gap: .85rem; min-width: 0; margin: 1rem 0; }
+.human-review-case > * { margin: 0; min-width: 0; }
+.human-review-case blockquote { padding-inline-start: 1rem; border-inline-start: var(--border-width-default) solid var(--color-border); }
+.human-review-help { color: var(--color-text-secondary); font-size: var(--font-size-small); }
+.human-review-help p { margin: .4rem 0 0; }
+.human-review-legend { display: flex; flex-wrap: wrap; gap: .35rem 1rem; margin: 0; }
+.human-review-legend > div { display: flex; flex-wrap: wrap; gap: .3rem; }
+.human-review-legend dt { font-weight: var(--font-weight-semibold); }
+.human-review-legend dd { margin: 0; }
+.human-review-case > label { display: grid; gap: .4rem; }
+.human-review-controls > button { max-width: 100%; white-space: normal; }
+.human-review-audit { display: grid; gap: 1rem; min-width: 0; padding-top: .85rem; border-top: var(--border-width-default) solid var(--color-border); }
+.human-review-audit > a { justify-self: start; max-width: 100%; overflow-wrap: anywhere; }
+.human-review-audit details { min-width: 0; overflow-wrap: anywhere; }
+.human-review-audit pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.human-review-complete { padding: 1rem; background: var(--color-surface-secondary); overflow-wrap: anywhere; }
+.triage-workflow { display: grid; gap: 1rem; padding: 1rem; min-width: 0; overflow-wrap: anywhere; }
+.triage-workflow > * { margin: 0; min-width: 0; }
+.triage-workflow > button { justify-self: start; max-width: 100%; white-space: normal; }
+.triage-workflow label { display: grid; gap: .5rem; }
+.triage-workflow pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.triage-workflow-steps { display: flex; flex-wrap: wrap; gap: .75rem; list-style: none; padding: 0; }
+.triage-workflow-steps li { padding: .5rem; border: var(--border-width-default) solid var(--color-border); border-radius: var(--radius-control); }
+.triage-workflow-steps [data-state="current"] { font-weight: var(--font-weight-bold); box-shadow: 0 0 0 var(--focus-ring-width) var(--color-text-primary); }
+.triage-workflow-steps [data-state="upcoming"] { color: var(--color-text-secondary); }
+
+
+/* Cheap Triage desktop workflow: shared Admin surfaces, controls and theme tokens. */
+#admin-view > .settings-surface, #admin-view > .settings-header { width: min(100%, 94rem); }
+#admin-cheap-triage-panel { min-width: 0; }
+.triage-workflow { gap: .85rem; padding: 1.1rem; }
+.settings-section .triage-workflow-title { font-size: var(--font-size-page-heading); color: var(--color-text-heading); }
+.triage-workflow-steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .65rem; }
+.triage-workflow-steps li { display: grid; gap: .2rem; padding: .65rem .8rem; font-size: var(--font-size-small); }
+.triage-workflow-steps li span { color: var(--color-text-secondary); font-size: var(--font-size-caption); text-transform: capitalize; }
+.triage-workflow-steps [data-state="complete"] { background: var(--color-surface-secondary); }
+.triage-current-action { padding: 1rem; background: var(--color-surface-secondary); display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; }
+.triage-current-action > h4 { flex-basis: 100%; font-size: var(--font-size-description-h2); }
+.triage-workflow-status { padding: .8rem 1rem; background: var(--color-surface-secondary); color: var(--color-text-secondary); line-height: var(--line-height-note); }
+.triage-workflow-status:empty { display: none; }
+.triage-current-action > p { flex-basis: 100%; margin: 0; line-height: var(--line-height-note); }
+.triage-current-action > button { margin: 0; }
+.triage-summary-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .65rem; }
+.triage-summary-grid > div { min-width: 0; padding: .7rem .8rem; background: var(--color-surface-secondary); border: var(--border-width-default) solid var(--color-border); border-radius: var(--radius-control); }
+.triage-summary-grid dt { color: var(--color-text-secondary); font-size: var(--font-size-caption); }
+.triage-summary-grid dd { margin: .3rem 0 0; font-size: var(--font-size-small); font-weight: var(--font-weight-semibold); color: var(--color-text-heading); font-variant-numeric: tabular-nums; }
+.triage-completed-review { display: flex; align-items: center; flex-wrap: wrap; gap: .65rem; border-top: var(--border-width-default) solid var(--color-border); padding-top: .8rem; }
+.triage-completed-review p { margin: 0; margin-inline-end: auto; color: var(--color-text-secondary); }
+.triage-workflow details > summary { cursor: pointer; padding-block: .35rem; font-weight: var(--font-weight-semibold); }
+.triage-workflow details > summary:focus-visible, .triage-table-scroll:focus-visible { outline: var(--focus-ring-width) solid var(--color-focus-ring); outline-offset: 2px; }
+.triage-workflow details p { font-size: var(--font-size-small); }
+.triage-table-scroll { max-width: 100%; min-width: 0; overflow-x: auto; }
+.triage-workflow .admin-compact-table { display: table; font-size: var(--font-size-small); }
+.triage-workflow .admin-compact-table th, .triage-workflow .admin-compact-table td { padding: .6rem .7rem; }
+.triage-workflow .admin-compact-table td { overflow-wrap: anywhere; }
+.triage-changes-table { min-width: 42rem; table-layout: fixed; }
+.triage-changes-table th:nth-child(2), .triage-changes-table th:nth-child(6) { width: 25%; }
+.triage-candidate-review, .triage-review-panel { display: grid; gap: .85rem; min-width: 0; padding: 1rem; }
+.triage-candidate-review > *, .triage-review-panel > * { min-width: 0; margin: 0; }
+.triage-candidate-review > button { justify-self: start; }
+@media (max-width: 1100px) {
+  .triage-summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
+  .triage-workflow-steps, .triage-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .triage-workflow { padding: .8rem; }
+  .triage-current-action > button, .triage-completed-review > button { max-width: 100%; white-space: normal; }
+}
+@media (max-width: 420px) {
+  .triage-summary-grid { grid-template-columns: minmax(0, 1fr); }
+}

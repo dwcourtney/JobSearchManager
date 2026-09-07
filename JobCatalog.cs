@@ -29,7 +29,6 @@ public sealed partial class JobCatalog
     private readonly JobSourceOptions _options;
     private readonly SharedSourceRefreshCoordinator _sharedSourceRefreshCoordinator;
     private readonly SemanticClassificationService? _semanticClassification;
-    private readonly CheapTriageShadow? _cheapTriage;
     private readonly object _gate = new();
     private readonly SemaphoreSlim _historyGate = new(1, 1);
     private readonly SemaphoreSlim _sourceOperationGate = new(1, 1);
@@ -60,8 +59,7 @@ public sealed partial class JobCatalog
         CompanyCatalog companyCatalog,
         IOptions<JobSourceOptions> options,
         SharedSourceRefreshCoordinator? sharedSourceRefreshCoordinator = null,
-        SemanticClassificationService? semanticClassification = null,
-        CheapTriageShadow? cheapTriage = null)
+        SemanticClassificationService? semanticClassification = null)
     {
         _jobSourceClient = jobSourceClient;
         _stateStore = stateStore;
@@ -74,7 +72,6 @@ public sealed partial class JobCatalog
         _options = options.Value;
         _sharedSourceRefreshCoordinator = sharedSourceRefreshCoordinator ?? new();
         _semanticClassification = semanticClassification;
-        _cheapTriage = cheapTriage;
     }
 
     public JobsSnapshot Snapshot
@@ -121,7 +118,6 @@ public sealed partial class JobCatalog
         finally
         {
             _sourceOperationGate.Release();
-            ScheduleCheapTriage();
         }
     }
 
@@ -239,7 +235,6 @@ public sealed partial class JobCatalog
             cachedJobs.Count,
             _stateStore.JobsCachePath);
         ScheduleSemanticClassification();
-        ScheduleCheapTriage();
     }
 
     public Task<JobsSnapshot> RefreshAsync()
@@ -310,7 +305,6 @@ public sealed partial class JobCatalog
                     "Switched to the recent {Company} cache ({JobCount} jobs, refreshed {LastRefreshed}); no provider listing or detail requests were made.",
                     company.DisplayName, availableJobs.Length, lastRefreshed);
                 ScheduleSemanticClassification();
-                ScheduleCheapTriage();
                 return snapshot;
             }
         }
@@ -467,13 +461,11 @@ public sealed partial class JobCatalog
                 _snapshot.DetailFailureCount,
                 query);
             ScheduleSemanticClassification();
-            ScheduleCheapTriage();
             return updated;
         }
         finally
         {
             _sourceOperationGate.Release();
-            ScheduleCheapTriage();
         }
     }
 
@@ -745,7 +737,7 @@ public sealed partial class JobCatalog
                 filterSettings: null);
             var result = fetched with
             {
-                Jobs = PreserveCheapTriage(cachedJobs, CanonicalizeStableIdentities(fetched.Jobs, "provider refresh"))
+                Jobs = PreserveLegacyCacheFields(cachedJobs, CanonicalizeStableIdentities(fetched.Jobs, "provider refresh"))
             };
             var refreshedAt = DateTimeOffset.UtcNow;
 
@@ -818,7 +810,6 @@ public sealed partial class JobCatalog
                 cacheChanged,
                 historyChanged);
             ScheduleSemanticClassification();
-            ScheduleCheapTriage();
             return refreshed;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -915,7 +906,6 @@ public sealed partial class JobCatalog
             "Reused a shared {Company} refresh completed by another workspace; no duplicate provider requests were made.",
             _companyCatalog.Get(query.CompanyId).DisplayName);
         ScheduleSemanticClassification();
-        ScheduleCheapTriage();
         return snapshot;
     }
 
@@ -1147,90 +1137,6 @@ public sealed partial class JobCatalog
             _reconciliationRepaired, elapsed);
     }
 
-    public async Task<QwenDeepAnalysis?> DeepAnalyzeWithQwenAsync(
-        string stableId,
-        CancellationToken cancellationToken = default)
-    {
-        if (_semanticClassification is null) return null;
-        var job = await GetJobDetailAsync(stableId, cancellationToken);
-        if (job is null || string.IsNullOrWhiteSpace(job.DescriptionHtml)) return null;
-        var requested = DateTimeOffset.UtcNow;
-        await PersistDeepAnalysisStateAsync(stableId,
-            new(LlmDeepAnalysisStatuses.Queued, RequestedUtc: requested), null, cancellationToken);
-        var started = DateTimeOffset.UtcNow;
-        await PersistDeepAnalysisStateAsync(stableId,
-            new(LlmDeepAnalysisStatuses.Running, requested, started), null, cancellationToken);
-        QwenDeepAnalysis? analysis;
-        try
-        {
-            analysis = await _semanticClassification.DeepAnalyzeAsync(job, cancellationToken);
-        }
-        catch (Exception exception)
-        {
-            await PersistDeepAnalysisStateAsync(stableId,
-                new(LlmDeepAnalysisStatuses.Failed, requested, started, DateTimeOffset.UtcNow,
-                    exception is OperationCanceledException
-                        ? "LLM deep analysis was canceled."
-                        : "LLM deep analysis failed."), null, CancellationToken.None);
-            throw;
-        }
-        if (analysis is null)
-        {
-            await PersistDeepAnalysisStateAsync(stableId,
-                new(LlmDeepAnalysisStatuses.Failed, requested, started, DateTimeOffset.UtcNow,
-                    "LLM deep analysis is unavailable."), null, cancellationToken);
-            return null;
-        }
-        await PersistDeepAnalysisStateAsync(stableId,
-            new(LlmDeepAnalysisStatuses.Completed, requested, started, analysis.AnalyzedUtc,
-                ResultFingerprint: analysis.ClassificationFingerprint), analysis, cancellationToken);
-        return analysis;
-    }
-
-    private async Task<bool> PersistDeepAnalysisStateAsync(
-        string stableId,
-        LlmDeepAnalysisRequestState state,
-        QwenDeepAnalysis? analysis,
-        CancellationToken cancellationToken)
-    {
-        await _sourceOperationGate.WaitAsync(cancellationToken);
-        try
-        {
-            JobSourceQuery query;
-            lock (_gate) { query = _currentQuery; }
-            var sourceKey = $"{query.CompanyId}:{_stateStore.QueryFingerprint(query)}";
-            await using var sharedSourceLease =
-                await _sharedSourceRefreshCoordinator.AcquireAsync(sourceKey, cancellationToken);
-            var document = await _stateStore.LoadJobsCacheAsync(query);
-            if (document?.Query?.IsEquivalentTo(query, _companyCatalog) != true) return false;
-            var current = document.Jobs.FirstOrDefault(item => item.StableId == stableId);
-            if (current is null) return false;
-            if (analysis is not null && SemanticRulesetFingerprint.PostingContentHash(
-                    current.Title, JobAnalysis.HtmlToPlainText(current.DescriptionHtml)) !=
-                analysis.PostingContentHash) return false;
-            var updated = current with
-            {
-                QwenDeepAnalysis = analysis ?? current.QwenDeepAnalysis,
-                DeepAnalysisRequest = state
-            };
-            var jobs = document.Jobs.Select(item => item.StableId == stableId ? updated : item).ToArray();
-            await _stateStore.SaveJobsCacheAsync(jobs,
-                document.LastRefreshedUtc ?? document.SavedAtUtc,
-                document.DetailFailureCount, query);
-            lock (_gate)
-            {
-                _cachedJobs = jobs;
-                var visible = VisibleJobs(jobs);
-                _snapshot = _snapshot with { Jobs = visible, TotalJobs = visible.Length };
-            }
-            return true;
-        }
-        finally
-        {
-            _sourceOperationGate.Release();
-        }
-    }
-
     public JobsListSnapshot CompactSnapshot
     {
         get
@@ -1244,7 +1150,6 @@ public sealed partial class JobCatalog
     public SemanticClassificationBackfillStatus StartSemanticClassificationBackfill()
     {
         ScheduleSemanticClassification();
-        ScheduleCheapTriage();
         return GetSemanticClassificationStatus();
     }
 
@@ -1421,4 +1326,14 @@ public sealed partial class JobCatalog
             pair => pair.Value,
             StringComparer.Ordinal)
     };
+    // Carry legacy observations through ordinary refreshes for rollback; never recompute them.
+    private static IReadOnlyList<JobRecord> PreserveLegacyCacheFields(IReadOnlyList<JobRecord> previous,
+        IReadOnlyList<JobRecord> incoming)
+    {
+        var observations = previous.ToDictionary(job => job.StableId, job => job.CheapTriage, StringComparer.Ordinal);
+        return incoming.Select(job => job with
+        {
+            CheapTriage = job.CheapTriage ?? observations.GetValueOrDefault(job.StableId)
+        }).ToArray();
+    }
 }
