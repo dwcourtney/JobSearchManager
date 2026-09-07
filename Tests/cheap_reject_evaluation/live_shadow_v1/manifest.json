@@ -1,0 +1,373 @@
+{
+  "release": "e0a28a10bfb158d5ea2c86f4718ca79f3fb99309",
+  "imageId": "sha256:1755b587d8280b949a3f7b42cdbe241b0a2ed35262144612c086d8c8d9dbb6ef",
+  "collectedAt": "2026-09-06T16:15:32.092688+00:00",
+  "caches": [
+    {
+      "cache": "aecom-3c55b12f8055996ccdc2c365b783b022579f495c3ed94e832674c6cc0ba8efa2",
+      "sourcePath": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/aecom/3c55b12f8055996ccdc2c365b783b022579f495c3ed94e832674c6cc0ba8efa2.json",
+      "sourceSha256": "b1a2e9d802350b947382dcdeacc3230aeb693d8a3be69d0a137076607cdded4a",
+      "outputSha256": "1743ae07da158112e150d4c9ee0047eeb6ad8544bf1fa87cbbae06cc9a382352",
+      "query": {
+        "countryId": "us",
+        "countryLabel": "United States",
+        "includeAllLocations": false,
+        "includeRemote": true,
+        "physicalLocations": [
+          {
+            "id": "location:us:Orlando, FL, United States",
+            "label": "Orlando, FL, United States"
+          }
+        ],
+        "sourceModelVersion": 2,
+        "companyId": "aecom"
+      },
+      "refreshed": "2026-08-31T22:14:23.66162+00:00",
+      "counts": {
+        "KEEP": 63,
+        "REJECT": 27
+      },
+      "count": 90,
+      "seconds": 3.41,
+      "network": "none"
+    },
+    {
+      "cache": "aecom-e06784f416eb9f0717083a1a136095b6116dee8313c76fd99b88642394f49fca",
+      "sourcePath": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/aecom/e06784f416eb9f0717083a1a136095b6116dee8313c76fd99b88642394f49fca.json",
+      "sourceSha256": "6de6dabf54652cbf5ccbc27fc67045f7dfec03a51e076aaea36c1535c5ae07e6",
+      "outputSha256": "13316b4559b89f00c5b2b34a9704a961ace042a441bf19f96f934b238998b26c",
+      "query": {
+        "countryId": "us",
+        "countryLabel": "United States",
+        "includeAllLocations": false,
+        "includeRemote": true,
+        "physicalLocations": [],
+        "sourceModelVersion": 2,
+        "companyId": "aecom"
+      },
+      "refreshed": "2026-08-27T00:03:49.8192498+00:00",
+      "counts": {
+        "KEEP": 59,
+        "REJECT": 18
+      },
+      "count": 77,
+      "seconds": 6.43,
+      "network": "none"
+    },
+    {
+      "cache": "amentum-6508afb282c3aa18510060d27cd39ff410340061a2f2b5c34f8eefe1e012a0e4",
+      "sourcePath": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/amentum/6508afb282c3aa18510060d27cd39ff410340061a2f2b5c34f8eefe1e012a0e4.json",
+      "sourceSha256": "10cc5a982fb2df1fd94d0d5fc4de24b37c850c3a04b0f95ad4b86218820aa772",
+      "outputSha256": "4fda0ddc431dd7e18d310d4e1538405a87cf48a44b88ad99f9a73ac9f6806a6f",
+      "query": {
+        "countryId": null,
+        "countryLabel": "All countries",
+        "includeAllLocations": false,
+        "includeRemote": true,
+        "physicalLocations": [],
+        "sourceModelVersion": 2,
+        "companyId": "amentum"
+      },
+      "refreshed": "2026-08-27T00:46:08.8041043+00:00",
+      "counts": {
+        "KEEP": 13,
+        "REJECT": 1
+      },
+      "count": 14,
+      "seconds": 4.34,
+      "network": "none"
+    },
+    {
+      "cache": "boeing-4d21f41f376cd401ed6e020e6254ec1e70c2e07eb6c34a2f1b6d743cc1d1d718",
+      "sourcePath": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/boeing/4d21f41f376cd401ed6e020e6254ec1e70c2e07eb6c34a2f1b6d743cc1d1d718.json",
+      "sourceSha256": "e027f64e9d54945b69323923ee907aabec90d40a115c12819cda442e53b99fc2",
+      "outputSha256": "16c10861c2466a8c7533b42599ee77ebbfcad9af4a6c22cd3ac708ea710c89ea",
+      "query": {
+        "countryId": "bc33aa3152ec42d4995f4791a106ed09",
+        "countryLabel": "United States of America",
+        "includeAllLocations": false,
+        "includeRemote": false,
+        "physicalLocations": [
+          {
+            "id": "8b618a30e00f0138f3a67f4b1b3fa284",
+            "label": "USA - Orlando, FL"
+          },
+          {
+            "id": "d50feea20c501001f726fc5c0ac00000",
+            "label": "USA - Daytona Beach, FL"
+          }
+        ],
+        "sourceModelVersion": 2,
+        "companyId": "boeing"
+      },
+      "refreshed": "2026-09-04T00:08:26.4448865+00:00",
+      "counts": {
+        "KEEP": 17
+      },
+      "count": 17,
+      "seconds": 4.34,
+      "network": "none"
+    },
+    {
+      "cache": "boeing-887541f2dc785e4555ddc3335ac156d667708970b1216138b2540382ca5cf66f",
+      "sourcePath": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/boeing/887541f2dc785e4555ddc3335ac156d667708970b1216138b2540382ca5cf66f.json",
+      "sourceSha256": "5c3250dc81ff1f73e128f7c2f0e4d57b6f8c6a2f82f09f3ad97fabe472d4f943",
+      "outputSha256": "43c2baf125d816b2c2fc07915df80f3be5e7424d0b7bddb6087db5d69a4bb73e",
+      "query": {
+        "countryId": "bc33aa3152ec42d4995f4791a106ed09",
+        "countryLabel": "United States of America",
+        "includeAllLocations": false,
+        "includeRemote": false,
+        "physicalLocations": [
+          {
+            "id": "8b618a30e00f0138f3a67f4b1b3fa284",
+            "label": "USA - Orlando, FL"
+          }
+        ],
+        "sourceModelVersion": 2,
+        "companyId": "boeing"
+      },
+      "refreshed": "2026-08-30T21:02:05.7776361+00:00",
+      "counts": {
+        "KEEP": 3
+      },
+      "count": 3,
+      "seconds": 3.32,
+      "network": "none"
+    },
+    {
+      "cache": "kbr-b694b75d628deb174d3609d5da833907cc60ca21abd24951a3a31ca305bc2f24",
+      "sourcePath": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/kbr/b694b75d628deb174d3609d5da833907cc60ca21abd24951a3a31ca305bc2f24.json",
+      "sourceSha256": "af1fdae2dc4949866d6e0bbed7a74cbca8510e76b9c00647289cfe00a43d1e18",
+      "outputSha256": "c521fdf7ad5877895c1fdea360519fcd6fee8e082b7ad5f9e20a57036036c30e",
+      "query": {
+        "countryId": "7d7dca02efe301804a21b8e9f401c00f",
+        "countryLabel": "United States",
+        "includeAllLocations": false,
+        "includeRemote": true,
+        "physicalLocations": [],
+        "sourceModelVersion": 2,
+        "companyId": "kbr"
+      },
+      "refreshed": "2026-08-27T00:46:50.7875774+00:00",
+      "counts": {
+        "KEEP": 40,
+        "REJECT": 8
+      },
+      "count": 48,
+      "seconds": 5.34,
+      "network": "none"
+    },
+    {
+      "cache": "leidos-697e9a0d8c74997954ef0e68219601eef0c4783b278a6267c3250aae5c876c50",
+      "sourcePath": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/leidos/697e9a0d8c74997954ef0e68219601eef0c4783b278a6267c3250aae5c876c50.json",
+      "sourceSha256": "4d2b0275876aa77918977c0b2483f6d7217e6be18641d45b517762731eaa04f9",
+      "outputSha256": "bca49e05acc0e8d97eb15ea7eb6a7a48fb5f32f71cd318f4e51e0f5327e5592a",
+      "query": {
+        "countryId": "bc33aa3152ec42d4995f4791a106ed09",
+        "countryLabel": "United States of America",
+        "includeAllLocations": false,
+        "includeRemote": true,
+        "physicalLocations": [
+          {
+            "id": "da70a15d3ef4012202062826f0cd0b93",
+            "label": "Orlando, FL"
+          }
+        ],
+        "sourceModelVersion": 2,
+        "companyId": "leidos"
+      },
+      "refreshed": "2026-09-05T22:36:55.2061721+00:00",
+      "counts": {
+        "KEEP": 251,
+        "REJECT": 23,
+        "UNDETERMINED": 1
+      },
+      "count": 275,
+      "seconds": 4.5,
+      "network": "none"
+    },
+    {
+      "cache": "northrop-grumman-c706f3e21f845a6ed5161556b5f5e06e6041bd94f694bb9f108920e6e1e59e11",
+      "sourcePath": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/northrop-grumman/c706f3e21f845a6ed5161556b5f5e06e6041bd94f694bb9f108920e6e1e59e11.json",
+      "sourceSha256": "fcd649213b924869fca296628917d0e65400bddb5061c48569997a8223253c2e",
+      "outputSha256": "7370410ca36f5a6d78f46f69478dd96a0bd663312378d8fa52bdf262f8b9b3be",
+      "query": {
+        "countryId": null,
+        "countryLabel": "All countries",
+        "includeAllLocations": false,
+        "includeRemote": true,
+        "physicalLocations": [],
+        "sourceModelVersion": 2,
+        "companyId": "northrop-grumman"
+      },
+      "refreshed": "2026-09-05T12:51:25.6987144+00:00",
+      "counts": {
+        "KEEP": 34,
+        "REJECT": 10
+      },
+      "count": 44,
+      "seconds": 4.4,
+      "network": "none"
+    },
+    {
+      "cache": "nvidia-68d60566b13a1d569a81a9438cd17b67666dd1e1e73bc4e69f8622c9be964cf8",
+      "sourcePath": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/nvidia/68d60566b13a1d569a81a9438cd17b67666dd1e1e73bc4e69f8622c9be964cf8.json",
+      "sourceSha256": "875f8563590f7234ea57387f027bbe47f0b853d63e0421dadaae1b06042833eb",
+      "outputSha256": "14d1d30b0cd446e496de4f144f9edec75b54dedf13ccf0a2946b5cb8e8ece421",
+      "query": {
+        "countryId": "2fcb99c455831013ea52fb338f2932d8",
+        "countryLabel": "United States",
+        "includeAllLocations": false,
+        "includeRemote": true,
+        "physicalLocations": [],
+        "sourceModelVersion": 2,
+        "companyId": "nvidia"
+      },
+      "refreshed": "2026-08-31T22:22:38.9167291+00:00",
+      "counts": {
+        "KEEP": 480,
+        "REJECT": 2
+      },
+      "count": 482,
+      "seconds": 7.82,
+      "network": "none"
+    },
+    {
+      "cache": "nxp-semiconductors-31fff07f6d5ca527d753690928be4bef8bbe993077cf673788f60fb1873d2447",
+      "sourcePath": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/nxp-semiconductors/31fff07f6d5ca527d753690928be4bef8bbe993077cf673788f60fb1873d2447.json",
+      "sourceSha256": "4f1655f37bd3b031387d57141a906e41fdc6a08cb13d4271ecd9b2e050e32168",
+      "outputSha256": "550535cb5fe4ccc643b14d8e382c7b7f14fc56ce1f47bf916fb34a4bdaca0a50",
+      "query": {
+        "countryId": "bc33aa3152ec42d4995f4791a106ed09",
+        "countryLabel": "United States of America",
+        "includeAllLocations": false,
+        "includeRemote": true,
+        "physicalLocations": [],
+        "sourceModelVersion": 2,
+        "companyId": "nxp-semiconductors"
+      },
+      "refreshed": "2026-08-31T22:21:46.1862798+00:00",
+      "counts": {
+        "KEEP": 12
+      },
+      "count": 12,
+      "seconds": 3.35,
+      "network": "none"
+    },
+    {
+      "cache": "parsons-cfd0f01f911887bdcef9e5a022443484c49c5a6da0471caba8e9024afa93baf1",
+      "sourcePath": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/parsons/cfd0f01f911887bdcef9e5a022443484c49c5a6da0471caba8e9024afa93baf1.json",
+      "sourceSha256": "719f26423a9488a6d9b02f7bb90e6ec6d8a0b8344e91ecfb304181775f1ec2ce",
+      "outputSha256": "719f26423a9488a6d9b02f7bb90e6ec6d8a0b8344e91ecfb304181775f1ec2ce",
+      "query": {
+        "countryId": "bc33aa3152ec42d4995f4791a106ed09",
+        "countryLabel": "United States of America",
+        "includeAllLocations": false,
+        "includeRemote": true,
+        "physicalLocations": [],
+        "sourceModelVersion": 2,
+        "companyId": "parsons"
+      },
+      "refreshed": "2026-09-06T00:53:14.803361+00:00",
+      "counts": {
+        "KEEP": 192,
+        "REJECT": 75,
+        "UNDETERMINED": 1
+      },
+      "count": 268,
+      "seconds": 3.46,
+      "network": "none"
+    },
+    {
+      "cache": "rtx-363a4d87be07d61263d5c73d01a6a3671f5e5488273aef6ee265d5f49b31c5bc",
+      "sourcePath": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/rtx/363a4d87be07d61263d5c73d01a6a3671f5e5488273aef6ee265d5f49b31c5bc.json",
+      "sourceSha256": "2b34086c2ecdcab94a8d7c9376dc0159e344a2bbd78cda00e943010cfe62b6bf",
+      "outputSha256": "7e1c7d66f0503c3dce25c4ee367fd147387fe66245689382b6b5c68abecc722a",
+      "query": {
+        "countryId": null,
+        "countryLabel": "All countries",
+        "includeAllLocations": false,
+        "includeRemote": true,
+        "physicalLocations": [],
+        "sourceModelVersion": 2,
+        "companyId": "rtx"
+      },
+      "refreshed": "2026-08-27T00:02:48.5647594+00:00",
+      "counts": {
+        "REJECT": 23,
+        "KEEP": 135
+      },
+      "count": 158,
+      "seconds": 9.63,
+      "network": "none"
+    },
+    {
+      "cache": "servicenow-a6b6217f7f08ffa370a51d94d2e74aab198a50274bb16b2021f40042af7de90f",
+      "sourcePath": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/servicenow/a6b6217f7f08ffa370a51d94d2e74aab198a50274bb16b2021f40042af7de90f.json",
+      "sourceSha256": "d63c5d4197d722d59d8a36d50e0f3f4a58ec655a8c7c46770efd4a5c12923d5c",
+      "outputSha256": "47ce9c9c09b8c60a7957c057228d156381a1ef9cd1eff965aa0d20bcacfbb357",
+      "query": {
+        "countryId": "us",
+        "countryLabel": "United States",
+        "includeAllLocations": false,
+        "includeRemote": true,
+        "physicalLocations": [
+          {
+            "id": "location:us:Orlando, Florida, United States",
+            "label": "Orlando, Florida, United States"
+          }
+        ],
+        "sourceModelVersion": 2,
+        "companyId": "servicenow"
+      },
+      "refreshed": "2026-08-31T22:20:34.9470304+00:00",
+      "counts": {
+        "KEEP": 113,
+        "REJECT": 30
+      },
+      "count": 143,
+      "seconds": 5.51,
+      "network": "none"
+    },
+    {
+      "cache": "boeing-79fbd27ebfc41219a37002560059254b648175c5d595a65130553bdc88ec82ef",
+      "sourcePath": "/home/codex/jsm-lab/data/app/workspaces/a0a5c7e770c8057bf6829752bb04cc79908b96848f56ae0fd2883ce8a950a838/shared/job-caches/boeing/79fbd27ebfc41219a37002560059254b648175c5d595a65130553bdc88ec82ef.json",
+      "sourceSha256": "08cd6cec8171e43a428ab99e41660e5fe621d424166eeb5b8ec8b056d6e695c8",
+      "outputSha256": "063a9bf3599866d5a18d80523e4b385c4c775a53598ce36a2490f96dac29eaa6",
+      "query": {
+        "countryId": "bc33aa3152ec42d4995f4791a106ed09",
+        "countryLabel": "United States of America",
+        "includeAllLocations": true,
+        "includeRemote": true,
+        "physicalLocations": [],
+        "sourceModelVersion": 2,
+        "companyId": "boeing"
+      },
+      "refreshed": "2026-08-30T20:42:19.0753823+00:00",
+      "counts": {
+        "REJECT": 36,
+        "KEEP": 617
+      },
+      "count": 653,
+      "seconds": 4.53,
+      "network": "none"
+    }
+  ],
+  "schemaVersion": 1,
+  "rulesetVersion": "1.0.0",
+  "rulesetSha256": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+  "remoteArchive": "/home/codex/jsm-lab/experiments/live-shadow-audit-20260906",
+  "rawRecordsSha256": "7bdb7d75e6fc4b12bafe42328c67d962837b346d26bac66b447c9f2c7a0327a3",
+  "rawManifestSha256": "215faae12001d50d4eaf0d996ee600866f9cdac841b54a37eb0a1045fd293dea",
+  "originalCollectorSha256": "e7ef784d1635cdcf5f5fe7de0dcaf64266f8bb88fb3e2545cd736d4d0087f233",
+  "scope": "Existing employer/query caches; production observations preserved; actual deployed app in network-disabled isolated containers for other decisions. Not new normal-browser traffic.",
+  "duplicatePolicy": "Stable posting ID; newest source refresh, then described input, then descending cache key. Distinct near-duplicate requisitions retained.",
+  "samplePolicy": "SHA256 jsm-live-shadow-audit-v1|stableId order; category round-robin up to 12 rejects/employer, five keeps/employer, all undetermined; seven additional title-census risk cases.",
+  "truthLimitations": "Codex audit judgments only; no independent human ground truth, no recall/precision certification, no edits to historical labels.",
+  "artifactSha256": {
+    "observations.jsonl": "39e5d5000792680dd3cfc9cb57af1122faf37962895bfa33e73d5b081ffe4c3e",
+    "review.jsonl": "9ef345f276c15a2750492710cb50d87ba7a144afefd38c4575d59ba10e0fc68b",
+    "summary.json": "02068f1118bf3a004926979dd138a3d71090d142c19f396c1b2d90eb3124caf5"
+  }
+}

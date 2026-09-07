@@ -1,0 +1,158 @@
+index	judgment	note
+40	clearly-correct	Environmental remediation cost estimates and bid costing; Excel use is incidental.
+95	questionable	Drainage/hydrology design and CAD analysis are genuine engineering; civil discipline boundary needs human agreement.
+33	questionable	Remediation equipment operation includes instrumentation, mechanical troubleshooting and monitoring; adjacent maintenance boundary.
+38	clearly-correct	EHS regulatory compliance audits, permitting and consulting; not financial auditing despite the finance category.
+76	clearly-correct	Archaeological excavation, artifact processing and field records.
+58	clearly-correct	Federal remediation capture, proposal strategy, bids and sales targets.
+83	clearly-correct	Construction project administration, cost/schedule/change orders; incidental modelling software.
+96	questionable	Roadway CAD/design is technical engineering, although outside ordinary software/IT work.
+85	clearly-correct	Energy-project cost estimating; estimating tools are used rather than engineered.
+51	clearly-correct	Archaeological fieldwork, cultural resources and reporting.
+28	clearly-correct	Construction inspection aide monitoring plans, specifications and field records.
+15	questionable	Structural concrete/steel facility design; data-center industry is not IT, but broad engineering boundary is unresolved.
+105	questionable	Finance transformation ownership overlaps enterprise ERP/process integration; not plainly a pure accounting position.
+468	questionable	Aircraft-maintenance/avionics instructor rather than software work; technical training adjacency needs review.
+488	clearly-correct	Supplier sourcing, negotiation, contracts and delivery performance.
+355	clearly-correct	Automotive repair and alternate truck driving; vehicle electronics do not establish IT duties.
+515	clearly-correct	Finance internship focused on business/financial work.
+542	clearly-correct	Operate/setup NC milling equipment; helping programmers is secondary to machining.
+122	clearly-correct	Large-structure tool fabrication, machining and welding.
+467	clearly-correct	Precision bench assembly and machining of aerospace parts.
+771	clearly-correct	Purchase orders, supplier contracts and sourcing; ERP is a business tool.
+619	questionable	Avionics fault isolation and test systems are substantive electronics work, albeit specialized aircraft maintenance.
+663	questionable	Primarily machining apprenticeship but includes CNC programming and equipment diagnostics; automation boundary.
+305	clearly-correct	Procurement and supplier contracts in a space-systems employer.
+326	clearly-correct	NC milling-machine operation/setup rather than software development.
+810	clearly-correct	Clinical psychological assessment and treatment.
+818	clearly-correct	Compensation administration, market pricing and pay recommendations.
+801	clearly-correct	Federal business-development capture and proposal win strategy.
+809	clearly-correct	Clinical psychological assessment and treatment.
+806	clearly-correct	Patient physical therapy and rehabilitation.
+805	clearly-correct	Nutrition counseling and clinical performance-dietitian duties.
+776	clearly-correct	Clinical social work, patient treatment and health records.
+819	clearly-correct	Patient case management and coordination of healthcare.
+1005	clearly-correct	Procurement/material movement coordination; Maximo data entry does not establish application engineering.
+1040	clearly-correct	Payroll transactions, garnishments, timecards and banking inquiries; not enterprise application development.
+1009	clearly-correct	Program forecasts, general ledger, revenue/cost and cash management.
+981	clearly-correct	Shipping, receiving and inventory of COMSEC equipment; does not operate/administer COMSEC systems.
+1062	clearly-correct	Construction execution, subcontractors, budgets and site logistics in Antarctica.
+859	questionable	Substation structural engineering with analytical design tools; civil/electrical adjacency needs human scope decision.
+1039	clearly-correct	Vessel operations, crewing, schedules and maritime regulatory compliance.
+975	clearly-correct	Program finance leadership, financial execution and bids.
+885	questionable	ISR sensor operation includes system troubleshooting and upgrades; specialized aircrew versus technical-support boundary.
+860	questionable	Licensed structural design/review for substations; broad engineering label is unresolved.
+914	questionable	ISR sensor operation includes troubleshooting/upgrades; near-duplicate occupation to the other reviewed ASO.
+998	questionable	Civil substation CAD drawings, drainage and earthwork analyses; genuine engineering but discipline-specific.
+1109	clearly-correct	Category sourcing, raw-material procurement and contract negotiation.
+1126	clearly-correct	State income-tax audits, tax returns and accounting.
+1124	clearly-correct	Recruiting, sourcing and candidate selection; recruiting technology is incidental.
+1128	clearly-correct	Press releases, media and public-relations communications.
+1141	clearly-correct	Supplier purchase contracts and procurement compliance.
+1108	likely-wrong	Daily integration-error monitoring, root-cause resolution and downstream dependencies across VNDLY/Workday/ServiceNow; HR title masks enterprise support.
+1111	clearly-correct	Subcontracts, bids, pricing and supplier delivery.
+1123	clearly-correct	HR workforce planning, succession and talent management.
+1119	clearly-correct	Supply-chain proposal pricing, estimating and purchasing compliance.
+1120	clearly-correct	Talent-acquisition sourcing apprenticeship; military/technology boilerplate is not the occupation.
+1383	clearly-correct	Product positioning, marketing content and go-to-market plans; climate/AI products do not make this engineering.
+1268	clearly-correct	Business growth, partners, co-selling and revenue; solution engineers perform the technical work.
+1792	clearly-correct	Construction cost projections and estimates.
+1669	questionable	Drainage engineering is a technical-analysis occupation; civil-domain scope boundary remains unresolved.
+1884	clearly-correct	Cost/schedule tracking, budget variance and financial forecasts.
+1771	clearly-correct	Environmental permitting/NEPA and wetlands project management.
+1896	clearly-correct	Tax-incentive eligibility, compliance and financial reporting.
+1865	clearly-correct	Automotive fleet repair and inspection-station compliance; finance is a misleading auditor match.
+1693	clearly-correct	Recruits cyber/cloud/software staff; does not perform those technical duties.
+1783	clearly-correct	UXO reconnaissance, disposal and range-clearance operations.
+1684	clearly-correct	Business development and opportunity capture for cyber/defense customers.
+1661	questionable	Highway design/construction leadership overlaps engineering-team leadership; not a plainly nontechnical manager.
+1656	clearly-correct	Heavy-civil construction estimation and contracting costs.
+1642	questionable	Bridge design/engineering; technical analysis versus realistic job-space boundary needs review.
+2001	clearly-correct	Purchasing, quotations and negotiated purchase orders.
+1970	clearly-correct	Financial leadership, revenue, program forecasts and finance staff.
+2032	clearly-correct	Full-cycle recruiting and candidate pipeline management.
+1913	clearly-correct	Defense press/media strategy and public relations.
+2046	likely-wrong	PCB layout, schematic implementation, routing constraints and ECAD design outputs are substantive electronics duties.
+2003	questionable	Digital Technology capture coordinates program architecture and IT requirements; mixed proposal/technical leadership, not safe pure-sales truth.
+2000	questionable	Supplier quality includes root-cause analysis and corrective actions for product-design problems; not simply purchasing.
+1941	clearly-correct	Procurement, supplier pricing/contracts and delivery-risk management.
+2052	clearly-correct	Integrated master schedule, cost/finance controls and critical-path reporting; network means schedule logic.
+2031	clearly-correct	Senior recruiting and candidate sourcing.
+2014	questionable	Supplier capability and root-cause improvement overlaps manufacturing/quality engineering.
+2056	clearly-correct	Procurement negotiations, compliance, price analysis and supplier contracts.
+2202	clearly-correct	Portfolio GTM, sales plays, pipeline and contract-value growth.
+2132	clearly-correct	Account-based marketing strategy, engagement and revenue; cybersecurity is the marketed product.
+2138	clearly-correct	Sales-team leadership, quotas and revenue.
+2203	clearly-correct	CIO-solution sales playbooks and commercial pipeline; title does not confer CIO engineering duties.
+2151	questionable	Quota-bearing sales with explicit technical discovery/demonstrations; adjacent solution-consulting boundary needs review.
+2109	clearly-correct	Role explicitly converts pharma expertise into GTM/customer pipeline rather than delivering technical implementation.
+2194	clearly-correct	Identity-product sales-team management and quota attainment.
+2115	clearly-correct	Banking CRM product marketing, positioning and sales enablement.
+2123	clearly-correct	Account/territory sales strategy and product commercial success.
+2136	questionable	Outbound product strategy, adoption and partner implementation enablement; mixed product/commercial scope.
+2104	clearly-correct	SaaS sales revenue, accounts and territory planning.
+2108	clearly-correct	Insurance GTM, strategic opportunities and commercial messaging.
+65	likely-wrong	Leads telecommunications infrastructure design and civil OSP quality delivery; plausible adjacent technical infrastructure leadership.
+227	questionable	Automated/digital nondestructive inspection and testing; specialized operator versus engineering-analysis boundary.
+480	likely-wrong	Designs test systems/components/software and performs integration, testing and troubleshooting.
+496	questionable	Electrical harness inspection and process analysis; genuine electronics versus fabrication-inspector boundary.
+611	questionable	Manufacturing R&D/lean process improvement and technical leadership; broad engineering-adjacency boundary.
+849	likely-wrong	Scientific instrument installation, calibration, troubleshooting and lab technical support; deployment preferences are separate.
+1983	clearly-correct	AS9100 quality-system audits and compliance, not financial accounting; no clear IT implementation duty.
+7	appropriate-keep	Mechanical data-center engineering is plausible adjacent engineering, not proof of cloud skill.
+0	appropriate-keep	Electrical substation design and calculations.
+92	appropriate-keep	Geophysical sensor/data acquisition and technical survey analysis; specialist science adjacency.
+30	borderline-keep	Environmental/health risk assessment calculations; not clinical practice, but search-space boundary needs review.
+86	appropriate-keep	Industrial process optimization and engineering analysis.
+112	borderline-keep	Aviation security curriculum, airport risks and drone mitigation; physical-security/training adjacency, not established cyber duties.
+106	obvious-leak	Labor-contract SCA/DBA compliance and administration; DBA is not database administration here.
+110	appropriate-keep	Hands-on AI architecture, RAG, deployment and cloud components.
+108	appropriate-keep	Data-warehouse security controls, access policies and encryption.
+111	appropriate-keep	AI solution architecture, integration and deployment coordination.
+275	appropriate-keep	Title-only test/evaluation technician; cannot safely discard without duties.
+405	appropriate-keep	Title-only nondestructive quality test specialist; uncertainty appropriately continues.
+264	appropriate-keep	MILSATCOM lifecycle systems requirements, architecture and verification.
+469	appropriate-keep	Flight-test instrumentation technical leadership and systems integration.
+210	borderline-keep	Spacecraft mechanical assembly/inspection; specialized physical technician work but technical adjacency unresolved.
+800	obvious-leak	Legal/ethics investigations and compliance leadership; business case system use is incidental.
+811	obvious-leak	Proposal formatting, submission compliance and review coordination; AI tool use is not AI engineering.
+792	appropriate-keep	Azure service administration, deployment, monitoring and troubleshooting.
+807	obvious-leak	Family counseling and behavioral-health support, not technical duties.
+816	appropriate-keep	ETL development, SQL and enterprise data integration.
+892	appropriate-keep	Electrical transmission engineering and technical leadership.
+1057	appropriate-keep	SharePoint development, permissions, Power Automate and technical user support.
+898	borderline-keep	Construction quality inspections and tests; engineering-title safeguard is not proof of software QA.
+943	appropriate-keep	SAN/storage administration, virtualization and infrastructure integration.
+890	appropriate-keep	Software/firmware installation, hardware checkout and technical deployment support.
+1102	obvious-leak	Supply-chain delivery planning and purchase-order scheduling.
+1099	appropriate-keep	Electronic warfare installation, system integration/testing and troubleshooting.
+1105	obvious-leak	HR career-development resources and organizational change management.
+1131	obvious-leak	Supplier schedules, material delivery and program administration dominate despite Engineer title.
+1112	appropriate-keep	SAP configuration, testing, implementation and enterprise production support.
+1505	appropriate-keep	Hands-on CAE benchmarks, performance studies and reference architectures despite marketing title.
+1334	appropriate-keep	Builds AI validation pipelines and cross-team integrations.
+1612	appropriate-keep	Compute/cloud platform architecture, automation and operations.
+1549	appropriate-keep	Hardware-software integration and system lifecycle technical leadership.
+1617	appropriate-keep	Distributed Go software, Kubernetes and storage services.
+1628	appropriate-keep	Field application engineering with proof-of-concept design and technical support despite sales overlap.
+1630	appropriate-keep	Microprocessor R&D/architecture technical leadership.
+1633	obvious-leak	Regional sales-team and revenue leadership; semiconductor industry is incidental to occupation.
+1635	obvious-leak	Commercial account strategies, pricing, contracts and revenue.
+1626	obvious-leak	Distribution-channel growth, sales campaigns and pipeline conversion.
+1868	obvious-leak	Industrial/federal project scheduling and delay analysis, not technical systems work.
+1821	borderline-keep	Wastewater/biosolids engineering consultant; genuine domain engineering but user adjacency unclear.
+1881	borderline-keep	Highway project design/management requiring PE; civil-domain boundary.
+1817	obvious-leak	Cost controls, invoicing, forecasts and financial variance; abbreviated title evades family match.
+1639	borderline-keep	Rail/transit design-team management; technical engineering versus civil-project leadership boundary.
+1907	appropriate-keep	SAP ERP process integration and technical transformation leadership.
+2034	appropriate-keep	SAP ABAP design, implementation, tests and application support.
+1943	appropriate-keep	SAP BTP iFlows, API integration and technical development.
+1992	appropriate-keep	PLM/S4 requirements, configuration, build/testing and system integration.
+1935	borderline-keep	Supplier quality improvement; develop a network is a professional network, making the technical-duty veto spurious.
+2165	borderline-keep	Value advisory for AI customers; technical employer/product introduction is insufficient to prove technical occupation.
+2076	obvious-leak	Product pricing/packaging and monetization, not software implementation.
+2146	appropriate-keep	Customer AI solution architecture and deployment engineering.
+2180	borderline-keep	Outbound product adoption/roadmap role; mixed technical product versus marketing duties.
+2179	appropriate-keep	Security solution delivery and technical-consultant leadership.
+826	undetermined-timeout	Live adapter preserved fail-open engine timeout; no precise timed-out predicate recorded.
+1744	undetermined-timeout	Original production fail-open timeout retained; preceding HR match does not identify which predicate timed out.

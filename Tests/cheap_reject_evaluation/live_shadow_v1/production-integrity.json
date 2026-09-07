@@ -1,0 +1,121 @@
+{
+  "checkedAtUtc": "2026-09-06T16:39:30.996229+00:00",
+  "health": {
+    "status": 200,
+    "body": "Healthy"
+  },
+  "version": {
+    "status": 200,
+    "body": {
+      "commit": "e0a28a10bfb158d5ea2c86f4718ca79f3fb99309",
+      "version": "1.0.0+e0a28a10bfb158d5ea2c86f4718ca79f3fb99309",
+      "hostingMode": "Container"
+    }
+  },
+  "mode": "Shadow",
+  "cacheChecks": [
+    {
+      "cache": "aecom-3c55b12f8055996ccdc2c365b783b022579f495c3ed94e832674c6cc0ba8efa2",
+      "unchanged": true,
+      "sha256": "b1a2e9d802350b947382dcdeacc3230aeb693d8a3be69d0a137076607cdded4a"
+    },
+    {
+      "cache": "aecom-e06784f416eb9f0717083a1a136095b6116dee8313c76fd99b88642394f49fca",
+      "unchanged": true,
+      "sha256": "6de6dabf54652cbf5ccbc27fc67045f7dfec03a51e076aaea36c1535c5ae07e6"
+    },
+    {
+      "cache": "amentum-6508afb282c3aa18510060d27cd39ff410340061a2f2b5c34f8eefe1e012a0e4",
+      "unchanged": true,
+      "sha256": "10cc5a982fb2df1fd94d0d5fc4de24b37c850c3a04b0f95ad4b86218820aa772"
+    },
+    {
+      "cache": "boeing-4d21f41f376cd401ed6e020e6254ec1e70c2e07eb6c34a2f1b6d743cc1d1d718",
+      "unchanged": true,
+      "sha256": "e027f64e9d54945b69323923ee907aabec90d40a115c12819cda442e53b99fc2"
+    },
+    {
+      "cache": "boeing-887541f2dc785e4555ddc3335ac156d667708970b1216138b2540382ca5cf66f",
+      "unchanged": true,
+      "sha256": "5c3250dc81ff1f73e128f7c2f0e4d57b6f8c6a2f82f09f3ad97fabe472d4f943"
+    },
+    {
+      "cache": "kbr-b694b75d628deb174d3609d5da833907cc60ca21abd24951a3a31ca305bc2f24",
+      "unchanged": true,
+      "sha256": "af1fdae2dc4949866d6e0bbed7a74cbca8510e76b9c00647289cfe00a43d1e18"
+    },
+    {
+      "cache": "leidos-697e9a0d8c74997954ef0e68219601eef0c4783b278a6267c3250aae5c876c50",
+      "unchanged": true,
+      "sha256": "4d2b0275876aa77918977c0b2483f6d7217e6be18641d45b517762731eaa04f9"
+    },
+    {
+      "cache": "northrop-grumman-c706f3e21f845a6ed5161556b5f5e06e6041bd94f694bb9f108920e6e1e59e11",
+      "unchanged": true,
+      "sha256": "fcd649213b924869fca296628917d0e65400bddb5061c48569997a8223253c2e"
+    },
+    {
+      "cache": "nvidia-68d60566b13a1d569a81a9438cd17b67666dd1e1e73bc4e69f8622c9be964cf8",
+      "unchanged": true,
+      "sha256": "875f8563590f7234ea57387f027bbe47f0b853d63e0421dadaae1b06042833eb"
+    },
+    {
+      "cache": "nxp-semiconductors-31fff07f6d5ca527d753690928be4bef8bbe993077cf673788f60fb1873d2447",
+      "unchanged": true,
+      "sha256": "4f1655f37bd3b031387d57141a906e41fdc6a08cb13d4271ecd9b2e050e32168"
+    },
+    {
+      "cache": "parsons-cfd0f01f911887bdcef9e5a022443484c49c5a6da0471caba8e9024afa93baf1",
+      "unchanged": true,
+      "sha256": "719f26423a9488a6d9b02f7bb90e6ec6d8a0b8344e91ecfb304181775f1ec2ce"
+    },
+    {
+      "cache": "rtx-363a4d87be07d61263d5c73d01a6a3671f5e5488273aef6ee265d5f49b31c5bc",
+      "unchanged": true,
+      "sha256": "2b34086c2ecdcab94a8d7c9376dc0159e344a2bbd78cda00e943010cfe62b6bf"
+    },
+    {
+      "cache": "servicenow-a6b6217f7f08ffa370a51d94d2e74aab198a50274bb16b2021f40042af7de90f",
+      "unchanged": true,
+      "sha256": "d63c5d4197d722d59d8a36d50e0f3f4a58ec655a8c7c46770efd4a5c12923d5c"
+    },
+    {
+      "cache": "boeing-79fbd27ebfc41219a37002560059254b648175c5d595a65130553bdc88ec82ef",
+      "unchanged": true,
+      "sha256": "08cd6cec8171e43a428ab99e41660e5fe621d424166eeb5b8ec8b056d6e695c8"
+    }
+  ],
+  "productionContainers": [
+    {
+      "name": "jsm-lab-jsm-1",
+      "id": "30d5e1e6af3c",
+      "startedAt": "2026-09-06T15:57:08.585197212Z",
+      "image": "sha256:1755b587d8280b949a3f7b42cdbe241b0a2ed35262144612c086d8c8d9dbb6ef"
+    },
+    {
+      "name": "jsm-lab-deep-analysis-1",
+      "id": "53f9da9f7d4b",
+      "startedAt": "2026-09-06T15:55:40.78449564Z",
+      "image": "sha256:3f80f57112c7548e8b2b0c8dc8dbb44ff8dddbc8e962d3699727238f658b9909"
+    },
+    {
+      "name": "jsm-lab-ollama-1",
+      "id": "7743532b6b82",
+      "startedAt": "2026-09-06T15:55:40.036655851Z",
+      "image": "sha256:95f9bf0775bc1ac57ab1c1ab415b10caecdcfeff42015629b291e696f4e58746"
+    },
+    {
+      "name": "ai801",
+      "id": "6c701283d093",
+      "startedAt": "2026-09-04T22:11:41.030166097Z",
+      "image": "sha256:b41aa98fa0311db1f1fd7f10ea64266aa0a9b6ad9bc7378d2e97c94ee80a08c7"
+    },
+    {
+      "name": "jsm-lab-mailpit-1",
+      "id": "43fa0495eb5f",
+      "startedAt": "2026-09-04T22:11:39.702237345Z",
+      "image": "sha256:c96991d9bef73594c246d89ca81411d4e916f03e76a7d2d72fa2ab5dd3c9ce24"
+    }
+  ],
+  "noAuditContainersRemaining": true
+}

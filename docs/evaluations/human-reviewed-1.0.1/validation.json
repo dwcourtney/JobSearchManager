@@ -1,0 +1,18 @@
+{
+  "dotnet": "PASS: all 140 deterministic architecture tests",
+  "source": "PASS: full source/Admin/UI/theme suite",
+  "repositoryAudit": "PASS",
+  "frozenParity": "PASS: zero baseline mismatches and no candidate safety regression",
+  "liveReplay": "PASS: zero input-fingerprint mismatches; 9 REJECT -> KEEP changes",
+  "linuxParity": "PASS: all 2205 full decision/evidence results identical to Windows",
+  "security": "PASS: source dependency, secret and configuration gates; policy fixtures; JSM, benchmark, deep-analysis and Ollama image gates unchanged",
+  "containers": "PASS: isolated health, identity, malformed API and runtime checks from repository image-validation section",
+  "production": "Not changed; no deployment, no rules activated, no Qwen/model inference",
+  "gitDiffCheck": "PASS",
+  "validationLogs": {
+    "dotnet.log": "5ee8b99262507bdc1ee1c3f036f27df3acbd54d825e39154dfb7e57622473a03",
+    "source.log": "7b0a642f7b5f9c678fd8b792997f670664c4a4ea9838c1471d7f0831512fa88e",
+    "audit.log": "3aac36aada5b2b56f53bd806654dbc0e2cb350d714f0c0f5a9027fedb6a63abf",
+    "linux-images.log": "91382a282a91a3b413ea9db19775eee937b4bd6bf1356a7c476c3e5d6baad657"
+  }
+}

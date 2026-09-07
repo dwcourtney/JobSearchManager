@@ -1,0 +1,39 @@
+{
+  "historical-live": {
+    "baseline": {
+      "n": 2205,
+      "counts": {
+        "KEEP": 1968,
+        "REJECT": 237
+      },
+      "failOpen": 0
+    },
+    "candidate": {
+      "n": 2205,
+      "counts": {
+        "KEEP": 1977,
+        "REJECT": 228
+      },
+      "failOpen": 0
+    }
+  },
+  "historical-input-fingerprint-mismatches": 0,
+  "snapshot-cache": {
+    "baseline": {
+      "n": 275,
+      "counts": {
+        "KEEP": 252,
+        "REJECT": 23
+      },
+      "failOpen": 0
+    },
+    "candidate": {
+      "n": 275,
+      "counts": {
+        "KEEP": 252,
+        "REJECT": 23
+      },
+      "failOpen": 0
+    }
+  }
+}

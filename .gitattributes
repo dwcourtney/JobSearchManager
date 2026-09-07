@@ -12,3 +12,6 @@ CheapTriage/** text eol=lf
 Tests/cheap_reject_evaluation/input_v3/train.py whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
 Tests/cheap_reject_evaluation/supervised_v2/train.py whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
 docs/supervised-cheap-reject-experiment.md whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
+
+# Immutable review/evaluation provenance includes hashes of original bytes.
+docs/evaluations/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

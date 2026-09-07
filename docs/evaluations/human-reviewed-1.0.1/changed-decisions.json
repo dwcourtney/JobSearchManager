@@ -1,0 +1,1520 @@
+[
+  {
+    "dataset": "frozen",
+    "id": "74e39fc92e769ae36ee74581",
+    "stableId": "rtx:01865916",
+    "employer": "rtx",
+    "title": "Digital Technology Capture Engagement Lead, Program Architecture (FEOTB) Naval Power, Remote",
+    "label": "AMBIGUOUS",
+    "before": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "d63bef69b35b28990804a21884146cb8a11dd3871868a3e7217b9b7c1827ad96",
+      "decision": "REJECT",
+      "category": "sales",
+      "reason": "Corroborated unrelated occupational duties: sales",
+      "ruleIds": [
+        "reject-sales"
+      ],
+      "evidence": [
+        {
+          "predicateId": "sales-title",
+          "scope": "title",
+          "text": "capture"
+        },
+        {
+          "predicateId": "sales-body",
+          "scope": "body",
+          "text": "capture"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "after": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "d63bef69b35b28990804a21884146cb8a11dd3871868a3e7217b9b7c1827ad96",
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated it architecture duties",
+      "ruleIds": [
+        "keep-reviewed-it-architecture"
+      ],
+      "evidence": [
+        {
+          "predicateId": "sales-title",
+          "scope": "title",
+          "text": "capture"
+        },
+        {
+          "predicateId": "reviewed-it-architecture-title",
+          "scope": "title",
+          "text": "digital technology"
+        },
+        {
+          "predicateId": "reviewed-it-architecture-object",
+          "scope": "body",
+          "text": "program architects"
+        },
+        {
+          "predicateId": "reviewed-it-architecture-duty",
+          "scope": "body",
+          "text": "proposal response"
+        }
+      ],
+      "guards": [
+        "keep-reviewed-it-architecture"
+      ],
+      "failOpen": false
+    },
+    "human": {
+      "revision": 30,
+      "stableJobId": "rtx:01865916",
+      "decision": "KEEP",
+      "note": "Primary duties center on Digital Technology, program architecture, IT/engineering requirements analysis, Agile workflows, and technical proposal support. This belongs in Technology despite the capture/business-development context.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:32:11.5064134+00:00"
+    },
+    "audit": "All changes are REJECT -> KEEP; no new reject. Historical labels preserved."
+  },
+  {
+    "dataset": "frozen",
+    "id": "86e66d42c78951f977ba6e5b",
+    "stableId": "servicenow:JB0074456",
+    "employer": "servicenow",
+    "title": "Senior Staff Outbound Product Manager - EmployeeWorks GTM",
+    "label": "AMBIGUOUS",
+    "before": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "1e7c0f8b276fed92fdc9e3ca10d3ec71f5483d7fa3c1b81d1e43a656772c39e7",
+      "decision": "REJECT",
+      "category": "business-other",
+      "reason": "Corroborated unrelated occupational duties: business-other",
+      "ruleIds": [
+        "reject-business-other"
+      ],
+      "evidence": [
+        {
+          "predicateId": "business-other-title",
+          "scope": "title",
+          "text": "gtm"
+        },
+        {
+          "predicateId": "business-other-body",
+          "scope": "body",
+          "text": "positioning"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "after": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "1e7c0f8b276fed92fdc9e3ca10d3ec71f5483d7fa3c1b81d1e43a656772c39e7",
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated software product duties",
+      "ruleIds": [
+        "keep-reviewed-software-product"
+      ],
+      "evidence": [
+        {
+          "predicateId": "business-other-title",
+          "scope": "title",
+          "text": "gtm"
+        },
+        {
+          "predicateId": "reviewed-software-product-title",
+          "scope": "title",
+          "text": "product manager"
+        },
+        {
+          "predicateId": "reviewed-software-product-object",
+          "scope": "body",
+          "text": "ai native"
+        },
+        {
+          "predicateId": "reviewed-software-product-duty",
+          "scope": "body",
+          "text": "product strategy"
+        }
+      ],
+      "guards": [
+        "keep-reviewed-software-product"
+      ],
+      "failOpen": false
+    },
+    "human": {
+      "revision": 25,
+      "stableJobId": "servicenow:JB0074456",
+      "decision": "KEEP",
+      "note": "Primary duties are product management, GTM strategy, adoption, and deployment orchestration for ServiceNow AI/software products. This is a Technology occupation even though it is business-facing rather than hands-on engineering.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:29:51.3716918+00:00"
+    },
+    "audit": "All changes are REJECT -> KEEP; no new reject. Historical labels preserved."
+  },
+  {
+    "dataset": "frozen",
+    "id": "1e8d2877f53a6d11c2e23f34",
+    "stableId": "boeing:JR2026518584",
+    "employer": "boeing",
+    "title": "Associate Test and Evaluation Laboratory Technician",
+    "label": "KEEP",
+    "before": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "7afe6cf0b9f5ca24965907b6013b54c32caea839ef41a68683a972f13fc7fbfd",
+      "decision": "REJECT",
+      "category": "operator-technician",
+      "reason": "Corroborated unrelated occupational duties: operator-technician",
+      "ruleIds": [
+        "reject-operator-technician"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "technician"
+        },
+        {
+          "predicateId": "operator-technician-body",
+          "scope": "body",
+          "text": "materials"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "after": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "7afe6cf0b9f5ca24965907b6013b54c32caea839ef41a68683a972f13fc7fbfd",
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated test systems duties",
+      "ruleIds": [
+        "keep-reviewed-test-systems"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "technician"
+        },
+        {
+          "predicateId": "reviewed-test-systems-title",
+          "scope": "title",
+          "text": "test"
+        },
+        {
+          "predicateId": "reviewed-test-systems-object",
+          "scope": "body",
+          "text": "electrical engineering drawings"
+        },
+        {
+          "predicateId": "reviewed-test-systems-duty",
+          "scope": "body",
+          "text": "designs systems"
+        }
+      ],
+      "guards": [
+        "keep-reviewed-test-systems"
+      ],
+      "failOpen": false
+    },
+    "human": {
+      "revision": 11,
+      "stableJobId": "boeing:JR2026518584",
+      "decision": "KEEP",
+      "note": "Primary duties involve test-system design, systems integration, instrumentation/sensors, electrical schematics, software, data analysis, and troubleshooting. This is technical systems/electronics work and belongs in Technology.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:23:47.3696724+00:00"
+    },
+    "audit": "All changes are REJECT -> KEEP; no new reject. Historical labels preserved."
+  },
+  {
+    "dataset": "frozen",
+    "id": "afc5e30631d0feea140b1bb7",
+    "stableId": "rtx:01868753",
+    "employer": "rtx",
+    "title": "ECAD Layout Designer Technician, Draft/Product Definition (Remote)",
+    "label": "KEEP",
+    "before": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "717b6c19c266bef044620bc83192d927a7a141ea397c6d2b76fb566d843e6c68",
+      "decision": "REJECT",
+      "category": "operator-technician",
+      "reason": "Corroborated unrelated occupational duties: operator-technician",
+      "ruleIds": [
+        "reject-operator-technician"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "technician"
+        },
+        {
+          "predicateId": "operator-technician-body",
+          "scope": "body",
+          "text": "assembly"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "after": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "717b6c19c266bef044620bc83192d927a7a141ea397c6d2b76fb566d843e6c68",
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated electronic design duties",
+      "ruleIds": [
+        "keep-reviewed-electronic-design"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "technician"
+        },
+        {
+          "predicateId": "reviewed-electronic-design-title",
+          "scope": "title",
+          "text": "ecad"
+        },
+        {
+          "predicateId": "reviewed-electronic-design-object",
+          "scope": "body",
+          "text": "pcb"
+        },
+        {
+          "predicateId": "reviewed-electronic-design-duty",
+          "scope": "body",
+          "text": "layout"
+        }
+      ],
+      "guards": [
+        "keep-reviewed-electronic-design"
+      ],
+      "failOpen": false
+    },
+    "human": {
+      "revision": 14,
+      "stableJobId": "rtx:01868753",
+      "decision": "KEEP",
+      "note": "Primary duties are PCB/ECAD design, routing, constraints, configuration management, and electronic design documentation. Despite the technician title, this is clearly Technology work.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:25:05.4399160+00:00"
+    },
+    "audit": "All changes are REJECT -> KEEP; no new reject. Historical labels preserved."
+  },
+  {
+    "dataset": "frozen",
+    "id": "40a4e12248dbc15959d09073",
+    "stableId": "northrop-grumman:R10245576",
+    "employer": "northrop-grumman",
+    "title": "Extended Workforce Solutions HR Project Manager",
+    "label": "KEEP",
+    "before": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "ec271befb1a50e90d22ee7e173c574942f00f809caa215d3a4f0afcb8e96d6ee",
+      "decision": "REJECT",
+      "category": "hr",
+      "reason": "Corroborated unrelated occupational duties: hr",
+      "ruleIds": [
+        "reject-hr"
+      ],
+      "evidence": [
+        {
+          "predicateId": "hr-title",
+          "scope": "title",
+          "text": "hr"
+        },
+        {
+          "predicateId": "hr-body",
+          "scope": "body",
+          "text": "candidates"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "after": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "ec271befb1a50e90d22ee7e173c574942f00f809caa215d3a4f0afcb8e96d6ee",
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated application integration duties",
+      "ruleIds": [
+        "keep-reviewed-application-integration"
+      ],
+      "evidence": [
+        {
+          "predicateId": "hr-title",
+          "scope": "title",
+          "text": "hr"
+        },
+        {
+          "predicateId": "reviewed-application-integration-title",
+          "scope": "title",
+          "text": "project manager"
+        },
+        {
+          "predicateId": "reviewed-application-integration-object",
+          "scope": "body",
+          "text": "file transfer"
+        },
+        {
+          "predicateId": "reviewed-application-integration-duty",
+          "scope": "body",
+          "text": "integration error"
+        }
+      ],
+      "guards": [
+        "keep-reviewed-application-integration"
+      ],
+      "failOpen": false
+    },
+    "human": {
+      "revision": 15,
+      "stableJobId": "northrop-grumman:R10245576",
+      "decision": "KEEP",
+      "note": "Despite the HR title, the primary duties are systems integration monitoring, root-cause analysis, troubleshooting, configuration improvement, and support across VNDLY, Workday, and ServiceNow. This belongs in Technology.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:25:34.0966995+00:00"
+    },
+    "audit": "All changes are REJECT -> KEEP; no new reject. Historical labels preserved."
+  },
+  {
+    "dataset": "frozen",
+    "id": "legacy:0326edd5236a248c",
+    "stableId": "unavailable in legacy cache",
+    "employer": "northrop-grumman",
+    "title": "Extended Workforce Solutions HR Project Manager",
+    "label": null,
+    "before": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "ec271befb1a50e90d22ee7e173c574942f00f809caa215d3a4f0afcb8e96d6ee",
+      "decision": "REJECT",
+      "category": "hr",
+      "reason": "Corroborated unrelated occupational duties: hr",
+      "ruleIds": [
+        "reject-hr"
+      ],
+      "evidence": [
+        {
+          "predicateId": "hr-title",
+          "scope": "title",
+          "text": "hr"
+        },
+        {
+          "predicateId": "hr-body",
+          "scope": "body",
+          "text": "candidates"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "after": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "ec271befb1a50e90d22ee7e173c574942f00f809caa215d3a4f0afcb8e96d6ee",
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated application integration duties",
+      "ruleIds": [
+        "keep-reviewed-application-integration"
+      ],
+      "evidence": [
+        {
+          "predicateId": "hr-title",
+          "scope": "title",
+          "text": "hr"
+        },
+        {
+          "predicateId": "reviewed-application-integration-title",
+          "scope": "title",
+          "text": "project manager"
+        },
+        {
+          "predicateId": "reviewed-application-integration-object",
+          "scope": "body",
+          "text": "file transfer"
+        },
+        {
+          "predicateId": "reviewed-application-integration-duty",
+          "scope": "body",
+          "text": "integration error"
+        }
+      ],
+      "guards": [
+        "keep-reviewed-application-integration"
+      ],
+      "failOpen": false
+    },
+    "human": null,
+    "audit": "All changes are REJECT -> KEEP; no new reject. Historical labels preserved."
+  },
+  {
+    "dataset": "frozen",
+    "id": "legacy:04d90d4b9a0514e7",
+    "stableId": "unavailable in legacy cache",
+    "employer": "rtx",
+    "title": "Digital Technology Capture Engagement Lead, Program Architecture (FEOTB) Naval Power, Remote",
+    "label": null,
+    "before": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "d63bef69b35b28990804a21884146cb8a11dd3871868a3e7217b9b7c1827ad96",
+      "decision": "REJECT",
+      "category": "sales",
+      "reason": "Corroborated unrelated occupational duties: sales",
+      "ruleIds": [
+        "reject-sales"
+      ],
+      "evidence": [
+        {
+          "predicateId": "sales-title",
+          "scope": "title",
+          "text": "capture"
+        },
+        {
+          "predicateId": "sales-body",
+          "scope": "body",
+          "text": "capture"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "after": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "d63bef69b35b28990804a21884146cb8a11dd3871868a3e7217b9b7c1827ad96",
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated it architecture duties",
+      "ruleIds": [
+        "keep-reviewed-it-architecture"
+      ],
+      "evidence": [
+        {
+          "predicateId": "sales-title",
+          "scope": "title",
+          "text": "capture"
+        },
+        {
+          "predicateId": "reviewed-it-architecture-title",
+          "scope": "title",
+          "text": "digital technology"
+        },
+        {
+          "predicateId": "reviewed-it-architecture-object",
+          "scope": "body",
+          "text": "program architects"
+        },
+        {
+          "predicateId": "reviewed-it-architecture-duty",
+          "scope": "body",
+          "text": "proposal response"
+        }
+      ],
+      "guards": [
+        "keep-reviewed-it-architecture"
+      ],
+      "failOpen": false
+    },
+    "human": null,
+    "audit": "All changes are REJECT -> KEEP; no new reject. Historical labels preserved."
+  },
+  {
+    "dataset": "frozen",
+    "id": "legacy:18879303447a1a97",
+    "stableId": "unavailable in legacy cache",
+    "employer": "boeing",
+    "title": "Associate Test and Evaluation Laboratory Technician",
+    "label": null,
+    "before": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "7afe6cf0b9f5ca24965907b6013b54c32caea839ef41a68683a972f13fc7fbfd",
+      "decision": "REJECT",
+      "category": "operator-technician",
+      "reason": "Corroborated unrelated occupational duties: operator-technician",
+      "ruleIds": [
+        "reject-operator-technician"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "technician"
+        },
+        {
+          "predicateId": "operator-technician-body",
+          "scope": "body",
+          "text": "materials"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "after": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "7afe6cf0b9f5ca24965907b6013b54c32caea839ef41a68683a972f13fc7fbfd",
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated test systems duties",
+      "ruleIds": [
+        "keep-reviewed-test-systems"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "technician"
+        },
+        {
+          "predicateId": "reviewed-test-systems-title",
+          "scope": "title",
+          "text": "test"
+        },
+        {
+          "predicateId": "reviewed-test-systems-object",
+          "scope": "body",
+          "text": "electrical engineering drawings"
+        },
+        {
+          "predicateId": "reviewed-test-systems-duty",
+          "scope": "body",
+          "text": "designs systems"
+        }
+      ],
+      "guards": [
+        "keep-reviewed-test-systems"
+      ],
+      "failOpen": false
+    },
+    "human": null,
+    "audit": "All changes are REJECT -> KEEP; no new reject. Historical labels preserved."
+  },
+  {
+    "dataset": "frozen",
+    "id": "legacy:d1f94efab39334b5",
+    "stableId": "unavailable in legacy cache",
+    "employer": "servicenow",
+    "title": "Senior Staff Outbound Product Manager - EmployeeWorks GTM",
+    "label": null,
+    "before": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "1e7c0f8b276fed92fdc9e3ca10d3ec71f5483d7fa3c1b81d1e43a656772c39e7",
+      "decision": "REJECT",
+      "category": "business-other",
+      "reason": "Corroborated unrelated occupational duties: business-other",
+      "ruleIds": [
+        "reject-business-other"
+      ],
+      "evidence": [
+        {
+          "predicateId": "business-other-title",
+          "scope": "title",
+          "text": "gtm"
+        },
+        {
+          "predicateId": "business-other-body",
+          "scope": "body",
+          "text": "positioning"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "after": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "1e7c0f8b276fed92fdc9e3ca10d3ec71f5483d7fa3c1b81d1e43a656772c39e7",
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated software product duties",
+      "ruleIds": [
+        "keep-reviewed-software-product"
+      ],
+      "evidence": [
+        {
+          "predicateId": "business-other-title",
+          "scope": "title",
+          "text": "gtm"
+        },
+        {
+          "predicateId": "reviewed-software-product-title",
+          "scope": "title",
+          "text": "product manager"
+        },
+        {
+          "predicateId": "reviewed-software-product-object",
+          "scope": "body",
+          "text": "ai native"
+        },
+        {
+          "predicateId": "reviewed-software-product-duty",
+          "scope": "body",
+          "text": "product strategy"
+        }
+      ],
+      "guards": [
+        "keep-reviewed-software-product"
+      ],
+      "failOpen": false
+    },
+    "human": null,
+    "audit": "All changes are REJECT -> KEEP; no new reject. Historical labels preserved."
+  },
+  {
+    "dataset": "frozen",
+    "id": "legacy:f90e425031a8b006",
+    "stableId": "unavailable in legacy cache",
+    "employer": "rtx",
+    "title": "ECAD Layout Designer Technician, Draft/Product Definition (Remote)",
+    "label": null,
+    "before": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "717b6c19c266bef044620bc83192d927a7a141ea397c6d2b76fb566d843e6c68",
+      "decision": "REJECT",
+      "category": "operator-technician",
+      "reason": "Corroborated unrelated occupational duties: operator-technician",
+      "ruleIds": [
+        "reject-operator-technician"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "technician"
+        },
+        {
+          "predicateId": "operator-technician-body",
+          "scope": "body",
+          "text": "assembly"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "after": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "717b6c19c266bef044620bc83192d927a7a141ea397c6d2b76fb566d843e6c68",
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated electronic design duties",
+      "ruleIds": [
+        "keep-reviewed-electronic-design"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "technician"
+        },
+        {
+          "predicateId": "reviewed-electronic-design-title",
+          "scope": "title",
+          "text": "ecad"
+        },
+        {
+          "predicateId": "reviewed-electronic-design-object",
+          "scope": "body",
+          "text": "pcb"
+        },
+        {
+          "predicateId": "reviewed-electronic-design-duty",
+          "scope": "body",
+          "text": "layout"
+        }
+      ],
+      "guards": [
+        "keep-reviewed-electronic-design"
+      ],
+      "failOpen": false
+    },
+    "human": null,
+    "audit": "All changes are REJECT -> KEEP; no new reject. Historical labels preserved."
+  },
+  {
+    "dataset": "historical-live",
+    "id": "northrop-grumman:R10245576",
+    "stableId": "northrop-grumman:R10245576",
+    "employer": "northrop-grumman",
+    "title": "Extended Workforce Solutions HR Project Manager",
+    "label": "KEEP",
+    "before": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "2d6a585f858263d35e568f15bc1acd957bc013a32974fbfb3ca94586637a8630",
+      "decision": "REJECT",
+      "category": "hr",
+      "reason": "Corroborated unrelated occupational duties: hr",
+      "ruleIds": [
+        "reject-hr"
+      ],
+      "evidence": [
+        {
+          "predicateId": "hr-title",
+          "scope": "title",
+          "text": "hr"
+        },
+        {
+          "predicateId": "hr-body",
+          "scope": "body",
+          "text": "candidates"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "after": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "2d6a585f858263d35e568f15bc1acd957bc013a32974fbfb3ca94586637a8630",
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated application integration duties",
+      "ruleIds": [
+        "keep-reviewed-application-integration"
+      ],
+      "evidence": [
+        {
+          "predicateId": "hr-title",
+          "scope": "title",
+          "text": "hr"
+        },
+        {
+          "predicateId": "reviewed-application-integration-title",
+          "scope": "title",
+          "text": "project manager"
+        },
+        {
+          "predicateId": "reviewed-application-integration-object",
+          "scope": "body",
+          "text": "file transfer"
+        },
+        {
+          "predicateId": "reviewed-application-integration-duty",
+          "scope": "body",
+          "text": "integration error"
+        }
+      ],
+      "guards": [
+        "keep-reviewed-application-integration"
+      ],
+      "failOpen": false
+    },
+    "human": {
+      "revision": 15,
+      "stableJobId": "northrop-grumman:R10245576",
+      "decision": "KEEP",
+      "note": "Despite the HR title, the primary duties are systems integration monitoring, root-cause analysis, troubleshooting, configuration improvement, and support across VNDLY, Workday, and ServiceNow. This belongs in Technology.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:25:34.0966995+00:00"
+    },
+    "audit": "All changes are REJECT -> KEEP; no new reject. Historical labels preserved."
+  },
+  {
+    "dataset": "historical-live",
+    "id": "servicenow:JB0074456",
+    "stableId": "servicenow:JB0074456",
+    "employer": "servicenow",
+    "title": "Senior Staff Outbound Product Manager - EmployeeWorks GTM",
+    "label": "KEEP",
+    "before": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "cf1bf980df805b349fed71bb279872d7b20165c79ca20206e26a8ffd4950f398",
+      "decision": "REJECT",
+      "category": "business-other",
+      "reason": "Corroborated unrelated occupational duties: business-other",
+      "ruleIds": [
+        "reject-business-other"
+      ],
+      "evidence": [
+        {
+          "predicateId": "business-other-title",
+          "scope": "title",
+          "text": "gtm"
+        },
+        {
+          "predicateId": "business-other-body",
+          "scope": "body",
+          "text": "positioning"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "after": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "cf1bf980df805b349fed71bb279872d7b20165c79ca20206e26a8ffd4950f398",
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated software product duties",
+      "ruleIds": [
+        "keep-reviewed-software-product"
+      ],
+      "evidence": [
+        {
+          "predicateId": "business-other-title",
+          "scope": "title",
+          "text": "gtm"
+        },
+        {
+          "predicateId": "reviewed-software-product-title",
+          "scope": "title",
+          "text": "product manager"
+        },
+        {
+          "predicateId": "reviewed-software-product-object",
+          "scope": "body",
+          "text": "ai native"
+        },
+        {
+          "predicateId": "reviewed-software-product-duty",
+          "scope": "body",
+          "text": "product strategy"
+        }
+      ],
+      "guards": [
+        "keep-reviewed-software-product"
+      ],
+      "failOpen": false
+    },
+    "human": {
+      "revision": 25,
+      "stableJobId": "servicenow:JB0074456",
+      "decision": "KEEP",
+      "note": "Primary duties are product management, GTM strategy, adoption, and deployment orchestration for ServiceNow AI/software products. This is a Technology occupation even though it is business-facing rather than hands-on engineering.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:29:51.3716918+00:00"
+    },
+    "audit": "All changes are REJECT -> KEEP; no new reject. Historical labels preserved."
+  },
+  {
+    "dataset": "historical-live",
+    "id": "servicenow:JB0074533",
+    "stableId": "servicenow:JB0074533",
+    "employer": "servicenow",
+    "title": "Senior Solution Sales Executive - Finance & Supply Chain Solutions",
+    "label": null,
+    "before": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "fed03f8bef7200f777f25d8d09ec0daaf0fe92d229f245931a1f764a38d4c210",
+      "decision": "REJECT",
+      "category": "sales",
+      "reason": "Corroborated unrelated occupational duties: sales",
+      "ruleIds": [
+        "reject-sales"
+      ],
+      "evidence": [
+        {
+          "predicateId": "finance-title",
+          "scope": "title",
+          "text": "finance"
+        },
+        {
+          "predicateId": "erp-object",
+          "scope": "body",
+          "text": "erp"
+        },
+        {
+          "predicateId": "sales-title",
+          "scope": "title",
+          "text": "sales"
+        },
+        {
+          "predicateId": "sales-body",
+          "scope": "body",
+          "text": "sales"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "after": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "fed03f8bef7200f777f25d8d09ec0daaf0fe92d229f245931a1f764a38d4c210",
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated solution sales duties",
+      "ruleIds": [
+        "keep-reviewed-solution-sales"
+      ],
+      "evidence": [
+        {
+          "predicateId": "finance-title",
+          "scope": "title",
+          "text": "finance"
+        },
+        {
+          "predicateId": "erp-object",
+          "scope": "body",
+          "text": "erp"
+        },
+        {
+          "predicateId": "reviewed-solution-sales-title",
+          "scope": "title",
+          "text": "solution sales"
+        },
+        {
+          "predicateId": "reviewed-solution-sales-object",
+          "scope": "body",
+          "text": "workflow automation"
+        },
+        {
+          "predicateId": "reviewed-solution-sales-duty",
+          "scope": "body",
+          "text": "demonstrations"
+        }
+      ],
+      "guards": [
+        "keep-reviewed-solution-sales"
+      ],
+      "failOpen": false
+    },
+    "human": null,
+    "audit": "All changes are REJECT -> KEEP; no new reject. Historical labels preserved."
+  },
+  {
+    "dataset": "historical-live",
+    "id": "servicenow:JB0074535",
+    "stableId": "servicenow:JB0074535",
+    "employer": "servicenow",
+    "title": "Senior Solution Sales Executive - Finance & Supply Chain Solutions",
+    "label": null,
+    "before": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "fed03f8bef7200f777f25d8d09ec0daaf0fe92d229f245931a1f764a38d4c210",
+      "decision": "REJECT",
+      "category": "sales",
+      "reason": "Corroborated unrelated occupational duties: sales",
+      "ruleIds": [
+        "reject-sales"
+      ],
+      "evidence": [
+        {
+          "predicateId": "finance-title",
+          "scope": "title",
+          "text": "finance"
+        },
+        {
+          "predicateId": "erp-object",
+          "scope": "body",
+          "text": "erp"
+        },
+        {
+          "predicateId": "sales-title",
+          "scope": "title",
+          "text": "sales"
+        },
+        {
+          "predicateId": "sales-body",
+          "scope": "body",
+          "text": "sales"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "after": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "fed03f8bef7200f777f25d8d09ec0daaf0fe92d229f245931a1f764a38d4c210",
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated solution sales duties",
+      "ruleIds": [
+        "keep-reviewed-solution-sales"
+      ],
+      "evidence": [
+        {
+          "predicateId": "finance-title",
+          "scope": "title",
+          "text": "finance"
+        },
+        {
+          "predicateId": "erp-object",
+          "scope": "body",
+          "text": "erp"
+        },
+        {
+          "predicateId": "reviewed-solution-sales-title",
+          "scope": "title",
+          "text": "solution sales"
+        },
+        {
+          "predicateId": "reviewed-solution-sales-object",
+          "scope": "body",
+          "text": "workflow automation"
+        },
+        {
+          "predicateId": "reviewed-solution-sales-duty",
+          "scope": "body",
+          "text": "demonstrations"
+        }
+      ],
+      "guards": [
+        "keep-reviewed-solution-sales"
+      ],
+      "failOpen": false
+    },
+    "human": null,
+    "audit": "All changes are REJECT -> KEEP; no new reject. Historical labels preserved."
+  },
+  {
+    "dataset": "historical-live",
+    "id": "servicenow:JB0074536",
+    "stableId": "servicenow:JB0074536",
+    "employer": "servicenow",
+    "title": "Senior Solution Sales Executive - Finance & Supply Chain Solutions",
+    "label": "KEEP",
+    "before": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "fed03f8bef7200f777f25d8d09ec0daaf0fe92d229f245931a1f764a38d4c210",
+      "decision": "REJECT",
+      "category": "sales",
+      "reason": "Corroborated unrelated occupational duties: sales",
+      "ruleIds": [
+        "reject-sales"
+      ],
+      "evidence": [
+        {
+          "predicateId": "finance-title",
+          "scope": "title",
+          "text": "finance"
+        },
+        {
+          "predicateId": "erp-object",
+          "scope": "body",
+          "text": "erp"
+        },
+        {
+          "predicateId": "sales-title",
+          "scope": "title",
+          "text": "sales"
+        },
+        {
+          "predicateId": "sales-body",
+          "scope": "body",
+          "text": "sales"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "after": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "fed03f8bef7200f777f25d8d09ec0daaf0fe92d229f245931a1f764a38d4c210",
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated solution sales duties",
+      "ruleIds": [
+        "keep-reviewed-solution-sales"
+      ],
+      "evidence": [
+        {
+          "predicateId": "finance-title",
+          "scope": "title",
+          "text": "finance"
+        },
+        {
+          "predicateId": "erp-object",
+          "scope": "body",
+          "text": "erp"
+        },
+        {
+          "predicateId": "reviewed-solution-sales-title",
+          "scope": "title",
+          "text": "solution sales"
+        },
+        {
+          "predicateId": "reviewed-solution-sales-object",
+          "scope": "body",
+          "text": "workflow automation"
+        },
+        {
+          "predicateId": "reviewed-solution-sales-duty",
+          "scope": "body",
+          "text": "demonstrations"
+        }
+      ],
+      "guards": [
+        "keep-reviewed-solution-sales"
+      ],
+      "failOpen": false
+    },
+    "human": {
+      "revision": 26,
+      "stableJobId": "servicenow:JB0074536",
+      "decision": "KEEP",
+      "note": "Primary duties are enterprise solution sales for ServiceNow AI/software products, including technical discovery, demonstrations, and explaining technical capabilities. This belongs to Technology even though it is a quota-carrying sales role.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:30:14.0327419+00:00"
+    },
+    "audit": "All changes are REJECT -> KEEP; no new reject. Historical labels preserved."
+  },
+  {
+    "dataset": "historical-live",
+    "id": "aecom:J10155853",
+    "stableId": "aecom:J10155853",
+    "employer": "aecom",
+    "title": "Civil OSP Project Manager - QA/QC Lead",
+    "label": "KEEP",
+    "before": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "d23c3e96dd9933f4744cb32b76d1857e15a09baf694556cbcac98c9daaebe822",
+      "decision": "REJECT",
+      "category": "trades-construction, civil-domain",
+      "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+      "ruleIds": [
+        "reject-trades-construction",
+        "reject-civil"
+      ],
+      "evidence": [
+        {
+          "predicateId": "trades-construction-title",
+          "scope": "title",
+          "text": "civil"
+        },
+        {
+          "predicateId": "trades-construction-body",
+          "scope": "body",
+          "text": "construction"
+        },
+        {
+          "predicateId": "civil-title",
+          "scope": "title",
+          "text": "civil"
+        },
+        {
+          "predicateId": "civil-object",
+          "scope": "body",
+          "text": "roadway"
+        },
+        {
+          "predicateId": "civil-work",
+          "scope": "body",
+          "text": "design"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "after": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "d23c3e96dd9933f4744cb32b76d1857e15a09baf694556cbcac98c9daaebe822",
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated telecom infrastructure duties",
+      "ruleIds": [
+        "keep-reviewed-telecom-infrastructure"
+      ],
+      "evidence": [
+        {
+          "predicateId": "trades-construction-title",
+          "scope": "title",
+          "text": "civil"
+        },
+        {
+          "predicateId": "reviewed-application-integration-title",
+          "scope": "title",
+          "text": "project manager"
+        },
+        {
+          "predicateId": "reviewed-telecom-infrastructure-title",
+          "scope": "title",
+          "text": "osp"
+        },
+        {
+          "predicateId": "reviewed-telecom-infrastructure-object",
+          "scope": "body",
+          "text": "telecommunications infrastructure"
+        },
+        {
+          "predicateId": "reviewed-telecom-infrastructure-duty",
+          "scope": "body",
+          "text": "infrastructure design"
+        }
+      ],
+      "guards": [
+        "keep-reviewed-telecom-infrastructure"
+      ],
+      "failOpen": false
+    },
+    "human": {
+      "revision": 27,
+      "stableJobId": "aecom:J10155853",
+      "decision": "KEEP",
+      "note": "Primary duties are project/quality leadership for telecommunications outside-plant infrastructure. Although the work includes substantial civil design and construction coordination, the underlying system is communications/network infrastructure, so it belongs in Technology.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:30:54.4899973+00:00"
+    },
+    "audit": "All changes are REJECT -> KEEP; no new reject. Historical labels preserved."
+  },
+  {
+    "dataset": "historical-live",
+    "id": "boeing:JR2026518584",
+    "stableId": "boeing:JR2026518584",
+    "employer": "boeing",
+    "title": "Associate Test and Evaluation Laboratory Technician",
+    "label": "KEEP",
+    "before": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "4f08950e4a25740cc3b0ee8ce298938ebc17dd07a8969a211ac9c1a4d8f81a12",
+      "decision": "REJECT",
+      "category": "operator-technician",
+      "reason": "Corroborated unrelated occupational duties: operator-technician",
+      "ruleIds": [
+        "reject-operator-technician"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "technician"
+        },
+        {
+          "predicateId": "operator-technician-body",
+          "scope": "body",
+          "text": "materials"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "after": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "4f08950e4a25740cc3b0ee8ce298938ebc17dd07a8969a211ac9c1a4d8f81a12",
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated test systems duties",
+      "ruleIds": [
+        "keep-reviewed-test-systems"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "technician"
+        },
+        {
+          "predicateId": "reviewed-test-systems-title",
+          "scope": "title",
+          "text": "test"
+        },
+        {
+          "predicateId": "reviewed-test-systems-object",
+          "scope": "body",
+          "text": "electrical engineering drawings"
+        },
+        {
+          "predicateId": "reviewed-test-systems-duty",
+          "scope": "body",
+          "text": "designs systems"
+        }
+      ],
+      "guards": [
+        "keep-reviewed-test-systems"
+      ],
+      "failOpen": false
+    },
+    "human": {
+      "revision": 11,
+      "stableJobId": "boeing:JR2026518584",
+      "decision": "KEEP",
+      "note": "Primary duties involve test-system design, systems integration, instrumentation/sensors, electrical schematics, software, data analysis, and troubleshooting. This is technical systems/electronics work and belongs in Technology.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:23:47.3696724+00:00"
+    },
+    "audit": "All changes are REJECT -> KEEP; no new reject. Historical labels preserved."
+  },
+  {
+    "dataset": "historical-live",
+    "id": "rtx:01865916",
+    "stableId": "rtx:01865916",
+    "employer": "rtx",
+    "title": "Digital Technology Capture Engagement Lead, Program Architecture (FEOTB) Naval Power, Remote",
+    "label": "KEEP",
+    "before": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "fa34b3314a7ce2f3a091b46adbd9e67640c16e52fd93d3e0f52236767b51795b",
+      "decision": "REJECT",
+      "category": "sales",
+      "reason": "Corroborated unrelated occupational duties: sales",
+      "ruleIds": [
+        "reject-sales"
+      ],
+      "evidence": [
+        {
+          "predicateId": "sales-title",
+          "scope": "title",
+          "text": "capture"
+        },
+        {
+          "predicateId": "sales-body",
+          "scope": "body",
+          "text": "capture"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "after": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "fa34b3314a7ce2f3a091b46adbd9e67640c16e52fd93d3e0f52236767b51795b",
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated it architecture duties",
+      "ruleIds": [
+        "keep-reviewed-it-architecture"
+      ],
+      "evidence": [
+        {
+          "predicateId": "sales-title",
+          "scope": "title",
+          "text": "capture"
+        },
+        {
+          "predicateId": "reviewed-it-architecture-title",
+          "scope": "title",
+          "text": "digital technology"
+        },
+        {
+          "predicateId": "reviewed-it-architecture-object",
+          "scope": "body",
+          "text": "program architects"
+        },
+        {
+          "predicateId": "reviewed-it-architecture-duty",
+          "scope": "body",
+          "text": "proposal response"
+        }
+      ],
+      "guards": [
+        "keep-reviewed-it-architecture"
+      ],
+      "failOpen": false
+    },
+    "human": {
+      "revision": 30,
+      "stableJobId": "rtx:01865916",
+      "decision": "KEEP",
+      "note": "Primary duties center on Digital Technology, program architecture, IT/engineering requirements analysis, Agile workflows, and technical proposal support. This belongs in Technology despite the capture/business-development context.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:32:11.5064134+00:00"
+    },
+    "audit": "All changes are REJECT -> KEEP; no new reject. Historical labels preserved."
+  },
+  {
+    "dataset": "historical-live",
+    "id": "rtx:01868753",
+    "stableId": "rtx:01868753",
+    "employer": "rtx",
+    "title": "ECAD Layout Designer Technician, Draft/Product Definition (Remote)",
+    "label": "KEEP",
+    "before": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "471f2ed21d200c50d4b536f0fb0b39d7561fb6e5edc5bf8ddeb25bba91d418bd",
+      "decision": "REJECT",
+      "category": "operator-technician",
+      "reason": "Corroborated unrelated occupational duties: operator-technician",
+      "ruleIds": [
+        "reject-operator-technician"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "technician"
+        },
+        {
+          "predicateId": "operator-technician-body",
+          "scope": "body",
+          "text": "assembly"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "after": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "471f2ed21d200c50d4b536f0fb0b39d7561fb6e5edc5bf8ddeb25bba91d418bd",
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated electronic design duties",
+      "ruleIds": [
+        "keep-reviewed-electronic-design"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "technician"
+        },
+        {
+          "predicateId": "reviewed-electronic-design-title",
+          "scope": "title",
+          "text": "ecad"
+        },
+        {
+          "predicateId": "reviewed-electronic-design-object",
+          "scope": "body",
+          "text": "pcb"
+        },
+        {
+          "predicateId": "reviewed-electronic-design-duty",
+          "scope": "body",
+          "text": "layout"
+        }
+      ],
+      "guards": [
+        "keep-reviewed-electronic-design"
+      ],
+      "failOpen": false
+    },
+    "human": {
+      "revision": 14,
+      "stableJobId": "rtx:01868753",
+      "decision": "KEEP",
+      "note": "Primary duties are PCB/ECAD design, routing, constraints, configuration management, and electronic design documentation. Despite the technician title, this is clearly Technology work.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:25:05.4399160+00:00"
+    },
+    "audit": "All changes are REJECT -> KEEP; no new reject. Historical labels preserved."
+  }
+]

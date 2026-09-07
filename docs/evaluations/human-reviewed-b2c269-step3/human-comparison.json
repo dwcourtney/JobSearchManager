@@ -1,0 +1,2237 @@
+[
+  {
+    "id": "aecom:J10147449",
+    "title": "Senior Structural Engineer, Data Centers - Remote (U.S.)",
+    "human": {
+      "revision": 2,
+      "stableJobId": "aecom:J10147449",
+      "decision": "REJECT",
+      "note": "Primary duties are structural/civil engineering for concrete and steel data-center facilities. The industry is technology-adjacent, but the occupation itself is not Technology.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:19:02.5106248+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "67b6082d108610e1b6450d557ce30ef80de002c0e351cd3be26445b1f6b130fe",
+      "decision": "REJECT",
+      "category": "trades-construction, civil-domain",
+      "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+      "ruleIds": [
+        "reject-trades-construction",
+        "reject-civil"
+      ],
+      "evidence": [
+        {
+          "predicateId": "trades-construction-title",
+          "scope": "title",
+          "text": "structural"
+        },
+        {
+          "predicateId": "protected-title",
+          "scope": "title",
+          "text": "engineer"
+        },
+        {
+          "predicateId": "civil-title",
+          "scope": "title",
+          "text": "structural"
+        },
+        {
+          "predicateId": "civil-object",
+          "scope": "body",
+          "text": "steel structures"
+        },
+        {
+          "predicateId": "civil-work",
+          "scope": "body",
+          "text": "design"
+        },
+        {
+          "predicateId": "trades-construction-body",
+          "scope": "body",
+          "text": "concrete"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "67b6082d108610e1b6450d557ce30ef80de002c0e351cd3be26445b1f6b130fe",
+      "decision": "REJECT",
+      "category": "trades-construction, civil-domain",
+      "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+      "ruleIds": [
+        "reject-trades-construction",
+        "reject-civil"
+      ],
+      "evidence": [
+        {
+          "predicateId": "trades-construction-title",
+          "scope": "title",
+          "text": "structural"
+        },
+        {
+          "predicateId": "protected-title",
+          "scope": "title",
+          "text": "engineer"
+        },
+        {
+          "predicateId": "civil-title",
+          "scope": "title",
+          "text": "structural"
+        },
+        {
+          "predicateId": "civil-object",
+          "scope": "body",
+          "text": "steel structures"
+        },
+        {
+          "predicateId": "civil-work",
+          "scope": "body",
+          "text": "design"
+        },
+        {
+          "predicateId": "trades-construction-body",
+          "scope": "body",
+          "text": "concrete"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    }
+  },
+  {
+    "id": "aecom:J10150854",
+    "title": "Operation, Maintenance, and Monitoring (OMM) Technician",
+    "human": {
+      "revision": 16,
+      "stableJobId": "aecom:J10150854",
+      "decision": "REJECT",
+      "note": "Primary duties are environmental remediation system operation, field sampling, maintenance, and treatment-system monitoring. Technology is used in the work, but the occupation itself is outside the Technology category.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:25:53.9315883+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "64caefbe78373492e19cbfa5f739998a2fc918cb9996f2d155011b9b7a36420d",
+      "decision": "REJECT",
+      "category": "environment-field",
+      "reason": "Corroborated unrelated occupational duties: environment-field",
+      "ruleIds": [
+        "reject-environment-field"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "technician"
+        },
+        {
+          "predicateId": "environment-field-title",
+          "scope": "title",
+          "text": "omm) technician"
+        },
+        {
+          "predicateId": "environment-field-body",
+          "scope": "body",
+          "text": "remediation"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "64caefbe78373492e19cbfa5f739998a2fc918cb9996f2d155011b9b7a36420d",
+      "decision": "REJECT",
+      "category": "environment-field",
+      "reason": "Corroborated unrelated occupational duties: environment-field",
+      "ruleIds": [
+        "reject-environment-field"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "technician"
+        },
+        {
+          "predicateId": "environment-field-title",
+          "scope": "title",
+          "text": "omm) technician"
+        },
+        {
+          "predicateId": "environment-field-body",
+          "scope": "body",
+          "text": "remediation"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    }
+  },
+  {
+    "id": "aecom:J10155853",
+    "title": "Civil OSP Project Manager - QA/QC Lead",
+    "human": {
+      "revision": 27,
+      "stableJobId": "aecom:J10155853",
+      "decision": "KEEP",
+      "note": "Primary duties are project/quality leadership for telecommunications outside-plant infrastructure. Although the work includes substantial civil design and construction coordination, the underlying system is communications/network infrastructure, so it belongs in Technology.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:30:54.4899973+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "d23c3e96dd9933f4744cb32b76d1857e15a09baf694556cbcac98c9daaebe822",
+      "decision": "REJECT",
+      "category": "trades-construction, civil-domain",
+      "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+      "ruleIds": [
+        "reject-trades-construction",
+        "reject-civil"
+      ],
+      "evidence": [
+        {
+          "predicateId": "trades-construction-title",
+          "scope": "title",
+          "text": "civil"
+        },
+        {
+          "predicateId": "trades-construction-body",
+          "scope": "body",
+          "text": "construction"
+        },
+        {
+          "predicateId": "civil-title",
+          "scope": "title",
+          "text": "civil"
+        },
+        {
+          "predicateId": "civil-object",
+          "scope": "body",
+          "text": "roadway"
+        },
+        {
+          "predicateId": "civil-work",
+          "scope": "body",
+          "text": "design"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "d23c3e96dd9933f4744cb32b76d1857e15a09baf694556cbcac98c9daaebe822",
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated telecom infrastructure duties",
+      "ruleIds": [
+        "keep-reviewed-telecom-infrastructure"
+      ],
+      "evidence": [
+        {
+          "predicateId": "trades-construction-title",
+          "scope": "title",
+          "text": "civil"
+        },
+        {
+          "predicateId": "reviewed-application-integration-title",
+          "scope": "title",
+          "text": "project manager"
+        },
+        {
+          "predicateId": "reviewed-telecom-infrastructure-title",
+          "scope": "title",
+          "text": "osp"
+        },
+        {
+          "predicateId": "reviewed-telecom-infrastructure-object",
+          "scope": "body",
+          "text": "telecommunications infrastructure"
+        },
+        {
+          "predicateId": "reviewed-telecom-infrastructure-duty",
+          "scope": "body",
+          "text": "infrastructure design"
+        }
+      ],
+      "guards": [
+        "keep-reviewed-telecom-infrastructure"
+      ],
+      "failOpen": false
+    }
+  },
+  {
+    "id": "aecom:REF59213I",
+    "title": "Drainage Engineers and Designers ",
+    "human": {
+      "revision": 3,
+      "stableJobId": "aecom:REF59213I",
+      "decision": "REJECT",
+      "note": "Primary duties are civil/drainage engineering. CAD is a technology tool used to perform the work, but the occupation itself is not Technology.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:20:20.2501040+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "c60baf99bb80a3dd14d87545da8172833eb8bfa089fdf97cd3541c1933595373",
+      "decision": "REJECT",
+      "category": "civil-domain",
+      "reason": "Corroborated unrelated occupational duties: civil",
+      "ruleIds": [
+        "reject-civil"
+      ],
+      "evidence": [
+        {
+          "predicateId": "civil-title",
+          "scope": "title",
+          "text": "drainage"
+        },
+        {
+          "predicateId": "protected-title",
+          "scope": "title",
+          "text": "engineers"
+        },
+        {
+          "predicateId": "civil-object",
+          "scope": "body",
+          "text": "highway"
+        },
+        {
+          "predicateId": "civil-work",
+          "scope": "body",
+          "text": "designing"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "c60baf99bb80a3dd14d87545da8172833eb8bfa089fdf97cd3541c1933595373",
+      "decision": "REJECT",
+      "category": "civil-domain",
+      "reason": "Corroborated unrelated occupational duties: civil",
+      "ruleIds": [
+        "reject-civil"
+      ],
+      "evidence": [
+        {
+          "predicateId": "civil-title",
+          "scope": "title",
+          "text": "drainage"
+        },
+        {
+          "predicateId": "protected-title",
+          "scope": "title",
+          "text": "engineers"
+        },
+        {
+          "predicateId": "civil-object",
+          "scope": "body",
+          "text": "highway"
+        },
+        {
+          "predicateId": "civil-work",
+          "scope": "body",
+          "text": "designing"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    }
+  },
+  {
+    "id": "aecom:REF59216P",
+    "title": "Roadway Engineers and Designers",
+    "human": {
+      "revision": 4,
+      "stableJobId": "aecom:REF59216P",
+      "decision": "REJECT",
+      "note": "Primary duties are roadway/civil engineering. CAD and design software are tools used for the work, but the role itself is not part of the Technology category.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:20:50.9893349+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "c61822e733f4f882ce7800777fa36525fe468bbcd216ed1ef8efe6c15d59d55e",
+      "decision": "REJECT",
+      "category": "trades-construction, civil-domain",
+      "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+      "ruleIds": [
+        "reject-trades-construction",
+        "reject-civil"
+      ],
+      "evidence": [
+        {
+          "predicateId": "trades-construction-title",
+          "scope": "title",
+          "text": "roadway"
+        },
+        {
+          "predicateId": "protected-title",
+          "scope": "title",
+          "text": "engineers"
+        },
+        {
+          "predicateId": "civil-title",
+          "scope": "title",
+          "text": "roadway"
+        },
+        {
+          "predicateId": "civil-object",
+          "scope": "body",
+          "text": "roadway"
+        },
+        {
+          "predicateId": "civil-work",
+          "scope": "body",
+          "text": "designing"
+        },
+        {
+          "predicateId": "trades-construction-body",
+          "scope": "body",
+          "text": "construction"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "c61822e733f4f882ce7800777fa36525fe468bbcd216ed1ef8efe6c15d59d55e",
+      "decision": "REJECT",
+      "category": "trades-construction, civil-domain",
+      "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+      "ruleIds": [
+        "reject-trades-construction",
+        "reject-civil"
+      ],
+      "evidence": [
+        {
+          "predicateId": "trades-construction-title",
+          "scope": "title",
+          "text": "roadway"
+        },
+        {
+          "predicateId": "protected-title",
+          "scope": "title",
+          "text": "engineers"
+        },
+        {
+          "predicateId": "civil-title",
+          "scope": "title",
+          "text": "roadway"
+        },
+        {
+          "predicateId": "civil-object",
+          "scope": "body",
+          "text": "roadway"
+        },
+        {
+          "predicateId": "civil-work",
+          "scope": "body",
+          "text": "designing"
+        },
+        {
+          "predicateId": "trades-construction-body",
+          "scope": "body",
+          "text": "construction"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    }
+  },
+  {
+    "id": "amentum:R0158818",
+    "title": "VP, Finance Excellence and Transformation",
+    "human": {
+      "revision": 28,
+      "stableJobId": "amentum:R0158818",
+      "decision": "REJECT",
+      "note": "Primary duties are finance transformation, process modernization, financial-system automation, governance, and program leadership. Technology is a major enabler, but the occupation itself is Finance rather than Technology.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:31:27.7752473+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "78dc8a0fc15633ff3bef41a8d02a876fe9d9c3a21c0f484113fcdc2209d8dcc7",
+      "decision": "REJECT",
+      "category": "finance",
+      "reason": "Corroborated unrelated occupational duties: finance",
+      "ruleIds": [
+        "reject-finance"
+      ],
+      "evidence": [
+        {
+          "predicateId": "finance-title",
+          "scope": "title",
+          "text": "finance"
+        },
+        {
+          "predicateId": "erp-object",
+          "scope": "body",
+          "text": "erp"
+        },
+        {
+          "predicateId": "finance-body",
+          "scope": "body",
+          "text": "audit"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "78dc8a0fc15633ff3bef41a8d02a876fe9d9c3a21c0f484113fcdc2209d8dcc7",
+      "decision": "REJECT",
+      "category": "finance",
+      "reason": "Corroborated unrelated occupational duties: finance",
+      "ruleIds": [
+        "reject-finance"
+      ],
+      "evidence": [
+        {
+          "predicateId": "finance-title",
+          "scope": "title",
+          "text": "finance"
+        },
+        {
+          "predicateId": "erp-object",
+          "scope": "body",
+          "text": "erp"
+        },
+        {
+          "predicateId": "finance-body",
+          "scope": "body",
+          "text": "audit"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    }
+  },
+  {
+    "id": "boeing:JR2026508418",
+    "title": "Nondestructive Test (NDT) Technician - UT & RT",
+    "human": {
+      "revision": 10,
+      "stableJobId": "boeing:JR2026508418",
+      "decision": "REJECT",
+      "note": "Primary duties are nondestructive inspection/testing of physical aerospace hardware. Digital and automated inspection systems are tools used in the work, but the occupation itself is outside the Technology category.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:23:01.4844890+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "0bb1a8ad06e7e876e9d2685cfc8ed46e0fdfc7ef5995b633557ea6577677d204",
+      "decision": "REJECT",
+      "category": "operator-technician",
+      "reason": "Corroborated unrelated occupational duties: operator-technician",
+      "ruleIds": [
+        "reject-operator-technician"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "technician"
+        },
+        {
+          "predicateId": "operator-technician-body",
+          "scope": "body",
+          "text": "repairs"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "0bb1a8ad06e7e876e9d2685cfc8ed46e0fdfc7ef5995b633557ea6577677d204",
+      "decision": "REJECT",
+      "category": "operator-technician",
+      "reason": "Corroborated unrelated occupational duties: operator-technician",
+      "ruleIds": [
+        "reject-operator-technician"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "technician"
+        },
+        {
+          "predicateId": "reviewed-test-systems-title",
+          "scope": "title",
+          "text": "test"
+        },
+        {
+          "predicateId": "operator-technician-body",
+          "scope": "body",
+          "text": "repairs"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    }
+  },
+  {
+    "id": "boeing:JR2026518346",
+    "title": "Maintenance Customer Technical Training Specialist (Mid-Level & Senior)",
+    "human": {
+      "revision": 17,
+      "stableJobId": "boeing:JR2026518346",
+      "decision": "REJECT",
+      "note": "Primary duties are aircraft maintenance technical training and courseware development. Specialized software supports the training work, but the occupation itself is outside the Technology category.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:26:18.6347876+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "511cd87352042c7b15c25c0a86d54b4025b7d5a2aee5a2ab84b3efd8c6441e4c",
+      "decision": "REJECT",
+      "category": "aircraft-maintenance-training",
+      "reason": "Corroborated unrelated occupational duties: aircraft-maintenance-training",
+      "ruleIds": [
+        "reject-aircraft-maintenance-training"
+      ],
+      "evidence": [
+        {
+          "predicateId": "aircraft-maintenance-training-title",
+          "scope": "title",
+          "text": "maintenance customer technical training"
+        },
+        {
+          "predicateId": "aircraft-maintenance-training-body",
+          "scope": "body",
+          "text": "aircraft mechanic"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "511cd87352042c7b15c25c0a86d54b4025b7d5a2aee5a2ab84b3efd8c6441e4c",
+      "decision": "REJECT",
+      "category": "aircraft-maintenance-training",
+      "reason": "Corroborated unrelated occupational duties: aircraft-maintenance-training",
+      "ruleIds": [
+        "reject-aircraft-maintenance-training"
+      ],
+      "evidence": [
+        {
+          "predicateId": "aircraft-maintenance-training-title",
+          "scope": "title",
+          "text": "maintenance customer technical training"
+        },
+        {
+          "predicateId": "aircraft-maintenance-training-body",
+          "scope": "body",
+          "text": "aircraft mechanic"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    }
+  },
+  {
+    "id": "boeing:JR2026518584",
+    "title": "Associate Test and Evaluation Laboratory Technician",
+    "human": {
+      "revision": 11,
+      "stableJobId": "boeing:JR2026518584",
+      "decision": "KEEP",
+      "note": "Primary duties involve test-system design, systems integration, instrumentation/sensors, electrical schematics, software, data analysis, and troubleshooting. This is technical systems/electronics work and belongs in Technology.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:23:47.3696724+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "4f08950e4a25740cc3b0ee8ce298938ebc17dd07a8969a211ac9c1a4d8f81a12",
+      "decision": "REJECT",
+      "category": "operator-technician",
+      "reason": "Corroborated unrelated occupational duties: operator-technician",
+      "ruleIds": [
+        "reject-operator-technician"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "technician"
+        },
+        {
+          "predicateId": "operator-technician-body",
+          "scope": "body",
+          "text": "materials"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "4f08950e4a25740cc3b0ee8ce298938ebc17dd07a8969a211ac9c1a4d8f81a12",
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated test systems duties",
+      "ruleIds": [
+        "keep-reviewed-test-systems"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "technician"
+        },
+        {
+          "predicateId": "reviewed-test-systems-title",
+          "scope": "title",
+          "text": "test"
+        },
+        {
+          "predicateId": "reviewed-test-systems-object",
+          "scope": "body",
+          "text": "electrical engineering drawings"
+        },
+        {
+          "predicateId": "reviewed-test-systems-duty",
+          "scope": "body",
+          "text": "designs systems"
+        }
+      ],
+      "guards": [
+        "keep-reviewed-test-systems"
+      ],
+      "failOpen": false
+    }
+  },
+  {
+    "id": "boeing:JR2026518773",
+    "title": "Experienced Quality Specialist \u2013 Electrical Test Inspector",
+    "human": {
+      "revision": 12,
+      "stableJobId": "boeing:JR2026518773",
+      "decision": "REJECT",
+      "note": "Primary duties are electrical manufacturing quality and inspection. Data analysis and manufacturing systems support the work, but the occupation itself is outside the Technology category.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:24:16.4950335+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "d40987bfd2acab2b2970f82daeb123a3069067b96e4a15c4d22943fc80fced1d",
+      "decision": "REJECT",
+      "category": "trades-construction",
+      "reason": "Corroborated unrelated occupational duties: trades-construction",
+      "ruleIds": [
+        "reject-trades-construction"
+      ],
+      "evidence": [
+        {
+          "predicateId": "trades-construction-title",
+          "scope": "title",
+          "text": "inspector"
+        },
+        {
+          "predicateId": "trades-construction-body",
+          "scope": "body",
+          "text": "wiring"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "d40987bfd2acab2b2970f82daeb123a3069067b96e4a15c4d22943fc80fced1d",
+      "decision": "REJECT",
+      "category": "trades-construction",
+      "reason": "Corroborated unrelated occupational duties: trades-construction",
+      "ruleIds": [
+        "reject-trades-construction"
+      ],
+      "evidence": [
+        {
+          "predicateId": "trades-construction-title",
+          "scope": "title",
+          "text": "inspector"
+        },
+        {
+          "predicateId": "reviewed-test-systems-title",
+          "scope": "title",
+          "text": "test"
+        },
+        {
+          "predicateId": "trades-construction-body",
+          "scope": "body",
+          "text": "wiring"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    }
+  },
+  {
+    "id": "boeing:JR2026521115",
+    "title": "Mid-Level Manufacturing Research and Development Technician",
+    "human": {
+      "revision": 21,
+      "stableJobId": "boeing:JR2026521115",
+      "decision": "REJECT",
+      "note": "Primary duties are manufacturing process improvement, tooling/equipment support, corrective actions, and project execution. The role is engineering-adjacent, but it is not a Technology occupation.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:27:50.3314062+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "fdbe5930a479f893964d3b864b859c4608f9f2d454cad7bcc4197ead8b7b07b6",
+      "decision": "REJECT",
+      "category": "operator-technician",
+      "reason": "Corroborated unrelated occupational duties: operator-technician",
+      "ruleIds": [
+        "reject-operator-technician"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "technician"
+        },
+        {
+          "predicateId": "operator-technician-body",
+          "scope": "body",
+          "text": "manufacturing"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "fdbe5930a479f893964d3b864b859c4608f9f2d454cad7bcc4197ead8b7b07b6",
+      "decision": "REJECT",
+      "category": "operator-technician",
+      "reason": "Corroborated unrelated occupational duties: operator-technician",
+      "ruleIds": [
+        "reject-operator-technician"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "technician"
+        },
+        {
+          "predicateId": "operator-technician-body",
+          "scope": "body",
+          "text": "manufacturing"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    }
+  },
+  {
+    "id": "boeing:JR2026521254",
+    "title": "F-15 Flight Line Avionics Technician - Qatar",
+    "human": {
+      "revision": 18,
+      "stableJobId": "boeing:JR2026521254",
+      "decision": "REJECT",
+      "note": "Primary duties are aircraft avionics maintenance, troubleshooting, repair, and flight-line support. The work is highly technical, but the occupation itself is outside the Technology category.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:26:39.5582701+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "5af8a6eefe91813efa0e039958f31732e1f09a10106f911c2c93a224ba30f232",
+      "decision": "REJECT",
+      "category": "operator-technician",
+      "reason": "Corroborated unrelated occupational duties: operator-technician",
+      "ruleIds": [
+        "reject-operator-technician"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "technician"
+        },
+        {
+          "predicateId": "operator-technician-body",
+          "scope": "body",
+          "text": "assembly"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "5af8a6eefe91813efa0e039958f31732e1f09a10106f911c2c93a224ba30f232",
+      "decision": "REJECT",
+      "category": "operator-technician",
+      "reason": "Corroborated unrelated occupational duties: operator-technician",
+      "ruleIds": [
+        "reject-operator-technician"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "technician"
+        },
+        {
+          "predicateId": "operator-technician-body",
+          "scope": "body",
+          "text": "assembly"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    }
+  },
+  {
+    "id": "boeing:JR2026522042",
+    "title": "Manufacturing Machinist Apprenticeship A24A0",
+    "human": {
+      "revision": 22,
+      "stableJobId": "boeing:JR2026522042",
+      "decision": "REJECT",
+      "note": "Primary duties are machining and manufacturing trades, including CNC operation/programming, fabrication, inspection, and tool work. This is outside the Technology category.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:28:22.8476528+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "f0e45159a28ac0a89ca400cef0fb10fba8837e6bc421325430efb078464997a4",
+      "decision": "REJECT",
+      "category": "trades-construction",
+      "reason": "Corroborated unrelated occupational duties: trades-construction",
+      "ruleIds": [
+        "reject-trades-construction"
+      ],
+      "evidence": [
+        {
+          "predicateId": "trades-construction-title",
+          "scope": "title",
+          "text": "machinist"
+        },
+        {
+          "predicateId": "trades-construction-body",
+          "scope": "body",
+          "text": "machining"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "f0e45159a28ac0a89ca400cef0fb10fba8837e6bc421325430efb078464997a4",
+      "decision": "REJECT",
+      "category": "trades-construction",
+      "reason": "Corroborated unrelated occupational duties: trades-construction",
+      "ruleIds": [
+        "reject-trades-construction"
+      ],
+      "evidence": [
+        {
+          "predicateId": "trades-construction-title",
+          "scope": "title",
+          "text": "machinist"
+        },
+        {
+          "predicateId": "trades-construction-body",
+          "scope": "body",
+          "text": "machining"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    }
+  },
+  {
+    "id": "leidos:R-00182300",
+    "title": "McMurdo Seasonal Instrument Technician",
+    "human": {
+      "revision": 13,
+      "stableJobId": "leidos:R-00182300",
+      "decision": "REJECT",
+      "note": "Primary duties are laboratory instrumentation maintenance, calibration, repair, and support. The role works with technical equipment, but it is not a Technology occupation in the software/IT/computing sense.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:24:40.1140765+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "0a4f3e287edd1df02c1c3c07ce9f86d20066ac467f84c5b24a918f117cc069b6",
+      "decision": "REJECT",
+      "category": "operator-technician",
+      "reason": "Corroborated unrelated occupational duties: operator-technician",
+      "ruleIds": [
+        "reject-operator-technician"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "technician"
+        },
+        {
+          "predicateId": "operator-technician-body",
+          "scope": "body",
+          "text": "repairs"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "0a4f3e287edd1df02c1c3c07ce9f86d20066ac467f84c5b24a918f117cc069b6",
+      "decision": "REJECT",
+      "category": "operator-technician",
+      "reason": "Corroborated unrelated occupational duties: operator-technician",
+      "ruleIds": [
+        "reject-operator-technician"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "technician"
+        },
+        {
+          "predicateId": "operator-technician-body",
+          "scope": "body",
+          "text": "repairs"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    }
+  },
+  {
+    "id": "leidos:R-00184335",
+    "title": "Substation Civil Structural Engineer",
+    "human": {
+      "revision": 5,
+      "stableJobId": "leidos:R-00184335",
+      "decision": "REJECT",
+      "note": "Leidos role, but the primary duties are civil/structural engineering for substations and physical infrastructure. Employer does not determine category.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:21:15.6124904+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "8a14d0df49da773d33d22432bcccdd789cd05e1fee96d3e25f961bd1344a12f9",
+      "decision": "REJECT",
+      "category": "trades-construction, civil-domain",
+      "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+      "ruleIds": [
+        "reject-trades-construction",
+        "reject-civil"
+      ],
+      "evidence": [
+        {
+          "predicateId": "trades-construction-title",
+          "scope": "title",
+          "text": "civil"
+        },
+        {
+          "predicateId": "protected-title",
+          "scope": "title",
+          "text": "engineer"
+        },
+        {
+          "predicateId": "civil-title",
+          "scope": "title",
+          "text": "civil"
+        },
+        {
+          "predicateId": "civil-object",
+          "scope": "body",
+          "text": "steel structures"
+        },
+        {
+          "predicateId": "civil-work",
+          "scope": "body",
+          "text": "designing"
+        },
+        {
+          "predicateId": "trades-construction-body",
+          "scope": "body",
+          "text": "concrete"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "8a14d0df49da773d33d22432bcccdd789cd05e1fee96d3e25f961bd1344a12f9",
+      "decision": "REJECT",
+      "category": "trades-construction, civil-domain",
+      "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+      "ruleIds": [
+        "reject-trades-construction",
+        "reject-civil"
+      ],
+      "evidence": [
+        {
+          "predicateId": "trades-construction-title",
+          "scope": "title",
+          "text": "civil"
+        },
+        {
+          "predicateId": "protected-title",
+          "scope": "title",
+          "text": "engineer"
+        },
+        {
+          "predicateId": "civil-title",
+          "scope": "title",
+          "text": "civil"
+        },
+        {
+          "predicateId": "civil-object",
+          "scope": "body",
+          "text": "steel structures"
+        },
+        {
+          "predicateId": "civil-work",
+          "scope": "body",
+          "text": "designing"
+        },
+        {
+          "predicateId": "trades-construction-body",
+          "scope": "body",
+          "text": "concrete"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    }
+  },
+  {
+    "id": "leidos:R-00184339",
+    "title": "Senior Civil/Structural Engineer",
+    "human": {
+      "revision": 6,
+      "stableJobId": "leidos:R-00184339",
+      "decision": "REJECT",
+      "note": "Primary duties are civil/structural engineering for utility/substation infrastructure. This is outside the Technology category despite being an engineering role.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:21:38.9474092+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "a45e7fc473e4a378b4410afe81cb636c500e3dc35642e5fdb8d7975bc461fa5b",
+      "decision": "REJECT",
+      "category": "trades-construction, civil-domain",
+      "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+      "ruleIds": [
+        "reject-trades-construction",
+        "reject-civil"
+      ],
+      "evidence": [
+        {
+          "predicateId": "trades-construction-title",
+          "scope": "title",
+          "text": "civil"
+        },
+        {
+          "predicateId": "protected-title",
+          "scope": "title",
+          "text": "engineer"
+        },
+        {
+          "predicateId": "civil-title",
+          "scope": "title",
+          "text": "civil"
+        },
+        {
+          "predicateId": "civil-object",
+          "scope": "body",
+          "text": "steel structures"
+        },
+        {
+          "predicateId": "civil-work",
+          "scope": "body",
+          "text": "design"
+        },
+        {
+          "predicateId": "trades-construction-body",
+          "scope": "body",
+          "text": "concrete"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "a45e7fc473e4a378b4410afe81cb636c500e3dc35642e5fdb8d7975bc461fa5b",
+      "decision": "REJECT",
+      "category": "trades-construction, civil-domain",
+      "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+      "ruleIds": [
+        "reject-trades-construction",
+        "reject-civil"
+      ],
+      "evidence": [
+        {
+          "predicateId": "trades-construction-title",
+          "scope": "title",
+          "text": "civil"
+        },
+        {
+          "predicateId": "protected-title",
+          "scope": "title",
+          "text": "engineer"
+        },
+        {
+          "predicateId": "civil-title",
+          "scope": "title",
+          "text": "civil"
+        },
+        {
+          "predicateId": "civil-object",
+          "scope": "body",
+          "text": "steel structures"
+        },
+        {
+          "predicateId": "civil-work",
+          "scope": "body",
+          "text": "design"
+        },
+        {
+          "predicateId": "trades-construction-body",
+          "scope": "body",
+          "text": "concrete"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    }
+  },
+  {
+    "id": "leidos:R-00187135",
+    "title": "Airborne Sensor Operator",
+    "human": {
+      "revision": 19,
+      "stableJobId": "leidos:R-00187135",
+      "decision": "REJECT",
+      "note": "Primary duties are airborne ISR sensor operation and mission execution. The role operates and troubleshoots sophisticated technology, but the occupation itself is primarily aircrew/operations rather than Technology.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:27:08.5689371+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "5f0a183fedba119ad53cdc1be1c879d0b0734607d2cc1e5cafe412df18da1449",
+      "decision": "REJECT",
+      "category": "operator-technician",
+      "reason": "Corroborated unrelated occupational duties: operator-technician",
+      "ruleIds": [
+        "reject-operator-technician"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "operator"
+        },
+        {
+          "predicateId": "operator-technician-body",
+          "scope": "body",
+          "text": "aircraft"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "5f0a183fedba119ad53cdc1be1c879d0b0734607d2cc1e5cafe412df18da1449",
+      "decision": "REJECT",
+      "category": "operator-technician",
+      "reason": "Corroborated unrelated occupational duties: operator-technician",
+      "ruleIds": [
+        "reject-operator-technician"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "operator"
+        },
+        {
+          "predicateId": "operator-technician-body",
+          "scope": "body",
+          "text": "aircraft"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    }
+  },
+  {
+    "id": "leidos:R-00188369",
+    "title": "Airborne Sensor Operator",
+    "human": {
+      "revision": 20,
+      "stableJobId": "leidos:R-00188369",
+      "decision": "REJECT",
+      "note": "Primary duties are airborne ISR sensor operation and mission execution. The role uses and troubleshoots sophisticated technology, but it is fundamentally an aircrew/operations position rather than a Technology occupation.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:27:29.5034337+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "edbb5a5209696408790af9ae3491d42b837b2a4e294404c048804e9f952f55bf",
+      "decision": "REJECT",
+      "category": "operator-technician",
+      "reason": "Corroborated unrelated occupational duties: operator-technician",
+      "ruleIds": [
+        "reject-operator-technician"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "operator"
+        },
+        {
+          "predicateId": "operator-technician-body",
+          "scope": "body",
+          "text": "aircraft"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "edbb5a5209696408790af9ae3491d42b837b2a4e294404c048804e9f952f55bf",
+      "decision": "REJECT",
+      "category": "operator-technician",
+      "reason": "Corroborated unrelated occupational duties: operator-technician",
+      "ruleIds": [
+        "reject-operator-technician"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "operator"
+        },
+        {
+          "predicateId": "operator-technician-body",
+          "scope": "body",
+          "text": "aircraft"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    }
+  },
+  {
+    "id": "leidos:R-00190076",
+    "title": "Substation Civil Site Designer",
+    "human": {
+      "revision": 7,
+      "stableJobId": "leidos:R-00190076",
+      "decision": "REJECT",
+      "note": "Primary duties are civil/site design for utility infrastructure. The role uses engineering software, but the occupation itself is outside the Technology category.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:21:59.0026258+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "7c7278355d75360c99bbbe237729c4c8271772c7433429758e6af92dd4d142fc",
+      "decision": "REJECT",
+      "category": "trades-construction, civil-domain",
+      "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+      "ruleIds": [
+        "reject-trades-construction",
+        "reject-civil"
+      ],
+      "evidence": [
+        {
+          "predicateId": "trades-construction-title",
+          "scope": "title",
+          "text": "civil"
+        },
+        {
+          "predicateId": "trades-construction-body",
+          "scope": "body",
+          "text": "construction"
+        },
+        {
+          "predicateId": "civil-title",
+          "scope": "title",
+          "text": "civil"
+        },
+        {
+          "predicateId": "civil-object",
+          "scope": "body",
+          "text": "stormwater"
+        },
+        {
+          "predicateId": "civil-work",
+          "scope": "body",
+          "text": "designer"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "7c7278355d75360c99bbbe237729c4c8271772c7433429758e6af92dd4d142fc",
+      "decision": "REJECT",
+      "category": "trades-construction, civil-domain",
+      "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+      "ruleIds": [
+        "reject-trades-construction",
+        "reject-civil"
+      ],
+      "evidence": [
+        {
+          "predicateId": "trades-construction-title",
+          "scope": "title",
+          "text": "civil"
+        },
+        {
+          "predicateId": "trades-construction-body",
+          "scope": "body",
+          "text": "construction"
+        },
+        {
+          "predicateId": "civil-title",
+          "scope": "title",
+          "text": "civil"
+        },
+        {
+          "predicateId": "civil-object",
+          "scope": "body",
+          "text": "stormwater"
+        },
+        {
+          "predicateId": "civil-work",
+          "scope": "body",
+          "text": "designer"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    }
+  },
+  {
+    "id": "northrop-grumman:R10245576",
+    "title": "Extended Workforce Solutions HR Project Manager",
+    "human": {
+      "revision": 15,
+      "stableJobId": "northrop-grumman:R10245576",
+      "decision": "KEEP",
+      "note": "Despite the HR title, the primary duties are systems integration monitoring, root-cause analysis, troubleshooting, configuration improvement, and support across VNDLY, Workday, and ServiceNow. This belongs in Technology.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:25:34.0966995+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "2d6a585f858263d35e568f15bc1acd957bc013a32974fbfb3ca94586637a8630",
+      "decision": "REJECT",
+      "category": "hr",
+      "reason": "Corroborated unrelated occupational duties: hr",
+      "ruleIds": [
+        "reject-hr"
+      ],
+      "evidence": [
+        {
+          "predicateId": "hr-title",
+          "scope": "title",
+          "text": "hr"
+        },
+        {
+          "predicateId": "hr-body",
+          "scope": "body",
+          "text": "candidates"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "2d6a585f858263d35e568f15bc1acd957bc013a32974fbfb3ca94586637a8630",
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated application integration duties",
+      "ruleIds": [
+        "keep-reviewed-application-integration"
+      ],
+      "evidence": [
+        {
+          "predicateId": "hr-title",
+          "scope": "title",
+          "text": "hr"
+        },
+        {
+          "predicateId": "reviewed-application-integration-title",
+          "scope": "title",
+          "text": "project manager"
+        },
+        {
+          "predicateId": "reviewed-application-integration-object",
+          "scope": "body",
+          "text": "file transfer"
+        },
+        {
+          "predicateId": "reviewed-application-integration-duty",
+          "scope": "body",
+          "text": "integration error"
+        }
+      ],
+      "guards": [
+        "keep-reviewed-application-integration"
+      ],
+      "failOpen": false
+    }
+  },
+  {
+    "id": "parsons:R172433",
+    "title": "Bridge Engineer 1",
+    "human": {
+      "revision": 8,
+      "stableJobId": "parsons:R172433",
+      "decision": "REJECT",
+      "note": "Primary duties are bridge/civil/structural engineering. CAD and bridge-design software support the work, but the occupation itself is outside the Technology category.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:22:17.0181335+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "054313dc48d78e8c912a0707af9500e2f4afdf4ee412c4bbf08bfd15b5455c95",
+      "decision": "REJECT",
+      "category": "trades-construction, civil-domain",
+      "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+      "ruleIds": [
+        "reject-trades-construction",
+        "reject-civil"
+      ],
+      "evidence": [
+        {
+          "predicateId": "trades-construction-title",
+          "scope": "title",
+          "text": "bridge"
+        },
+        {
+          "predicateId": "protected-title",
+          "scope": "title",
+          "text": "engineer"
+        },
+        {
+          "predicateId": "civil-title",
+          "scope": "title",
+          "text": "bridge"
+        },
+        {
+          "predicateId": "civil-object",
+          "scope": "body",
+          "text": "bridge"
+        },
+        {
+          "predicateId": "civil-work",
+          "scope": "body",
+          "text": "design"
+        },
+        {
+          "predicateId": "trades-construction-body",
+          "scope": "body",
+          "text": "bridge design"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "054313dc48d78e8c912a0707af9500e2f4afdf4ee412c4bbf08bfd15b5455c95",
+      "decision": "REJECT",
+      "category": "trades-construction, civil-domain",
+      "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+      "ruleIds": [
+        "reject-trades-construction",
+        "reject-civil"
+      ],
+      "evidence": [
+        {
+          "predicateId": "trades-construction-title",
+          "scope": "title",
+          "text": "bridge"
+        },
+        {
+          "predicateId": "protected-title",
+          "scope": "title",
+          "text": "engineer"
+        },
+        {
+          "predicateId": "civil-title",
+          "scope": "title",
+          "text": "bridge"
+        },
+        {
+          "predicateId": "civil-object",
+          "scope": "body",
+          "text": "bridge"
+        },
+        {
+          "predicateId": "civil-work",
+          "scope": "body",
+          "text": "design"
+        },
+        {
+          "predicateId": "trades-construction-body",
+          "scope": "body",
+          "text": "bridge design"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    }
+  },
+  {
+    "id": "parsons:R177999",
+    "title": "Principal Project Manager - Highway Design/Construction - Transportation",
+    "human": {
+      "revision": 29,
+      "stableJobId": "parsons:R177999",
+      "decision": "REJECT",
+      "note": "Primary duties are transportation/highway project and design management. The role is technical and engineering-focused, but it belongs to Transportation/Civil Engineering rather than Technology.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:31:50.1507179+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "c192106940efcc7f6d4d5b075ba7ad4fefa8a8efb15bd8c0552d2f46ea284109",
+      "decision": "REJECT",
+      "category": "trades-construction",
+      "reason": "Corroborated unrelated occupational duties: trades-construction",
+      "ruleIds": [
+        "reject-trades-construction"
+      ],
+      "evidence": [
+        {
+          "predicateId": "trades-construction-title",
+          "scope": "title",
+          "text": "construction"
+        },
+        {
+          "predicateId": "trades-construction-body",
+          "scope": "body",
+          "text": "construction"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "c192106940efcc7f6d4d5b075ba7ad4fefa8a8efb15bd8c0552d2f46ea284109",
+      "decision": "REJECT",
+      "category": "trades-construction",
+      "reason": "Corroborated unrelated occupational duties: trades-construction",
+      "ruleIds": [
+        "reject-trades-construction"
+      ],
+      "evidence": [
+        {
+          "predicateId": "trades-construction-title",
+          "scope": "title",
+          "text": "construction"
+        },
+        {
+          "predicateId": "reviewed-application-integration-title",
+          "scope": "title",
+          "text": "project manager"
+        },
+        {
+          "predicateId": "trades-construction-body",
+          "scope": "body",
+          "text": "construction"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    }
+  },
+  {
+    "id": "parsons:R178563",
+    "title": "Drainage Engineer",
+    "human": {
+      "revision": 9,
+      "stableJobId": "parsons:R178563",
+      "decision": "REJECT",
+      "note": "Primary duties are drainage/civil engineering for roadway projects. Engineering software and CAD are supporting tools; the occupation itself is outside the Technology category.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:22:34.6210776+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "624219e2030c63d4c14fcd84513f80317e648e71dc59c199ef493f0dc8a1eede",
+      "decision": "REJECT",
+      "category": "civil-domain",
+      "reason": "Corroborated unrelated occupational duties: civil",
+      "ruleIds": [
+        "reject-civil"
+      ],
+      "evidence": [
+        {
+          "predicateId": "civil-title",
+          "scope": "title",
+          "text": "drainage"
+        },
+        {
+          "predicateId": "protected-title",
+          "scope": "title",
+          "text": "engineer"
+        },
+        {
+          "predicateId": "civil-object",
+          "scope": "body",
+          "text": "erosion"
+        },
+        {
+          "predicateId": "civil-work",
+          "scope": "body",
+          "text": "design"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "624219e2030c63d4c14fcd84513f80317e648e71dc59c199ef493f0dc8a1eede",
+      "decision": "REJECT",
+      "category": "civil-domain",
+      "reason": "Corroborated unrelated occupational duties: civil",
+      "ruleIds": [
+        "reject-civil"
+      ],
+      "evidence": [
+        {
+          "predicateId": "civil-title",
+          "scope": "title",
+          "text": "drainage"
+        },
+        {
+          "predicateId": "protected-title",
+          "scope": "title",
+          "text": "engineer"
+        },
+        {
+          "predicateId": "civil-object",
+          "scope": "body",
+          "text": "erosion"
+        },
+        {
+          "predicateId": "civil-work",
+          "scope": "body",
+          "text": "design"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    }
+  },
+  {
+    "id": "rtx:01865563",
+    "title": "Principal Specialist, Supplier Quality & Development (Remote)",
+    "human": {
+      "revision": 23,
+      "stableJobId": "rtx:01865563",
+      "decision": "REJECT",
+      "note": "Primary duties are supplier quality, manufacturing/process control, corrective actions, and supplier qualification. The work is analytical and technical, but it is outside the Technology category.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:28:46.7413971+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "a2c3af4b897a1c53f82c2f6645113ac331130e981a0199abe6fa12c1e277c2b8",
+      "decision": "REJECT",
+      "category": "supplier-administration",
+      "reason": "Corroborated unrelated occupational duties: supplier-administration",
+      "ruleIds": [
+        "reject-supplier-administration"
+      ],
+      "evidence": [
+        {
+          "predicateId": "supplier-administration-title",
+          "scope": "title",
+          "text": "supplier quality"
+        },
+        {
+          "predicateId": "supplier-administration-body",
+          "scope": "body",
+          "text": "supplier quality"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "a2c3af4b897a1c53f82c2f6645113ac331130e981a0199abe6fa12c1e277c2b8",
+      "decision": "REJECT",
+      "category": "supplier-administration",
+      "reason": "Corroborated unrelated occupational duties: supplier-administration",
+      "ruleIds": [
+        "reject-supplier-administration"
+      ],
+      "evidence": [
+        {
+          "predicateId": "supplier-administration-title",
+          "scope": "title",
+          "text": "supplier quality"
+        },
+        {
+          "predicateId": "supplier-administration-body",
+          "scope": "body",
+          "text": "supplier quality"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    }
+  },
+  {
+    "id": "rtx:01865916",
+    "title": "Digital Technology Capture Engagement Lead, Program Architecture (FEOTB) Naval Power, Remote",
+    "human": {
+      "revision": 30,
+      "stableJobId": "rtx:01865916",
+      "decision": "KEEP",
+      "note": "Primary duties center on Digital Technology, program architecture, IT/engineering requirements analysis, Agile workflows, and technical proposal support. This belongs in Technology despite the capture/business-development context.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:32:11.5064134+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "fa34b3314a7ce2f3a091b46adbd9e67640c16e52fd93d3e0f52236767b51795b",
+      "decision": "REJECT",
+      "category": "sales",
+      "reason": "Corroborated unrelated occupational duties: sales",
+      "ruleIds": [
+        "reject-sales"
+      ],
+      "evidence": [
+        {
+          "predicateId": "sales-title",
+          "scope": "title",
+          "text": "capture"
+        },
+        {
+          "predicateId": "sales-body",
+          "scope": "body",
+          "text": "capture"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "fa34b3314a7ce2f3a091b46adbd9e67640c16e52fd93d3e0f52236767b51795b",
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated it architecture duties",
+      "ruleIds": [
+        "keep-reviewed-it-architecture"
+      ],
+      "evidence": [
+        {
+          "predicateId": "sales-title",
+          "scope": "title",
+          "text": "capture"
+        },
+        {
+          "predicateId": "reviewed-it-architecture-title",
+          "scope": "title",
+          "text": "digital technology"
+        },
+        {
+          "predicateId": "reviewed-it-architecture-object",
+          "scope": "body",
+          "text": "program architects"
+        },
+        {
+          "predicateId": "reviewed-it-architecture-duty",
+          "scope": "body",
+          "text": "proposal response"
+        }
+      ],
+      "guards": [
+        "keep-reviewed-it-architecture"
+      ],
+      "failOpen": false
+    }
+  },
+  {
+    "id": "rtx:01866857",
+    "title": "Supplier Development Lead",
+    "human": {
+      "revision": 24,
+      "stableJobId": "rtx:01866857",
+      "decision": "REJECT",
+      "note": "Primary duties are supplier development, quality containment, root-cause/corrective action, supplier assessment, and operational improvement. Engineering teams are stakeholders, but the occupation itself is outside the Technology category.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:29:16.1652658+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "9d7195b041d898f52e17488cf4329ef943bbdac322bd72e3a65e27754ce5aebe",
+      "decision": "REJECT",
+      "category": "supplier-administration",
+      "reason": "Corroborated unrelated occupational duties: supplier-administration",
+      "ruleIds": [
+        "reject-supplier-administration"
+      ],
+      "evidence": [
+        {
+          "predicateId": "supplier-administration-title",
+          "scope": "title",
+          "text": "supplier development"
+        },
+        {
+          "predicateId": "supplier-administration-body",
+          "scope": "body",
+          "text": "supplier performance"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "9d7195b041d898f52e17488cf4329ef943bbdac322bd72e3a65e27754ce5aebe",
+      "decision": "REJECT",
+      "category": "supplier-administration",
+      "reason": "Corroborated unrelated occupational duties: supplier-administration",
+      "ruleIds": [
+        "reject-supplier-administration"
+      ],
+      "evidence": [
+        {
+          "predicateId": "supplier-administration-title",
+          "scope": "title",
+          "text": "supplier development"
+        },
+        {
+          "predicateId": "supplier-administration-body",
+          "scope": "body",
+          "text": "supplier performance"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    }
+  },
+  {
+    "id": "rtx:01868753",
+    "title": "ECAD Layout Designer Technician, Draft/Product Definition (Remote)",
+    "human": {
+      "revision": 14,
+      "stableJobId": "rtx:01868753",
+      "decision": "KEEP",
+      "note": "Primary duties are PCB/ECAD design, routing, constraints, configuration management, and electronic design documentation. Despite the technician title, this is clearly Technology work.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:25:05.4399160+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "471f2ed21d200c50d4b536f0fb0b39d7561fb6e5edc5bf8ddeb25bba91d418bd",
+      "decision": "REJECT",
+      "category": "operator-technician",
+      "reason": "Corroborated unrelated occupational duties: operator-technician",
+      "ruleIds": [
+        "reject-operator-technician"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "technician"
+        },
+        {
+          "predicateId": "operator-technician-body",
+          "scope": "body",
+          "text": "assembly"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "471f2ed21d200c50d4b536f0fb0b39d7561fb6e5edc5bf8ddeb25bba91d418bd",
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated electronic design duties",
+      "ruleIds": [
+        "keep-reviewed-electronic-design"
+      ],
+      "evidence": [
+        {
+          "predicateId": "operator-technician-title",
+          "scope": "title",
+          "text": "technician"
+        },
+        {
+          "predicateId": "reviewed-electronic-design-title",
+          "scope": "title",
+          "text": "ecad"
+        },
+        {
+          "predicateId": "reviewed-electronic-design-object",
+          "scope": "body",
+          "text": "pcb"
+        },
+        {
+          "predicateId": "reviewed-electronic-design-duty",
+          "scope": "body",
+          "text": "layout"
+        }
+      ],
+      "guards": [
+        "keep-reviewed-electronic-design"
+      ],
+      "failOpen": false
+    }
+  },
+  {
+    "id": "servicenow:JB0074456",
+    "title": "Senior Staff Outbound Product Manager - EmployeeWorks GTM",
+    "human": {
+      "revision": 25,
+      "stableJobId": "servicenow:JB0074456",
+      "decision": "KEEP",
+      "note": "Primary duties are product management, GTM strategy, adoption, and deployment orchestration for ServiceNow AI/software products. This is a Technology occupation even though it is business-facing rather than hands-on engineering.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:29:51.3716918+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "cf1bf980df805b349fed71bb279872d7b20165c79ca20206e26a8ffd4950f398",
+      "decision": "REJECT",
+      "category": "business-other",
+      "reason": "Corroborated unrelated occupational duties: business-other",
+      "ruleIds": [
+        "reject-business-other"
+      ],
+      "evidence": [
+        {
+          "predicateId": "business-other-title",
+          "scope": "title",
+          "text": "gtm"
+        },
+        {
+          "predicateId": "business-other-body",
+          "scope": "body",
+          "text": "positioning"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "cf1bf980df805b349fed71bb279872d7b20165c79ca20206e26a8ffd4950f398",
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated software product duties",
+      "ruleIds": [
+        "keep-reviewed-software-product"
+      ],
+      "evidence": [
+        {
+          "predicateId": "business-other-title",
+          "scope": "title",
+          "text": "gtm"
+        },
+        {
+          "predicateId": "reviewed-software-product-title",
+          "scope": "title",
+          "text": "product manager"
+        },
+        {
+          "predicateId": "reviewed-software-product-object",
+          "scope": "body",
+          "text": "ai native"
+        },
+        {
+          "predicateId": "reviewed-software-product-duty",
+          "scope": "body",
+          "text": "product strategy"
+        }
+      ],
+      "guards": [
+        "keep-reviewed-software-product"
+      ],
+      "failOpen": false
+    }
+  },
+  {
+    "id": "servicenow:JB0074536",
+    "title": "Senior Solution Sales Executive - Finance & Supply Chain Solutions",
+    "human": {
+      "revision": 26,
+      "stableJobId": "servicenow:JB0074536",
+      "decision": "KEEP",
+      "note": "Primary duties are enterprise solution sales for ServiceNow AI/software products, including technical discovery, demonstrations, and explaining technical capabilities. This belongs to Technology even though it is a quota-carrying sales role.",
+      "reviewer": "8c76bd2c122041f0a9d28e8a6188fac2",
+      "reviewedAtUtc": "2026-09-06T21:30:14.0327419+00:00"
+    },
+    "baseline": {
+      "rulesetVersion": "1.0.0",
+      "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+      "postingFingerprint": "fed03f8bef7200f777f25d8d09ec0daaf0fe92d229f245931a1f764a38d4c210",
+      "decision": "REJECT",
+      "category": "sales",
+      "reason": "Corroborated unrelated occupational duties: sales",
+      "ruleIds": [
+        "reject-sales"
+      ],
+      "evidence": [
+        {
+          "predicateId": "finance-title",
+          "scope": "title",
+          "text": "finance"
+        },
+        {
+          "predicateId": "erp-object",
+          "scope": "body",
+          "text": "erp"
+        },
+        {
+          "predicateId": "sales-title",
+          "scope": "title",
+          "text": "sales"
+        },
+        {
+          "predicateId": "sales-body",
+          "scope": "body",
+          "text": "sales"
+        }
+      ],
+      "guards": [],
+      "failOpen": false
+    },
+    "candidate": {
+      "rulesetVersion": "1.0.1",
+      "rulesetFingerprint": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+      "postingFingerprint": "fed03f8bef7200f777f25d8d09ec0daaf0fe92d229f245931a1f764a38d4c210",
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated solution sales duties",
+      "ruleIds": [
+        "keep-reviewed-solution-sales"
+      ],
+      "evidence": [
+        {
+          "predicateId": "finance-title",
+          "scope": "title",
+          "text": "finance"
+        },
+        {
+          "predicateId": "erp-object",
+          "scope": "body",
+          "text": "erp"
+        },
+        {
+          "predicateId": "reviewed-solution-sales-title",
+          "scope": "title",
+          "text": "solution sales"
+        },
+        {
+          "predicateId": "reviewed-solution-sales-object",
+          "scope": "body",
+          "text": "workflow automation"
+        },
+        {
+          "predicateId": "reviewed-solution-sales-duty",
+          "scope": "body",
+          "text": "demonstrations"
+        }
+      ],
+      "guards": [
+        "keep-reviewed-solution-sales"
+      ],
+      "failOpen": false
+    }
+  }
+]

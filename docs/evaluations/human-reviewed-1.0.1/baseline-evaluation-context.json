@@ -1,0 +1,225 @@
+{
+  "rulesetVersion": "1.0.0",
+  "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+  "provenance": "Frozen supervised_v2/input_v3 electrical-safe baseline; provisional Codex labels, not independent human truth.",
+  "sources": [
+    "Tests/cheap_reject_evaluation/supervised_v2/corpus.jsonl",
+    "Tests/cheap_reject_evaluation/supervised_v2/cache.jsonl",
+    "Tests/cheap_reject_evaluation/supervised_v2/baseline.json",
+    "Tests/cheap_reject_evaluation/development.jsonl",
+    "Tests/cheap_reject_evaluation/leakage-audit.jsonl",
+    "Tests/cheap_reject_evaluation/leakage-delta-audit.jsonl",
+    "Tests/cheap_reject_evaluation/machine_corpus_v1",
+    "Tests/cheap_reject_evaluation/input_v3/paired-error-analysis.json"
+  ],
+  "baseline": {
+    "slices": {
+      "combined": {
+        "n": 2669,
+        "keeps": 2121,
+        "falseRejects": 9,
+        "rejected": 42,
+        "keepRecall": 0.9957567185289957,
+        "rejectionRate": 0.015736230798051705,
+        "rejectPrecision": 0.7857142857142857
+      },
+      "description": {
+        "n": 1159,
+        "keeps": 914,
+        "falseRejects": 9,
+        "rejected": 42,
+        "keepRecall": 0.9901531728665208,
+        "rejectionRate": 0.0362381363244176,
+        "rejectPrecision": 0.7857142857142857
+      },
+      "title_only": {
+        "n": 1510,
+        "keeps": 1207,
+        "falseRejects": 0,
+        "rejected": 0,
+        "keepRecall": 1.0,
+        "rejectionRate": 0.0,
+        "rejectPrecision": null
+      },
+      "confidence_high": {
+        "n": 1014,
+        "keeps": 781,
+        "falseRejects": 5,
+        "rejected": 36,
+        "keepRecall": 0.9935979513444302,
+        "rejectionRate": 0.03550295857988166,
+        "rejectPrecision": 0.8611111111111112
+      },
+      "confidence_medium": {
+        "n": 1655,
+        "keeps": 1340,
+        "falseRejects": 4,
+        "rejected": 6,
+        "keepRecall": 0.9970149253731343,
+        "rejectionRate": 0.0036253776435045317,
+        "rejectPrecision": 0.3333333333333333
+      }
+    },
+    "cache": {
+      "n": 1503,
+      "keeps": 150,
+      "falseRejects": null,
+      "rejected": 208,
+      "keepRecall": null,
+      "rejectionRate": 0.1383898868928809,
+      "rejectPrecision": null
+    },
+    "corpus": {
+      "n": 3198,
+      "keeps": 2121,
+      "falseRejects": null,
+      "rejected": 52,
+      "keepRecall": null,
+      "rejectionRate": 0.016260162601626018,
+      "rejectPrecision": null
+    },
+    "ambiguous": {
+      "n": 529,
+      "keeps": 0,
+      "falseRejects": null,
+      "rejected": 10,
+      "keepRecall": null,
+      "rejectionRate": 0.01890359168241966,
+      "rejectPrecision": null
+    },
+    "legacy": {
+      "n": 347,
+      "keeps": 150,
+      "falseRejects": 0,
+      "rejected": 162,
+      "keepRecall": 1.0,
+      "rejectionRate": 0.4668587896253602,
+      "rejectPrecision": 1.0
+    },
+    "falseRejects": [
+      {
+        "id": "9d0215801cd4ecf4c649e049",
+        "employer": "aecom",
+        "title": "Civil Site Lead, Power Delivery",
+        "label": "KEEP",
+        "confidence": "medium",
+        "bodyAvailable": true,
+        "category": "engineering",
+        "reason": "Plausibly adjacent engineering, controls, electronics, integration or technical analysis.",
+        "keepScore": 0.0,
+        "threshold": 0.5
+      },
+      {
+        "id": "5b5f3d0cb938b7f44d42ef89",
+        "employer": "leidos",
+        "title": "Cable Test Technician-2nd shift",
+        "label": "KEEP",
+        "confidence": "medium",
+        "bodyAvailable": true,
+        "category": "engineering",
+        "reason": "Plausibly adjacent engineering, controls, electronics, integration or technical analysis.",
+        "keepScore": 0.0,
+        "threshold": 0.5
+      },
+      {
+        "id": "72005173e60e4cf83cee1699",
+        "employer": "boeing",
+        "title": "Nondestructive Test (NDT) Technician - UT & RT",
+        "label": "KEEP",
+        "confidence": "medium",
+        "bodyAvailable": true,
+        "category": "engineering",
+        "reason": "Plausibly adjacent engineering, controls, electronics, integration or technical analysis.",
+        "keepScore": 0.0,
+        "threshold": 0.5
+      },
+      {
+        "id": "1e8d2877f53a6d11c2e23f34",
+        "employer": "boeing",
+        "title": "Associate Test and Evaluation Laboratory Technician",
+        "label": "KEEP",
+        "confidence": "high",
+        "bodyAvailable": true,
+        "category": "engineering",
+        "reason": "Plausibly adjacent engineering, controls, electronics, integration or technical analysis.",
+        "keepScore": 0.0,
+        "threshold": 0.5
+      },
+      {
+        "id": "18452bbf4534bab7c96f42da",
+        "employer": "leidos",
+        "title": "McMurdo Seasonal Instrument Technician",
+        "label": "KEEP",
+        "confidence": "high",
+        "bodyAvailable": true,
+        "category": "engineering",
+        "reason": "Plausibly adjacent engineering, controls, electronics, integration or technical analysis.",
+        "keepScore": 0.0,
+        "threshold": 0.5
+      },
+      {
+        "id": "3ffbe13f6fc1ba15d707cd2d",
+        "employer": "leidos",
+        "title": "Substation Structural Designer",
+        "label": "KEEP",
+        "confidence": "high",
+        "bodyAvailable": true,
+        "category": "engineering",
+        "reason": "Plausibly adjacent engineering, controls, electronics, integration or technical analysis.",
+        "keepScore": 0.0,
+        "threshold": 0.5
+      },
+      {
+        "id": "afc5e30631d0feea140b1bb7",
+        "employer": "rtx",
+        "title": "ECAD Layout Designer Technician, Draft/Product Definition (Remote)",
+        "label": "KEEP",
+        "confidence": "high",
+        "bodyAvailable": true,
+        "category": "engineering",
+        "reason": "Plausibly adjacent engineering, controls, electronics, integration or technical analysis.",
+        "keepScore": 0.0,
+        "threshold": 0.5
+      },
+      {
+        "id": "23872427616e788205970739",
+        "employer": "aecom",
+        "title": "Structural Engineer - Power Delivery",
+        "label": "KEEP",
+        "confidence": "medium",
+        "bodyAvailable": true,
+        "category": "engineering",
+        "reason": "Plausibly adjacent engineering, controls, electronics, integration or technical analysis.",
+        "keepScore": 0.0,
+        "threshold": 0.5
+      },
+      {
+        "id": "40a4e12248dbc15959d09073",
+        "employer": "northrop-grumman",
+        "title": "Extended Workforce Solutions HR Project Manager",
+        "label": "KEEP",
+        "confidence": "high",
+        "bodyAvailable": true,
+        "category": "infrastructure-support",
+        "reason": "Integration error monitoring and root-cause resolution across VNDLY, Workday and ServiceNow; HR title understates technical duties.",
+        "keepScore": 0.0,
+        "threshold": 0.5
+      }
+    ],
+    "timing": {
+      "n": 4701,
+      "seconds": 0.46015710243955255,
+      "msPerPosting": 0.09788493989354446,
+      "postingsPerSecond": 10216.076151117402
+    },
+    "unreviewedCache": {
+      "n": 1156,
+      "keeps": 0,
+      "falseRejects": null,
+      "rejected": 46,
+      "keepRecall": null,
+      "rejectionRate": 0.039792387543252594,
+      "rejectPrecision": null
+    }
+  }
+}

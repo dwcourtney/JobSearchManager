@@ -1,0 +1,161 @@
+{
+  "baseline": {
+    "binary": {
+      "n": 2669,
+      "keepRecall": 0.9957567185289957,
+      "falseRejectCount": 9,
+      "rejectionCount": 42
+    },
+    "described": {
+      "n": 1159,
+      "keepRecall": 0.9901531728665208,
+      "falseRejectCount": 9,
+      "rejectionCount": 42
+    },
+    "titleOnly": {
+      "n": 1510,
+      "keepRecall": 1.0,
+      "falseRejectCount": 0,
+      "rejectionCount": 0
+    },
+    "ambiguous": {
+      "n": 529,
+      "keepRecall": null,
+      "falseRejectCount": 0,
+      "rejectionCount": 10
+    },
+    "oldCache": {
+      "n": 1503,
+      "keepRecall": 1.0,
+      "falseRejectCount": 0,
+      "rejectionCount": 208
+    },
+    "development": {
+      "n": 166,
+      "keepRecall": 1.0,
+      "falseRejectCount": 0,
+      "rejectionCount": 56
+    },
+    "leakage-audit": {
+      "n": 196,
+      "keepRecall": 1.0,
+      "falseRejectCount": 0,
+      "rejectionCount": 99
+    },
+    "leakage-delta-audit": {
+      "n": 41,
+      "keepRecall": 1.0,
+      "falseRejectCount": 0,
+      "rejectionCount": 40
+    },
+    "fixtures": {
+      "n": 60,
+      "keepRecall": 1.0,
+      "falseRejectCount": 0,
+      "rejectionCount": 30
+    }
+  },
+  "candidate": {
+    "binary": {
+      "n": 2669,
+      "keepRecall": 0.9971711456859972,
+      "falseRejectCount": 6,
+      "rejectionCount": 39
+    },
+    "described": {
+      "n": 1159,
+      "keepRecall": 0.9934354485776805,
+      "falseRejectCount": 6,
+      "rejectionCount": 39
+    },
+    "titleOnly": {
+      "n": 1510,
+      "keepRecall": 1.0,
+      "falseRejectCount": 0,
+      "rejectionCount": 0
+    },
+    "ambiguous": {
+      "n": 529,
+      "keepRecall": null,
+      "falseRejectCount": 0,
+      "rejectionCount": 8
+    },
+    "oldCache": {
+      "n": 1503,
+      "keepRecall": 1.0,
+      "falseRejectCount": 0,
+      "rejectionCount": 203
+    },
+    "development": {
+      "n": 166,
+      "keepRecall": 1.0,
+      "falseRejectCount": 0,
+      "rejectionCount": 56
+    },
+    "leakage-audit": {
+      "n": 196,
+      "keepRecall": 1.0,
+      "falseRejectCount": 0,
+      "rejectionCount": 99
+    },
+    "leakage-delta-audit": {
+      "n": 41,
+      "keepRecall": 1.0,
+      "falseRejectCount": 0,
+      "rejectionCount": 40
+    },
+    "fixtures": {
+      "n": 60,
+      "keepRecall": 1.0,
+      "falseRejectCount": 0,
+      "rejectionCount": 30
+    }
+  },
+  "live": {
+    "historical-live": {
+      "baseline": {
+        "n": 2205,
+        "counts": {
+          "KEEP": 1968,
+          "REJECT": 237
+        },
+        "failOpen": 0
+      },
+      "candidate": {
+        "n": 2205,
+        "counts": {
+          "KEEP": 1977,
+          "REJECT": 228
+        },
+        "failOpen": 0
+      }
+    },
+    "historical-input-fingerprint-mismatches": 0,
+    "snapshot-cache": {
+      "baseline": {
+        "n": 268,
+        "counts": {
+          "KEEP": 192,
+          "REJECT": 76
+        },
+        "failOpen": 0
+      },
+      "candidate": {
+        "n": 268,
+        "counts": {
+          "KEEP": 192,
+          "REJECT": 76
+        },
+        "failOpen": 0
+      }
+    }
+  },
+  "human": {
+    "n": 29,
+    "KEEP": 7,
+    "REJECT": 22,
+    "AMBIGUOUS": 0,
+    "baselineMatches": 22,
+    "candidateMatches": 29
+  }
+}

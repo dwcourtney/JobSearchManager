@@ -1,0 +1,50 @@
+{
+  "snapshotBundle": "ce2297c9214b85e699085696ba306a1196b960fa960f5e3323cce2c2c9b9ea83",
+  "snapshotHashes": {
+    "human-review.json": "5010d49f71c996d4591f0aac9be2be55326e882f3ea22f52e919a441c79952f2",
+    "live-shadow.json": "a05c78555473805878888ee5d7c8e2a5e986e28c2ab5bae4e96c863dc0a6e560",
+    "manifest.json": "ce2297c9214b85e699085696ba306a1196b960fa960f5e3323cce2c2c9b9ea83"
+  },
+  "rulesetHashes": {
+    "1.0.0": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+    "1.0.1": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1"
+  },
+  "cacheInputHashes": {
+    "live-inputs.jsonl": "74e179387458058789620a3d46d8989bc19b0451f87ba4e422e8394d9159abdc",
+    "current-inputs.jsonl": "8e644dfff729d2271c9481e7d11bde0dd44d54e00167cbba19e8dce7bdc69c05"
+  },
+  "frozenSourceHashes": {
+    "corpus.jsonl": "3d0ef7252e53bb8e8e25a5ff387f688e72952455f0ae0da05dcf2517003ea4ec",
+    "cache.jsonl": "8d16ae356fa4726550332109c404c4b995e7321e04e06a0936ff112fef1b617f",
+    "splits.json": "831545b3bc39675c6a20cc64ee54824156d87efc6da21f9bc6e342f54b136fcf",
+    "baseline.json": "354c3b409dd21d108f4de72d0f375ea7dda08e7ac54e6271ae90cc1bdeed6f28",
+    "development.jsonl": "e082078496d5186a2e1e9465c145053b57659259cb78c6bd4f3e9ad56e6decbc",
+    "leakage-audit.jsonl": "3d98302bac8a063c5a7f4a52b2cfbcbcfc50b31005ae19d96ab929bb9769aae1",
+    "leakage-delta-audit.jsonl": "006c4798989924817b786e422021bdad1d8d4bd64686abe452c3f0c6024c743a",
+    "fixtures.jsonl": "eaf4189d0fc532c70aaf3d072085376d4bf1cbb008572364320da654e9850118"
+  },
+  "humanEvidenceAndRevisionsEqualPriorSnapshot": true,
+  "existingRulesAndPredicatesUnchanged": true,
+  "changedRows": 19,
+  "newRejects": 0,
+  "linuxReplayLocation": "/home/codex/jsm-lab/experiments/snapshot-ce2297-recheck",
+  "validation": {
+    "frozenParity": "PASS: zero mismatches",
+    "human": "PASS: exact 29 saved outcomes, evidence/revisions preserved",
+    "linux": "PASS: full decisions/evidence identical for both versions, 2205 + 268 rows",
+    "dotnet": "PASS: all 140 deterministic architecture tests",
+    "sourceUI": "PASS: full source/Admin/Human Review/theme checks",
+    "production": "No modifications/deployment; current smoke remains unchanged",
+    "security": "Current exact smoke image passed Trivy in preceding prompt-refactor task; no app/rule/image bytes changed in this recheck. Earlier full candidate image/security suite remains recorded in ../human-reviewed-1.0.1/validation.json; not rerun or claimed as new CI."
+  },
+  "logHashes": {
+    "dotnet.log": "79e9265ab991d7ad3bc422c02a2a81266d3fe4d51d27e966ba8f0aa1e004c33c",
+    "source.log": "d8e945ba5f644a67de401891e4feabfbf9346559a9ab8e938e698e5eaebf5148",
+    "frozen.log": "0779ac4e8994badbca395a8f2ffb8066c999cd7be19d4cdb9622a1db4fb809e1"
+  },
+  "outputHashes": {
+    "comparison-summary.json": "8ca646e1543dbd38a6878d0c6c0e3fa1a814a7531539623c345387326b1a4248",
+    "changed-decisions.json": "c17f6c51e4418b21b60d62f4c6ca51c611c370c46dd789e29bd9562185b6bf04",
+    "changed-decisions.csv": "73577fe775bb6a8d3353703e16e05df3133f93f45ac798047fc7d32a200d127f"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "dotnet": "PASS: 140 executable architecture tests (dotnet run, not dotnet test)",
+  "source": "PASS: full Admin/Human Review/workflow/Job Fit/theme/UI/source validation",
+  "audit": "PASS: repository/history credential audit",
+  "frozen": "PASS: zero baseline mismatches, zero fail-open, no new false rejects",
+  "linux": "PASS: 2205 historical + 275 current Leidos full output/evidence parity for both versions in network-disabled read-only containers",
+  "security": "PASS: fresh unchanged smoke-image Trivy gate, source and policy-test gates; other image/build/runtime checks retained from prior validation, not rerun for this artifact-only task",
+  "whitespace": "PASS: git diff --check",
+  "runtime": "Unchanged; no deployment, import, approval, model inference or provider fetch"
+}

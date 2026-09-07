@@ -1,0 +1,269 @@
+{
+  "aggregate": {
+    "total": 2205,
+    "keep": 1967,
+    "reject": 236,
+    "undetermined": 2,
+    "titleOnly": 450,
+    "descriptionBacked": 1755,
+    "rejectionRate": 0.10702947845804989
+  },
+  "employers": {
+    "aecom": {
+      "total": 102,
+      "keep": 74,
+      "reject": 28,
+      "undetermined": 0,
+      "titleOnly": 0,
+      "descriptionBacked": 102,
+      "rejectionRate": 0.27450980392156865
+    },
+    "amentum": {
+      "total": 14,
+      "keep": 13,
+      "reject": 1,
+      "undetermined": 0,
+      "titleOnly": 0,
+      "descriptionBacked": 14,
+      "rejectionRate": 0.07142857142857142
+    },
+    "boeing": {
+      "total": 659,
+      "keep": 623,
+      "reject": 36,
+      "undetermined": 0,
+      "titleOnly": 443,
+      "descriptionBacked": 216,
+      "rejectionRate": 0.054628224582701064
+    },
+    "kbr": {
+      "total": 48,
+      "keep": 40,
+      "reject": 8,
+      "undetermined": 0,
+      "titleOnly": 0,
+      "descriptionBacked": 48,
+      "rejectionRate": 0.16666666666666666
+    },
+    "leidos": {
+      "total": 275,
+      "keep": 251,
+      "reject": 23,
+      "undetermined": 1,
+      "titleOnly": 0,
+      "descriptionBacked": 275,
+      "rejectionRate": 0.08363636363636363
+    },
+    "northrop-grumman": {
+      "total": 44,
+      "keep": 34,
+      "reject": 10,
+      "undetermined": 0,
+      "titleOnly": 0,
+      "descriptionBacked": 44,
+      "rejectionRate": 0.22727272727272727
+    },
+    "nvidia": {
+      "total": 482,
+      "keep": 480,
+      "reject": 2,
+      "undetermined": 0,
+      "titleOnly": 7,
+      "descriptionBacked": 475,
+      "rejectionRate": 0.004149377593360996
+    },
+    "nxp-semiconductors": {
+      "total": 12,
+      "keep": 12,
+      "reject": 0,
+      "undetermined": 0,
+      "titleOnly": 0,
+      "descriptionBacked": 12,
+      "rejectionRate": 0.0
+    },
+    "parsons": {
+      "total": 268,
+      "keep": 192,
+      "reject": 75,
+      "undetermined": 1,
+      "titleOnly": 0,
+      "descriptionBacked": 268,
+      "rejectionRate": 0.2798507462686567
+    },
+    "rtx": {
+      "total": 158,
+      "keep": 135,
+      "reject": 23,
+      "undetermined": 0,
+      "titleOnly": 0,
+      "descriptionBacked": 158,
+      "rejectionRate": 0.14556962025316456
+    },
+    "servicenow": {
+      "total": 143,
+      "keep": 113,
+      "reject": 30,
+      "undetermined": 0,
+      "titleOnly": 0,
+      "descriptionBacked": 143,
+      "rejectionRate": 0.2097902097902098
+    }
+  },
+  "providers": {
+    "SmartRecruiters": {
+      "total": 245,
+      "keep": 187,
+      "reject": 58,
+      "undetermined": 0,
+      "titleOnly": 0,
+      "descriptionBacked": 245,
+      "rejectionRate": 0.23673469387755103
+    },
+    "Workday": {
+      "total": 1960,
+      "keep": 1780,
+      "reject": 178,
+      "undetermined": 2,
+      "titleOnly": 450,
+      "descriptionBacked": 1510,
+      "rejectionRate": 0.09081632653061225
+    }
+  },
+  "sourceAvailable": {
+    "total": 1838,
+    "keep": 1644,
+    "reject": 192,
+    "undetermined": 2,
+    "titleOnly": 443,
+    "descriptionBacked": 1395,
+    "rejectionRate": 0.1044613710554951
+  },
+  "retainedUnavailable": {
+    "total": 367,
+    "keep": 323,
+    "reject": 44,
+    "undetermined": 0,
+    "titleOnly": 7,
+    "descriptionBacked": 360,
+    "rejectionRate": 0.11989100817438691
+  },
+  "described": {
+    "total": 1755,
+    "keep": 1517,
+    "reject": 236,
+    "undetermined": 2,
+    "titleOnly": 0,
+    "descriptionBacked": 1755,
+    "rejectionRate": 0.13447293447293449
+  },
+  "titleOnly": {
+    "total": 450,
+    "keep": 450,
+    "reject": 0,
+    "undetermined": 0,
+    "titleOnly": 450,
+    "descriptionBacked": 0,
+    "rejectionRate": 0.0
+  },
+  "rawCacheInstances": 2284,
+  "duplicateInstancesRemoved": 79,
+  "overlappingStableIds": 76,
+  "overlappingDecisionDisagreements": 0,
+  "overlappingInputDisagreements": 13,
+  "provenance": {
+    "isolated-runtime-reconciliation": 1937,
+    "production-recorded": 268
+  },
+  "keepReasons": {
+    "KEEP: no explicit unrelated title family": 1774,
+    "KEEP: technical-duty veto": 18,
+    "KEEP: protected technical/engineering title": 94,
+    "KEEP: missing corroborating occupational body evidence": 72,
+    "KEEP: ambiguous technical support title": 5,
+    "KEEP: explicit ERP/SQL/configuration/support evidence": 4
+  },
+  "rejectCategories": {
+    "trades-construction, civil-domain": 52,
+    "trades-construction": 28,
+    "environment-field": 4,
+    "finance": 17,
+    "business-other": 34,
+    "sales": 29,
+    "operator-technician, environment-field": 1,
+    "civil-domain": 19,
+    "operator-technician": 19,
+    "driving": 1,
+    "trades-construction, operator-technician": 1,
+    "aircraft-maintenance-training": 1,
+    "clinical": 6,
+    "hr": 9,
+    "cost-scheduling-payroll": 3,
+    "marketing-communications": 3,
+    "business-other, marketing-communications": 1,
+    "trades-construction, business-other": 2,
+    "finance, operator-technician": 1,
+    "supplier-administration": 5
+  },
+  "auditJudgments": {
+    "clearly-correct": 71,
+    "questionable": 24,
+    "likely-wrong": 5,
+    "appropriate-keep": 32,
+    "borderline-keep": 10,
+    "obvious-leak": 13,
+    "undetermined-timeout": 2
+  },
+  "coreAuditJudgments": {
+    "clearly-correct": 70,
+    "questionable": 21,
+    "likely-wrong": 2,
+    "appropriate-keep": 32,
+    "borderline-keep": 10,
+    "obvious-leak": 13,
+    "undetermined-timeout": 2
+  },
+  "employerRejectAudit": {
+    "aecom": {
+      "clearly-correct": 8,
+      "questionable": 4,
+      "likely-wrong": 1
+    },
+    "amentum": {
+      "questionable": 1
+    },
+    "boeing": {
+      "questionable": 6,
+      "clearly-correct": 9,
+      "likely-wrong": 1
+    },
+    "kbr": {
+      "clearly-correct": 8
+    },
+    "leidos": {
+      "clearly-correct": 7,
+      "questionable": 5,
+      "likely-wrong": 1
+    },
+    "northrop-grumman": {
+      "clearly-correct": 9,
+      "likely-wrong": 1
+    },
+    "nvidia": {
+      "clearly-correct": 2
+    },
+    "nxp-semiconductors": {},
+    "parsons": {
+      "clearly-correct": 9,
+      "questionable": 3
+    },
+    "rtx": {
+      "clearly-correct": 9,
+      "likely-wrong": 1,
+      "questionable": 3
+    },
+    "servicenow": {
+      "clearly-correct": 10,
+      "questionable": 2
+    }
+  }
+}

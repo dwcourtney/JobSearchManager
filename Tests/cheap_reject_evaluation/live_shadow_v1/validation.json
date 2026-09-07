@@ -1,0 +1,45 @@
+{
+  "checkedAtUtc": "2026-09-06T16:46:19.522952+00:00",
+  "scope": "Documentation and offline audit reporting only; production implementation and rules unchanged",
+  "offlineWindows": "PASS: build and portable validation",
+  "offlineLinux": "PASS: frozen-input report reproduction on curiosity; no container/model/provider work in reporting",
+  "crossPlatformArtifactSha256": {
+    "observations.jsonl": "39e5d5000792680dd3cfc9cb57af1122faf37962895bfa33e73d5b081ffe4c3e",
+    "review.jsonl": "9ef345f276c15a2750492710cb50d87ba7a144afefd38c4575d59ba10e0fc68b",
+    "summary.json": "02068f1118bf3a004926979dd138a3d71090d142c19f396c1b2d90eb3124caf5"
+  },
+  "crossPlatformByteParity": "PASS after explicit UTF-8/LF output; initial CRLF difference corrected in new reporter only",
+  "sourceUiValidation": {
+    "command": "scripts/validate-source.ps1",
+    "exitCode": 0,
+    "result": "PASS including Job Fit, Admin, Shadow non-gating and 241 archived research hashes",
+    "logSha256": "9dc860b9de2a55bfb14f92d0068315ad794e2911b759c7553886c8c8260df11f",
+    "retainedLog": "/home/codex/jsm-lab/experiments/live-shadow-audit-20260906/source-validation.txt"
+  },
+  "production": {
+    "health": "HTTP 200 Healthy",
+    "release": "e0a28a10bfb158d5ea2c86f4718ca79f3fb99309",
+    "mode": "Shadow",
+    "originalCacheBytesUnchanged": 14,
+    "jobFieldsUnchanged": 2284,
+    "workflowDocumentsUnchanged": 2,
+    "originalObservationsUnchanged": 268,
+    "productionServicesRestarted": 0,
+    "auditContainersRemaining": 0,
+    "evidence": "production-integrity.json",
+    "stateHashEvidence": "curiosity archive: jsm-shadow-audit-initial.json and jsm-shadow-audit-final.json"
+  },
+  "git": {
+    "trackedDiff": "empty",
+    "diffCheck": "PASS",
+    "branch": "main",
+    "head": "e0a28a10bfb158d5ea2c86f4718ca79f3fb99309",
+    "ahead": 0,
+    "behind": 0,
+    "newFiles": 12,
+    "commitsPushesDeployments": 0
+  },
+  "notRun": ".NET/build/container/Trivy/real GitHub CI: unnecessary for documentation/reporting-only additions; source security/CodeQL integration tests are not a new CI run",
+  "helperCorrections": "Verification initially tried unbound loopback and JSON parsing of plain-text health; corrected to established LAN address and response format, no runtime change",
+  "addedFileIntegrity": "PASS: all 12 files, UTF-8/JSON/Python parsing, newlines, whitespace and Markdown links"
+}

@@ -1,0 +1,68 @@
+[
+  {
+    "employer": "aecom",
+    "n": 102,
+    "baselineReject": 28,
+    "candidateReject": 27
+  },
+  {
+    "employer": "amentum",
+    "n": 14,
+    "baselineReject": 1,
+    "candidateReject": 1
+  },
+  {
+    "employer": "boeing",
+    "n": 659,
+    "baselineReject": 36,
+    "candidateReject": 35
+  },
+  {
+    "employer": "kbr",
+    "n": 48,
+    "baselineReject": 8,
+    "candidateReject": 8
+  },
+  {
+    "employer": "leidos",
+    "n": 275,
+    "baselineReject": 23,
+    "candidateReject": 23
+  },
+  {
+    "employer": "northrop-grumman",
+    "n": 44,
+    "baselineReject": 10,
+    "candidateReject": 9
+  },
+  {
+    "employer": "nvidia",
+    "n": 482,
+    "baselineReject": 2,
+    "candidateReject": 2
+  },
+  {
+    "employer": "nxp-semiconductors",
+    "n": 12,
+    "baselineReject": 0,
+    "candidateReject": 0
+  },
+  {
+    "employer": "parsons",
+    "n": 268,
+    "baselineReject": 76,
+    "candidateReject": 76
+  },
+  {
+    "employer": "rtx",
+    "n": 158,
+    "baselineReject": 23,
+    "candidateReject": 21
+  },
+  {
+    "employer": "servicenow",
+    "n": 143,
+    "baselineReject": 30,
+    "candidateReject": 26
+  }
+]

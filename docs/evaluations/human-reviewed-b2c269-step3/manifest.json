@@ -1,0 +1,32 @@
+{
+  "snapshotBundle": "b2c269cc766fe41cd82ed594f8bcbff04f940103361dbff172b7a480f051db0c",
+  "baselineSha256": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+  "candidateSha256": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1",
+  "windowsScratch": "D:\\David\\Documents\\ChatGPT\\Job Search Manager\\step3-b2c269",
+  "linuxInputs": "/home/codex/jsm-lab/experiments/step3-b2c269",
+  "currentCacheSource": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/leidos/697e9a0d8c74997954ef0e68219601eef0c4783b278a6267c3250aae5c876c50.json",
+  "inputs": {
+    "current-leidos.json": "ec887463ff1fb5b0ea68ccfb00196ff1b4795051c7fa357799709a6863e41000",
+    "current-inputs.jsonl": "9e1e784fcb1684b1a0557335a70758728734d27c435e809c750a3548b4f86101"
+  },
+  "historicalInputsSha256": "74e179387458058789620a3d46d8989bc19b0451f87ba4e422e8394d9159abdc",
+  "logs": {
+    "dotnet.log": "cd8df002c21b991476b2bf222fbb4d012b54f6114df03ccb8d732ffc77aa02fd",
+    "source.log": "34fe6dd3b9799d959a656bf620903def92f93af498518ca0d4dea56dd6171a87",
+    "audit.log": "3aac36aada5b2b56f53bd806654dbc0e2cb350d714f0c0f5a9027fedb6a63abf",
+    "security.log": "fa79974a1b7cdd609ee04a348a1d02d4108a7cd0476d7a38e6d2d7a5663caad2"
+  },
+  "outputs": {
+    "candidate-result.json": "00158e65bef100db699fffd83ed57b244dd1ccf8d92264ad1575c4bb0f6d67bc",
+    "changed-decisions.csv": "73577fe775bb6a8d3353703e16e05df3133f93f45ac798047fc7d32a200d127f",
+    "changed-decisions.json": "c17f6c51e4418b21b60d62f4c6ca51c611c370c46dd789e29bd9562185b6bf04",
+    "compare.py": "901e7a913802642bcb7a323568212fe43af54eb30a056df3435db5a3f777db91",
+    "comparison.json": "e1a72fe3cb352af19224fa3b83f65204c3a33cfe685d316962d992e34f94cdbc",
+    "export.py": "fc7e2b475781e5ccbc9b7a402f08bcfac4d9cfa9c693cdbfce7bdda67a8b9d39",
+    "human-comparison.json": "2642e30b54944e1da48fc4d3b9e6b607f0248454c9fd434d4066c438888cb003",
+    "live-summary.json": "f9df1460d372f041890e33e7e939ae8e75e84777ba520f8ab8145f3cf5e0ff59",
+    "replay.py": "a0d9906e0cdaa9fd66aef44805e11edc4b4e02d4a8ece18684d032d40b5555fa",
+    "validation.json": "c08b54860a75bebc86051a6e7ab4ce5129f3fb4dbd767f8c4959c9b36ed062a2",
+    "verify.py": "623bf3e32be87e6a5624936159e01017dc6e5d08eda3c2d2d01e3c7843e24a07"
+  }
+}

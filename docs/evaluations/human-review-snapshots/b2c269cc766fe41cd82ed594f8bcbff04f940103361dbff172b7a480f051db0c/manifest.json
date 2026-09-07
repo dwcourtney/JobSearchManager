@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "rulesetPath": "CheapTriage/rulesets/1.0.0.json",
+  "rulesetVersion": "1.0.0",
+  "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+  "queueVersion": "human_review_v1",
+  "queueFingerprint": "2c66bac39adcc36b69090927cf0c244ca3f1a2eb9c52288e0e0ab38e01542b61",
+  "sourceManifestHash": "0d0f75269554b9e0cc0ba61f9bb9cea283f5a84a8e4a877ed79cdfdf6e250c7e",
+  "artifacts": {
+    "human-review.json": "5010d49f71c996d4591f0aac9be2be55326e882f3ea22f52e919a441c79952f2",
+    "live-shadow.json": "a7e35aed1ff3319b765df9ca8ffef24ee903863aa4b36f98162b0ae00ab590b8"
+  }
+}

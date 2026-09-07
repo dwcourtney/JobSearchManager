@@ -1,0 +1,2570 @@
+{
+  "schemaVersion": 1,
+  "rulesetVersion": "1.0.0",
+  "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+  "scope": "Current workspace cached observations only; null means unavailable. No provider refresh requested. Not a global traffic sample.",
+  "liveShadow": {
+    "mode": "Shadow",
+    "scope": "Current workspace selected-source cache, including retained/hidden jobs; not global traffic",
+    "companyId": "leidos",
+    "rulesetVersion": "1.0.0",
+    "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+    "totalJobs": 275,
+    "analyzedJobs": 275,
+    "keep": 252,
+    "reject": 23,
+    "undetermined": 0,
+    "titleOnly": 0,
+    "descriptionBacked": 275,
+    "stalePreviousRuleset": 0,
+    "requiringReconciliation": 0,
+    "rejectionPercentage": 8.363636363636363,
+    "running": false,
+    "latestAnalysisUtc": "2026-09-06T23:56:57.7320171+00:00",
+    "lastReconciliationUtc": null,
+    "error": null,
+    "rejectedJobs": [
+      {
+        "employer": "Leidos",
+        "job": {
+          "stableId": "leidos:R-00191030",
+          "title": "ASC Construction Manager",
+          "requisitionId": "R-00191030",
+          "startDate": "2026-09-02",
+          "postedOn": "Posted Today",
+          "primaryLocation": "6314 Remote/Teleworker US",
+          "additionalLocations": [],
+          "payMinimum": 125000,
+          "payMaximum": 135000,
+          "payPeriod": "annual",
+          "isRemoteLocationRestricted": false,
+          "clearanceLevel": "publicTrust",
+          "clearanceRequirement": "activeRequired",
+          "polygraphRequired": false,
+          "clearanceParseStatus": "parsed",
+          "credentials": [],
+          "unknownCredentialRequirements": [],
+          "academicQualification": {
+            "minimumLevel": "bachelor",
+            "specificDegree": null,
+            "requirementType": "degreeOrExperience",
+            "experienceSubstitutionAccepted": true,
+            "parseStatus": "parsed",
+            "hasAccreditation": false
+          },
+          "workAuthorization": {
+            "eligibility": "usCitizen",
+            "sponsorship": "noneSpecified",
+            "strength": "strict",
+            "sponsorshipStrength": "none"
+          },
+          "remoteWork": {
+            "concernLevel": "none",
+            "summary": null
+          },
+          "extendedLocationRequirement": {
+            "confidence": "strong",
+            "destination": "Antarctica",
+            "summary": "Extended away-from-home assignment required"
+          },
+          "detectedConcepts": [
+            {
+              "conceptId": "role.management-heavy",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "work.deployment",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "work.extended-away-assignment",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "work.remote",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            }
+          ],
+          "analysisPending": false,
+          "semanticClassificationStatus": "complete"
+        },
+        "workflowState": "normal",
+        "sourceAvailable": true,
+        "current": true,
+        "observation": {
+          "analysisVersion": 1,
+          "analyzedAtUtc": "2026-09-06T23:56:57.6500253+00:00",
+          "descriptionAvailable": true,
+          "result": {
+            "rulesetVersion": "1.0.0",
+            "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+            "postingFingerprint": "016fcf94d454c989fe3a92d8330da57b29d8050fec1a50934a29fa0907b62382",
+            "decision": "REJECT",
+            "category": "trades-construction",
+            "reason": "Corroborated unrelated occupational duties: trades-construction",
+            "ruleIds": [
+              "reject-trades-construction"
+            ],
+            "evidence": [
+              {
+                "predicateId": "trades-construction-title",
+                "scope": "title",
+                "text": "construction"
+              },
+              {
+                "predicateId": "trades-construction-body",
+                "scope": "body",
+                "text": "construction"
+              }
+            ],
+            "guards": [],
+            "failOpen": false
+          },
+          "decision": "REJECT"
+        }
+      },
+      {
+        "employer": "Leidos",
+        "job": {
+          "stableId": "leidos:R-00187135",
+          "title": "Airborne Sensor Operator",
+          "requisitionId": "R-00187135",
+          "startDate": "2026-07-31",
+          "postedOn": "Posted 30\u002B Days Ago",
+          "primaryLocation": "Remote, US",
+          "additionalLocations": [],
+          "payMinimum": 59150.00,
+          "payMaximum": 106925.00,
+          "payPeriod": "annual",
+          "isRemoteLocationRestricted": false,
+          "clearanceLevel": "topSecretSCI",
+          "clearanceRequirement": "ambiguous",
+          "polygraphRequired": false,
+          "clearanceParseStatus": "ambiguous",
+          "credentials": [],
+          "unknownCredentialRequirements": [],
+          "academicQualification": {
+            "minimumLevel": "bachelor",
+            "specificDegree": null,
+            "requirementType": "degreeOrExperience",
+            "experienceSubstitutionAccepted": true,
+            "parseStatus": "parsed",
+            "hasAccreditation": false
+          },
+          "workAuthorization": {
+            "eligibility": "noneSpecified",
+            "sponsorship": "noneSpecified",
+            "strength": "none",
+            "sponsorshipStrength": "none"
+          },
+          "remoteWork": {
+            "concernLevel": "none",
+            "summary": null
+          },
+          "extendedLocationRequirement": {
+            "confidence": "strong",
+            "destination": "OCONUS",
+            "summary": "Extended away-from-home assignment required"
+          },
+          "detectedConcepts": [
+            {
+              "conceptId": "work.extended-away-assignment",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "work.remote",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "work.aircraft-flight-line",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            }
+          ],
+          "analysisPending": false,
+          "semanticClassificationStatus": "complete"
+        },
+        "workflowState": "normal",
+        "sourceAvailable": true,
+        "current": true,
+        "observation": {
+          "analysisVersion": 1,
+          "analyzedAtUtc": "2026-09-06T23:56:57.6839345+00:00",
+          "descriptionAvailable": true,
+          "result": {
+            "rulesetVersion": "1.0.0",
+            "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+            "postingFingerprint": "5f0a183fedba119ad53cdc1be1c879d0b0734607d2cc1e5cafe412df18da1449",
+            "decision": "REJECT",
+            "category": "operator-technician",
+            "reason": "Corroborated unrelated occupational duties: operator-technician",
+            "ruleIds": [
+              "reject-operator-technician"
+            ],
+            "evidence": [
+              {
+                "predicateId": "operator-technician-title",
+                "scope": "title",
+                "text": "operator"
+              },
+              {
+                "predicateId": "operator-technician-body",
+                "scope": "body",
+                "text": "aircraft"
+              }
+            ],
+            "guards": [],
+            "failOpen": false
+          },
+          "decision": "REJECT"
+        }
+      },
+      {
+        "employer": "Leidos",
+        "job": {
+          "stableId": "leidos:R-00188366",
+          "title": "Airborne Sensor Operator",
+          "requisitionId": "R-00188366",
+          "startDate": "2026-07-29",
+          "postedOn": "Posted 30\u002B Days Ago",
+          "primaryLocation": "Remote, US",
+          "additionalLocations": [],
+          "payMinimum": 59150.00,
+          "payMaximum": 106925.00,
+          "payPeriod": "annual",
+          "isRemoteLocationRestricted": false,
+          "clearanceLevel": "topSecretSCI",
+          "clearanceRequirement": "ambiguous",
+          "polygraphRequired": false,
+          "clearanceParseStatus": "ambiguous",
+          "credentials": [],
+          "unknownCredentialRequirements": [],
+          "academicQualification": {
+            "minimumLevel": "bachelor",
+            "specificDegree": null,
+            "requirementType": "degreeOrExperience",
+            "experienceSubstitutionAccepted": true,
+            "parseStatus": "parsed",
+            "hasAccreditation": false
+          },
+          "workAuthorization": {
+            "eligibility": "noneSpecified",
+            "sponsorship": "noneSpecified",
+            "strength": "none",
+            "sponsorshipStrength": "none"
+          },
+          "remoteWork": {
+            "concernLevel": "none",
+            "summary": null
+          },
+          "extendedLocationRequirement": {
+            "confidence": "strong",
+            "destination": "OCONUS",
+            "summary": "Extended away-from-home assignment required"
+          },
+          "detectedConcepts": [
+            {
+              "conceptId": "work.extended-away-assignment",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "work.remote",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "work.aircraft-flight-line",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            }
+          ],
+          "analysisPending": false,
+          "semanticClassificationStatus": "complete"
+        },
+        "workflowState": "normal",
+        "sourceAvailable": true,
+        "current": true,
+        "observation": {
+          "analysisVersion": 1,
+          "analyzedAtUtc": "2026-09-06T23:56:57.6864614+00:00",
+          "descriptionAvailable": true,
+          "result": {
+            "rulesetVersion": "1.0.0",
+            "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+            "postingFingerprint": "edbb5a5209696408790af9ae3491d42b837b2a4e294404c048804e9f952f55bf",
+            "decision": "REJECT",
+            "category": "operator-technician",
+            "reason": "Corroborated unrelated occupational duties: operator-technician",
+            "ruleIds": [
+              "reject-operator-technician"
+            ],
+            "evidence": [
+              {
+                "predicateId": "operator-technician-title",
+                "scope": "title",
+                "text": "operator"
+              },
+              {
+                "predicateId": "operator-technician-body",
+                "scope": "body",
+                "text": "aircraft"
+              }
+            ],
+            "guards": [],
+            "failOpen": false
+          },
+          "decision": "REJECT"
+        }
+      },
+      {
+        "employer": "Leidos",
+        "job": {
+          "stableId": "leidos:R-00188369",
+          "title": "Airborne Sensor Operator",
+          "requisitionId": "R-00188369",
+          "startDate": "2026-07-29",
+          "postedOn": "Posted 30\u002B Days Ago",
+          "primaryLocation": "Remote, US",
+          "additionalLocations": [],
+          "payMinimum": 59150.00,
+          "payMaximum": 106925.00,
+          "payPeriod": "annual",
+          "isRemoteLocationRestricted": false,
+          "clearanceLevel": "topSecretSCI",
+          "clearanceRequirement": "ambiguous",
+          "polygraphRequired": false,
+          "clearanceParseStatus": "ambiguous",
+          "credentials": [],
+          "unknownCredentialRequirements": [],
+          "academicQualification": {
+            "minimumLevel": "bachelor",
+            "specificDegree": null,
+            "requirementType": "degreeOrExperience",
+            "experienceSubstitutionAccepted": true,
+            "parseStatus": "parsed",
+            "hasAccreditation": false
+          },
+          "workAuthorization": {
+            "eligibility": "noneSpecified",
+            "sponsorship": "noneSpecified",
+            "strength": "none",
+            "sponsorshipStrength": "none"
+          },
+          "remoteWork": {
+            "concernLevel": "none",
+            "summary": null
+          },
+          "extendedLocationRequirement": {
+            "confidence": "strong",
+            "destination": "OCONUS",
+            "summary": "Extended away-from-home assignment required"
+          },
+          "detectedConcepts": [
+            {
+              "conceptId": "work.extended-away-assignment",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "work.remote",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "work.aircraft-flight-line",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            }
+          ],
+          "analysisPending": false,
+          "semanticClassificationStatus": "complete"
+        },
+        "workflowState": "normal",
+        "sourceAvailable": true,
+        "current": true,
+        "observation": {
+          "analysisVersion": 1,
+          "analyzedAtUtc": "2026-09-06T23:56:57.6871746+00:00",
+          "descriptionAvailable": true,
+          "result": {
+            "rulesetVersion": "1.0.0",
+            "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+            "postingFingerprint": "edbb5a5209696408790af9ae3491d42b837b2a4e294404c048804e9f952f55bf",
+            "decision": "REJECT",
+            "category": "operator-technician",
+            "reason": "Corroborated unrelated occupational duties: operator-technician",
+            "ruleIds": [
+              "reject-operator-technician"
+            ],
+            "evidence": [
+              {
+                "predicateId": "operator-technician-title",
+                "scope": "title",
+                "text": "operator"
+              },
+              {
+                "predicateId": "operator-technician-body",
+                "scope": "body",
+                "text": "aircraft"
+              }
+            ],
+            "guards": [],
+            "failOpen": false
+          },
+          "decision": "REJECT"
+        }
+      },
+      {
+        "employer": "Leidos",
+        "job": {
+          "stableId": "leidos:R-00188370",
+          "title": "Airborne Sensor Operator",
+          "requisitionId": "R-00188370",
+          "startDate": "2026-07-29",
+          "postedOn": "Posted 30\u002B Days Ago",
+          "primaryLocation": "Remote, US",
+          "additionalLocations": [],
+          "payMinimum": 59150.00,
+          "payMaximum": 106925.00,
+          "payPeriod": "annual",
+          "isRemoteLocationRestricted": false,
+          "clearanceLevel": "topSecretSCI",
+          "clearanceRequirement": "ambiguous",
+          "polygraphRequired": false,
+          "clearanceParseStatus": "ambiguous",
+          "credentials": [],
+          "unknownCredentialRequirements": [],
+          "academicQualification": {
+            "minimumLevel": "bachelor",
+            "specificDegree": null,
+            "requirementType": "degreeOrExperience",
+            "experienceSubstitutionAccepted": true,
+            "parseStatus": "parsed",
+            "hasAccreditation": false
+          },
+          "workAuthorization": {
+            "eligibility": "noneSpecified",
+            "sponsorship": "noneSpecified",
+            "strength": "none",
+            "sponsorshipStrength": "none"
+          },
+          "remoteWork": {
+            "concernLevel": "none",
+            "summary": null
+          },
+          "extendedLocationRequirement": {
+            "confidence": "strong",
+            "destination": "OCONUS",
+            "summary": "Extended away-from-home assignment required"
+          },
+          "detectedConcepts": [
+            {
+              "conceptId": "work.extended-away-assignment",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "work.remote",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "work.aircraft-flight-line",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            }
+          ],
+          "analysisPending": false,
+          "semanticClassificationStatus": "complete"
+        },
+        "workflowState": "normal",
+        "sourceAvailable": true,
+        "current": true,
+        "observation": {
+          "analysisVersion": 1,
+          "analyzedAtUtc": "2026-09-06T23:56:57.6879491+00:00",
+          "descriptionAvailable": true,
+          "result": {
+            "rulesetVersion": "1.0.0",
+            "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+            "postingFingerprint": "edbb5a5209696408790af9ae3491d42b837b2a4e294404c048804e9f952f55bf",
+            "decision": "REJECT",
+            "category": "operator-technician",
+            "reason": "Corroborated unrelated occupational duties: operator-technician",
+            "ruleIds": [
+              "reject-operator-technician"
+            ],
+            "evidence": [
+              {
+                "predicateId": "operator-technician-title",
+                "scope": "title",
+                "text": "operator"
+              },
+              {
+                "predicateId": "operator-technician-body",
+                "scope": "body",
+                "text": "aircraft"
+              }
+            ],
+            "guards": [],
+            "failOpen": false
+          },
+          "decision": "REJECT"
+        }
+      },
+      {
+        "employer": "Leidos",
+        "job": {
+          "stableId": "leidos:R-00185379",
+          "title": "Associate Substation Civil/Structural Engineer",
+          "requisitionId": "R-00185379",
+          "startDate": "2026-06-12",
+          "postedOn": "Posted 30\u002B Days Ago",
+          "primaryLocation": "Portland, OR",
+          "additionalLocations": [
+            "6314 Remote/Teleworker US"
+          ],
+          "payMinimum": 59150.00,
+          "payMaximum": 106925.00,
+          "payPeriod": "annual",
+          "isRemoteLocationRestricted": true,
+          "clearanceLevel": "noneMentioned",
+          "clearanceRequirement": "none",
+          "polygraphRequired": false,
+          "clearanceParseStatus": "not-mentioned",
+          "credentials": [
+            {
+              "credentialId": "pe",
+              "name": "PE",
+              "fullName": "Professional Engineer",
+              "requirement": "required",
+              "isAlternative": false,
+              "equivalentAccepted": false,
+              "inProgressAccepted": false,
+              "postHireAcquisitionAllowed": false,
+              "equivalentCredentialIds": [],
+              "alternativeGroup": null
+            },
+            {
+              "credentialId": "eit",
+              "name": "EIT / FE",
+              "fullName": "Engineer in Training / Fundamentals of Engineering",
+              "requirement": "preferred",
+              "isAlternative": false,
+              "equivalentAccepted": false,
+              "inProgressAccepted": false,
+              "postHireAcquisitionAllowed": false,
+              "equivalentCredentialIds": [],
+              "alternativeGroup": null
+            }
+          ],
+          "unknownCredentialRequirements": [],
+          "academicQualification": {
+            "minimumLevel": "bachelor",
+            "specificDegree": null,
+            "requirementType": "strictDegree",
+            "experienceSubstitutionAccepted": false,
+            "parseStatus": "parsed",
+            "hasAccreditation": false
+          },
+          "workAuthorization": {
+            "eligibility": "usCitizen",
+            "sponsorship": "noneSpecified",
+            "strength": "strict",
+            "sponsorshipStrength": "none"
+          },
+          "remoteWork": {
+            "concernLevel": "none",
+            "summary": null
+          },
+          "extendedLocationRequirement": {
+            "confidence": "none",
+            "destination": null,
+            "summary": null
+          },
+          "detectedConcepts": [
+            {
+              "conceptId": "work.travel.occasional",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "work.remote",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            }
+          ],
+          "analysisPending": false,
+          "semanticClassificationStatus": "complete"
+        },
+        "workflowState": "normal",
+        "sourceAvailable": true,
+        "current": true,
+        "observation": {
+          "analysisVersion": 1,
+          "analyzedAtUtc": "2026-09-06T23:56:57.6975285+00:00",
+          "descriptionAvailable": true,
+          "result": {
+            "rulesetVersion": "1.0.0",
+            "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+            "postingFingerprint": "1355034c53ccedd49acec2f5952bce22c2934f664a2b921ff968d0add63de087",
+            "decision": "REJECT",
+            "category": "trades-construction, civil-domain",
+            "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+            "ruleIds": [
+              "reject-trades-construction",
+              "reject-civil"
+            ],
+            "evidence": [
+              {
+                "predicateId": "trades-construction-title",
+                "scope": "title",
+                "text": "civil"
+              },
+              {
+                "predicateId": "protected-title",
+                "scope": "title",
+                "text": "engineer"
+              },
+              {
+                "predicateId": "civil-title",
+                "scope": "title",
+                "text": "civil"
+              },
+              {
+                "predicateId": "civil-object",
+                "scope": "body",
+                "text": "steel structures"
+              },
+              {
+                "predicateId": "civil-work",
+                "scope": "body",
+                "text": "design"
+              },
+              {
+                "predicateId": "trades-construction-body",
+                "scope": "body",
+                "text": "concrete"
+              }
+            ],
+            "guards": [],
+            "failOpen": false
+          },
+          "decision": "REJECT"
+        }
+      },
+      {
+        "employer": "Leidos",
+        "job": {
+          "stableId": "leidos:R-00182300",
+          "title": "McMurdo Seasonal Instrument Technician",
+          "requisitionId": "R-00182300",
+          "startDate": "2026-09-02",
+          "postedOn": "Posted Today",
+          "primaryLocation": "6314 Remote/Teleworker US",
+          "additionalLocations": [],
+          "payMinimum": 87100.00,
+          "payMaximum": 157450.00,
+          "payPeriod": "annual",
+          "isRemoteLocationRestricted": false,
+          "clearanceLevel": "publicTrust",
+          "clearanceRequirement": "obtain",
+          "polygraphRequired": false,
+          "clearanceParseStatus": "parsed",
+          "credentials": [],
+          "unknownCredentialRequirements": [],
+          "academicQualification": {
+            "minimumLevel": "bachelor",
+            "specificDegree": null,
+            "requirementType": "degreeWithExperienceSubstitution",
+            "experienceSubstitutionAccepted": false,
+            "parseStatus": "parsed",
+            "hasAccreditation": false
+          },
+          "workAuthorization": {
+            "eligibility": "usCitizen",
+            "sponsorship": "noneSpecified",
+            "strength": "strict",
+            "sponsorshipStrength": "none"
+          },
+          "remoteWork": {
+            "concernLevel": "strong",
+            "summary": "work at an operational site or facility."
+          },
+          "extendedLocationRequirement": {
+            "confidence": "strong",
+            "destination": "Antarctica",
+            "summary": "Extended away-from-home assignment required"
+          },
+          "detectedConcepts": [
+            {
+              "conceptId": "role.fabrication-assembly-machining",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "work.extended-away-assignment",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "work.onsite",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "work.remote",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            }
+          ],
+          "analysisPending": false,
+          "semanticClassificationStatus": "complete"
+        },
+        "workflowState": "normal",
+        "sourceAvailable": true,
+        "current": true,
+        "observation": {
+          "analysisVersion": 1,
+          "analyzedAtUtc": "2026-09-06T23:56:57.6543077+00:00",
+          "descriptionAvailable": true,
+          "result": {
+            "rulesetVersion": "1.0.0",
+            "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+            "postingFingerprint": "0a4f3e287edd1df02c1c3c07ce9f86d20066ac467f84c5b24a918f117cc069b6",
+            "decision": "REJECT",
+            "category": "operator-technician",
+            "reason": "Corroborated unrelated occupational duties: operator-technician",
+            "ruleIds": [
+              "reject-operator-technician"
+            ],
+            "evidence": [
+              {
+                "predicateId": "operator-technician-title",
+                "scope": "title",
+                "text": "technician"
+              },
+              {
+                "predicateId": "operator-technician-body",
+                "scope": "body",
+                "text": "repairs"
+              }
+            ],
+            "guards": [],
+            "failOpen": false
+          },
+          "decision": "REJECT"
+        }
+      },
+      {
+        "employer": "Leidos",
+        "job": {
+          "stableId": "leidos:R-00190730",
+          "title": "Port Captain",
+          "requisitionId": "R-00190730",
+          "startDate": "2026-08-27",
+          "postedOn": "Posted Today",
+          "primaryLocation": "6314 Remote/Teleworker US",
+          "additionalLocations": [],
+          "payMinimum": 131300.00,
+          "payMaximum": 237350.00,
+          "payPeriod": "annual",
+          "isRemoteLocationRestricted": false,
+          "clearanceLevel": "secret",
+          "clearanceRequirement": "preferred",
+          "polygraphRequired": false,
+          "clearanceParseStatus": "parsed",
+          "credentials": [
+            {
+              "credentialId": "pmp",
+              "name": "PMP",
+              "fullName": "Project Management Professional",
+              "requirement": "preferred",
+              "isAlternative": false,
+              "equivalentAccepted": false,
+              "inProgressAccepted": false,
+              "postHireAcquisitionAllowed": false,
+              "equivalentCredentialIds": [],
+              "alternativeGroup": null
+            }
+          ],
+          "unknownCredentialRequirements": [],
+          "academicQualification": {
+            "minimumLevel": "bachelor",
+            "specificDegree": null,
+            "requirementType": "strictDegree",
+            "experienceSubstitutionAccepted": false,
+            "parseStatus": "parsed",
+            "hasAccreditation": false
+          },
+          "workAuthorization": {
+            "eligibility": "usCitizen",
+            "sponsorship": "noneSpecified",
+            "strength": "strict",
+            "sponsorshipStrength": "none"
+          },
+          "remoteWork": {
+            "concernLevel": "none",
+            "summary": null
+          },
+          "extendedLocationRequirement": {
+            "confidence": "none",
+            "destination": null,
+            "summary": null
+          },
+          "detectedConcepts": [
+            {
+              "conceptId": "work.remote",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "work.shipboard",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            }
+          ],
+          "analysisPending": false,
+          "semanticClassificationStatus": "complete"
+        },
+        "workflowState": "hidden",
+        "sourceAvailable": false,
+        "current": true,
+        "observation": {
+          "analysisVersion": 1,
+          "analyzedAtUtc": "2026-09-06T23:56:57.7097061+00:00",
+          "descriptionAvailable": true,
+          "result": {
+            "rulesetVersion": "1.0.0",
+            "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+            "postingFingerprint": "a7ef3378faf8d2ed9b143993ad1c2a6419571be26164caeea13ea583e26367a7",
+            "decision": "REJECT",
+            "category": "business-other",
+            "reason": "Corroborated unrelated occupational duties: business-other",
+            "ruleIds": [
+              "reject-business-other"
+            ],
+            "evidence": [
+              {
+                "predicateId": "business-other-title",
+                "scope": "title",
+                "text": "port captain"
+              },
+              {
+                "predicateId": "business-other-body",
+                "scope": "body",
+                "text": "vessels"
+              }
+            ],
+            "guards": [],
+            "failOpen": false
+          },
+          "decision": "REJECT"
+        }
+      },
+      {
+        "employer": "Leidos",
+        "job": {
+          "stableId": "leidos:R-00190215",
+          "title": "Procurement Coordinator",
+          "requisitionId": "R-00190215",
+          "startDate": "2026-08-21",
+          "postedOn": "Posted Today",
+          "primaryLocation": "6314 Remote/Teleworker US",
+          "additionalLocations": [],
+          "payMinimum": 52000.00,
+          "payMaximum": 94000.00,
+          "payPeriod": "annual",
+          "isRemoteLocationRestricted": false,
+          "clearanceLevel": "publicTrust",
+          "clearanceRequirement": "obtainAndMaintain",
+          "polygraphRequired": false,
+          "clearanceParseStatus": "parsed",
+          "credentials": [],
+          "unknownCredentialRequirements": [],
+          "academicQualification": {
+            "minimumLevel": "associate",
+            "specificDegree": null,
+            "requirementType": "strictDegree",
+            "experienceSubstitutionAccepted": false,
+            "parseStatus": "parsed",
+            "hasAccreditation": false
+          },
+          "workAuthorization": {
+            "eligibility": "usCitizen",
+            "sponsorship": "noneSpecified",
+            "strength": "strict",
+            "sponsorshipStrength": "none"
+          },
+          "remoteWork": {
+            "concernLevel": "none",
+            "summary": null
+          },
+          "extendedLocationRequirement": {
+            "confidence": "none",
+            "destination": null,
+            "summary": null
+          },
+          "detectedConcepts": [
+            {
+              "conceptId": "role.warehouse-material-handling",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "work.remote",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            }
+          ],
+          "analysisPending": false,
+          "semanticClassificationStatus": "complete"
+        },
+        "workflowState": "normal",
+        "sourceAvailable": false,
+        "current": true,
+        "observation": {
+          "analysisVersion": 1,
+          "analyzedAtUtc": "2026-09-06T23:56:57.7158975+00:00",
+          "descriptionAvailable": true,
+          "result": {
+            "rulesetVersion": "1.0.0",
+            "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+            "postingFingerprint": "a6aba0b1250e1e1e36ac5eb2ebf14879dbeafde5bbfa70bf2e5c093b611c2217",
+            "decision": "REJECT",
+            "category": "business-other",
+            "reason": "Corroborated unrelated occupational duties: business-other",
+            "ruleIds": [
+              "reject-business-other"
+            ],
+            "evidence": [
+              {
+                "predicateId": "business-other-title",
+                "scope": "title",
+                "text": "procurement"
+              },
+              {
+                "predicateId": "business-other-body",
+                "scope": "body",
+                "text": "procurement"
+              }
+            ],
+            "guards": [],
+            "failOpen": false
+          },
+          "decision": "REJECT"
+        }
+      },
+      {
+        "employer": "Leidos",
+        "job": {
+          "stableId": "leidos:R-00189475",
+          "title": "Program Finance Analyst",
+          "requisitionId": "R-00189475",
+          "startDate": "2026-08-17",
+          "postedOn": "Posted Today",
+          "primaryLocation": "6314 Remote/Teleworker US",
+          "additionalLocations": [],
+          "payMinimum": 59150.00,
+          "payMaximum": 106925.00,
+          "payPeriod": "annual",
+          "isRemoteLocationRestricted": false,
+          "clearanceLevel": "noneMentioned",
+          "clearanceRequirement": "none",
+          "polygraphRequired": false,
+          "clearanceParseStatus": "not-mentioned",
+          "credentials": [],
+          "unknownCredentialRequirements": [],
+          "academicQualification": {
+            "minimumLevel": "bachelor",
+            "specificDegree": null,
+            "requirementType": "strictDegree",
+            "experienceSubstitutionAccepted": false,
+            "parseStatus": "parsed",
+            "hasAccreditation": false
+          },
+          "workAuthorization": {
+            "eligibility": "noneSpecified",
+            "sponsorship": "noneSpecified",
+            "strength": "none",
+            "sponsorshipStrength": "none"
+          },
+          "remoteWork": {
+            "concernLevel": "none",
+            "summary": null
+          },
+          "extendedLocationRequirement": {
+            "confidence": "none",
+            "destination": null,
+            "summary": null
+          },
+          "detectedConcepts": [
+            {
+              "conceptId": "role.management-heavy",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "responsibility.team-leadership",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "role.program-management",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "role.test-validation-engineering",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "work.remote",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            }
+          ],
+          "analysisPending": false,
+          "semanticClassificationStatus": "complete"
+        },
+        "workflowState": "normal",
+        "sourceAvailable": false,
+        "current": true,
+        "observation": {
+          "analysisVersion": 1,
+          "analyzedAtUtc": "2026-09-06T23:56:57.7207488+00:00",
+          "descriptionAvailable": true,
+          "result": {
+            "rulesetVersion": "1.0.0",
+            "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+            "postingFingerprint": "b951d6ac6043ccfff84d106db35836c76c44548cacc3b57e1779512b40a85dd8",
+            "decision": "REJECT",
+            "category": "finance",
+            "reason": "Corroborated unrelated occupational duties: finance",
+            "ruleIds": [
+              "reject-finance"
+            ],
+            "evidence": [
+              {
+                "predicateId": "finance-title",
+                "scope": "title",
+                "text": "finance"
+              },
+              {
+                "predicateId": "finance-body",
+                "scope": "body",
+                "text": "portfolios"
+              }
+            ],
+            "guards": [],
+            "failOpen": false
+          },
+          "decision": "REJECT"
+        }
+      },
+      {
+        "employer": "Leidos",
+        "job": {
+          "stableId": "leidos:R-00184339",
+          "title": "Senior Civil/Structural Engineer",
+          "requisitionId": "R-00184339",
+          "startDate": "2026-05-29",
+          "postedOn": "Posted 30\u002B Days Ago",
+          "primaryLocation": "6314 Remote/Teleworker US",
+          "additionalLocations": [
+            "Boston, MA",
+            "Chicago, IL",
+            "Detroit, MI"
+          ],
+          "payMinimum": 73450.00,
+          "payMaximum": 132775.00,
+          "payPeriod": "annual",
+          "isRemoteLocationRestricted": true,
+          "clearanceLevel": "noneMentioned",
+          "clearanceRequirement": "none",
+          "polygraphRequired": false,
+          "clearanceParseStatus": "not-mentioned",
+          "credentials": [
+            {
+              "credentialId": "pe",
+              "name": "PE",
+              "fullName": "Professional Engineer",
+              "requirement": "required",
+              "isAlternative": false,
+              "equivalentAccepted": false,
+              "inProgressAccepted": true,
+              "postHireAcquisitionAllowed": false,
+              "equivalentCredentialIds": [],
+              "alternativeGroup": null
+            },
+            {
+              "credentialId": "se-license",
+              "name": "SE",
+              "fullName": "Structural Engineer License",
+              "requirement": "preferred",
+              "isAlternative": false,
+              "equivalentAccepted": false,
+              "inProgressAccepted": false,
+              "postHireAcquisitionAllowed": false,
+              "equivalentCredentialIds": [],
+              "alternativeGroup": null
+            }
+          ],
+          "unknownCredentialRequirements": [
+            {
+              "name": "NJ or the ability to obtain",
+              "requirement": "required",
+              "equivalentAccepted": false
+            }
+          ],
+          "academicQualification": {
+            "minimumLevel": "noneSpecified",
+            "specificDegree": null,
+            "requirementType": "noDegreeSpecified",
+            "experienceSubstitutionAccepted": false,
+            "parseStatus": "notFound",
+            "hasAccreditation": false
+          },
+          "workAuthorization": {
+            "eligibility": "noneSpecified",
+            "sponsorship": "noneSpecified",
+            "strength": "none",
+            "sponsorshipStrength": "none"
+          },
+          "remoteWork": {
+            "concernLevel": "none",
+            "summary": null
+          },
+          "extendedLocationRequirement": {
+            "confidence": "none",
+            "destination": null,
+            "summary": null
+          },
+          "detectedConcepts": [
+            {
+              "conceptId": "work.travel.occasional",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "work.remote",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            }
+          ],
+          "analysisPending": false,
+          "semanticClassificationStatus": "complete"
+        },
+        "workflowState": "normal",
+        "sourceAvailable": true,
+        "current": true,
+        "observation": {
+          "analysisVersion": 1,
+          "analyzedAtUtc": "2026-09-06T23:56:57.6983979+00:00",
+          "descriptionAvailable": true,
+          "result": {
+            "rulesetVersion": "1.0.0",
+            "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+            "postingFingerprint": "a45e7fc473e4a378b4410afe81cb636c500e3dc35642e5fdb8d7975bc461fa5b",
+            "decision": "REJECT",
+            "category": "trades-construction, civil-domain",
+            "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+            "ruleIds": [
+              "reject-trades-construction",
+              "reject-civil"
+            ],
+            "evidence": [
+              {
+                "predicateId": "trades-construction-title",
+                "scope": "title",
+                "text": "civil"
+              },
+              {
+                "predicateId": "protected-title",
+                "scope": "title",
+                "text": "engineer"
+              },
+              {
+                "predicateId": "civil-title",
+                "scope": "title",
+                "text": "civil"
+              },
+              {
+                "predicateId": "civil-object",
+                "scope": "body",
+                "text": "steel structures"
+              },
+              {
+                "predicateId": "civil-work",
+                "scope": "body",
+                "text": "design"
+              },
+              {
+                "predicateId": "trades-construction-body",
+                "scope": "body",
+                "text": "concrete"
+              }
+            ],
+            "guards": [],
+            "failOpen": false
+          },
+          "decision": "REJECT"
+        }
+      },
+      {
+        "employer": "Leidos",
+        "job": {
+          "stableId": "leidos:R-00190333",
+          "title": "Senior Program Financial Analyst",
+          "requisitionId": "R-00190333",
+          "startDate": "2026-08-21",
+          "postedOn": "Posted 15 Days Ago",
+          "primaryLocation": "Huntsville, AL",
+          "additionalLocations": [
+            "6314 Remote/Teleworker US"
+          ],
+          "payMinimum": 92300.00,
+          "payMaximum": 166850.00,
+          "payPeriod": "annual",
+          "isRemoteLocationRestricted": false,
+          "clearanceLevel": "other",
+          "clearanceRequirement": "obtain",
+          "polygraphRequired": false,
+          "clearanceParseStatus": "ambiguous",
+          "credentials": [],
+          "unknownCredentialRequirements": [],
+          "academicQualification": {
+            "minimumLevel": "bachelor",
+            "specificDegree": null,
+            "requirementType": "strictDegree",
+            "experienceSubstitutionAccepted": false,
+            "parseStatus": "parsed",
+            "hasAccreditation": false
+          },
+          "workAuthorization": {
+            "eligibility": "usCitizen",
+            "sponsorship": "noneSpecified",
+            "strength": "strict",
+            "sponsorshipStrength": "none"
+          },
+          "remoteWork": {
+            "concernLevel": "strong",
+            "summary": "onsite duties."
+          },
+          "extendedLocationRequirement": {
+            "confidence": "none",
+            "destination": null,
+            "summary": null
+          },
+          "detectedConcepts": [
+            {
+              "conceptId": "work.onsite",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "work.remote",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            }
+          ],
+          "analysisPending": false,
+          "semanticClassificationStatus": "complete"
+        },
+        "workflowState": "hidden",
+        "sourceAvailable": true,
+        "current": true,
+        "observation": {
+          "analysisVersion": 1,
+          "analyzedAtUtc": "2026-09-06T23:56:57.6690629+00:00",
+          "descriptionAvailable": true,
+          "result": {
+            "rulesetVersion": "1.0.0",
+            "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+            "postingFingerprint": "12cd62ff8c2df3fa01aaf5efeb808f26eab40ea484f4deee69096c550119efd4",
+            "decision": "REJECT",
+            "category": "finance",
+            "reason": "Corroborated unrelated occupational duties: finance",
+            "ruleIds": [
+              "reject-finance"
+            ],
+            "evidence": [
+              {
+                "predicateId": "finance-title",
+                "scope": "title",
+                "text": "financial"
+              },
+              {
+                "predicateId": "finance-body",
+                "scope": "body",
+                "text": "earned value"
+              }
+            ],
+            "guards": [],
+            "failOpen": false
+          },
+          "decision": "REJECT"
+        }
+      },
+      {
+        "employer": "Leidos",
+        "job": {
+          "stableId": "leidos:R-00188799",
+          "title": "Substation Civil Site Designer",
+          "requisitionId": "R-00188799",
+          "startDate": "2026-08-05",
+          "postedOn": "Posted 12 Days Ago",
+          "primaryLocation": "Chicago, IL",
+          "additionalLocations": [
+            "6314 Remote/Teleworker US"
+          ],
+          "payMinimum": 48100.00,
+          "payMaximum": 86950.00,
+          "payPeriod": "annual",
+          "isRemoteLocationRestricted": false,
+          "clearanceLevel": "noneMentioned",
+          "clearanceRequirement": "none",
+          "polygraphRequired": false,
+          "clearanceParseStatus": "not-mentioned",
+          "credentials": [],
+          "unknownCredentialRequirements": [],
+          "academicQualification": {
+            "minimumLevel": "associate",
+            "specificDegree": null,
+            "requirementType": "strictDegree",
+            "experienceSubstitutionAccepted": false,
+            "parseStatus": "parsed",
+            "hasAccreditation": false
+          },
+          "workAuthorization": {
+            "eligibility": "noneSpecified",
+            "sponsorship": "noneSpecified",
+            "strength": "none",
+            "sponsorshipStrength": "none"
+          },
+          "remoteWork": {
+            "concernLevel": "none",
+            "summary": null
+          },
+          "extendedLocationRequirement": {
+            "confidence": "none",
+            "destination": null,
+            "summary": null
+          },
+          "detectedConcepts": [
+            {
+              "conceptId": "work.remote",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            }
+          ],
+          "analysisPending": false,
+          "semanticClassificationStatus": "complete"
+        },
+        "workflowState": "normal",
+        "sourceAvailable": false,
+        "current": true,
+        "observation": {
+          "analysisVersion": 1,
+          "analyzedAtUtc": "2026-09-06T23:56:57.7280196+00:00",
+          "descriptionAvailable": true,
+          "result": {
+            "rulesetVersion": "1.0.0",
+            "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+            "postingFingerprint": "52ba7d161b4f47b4018d76efdfb8ef97936da921c1ea32df9abc30cec548ca9f",
+            "decision": "REJECT",
+            "category": "trades-construction, civil-domain",
+            "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+            "ruleIds": [
+              "reject-trades-construction",
+              "reject-civil"
+            ],
+            "evidence": [
+              {
+                "predicateId": "trades-construction-title",
+                "scope": "title",
+                "text": "civil"
+              },
+              {
+                "predicateId": "trades-construction-body",
+                "scope": "body",
+                "text": "construction"
+              },
+              {
+                "predicateId": "civil-title",
+                "scope": "title",
+                "text": "civil"
+              },
+              {
+                "predicateId": "civil-object",
+                "scope": "body",
+                "text": "stormwater"
+              },
+              {
+                "predicateId": "civil-work",
+                "scope": "body",
+                "text": "designer"
+              }
+            ],
+            "guards": [],
+            "failOpen": false
+          },
+          "decision": "REJECT"
+        }
+      },
+      {
+        "employer": "Leidos",
+        "job": {
+          "stableId": "leidos:R-00190076",
+          "title": "Substation Civil Site Designer",
+          "requisitionId": "R-00190076",
+          "startDate": "2026-08-19",
+          "postedOn": "Posted 14 Days Ago",
+          "primaryLocation": "6314 Remote/Teleworker US",
+          "additionalLocations": [
+            "Chicago, IL"
+          ],
+          "payMinimum": 48100.00,
+          "payMaximum": 86950.00,
+          "payPeriod": "annual",
+          "isRemoteLocationRestricted": false,
+          "clearanceLevel": "noneMentioned",
+          "clearanceRequirement": "none",
+          "polygraphRequired": false,
+          "clearanceParseStatus": "not-mentioned",
+          "credentials": [],
+          "unknownCredentialRequirements": [],
+          "academicQualification": {
+            "minimumLevel": "associate",
+            "specificDegree": null,
+            "requirementType": "strictDegree",
+            "experienceSubstitutionAccepted": false,
+            "parseStatus": "parsed",
+            "hasAccreditation": false
+          },
+          "workAuthorization": {
+            "eligibility": "noneSpecified",
+            "sponsorship": "noneSpecified",
+            "strength": "none",
+            "sponsorshipStrength": "none"
+          },
+          "remoteWork": {
+            "concernLevel": "none",
+            "summary": null
+          },
+          "extendedLocationRequirement": {
+            "confidence": "none",
+            "destination": null,
+            "summary": null
+          },
+          "detectedConcepts": [
+            {
+              "conceptId": "work.remote",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            }
+          ],
+          "analysisPending": false,
+          "semanticClassificationStatus": "complete"
+        },
+        "workflowState": "normal",
+        "sourceAvailable": false,
+        "current": true,
+        "observation": {
+          "analysisVersion": 1,
+          "analyzedAtUtc": "2026-09-06T23:56:57.7180286+00:00",
+          "descriptionAvailable": true,
+          "result": {
+            "rulesetVersion": "1.0.0",
+            "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+            "postingFingerprint": "7c7278355d75360c99bbbe237729c4c8271772c7433429758e6af92dd4d142fc",
+            "decision": "REJECT",
+            "category": "trades-construction, civil-domain",
+            "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+            "ruleIds": [
+              "reject-trades-construction",
+              "reject-civil"
+            ],
+            "evidence": [
+              {
+                "predicateId": "trades-construction-title",
+                "scope": "title",
+                "text": "civil"
+              },
+              {
+                "predicateId": "trades-construction-body",
+                "scope": "body",
+                "text": "construction"
+              },
+              {
+                "predicateId": "civil-title",
+                "scope": "title",
+                "text": "civil"
+              },
+              {
+                "predicateId": "civil-object",
+                "scope": "body",
+                "text": "stormwater"
+              },
+              {
+                "predicateId": "civil-work",
+                "scope": "body",
+                "text": "designer"
+              }
+            ],
+            "guards": [],
+            "failOpen": false
+          },
+          "decision": "REJECT"
+        }
+      },
+      {
+        "employer": "Leidos",
+        "job": {
+          "stableId": "leidos:R-00191567",
+          "title": "Substation Civil Site Designer",
+          "requisitionId": "R-00191567",
+          "startDate": "2026-09-04",
+          "postedOn": "Posted Today",
+          "primaryLocation": "6314 Remote/Teleworker US",
+          "additionalLocations": [
+            "Chicago, IL"
+          ],
+          "payMinimum": 48100.00,
+          "payMaximum": 86950.00,
+          "payPeriod": "annual",
+          "isRemoteLocationRestricted": false,
+          "clearanceLevel": "noneMentioned",
+          "clearanceRequirement": "none",
+          "polygraphRequired": false,
+          "clearanceParseStatus": "not-mentioned",
+          "credentials": [],
+          "unknownCredentialRequirements": [],
+          "academicQualification": {
+            "minimumLevel": "associate",
+            "specificDegree": null,
+            "requirementType": "strictDegree",
+            "experienceSubstitutionAccepted": false,
+            "parseStatus": "parsed",
+            "hasAccreditation": false
+          },
+          "workAuthorization": {
+            "eligibility": "noneSpecified",
+            "sponsorship": "noneSpecified",
+            "strength": "none",
+            "sponsorshipStrength": "none"
+          },
+          "remoteWork": {
+            "concernLevel": "none",
+            "summary": null
+          },
+          "extendedLocationRequirement": {
+            "confidence": "none",
+            "destination": null,
+            "summary": null
+          },
+          "detectedConcepts": [
+            {
+              "conceptId": "work.remote",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            }
+          ],
+          "analysisPending": false,
+          "semanticClassificationStatus": "complete"
+        },
+        "workflowState": "normal",
+        "sourceAvailable": true,
+        "current": true,
+        "observation": {
+          "analysisVersion": 1,
+          "analyzedAtUtc": "2026-09-06T23:56:57.639392+00:00",
+          "descriptionAvailable": true,
+          "result": {
+            "rulesetVersion": "1.0.0",
+            "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+            "postingFingerprint": "370a4f91b9f5238935a56f44db2ee7bb762863c17ee9f3a9fe6e47166fdbca41",
+            "decision": "REJECT",
+            "category": "trades-construction, civil-domain",
+            "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+            "ruleIds": [
+              "reject-trades-construction",
+              "reject-civil"
+            ],
+            "evidence": [
+              {
+                "predicateId": "trades-construction-title",
+                "scope": "title",
+                "text": "civil"
+              },
+              {
+                "predicateId": "trades-construction-body",
+                "scope": "body",
+                "text": "construction"
+              },
+              {
+                "predicateId": "civil-title",
+                "scope": "title",
+                "text": "civil"
+              },
+              {
+                "predicateId": "civil-object",
+                "scope": "body",
+                "text": "stormwater"
+              },
+              {
+                "predicateId": "civil-work",
+                "scope": "body",
+                "text": "designer"
+              }
+            ],
+            "guards": [],
+            "failOpen": false
+          },
+          "decision": "REJECT"
+        }
+      },
+      {
+        "employer": "Leidos",
+        "job": {
+          "stableId": "leidos:R-00191598",
+          "title": "Substation Civil Site Engineer",
+          "requisitionId": "R-00191598",
+          "startDate": "2026-09-04",
+          "postedOn": "Posted Today",
+          "primaryLocation": "6314 Remote/Teleworker US",
+          "additionalLocations": [
+            "Chicago, IL"
+          ],
+          "payMinimum": 59150.00,
+          "payMaximum": 106925.00,
+          "payPeriod": "annual",
+          "isRemoteLocationRestricted": false,
+          "clearanceLevel": "noneMentioned",
+          "clearanceRequirement": "none",
+          "polygraphRequired": false,
+          "clearanceParseStatus": "not-mentioned",
+          "credentials": [],
+          "unknownCredentialRequirements": [],
+          "academicQualification": {
+            "minimumLevel": "bachelor",
+            "specificDegree": null,
+            "requirementType": "strictDegree",
+            "experienceSubstitutionAccepted": false,
+            "parseStatus": "parsed",
+            "hasAccreditation": false
+          },
+          "workAuthorization": {
+            "eligibility": "noneSpecified",
+            "sponsorship": "noneSpecified",
+            "strength": "none",
+            "sponsorshipStrength": "none"
+          },
+          "remoteWork": {
+            "concernLevel": "none",
+            "summary": null
+          },
+          "extendedLocationRequirement": {
+            "confidence": "none",
+            "destination": null,
+            "summary": null
+          },
+          "detectedConcepts": [
+            {
+              "conceptId": "work.remote",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            }
+          ],
+          "analysisPending": false,
+          "semanticClassificationStatus": "complete"
+        },
+        "workflowState": "normal",
+        "sourceAvailable": true,
+        "current": true,
+        "observation": {
+          "analysisVersion": 1,
+          "analyzedAtUtc": "2026-09-06T23:56:57.6407505+00:00",
+          "descriptionAvailable": true,
+          "result": {
+            "rulesetVersion": "1.0.0",
+            "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+            "postingFingerprint": "10068f6e9db8402e5e265d34ac12ff8b21382a60ffe9a051594bbcddf1b434de",
+            "decision": "REJECT",
+            "category": "trades-construction, civil-domain",
+            "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+            "ruleIds": [
+              "reject-trades-construction",
+              "reject-civil"
+            ],
+            "evidence": [
+              {
+                "predicateId": "trades-construction-title",
+                "scope": "title",
+                "text": "civil"
+              },
+              {
+                "predicateId": "protected-title",
+                "scope": "title",
+                "text": "engineer"
+              },
+              {
+                "predicateId": "civil-title",
+                "scope": "title",
+                "text": "civil"
+              },
+              {
+                "predicateId": "civil-object",
+                "scope": "body",
+                "text": "stormwater"
+              },
+              {
+                "predicateId": "civil-work",
+                "scope": "body",
+                "text": "designers"
+              },
+              {
+                "predicateId": "trades-construction-body",
+                "scope": "body",
+                "text": "construction"
+              }
+            ],
+            "guards": [],
+            "failOpen": false
+          },
+          "decision": "REJECT"
+        }
+      },
+      {
+        "employer": "Leidos",
+        "job": {
+          "stableId": "leidos:R-00184335",
+          "title": "Substation Civil Structural Engineer",
+          "requisitionId": "R-00184335",
+          "startDate": "2026-05-29",
+          "postedOn": "Posted 30\u002B Days Ago",
+          "primaryLocation": "6314 Remote/Teleworker US",
+          "additionalLocations": [],
+          "payMinimum": 59150.00,
+          "payMaximum": 106925.00,
+          "payPeriod": "annual",
+          "isRemoteLocationRestricted": false,
+          "clearanceLevel": "noneMentioned",
+          "clearanceRequirement": "none",
+          "polygraphRequired": false,
+          "clearanceParseStatus": "not-mentioned",
+          "credentials": [
+            {
+              "credentialId": "pe",
+              "name": "PE",
+              "fullName": "Professional Engineer",
+              "requirement": "preferred",
+              "isAlternative": false,
+              "equivalentAccepted": false,
+              "inProgressAccepted": true,
+              "postHireAcquisitionAllowed": false,
+              "equivalentCredentialIds": [],
+              "alternativeGroup": null
+            }
+          ],
+          "unknownCredentialRequirements": [],
+          "academicQualification": {
+            "minimumLevel": "bachelor",
+            "specificDegree": null,
+            "requirementType": "strictDegree",
+            "experienceSubstitutionAccepted": false,
+            "parseStatus": "parsed",
+            "hasAccreditation": false
+          },
+          "workAuthorization": {
+            "eligibility": "noneSpecified",
+            "sponsorship": "noneSpecified",
+            "strength": "none",
+            "sponsorshipStrength": "none"
+          },
+          "remoteWork": {
+            "concernLevel": "none",
+            "summary": null
+          },
+          "extendedLocationRequirement": {
+            "confidence": "none",
+            "destination": null,
+            "summary": null
+          },
+          "detectedConcepts": [
+            {
+              "conceptId": "work.remote.full",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "work.travel.occasional",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "work.remote",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            }
+          ],
+          "analysisPending": false,
+          "semanticClassificationStatus": "complete"
+        },
+        "workflowState": "normal",
+        "sourceAvailable": true,
+        "current": true,
+        "observation": {
+          "analysisVersion": 1,
+          "analyzedAtUtc": "2026-09-06T23:56:57.6990386+00:00",
+          "descriptionAvailable": true,
+          "result": {
+            "rulesetVersion": "1.0.0",
+            "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+            "postingFingerprint": "8a14d0df49da773d33d22432bcccdd789cd05e1fee96d3e25f961bd1344a12f9",
+            "decision": "REJECT",
+            "category": "trades-construction, civil-domain",
+            "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+            "ruleIds": [
+              "reject-trades-construction",
+              "reject-civil"
+            ],
+            "evidence": [
+              {
+                "predicateId": "trades-construction-title",
+                "scope": "title",
+                "text": "civil"
+              },
+              {
+                "predicateId": "protected-title",
+                "scope": "title",
+                "text": "engineer"
+              },
+              {
+                "predicateId": "civil-title",
+                "scope": "title",
+                "text": "civil"
+              },
+              {
+                "predicateId": "civil-object",
+                "scope": "body",
+                "text": "steel structures"
+              },
+              {
+                "predicateId": "civil-work",
+                "scope": "body",
+                "text": "designing"
+              },
+              {
+                "predicateId": "trades-construction-body",
+                "scope": "body",
+                "text": "concrete"
+              }
+            ],
+            "guards": [],
+            "failOpen": false
+          },
+          "decision": "REJECT"
+        }
+      },
+      {
+        "employer": "Leidos",
+        "job": {
+          "stableId": "leidos:R-00182170",
+          "title": "Substation Senior Civil/Structural Engineer",
+          "requisitionId": "R-00182170",
+          "startDate": "2026-04-30",
+          "postedOn": "Posted 30\u002B Days Ago",
+          "primaryLocation": "Portland, OR",
+          "additionalLocations": [
+            "Remote, US"
+          ],
+          "payMinimum": 73450.00,
+          "payMaximum": 132775.00,
+          "payPeriod": "annual",
+          "isRemoteLocationRestricted": true,
+          "clearanceLevel": "noneMentioned",
+          "clearanceRequirement": "none",
+          "polygraphRequired": false,
+          "clearanceParseStatus": "not-mentioned",
+          "credentials": [
+            {
+              "credentialId": "pe",
+              "name": "PE",
+              "fullName": "Professional Engineer",
+              "requirement": "required",
+              "isAlternative": false,
+              "equivalentAccepted": false,
+              "inProgressAccepted": true,
+              "postHireAcquisitionAllowed": false,
+              "equivalentCredentialIds": [],
+              "alternativeGroup": null
+            },
+            {
+              "credentialId": "se-license",
+              "name": "SE",
+              "fullName": "Structural Engineer License",
+              "requirement": "preferred",
+              "isAlternative": false,
+              "equivalentAccepted": false,
+              "inProgressAccepted": false,
+              "postHireAcquisitionAllowed": false,
+              "equivalentCredentialIds": [],
+              "alternativeGroup": null
+            }
+          ],
+          "unknownCredentialRequirements": [
+            {
+              "name": "Oregon -OR- the ability to obtain",
+              "requirement": "required",
+              "equivalentAccepted": false
+            }
+          ],
+          "academicQualification": {
+            "minimumLevel": "noneSpecified",
+            "specificDegree": null,
+            "requirementType": "noDegreeSpecified",
+            "experienceSubstitutionAccepted": false,
+            "parseStatus": "notFound",
+            "hasAccreditation": false
+          },
+          "workAuthorization": {
+            "eligibility": "noneSpecified",
+            "sponsorship": "noneSpecified",
+            "strength": "none",
+            "sponsorshipStrength": "none"
+          },
+          "remoteWork": {
+            "concernLevel": "none",
+            "summary": null
+          },
+          "extendedLocationRequirement": {
+            "confidence": "none",
+            "destination": null,
+            "summary": null
+          },
+          "detectedConcepts": [
+            {
+              "conceptId": "work.travel.occasional",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "work.remote",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            }
+          ],
+          "analysisPending": false,
+          "semanticClassificationStatus": "complete"
+        },
+        "workflowState": "normal",
+        "sourceAvailable": true,
+        "current": true,
+        "observation": {
+          "analysisVersion": 1,
+          "analyzedAtUtc": "2026-09-06T23:56:57.7032769+00:00",
+          "descriptionAvailable": true,
+          "result": {
+            "rulesetVersion": "1.0.0",
+            "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+            "postingFingerprint": "d2aac1533ac2bbd83eafeac5f4f4aad2b87fff49ca4345479c9d39b0c4390eec",
+            "decision": "REJECT",
+            "category": "trades-construction, civil-domain",
+            "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+            "ruleIds": [
+              "reject-trades-construction",
+              "reject-civil"
+            ],
+            "evidence": [
+              {
+                "predicateId": "trades-construction-title",
+                "scope": "title",
+                "text": "civil"
+              },
+              {
+                "predicateId": "protected-title",
+                "scope": "title",
+                "text": "engineer"
+              },
+              {
+                "predicateId": "civil-title",
+                "scope": "title",
+                "text": "civil"
+              },
+              {
+                "predicateId": "civil-object",
+                "scope": "body",
+                "text": "steel structures"
+              },
+              {
+                "predicateId": "civil-work",
+                "scope": "body",
+                "text": "design"
+              },
+              {
+                "predicateId": "trades-construction-body",
+                "scope": "body",
+                "text": "concrete"
+              }
+            ],
+            "guards": [],
+            "failOpen": false
+          },
+          "decision": "REJECT"
+        }
+      },
+      {
+        "employer": "Leidos",
+        "job": {
+          "stableId": "leidos:R-00183929",
+          "title": "Substation Senior Structural Engineer",
+          "requisitionId": "R-00183929",
+          "startDate": "2026-05-22",
+          "postedOn": "Posted 30\u002B Days Ago",
+          "primaryLocation": "Portland, OR",
+          "additionalLocations": [
+            "6314 Remote/Teleworker US"
+          ],
+          "payMinimum": 73450.00,
+          "payMaximum": 132775.00,
+          "payPeriod": "annual",
+          "isRemoteLocationRestricted": true,
+          "clearanceLevel": "noneMentioned",
+          "clearanceRequirement": "none",
+          "polygraphRequired": false,
+          "clearanceParseStatus": "not-mentioned",
+          "credentials": [
+            {
+              "credentialId": "pe",
+              "name": "PE",
+              "fullName": "Professional Engineer",
+              "requirement": "preferred",
+              "isAlternative": false,
+              "equivalentAccepted": false,
+              "inProgressAccepted": true,
+              "postHireAcquisitionAllowed": false,
+              "equivalentCredentialIds": [],
+              "alternativeGroup": null
+            },
+            {
+              "credentialId": "se-license",
+              "name": "SE",
+              "fullName": "Structural Engineer License",
+              "requirement": "preferred",
+              "isAlternative": false,
+              "equivalentAccepted": false,
+              "inProgressAccepted": false,
+              "postHireAcquisitionAllowed": false,
+              "equivalentCredentialIds": [],
+              "alternativeGroup": null
+            }
+          ],
+          "unknownCredentialRequirements": [],
+          "academicQualification": {
+            "minimumLevel": "bachelor",
+            "specificDegree": null,
+            "requirementType": "strictDegree",
+            "experienceSubstitutionAccepted": false,
+            "parseStatus": "parsed",
+            "hasAccreditation": false
+          },
+          "workAuthorization": {
+            "eligibility": "noneSpecified",
+            "sponsorship": "noneSpecified",
+            "strength": "none",
+            "sponsorshipStrength": "none"
+          },
+          "remoteWork": {
+            "concernLevel": "none",
+            "summary": null
+          },
+          "extendedLocationRequirement": {
+            "confidence": "none",
+            "destination": null,
+            "summary": null
+          },
+          "detectedConcepts": [
+            {
+              "conceptId": "work.travel.occasional",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "work.remote",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            }
+          ],
+          "analysisPending": false,
+          "semanticClassificationStatus": "complete"
+        },
+        "workflowState": "normal",
+        "sourceAvailable": true,
+        "current": true,
+        "observation": {
+          "analysisVersion": 1,
+          "analyzedAtUtc": "2026-09-06T23:56:57.6996411+00:00",
+          "descriptionAvailable": true,
+          "result": {
+            "rulesetVersion": "1.0.0",
+            "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+            "postingFingerprint": "56d79fd7c6b2d983cc1729237dfb320bd3f1bf8cacaac8972caedf37a6733680",
+            "decision": "REJECT",
+            "category": "trades-construction, civil-domain",
+            "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+            "ruleIds": [
+              "reject-trades-construction",
+              "reject-civil"
+            ],
+            "evidence": [
+              {
+                "predicateId": "trades-construction-title",
+                "scope": "title",
+                "text": "structural"
+              },
+              {
+                "predicateId": "protected-title",
+                "scope": "title",
+                "text": "engineer"
+              },
+              {
+                "predicateId": "civil-title",
+                "scope": "title",
+                "text": "structural"
+              },
+              {
+                "predicateId": "civil-object",
+                "scope": "body",
+                "text": "steel structures"
+              },
+              {
+                "predicateId": "civil-work",
+                "scope": "body",
+                "text": "design"
+              },
+              {
+                "predicateId": "trades-construction-body",
+                "scope": "body",
+                "text": "concrete"
+              }
+            ],
+            "guards": [],
+            "failOpen": false
+          },
+          "decision": "REJECT"
+        }
+      },
+      {
+        "employer": "Leidos",
+        "job": {
+          "stableId": "leidos:R-00188082",
+          "title": "Substation Senior Structural Engineer",
+          "requisitionId": "R-00188082",
+          "startDate": "2026-07-24",
+          "postedOn": "Posted 30\u002B Days Ago",
+          "primaryLocation": "Orlando, FL",
+          "additionalLocations": [
+            "6314 Remote/Teleworker US",
+            "Atlanta, GA",
+            "Durham, NC",
+            "Houston, TX"
+          ],
+          "payMinimum": 73450.00,
+          "payMaximum": 132775.00,
+          "payPeriod": "annual",
+          "isRemoteLocationRestricted": false,
+          "clearanceLevel": "noneMentioned",
+          "clearanceRequirement": "none",
+          "polygraphRequired": false,
+          "clearanceParseStatus": "not-mentioned",
+          "credentials": [
+            {
+              "credentialId": "pe",
+              "name": "PE",
+              "fullName": "Professional Engineer",
+              "requirement": "required",
+              "isAlternative": false,
+              "equivalentAccepted": false,
+              "inProgressAccepted": false,
+              "postHireAcquisitionAllowed": false,
+              "equivalentCredentialIds": [],
+              "alternativeGroup": null
+            },
+            {
+              "credentialId": "se-license",
+              "name": "SE",
+              "fullName": "Structural Engineer License",
+              "requirement": "preferred",
+              "isAlternative": false,
+              "equivalentAccepted": false,
+              "inProgressAccepted": false,
+              "postHireAcquisitionAllowed": false,
+              "equivalentCredentialIds": [],
+              "alternativeGroup": null
+            }
+          ],
+          "unknownCredentialRequirements": [],
+          "academicQualification": {
+            "minimumLevel": "bachelor",
+            "specificDegree": null,
+            "requirementType": "strictDegree",
+            "experienceSubstitutionAccepted": false,
+            "parseStatus": "parsed",
+            "hasAccreditation": false
+          },
+          "workAuthorization": {
+            "eligibility": "noneSpecified",
+            "sponsorship": "noneSpecified",
+            "strength": "none",
+            "sponsorshipStrength": "none"
+          },
+          "remoteWork": {
+            "concernLevel": "none",
+            "summary": null
+          },
+          "extendedLocationRequirement": {
+            "confidence": "none",
+            "destination": null,
+            "summary": null
+          },
+          "detectedConcepts": [
+            {
+              "conceptId": "work.travel.occasional",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "work.remote",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            }
+          ],
+          "analysisPending": false,
+          "semanticClassificationStatus": "complete"
+        },
+        "workflowState": "normal",
+        "sourceAvailable": true,
+        "current": true,
+        "observation": {
+          "analysisVersion": 1,
+          "analyzedAtUtc": "2026-09-06T23:56:57.6905595+00:00",
+          "descriptionAvailable": true,
+          "result": {
+            "rulesetVersion": "1.0.0",
+            "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+            "postingFingerprint": "53457778d99e397c9faa22fa141206fbad31d6b69898f491e78ea00a4fd35f77",
+            "decision": "REJECT",
+            "category": "trades-construction, civil-domain",
+            "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+            "ruleIds": [
+              "reject-trades-construction",
+              "reject-civil"
+            ],
+            "evidence": [
+              {
+                "predicateId": "trades-construction-title",
+                "scope": "title",
+                "text": "structural"
+              },
+              {
+                "predicateId": "protected-title",
+                "scope": "title",
+                "text": "engineer"
+              },
+              {
+                "predicateId": "civil-title",
+                "scope": "title",
+                "text": "structural"
+              },
+              {
+                "predicateId": "civil-object",
+                "scope": "body",
+                "text": "steel structures"
+              },
+              {
+                "predicateId": "civil-work",
+                "scope": "body",
+                "text": "design"
+              },
+              {
+                "predicateId": "trades-construction-body",
+                "scope": "body",
+                "text": "concrete"
+              }
+            ],
+            "guards": [],
+            "failOpen": false
+          },
+          "decision": "REJECT"
+        }
+      },
+      {
+        "employer": "Leidos",
+        "job": {
+          "stableId": "leidos:R-00188954",
+          "title": "Substation Structural Designer",
+          "requisitionId": "R-00188954",
+          "startDate": "2026-08-06",
+          "postedOn": "Posted 26 Days Ago",
+          "primaryLocation": "6314 Remote/Teleworker US",
+          "additionalLocations": [],
+          "payMinimum": 40300.00,
+          "payMaximum": 72850.00,
+          "payPeriod": "annual",
+          "isRemoteLocationRestricted": false,
+          "clearanceLevel": "noneMentioned",
+          "clearanceRequirement": "none",
+          "polygraphRequired": false,
+          "clearanceParseStatus": "not-mentioned",
+          "credentials": [
+            {
+              "credentialId": "pmp",
+              "name": "PMP",
+              "fullName": "Project Management Professional",
+              "requirement": "mentioned",
+              "isAlternative": false,
+              "equivalentAccepted": false,
+              "inProgressAccepted": false,
+              "postHireAcquisitionAllowed": false,
+              "equivalentCredentialIds": [],
+              "alternativeGroup": null
+            }
+          ],
+          "unknownCredentialRequirements": [],
+          "academicQualification": {
+            "minimumLevel": "associate",
+            "specificDegree": null,
+            "requirementType": "degreeOrExperience",
+            "experienceSubstitutionAccepted": true,
+            "parseStatus": "parsed",
+            "hasAccreditation": false
+          },
+          "workAuthorization": {
+            "eligibility": "noneSpecified",
+            "sponsorship": "noneSpecified",
+            "strength": "none",
+            "sponsorshipStrength": "none"
+          },
+          "remoteWork": {
+            "concernLevel": "none",
+            "summary": null
+          },
+          "extendedLocationRequirement": {
+            "confidence": "none",
+            "destination": null,
+            "summary": null
+          },
+          "detectedConcepts": [
+            {
+              "conceptId": "role.management-heavy",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "responsibility.personnel-management",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "role.people-management",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "role.project-management",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            },
+            {
+              "conceptId": "work.remote",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            }
+          ],
+          "analysisPending": false,
+          "semanticClassificationStatus": "complete"
+        },
+        "workflowState": "normal",
+        "sourceAvailable": true,
+        "current": true,
+        "observation": {
+          "analysisVersion": 1,
+          "analyzedAtUtc": "2026-09-06T23:56:57.6817802+00:00",
+          "descriptionAvailable": true,
+          "result": {
+            "rulesetVersion": "1.0.0",
+            "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+            "postingFingerprint": "9f777b19307b9f16213c18425eb8634499488a075fc0a057d2ae08d289449cca",
+            "decision": "REJECT",
+            "category": "trades-construction, civil-domain",
+            "reason": "Corroborated unrelated occupational duties: trades-construction; Corroborated unrelated occupational duties: civil",
+            "ruleIds": [
+              "reject-trades-construction",
+              "reject-civil"
+            ],
+            "evidence": [
+              {
+                "predicateId": "trades-construction-title",
+                "scope": "title",
+                "text": "structural"
+              },
+              {
+                "predicateId": "trades-construction-body",
+                "scope": "body",
+                "text": "construction"
+              },
+              {
+                "predicateId": "civil-title",
+                "scope": "title",
+                "text": "structural"
+              },
+              {
+                "predicateId": "civil-object",
+                "scope": "body",
+                "text": "foundation"
+              },
+              {
+                "predicateId": "civil-work",
+                "scope": "body",
+                "text": "designer"
+              }
+            ],
+            "guards": [],
+            "failOpen": false
+          },
+          "decision": "REJECT"
+        }
+      },
+      {
+        "employer": "Leidos",
+        "job": {
+          "stableId": "leidos:R-00190741",
+          "title": "Time \u0026 Pay Solutions Specialist",
+          "requisitionId": "R-00190741",
+          "startDate": "2026-08-28",
+          "postedOn": "Posted Today",
+          "primaryLocation": "6314 Remote/Teleworker US",
+          "additionalLocations": [],
+          "payMinimum": 41600.00,
+          "payMaximum": 75200.00,
+          "payPeriod": "annual",
+          "isRemoteLocationRestricted": false,
+          "clearanceLevel": "other",
+          "clearanceRequirement": "obtain",
+          "polygraphRequired": false,
+          "clearanceParseStatus": "ambiguous",
+          "credentials": [],
+          "unknownCredentialRequirements": [],
+          "academicQualification": {
+            "minimumLevel": "highSchool",
+            "specificDegree": null,
+            "requirementType": "strictDegree",
+            "experienceSubstitutionAccepted": false,
+            "parseStatus": "parsed",
+            "hasAccreditation": false
+          },
+          "workAuthorization": {
+            "eligibility": "usCitizen",
+            "sponsorship": "noneSpecified",
+            "strength": "strict",
+            "sponsorshipStrength": "none"
+          },
+          "remoteWork": {
+            "concernLevel": "none",
+            "summary": null
+          },
+          "extendedLocationRequirement": {
+            "confidence": "none",
+            "destination": null,
+            "summary": null
+          },
+          "detectedConcepts": [
+            {
+              "conceptId": "work.remote",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            }
+          ],
+          "analysisPending": false,
+          "semanticClassificationStatus": "complete"
+        },
+        "workflowState": "normal",
+        "sourceAvailable": false,
+        "current": true,
+        "observation": {
+          "analysisVersion": 1,
+          "analyzedAtUtc": "2026-09-06T23:56:57.7090931+00:00",
+          "descriptionAvailable": true,
+          "result": {
+            "rulesetVersion": "1.0.0",
+            "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+            "postingFingerprint": "99be608ba4a06ecaa2c3efd28602f961d36c219c5443bfc1af0446c26d2f0843",
+            "decision": "REJECT",
+            "category": "cost-scheduling-payroll",
+            "reason": "Corroborated unrelated occupational duties: cost-scheduling-payroll",
+            "ruleIds": [
+              "reject-cost-scheduling-payroll"
+            ],
+            "evidence": [
+              {
+                "predicateId": "cost-scheduling-payroll-title",
+                "scope": "title",
+                "text": "time \u0026 pay"
+              },
+              {
+                "predicateId": "cost-scheduling-payroll-body",
+                "scope": "body",
+                "text": "payroll"
+              }
+            ],
+            "guards": [],
+            "failOpen": false
+          },
+          "decision": "REJECT"
+        }
+      },
+      {
+        "employer": "Leidos",
+        "job": {
+          "stableId": "leidos:R-00189632",
+          "title": "Warehouse Associate",
+          "requisitionId": "R-00189632",
+          "startDate": "2026-08-18",
+          "postedOn": "Posted Today",
+          "primaryLocation": "Orlando, FL",
+          "additionalLocations": [],
+          "payMinimum": 45500.00,
+          "payMaximum": 82250.00,
+          "payPeriod": "annual",
+          "isRemoteLocationRestricted": false,
+          "clearanceLevel": "topSecret",
+          "clearanceRequirement": "activeRequired",
+          "polygraphRequired": false,
+          "clearanceParseStatus": "parsed",
+          "credentials": [],
+          "unknownCredentialRequirements": [],
+          "academicQualification": {
+            "minimumLevel": "highSchool",
+            "specificDegree": null,
+            "requirementType": "strictDegree",
+            "experienceSubstitutionAccepted": false,
+            "parseStatus": "parsed",
+            "hasAccreditation": false
+          },
+          "workAuthorization": {
+            "eligibility": "exportControlled",
+            "sponsorship": "noneSpecified",
+            "strength": "mentioned",
+            "sponsorshipStrength": "none"
+          },
+          "remoteWork": {
+            "concernLevel": "none",
+            "summary": null
+          },
+          "extendedLocationRequirement": {
+            "confidence": "none",
+            "destination": null,
+            "summary": null
+          },
+          "detectedConcepts": [
+            {
+              "conceptId": "role.warehouse-material-handling",
+              "evidence": "Lifecycle-managed RegEx semantic classification"
+            }
+          ],
+          "analysisPending": false,
+          "semanticClassificationStatus": "complete"
+        },
+        "workflowState": "normal",
+        "sourceAvailable": false,
+        "current": true,
+        "observation": {
+          "analysisVersion": 1,
+          "analyzedAtUtc": "2026-09-06T23:56:57.7195273+00:00",
+          "descriptionAvailable": true,
+          "result": {
+            "rulesetVersion": "1.0.0",
+            "rulesetFingerprint": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983",
+            "postingFingerprint": "ab33c9a820dabc97fcde5b399eafaa86616b1e60fe7d98a12affa5a33059521d",
+            "decision": "REJECT",
+            "category": "operator-technician",
+            "reason": "Corroborated unrelated occupational duties: operator-technician",
+            "ruleIds": [
+              "reject-operator-technician"
+            ],
+            "evidence": [
+              {
+                "predicateId": "operator-technician-title",
+                "scope": "title",
+                "text": "warehouse"
+              },
+              {
+                "predicateId": "operator-technician-body",
+                "scope": "body",
+                "text": "materials"
+              }
+            ],
+            "guards": [],
+            "failOpen": false
+          },
+          "decision": "REJECT"
+        }
+      }
+    ]
+  }
+}
