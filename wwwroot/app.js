@@ -4136,6 +4136,8 @@ function evaluateJobFit(job) {
     {
       enabled: state.jobFitEnabled,
       signals: state.jobFitSignals,
+      travelTolerance: state.travelTolerance,
+      preferredWorkLocation: state.preferredWorkLocation,
       groupHardConflicts: state.jobFitGroupHardConflicts
     },
     state.jobFitConcepts);

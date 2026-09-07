@@ -468,3 +468,95 @@ assert.equal(fitLabel({ ...scoredJob, semanticClassificationStatus: "unavailable
 runtime.state.jobFitEnabled = false;
 assert.equal(fitLabel(scoredJob), undefined, "Disabled Job Fit must not display a badge.");
 console.log("All first-render Job Fit regression tests passed.");
+
+// Exercise the actual Jobs wrapper and list/detail paths, not a duplicate caller.
+runtime.state.jobFitEnabled = true;
+runtime.state.jobFitSignals = [];
+runtime.elements = {
+  emptyDetail: element(), jobDetail: element(),
+  jobFitDetailTab: element(), jobFitDetailContent: element()
+};
+runtime.elements.jobFitDetailContent.replaceChildren = function () { this.children = []; };
+runtime.document.querySelector = element;
+runtime.CheapTriage = { renderDetail() {} };
+runtime.resetCopyFeedback = () => {};
+runtime.formatJobFitImpact = String;
+runtime.appendJobFitCalculationRow = () => {};
+runtime.appendJobFitSignalGroup = () => {};
+// Stop only after renderDetail has executed its real Job Fit renderer; the
+// remaining At a Glance/posting rendering is outside this caller regression.
+const detailComplete = new Error("Job Fit detail rendered");
+runtime.showDetailTab = () => { throw detailComplete; };
+const detailStart = app.indexOf("function renderJobFitDetail(result, job)");
+const renderDetailStart = app.indexOf("function renderDetail(job)", detailStart);
+const detailEnd = app.indexOf("\nfunction ", renderDetailStart + 1);
+assert.ok(detailStart >= 0 && renderDetailStart > detailStart && detailEnd > renderDetailStart);
+vm.runInContext(app.slice(detailStart, detailEnd), runtime);
+const evaluations = [];
+runtime.JobFit = { ...JobFit, evaluate(...args) {
+  const result = JobFit.evaluate(...args);
+  evaluations.push({ configuration: args[1], result });
+  return result;
+} };
+function detailScore(job) {
+  assert.throws(() => runtime.renderDetail(job), error => error === detailComplete);
+  function find(node) {
+    if (node.className?.split(" ").includes("job-fit-detail-score")) return node.textContent;
+    return node.children?.map(find).find(Boolean);
+  }
+  return find(runtime.elements.jobFitDetailContent);
+}
+const callerFixtures = [
+  { name: "Fully remote, prefers fully remote", conceptId: "work.remote.full", preferredWorkLocation: 0, score: 6 },
+  { name: "Onsite, prefers fully remote", conceptId: "work.onsite", preferredWorkLocation: 0, score: 3 },
+  { name: "Onsite, prefers onsite", conceptId: "work.onsite", preferredWorkLocation: 5, score: 6 },
+  { name: "Heavy travel, no travel tolerated", conceptId: catalog.concepts.find(c => c.travelLevel === 5).id, travelTolerance: 0, score: 2 },
+  { name: "Heavy travel, heavy travel tolerated", conceptId: catalog.concepts.find(c => c.travelLevel === 5).id, travelTolerance: 5, score: 5 }
+];
+for (const fixture of callerFixtures) {
+  const job = { stableId: fixture.name, semanticClassificationStatus: "complete",
+    detectedConcepts: [{ conceptId: fixture.conceptId, evidence: "Lifecycle-managed RegEx semantic classification" }] };
+  runtime.state.travelTolerance = fixture.travelTolerance ?? null;
+  runtime.state.preferredWorkLocation = fixture.preferredWorkLocation ?? null;
+  evaluations.length = 0;
+  assert.equal(fitLabel(job), `Job Fit ${fixture.score}/10`, fixture.name);
+  assert.equal(detailScore(job), `${fixture.score} / 10`, fixture.name);
+  assert.equal(evaluations.length, 2, "List and detail must each use the shared caller exactly once.");
+  assert.deepEqual(evaluations[0].result, evaluations[1].result, "List and detail must receive identical results.");
+  for (const { configuration } of evaluations) {
+    assert.equal(configuration.travelTolerance, runtime.state.travelTolerance);
+    assert.equal(configuration.preferredWorkLocation, runtime.state.preferredWorkLocation);
+  }
+  console.log(`Jobs caller fixture: ${fixture.name}: ${fixture.score}/10 (list and detail)`);
+}
+const arrangementJob = { stableId: "arrangement", semanticClassificationStatus: "complete",
+  detectedConcepts: callerFixtures.filter(f => f.score === 2 || f.name.startsWith("Onsite, prefers fully"))
+    .map(f => ({ conceptId: f.conceptId })) };
+for (const missing of [false, true]) {
+  runtime.state.travelTolerance = null;
+  runtime.state.preferredWorkLocation = null;
+  if (missing) { delete runtime.state.travelTolerance; delete runtime.state.preferredWorkLocation; }
+  const result = runtime.evaluateJobFit(arrangementJob);
+  assert.equal(result.score, 5);
+  assert.equal(result.contributions.length, 0, "Null/missing sliders must not create comparisons.");
+  assert.equal(fitLabel(arrangementJob), "Job Fit 5/10");
+  assert.equal(detailScore(arrangementJob), "5 / 10");
+}
+runtime.state.travelTolerance = 0;
+runtime.state.preferredWorkLocation = 0;
+runtime.state.jobFitEnabled = false;
+assert.equal(runtime.evaluateJobFit(arrangementJob), null);
+assert.equal(fitLabel(arrangementJob), undefined);
+assert.equal(detailScore(arrangementJob), undefined);
+assert.equal(runtime.elements.jobFitDetailTab.hidden, true);
+runtime.state.jobFitEnabled = true;
+for (const status of [undefined, "pending", "unavailable"]) {
+  const job = { ...arrangementJob, semanticClassificationStatus: status };
+  evaluations.length = 0;
+  assert.equal(runtime.evaluateJobFit(job), null);
+  assert.equal(fitLabel(job), "Job Fit TBD");
+  assert.equal(detailScore(job), undefined);
+  assert.equal(runtime.elements.jobFitDetailTab.hidden, true);
+  assert.equal(evaluations.length, 0, "Incomplete classification must never enter the scorer.");
+}
+console.log("All saved-preference Jobs caller regressions passed.");
