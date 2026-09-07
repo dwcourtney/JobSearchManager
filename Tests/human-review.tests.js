@@ -121,6 +121,6 @@ assert.deepEqual(queue.cases.map(x=>x.stableJobId).sort(),JSON.parse(original).m
   const backend=fs.readFileSync(path.join(root,"CheapTriageHumanReview.cs"),"utf8");
   assert.doesNotMatch(backend,/JobCatalog|SaveJobHistory|CheapRejectRules|DeepAnalyze|FetchJob/);
   const index=fs.readFileSync(path.join(root,"wwwroot/index.html"),"utf8");
-  assert.ok(index.indexOf("human-review.js?v=7")<index.indexOf("rule-maintenance.js?v=9"));
+  assert.ok(index.indexOf("human-review.js?v=7")<index.indexOf("rule-maintenance.js?v=10"));
   console.log("PASS Human Review 29 IDs, save/navigation/revision/errors/completion/export, safe rendering and Admin route boundaries");
 })().catch(e=>{console.error(e);process.exitCode=1;});

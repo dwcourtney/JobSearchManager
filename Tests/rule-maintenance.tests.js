@@ -77,7 +77,7 @@ function setup(fetch) {
   const route = program.slice(program.indexOf('app.MapGet("/api/admin/cheap-triage/maintenance-prompt"'));
   assert.match(route.slice(0, 600), /RequireAuthorization\(AdminAuthorization.Policy\)/);
   assert.match(route.slice(0, 600), /RequireRateLimiting\("state"\)/);
-  assert.match(fs.readFileSync(path.join(root, "wwwroot/index.html"), "utf8"), /rule-maintenance.js\?v=9/);
+  assert.match(fs.readFileSync(path.join(root, "wwwroot/index.html"), "utf8"), /rule-maintenance.js\?v=10/);
   assert.match(fs.readFileSync(path.join(root, "wwwroot/app.js"), "utf8"), /RuleMaintenance.renderStatus\(elements.adminCheapPanel,/);
   const service = fs.readFileSync(path.join(root, "classifier-service/classifier_service.py"), "utf8");
   assert.match(service, /opt-in-llm-deep-analysis/);

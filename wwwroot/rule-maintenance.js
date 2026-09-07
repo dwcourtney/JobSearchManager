@@ -89,14 +89,14 @@
     status.className = "admin-evaluation-metadata";
     status.textContent = "Loading Cheap Triage status…";
     panel.replaceChildren(title, description, status);
-    let diagnostics = panel;
+    let diagnostics = panel, workflowControl;
     if (env.CheapTriageWorkflow) {
       const workflow = doc.createElement("section");
       diagnostics = doc.createElement("details");
       const summary = doc.createElement("summary"); summary.textContent = "Technical Details — live observations and offline evaluation";
       diagnostics.append(summary, description, status);
       panel.replaceChildren(title, workflow, diagnostics);
-      env.CheapTriageWorkflow.mount(workflow, env);
+      workflowControl = env.CheapTriageWorkflow.mount(workflow, env);
     }
     try {
       const response = await env.fetch("/api/admin/cheap-triage/status", { cache: "no-store" });
@@ -113,6 +113,7 @@
       }
       // Each load owns its nodes: an older response cannot overwrite a newer panel.
       if (status.parentNode === diagnostics && (diagnostics === panel || diagnostics.parentNode === panel)) {
+        workflowControl?.setStatus?.(value);
         const refresh = doc.createElement("button"); refresh.type = "button"; refresh.className = "primary-button admin-evaluation-action confirmation-secondary-button"; refresh.textContent = "Refresh observations";
         refresh.addEventListener("click", () => renderStatus(panel, env, score));
         const liveApi = typeof module === "object" && module.exports ? require("./cheap-triage.js") : env.CheapTriage;

@@ -136,6 +136,48 @@ internal static class HumanReviewTests
         Check(new CheapTriageMaintenance(config,environment,candidateRules).Read(complete).Stage=="review-complete", "Changed baseline invalidates candidate");
         Check(File.ReadAllText(Path.Combine(dir,"workflow",state.Key+".json")).Contains("rejected"), "Earlier disposition history preserved");
         Throws<InvalidOperationException>(() => workflow.ReadInbox());
+        // Separate in-memory test fixture; never rewrite the persisted human store.
+        var binaryReview = complete with { Reviews = complete.Reviews.OrderBy(x=>x.Key).Select((x,i)=>new {x.Key, Value=x.Value with {Decision=i<7?"KEEP":"REJECT"}}).ToDictionary(x=>x.Key,x=>x.Value),
+            Counts = new Dictionary<string,int> { ["KEEP"]=7,["REJECT"]=22,["AMBIGUOUS"]=0 } };
+        state=workflow.Read(binaryReview);state=workflow.Prepare(binaryReview,new(state.Key,state.Revision),prompt,"test");
+        var noUpdate=new MaintenanceNoUpdate(prompt.ArtifactBundle!,rules.Version,rules.Fingerprint,binaryReview.QueueFingerprint,binaryReview.SourceManifestHash,
+            binaryReview.Reviews.Select(x=>new NoUpdateHumanMatch(x.Key,x.Value,x.Value.Decision)).ToArray(),metrics,0,"PASS",["Provisional evidence"],[],new string('b',64));
+        MaintenanceResultImport Request(MaintenanceNoUpdate value) => new(state.Key,state.Revision,new("NO_UPDATE_NEEDED",null,value));
+        Throws<InvalidOperationException>(()=>workflow.ImportResult(binaryReview,Request(noUpdate with {SnapshotBundle="stale"}),"test"));
+        Throws<InvalidOperationException>(()=>workflow.ImportResult(binaryReview,Request(noUpdate with {RulesetHash="stale"}),"test"));
+        Throws<InvalidOperationException>(()=>workflow.ImportResult(binaryReview,Request(noUpdate with {QueueFingerprint="stale"}),"test"));
+        Throws<InvalidOperationException>(()=>workflow.ImportResult(binaryReview,Request(noUpdate with {SourceManifestHash="stale"}),"test"));
+        Throws<InvalidOperationException>(()=>workflow.ImportResult(binaryReview,Request(noUpdate) with {Revision=0},"test"));
+        Throws<InvalidDataException>(()=>workflow.ImportResult(binaryReview,Request(noUpdate with {ChangedDecisionCount=1}),"test"));
+        Throws<InvalidDataException>(()=>workflow.ImportResult(binaryReview,Request(noUpdate with {ValidationStatus="INCOMPLETE"}),"test"));
+        Throws<InvalidDataException>(()=>workflow.ImportResult(binaryReview,Request(noUpdate with {SafetyFailures=["failure"]}),"test"));
+        Throws<InvalidDataException>(()=>workflow.ImportResult(binaryReview,Request(noUpdate with {Metrics=metrics with {KeepRecall=.97}}),"test"));
+        Throws<InvalidDataException>(()=>workflow.ImportResult(binaryReview,Request(noUpdate with {Metrics=metrics with {KeepRecall=double.NaN}}),"test"));
+        Throws<InvalidDataException>(()=>workflow.ImportResult(binaryReview,Request(noUpdate with {HumanMatches=noUpdate.HumanMatches.Skip(1).ToArray()}),"test"));
+        var altered=noUpdate.HumanMatches.ToArray();altered[0]=altered[0] with {Human=altered[0].Human with {Note="tampered"}};
+        Throws<InvalidDataException>(()=>workflow.ImportResult(binaryReview,Request(noUpdate with {HumanMatches=altered}),"test"));
+        altered=noUpdate.HumanMatches.ToArray();altered[0]=altered[1];
+        Throws<InvalidDataException>(()=>workflow.ImportResult(binaryReview,Request(noUpdate with {HumanMatches=altered}),"test"));
+        Throws<InvalidDataException>(()=>workflow.ImportResult(binaryReview,new(state.Key,state.Revision,new("NO_UPDATE_NEEDED",candidate,noUpdate)),"test"));
+        Throws<InvalidDataException>(()=>workflow.ImportResult(binaryReview,new(state.Key,state.Revision,new("UNKNOWN",null,noUpdate)),"test"));
+        var sameVersion=candidate with {CandidateVersion=rules.Version,CandidateHash=rules.Fingerprint,RulesetJson=File.ReadAllText(rulesPath)};
+        Throws<InvalidDataException>(()=>workflow.ImportResult(binaryReview,new(state.Key,state.Revision,new("CANDIDATE",sameVersion,null)),"test"));
+        state=workflow.ImportResult(binaryReview,Request(noUpdate),"test");
+        Check(state.Stage=="no-update-needed" && state.Candidate is null && state.Release is null && state.ResultHash?.Length==64, "No-update is a distinct completed outcome, not a candidate or release");
+        var restored=new CheapTriageMaintenance(config,environment,rules).Read(binaryReview);
+        Check(restored.Stage=="no-update-needed" && restored.NoUpdate!.HumanMatches.Length==29 && restored.ResultHash==state.ResultHash,"No-update survives restart with exact provenance");
+        Throws<InvalidOperationException>(()=>workflow.PrepareRelease(binaryReview,new(state.Key,state.Revision),"test"));
+        Throws<InvalidOperationException>(()=>workflow.Decide(binaryReview,new(state.Key,state.Revision,candidate.CandidateHash,"approved"),"test"));
+        Throws<InvalidOperationException>(()=>workflow.Prepare(binaryReview,new(state.Key,state.Revision),prompt,"test"));
+        Check(workflow.Read(binaryReview with {Reviews=binaryReview.Reviews.ToDictionary(x=>x.Key,x=>x.Value with {Note="new review"})}).Stage=="review-complete","Changed human revisions invalidate no-update");
+        Check(new CheapTriageMaintenance(config,environment,candidateRules).Read(binaryReview).Stage=="review-complete","Changed rules invalidate no-update");
+        Check(CheapRejectRules.Load(rulesPath).Fingerprint==rules.Fingerprint,"No-update does not change rules");
+        var inbox=Path.Combine(dir,"workflow","candidate-inbox.json");
+        File.WriteAllText(inbox,JsonSerializer.Serialize(new MaintenanceResult("NO_UPDATE_NEEDED",null,noUpdate),new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+        Check(workflow.ReadInbox().ResultType=="NO_UPDATE_NEEDED","Synced result discriminator");
+        File.WriteAllText(inbox,JsonSerializer.Serialize(sameVersion,new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+        Check(workflow.ReadInbox().ResultType=="CANDIDATE","Legacy same-version input is never inferred as no-update");
+
     }
     private sealed class ReviewEnvironment : Microsoft.Extensions.Hosting.IHostEnvironment
     {

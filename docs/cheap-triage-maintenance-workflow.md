@@ -16,11 +16,15 @@ Completed/current/upcoming steps are textually and visually marked. Human Review
 
 ## Codex result handoff
 
+Codex returns one of two explicit result types. `CANDIDATE` contains a new versioned ruleset and proceeds to candidate review. `NO_UPDATE_NEEDED` contains the current ruleset identity, exact saved human decisions, high-recall metrics, zero changed decisions, validation status, and an evaluation artifact hash; it completes maintenance without candidate approval or release. A same-version `CANDIDATE` remains invalid and must not be used to represent this outcome.
+
 Codex should perform frozen and cached-live evaluation first, preserving all historical evidence. Use the existing evaluation CLI and reports. Do not train models, fetch providers, activate rules, or change Job Fit. Build a result package from already evaluated artifacts:
 
 ```powershell
 python scripts/package-cheap-triage-candidate.py --snapshot docs/evaluations/human-review-snapshots/<bundle-sha256> --comparison <frozen/comparison.json> --changes <all-changed-decisions.json> --human-comparison <human-comparison.json> --rules CheapTriage/rulesets/<candidate-version>.json --validation PASS --output candidate-result.json
 ```
+
+For a no-change result, add `--result-type NO_UPDATE_NEEDED` and use the current rules file with identical before/after evaluation results. The package must match every saved human decision, report zero changes and pass the safety checks. Import completes maintenance without approval or release.
 
 `--validation` must reflect completed validation (PASS, FAIL or INCOMPLETE); packaging does not run tests. Human comparison is an array of `{id, human, baseline, candidate}` with exact saved human objects and complete before/after engine decisions for every queue ID. Changes is the exhaustive frozen AND live changed-decision array containing IDs, titles, before/after decisions and evidence. Duplicate postings across datasets remain distinguished by their dataset field. The script verifies snapshot hashes, rule/baseline identity and human provenance. It refuses to overwrite an output file. Keep the package with its analysis artifacts.
 
@@ -56,6 +60,7 @@ Only the current state's primary action is rendered. Completed imports and dispo
 | CANDIDATE_REJECTED | Prepare Revision Request |
 | RELEASE_REQUEST_READY | Copy Release Prompt |
 | RELEASED | None |
+| NO_UPDATE_NEEDED | None; maintenance complete, candidate and release not required |
 
 Preparing a release appends a revision-checked `release-prepared` event with a server-template-generated prompt, preserving the candidate and approval. It invokes no external process and changes no rules. A later rejection invalidates the release prompt. Existing approved journals migrate without modification. The release template is CheapTriage/release-prompt-v1.txt.
 

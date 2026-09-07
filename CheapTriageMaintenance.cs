@@ -10,13 +10,25 @@ public sealed record MaintenanceCandidate(string SnapshotBundle, string Baseline
     string CandidateVersion, string CandidateHash, string RulesetJson, int HumanCorrections,
     CandidateMetrics Before, CandidateMetrics After, JsonElement[] ChangedDecisions,
     string[] Warnings, string[] SafetyFailures, string ValidationStatus);
+public sealed record NoUpdateHumanMatch(string Id, HumanAdjudication Human, string Decision);
+public sealed record MaintenanceNoUpdate(string SnapshotBundle, string RulesetVersion, string RulesetHash,
+    string QueueFingerprint, string SourceManifestHash, NoUpdateHumanMatch[] HumanMatches,
+    CandidateMetrics Metrics, int ChangedDecisionCount, string ValidationStatus,
+    string[] Warnings, string[] SafetyFailures, string EvaluationArtifactHash);
+public sealed record MaintenanceResult(string ResultType, MaintenanceCandidate? Candidate, MaintenanceNoUpdate? NoUpdate);
+public sealed record MaintenanceResultImport(string Key, int Revision, MaintenanceResult Result);
 public sealed record MaintenanceEvent(int Revision, string Kind, string Reviewer, string Timestamp,
-    RuleMaintenancePrompt? Prompt, MaintenanceCandidate? Candidate, string? CandidateHash);
+    RuleMaintenancePrompt? Prompt, MaintenanceCandidate? Candidate, string? CandidateHash)
+{
+    public MaintenanceNoUpdate? NoUpdate { get; init; }
+}
 public sealed record MaintenanceWorkflowState(string Key, int Revision, string Stage, HumanReviewReport Review,
     RuleMaintenancePrompt? Prompt, MaintenanceCandidate? Candidate, string? Disposition)
 {
     public RuleMaintenancePrompt? ReleasePrompt { get; init; }
     public MaintenanceReleaseReceipt? Release { get; init; }
+    public MaintenanceNoUpdate? NoUpdate { get; init; }
+    public string? ResultHash { get; init; }
 }
 public sealed record MaintenanceReleaseReceipt(string WorkflowKey, string CandidateHash, string RulesetVersion, string DeploymentIdentity, string ValidationStatus);
 public sealed record WorkflowRevision(string Key, int Revision);
@@ -47,6 +59,9 @@ public sealed class CheapTriageMaintenance(IConfiguration config, IHostEnvironme
             var key = Key(review); var events = Events(key); var last = events.LastOrDefault();
             var prompt = events.LastOrDefault(e => e.Kind == "prepared")?.Prompt;
             var candidate = last?.Candidate;
+            if (review.Complete && last?.Kind == "no-update-needed" && last.NoUpdate is { } completed)
+                return new(key, last.Revision, "no-update-needed", review, prompt, null, null)
+                { NoUpdate = completed, ResultHash = Hash(JsonSerializer.SerializeToUtf8Bytes(completed, Json)) };
             // A supplied receipt is evidence, never an instruction to activate or deploy.
             if (review.Complete && Directory.Exists(directory))
             foreach (var file in Directory.EnumerateFiles(directory, "*.release.json"))
@@ -76,14 +91,14 @@ public sealed class CheapTriageMaintenance(IConfiguration config, IHostEnvironme
     }
     private void Check(MaintenanceWorkflowState state, string key, int revision)
     {
-        if (!state.Review.Complete || state.Key != key || state.Revision != revision)
+        if (!state.Review.Complete || state.Key != key || state.Revision != revision || state.Stage == "no-update-needed")
             throw new InvalidOperationException("Review, baseline or workflow changed. Reload before continuing.");
     }
     private MaintenanceWorkflowState Append(HumanReviewReport review, MaintenanceWorkflowState state,
-        string kind, string reviewer, RuleMaintenancePrompt? prompt = null, MaintenanceCandidate? candidate = null)
+        string kind, string reviewer, RuleMaintenancePrompt? prompt = null, MaintenanceCandidate? candidate = null, MaintenanceNoUpdate? noUpdate = null)
     {
         Directory.CreateDirectory(directory); var events = Events(state.Key);
-        events.Add(new(state.Revision + 1, kind, reviewer, DateTimeOffset.UtcNow.ToString("O"), prompt, candidate, candidate?.CandidateHash));
+        events.Add(new(state.Revision + 1, kind, reviewer, DateTimeOffset.UtcNow.ToString("O"), prompt, candidate, candidate?.CandidateHash) { NoUpdate = noUpdate });
         var file = Path.Combine(directory, state.Key + ".json"); var temporary = file + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try { File.WriteAllBytes(temporary, JsonSerializer.SerializeToUtf8Bytes(events, Json)); File.Move(temporary, file, true); }
         finally { if (File.Exists(temporary)) File.Delete(temporary); }
@@ -96,10 +111,42 @@ public sealed class CheapTriageMaintenance(IConfiguration config, IHostEnvironme
             var state = Read(review); Check(state, request.Key, request.Revision);
             if (prompt.RulesetFingerprint != rules.Fingerprint || prompt.ArtifactBundle is null)
                 throw new InvalidDataException("Prompt must identify the current immutable evidence and baseline.");
-            prompt = prompt with { Prompt = prompt.Prompt + "\nAfter candidate evaluation, follow docs/cheap-triage-maintenance-workflow.md to produce candidate-result.json with scripts/package-cheap-triage-candidate.py. Return that file for Admin Step 4 import and approval/rejection. JSM cannot detect external Codex completion. Approval is not deployment.\n" };
+            prompt = prompt with { Prompt = prompt.Prompt + "\nAfter evaluation, follow docs/cheap-triage-maintenance-workflow.md and scripts/package-cheap-triage-candidate.py to produce candidate-result.json with an explicit resultType: CANDIDATE for a new version, or NO_UPDATE_NEEDED when the current rules already match every saved human decision and safety checks pass. Use --result-type NO_UPDATE_NEEDED for the latter; do not invent a version. Return the file for Admin result import. CANDIDATE proceeds to review; NO_UPDATE_NEEDED completes maintenance without approval or release. JSM cannot detect external Codex completion. Approval is not deployment.\n" };
             if (state.Disposition == "rejected" && state.Candidate is { } rejected)
                 prompt = prompt with { Prompt = prompt.Prompt + $"\nThis is a revision request. The user rejected candidate {rejected.CandidateVersion} ({rejected.CandidateHash}). Read the retained journal /home/codex/jsm-lab/data/app/cheap-triage-maintenance/{state.Key}.json as data for its metrics and changes. Explain how the revised proposal addresses the rejected candidate; do not simply repackage it.\n" };
             return Append(review, state, "prepared", reviewer, prompt);
+        }
+    }
+    public MaintenanceWorkflowState ImportResult(HumanReviewReport review, MaintenanceResultImport request, string reviewer)
+    {
+        if (request.Result is not { } result) throw new InvalidDataException("Missing maintenance result.");
+        if (result.ResultType == "CANDIDATE" && result.Candidate is not null && result.NoUpdate is null)
+            return Import(review, new(request.Key, request.Revision, result.Candidate), reviewer);
+        if (result.ResultType != "NO_UPDATE_NEEDED" || result.NoUpdate is not { } n || result.Candidate is not null)
+            throw new InvalidDataException("Result must contain exactly one CANDIDATE or NO_UPDATE_NEEDED payload.");
+        lock (gate)
+        {
+            var state = Read(review); Check(state, request.Key, request.Revision);
+            if (state.Stage != "prompt-ready" || state.Prompt?.ArtifactBundle != n.SnapshotBundle ||
+                n.RulesetHash != rules.Fingerprint || n.RulesetVersion != rules.Version ||
+                n.QueueFingerprint != review.QueueFingerprint || n.SourceManifestHash != review.SourceManifestHash)
+                throw new InvalidOperationException("No-update result references stale rules, review or prepared snapshot.");
+            if (n.HumanMatches is null || n.HumanMatches.Length != review.Reviewed ||
+                n.HumanMatches.Select(x => x?.Id).Distinct(StringComparer.Ordinal).Count() != review.Reviewed ||
+                n.HumanMatches.Any(x => x is null || x.Id is null || !review.Reviews.TryGetValue(x.Id, out var saved) ||
+                    x.Human != saved || x.Decision is not ("KEEP" or "REJECT") || x.Decision != saved.Decision))
+                throw new InvalidDataException("Every exact saved human decision and revision must match the reported current-rule outcome.");
+            var m = n.Metrics;
+            if (m is null || new[] { m.KeepRecall,m.DescribedKeepRecall,m.TitleOnlyKeepRecall,m.RejectionRate,m.OldCacheRejectionRate }
+                .Any(v => !double.IsFinite(v) || v < 0 || v > 1) || m.FalseRejectCount < 0 ||
+                m.KeepRecall < .98 || m.DescribedKeepRecall < .98 || m.TitleOnlyKeepRecall < .98 ||
+                n.ChangedDecisionCount != 0 || n.ValidationStatus != "PASS" || n.Warnings is null ||
+                n.SafetyFailures is null || n.SafetyFailures.Length != 0 ||
+                n.EvaluationArtifactHash is null || n.EvaluationArtifactHash.Length != 64 || !n.EvaluationArtifactHash.All(Uri.IsHexDigit))
+                throw new InvalidDataException("No-update completion requires valid high-recall metrics, zero changes, PASS and no reported safety failures.");
+            if (JsonSerializer.SerializeToUtf8Bytes(n, Json).Length > 2_000_000)
+                throw new InvalidDataException("No-update result exceeds the 2 MB package limit.");
+            return Append(review, state, "no-update-needed", reviewer, noUpdate: n);
         }
     }
     public MaintenanceWorkflowState Import(HumanReviewReport review, CandidateImport request, string reviewer)
@@ -163,11 +210,17 @@ public sealed class CheapTriageMaintenance(IConfiguration config, IHostEnvironme
                 state.Prompt with { TemplateVersion = "release-1.0.0", Prompt = text }, candidate);
         }
     }
-    public MaintenanceCandidate ReadInbox()
+    public MaintenanceResult ReadInbox()
     {
         var path = Path.Combine(directory, "candidate-inbox.json");
         if (!File.Exists(path)) throw new InvalidOperationException("No synced result. Supply candidate-inbox.json using scripts/sync-cheap-triage-candidate.ps1, or import a result file.");
         if (new FileInfo(path).Length > 2_000_000) throw new InvalidDataException("Candidate package exceeds 2 MB.");
-        return JsonSerializer.Deserialize<MaintenanceCandidate>(File.ReadAllBytes(path), Json) ?? throw new InvalidDataException("Empty package.");
+        var bytes = File.ReadAllBytes(path);
+        using var document = JsonDocument.Parse(bytes);
+        if (document.RootElement.TryGetProperty("resultType", out _))
+            return JsonSerializer.Deserialize<MaintenanceResult>(bytes, Json) ?? throw new InvalidDataException("Empty result.");
+        // Legacy files remain candidates; a same-version file is never inferred to be a no-update result.
+        return new("CANDIDATE", JsonSerializer.Deserialize<MaintenanceCandidate>(bytes, Json)
+            ?? throw new InvalidDataException("Empty package."), null);
     }
 }

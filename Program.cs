@@ -751,7 +751,7 @@ maintenanceWorkflow.AddEndpointFilter(async (context, next) =>
     try { return await next(context); }
     catch (InvalidOperationException e) { return Results.Conflict(new { error = e.Message }); }
     catch (Exception e) when (e is InvalidDataException or JsonException or ArgumentException)
-    { return Results.BadRequest(new { error = "Invalid candidate result: " + e.Message }); }
+    { return Results.BadRequest(new { error = "Invalid maintenance result: " + e.Message }); }
 });
 maintenanceWorkflow.MapGet("", (CheapTriageHumanReview review, CheapTriageMaintenance workflow) => Results.Ok(workflow.Read(review.Read())));
 maintenanceWorkflow.MapPost("/prepare", async (WorkflowRevision request, CheapTriageHumanReview review,
@@ -769,8 +769,11 @@ maintenanceWorkflow.MapPost("/prepare-release", (WorkflowRevision request, Cheap
 maintenanceWorkflow.MapPost("/candidate", (CandidateImport request, CheapTriageHumanReview review,
     CheapTriageMaintenance workflow, HttpContext context) => Results.Ok(workflow.Import(review.Read(), request,
         context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "administrator")));
+maintenanceWorkflow.MapPost("/result", (MaintenanceResultImport request, CheapTriageHumanReview review,
+    CheapTriageMaintenance workflow, HttpContext context) => Results.Ok(workflow.ImportResult(review.Read(), request,
+        context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "administrator")));
 maintenanceWorkflow.MapPost("/import-synced", (WorkflowRevision request, CheapTriageHumanReview review,
-    CheapTriageMaintenance workflow, HttpContext context) => Results.Ok(workflow.Import(review.Read(),
+    CheapTriageMaintenance workflow, HttpContext context) => Results.Ok(workflow.ImportResult(review.Read(),
         new(request.Key, request.Revision, workflow.ReadInbox()), context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "administrator")));
 maintenanceWorkflow.MapPost("/decision", (CandidateDisposition request, CheapTriageHumanReview review,
     CheapTriageMaintenance workflow, HttpContext context) => Results.Ok(workflow.Decide(review.Read(), request,
