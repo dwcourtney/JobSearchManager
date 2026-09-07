@@ -1110,7 +1110,7 @@ function synchronizeAdminNavigation(isAdmin) {
 
   const classifierPanel = document.createElement("section");
   classifierPanel.id = "admin-classifier-panel";
-  classifierPanel.className = "settings-section admin-subtab-panel";
+  classifierPanel.className = "settings-section admin-subtab-panel admin-job-fit-rules";
   classifierPanel.setAttribute("role", "tabpanel");
   classifierPanel.setAttribute("aria-labelledby", "admin-classifier-tab");
   classifierPanel.hidden = true;
@@ -1118,22 +1118,24 @@ function synchronizeAdminNavigation(isAdmin) {
   classifierTitle.textContent = "Job Fit Rules";
   const classifierIntro = document.createElement("p");
   classifierIntro.textContent = "Search and inspect the production Job Fit rules. Open a row for its full pattern, provenance, lifecycle details, and carefully scoped controls.";
-  const classifierStatus = document.createElement("p");
-  classifierStatus.className = "settings-status";
+  const classifierStatus = document.createElement("div");
+  classifierStatus.className = "settings-status admin-rule-summary";
   classifierStatus.setAttribute("role", "status");
   classifierStatus.setAttribute("aria-live", "polite");
   const backfill = document.createElement("button");
   backfill.type = "button";
+  backfill.className = "primary-button admin-evaluation-action confirmation-secondary-button";
   backfill.textContent = "Reclassify stale cache";
   backfill.addEventListener("click", () => void startClassifierBackfill());
   const evaluate = document.createElement("button");
   evaluate.type = "button";
-  evaluate.className = "primary-button";
+  evaluate.className = "primary-button admin-evaluation-action";
   evaluate.textContent = "Run Curated Regression Benchmark";
   evaluate.title = "Read-only evaluation of current rules against known regression cases. It does not change rules, jobs, or production match counters; it records evaluation results only.";
   evaluate.addEventListener("click", () => void evaluateRegexRules());
   const reload = document.createElement("button");
   reload.type = "button";
+  reload.className = "primary-button admin-evaluation-action confirmation-secondary-button";
   reload.textContent = "Verify and Apply Current Rule Set";
   reload.title = "Validates and compiles the already-approved active rules. On success it replaces the in-memory ruleset and reclassifies stale cache entries; it does not create or edit rules.";
   reload.addEventListener("click", () => void reloadRegexRules());
@@ -1141,7 +1143,7 @@ function synchronizeAdminNavigation(isAdmin) {
   actionHelp.className = "account-help";
   actionHelp.textContent = "Benchmark is read-only. Verify and Apply changes production classification only when approved rule records already differ from the running ruleset.";
   const filters = document.createElement("div");
-  filters.className = "settings-grid";
+  filters.className = "admin-rule-filters";
   const statusFilter = document.createElement("select");
   for (const value of ["", "proposed", "validated", "active", "review-due", "retired", "deleted"]) {
     const option = document.createElement("option");
@@ -1172,15 +1174,26 @@ function synchronizeAdminNavigation(isAdmin) {
   }
   const rulesList = document.createElement("div");
   rulesList.className = "admin-regex-rule-list";
-  for (const control of [statusFilter, conceptFilter, usageFilter, provenanceFilter, ruleSort]) {
+  for (const [control, name] of [[statusFilter, "Lifecycle status"], [conceptFilter, "Concept"], [usageFilter, "Usage"], [provenanceFilter, "Provenance"], [ruleSort, "Sort rules"]]) {
+    control.className = `text-control ${control.tagName === "SELECT" ? "admin-evaluation-filter-select" : "admin-evaluation-filter-input"}`;
+    control.setAttribute("aria-label", name);
     control.addEventListener("input", () => {
       state.adminRegexRulePage = 0;
       renderAdminRegexRules();
     });
-    filters.append(control);
+    const label = document.createElement("label"); label.textContent = name; label.append(control); filters.append(label);
   }
-  classifierPanel.append(classifierTitle, classifierIntro, classifierStatus,
-    backfill, evaluate, reload, actionHelp, filters, rulesList);
+  const summaryPanel = document.createElement("section"); summaryPanel.className = "admin-evaluation-card admin-rule-section";
+  const summaryTitle = document.createElement("h4"); summaryTitle.textContent = "Runtime summary";
+  summaryPanel.append(summaryTitle, classifierStatus);
+  const actionPanel = document.createElement("section"); actionPanel.className = "admin-evaluation-card admin-rule-section";
+  const actionTitle = document.createElement("h4"); actionTitle.textContent = "Rule maintenance actions";
+  const toolbar = document.createElement("div"); toolbar.className = "admin-evaluation-table-controls";
+  toolbar.append(evaluate, reload, backfill); actionPanel.append(actionTitle, toolbar, actionHelp);
+  const rulesPanel = document.createElement("section"); rulesPanel.className = "admin-evaluation-card admin-rule-section";
+  const rulesTitle = document.createElement("h4"); rulesTitle.textContent = "Browse rules";
+  rulesPanel.append(rulesTitle, filters, rulesList);
+  classifierPanel.append(classifierTitle, classifierIntro, summaryPanel, actionPanel, rulesPanel);
   const cheapPanel = document.createElement("section");
   cheapPanel.id = "admin-cheap-triage-panel";
   cheapPanel.className = "settings-section admin-subtab-panel";
@@ -1506,7 +1519,15 @@ async function loadClassifierStatus(force = false) {
     const reconciliation = result.jobsInspected > 0
       ? ` · last reconciliation: ${result.jobsInspected} inspected, ${result.staleResultsFound} stale, ${result.recomputedResults} recomputed, ${result.inconsistenciesRepaired} repaired in ${Math.round(result.elapsedMilliseconds)} ms`
       : "";
-    elements.adminClassifierStatus.textContent = `${overview.activeRuleCount} runtime rules · fingerprint ${overview.rulesetFingerprint.slice(0, 12)}… · ${result.current} of ${result.total} cached postings current · ${result.pending} stale${result.running ? " · reclassification running" : reconciliation}.`;
+    const metrics = document.createElement("dl"); metrics.className = "admin-evaluation-metrics";
+    for (const [label, value] of [["Active runtime rules", overview.activeRuleCount], ["Current cached postings", `${result.current} / ${result.total}`], ["Stale postings", result.pending]]) {
+      const item = document.createElement("div"), term = document.createElement("dt"), count = document.createElement("dd");
+      term.textContent = label; count.textContent = value; item.append(term, count); metrics.append(item);
+    }
+    const identity = document.createElement("p"); identity.className = "admin-evaluation-metadata";
+    identity.textContent = `Runtime ruleset fingerprint: ${overview.rulesetFingerprint}`;
+    const progress = document.createElement("p"); progress.textContent = result.running ? "Cache reclassification running" : reconciliation ? reconciliation.replace(/^ · /, "") : "Cache reconciliation idle";
+    elements.adminClassifierStatus.replaceChildren(metrics, identity, progress);
     elements.adminClassifierBackfill.disabled = result.running || result.pending === 0;
     renderAdminRegexRules();
   } catch (error) {
@@ -1564,14 +1585,18 @@ function renderAdminRegexRules() {
   summary.textContent = `${rules.length} matching rules · page ${state.adminRegexRulePage + 1} of ${pageCount}`;
   const previous = document.createElement("button");
   previous.type = "button";
+  previous.className = "primary-button admin-evaluation-action confirmation-secondary-button";
   previous.textContent = "Previous";
   previous.disabled = state.adminRegexRulePage === 0;
   previous.addEventListener("click", () => { state.adminRegexRulePage--; renderAdminRegexRules(); });
   const next = document.createElement("button");
   next.type = "button";
+  next.className = "primary-button admin-evaluation-action confirmation-secondary-button";
   next.textContent = "Next";
   next.disabled = state.adminRegexRulePage >= pageCount - 1;
   next.addEventListener("click", () => { state.adminRegexRulePage++; renderAdminRegexRules(); });
+  summary.setAttribute("role", "status");
+  pager.setAttribute("aria-label", "Rule table pagination");
   pager.append(summary, previous, next);
   const table = document.createElement("table");
   table.className = "admin-compact-table admin-rule-table";
@@ -1580,7 +1605,7 @@ function renderAdminRegexRules() {
   for (const label of ["Concept", "Pattern", "Type / scope", "Status", "Last matched",
     "Lifetime", "Recent", "Timeouts"] ) {
     const cell = document.createElement("th");
-    cell.textContent = label;
+    cell.textContent = label; cell.scope = "col";
     headerRow.append(cell);
   }
   head.append(headerRow);
@@ -1591,33 +1616,52 @@ function renderAdminRegexRules() {
     const details = document.createElement("details");
     const detailsSummary = document.createElement("summary");
     detailsSummary.textContent = rule.conceptId;
+    const expandedRow = document.createElement("tr"); expandedRow.hidden = true; expandedRow.className = "admin-rule-expanded-row";
+    const expandedCell = document.createElement("td"); expandedCell.colSpan = 8;
+    const expanded = document.createElement("div"); expanded.className = "admin-rule-expanded";
+    expandedCell.append(expanded); expandedRow.append(expandedCell);
+    expandedRow.id = `admin-rule-details-${encodeURIComponent(rule.ruleId)}`;
+    detailsSummary.setAttribute("aria-controls", expandedRow.id); detailsSummary.setAttribute("aria-expanded", "false");
+    details.addEventListener("toggle", () => { expandedRow.hidden = !details.open; detailsSummary.setAttribute("aria-expanded", String(details.open)); });
     const fullPattern = document.createElement("code");
     fullPattern.textContent = rule.pattern;
-    const metadata = document.createElement("p");
-    metadata.textContent = `Rule ${rule.ruleId} · created ${formatLongDate(rule.createdUtc) || rule.createdUtc} · modified ${formatLongDate(rule.lastModifiedUtc) || rule.lastModifiedUtc} · provenance ${rule.provenance}${rule.reason ? ` · ${rule.reason}` : ""}`;
-    details.append(detailsSummary, fullPattern, metadata);
+    const metadata = document.createElement("dl"); metadata.className = "admin-evaluation-metrics";
+    for (const [label, value] of [["Rule ID", rule.ruleId], ["Created", formatLongDate(rule.createdUtc) || rule.createdUtc], ["Modified", formatLongDate(rule.lastModifiedUtc) || rule.lastModifiedUtc], ["Provenance", rule.provenance], ["Reason", rule.reason || "Not recorded"]]) {
+      const item = document.createElement("div"), term = document.createElement("dt"), description = document.createElement("dd");
+      term.textContent = label; description.textContent = value; item.append(term, description); metadata.append(item);
+    }
+    details.append(detailsSummary);
+    expanded.append(fullPattern, metadata);
+    const rowActions = document.createElement("div"); rowActions.className = "admin-evaluation-table-controls";
     for (const [label, action] of regexRuleActions(rule)) {
       const button = document.createElement("button");
       button.type = "button";
+      button.className = "primary-button admin-evaluation-action confirmation-secondary-button";
       button.textContent = label;
       button.addEventListener("click", () => void applyRegexRuleAction(rule.ruleId, action));
-      details.append(button);
+      rowActions.append(button);
     }
+    expanded.append(rowActions);
     conceptCell.append(details);
     const abbreviated = rule.pattern.length > 72 ? `${rule.pattern.slice(0, 69)}…` : rule.pattern;
     for (const value of [abbreviated, `${rule.ruleType} / ${rule.scope}`, rule.status,
       rule.lastMatchedUtc ? formatLongDate(rule.lastMatchedUtc) : "Never", rule.matchCountLifetime,
       rule.matchCountSinceReview, rule.timeoutCountLifetime]) {
       const cell = document.createElement("td");
-      cell.textContent = value;
+      if (value === rule.status) {
+        const statusLabel = document.createElement("strong"); statusLabel.className = "admin-rule-status"; statusLabel.textContent = value; cell.append(statusLabel);
+      } else cell.textContent = value;
       cell.title = value === abbreviated ? rule.pattern : "";
       row.append(cell);
     }
     row.prepend(conceptCell);
-    body.append(row);
+    body.append(row, expandedRow);
   }
   table.append(head, body);
-  elements.adminRegexRulesList.append(pager, table);
+  const viewport = document.createElement("div"); viewport.className = "admin-rule-table-viewport";
+  viewport.tabIndex = 0; viewport.setAttribute("role", "region"); viewport.setAttribute("aria-label", "Job Fit rules; scroll to see all columns and rows");
+  viewport.append(table);
+  elements.adminRegexRulesList.append(pager, viewport);
 }
 
 function regexRuleActions(rule) {
@@ -1668,7 +1712,13 @@ async function evaluateRegexRules() {
     return;
   }
   const result = await response.json();
-  elements.adminClassifierStatus.textContent = `CURATED REGRESSION BENCHMARK ${result.evaluationRunId.slice(0, 8)} · ${result.postingCount} postings · ${result.conceptDecisionCount} concept decisions · macro F1 ${formatMetric(result.historicalBenchmarkMacro.f1)} · micro F1 ${formatMetric(result.historicalBenchmarkMicro.f1)}. Not production accuracy.`;
+  const metrics = document.createElement("dl"); metrics.className = "admin-evaluation-metrics";
+  for (const [label, value] of [["Curated regression run", result.evaluationRunId], ["Postings", result.postingCount], ["Concept decisions", result.conceptDecisionCount], ["Macro F1", formatMetric(result.historicalBenchmarkMacro.f1)], ["Micro F1", formatMetric(result.historicalBenchmarkMicro.f1)]]) {
+    const item = document.createElement("div"), term = document.createElement("dt"), count = document.createElement("dd");
+    term.textContent = label; count.textContent = value; item.append(term, count); metrics.append(item);
+  }
+  const note = document.createElement("p"); note.textContent = "CURATED REGRESSION BENCHMARK. Not production accuracy.";
+  elements.adminClassifierStatus.replaceChildren(metrics, note);
 }
 async function claimAdministrator(event) {
   event.preventDefault();

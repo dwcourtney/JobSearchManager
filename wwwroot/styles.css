@@ -2601,17 +2601,46 @@ mark {
 .admin-compact-table th, .admin-compact-table td { padding: .45rem .5rem; border-bottom: var(--border-width-default) solid var(--color-border); text-align: left; vertical-align: top; }
 .admin-compact-table th { color: var(--color-label); background: var(--color-surface-secondary); white-space: nowrap; }
 .admin-compact-table td:not(:first-child) { font-variant-numeric: tabular-nums; }
-.admin-rule-table { table-layout: fixed; }
-.admin-rule-table th:nth-child(1) { width: 18%; }
+.settings-view:has(.admin-job-fit-rules:not([hidden])) > .settings-surface { width: min(100%, 96rem); }
+.admin-job-fit-rules { display: grid; gap: 1rem; font-size: var(--font-size-ui); line-height: var(--line-height-note); }
+.admin-job-fit-rules > * { margin: 0; min-width: 0; }
+.settings-section.admin-job-fit-rules > h3 { font-size: var(--font-size-page-heading); text-transform: none; letter-spacing: normal; }
+.admin-rule-section { padding: 1rem; min-width: 0; }
+.admin-rule-section > h4 { font-size: var(--font-size-description-h3); }
+.admin-rule-summary .admin-evaluation-metrics { margin: .5rem 0 1rem; }
+.admin-rule-summary .admin-evaluation-metrics dt, .admin-rule-summary .admin-evaluation-metadata { font-size: var(--font-size-metadata); }
+.admin-rule-summary .admin-evaluation-metrics dd { font-size: var(--font-size-description-h2); }
+.admin-rule-section .account-help { font-size: var(--font-size-metadata); line-height: var(--line-height-note); }
+.admin-rule-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: .75rem; margin: 1rem 0; }
+.admin-rule-filters label { display: grid; gap: .35rem; color: var(--color-text-secondary); font-size: var(--font-size-label); font-weight: var(--font-weight-medium); }
+.admin-rule-filters .text-control { width: 100%; min-width: 0; font-size: var(--font-size-ui); }
+.admin-rule-table-viewport { overflow: auto; max-height: 68vh; border: var(--border-width-default) solid var(--color-border); border-radius: var(--radius-control); }
+.admin-rule-table-viewport:focus-visible { outline: var(--focus-ring-width) solid var(--color-focus-ring); outline-offset: var(--focus-ring-offset-default); }
+.admin-rule-table { table-layout: fixed; min-width: 68rem; font-size: var(--font-size-ui); }
+.admin-rule-table th, .admin-rule-table td { padding: .7rem .75rem; overflow-wrap: anywhere; }
+.admin-rule-table thead th { position: sticky; top: 0; z-index: 1; white-space: normal; }
+.admin-rule-table th:nth-child(1) { width: 22%; }
 .admin-rule-table th:nth-child(2) { width: 25%; }
-.admin-rule-table td { overflow: hidden; text-overflow: ellipsis; }
-.admin-rule-table details[open] { position: relative; z-index: 1; min-width: 32rem; padding: .5rem; border: var(--border-width-default) solid var(--color-border); border-radius: var(--radius-control); background: var(--color-settings-surface-background); }
-.admin-rule-table details button { margin: .3rem .3rem 0 0; }
+.admin-rule-table th:nth-child(3) { width: 12%; }
+.admin-rule-table th:nth-child(4) { width: 10%; }
+.admin-rule-table th:nth-child(5) { width: 13%; }
+.admin-rule-table tr:not(.admin-rule-expanded-row) > :nth-child(n+6) { text-align: right; }
+.admin-rule-table tbody tr:not(.admin-rule-expanded-row):hover { background: var(--color-surface-secondary); }
+.admin-rule-table details { overflow: visible; }
+.admin-rule-table summary { cursor: pointer; color: var(--color-text-heading); font-weight: var(--font-weight-medium); }
+.admin-rule-table summary:focus-visible { outline: var(--focus-ring-width) solid var(--color-focus-ring); }
+.admin-rule-status { color: var(--color-text-heading); font-weight: var(--font-weight-semibold); }
+.admin-rule-expanded { display: grid; gap: .75rem; padding: .5rem; background: var(--color-surface-secondary); }
+.admin-rule-expanded code, .admin-rule-expanded p { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
+.admin-rule-expanded code { font-size: var(--font-size-ui); }
+.admin-rule-expanded .admin-evaluation-metrics { margin: 0; }
+.admin-rule-expanded .admin-evaluation-metrics dd { font-size: var(--font-size-ui); font-weight: var(--font-weight-regular); overflow-wrap: anywhere; }
+.admin-job-fit-rules .admin-table-pager { gap: .75rem; padding-block: .5rem; }
 
 @media (max-width: 760px) {
   .admin-evaluation-metrics { grid-template-columns: repeat(2, minmax(7rem, 1fr)); }
   .admin-compact-table { display: block; overflow-x: auto; }
-  .admin-rule-table { min-width: 62rem; }
+  .admin-rule-table { display: table; min-width: 68rem; }
 }
 
 .rule-maintenance-dialog { width: min(900px, 90vw); max-height: 85vh; overflow: auto; padding: 24px; border-radius: 12px; }

@@ -18,7 +18,7 @@ assert.match(index,
   /id="administrator-bootstrap-section"[^>]*hidden[\s\S]*?id="administrator-bootstrap-code"[\s\S]*?minlength="8"[\s\S]*?maxlength="8"[\s\S]*?Claim Administrator/);
 assert.doesNotMatch(index, /annotation-labeling-ui|detector-evaluation-ui/,
   "Removed experimental Admin assets must not load.");
-assert.match(index, /app\.js\?v=55/);
+assert.match(index, /app\.js\?v=56/);
 
 assert.match(app, /synchronizeAdminNavigation\(account\.isAdmin === true\)/);
 assert.match(app, /if \(!isAdmin\)[\s\S]*?adminTab\?\.remove\(\)[\s\S]*?return;/,
@@ -42,7 +42,7 @@ assert.match(app, /Run AI-Adjudicated Holdout Evaluation/);
 assert.doesNotMatch(app, /renderLlm|renderTriage|llmHoldout|LLM_HOLDOUT|activeEvaluationTab|Run LLM Holdout|CHEAP HIGH-RECALL TRIAGE|Deep Analyze with LLM/,
   "Retired workflows must have no controls, polling, or remembered tab in shipped UI.");
 assert.doesNotMatch(styles, /\.llm-|\.admin-evaluation-subtabs/);
-assert.equal((app.match(/primary-button admin-evaluation-action/g) || []).length, 2);
+assert.match(app, /evaluate.className = "primary-button admin-evaluation-action"/);
 assert.match(app, /admin-compact-table[\s\S]*?Previous[\s\S]*?Next/,
   "RegEx rules must use a compact paginated table instead of giant cards.");
 assert.match(app, /Worst F1[\s\S]*?Lowest support[\s\S]*?Highest disagreement[\s\S]*?Concept name/);

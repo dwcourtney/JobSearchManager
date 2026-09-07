@@ -59,7 +59,7 @@ const observation = { decision: "REJECT", analyzedAtUtc: "2026-09-06T00:00:00Z",
   const source = fs.readFileSync(path.join(root, "JobCatalog.CheapTriage.cs"), "utf8");
   assert.doesNotMatch(source, /FetchJobDetail|FetchAllJobs|SaveJobHistory|DeepAnalyze|ClassifyAsync|DeleteAsync/);
   const index = fs.readFileSync(path.join(root, "wwwroot/index.html"), "utf8");
-  assert.ok(index.indexOf('src="/cheap-triage.js?v=2" defer') < index.indexOf('src="/app.js?v=55"'));
+  assert.ok(index.indexOf('src="/cheap-triage.js?v=2" defer') < index.indexOf('src="/app.js?v=56"'));
   assert.equal(JSON.parse(fs.readFileSync(path.join(root, "appsettings.json"))).CheapTriage.Mode, "Off");
   console.log("PASS Shadow detail states/races, live metrics/review/export, text safety and non-gating boundaries");
 })().catch(error => { console.error(error); process.exitCode = 1; });
