@@ -4,15 +4,25 @@
   if (typeof module === "object" && module.exports) module.exports = api;
   else root.RuleMaintenance = api;
 })(globalThis, () => {
-  function createButton(env = globalThis) {
+  async function copyPrompt(value, env = globalThis) {
+    try { await env.navigator.clipboard.writeText(value); }
+    catch {
+      const doc = env.document, previous = doc.activeElement;
+      const field = doc.createElement("textarea"); field.className = "text-control visually-hidden";
+      field.readOnly = true; field.value = value; doc.body.appendChild(field);
+      try { field.focus(); field.select(); if (!doc.execCommand("copy")) throw new Error("Clipboard unavailable"); }
+      finally { field.remove(); previous?.focus(); }
+    }
+  }
+  function createButton(env = globalThis, options = {}) {
     const button = env.document.createElement("button");
-    button.type = "button";
-    button.textContent = "Update RegEx Rules";
-    button.addEventListener("click", () => open(button, env));
+    button.type = "button"; button.className = "primary-button admin-evaluation-action";
+    button.textContent = options.title || "Update RegEx Rules";
+    button.addEventListener("click", () => open(button, env, options));
     return button;
   }
 
-  async function open(opener, env = globalThis) {
+  async function open(opener, env = globalThis, options = {}) {
     if (opener.disabled) return;
     opener.disabled = true;
     const doc = env.document;
@@ -21,18 +31,18 @@
     dialog.setAttribute("aria-labelledby", "rule-maintenance-title");
     const title = doc.createElement("h2");
     title.id = "rule-maintenance-title";
-    title.textContent = "Update RegEx Rules";
+    title.textContent = options.title || "Update RegEx Rules";
     const status = doc.createElement("p");
     status.setAttribute("role", "status");
     status.textContent = "Preparing the rule maintenance prompt…";
     const prompt = doc.createElement("textarea");
-    prompt.readOnly = true;
+    prompt.readOnly = true; prompt.className = "text-control";
     prompt.setAttribute("aria-label", "Complete Codex maintenance prompt");
     prompt.rows = 18;
     const copy = doc.createElement("button");
-    copy.type = "button"; copy.textContent = "Copy Prompt"; copy.disabled = true;
+    copy.type = "button"; copy.className = "primary-button"; copy.textContent = "Copy Prompt"; copy.disabled = true;
     const close = doc.createElement("button");
-    close.type = "button"; close.textContent = "Close";
+    close.type = "button"; close.className = "primary-button confirmation-secondary-button"; close.textContent = "Close";
     const abort = new AbortController();
     let closed = false;
     dialog.addEventListener("close", () => {
@@ -56,7 +66,7 @@
     doc.body.appendChild(dialog);
     dialog.showModal(); close.focus();
     try {
-      const response = await env.fetch("/api/admin/cheap-triage/maintenance-prompt", { cache: "no-store", signal: abort.signal });
+      const response = options.prepared ? { ok: true, json: async () => options.prepared } : await env.fetch(options.endpoint || "/api/admin/cheap-triage/maintenance-prompt", { cache: "no-store", signal: abort.signal });
       if (!response.ok) throw new Error("Prompt unavailable");
       const value = await response.json();
       if (typeof value.prompt !== "string" || !value.prompt.trim()) throw new Error("Empty prompt");
@@ -78,11 +88,15 @@
     const status = doc.createElement("p"); status.setAttribute("role", "status");
     status.className = "admin-evaluation-metadata";
     status.textContent = "Loading Cheap Triage status…";
-    panel.replaceChildren(title, description, status, createButton(env));
-    if (env.HumanReview) {
-      const humanReview = doc.createElement("section");
-      panel.append(humanReview);
-      env.HumanReview.mount(humanReview, env);
+    panel.replaceChildren(title, description, status);
+    let diagnostics = panel;
+    if (env.CheapTriageWorkflow) {
+      const workflow = doc.createElement("section");
+      diagnostics = doc.createElement("details");
+      const summary = doc.createElement("summary"); summary.textContent = "Technical Details — live observations and offline evaluation";
+      diagnostics.append(summary, description, status);
+      panel.replaceChildren(title, workflow, diagnostics);
+      env.CheapTriageWorkflow.mount(workflow, env);
     }
     try {
       const response = await env.fetch("/api/admin/cheap-triage/status", { cache: "no-store" });
@@ -98,15 +112,15 @@
         metrics.textContent = "Frozen metrics do not match the loaded ruleset. Reevaluate before considering promotion.";
       }
       // Each load owns its nodes: an older response cannot overwrite a newer panel.
-      if (status.parentNode === panel) {
-        const refresh = doc.createElement("button"); refresh.type = "button"; refresh.textContent = "Refresh observations";
+      if (status.parentNode === diagnostics && (diagnostics === panel || diagnostics.parentNode === panel)) {
+        const refresh = doc.createElement("button"); refresh.type = "button"; refresh.className = "primary-button admin-evaluation-action confirmation-secondary-button"; refresh.textContent = "Refresh observations";
         refresh.addEventListener("click", () => renderStatus(panel, env, score));
         const liveApi = typeof module === "object" && module.exports ? require("./cheap-triage.js") : env.CheapTriage;
-        panel.append(metrics, refresh, liveApi.renderLive(value.live, env, score));
+        diagnostics.append(metrics, refresh, liveApi.renderLive(value.live, env, score));
       }
     } catch {
       status.textContent = "Unable to load Cheap Triage status. Reopen this tab to retry.";
     }
   }
-  return { createButton, open, renderStatus };
+  return { createButton, open, renderStatus, copyPrompt };
 });

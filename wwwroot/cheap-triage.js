@@ -42,7 +42,7 @@
         details.append(text(doc, "p", `${observation.result.category}: ${observation.result.reason}`), evidence(doc, observation));
       } else details.append(text(doc, "p", value.mode === "Off" ? "Live evaluation is disabled." : "Background observation is pending."));
       if (!value.current && value.mode === "Shadow") {
-        const refresh = text(doc, "button", "Refresh observation"); refresh.type = "button";
+        const refresh = text(doc, "button", "Refresh observation"); refresh.type = "button"; refresh.className = "primary-button admin-evaluation-action";
         refresh.addEventListener("click", () => renderDetail(panel, job, env, true)); details.append(refresh);
       }
     } catch {
@@ -61,7 +61,7 @@
     const review = doc.createElement("details"); review.append(text(doc, "summary", `Review recorded REJECT decisions (${live.rejectedJobs.length})`));
     review.append(text(doc, "p", "Includes stale recorded rejects, labeled below; stale results are excluded from current counts. These jobs remain in their existing workflow state."));
     const rows = live.rejectedJobs.map(row => ({ ...row, jobFitScore: score(row.job) }));
-    const exportButton = text(doc, "button", "Export review JSON"); exportButton.type = "button";
+    const exportButton = text(doc, "button", "Export review JSON"); exportButton.type = "button"; exportButton.className = "primary-button admin-evaluation-action";
     exportButton.addEventListener("click", () => {
       const blob = new env.Blob([JSON.stringify({ exportedAtUtc: new Date().toISOString(), mode: live.mode,
         scope: live.scope, rulesetVersion: live.rulesetVersion, rulesetFingerprint: live.rulesetFingerprint,

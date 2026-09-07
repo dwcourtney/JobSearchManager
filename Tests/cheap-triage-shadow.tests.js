@@ -32,6 +32,7 @@ const observation = { decision: "REJECT", analyzedAtUtc: "2026-09-06T00:00:00Z",
   env.fetch = async () => ({ ok: true, json: async () => ({ mode: "Shadow", current: false, observation }) });
   await api.renderDetail(panel, { stableId: "stale" }, env);
   assert.match(flatten(panel), /REJECT \(stale\).*Refresh observation/);
+  assert.match(panel.children[0].children.at(-1).className,/\bprimary-button\b/);
   let resolve;
   env.fetch = () => new Promise(done => { resolve = done; });
   const old = api.renderDetail(panel, { stableId: "old" }, env);
@@ -49,7 +50,7 @@ const observation = { decision: "REJECT", analyzedAtUtc: "2026-09-06T00:00:00Z",
   assert.match(flatten(rendered), /Live Shadow observation.*KEEP 1.*REJECT 1.*UNDETERMINED 1.*33.33%/);
   assert.match(flatten(rendered), /2 missing\/stale.*1 under previous rules/);
   assert.match(flatten(rendered), /Job Fit 7\/10.*saved/);
-  const review = rendered.children.at(-1); review.children[2].click();
+  const review = rendered.children.at(-1); assert.match(review.children[2].className,/\bprimary-button\b/); review.children[2].click();
   const data = JSON.parse(exported); assert.equal(data.jobs[0].jobFitScore, 7);
   assert.equal(data.jobs[0].observation.result.ruleIds[0], "reject-clinical");
   assert.equal(data.provisionalReviewOnly, true);
@@ -58,7 +59,7 @@ const observation = { decision: "REJECT", analyzedAtUtc: "2026-09-06T00:00:00Z",
   const source = fs.readFileSync(path.join(root, "JobCatalog.CheapTriage.cs"), "utf8");
   assert.doesNotMatch(source, /FetchJobDetail|FetchAllJobs|SaveJobHistory|DeepAnalyze|ClassifyAsync|DeleteAsync/);
   const index = fs.readFileSync(path.join(root, "wwwroot/index.html"), "utf8");
-  assert.ok(index.indexOf('src="/cheap-triage.js?v=1" defer') < index.indexOf('src="/app.js?v=55"'));
+  assert.ok(index.indexOf('src="/cheap-triage.js?v=2" defer') < index.indexOf('src="/app.js?v=55"'));
   assert.equal(JSON.parse(fs.readFileSync(path.join(root, "appsettings.json"))).CheapTriage.Mode, "Off");
   console.log("PASS Shadow detail states/races, live metrics/review/export, text safety and non-gating boundaries");
 })().catch(error => { console.error(error); process.exitCode = 1; });

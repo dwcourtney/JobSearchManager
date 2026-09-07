@@ -547,3 +547,5 @@ if ($LASTEXITCODE -ne 0) { throw "Cheap Triage Shadow UI tests failed." }
 if ($LASTEXITCODE -ne 0) { throw "Human review syntax validation failed." }
 & $NodePath (Join-Path $repo "Tests/human-review.tests.js")
 if ($LASTEXITCODE -ne 0) { throw "Human review UI tests failed." }
+& $NodePath (Join-Path $repo "Tests/cheap-triage-workflow.tests.js")
+if ($LASTEXITCODE -ne 0) { throw "Guided Cheap Triage workflow UI tests failed." }

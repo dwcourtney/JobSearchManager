@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text.Json;
+using Microsoft.Extensions.Configuration;
 using JobSearchManager;
 
 internal static class HumanReviewTests
@@ -34,6 +35,36 @@ internal static class HumanReviewTests
             foreach (var c in blank.Cases.Skip(1))
                 store.Save(new(store.QueueFingerprint, c.GetProperty("stableJobId").GetString()!, "REJECT", "reviewed", 0), "reviewer-one");
             var complete = store.Read();
+            WorkflowChecks(blank, saved, complete, dir, rules);
+            var maintenance = new RuleMaintenance(CheapRejectRules.Load(rules),
+                new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string,string?> { ["CheapTriage:ReviewArtifactDirectory"] = Path.Combine(dir, "artifacts") }).Build(),
+                new ReviewEnvironment { ContentRootPath = AppContext.BaseDirectory });
+            Throws<InvalidOperationException>(() => maintenance.GenerateReviewed(blank, null));
+            var beforePrompt = Hash(db);
+            var prepared = maintenance.GenerateReviewed(complete, null);
+            Check(prepared.Prompt.Length < 6000 && !prepared.Prompt.Contains("needs context") && !prepared.Prompt.Contains("\"decisions\""), "Compact prompt does not embed evidence");
+            Check(prepared.Prompt.Contains(complete.QueueFingerprint) && prepared.Prompt.Contains(complete.SourceManifestHash)
+                && prepared.Prompt.Contains(CheapRejectRules.Load(rules).Fingerprint) && prepared.Prompt.Contains("29 reviewed; KEEP 0, REJECT 28, AMBIGUOUS 1"), "Prompt identities and counts");
+            var artifactDir = Path.Combine(dir, "artifacts", prepared.ArtifactBundle!);
+            foreach (var artifact in prepared.ArtifactHashes!)
+            {
+                Check(Hash(Path.Combine(artifactDir, artifact.Key)) == artifact.Value, "Artifact bytes match SHA-256");
+                Check(prepared.Prompt.Contains("docs/evaluations/human-review-snapshots/" + prepared.ArtifactBundle + "/" + artifact.Key)
+                    && prepared.Prompt.Contains(artifact.Value), "Prompt references immutable files and hashes");
+            }
+            var evidence = File.ReadAllText(Path.Combine(artifactDir, "human-review.json"));
+            foreach (var decision in complete.Reviews.Values)
+                Check(evidence.Contains(decision.StableJobId), "Every decision exported");
+            Check(evidence.Contains("needs context") && evidence.Contains("matchedEvidence") && evidence.Contains("disagreesWithMachine"), "Full evidence preserved outside prompt");
+            Check(maintenance.GenerateReviewed(complete, null).ArtifactBundle == prepared.ArtifactBundle, "Identical snapshot reuses immutable bundle");
+            var revised = complete with { Reviews = complete.Reviews.ToDictionary(x => x.Key, x => x.Value with { Note = "revised note" }) };
+            Check(maintenance.GenerateReviewed(revised, null).ArtifactBundle != prepared.ArtifactBundle, "Changed review gets new bundle");
+            Check(File.ReadAllText(Path.Combine(artifactDir, "human-review.json")) == evidence, "Prior version preserved");
+            File.AppendAllText(Path.Combine(artifactDir, "live-shadow.json"), "corrupt");
+            Throws<InvalidDataException>(() => maintenance.GenerateReviewed(complete, null));
+            Check(prepared.Prompt.Contains("Prefer false KEEP over false REJECT") && prepared.Prompt.Contains("Active gating")
+                && prepared.Prompt.Contains("EVERY changed decision") && prepared.Prompt.Contains("frozen AND live"), "Prompt safety constraints");
+            Check(Hash(db) == beforePrompt && store.Read().Revisions.SequenceEqual(complete.Revisions), "Prompt generation never writes review data");
             var backupPath = Path.Combine(dir, "backup.db");
             var sourceHash = Hash(db);
             CheapTriageHumanReview.Backup(db, backupPath);
@@ -54,6 +85,65 @@ internal static class HumanReviewTests
         }
         finally { Directory.Delete(dir, true); }
         return Task.CompletedTask;
+    }
+    private static void WorkflowChecks(HumanReviewReport blank, HumanReviewReport partial, HumanReviewReport complete, string dir, string rulesPath)
+    {
+        var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string,string?> {
+            ["CheapTriage:MaintenanceDirectory"] = Path.Combine(dir, "workflow") }).Build();
+        var environment = new ReviewEnvironment { ContentRootPath = AppContext.BaseDirectory };
+        var rules = CheapRejectRules.Load(rulesPath);
+        var workflow = new CheapTriageMaintenance(config, environment, rules);
+        Check(workflow.Read(blank).Stage == "review-required", "Workflow requires initial review");
+        Check(workflow.Read(partial).Stage == "review-progress", "Partial review state");
+        var state = workflow.Read(complete);
+        Check(state.Stage == "review-complete", "Complete review leads to prompt preparation");
+        var prompt = new RuleMaintenancePrompt("human-reviewed-2.0.0", rules.Version, rules.Fingerprint, rulesPath, "manual-review-only", "Compact prompt") { ArtifactBundle = new string('a',64) };
+        Throws<InvalidOperationException>(() => workflow.Prepare(blank, new(state.Key,0), prompt,"test"));
+        state = workflow.Prepare(complete, new(state.Key,state.Revision), prompt,"test");
+        Check(state.Stage == "prompt-ready" && state.Prompt!.Prompt.Contains("candidate-result.json"), "Explicit durable Codex handoff");
+        Check(new CheapTriageMaintenance(config,environment,rules).Read(complete).Stage == "prompt-ready", "Prompt handoff survives restart");
+        var bytes = File.ReadAllText(rulesPath).Replace("\"rulesetVersion\": \"1.0.0\"", "\"rulesetVersion\": \"1.0.9\"");
+        var candidateRules = CheapRejectRules.Parse(System.Text.Encoding.UTF8.GetBytes(bytes));
+        var metrics = new CandidateMetrics(.995,.99,1,.1,.13,6);
+        var candidate = new MaintenanceCandidate(prompt.ArtifactBundle!,rules.Version,rules.Fingerprint,candidateRules.Version,candidateRules.Fingerprint,bytes,0,metrics,metrics,[],["Provisional evidence"],[],"PASS");
+        Throws<InvalidOperationException>(() => workflow.Import(complete,new(state.Key,state.Revision,candidate with {SnapshotBundle="stale"}),"test"));
+        Throws<InvalidDataException>(() => workflow.Import(complete,new(state.Key,state.Revision,candidate with {CandidateHash="wrong"}),"test"));
+        Throws<InvalidOperationException>(() => workflow.Import(complete,new(state.Key,0,candidate),"test"));
+        state=workflow.Import(complete,new(state.Key,state.Revision,candidate),"test");
+        Check(state.Stage=="candidate", "Import opens candidate evaluation");
+        state=workflow.Decide(complete,new(state.Key,state.Revision,candidate.CandidateHash,"rejected"),"test");
+        Check(state.Stage=="rejected", "Explicit rejection recorded");
+        state=workflow.Prepare(complete,new(state.Key,state.Revision),prompt,"test");
+        Check(state.Stage=="prompt-ready" && state.Candidate is null, "Revision request resets candidate, keeps history");
+        state=workflow.Import(complete,new(state.Key,state.Revision,candidate with {ValidationStatus="INCOMPLETE"}),"test");
+        Throws<InvalidOperationException>(() => workflow.Decide(complete,new(state.Key,state.Revision,candidate.CandidateHash,"approved"),"test"));
+        state=workflow.Import(complete,new(state.Key,state.Revision,candidate with {After=metrics with {KeepRecall=.97}}),"test");
+        Throws<InvalidOperationException>(() => workflow.Decide(complete,new(state.Key,state.Revision,candidate.CandidateHash,"approved"),"test"));
+        state=workflow.Import(complete,new(state.Key,state.Revision,candidate),"test");
+        state=workflow.Decide(complete,new(state.Key,state.Revision,candidate.CandidateHash,"approved"),"test");
+        Check(state.Stage=="approved" && CheapRejectRules.Load(rulesPath).Fingerprint==rules.Fingerprint, "Approval is durable and never activates rules");
+        Check(new CheapTriageMaintenance(config,environment,rules).Read(complete).Stage=="approved", "Approval survives restart");
+        state=workflow.PrepareRelease(complete,new(state.Key,state.Revision),"test");
+        Check(state.Stage=="release-request-ready" && state.Disposition=="approved" && state.ReleasePrompt!.Prompt.Contains(candidate.CandidateHash), "Release request identifies accepted candidate");
+        Check(state.ReleasePrompt!.Prompt.Contains("Shadow") && state.ReleasePrompt.Prompt.Contains("Do not configure Docker/WSL"), "Release prompt safety");
+        Check(new CheapTriageMaintenance(config,environment,rules).Read(complete).Stage=="release-request-ready", "Release request survives restart");
+        Throws<InvalidOperationException>(()=>workflow.PrepareRelease(complete,new(state.Key,0),"test"));
+        state=workflow.Decide(complete,new(state.Key,state.Revision,candidate.CandidateHash,"rejected"),"test");
+        Check(state.ReleasePrompt is null, "Changed disposition invalidates release request");
+        Throws<InvalidOperationException>(()=>workflow.PrepareRelease(complete,new(state.Key,state.Revision),"test"));
+        var revised = complete with { Reviews=complete.Reviews.ToDictionary(x=>x.Key,x=>x.Value with {Note="later review"}) };
+        Check(workflow.Read(revised).Stage=="review-complete", "Changed human review invalidates prior prompt/candidate");
+        Check(new CheapTriageMaintenance(config,environment,candidateRules).Read(complete).Stage=="review-complete", "Changed baseline invalidates candidate");
+        Check(File.ReadAllText(Path.Combine(dir,"workflow",state.Key+".json")).Contains("rejected"), "Earlier disposition history preserved");
+        Throws<InvalidOperationException>(() => workflow.ReadInbox());
+    }
+    private sealed class ReviewEnvironment : Microsoft.Extensions.Hosting.IHostEnvironment
+    {
+        public string EnvironmentName { get; set; } = "Test";
+        public string ApplicationName { get; set; } = "Tests";
+        public string ContentRootPath { get; set; } = "";
+        public Microsoft.Extensions.FileProviders.IFileProvider ContentRootFileProvider { get; set; }
+            = new Microsoft.Extensions.FileProviders.NullFileProvider();
     }
     private static void Check(bool value, string message) { if (!value) throw new Exception(message); }
     private static void Throws<T>(Action action) where T:Exception

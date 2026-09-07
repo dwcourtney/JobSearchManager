@@ -50,7 +50,7 @@ for (const [id, label] of [
   assert.match(bootstrap, new RegExp(`"${id}"`));
 }
 assert.match(index, /theme\.css\?v=11/);
-assert.match(index, /styles\.css\?v=42/);
+assert.match(index, /styles\.css\?v=48/);
 assert.match(index, /app\.js\?v=55/);
 assert.match(app, /function normalizeThemeMode\(value\)/);
 assert.match(app, /SUPPORTED_THEME_MODES\.has\(value\) \? value : "light"/);
@@ -168,4 +168,23 @@ assert.ok(contrast("#F8F8F2", "#242631") >= 4.5,
 assert.ok(contrast("#F8F8F2", "#4C536F") >= 4.5,
   "Dracula selected-row text contrast is below WCAG AA.");
 
+// Human Review reuses the shared paint/state rules rather than browser defaults.
+const cssRules = [...styles.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(m => ({selectors:m[1].trim().split(/,\s*/), body:m[2]}));
+const sharedRule = selector => {
+  const rule = cssRules.find(r => r.selectors.includes(selector));
+  assert.ok(rule, `Missing shared theme selector ${selector}`);
+  return rule;
+};
+assert.ok(sharedRule(".account-form > input").selectors.includes(".text-control"));
+for (const token of ["--color-input-text", "--color-input-background", "--radius-control"])
+  assert.ok(sharedRule(".account-form > input").body.includes(`var(${token})`));
+assert.match(sharedRule(".text-control:focus-visible").body, /var\(--color-focus-ring\)/);
+assert.match(sharedRule(".text-control:disabled").body, /var\(--opacity-disabled\)/);
+assert.match(sharedRule(".primary-button:hover:not(:disabled)").body, /var\(--color-accent-hover\)/);
+assert.match(sharedRule(".source-posting-button:hover:not(:disabled)").body, /var\(--color-accent-hover\)/);
+assert.match(sharedRule("button:focus-visible").body, /var\(--color-focus-ring\)/);
+assert.match(sharedRule("button:disabled").body, /var\(--opacity-disabled\)/);
+const pressed = sharedRule('.human-review-controls [aria-pressed="true"]').body;
+assert.match(pressed, /box-shadow:.*var\(--color-text-primary\)/);
+assert.doesNotMatch(pressed, /(?:^|;)\s*outline:/, "Selection must not override keyboard focus outline");
 console.log("All deterministic Nord and Dracula theme/persistence UI tests passed.");

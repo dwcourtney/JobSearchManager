@@ -12,7 +12,10 @@ public sealed record HumanReviewSave(string QueueFingerprint, string StableJobId
 public sealed record HumanReviewReport(string QueueVersion, string SourceManifestHash, string QueueFingerprint,
     JsonElement[] Cases, IReadOnlyDictionary<string, HumanAdjudication> Reviews,
     IReadOnlyList<HumanAdjudication> Revisions, int Reviewed, int Remaining,
-    IReadOnlyDictionary<string, int> Counts, bool Complete, bool RulesChanged = false);
+    IReadOnlyDictionary<string, int> Counts, bool Complete, bool RulesChanged = false)
+{
+    public string CategoryName { get; init; } = "Technology";
+}
 
 /// <summary>Global administrator adjudications, separate from every production classifier/cache.</summary>
 public sealed class CheapTriageHumanReview
@@ -37,6 +40,7 @@ public sealed class CheapTriageHumanReview
     }
 
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
+    private readonly string categoryName = "Technology";
     private readonly HumanReviewQueue queue;
     private readonly HashSet<string> ids;
     private readonly string connectionString;
@@ -45,7 +49,10 @@ public sealed class CheapTriageHumanReview
     public CheapTriageHumanReview(IConfiguration configuration, IHostEnvironment environment, HostingConfiguration hosting)
         : this(Path.Combine(environment.ContentRootPath, "CheapTriage", "review-queues", "human-review-v1.json"),
             configuration["HumanReview:DatabasePath"] ?? (hosting.IsContainer ? "/app/data/cheap-triage-human-review.db" :
-                Path.Combine(environment.ContentRootPath, "data", "cheap-triage-human-review.db"))) { }
+                Path.Combine(environment.ContentRootPath, "data", "cheap-triage-human-review.db")))
+    {
+        categoryName = configuration["HumanReview:CategoryName"]?.Trim() is { Length: > 0 } name ? name : "Technology";
+    }
 
     internal CheapTriageHumanReview(string queuePath, string databasePath)
     {
@@ -93,7 +100,7 @@ public sealed class CheapTriageHumanReview
         var latest = revisions.GroupBy(x => x.StableJobId).ToDictionary(g => g.Key, g => g.Last(), StringComparer.Ordinal);
         var counts = new[] { "KEEP", "REJECT", "AMBIGUOUS" }.ToDictionary(x => x, x => latest.Values.Count(r => r.Decision == x));
         return new(queue.QueueVersion, queue.SourceManifestHash, QueueFingerprint, queue.Cases, latest, revisions,
-            latest.Count, ids.Count - latest.Count, counts, latest.Count == ids.Count);
+            latest.Count, ids.Count - latest.Count, counts, latest.Count == ids.Count) { CategoryName = categoryName };
     }
 
     public void Save(HumanReviewSave request, string reviewer)

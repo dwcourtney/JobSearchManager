@@ -354,6 +354,7 @@ builder.Services.AddSingleton(services => CheapRejectRules.Load(Path.GetFullPath
     builder.Environment.ContentRootPath)));
 builder.Services.AddSingleton<CheapTriageShadow>();
 builder.Services.AddSingleton<RuleMaintenance>();
+builder.Services.AddSingleton<CheapTriageMaintenance>();
 builder.Services.AddSingleton<CheapTriageHumanReview>();
 builder.Services.AddHostedService<RegexTelemetryFlushService>();
 builder.Services.AddSingleton<SemanticClassificationService>();
@@ -736,6 +737,45 @@ humanReviewApi.MapPost("", (HumanReviewSave request, CheapTriageHumanReview revi
     catch (ArgumentException exception) { return Results.BadRequest(new { error = exception.Message }); }
     catch (InvalidOperationException exception) { return Results.Conflict(new { error = exception.Message }); }
 });
+humanReviewApi.MapGet("/maintenance-prompt", async Task<IResult> (CheapTriageHumanReview review,
+    RuleMaintenance maintenance, WorkspaceRuntimeProvider provider, CancellationToken token) =>
+{
+    var report = review.Read();
+    if (!report.Complete) return Results.Conflict(new { error = "Complete Human Review before preparing a rule update." });
+    var catalog = (await provider.GetAsync(token)).Catalog;
+    return Results.Ok(maintenance.GenerateReviewed(report, catalog.GetCheapTriageReport()));
+});
+var maintenanceWorkflow = humanReviewApi.MapGroup("/workflow");
+maintenanceWorkflow.AddEndpointFilter(async (context, next) =>
+{
+    try { return await next(context); }
+    catch (InvalidOperationException e) { return Results.Conflict(new { error = e.Message }); }
+    catch (Exception e) when (e is InvalidDataException or JsonException or ArgumentException)
+    { return Results.BadRequest(new { error = "Invalid candidate result: " + e.Message }); }
+});
+maintenanceWorkflow.MapGet("", (CheapTriageHumanReview review, CheapTriageMaintenance workflow) => Results.Ok(workflow.Read(review.Read())));
+maintenanceWorkflow.MapPost("/prepare", async (WorkflowRevision request, CheapTriageHumanReview review,
+    CheapTriageMaintenance workflow, RuleMaintenance maintenance, WorkspaceRuntimeProvider provider, HttpContext context, CancellationToken token) =>
+{
+    var report = review.Read();
+    if (!report.Complete) return Results.Conflict(new { error = "Complete Human Review first." });
+    var catalog = (await provider.GetAsync(token)).Catalog;
+    return Results.Ok(workflow.Prepare(report, request, maintenance.GenerateReviewed(report, catalog.GetCheapTriageReport()),
+        context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "administrator"));
+});
+maintenanceWorkflow.MapPost("/prepare-release", (WorkflowRevision request, CheapTriageHumanReview review,
+    CheapTriageMaintenance workflow, HttpContext context) => Results.Ok(workflow.PrepareRelease(review.Read(), request,
+        context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "administrator")));
+maintenanceWorkflow.MapPost("/candidate", (CandidateImport request, CheapTriageHumanReview review,
+    CheapTriageMaintenance workflow, HttpContext context) => Results.Ok(workflow.Import(review.Read(), request,
+        context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "administrator")));
+maintenanceWorkflow.MapPost("/import-synced", (WorkflowRevision request, CheapTriageHumanReview review,
+    CheapTriageMaintenance workflow, HttpContext context) => Results.Ok(workflow.Import(review.Read(),
+        new(request.Key, request.Revision, workflow.ReadInbox()), context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "administrator")));
+maintenanceWorkflow.MapPost("/decision", (CandidateDisposition request, CheapTriageHumanReview review,
+    CheapTriageMaintenance workflow, HttpContext context) => Results.Ok(workflow.Decide(review.Read(), request,
+        context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "administrator")));
+
 humanReviewApi.MapGet("/export", (CheapTriageHumanReview review) => Results.File(
     JsonSerializer.SerializeToUtf8Bytes(new { exportedAtUtc = DateTimeOffset.UtcNow, report = review.Read() },
         new JsonSerializerOptions(JsonSerializerDefaults.Web)), "application/json", "jsm-human-review.json"));

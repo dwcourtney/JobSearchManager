@@ -15,7 +15,7 @@ body {
   background: var(--color-surface);
 }
 
-button, input, select { font: inherit; }
+button, input, select, .text-control { font: inherit; }
 
 button, a { -webkit-tap-highlight-color: var(--color-tap-highlight); }
 
@@ -87,12 +87,12 @@ button, a { -webkit-tap-highlight-color: var(--color-tap-highlight); }
 
 .primary-button:hover:not(:disabled), .input-group button:hover:not(:disabled), .source-posting-button:hover:not(:disabled) { background: var(--color-accent-hover); }
 
-button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, .text-control:focus-visible {
   outline: var(--focus-ring-width) solid var(--color-focus-ring);
   outline-offset: var(--focus-ring-offset-default);
 }
 
-button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
+button:disabled, .text-control:disabled { cursor: wait; opacity: var(--opacity-disabled); }
 
 .global-status {
   display: grid;
@@ -697,7 +697,7 @@ button:disabled { cursor: wait; opacity: var(--opacity-disabled); }
   max-width: 44rem;
 }
 .account-form > label { color: var(--color-label); font-weight: var(--font-weight-semibold); }
-.account-form > input, .account-form > select {
+.account-form > input, .account-form > select, .text-control {
   width: 100%;
   padding: .48rem .55rem;
   border: var(--border-width-default) solid var(--color-border);
@@ -2620,4 +2620,32 @@ mark {
 .rule-maintenance-dialog::backdrop { background: var(--color-confirmation-backdrop); }
 
 .human-review-controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
-.human-review-controls [aria-pressed="true"] { outline: 2px solid currentColor; outline-offset: 2px; font-weight: bold; }
+.human-review-controls [aria-pressed="true"] { box-shadow: 0 0 0 var(--focus-ring-width) var(--color-text-primary); font-weight: var(--font-weight-bold); }
+
+.settings-section .human-review-question { font-size: var(--font-size-page-heading); color: var(--color-text-heading); text-transform: none; letter-spacing: normal; }
+.human-review-decisions button { font-size: var(--font-size-detail-heading); padding: .65rem 1.25rem; }
+.human-review-case { display: grid; gap: .85rem; min-width: 0; margin: 1rem 0; }
+.human-review-case > * { margin: 0; min-width: 0; }
+.human-review-case blockquote { padding-inline-start: 1rem; border-inline-start: var(--border-width-default) solid var(--color-border); }
+.human-review-help { color: var(--color-text-secondary); font-size: var(--font-size-small); }
+.human-review-help p { margin: .4rem 0 0; }
+.human-review-legend { display: flex; flex-wrap: wrap; gap: .35rem 1rem; margin: 0; }
+.human-review-legend > div { display: flex; flex-wrap: wrap; gap: .3rem; }
+.human-review-legend dt { font-weight: var(--font-weight-semibold); }
+.human-review-legend dd { margin: 0; }
+.human-review-case > label { display: grid; gap: .4rem; }
+.human-review-controls > button { max-width: 100%; white-space: normal; }
+.human-review-audit { display: grid; gap: 1rem; min-width: 0; padding-top: .85rem; border-top: var(--border-width-default) solid var(--color-border); }
+.human-review-audit > a { justify-self: start; max-width: 100%; overflow-wrap: anywhere; }
+.human-review-audit details { min-width: 0; overflow-wrap: anywhere; }
+.human-review-audit pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.human-review-complete { padding: 1rem; background: var(--color-surface-secondary); overflow-wrap: anywhere; }
+.triage-workflow { display: grid; gap: 1rem; padding: 1rem; min-width: 0; overflow-wrap: anywhere; }
+.triage-workflow > * { margin: 0; min-width: 0; }
+.triage-workflow > button { justify-self: start; max-width: 100%; white-space: normal; }
+.triage-workflow label { display: grid; gap: .5rem; }
+.triage-workflow pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.triage-workflow-steps { display: flex; flex-wrap: wrap; gap: .75rem; list-style: none; padding: 0; }
+.triage-workflow-steps li { padding: .5rem; border: var(--border-width-default) solid var(--color-border); border-radius: var(--radius-control); }
+.triage-workflow-steps [data-state="current"] { font-weight: var(--font-weight-bold); box-shadow: 0 0 0 var(--focus-ring-width) var(--color-text-primary); }
+.triage-workflow-steps [data-state="upcoming"] { color: var(--color-text-secondary); }
