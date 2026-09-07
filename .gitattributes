@@ -15,3 +15,6 @@ docs/supervised-cheap-reject-experiment.md whitespace=blank-at-eol,-blank-at-eof
 
 # Immutable review/evaluation provenance includes hashes of original bytes.
 docs/evaluations/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
+# Approved candidate identity is over its original CRLF bytes.
+CheapTriage/rulesets/1.0.1.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

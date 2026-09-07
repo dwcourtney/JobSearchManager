@@ -1,0 +1,889 @@
+{
+  "schemaVersion": 1,
+  "rulesetVersion": "1.0.1",
+  "name": "human-reviewed-technology-safety",
+  "status": "shadow-only",
+  "description": "Candidate only: corroborated Technology KEEP guards from human review; legacy rejects and active configuration unchanged.",
+  "defaultReason": "KEEP: missing corroborating occupational body evidence",
+  "predicates": [
+    {
+      "id": "support",
+      "scope": "title",
+      "pattern": "\\b(?:field(?: service)?|training device|pc support|electronic maintenance) technician\\b"
+    },
+    {
+      "id": "erp-object",
+      "scope": "body",
+      "pattern": "\\b(?:sql|sap|erp|s/?4hana|financial system(?:s)? modules)\\b"
+    },
+    {
+      "id": "erp-duty",
+      "scope": "body",
+      "pattern": "\\b(?:configur\\w*|troubleshoot\\w*|systems? (?:issues|modules)|data mapping|functional specifications?|integration testing)\\b"
+    },
+    {
+      "id": "civil-title",
+      "scope": "title",
+      "pattern": "\\b(?:civil|roadway|bridge|geotechnical|drainage|structural)\\b"
+    },
+    {
+      "id": "civil-object",
+      "scope": "body",
+      "pattern": "\\b(?:bridges?|roadways?|highways?|stormwater|storm sewers|culverts?|foundations?|concrete panels|steel structures|steel framing|landfills|excavations|erosion|sediment)\\b"
+    },
+    {
+      "id": "civil-work",
+      "scope": "body",
+      "pattern": "\\b(?:design\\w*|construction|drawings?|calculations?|grading|hydraulic|geotechnical)\\b"
+    },
+    {
+      "id": "core-title",
+      "scope": "title",
+      "pattern": "\\b(?:software|developer\\w*|programmer|devops|devsecops|full[- ]stack|back[- ]end|cloud|aws|azure|systems?|integration|automation|ai|ml|nlp|machine learning|network\\w*|cyber\\w*|database|gis|sysadmin|administrator|solution consultant)\\b|(?<!\\w)(?:\\.net|c#)(?!\\w)"
+    },
+    {
+      "id": "electrical-title",
+      "scope": "title",
+      "pattern": "\\b(?:lighting|electrical|protection|controls|signals?)\\b"
+    },
+    {
+      "id": "procurement-role",
+      "scope": "title",
+      "pattern": "\\bprocurement (?:agent|specialist)\\b"
+    },
+    {
+      "id": "role-tech",
+      "scope": "title",
+      "pattern": "\\b(?:engineer\\w*|developer\\w*|programmer|architect|sysadmin|administrator|integration|devops|devsecops|automation|solution consultant)\\b"
+    },
+    {
+      "id": "core-prefix",
+      "scope": "titlePrefix",
+      "pattern": "\\b(?:software|developer\\w*|programmer|devops|devsecops|full[- ]stack|back[- ]end|cloud|aws|azure|systems?|integration|automation|ai|ml|nlp|machine learning|network\\w*|cyber\\w*|database|gis|sysadmin|administrator|solution consultant)\\b|(?<!\\w)(?:\\.net|c#)(?!\\w)"
+    },
+    {
+      "id": "protected-title",
+      "scope": "title",
+      "pattern": "\\b(?:engineer\\w*|developer\\w*|programmer|software|devops|devsecops|full[- ]stack|back[- ]end|front[- ]end|platform|cloud|aws|azure|systems?|integration|automation|ai|ml|nlp|machine learning|deep learning|network\\w*|cyber\\w*|database|data warehouse|gis|architect|sysadmin|administrator|technical program|solution consultant)\\b|(?<!\\w)(?:\\.net|c#)(?!\\w)"
+    },
+    {
+      "id": "technical-duty",
+      "scope": "body",
+      "pattern": "\\b(?:develop\\w*|build\\w*|implement\\w*|program\\w*|administer\\w*|configur\\w*|debug\\w*|deploy\\w*|integrat\\w*|troubleshoot\\w*|maintain\\w*)\\b[^.!?;]{0,80}\\b(?:software|apis?|code|applications?|linux|windows server|servers?|networks?|kubernetes|sql|database|plc|cloud|python|csharp|c#|ci/cd)\\b",
+      "ignorePattern": "\\b(?:talent pipelines?|recruit top.tier|professional network|practice network|cad software|consistent application|development and application|program controls|programmatic safety|programs within ms office|training application)\\b"
+    },
+    {
+      "id": "clinical-title",
+      "scope": "title",
+      "pattern": "\\b(?:nurse|clinical|physician|therapist|dental|dietitian|psychiatric|mental health|social worker)\\b"
+    },
+    {
+      "id": "clinical-body",
+      "scope": "body",
+      "pattern": "\\b(?:patient|patients|counseling|therapy|rehabilitation|medications|teeth)\\b"
+    },
+    {
+      "id": "clinical-confirmed",
+      "all": [
+        "clinical-title",
+        "clinical-body"
+      ],
+      "any": [],
+      "none": []
+    },
+    {
+      "id": "driving-title",
+      "scope": "title",
+      "pattern": "\\b(?:driver|truck|chauffeur)\\b"
+    },
+    {
+      "id": "driving-body",
+      "scope": "body",
+      "pattern": "\\b(?:cdl|freight|deliver|delivery routes|tractor trailer|driving license)\\b"
+    },
+    {
+      "id": "driving-confirmed",
+      "all": [
+        "driving-title",
+        "driving-body"
+      ],
+      "any": [],
+      "none": []
+    },
+    {
+      "id": "trades-construction-title",
+      "scope": "title",
+      "pattern": "\\b(?:construction|civil|bridge|roadway|structural|electrician|plumber|welder|machinist|mechanic|inspector|cad operator)\\b"
+    },
+    {
+      "id": "trades-construction-body",
+      "scope": "body",
+      "pattern": "\\b(?:construction|concrete|welding|weld|pipes|plumbing|wiring|machining|engines|aircraft|structural steel|bridge design)\\b"
+    },
+    {
+      "id": "trades-construction-confirmed",
+      "all": [
+        "trades-construction-title",
+        "trades-construction-body"
+      ],
+      "any": [],
+      "none": []
+    },
+    {
+      "id": "finance-title",
+      "scope": "title",
+      "pattern": "\\b(?:accountant|accounting|finance|financial|tax|payroll|auditor)\\b"
+    },
+    {
+      "id": "finance-body",
+      "scope": "body",
+      "pattern": "\\b(?:accounting|financial statements|journal entries|tax|payroll|cost control|cost analysis|earned value|audits|audit|portfolios)\\b"
+    },
+    {
+      "id": "finance-confirmed",
+      "all": [
+        "finance-title",
+        "finance-body"
+      ],
+      "any": [],
+      "none": []
+    },
+    {
+      "id": "sales-title",
+      "scope": "title",
+      "pattern": "\\b(?:sales|account executive|business development|capture|pursuit lead)\\b"
+    },
+    {
+      "id": "sales-body",
+      "scope": "body",
+      "pattern": "\\b(?:sales|revenue|quota|quotas|capture|pipeline|prospect|commercial|contracts)\\b"
+    },
+    {
+      "id": "sales-confirmed",
+      "all": [
+        "sales-title",
+        "sales-body"
+      ],
+      "any": [],
+      "none": []
+    },
+    {
+      "id": "hr-title",
+      "scope": "title",
+      "pattern": "\\b(?:hr|human resources|recruiter|recruiting|talent acquisition|compensation|staffing)\\b"
+    },
+    {
+      "id": "hr-body",
+      "scope": "body",
+      "pattern": "\\b(?:hiring|recruitment|recruiting|candidates|employee relations|staffing|compensation|benefit policies)\\b"
+    },
+    {
+      "id": "hr-confirmed",
+      "all": [
+        "hr-title",
+        "hr-body"
+      ],
+      "any": [],
+      "none": []
+    },
+    {
+      "id": "hospitality-title",
+      "scope": "title",
+      "pattern": "\\b(?:cook|chef|housekeep\\w*|bartender|barista|restaurant server|food service|hotel front desk)\\b"
+    },
+    {
+      "id": "hospitality-body",
+      "scope": "body",
+      "pattern": "\\b(?:food|kitchen|meals|guest rooms|linens|drinks|beverages|tables|cooking)\\b"
+    },
+    {
+      "id": "hospitality-confirmed",
+      "all": [
+        "hospitality-title",
+        "hospitality-body"
+      ],
+      "any": [],
+      "none": []
+    },
+    {
+      "id": "physical-security-title",
+      "scope": "title",
+      "pattern": "\\b(?:security guard|security officer|police|armed security|protective officer)\\b"
+    },
+    {
+      "id": "physical-security-body",
+      "scope": "body",
+      "pattern": "\\b(?:patrol|patrolling|firearm|gates|guarding|premises|physical access)\\b"
+    },
+    {
+      "id": "physical-security-confirmed",
+      "all": [
+        "physical-security-title",
+        "physical-security-body"
+      ],
+      "any": [],
+      "none": []
+    },
+    {
+      "id": "operator-technician-title",
+      "scope": "title",
+      "pattern": "\\b(?:technician|operator|assembler|warehouse|material handler)\\b"
+    },
+    {
+      "id": "operator-technician-body",
+      "scope": "body",
+      "pattern": "\\b(?:manufacturing|production parts|machinery|pallets|forklift|repair|repairs|aircraft|assembly|assemble|materials)\\b"
+    },
+    {
+      "id": "operator-technician-confirmed",
+      "all": [
+        "operator-technician-title",
+        "operator-technician-body"
+      ],
+      "any": [],
+      "none": []
+    },
+    {
+      "id": "business-other-title",
+      "scope": "title",
+      "pattern": "\\b(?:procurement|supply chain programs|product marketing|go.to.market|gtm|estimator|cost estimating|port captain)\\b"
+    },
+    {
+      "id": "business-other-body",
+      "scope": "body",
+      "pattern": "\\b(?:procurement|supplier|suppliers|purchase|marketing|positioning|estimat\\w*|vessels|crewing|commercial)\\b"
+    },
+    {
+      "id": "business-other-confirmed",
+      "all": [
+        "business-other-title",
+        "business-other-body"
+      ],
+      "any": [],
+      "none": []
+    },
+    {
+      "id": "marketing-communications-title",
+      "scope": "title",
+      "pattern": "\\b(?:marketing (?:specialist|manager)|public relations)\\b"
+    },
+    {
+      "id": "marketing-communications-body",
+      "scope": "body",
+      "pattern": "\\b(?:campaigns?|press releases|media plans|marketing|messaging|go.to.market)\\b"
+    },
+    {
+      "id": "marketing-communications-confirmed",
+      "all": [
+        "marketing-communications-title",
+        "marketing-communications-body"
+      ],
+      "any": [],
+      "none": []
+    },
+    {
+      "id": "environment-field-title",
+      "scope": "title",
+      "pattern": "\\b(?:environmental (?:project|program) manager|archaeolog\\w*|omm\\b.*technician)\\b"
+    },
+    {
+      "id": "environment-field-body",
+      "scope": "body",
+      "pattern": "\\b(?:groundwater|soil|remediation|nepa|wetlands|environmental sampling|archaeolog\\w*)\\b"
+    },
+    {
+      "id": "environment-field-confirmed",
+      "all": [
+        "environment-field-title",
+        "environment-field-body"
+      ],
+      "any": [],
+      "none": []
+    },
+    {
+      "id": "cost-scheduling-payroll-title",
+      "scope": "title",
+      "pattern": "\\b(?:program schedule analyst|project controls? specialist|time & pay)\\b"
+    },
+    {
+      "id": "cost-scheduling-payroll-body",
+      "scope": "body",
+      "pattern": "\\b(?:earned value|cost and schedule|budget performance|payroll|timekeeping|garnishments)\\b"
+    },
+    {
+      "id": "cost-scheduling-payroll-confirmed",
+      "all": [
+        "cost-scheduling-payroll-title",
+        "cost-scheduling-payroll-body"
+      ],
+      "any": [],
+      "none": []
+    },
+    {
+      "id": "supplier-administration-title",
+      "scope": "title",
+      "pattern": "\\bsupplier (?:quality|development)\\b"
+    },
+    {
+      "id": "supplier-administration-body",
+      "scope": "body",
+      "pattern": "\\b(?:supplier performance|supplier quality|supplier health|on.site at supplier|supplier.*deliveries|quality issues)\\b"
+    },
+    {
+      "id": "supplier-administration-confirmed",
+      "all": [
+        "supplier-administration-title",
+        "supplier-administration-body"
+      ],
+      "any": [],
+      "none": []
+    },
+    {
+      "id": "aircraft-maintenance-training-title",
+      "scope": "title",
+      "pattern": "\\bmaintenance customer technical training\\b"
+    },
+    {
+      "id": "aircraft-maintenance-training-body",
+      "scope": "body",
+      "pattern": "\\b(?:aircraft mechanic|military aircraft maintainers|aircraft maintenance training)\\b"
+    },
+    {
+      "id": "aircraft-maintenance-training-confirmed",
+      "all": [
+        "aircraft-maintenance-training-title",
+        "aircraft-maintenance-training-body"
+      ],
+      "any": [],
+      "none": []
+    },
+    {
+      "id": "possible",
+      "all": [],
+      "any": [
+        "clinical-title",
+        "driving-title",
+        "trades-construction-title",
+        "finance-title",
+        "sales-title",
+        "hr-title",
+        "hospitality-title",
+        "physical-security-title",
+        "operator-technician-title",
+        "business-other-title",
+        "marketing-communications-title",
+        "environment-field-title",
+        "cost-scheduling-payroll-title",
+        "supplier-administration-title",
+        "aircraft-maintenance-training-title",
+        "civil-title"
+      ],
+      "none": []
+    },
+    {
+      "id": "override-candidate",
+      "all": [],
+      "any": [
+        "civil-title",
+        "procurement-role"
+      ],
+      "none": []
+    },
+    {
+      "id": "early-protected",
+      "all": [
+        "protected-title"
+      ],
+      "any": [],
+      "none": [
+        "override-candidate"
+      ]
+    },
+    {
+      "id": "erp-support",
+      "all": [
+        "erp-object",
+        "erp-duty"
+      ],
+      "any": [],
+      "none": []
+    },
+    {
+      "id": "civil-confirmed",
+      "all": [
+        "civil-title",
+        "civil-object",
+        "civil-work"
+      ],
+      "any": [],
+      "none": [
+        "core-title",
+        "electrical-title"
+      ]
+    },
+    {
+      "id": "procurement-override",
+      "all": [
+        "procurement-role"
+      ],
+      "any": [],
+      "none": [
+        "role-tech",
+        "core-prefix"
+      ]
+    },
+    {
+      "id": "has-family",
+      "all": [],
+      "any": [
+        "clinical-title",
+        "driving-title",
+        "trades-construction-title",
+        "finance-title",
+        "sales-title",
+        "hr-title",
+        "hospitality-title",
+        "physical-security-title",
+        "operator-technician-title",
+        "business-other-title",
+        "marketing-communications-title",
+        "environment-field-title",
+        "cost-scheduling-payroll-title",
+        "supplier-administration-title",
+        "aircraft-maintenance-training-title",
+        "civil-confirmed"
+      ],
+      "none": []
+    },
+    {
+      "id": "protected",
+      "all": [
+        "protected-title"
+      ],
+      "any": [],
+      "none": [
+        "civil-confirmed",
+        "procurement-override"
+      ]
+    },
+    {
+      "id": "no-possible",
+      "all": [],
+      "any": [],
+      "none": [
+        "possible"
+      ]
+    },
+    {
+      "id": "no-family",
+      "all": [],
+      "any": [],
+      "none": [
+        "has-family"
+      ]
+    },
+    {
+      "id": "reviewed-electronic-design-title",
+      "scope": "title",
+      "pattern": "\\b(?:ecad|pcb|electronic(?:s)?)\\b"
+    },
+    {
+      "id": "reviewed-electronic-design-object",
+      "scope": "body",
+      "pattern": "\\b(?:pcb|printed circuit board|ecad)\\b"
+    },
+    {
+      "id": "reviewed-electronic-design-duty",
+      "scope": "body",
+      "pattern": "\\b(?:layout|routing|schematic|component placement)\\b"
+    },
+    {
+      "id": "reviewed-electronic-design-confirmed",
+      "all": [
+        "reviewed-electronic-design-title",
+        "reviewed-electronic-design-object",
+        "reviewed-electronic-design-duty"
+      ]
+    },
+    {
+      "id": "reviewed-test-systems-title",
+      "scope": "title",
+      "pattern": "\\b(?:test|evaluation|laboratory)\\b"
+    },
+    {
+      "id": "reviewed-test-systems-object",
+      "scope": "body",
+      "pattern": "\\b(?:electrical engineering drawings|electrical schematics|sensors and instrumentation)\\b"
+    },
+    {
+      "id": "reviewed-test-systems-duty",
+      "scope": "body",
+      "pattern": "\\b(?:systems integration|test.system design|designs systems)\\b"
+    },
+    {
+      "id": "reviewed-test-systems-confirmed",
+      "all": [
+        "reviewed-test-systems-title",
+        "reviewed-test-systems-object",
+        "reviewed-test-systems-duty"
+      ]
+    },
+    {
+      "id": "reviewed-application-integration-title",
+      "scope": "title",
+      "pattern": "\\b(?:project manager|support|analyst|administrator)\\b"
+    },
+    {
+      "id": "reviewed-application-integration-object",
+      "scope": "body",
+      "pattern": "\\b(?:file transfer|data flows|system dependencies)\\b"
+    },
+    {
+      "id": "reviewed-application-integration-duty",
+      "scope": "body",
+      "pattern": "\\b(?:integration (?:issues|error)|configuration improvements|triage issues)\\b"
+    },
+    {
+      "id": "reviewed-application-integration-confirmed",
+      "all": [
+        "reviewed-application-integration-title",
+        "reviewed-application-integration-object",
+        "reviewed-application-integration-duty"
+      ]
+    },
+    {
+      "id": "reviewed-software-product-title",
+      "scope": "title",
+      "pattern": "\\bproduct manager\\b"
+    },
+    {
+      "id": "reviewed-software-product-object",
+      "scope": "body",
+      "pattern": "\\b(?:software|ai native|saas)\\b"
+    },
+    {
+      "id": "reviewed-software-product-duty",
+      "scope": "body",
+      "pattern": "\\b(?:customer deployment|product strategy|implementation capacity)\\b"
+    },
+    {
+      "id": "reviewed-software-product-confirmed",
+      "all": [
+        "reviewed-software-product-title",
+        "reviewed-software-product-object",
+        "reviewed-software-product-duty"
+      ]
+    },
+    {
+      "id": "reviewed-solution-sales-title",
+      "scope": "title",
+      "pattern": "\\bsolution sales\\b"
+    },
+    {
+      "id": "reviewed-solution-sales-object",
+      "scope": "body",
+      "pattern": "\\b(?:ai.platform|software.platform|saas|workflow automation)\\b"
+    },
+    {
+      "id": "reviewed-solution-sales-duty",
+      "scope": "body",
+      "pattern": "\\b(?:demonstrations|technical discovery|technical questions)\\b"
+    },
+    {
+      "id": "reviewed-solution-sales-confirmed",
+      "all": [
+        "reviewed-solution-sales-title",
+        "reviewed-solution-sales-object",
+        "reviewed-solution-sales-duty"
+      ]
+    },
+    {
+      "id": "reviewed-telecom-infrastructure-title",
+      "scope": "title",
+      "pattern": "\\b(?:osp|outside.plant|telecommunications)\\b"
+    },
+    {
+      "id": "reviewed-telecom-infrastructure-object",
+      "scope": "body",
+      "pattern": "\\btelecommunications infrastructure\\b"
+    },
+    {
+      "id": "reviewed-telecom-infrastructure-duty",
+      "scope": "body",
+      "pattern": "\\b(?:design programs|design management|infrastructure design)\\b"
+    },
+    {
+      "id": "reviewed-telecom-infrastructure-confirmed",
+      "all": [
+        "reviewed-telecom-infrastructure-title",
+        "reviewed-telecom-infrastructure-object",
+        "reviewed-telecom-infrastructure-duty"
+      ]
+    },
+    {
+      "id": "reviewed-it-architecture-title",
+      "scope": "title",
+      "pattern": "\\b(?:digital technology|program architecture)\\b"
+    },
+    {
+      "id": "reviewed-it-architecture-object",
+      "scope": "body",
+      "pattern": "\\b(?:it and engineering|information technology|program architects)\\b"
+    },
+    {
+      "id": "reviewed-it-architecture-duty",
+      "scope": "body",
+      "pattern": "\\b(?:requirements analysis|agile workflows|proposal response)\\b"
+    },
+    {
+      "id": "reviewed-it-architecture-confirmed",
+      "all": [
+        "reviewed-it-architecture-title",
+        "reviewed-it-architecture-object",
+        "reviewed-it-architecture-duty"
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "keep-support",
+      "order": 0,
+      "decision": "KEEP",
+      "category": "guard",
+      "reason": "KEEP: ambiguous technical support title",
+      "when": "support"
+    },
+    {
+      "id": "keep-no-possible",
+      "order": 1,
+      "decision": "KEEP",
+      "category": "guard",
+      "reason": "KEEP: no explicit unrelated title family",
+      "when": "no-possible"
+    },
+    {
+      "id": "keep-early-protected",
+      "order": 2,
+      "decision": "KEEP",
+      "category": "guard",
+      "reason": "KEEP: protected technical/engineering title",
+      "when": "early-protected"
+    },
+    {
+      "id": "keep-erp-support",
+      "order": 3,
+      "decision": "KEEP",
+      "category": "guard",
+      "reason": "KEEP: explicit ERP/SQL/configuration/support evidence",
+      "when": "erp-support"
+    },
+    {
+      "id": "keep-no-family",
+      "order": 4,
+      "decision": "KEEP",
+      "category": "guard",
+      "reason": "KEEP: no explicit unrelated title family",
+      "when": "no-family"
+    },
+    {
+      "id": "keep-protected",
+      "order": 5,
+      "decision": "KEEP",
+      "category": "guard",
+      "reason": "KEEP: protected technical/engineering title",
+      "when": "protected"
+    },
+    {
+      "id": "keep-technical-duty",
+      "order": 6,
+      "decision": "KEEP",
+      "category": "guard",
+      "reason": "KEEP: technical-duty veto",
+      "when": "technical-duty"
+    },
+    {
+      "id": "keep-reviewed-electronic-design",
+      "order": 7,
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated electronic design duties",
+      "when": "reviewed-electronic-design-confirmed"
+    },
+    {
+      "id": "keep-reviewed-test-systems",
+      "order": 8,
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated test systems duties",
+      "when": "reviewed-test-systems-confirmed"
+    },
+    {
+      "id": "keep-reviewed-application-integration",
+      "order": 9,
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated application integration duties",
+      "when": "reviewed-application-integration-confirmed"
+    },
+    {
+      "id": "keep-reviewed-software-product",
+      "order": 10,
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated software product duties",
+      "when": "reviewed-software-product-confirmed"
+    },
+    {
+      "id": "keep-reviewed-solution-sales",
+      "order": 11,
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated solution sales duties",
+      "when": "reviewed-solution-sales-confirmed"
+    },
+    {
+      "id": "keep-reviewed-telecom-infrastructure",
+      "order": 12,
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated telecom infrastructure duties",
+      "when": "reviewed-telecom-infrastructure-confirmed"
+    },
+    {
+      "id": "keep-reviewed-it-architecture",
+      "order": 13,
+      "decision": "KEEP",
+      "category": "technology-safety",
+      "reason": "KEEP: corroborated it architecture duties",
+      "when": "reviewed-it-architecture-confirmed"
+    },
+    {
+      "id": "reject-clinical",
+      "order": 100,
+      "decision": "REJECT",
+      "category": "clinical",
+      "reason": "Corroborated unrelated occupational duties: clinical",
+      "when": "clinical-confirmed"
+    },
+    {
+      "id": "reject-driving",
+      "order": 101,
+      "decision": "REJECT",
+      "category": "driving",
+      "reason": "Corroborated unrelated occupational duties: driving",
+      "when": "driving-confirmed"
+    },
+    {
+      "id": "reject-trades-construction",
+      "order": 102,
+      "decision": "REJECT",
+      "category": "trades-construction",
+      "reason": "Corroborated unrelated occupational duties: trades-construction",
+      "when": "trades-construction-confirmed"
+    },
+    {
+      "id": "reject-finance",
+      "order": 103,
+      "decision": "REJECT",
+      "category": "finance",
+      "reason": "Corroborated unrelated occupational duties: finance",
+      "when": "finance-confirmed"
+    },
+    {
+      "id": "reject-sales",
+      "order": 104,
+      "decision": "REJECT",
+      "category": "sales",
+      "reason": "Corroborated unrelated occupational duties: sales",
+      "when": "sales-confirmed"
+    },
+    {
+      "id": "reject-hr",
+      "order": 105,
+      "decision": "REJECT",
+      "category": "hr",
+      "reason": "Corroborated unrelated occupational duties: hr",
+      "when": "hr-confirmed"
+    },
+    {
+      "id": "reject-hospitality",
+      "order": 106,
+      "decision": "REJECT",
+      "category": "hospitality",
+      "reason": "Corroborated unrelated occupational duties: hospitality",
+      "when": "hospitality-confirmed"
+    },
+    {
+      "id": "reject-physical-security",
+      "order": 107,
+      "decision": "REJECT",
+      "category": "physical-security",
+      "reason": "Corroborated unrelated occupational duties: physical-security",
+      "when": "physical-security-confirmed"
+    },
+    {
+      "id": "reject-operator-technician",
+      "order": 108,
+      "decision": "REJECT",
+      "category": "operator-technician",
+      "reason": "Corroborated unrelated occupational duties: operator-technician",
+      "when": "operator-technician-confirmed"
+    },
+    {
+      "id": "reject-business-other",
+      "order": 109,
+      "decision": "REJECT",
+      "category": "business-other",
+      "reason": "Corroborated unrelated occupational duties: business-other",
+      "when": "business-other-confirmed"
+    },
+    {
+      "id": "reject-marketing-communications",
+      "order": 110,
+      "decision": "REJECT",
+      "category": "marketing-communications",
+      "reason": "Corroborated unrelated occupational duties: marketing-communications",
+      "when": "marketing-communications-confirmed"
+    },
+    {
+      "id": "reject-environment-field",
+      "order": 111,
+      "decision": "REJECT",
+      "category": "environment-field",
+      "reason": "Corroborated unrelated occupational duties: environment-field",
+      "when": "environment-field-confirmed"
+    },
+    {
+      "id": "reject-cost-scheduling-payroll",
+      "order": 112,
+      "decision": "REJECT",
+      "category": "cost-scheduling-payroll",
+      "reason": "Corroborated unrelated occupational duties: cost-scheduling-payroll",
+      "when": "cost-scheduling-payroll-confirmed"
+    },
+    {
+      "id": "reject-supplier-administration",
+      "order": 113,
+      "decision": "REJECT",
+      "category": "supplier-administration",
+      "reason": "Corroborated unrelated occupational duties: supplier-administration",
+      "when": "supplier-administration-confirmed"
+    },
+    {
+      "id": "reject-aircraft-maintenance-training",
+      "order": 114,
+      "decision": "REJECT",
+      "category": "aircraft-maintenance-training",
+      "reason": "Corroborated unrelated occupational duties: aircraft-maintenance-training",
+      "when": "aircraft-maintenance-training-confirmed"
+    },
+    {
+      "id": "reject-civil",
+      "order": 115,
+      "decision": "REJECT",
+      "category": "civil-domain",
+      "reason": "Corroborated unrelated occupational duties: civil",
+      "when": "civil-confirmed"
+    }
+  ]
+}

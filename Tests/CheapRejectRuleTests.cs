@@ -53,6 +53,7 @@ internal static class CheapRejectRuleTests
             Check(snapshot.Version == "1.0.0" && reload.Version == "1.0.1" && snapshot.Fingerprint != reload.Fingerprint, "Loaded snapshot immutable; explicit reload changes version");
             foreach (var file in new[] { "maintenance-prompt-v1.txt", "evaluation-context.json" })
                 File.Copy(Path.Combine(AppContext.BaseDirectory, "CheapTriage", file), Path.Combine(temp, "CheapTriage", file));
+            File.Copy(Path.Combine(Directory.GetCurrentDirectory(), "docs/evaluations/human-reviewed-1.0.1/baseline-evaluation-context.json"), Path.Combine(temp, "CheapTriage", "evaluation-context.json"), true);
             var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?> { ["CheapTriage:RepositoryPath"] = "repo/{{unknown}}" }).Build();
             var env = new TestEnvironment { ContentRootPath = temp };
             var maintenance = new RuleMaintenance(snapshot, config, env);
@@ -75,6 +76,12 @@ internal static class CheapRejectRuleTests
             Throws(() => new RuleMaintenance(snapshot, config, env).Generate());
         }
         finally { Directory.Delete(temp, true); }
+        var selected = CheapRejectRules.Load(Path.Combine(AppContext.BaseDirectory, "CheapTriage/rulesets/1.0.1.json"));
+        Check(selected.Fingerprint == "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1", "Exact approved bytes survive checkout on every platform");
+        var releasedStatus = new RuleMaintenance(selected, new ConfigurationBuilder().Build(),
+            new TestEnvironment { ContentRootPath = AppContext.BaseDirectory }).GetStatus();
+        Check(releasedStatus.MetricsCurrent && releasedStatus.FrozenEvaluation!.Value.GetProperty("slices").GetProperty("combined").GetProperty("falseRejects").GetInt32() == 6,
+            "Approved release exposes matching candidate metrics without rewriting frozen baseline");
         return Task.CompletedTask;
 
         void Invalid(Action<JsonNode> mutate) { var node = JsonNode.Parse(bytes)!; mutate(node); Throws(() => CheapRejectRules.Parse(Encode(node))); }
