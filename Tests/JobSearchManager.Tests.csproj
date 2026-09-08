@@ -23,4 +23,5 @@
   <ItemGroup>
     <Compile Include="../migration/concept-rules/phase2/*.cs" Link="Migration/%(Filename)%(Extension)" />
   </ItemGroup>
+  <ItemGroup><ProjectReference Include="../migration/legacy-sqlite/Jsm.LegacySqlite.csproj" /></ItemGroup>
 </Project>

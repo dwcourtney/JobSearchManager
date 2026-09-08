@@ -48,8 +48,12 @@
         }
       },
       "jobsearchmanager": {
+        "type": "Project"
+      },
+      "jsm.legacysqlite": {
         "type": "Project",
         "dependencies": {
+          "JobSearchManager": "[1.0.0, )",
           "Microsoft.Data.Sqlite": "[10.0.11, )"
         }
       }

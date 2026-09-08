@@ -83,8 +83,8 @@ internal static class JsonConceptTests
             var el=f.ExtendedLocation??extended.Analyze(f.Title,f.PrimaryLocation,f.AdditionalLocations??[],f.Html);
             Require(Serialize(Comparable(candidate.Classify(f.Title,f.Html,rw,el)))==Serialize(Comparable(shuffled.Classify(f.Title,f.Html,rw,el))),"Physical JSON order changed actual classification");
         }
-        try { await candidate.Matcher.ReloadAsync();throw new InvalidOperationException("Candidate reloaded SQLite"); } catch(InvalidOperationException ex) when(ex.Message.Contains("immutable migration")) { }
-        try { candidate.Matcher.Classify("","",null,null,true);throw new InvalidOperationException("Candidate accepted telemetry"); } catch(InvalidOperationException ex) when(ex.Message.Contains("immutable migration")) { }
+        Require(candidate.Matcher.GetType().GetMethod("ReloadAsync") is null,"Production snapshot must not expose store reload");
+        try { candidate.Matcher.Classify("","",null,null,true);throw new InvalidOperationException("Candidate accepted telemetry"); } catch(InvalidOperationException ex) when(ex.Message.Contains("Immutable concept")) { }
         var output=Path.Combine(Path.GetTempPath(),"jsm-json-fixtures-"+Guid.NewGuid().ToString("N")+".json");
         try { await CompareAsync(Path.Combine(AppContext.BaseDirectory,"concept-oracle-fixtures.json"),output,"seed"); }
         finally { File.Delete(output);File.Delete(output+".concepts.json"); }
@@ -92,7 +92,7 @@ internal static class JsonConceptTests
         Console.WriteLine($"PASS JSON loader: {InvalidCases().Count} rejected cases, immutable snapshot, explicit order, independent identities");
     }
 
-    private static string[] Trace(RegexSemanticClassifier matcher,JobConceptCatalog catalog,string title,string html) =>
+    private static string[] Trace(IConceptMatcher matcher,JobConceptCatalog catalog,string title,string html) =>
         (string[])typeof(ConceptOracleTests).GetMethod("CurrentTrace",BindingFlags.Static|BindingFlags.NonPublic)!.Invoke(null,[matcher,catalog,title,html])!;
     private static RegexClassification Comparable(RegexClassification r) => r with {ClassifiedUtc=DateTimeOffset.UnixEpoch,RulesetFingerprint="comparison-only: identities verified separately"};
     private static string? Error(Action action) { try {action();return null;} catch(Exception ex){return ex.GetType().FullName+":"+ex.Message;} }
@@ -112,7 +112,7 @@ internal static class JsonConceptTests
             foreach(var pair in snapshot.Rules.Zip(candidate.Rules))
                 Require(pair.First.RuleId==pair.Second.RuleId && pair.First.ConceptId==pair.Second.ConceptId && pair.First.RuleType==pair.Second.Kind && pair.First.Scope==pair.Second.Scope && pair.First.ContextGroupId==pair.Second.ContextGroupId && pair.First.Pattern==(pair.Second.Pattern??pair.Second.Selector!.Category??"remote-designation"),"Definition or order drift");
             Require(snapshot.Rules.Count==candidate.Rules.Length,"Rule count drift");
-            var sqlite=new RegexSemanticClassifier(store,catalog);await sqlite.InitializeAsync();
+            var sqlite=new LegacyRegexSemanticClassifier(store,catalog);await sqlite.InitializeAsync();
             var frozen=new FrozenSqliteConceptOracle(new(snapshot.Fingerprint,DateTimeOffset.UnixEpoch,definitions,[]),catalog,store.Policy);
             var fixtures=JsonSerializer.Deserialize<ConceptOracleTests.Input[]>(File.ReadAllBytes(input),Json)!;
             var remote=new RemoteWorkDetector();var extended=new ExtendedLocationRequirementDetector();
@@ -152,7 +152,7 @@ internal static class JsonConceptTests
                 var candidate=JsonConceptCandidate.Parse(Bytes(d),catalog);
                 using(var db=new Microsoft.Data.Sqlite.SqliteConnection("Data Source="+Path.Combine(directory,"rules.db")))
                 {db.Open();using var command=db.CreateCommand();command.CommandText="UPDATE SemanticRules SET Pattern=$pattern,Scope='posting' WHERE RuleId=$id";command.Parameters.AddWithValue("$pattern",pattern);command.Parameters.AddWithValue("$id",rule["ruleId"]!.GetValue<string>());command.ExecuteNonQuery();}
-                var snapshot=await store.LoadRuntimeSnapshotAsync();var sql=new RegexSemanticClassifier(store,catalog);await sql.InitializeAsync();var old=new FrozenSqliteConceptOracle(snapshot,catalog,store.Policy);
+                var snapshot=await store.LoadRuntimeSnapshotAsync();var sql=new LegacyRegexSemanticClassifier(store,catalog);await sql.InitializeAsync();var old=new FrozenSqliteConceptOracle(snapshot,catalog,store.Policy);
                 foreach(var f in pattern.Contains("needle")?new[]{new ConceptOracleTests.Input("posting","","needle"),new("title-only","needle",""),new("first-acceptable","","not needle. needle")}:new[]{new ConceptOracleTests.Input("timeout","",new string('a',100000)+"!")})
                 {
                     var a=old.Classify(f.Title,f.Html,null,null,false);var b=sql.Classify(f.Title,f.Html,null,null,false);var c=candidate.Classify(f.Title,f.Html,null,null);

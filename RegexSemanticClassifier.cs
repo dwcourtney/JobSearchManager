@@ -1,9 +1,8 @@
-using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 
 namespace JobSearchManager;
 
-public sealed class RegexSemanticClassifier
+public sealed class RegexSemanticClassifier : IConceptMatcher
 {
     private const RegexOptions BaseOptions = RegexOptions.IgnoreCase | RegexOptions.CultureInvariant;
     private static readonly Regex WhitespacePattern = new(@"\s+", BaseOptions,
@@ -11,61 +10,29 @@ public sealed class RegexSemanticClassifier
     private static readonly Regex LocalNegationPattern = new(
         @"(?:\b(?:do|does|did|is|are|was|were|will|would|should|can|cannot)\s+not|\bnot\s+(?:directly\s+)?(?:responsible\s+for\s+)?|\bno\s+(?:direct\s+)?)$",
         BaseOptions, TimeSpan.FromMilliseconds(100));
-    private readonly SqliteSemanticRuleStore? _store;
-    private readonly SemanticRulePolicy _policy;
+    private readonly ConceptRegexPolicy _policy;
     private readonly JobConceptCatalog _catalog;
-    private readonly ConcurrentDictionary<string, long> _pendingUsage = new(StringComparer.Ordinal);
-    private readonly ConcurrentDictionary<string, long> _pendingTimeouts = new(StringComparer.Ordinal);
-    private readonly SemaphoreSlim _reloadGate = new(1, 1);
-    private CompiledRuleset? _current;
+    private readonly CompiledRuleset _current;
 
-    public RegexSemanticClassifier(SqliteSemanticRuleStore store, JobConceptCatalog catalog)
-    {
-        _store = store;
-        _policy = store.Policy;
-        _catalog = catalog;
-    }
-
-    // An immutable, store-free snapshot is available only to internal migration tooling.
-    // Matching branches stay shared with the SQLite production path.
-    internal RegexSemanticClassifier(SemanticRulesSnapshot snapshot, JobConceptCatalog catalog, SemanticRulePolicy policy)
+    // One immutable validated snapshot is compiled before the normal host listens.
+    internal RegexSemanticClassifier(ConceptMatchSnapshot snapshot, JobConceptCatalog catalog, ConceptRegexPolicy policy)
     {
         _catalog = catalog;
         _policy = policy;
         _current = Compile(snapshot);
     }
 
-    public string RulesetFingerprint => Volatile.Read(ref _current)?.Fingerprint
+    public string RulesetFingerprint => _current?.Fingerprint
         ?? throw new InvalidOperationException("Semantic RegEx rules have not been loaded.");
 
-    internal bool UsesSqliteCompatibility => _store is not null;
-    internal string AuthorityTag => UsesSqliteCompatibility ? "sqlite-regex-v1" : "json-regex-v1";
-
-    public int ActiveRuleCount => Volatile.Read(ref _current)?.Rules.Count ?? 0;
-
-    public async Task InitializeAsync(CancellationToken cancellationToken = default) =>
-        await ReloadAsync(cancellationToken);
-
-    public async Task<string> ReloadAsync(CancellationToken cancellationToken = default)
-    {
-        if (_store is null) throw new InvalidOperationException("An immutable migration snapshot cannot reload from a store.");
-        await _reloadGate.WaitAsync(cancellationToken);
-        try
-        {
-            var snapshot = await _store.LoadRuntimeSnapshotAsync(cancellationToken);
-            var compiled = Compile(snapshot);
-            Interlocked.Exchange(ref _current, compiled);
-            return compiled.Fingerprint;
-        }
-        finally { _reloadGate.Release(); }
-    }
+    public int ActiveRuleCount => _current.Rules.Count;
 
     public RegexClassification Classify(string title, string descriptionHtml,
         RemoteWorkAnalysis? remoteWork, ExtendedLocationRequirementAnalysis? extendedLocation,
         bool productionUsage)
     {
-        if (productionUsage && _store is null) throw new InvalidOperationException("An immutable migration snapshot cannot record production telemetry.");
-        var current = Volatile.Read(ref _current)
+        if (productionUsage) throw new InvalidOperationException("Immutable concept matching does not record lifecycle telemetry.");
+        var current = _current
             ?? throw new InvalidOperationException("Semantic RegEx rules have not been loaded.");
         var description = string.IsNullOrWhiteSpace(descriptionHtml)
             ? "" : JobAnalysis.HtmlToPlainText(descriptionHtml);
@@ -78,35 +45,34 @@ public sealed class RegexSemanticClassifier
         {
             if (!current.ByConcept.TryGetValue(concept.Id, out var rules)) continue;
             var matched = new List<(CompiledRule Rule, string Evidence)>();
-            var excluded = rules.Where(item => item.Rule.RuleType == SemanticRuleTypes.Exclusion)
+            var excluded = rules.Where(item => item.Rule.RuleType == ConceptRuleTypes.Exclusion)
                 .Select(item => (item, Match: FirstMatch(item, title ?? "",
                     rejectLocalNegation: false, Timeout)))
                 .Where(item => item.Match is not null)
                 .ToArray();
             if (excluded.Length > 0)
             {
-                Count(excluded.Select(item => item.item.Rule.RuleId));
                 continue;
             }
 
             foreach (var rule in rules.Where(item => item.Rule.RuleType is
-                         SemanticRuleTypes.TitleEvidence or SemanticRuleTypes.PositiveEvidence))
+                         ConceptRuleTypes.TitleEvidence or ConceptRuleTypes.PositiveEvidence))
             {
-                var input = rule.Rule.Scope == SemanticRuleScopes.Title ? title ?? "" :
-                    rule.Rule.Scope == SemanticRuleScopes.Posting ? description : corpus;
+                var input = rule.Rule.Scope == ConceptRuleScopes.Title ? title ?? "" :
+                    rule.Rule.Scope == ConceptRuleScopes.Posting ? description : corpus;
                 var match = FirstMatch(rule, input,
-                    rejectLocalNegation: rule.Rule.RuleType == SemanticRuleTypes.PositiveEvidence,
+                    rejectLocalNegation: rule.Rule.RuleType == ConceptRuleTypes.PositiveEvidence,
                     Timeout);
                 if (match is not null) matched.Add((rule, NormalizeEvidence(match.Value)));
             }
 
-            foreach (var group in rules.Where(item => item.Rule.RuleType == SemanticRuleTypes.RequiredContext)
+            foreach (var group in rules.Where(item => item.Rule.RuleType == ConceptRuleTypes.RequiredContext)
                          .GroupBy(item => item.Rule.ContextGroupId, StringComparer.Ordinal))
             {
                 var groupMatches = group.Select(item =>
                 {
-                    var input = item.Rule.Scope == SemanticRuleScopes.Title ? title ?? "" :
-                        item.Rule.Scope == SemanticRuleScopes.Posting ? description : corpus;
+                    var input = item.Rule.Scope == ConceptRuleScopes.Title ? title ?? "" :
+                        item.Rule.Scope == ConceptRuleScopes.Posting ? description : corpus;
                     return (Rule: item, Match: FirstMatch(item, input,
                         rejectLocalNegation: false, Timeout));
                 }).ToArray();
@@ -115,17 +81,17 @@ public sealed class RegexSemanticClassifier
                         NormalizeEvidence(item.Match!.Value))));
             }
 
-            foreach (var rule in rules.Where(item => item.Rule.RuleType == SemanticRuleTypes.RemoteDesignation))
+            foreach (var rule in rules.Where(item => item.Rule.RuleType == ConceptRuleTypes.RemoteDesignation))
             {
                 if (remoteWork?.IsRemoteDesignated == true)
                     matched.Add((rule, "Remote designation detected in the posting"));
             }
-            foreach (var rule in rules.Where(item => item.Rule.RuleType == SemanticRuleTypes.RemoteSignal))
+            foreach (var rule in rules.Where(item => item.Rule.RuleType == ConceptRuleTypes.RemoteSignal))
             {
                 var signal = remoteWork?.Signals?.FirstOrDefault(item => item.Category == rule.Rule.Pattern);
                 if (signal is not null) matched.Add((rule, signal.Evidence));
             }
-            foreach (var rule in rules.Where(item => item.Rule.RuleType == SemanticRuleTypes.ExtendedLocationSignal))
+            foreach (var rule in rules.Where(item => item.Rule.RuleType == ConceptRuleTypes.ExtendedLocationSignal))
             {
                 var signal = extendedLocation?.Signals?.FirstOrDefault(item => item.Category == rule.Rule.Pattern);
                 if (signal is not null) matched.Add((rule, signal.Evidence));
@@ -137,63 +103,21 @@ public sealed class RegexSemanticClassifier
                 .Where(item => !string.IsNullOrWhiteSpace(item)).Distinct(StringComparer.OrdinalIgnoreCase));
             results[concept.Id] = new(concept.Id, NormalizeEvidence(evidence));
             matchedRuleIds[concept.Id] = uniqueRules;
-            Count(uniqueRules);
         }
 
-        return new(SemanticRulesetFingerprint.PostingContentHash(title ?? "", description),
+        return new(ConceptFingerprint.PostingContentHash(title ?? "", description),
             current.Fingerprint, DateTimeOffset.UtcNow,
             results.Values.OrderBy(item => item.ConceptId, StringComparer.Ordinal).ToArray(),
             matchedRuleIds, timedOutRuleIds.OrderBy(item => item, StringComparer.Ordinal).ToArray());
 
-        void Count(IEnumerable<string> ids)
-        {
-            if (!productionUsage) return;
-            foreach (var id in ids.Distinct(StringComparer.Ordinal))
-                _pendingUsage.AddOrUpdate(id, 1, (_, currentValue) => currentValue + 1);
-        }
-
-        void Timeout(string id)
-        {
-            timedOutRuleIds.Add(id);
-            if (productionUsage)
-                _pendingTimeouts.AddOrUpdate(id, 1, (_, currentValue) => currentValue + 1);
-        }
+        void Timeout(string id) => timedOutRuleIds.Add(id);
     }
 
-    public async Task FlushUsageAsync(CancellationToken cancellationToken = default)
-    {
-        if (_store is null) throw new InvalidOperationException("An immutable migration snapshot has no telemetry store.");
-        var batch = new Dictionary<string, long>(StringComparer.Ordinal);
-        var timeoutBatch = new Dictionary<string, long>(StringComparer.Ordinal);
-        foreach (var item in _pendingUsage)
-            if (_pendingUsage.TryRemove(item.Key, out var count)) batch[item.Key] = count;
-        foreach (var item in _pendingTimeouts)
-            if (_pendingTimeouts.TryRemove(item.Key, out var count)) timeoutBatch[item.Key] = count;
-        if (batch.Count == 0 && timeoutBatch.Count == 0) return;
-        var usageApplied = false;
-        try
-        {
-            var now = DateTimeOffset.UtcNow;
-            await _store.ApplyUsageAsync(batch, now, cancellationToken);
-            usageApplied = true;
-            await _store.ApplyTimeoutsAsync(timeoutBatch, now, cancellationToken);
-        }
-        catch
-        {
-            if (!usageApplied)
-                foreach (var item in batch)
-                    _pendingUsage.AddOrUpdate(item.Key, item.Value, (_, current) => current + item.Value);
-            foreach (var item in timeoutBatch)
-                _pendingTimeouts.AddOrUpdate(item.Key, item.Value, (_, current) => current + item.Value);
-            throw;
-        }
-    }
-
-    private CompiledRuleset Compile(SemanticRulesSnapshot snapshot)
+    private CompiledRuleset Compile(ConceptMatchSnapshot snapshot)
     {
         var compiled = snapshot.Rules.Select(rule => new CompiledRule(rule,
-            rule.RuleType is SemanticRuleTypes.RemoteDesignation or SemanticRuleTypes.RemoteSignal or
-                SemanticRuleTypes.ExtendedLocationSignal ? null : CompilePattern(rule.Pattern))).ToArray();
+            rule.RuleType is ConceptRuleTypes.RemoteDesignation or ConceptRuleTypes.RemoteSignal or
+                ConceptRuleTypes.ExtendedLocationSignal ? null : CompilePattern(rule.Pattern))).ToArray();
         return new(snapshot.Fingerprint, compiled,
             compiled.GroupBy(item => item.Rule.ConceptId, StringComparer.Ordinal)
                 .ToDictionary(group => group.Key, group => (IReadOnlyList<CompiledRule>)group.ToArray(),
@@ -237,30 +161,7 @@ public sealed class RegexSemanticClassifier
         return normalized.Length <= 300 ? normalized : normalized[..297] + "...";
     }
 
-    private sealed record CompiledRule(SemanticRule Rule, Regex? Pattern);
+    private sealed record CompiledRule(ConceptMatchRule Rule, Regex? Pattern);
     private sealed record CompiledRuleset(string Fingerprint, IReadOnlyList<CompiledRule> Rules,
         IReadOnlyDictionary<string, IReadOnlyList<CompiledRule>> ByConcept);
-}
-
-public sealed class RegexTelemetryFlushService(
-    RegexSemanticClassifier classifier,
-    SqliteSemanticRuleStore store,
-    ILogger<RegexTelemetryFlushService> logger) : BackgroundService
-{
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(store.Policy.TelemetryFlushSeconds));
-        while (await timer.WaitForNextTickAsync(stoppingToken))
-        {
-            try { await classifier.FlushUsageAsync(stoppingToken); }
-            catch (Exception exception) when (!stoppingToken.IsCancellationRequested)
-            { logger.LogWarning(exception, "Semantic rule usage telemetry flush failed; counters remain buffered."); }
-        }
-    }
-
-    public override async Task StopAsync(CancellationToken cancellationToken)
-    {
-        await classifier.FlushUsageAsync(cancellationToken);
-        await base.StopAsync(cancellationToken);
-    }
 }

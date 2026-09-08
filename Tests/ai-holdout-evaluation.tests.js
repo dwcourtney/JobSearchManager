@@ -4,7 +4,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const root = path.resolve(__dirname, "..");
-const source = fs.readFileSync(path.join(root, "AiHoldoutEvaluation.cs"), "utf8");
+const source = fs.readFileSync(path.join(root, "migration/legacy-sqlite/AiHoldoutEvaluation.cs"), "utf8");
 const program = fs.readFileSync(path.join(root, "Program.cs"), "utf8");
 const docs = fs.readFileSync(path.join(root, "docs", "regex-evaluation-methodology.md"), "utf8");
 

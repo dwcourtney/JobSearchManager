@@ -55,7 +55,7 @@ internal static class ConceptOracleTests
             Require(snapshot.Fingerprint == Fingerprint,"Backup/seed runtime fingerprint differs");
             object Fields(SemanticRule r) => new {r.RuleId,r.ConceptId,r.Pattern,r.Scope,r.RuleType,r.ContextGroupId};
             Require(Serialize(snapshot.Rules.Select(Fields)) == Serialize(definitions.Select(Fields)),"Actual C# seed/backup definitions or SQL execution order differ from frozen export");
-            var current = new RegexSemanticClassifier(store,catalog); await current.InitializeAsync();
+            var current = new LegacyRegexSemanticClassifier(store,catalog); await current.InitializeAsync();
             var oracle = new FrozenSqliteConceptOracle(new(Fingerprint,DateTimeOffset.UnixEpoch,definitions,[]),frozenCatalog,policy);
             var inputs = JsonSerializer.Deserialize<Input[]>(File.ReadAllBytes(input),Json)!;
             var remote = new RemoteWorkDetector(); var extended = new ExtendedLocationRequirementDetector();
@@ -88,18 +88,18 @@ internal static class ConceptOracleTests
     // Diagnostic adapter only: executes the actual compiled matcher/private FirstMatch.
     // Production does not expose veto/context outcomes. Replay is deliberately confined to tests;
     // the classifier's real returned output is independently compared above.
-    private static string[] CurrentTrace(RegexSemanticClassifier classifier,JobConceptCatalog catalog,string title,string html)
+    private static string[] CurrentTrace(IConceptMatcher classifier,JobConceptCatalog catalog,string title,string html)
     {
         const BindingFlags flags=BindingFlags.Instance|BindingFlags.NonPublic|BindingFlags.Public;
-        var compiled=typeof(RegexSemanticClassifier).GetField("_current",flags)!.GetValue(classifier)!;
+        var compiled=classifier.GetType().GetField("_current",flags)!.GetValue(classifier)!;
         var byConcept=(IDictionary)compiled.GetType().GetProperty("ByConcept")!.GetValue(compiled)!;
-        var first=typeof(RegexSemanticClassifier).GetMethod("FirstMatch",BindingFlags.NonPublic|BindingFlags.Static)!;
+        var first=classifier.GetType().GetMethod("FirstMatch",BindingFlags.NonPublic|BindingFlags.Static)!;
         var plain=string.IsNullOrWhiteSpace(html)?"":JobAnalysis.HtmlToPlainText(html); var corpus=title+"\n"+plain;
         var trace=new List<string>();
         foreach(var concept in catalog.Concepts)
         {
             if(!byConcept.Contains(concept.Id)) continue;
-            var rules=((IEnumerable)byConcept[concept.Id]!).Cast<object>().Select(c=>new {Compiled=c,Rule=(SemanticRule)c.GetType().GetProperty("Rule")!.GetValue(c)!}).ToArray();
+            var rules=((IEnumerable)byConcept[concept.Id]!).Cast<object>().Select(c=>new {Compiled=c,Rule=JsonSerializer.Deserialize<ConceptMatchRule>(JsonSerializer.Serialize(c.GetType().GetProperty("Rule")!.GetValue(c)!))!}).ToArray();
             bool Match(object c,string text) => first.Invoke(null,[c,text,false,(Action<string>)(_=>{})]) is Match;
             var excluded=rules.Where(r=>r.Rule.RuleType=="exclusion" && Match(r.Compiled,title)).ToArray();
             trace.Add("exclusion:"+concept.Id+":"+string.Join(",",excluded.Select(r=>r.Rule.RuleId)));
@@ -124,7 +124,7 @@ internal static class ConceptOracleTests
                 await store.TransitionForEvaluationAsync(row.RuleId,"validated");
                 await store.TransitionForEvaluationAsync(row.RuleId,"active");
                 var snapshot=await store.LoadRuntimeSnapshotAsync();
-                var current=new RegexSemanticClassifier(store,catalog);await current.InitializeAsync();
+                var current=new LegacyRegexSemanticClassifier(store,catalog);await current.InitializeAsync();
                 var old=new FrozenSqliteConceptOracle(snapshot,catalog,store.Policy);
                 foreach(var input in new[]{new Input("posting-match","","needle"),new Input("posting-title-only","needle",""),new Input("negated-first","","not needle. needle")})
                 {
@@ -137,7 +137,7 @@ internal static class ConceptOracleTests
             var timeout=await store.CreateAsync(new("technical.software-development",@"^(?=a)(a+)+$","posting","positive-evidence","test-only"));
             await store.TransitionForEvaluationAsync(timeout.RuleId,"validated");
             await store.TransitionForEvaluationAsync(timeout.RuleId,"active");
-            var live=new RegexSemanticClassifier(store,catalog);await live.InitializeAsync();var frozen=new FrozenSqliteConceptOracle(await store.LoadRuntimeSnapshotAsync(),catalog,store.Policy);
+            var live=new LegacyRegexSemanticClassifier(store,catalog);await live.InitializeAsync();var frozen=new FrozenSqliteConceptOracle(await store.LoadRuntimeSnapshotAsync(),catalog,store.Policy);
             var text=new string('a',100_000)+"!";
             var before=frozen.Classify("",text,null,null,false);var after=live.Classify("",text,null,null,false);
             Require(before.TimedOutRuleIds.Contains(timeout.RuleId)&&after.TimedOutRuleIds.Contains(timeout.RuleId),"Pathological fallback must timeout in both engines");
@@ -150,7 +150,7 @@ internal static class ConceptOracleTests
                 catch(Exception ex) { var e = ex is TargetInvocationException t ? t.InnerException! : ex; return e.GetType().FullName + ":" + e.Message; }
             }
             var oldFailure = Failure(() => _ = new FrozenSqliteConceptOracle(invalid,catalog,store.Policy));
-            var currentFailure = Failure(() => typeof(RegexSemanticClassifier).GetMethod("Compile",BindingFlags.Instance|BindingFlags.NonPublic)!.Invoke(live,[invalid]));
+            var currentFailure = Failure(() => typeof(LegacyRegexSemanticClassifier).GetMethod("Compile",BindingFlags.Instance|BindingFlags.NonPublic)!.Invoke(live,[invalid]));
             Require(oldFailure != "no error" && oldFailure == currentFailure,"Invalid regex error parity");
             Console.WriteLine("PASS synthetic posting scope, lookahead fallback, negation, bounded 100ms timeout parity");
         }

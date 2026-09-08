@@ -96,8 +96,8 @@ internal sealed class ConceptRuleSnapshot
             Require(Text(rule.RuleId, 300) && ids.Add(rule.RuleId), "invalid/duplicate RuleId");
             Require(Text(rule.ConceptId, 300) && catalog.Contains(rule.ConceptId), "unknown ConceptId");
             Require(rule.ExecutionOrder >= 0 && rule.ExecutionOrder < d.Rules.Length && positions.Add(rule.ExecutionOrder), "invalid/duplicate execution position");
-            Require(SemanticRuleTypes.All.Contains(rule.Kind), "invalid rule kind");
-            Require(SemanticRuleScopes.All.Contains(rule.Scope), "invalid scope");
+            Require(ConceptRuleTypes.All.Contains(rule.Kind), "invalid rule kind");
+            Require(ConceptRuleScopes.All.Contains(rule.Scope), "invalid scope");
             Require(rule.Kind is not ("title-evidence" or "exclusion") || rule.Scope == "title", "title rule requires title scope");
             Require(rule.Provenance.Length <= 1000 && rule.Description.Length <= 4000, "excessive descriptive metadata");
             Require(rule.Kind == "required-context" ? Text(rule.ContextGroupId, 300) : rule.ContextGroupId is null, "invalid context group");
@@ -134,13 +134,11 @@ internal sealed class ConceptRuleSnapshot
             TaxonomyIdentity, EngineContractHash, PolicyHash,
             remoteWork = RemoteWorkRules.Default.Fingerprint, extendedLocation = ExtendedLocationRules.Default.Fingerprint }, Json));
         PipelineFingerprint = Hash(JsonSerializer.SerializeToUtf8Bytes(new { authority = "json-regex-v1", CandidatePipelineFingerprint, FactualDependencies, inputContract = "posting-and-consumed-facts-v1" }, Json));
-        // Compatibility adapter into existing mechanics. Selector categories are passed to the
-        // existing non-regex branches; they are never compiled as regex. No lifecycle store exists.
-        var matching = Rules.Select(r => new SemanticRule(r.RuleId, r.ConceptId,
-            r.Pattern ?? r.Selector!.Category ?? "remote-designation", r.Scope, r.Kind, "active",
-            DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch, null, null, null, 0, 0,
-            r.Provenance, r.Description, r.ContextGroupId)).ToImmutableArray();
-        Matcher = new RegexSemanticClassifier(new(PipelineFingerprint, DateTimeOffset.UnixEpoch, matching, []), catalog, new SemanticRulePolicy());
+        // Preserve exact execution order and matching inputs; lifecycle metadata is not runtime data.
+        var matching = Rules.Select(r => new ConceptMatchRule(r.RuleId, r.ConceptId,
+            r.Pattern ?? r.Selector!.Category ?? "remote-designation", r.Scope, r.Kind,
+            r.ContextGroupId)).ToImmutableArray();
+        Matcher = new RegexSemanticClassifier(new(PipelineFingerprint, matching), catalog, new ConceptRegexPolicy());
     }
 
     internal RegexClassification Classify(string title, string html, RemoteWorkAnalysis? remote, ExtendedLocationRequirementAnalysis? extended) =>

@@ -18,7 +18,7 @@ class DeploymentTests(unittest.TestCase):
                 self.assertNotIn(forbidden, source, name)
     def test_preserved_application_gates(self):
         source = (ROOT / "scripts/deploy-curiosity.sh").read_text()
-        for required in ("verify-repository-identity.sh", "org.opencontainers.image.revision", "security-scan.sh", "--regex-maintenance backup", "/healthz", "/version", "flock -n", "--no-deps", "rollback-jsm.json", "verify_deployment \"$previous_sha\""):
+        for required in ("verify-repository-identity.sh", "org.opencontainers.image.revision", "security-scan.sh", "cp --preserve=mode,timestamps", "--json-concept-audit", "cmp --silent", "/healthz", "/version", "flock -n", "--no-deps", "rollback-jsm.json", "verify_deployment \"$previous_sha\""):
             self.assertIn(required, source)
         self.assertLess(source.index('security-scan.sh" image'), source.index("replacement_started=true"))
     def test_old_manifest_rolls_back_jsm_without_model_variables(self):

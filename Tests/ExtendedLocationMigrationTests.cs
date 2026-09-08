@@ -38,7 +38,7 @@ internal static class ExtendedLocationMigrationTests
             var catalog = JobConceptCatalog.LoadDefault();
             using var store = new SqliteSemanticRuleStore(Path.Combine(directory, "rules.db"), catalog);
             store.Initialize(Path.Combine(AppContext.BaseDirectory, "LegacyJobConceptRules.json"));
-            var classifier = new RegexSemanticClassifier(store, catalog);
+            var classifier = new LegacyRegexSemanticClassifier(store, catalog);
             classifier.InitializeAsync().GetAwaiter().GetResult();
             var remote = new RemoteWorkDetector();
             var downstream = fixtures.Select((f, i) =>

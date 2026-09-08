@@ -77,3 +77,7 @@ Normal deployment composition, exact-commit checks, data/key mounts and rollback
 handling are unchanged. Rolling back to the previous image can locally recompute its
 own SQLite identities from retained cache descriptions. Do not delete rollback data.
 Final SQLite package/source retirement belongs to Phase 4.
+
+## Phase 4 dependency retirement
+
+SQLite is now isolated outside normal compilation and packaging. See [SQLite retirement](sqlite-retirement.md) for the current production boundary, historical tooling and deployment checks. Earlier Phase 3 retention notes above describe the prior checkpoint.

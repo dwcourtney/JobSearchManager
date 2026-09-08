@@ -15,9 +15,6 @@
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.11" />
-  </ItemGroup>
 
   <ItemGroup>
     <Content Update="evaluation/**/*.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
@@ -25,13 +22,12 @@
     <Content Update="CredentialCatalog.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Update="CompanyCatalog.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Update="JobConceptCatalog.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <Content Update="LegacyJobConceptRules.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Update="RegexValidationCorpus.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <Content Update="EvaluationHoldoutPlan.example.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="JobSearchManager.Tests" />
+    <InternalsVisibleTo Include="Jsm.LegacySqlite" />
     <InternalsVisibleTo Include="Jsm.CheapTriage.Research" />
     <InternalsVisibleTo Include="Jsm.CheapTriage.Research.Tests" />
     <InternalsVisibleTo Include="Jsm.Qwen.Research" />
@@ -48,6 +44,8 @@
     <Compile Remove="Tests\**\*.cs" />
     <Compile Remove="classifier-service\**\*.cs" />
     <Compile Remove="migration/**/*.cs" />
+    <Content Remove="LegacyJobConceptRules.json;EvaluationHoldoutPlan.example.json" />
+    <None Remove="LegacyJobConceptRules.json;EvaluationHoldoutPlan.example.json" />
     <Content Remove="migration/**/*" />
     <None Remove="migration/**/*" />
     <Content Remove="Tests\**\*" />

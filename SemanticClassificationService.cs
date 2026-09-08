@@ -33,21 +33,18 @@ public sealed class SemanticClassificationService(
             value.ModelType == "deterministic-regex" &&
             value.ModelId == "jsm-semantic-regex" &&
             value.ModelDigest == regexClassifier.RulesetFingerprint &&
-            value.ClassifierConfigurationVersion == regexClassifier.AuthorityTag &&
+            value.ClassifierConfigurationVersion == "json-regex-v1" &&
             value.ClassifierConfigurationFingerprint == ExpectedConfigurationFingerprint &&
             value.ClassificationFingerprint ==
-                SemanticRulesetFingerprint.ClassificationFingerprint(
+                ConceptFingerprint.ClassificationFingerprint(
                     contentHash, regexClassifier.RulesetFingerprint, catalog.Fingerprint) &&
             value.Predictions.Count == 85 &&
             value.Predictions.Select(item => item.ConceptId).ToHashSet(StringComparer.Ordinal)
                 .SetEquals(catalog.Concepts.Select(item => item.Id));
     }
 
-    // JSON freshness includes every consumed fact and its relevant provider inputs. UTC cache
-    // timestamps are deliberately excluded. The SQLite branch is rollback/test compatibility.
-    public string InputFingerprint(JobRecord job) => regexClassifier.UsesSqliteCompatibility
-        ? SemanticRulesetFingerprint.PostingContentHash(job.Title, JobAnalysis.HtmlToPlainText(job.DescriptionHtml))
-        : Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(
+    // Every consumed fact/provider input participates in freshness; cache timestamps do not.
+    public string InputFingerprint(JobRecord job) => Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(
             System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(new
             {
                 contract = "posting-and-consumed-facts-v1", job.Title,
@@ -67,7 +64,7 @@ public sealed class SemanticClassificationService(
             return Task.FromResult(new SemanticClassificationAttempt(false, null, "Description unavailable."));
         var description = JobAnalysis.HtmlToPlainText(job.DescriptionHtml);
         var contentHash = InputFingerprint(job);
-        var fingerprint = SemanticRulesetFingerprint.ClassificationFingerprint(
+        var fingerprint = ConceptFingerprint.ClassificationFingerprint(
             contentHash, regexClassifier.RulesetFingerprint, catalog.Fingerprint);
         if (_completed.TryGetValue(fingerprint, out var cached))
             return Task.FromResult(new SemanticClassificationAttempt(true, cached, null));
@@ -92,18 +89,18 @@ public sealed class SemanticClassificationService(
     {
         cancellationToken.ThrowIfCancellationRequested();
         var result = regexClassifier.Classify(job.Title, job.DescriptionHtml, job.RemoteWork,
-            job.ExtendedLocationRequirement, productionUsage: regexClassifier.UsesSqliteCompatibility);
+            job.ExtendedLocationRequirement, productionUsage: false);
         var inputHash = InputFingerprint(job);
-        var fingerprint = SemanticRulesetFingerprint.ClassificationFingerprint(
+        var fingerprint = ConceptFingerprint.ClassificationFingerprint(
             inputHash, result.RulesetFingerprint, catalog.Fingerprint);
         var matched = result.Concepts.Select(item => item.ConceptId).ToHashSet(StringComparer.Ordinal);
         var classification = new SemanticJobClassification(
             inputHash, catalog.Version, catalog.Fingerprint,
-            "deterministic-regex", "jsm-semantic-regex", regexClassifier.UsesSqliteCompatibility ? "lifecycle-managed" : "json-regex-v1",
+            "deterministic-regex", "jsm-semantic-regex", "json-regex-v1",
             result.RulesetFingerprint, "", "", "", result.ClassifiedUtc, fingerprint,
             catalog.Concepts.Select(item => new SemanticConceptPrediction(
                 item.Id, matched.Contains(item.Id))).ToArray(),
-            regexClassifier.AuthorityTag, result.RulesetFingerprint);
+            "json-regex-v1", result.RulesetFingerprint);
         if (_completed.Count >= MaximumProcessCacheEntries) _completed.Clear();
         _completed[fingerprint] = classification;
         return await Task.FromResult(new SemanticClassificationAttempt(true, classification, null));

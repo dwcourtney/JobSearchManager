@@ -60,7 +60,7 @@ if (args.Length == 4 && args[0] == "--regex-maintenance" &&
     var catalog = JobConceptCatalog.LoadDefault();
     using var store = new SqliteSemanticRuleStore(Path.GetFullPath(args[2]), catalog);
     store.Initialize(Path.Combine(AppContext.BaseDirectory, "LegacyJobConceptRules.json"));
-    var classifier = new RegexSemanticClassifier(store, catalog);
+    var classifier = new LegacyRegexSemanticClassifier(store, catalog);
     await classifier.InitializeAsync();
     var jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true };
     switch (action)

@@ -48,15 +48,21 @@
         }
       },
       "jobsearchmanager": {
-        "type": "Project",
-        "dependencies": {
-          "Microsoft.Data.Sqlite": "[10.0.11, )"
-        }
+        "type": "Project"
       },
       "jsm.cheaptriage.research": {
         "type": "Project",
         "dependencies": {
-          "JobSearchManager": "[1.0.0, )"
+          "JobSearchManager": "[1.0.0, )",
+          "Jsm.LegacySqlite": "[1.0.0, )",
+          "Microsoft.Data.Sqlite": "[10.0.11, )"
+        }
+      },
+      "jsm.legacysqlite": {
+        "type": "Project",
+        "dependencies": {
+          "JobSearchManager": "[1.0.0, )",
+          "Microsoft.Data.Sqlite": "[10.0.11, )"
         }
       }
     }

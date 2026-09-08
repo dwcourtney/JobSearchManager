@@ -3,7 +3,8 @@
   "dependencies": {
     "net10.0": {
       "Microsoft.Data.Sqlite": {
-        "type": "Transitive",
+        "type": "Direct",
+        "requested": "[10.0.11, )",
         "resolved": "10.0.11",
         "contentHash": "7je7UELzm131GiLYc4PpZvfKXIgIyzPM+v+tjcd/nbnuWRfgcONYKzDTqJlURxwVCFsVnlpmq6y6yn4qvR8QXQ==",
         "dependencies": {
@@ -48,8 +49,12 @@
         }
       },
       "jobsearchmanager": {
+        "type": "Project"
+      },
+      "jsm.legacysqlite": {
         "type": "Project",
         "dependencies": {
+          "JobSearchManager": "[1.0.0, )",
           "Microsoft.Data.Sqlite": "[10.0.11, )"
         }
       }

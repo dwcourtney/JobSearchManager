@@ -18,10 +18,18 @@ assert.match(program, /AddSingleton<SemanticClassificationService>/);
 assert.match(program, /ConceptDiagnosticRequest request/);
 assert.match(read("JobModels.cs"), /QwenDeepAnalysis\? QwenDeepAnalysis/);
 assert.match(read("JobModels.cs"), /LlmDeepAnalysisRequestState/);
-assert.match(read("SqliteSemanticRuleStore.cs"), /CREATE TABLE IF NOT EXISTS LlmEvaluationRunDetails/);
+assert.match(read("migration/legacy-sqlite/SqliteSemanticRuleStore.cs"), /CREATE TABLE IF NOT EXISTS LlmEvaluationRunDetails/);
 assert.match(read("JobSearchManager.csproj"), /Compile Remove="ClassifierClient\.cs;LlmHoldoutEvaluation\.cs;LlmHardwareBenchmark\.cs;LlmTechnicalPreflight\.cs;research\/\*\*\/\*\.cs"/);
 const taxonomy=JSON.parse(read("JobConceptCatalog.json"));
 assert.equal(taxonomy.concepts.length,85);
 assert.equal(new Set(taxonomy.concepts.map(c=>c.id)).size,85);
 assert.match(read("scripts/deploy-curiosity.sh"), /ancestor=jsm:\$old_sha/);
 console.log("Model-free deterministic composition and persisted Qwen compatibility: PASS");
+
+assert.doesNotMatch(read("JobSearchManager.csproj"), /PackageReference[^>]+Sqlite/);
+for (const name of ["Program.cs", "RegexSemanticClassifier.cs", "SemanticClassificationService.cs", "RegexCacheReconciler.cs", "JsonConceptAudit.cs"])
+  assert.doesNotMatch(read(name), /SqliteSemanticRuleStore|LegacySemanticRuleMigrator|UsesSqliteCompatibility|Microsoft\.Data\.Sqlite|--regex-maintenance/);
+assert.match(read("migration/legacy-sqlite/Jsm.LegacySqlite.csproj"), /PackageReference Include="Microsoft.Data.Sqlite"/);
+assert.match(read("scripts/deploy-curiosity.sh"), /--json-concept-audit/);
+assert.doesNotMatch(read("scripts/deploy-curiosity.sh"), /--regex-maintenance/);
+console.log("PASS normal SQLite-free composition and isolated historical tooling boundary");

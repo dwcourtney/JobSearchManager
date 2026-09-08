@@ -120,14 +120,6 @@ public sealed record SemanticRuleCandidateValidation(
     string ValidationCorpusFingerprint,
     string TaxonomyFingerprint);
 
-public sealed record RegexClassification(
-    string PostingContentHash,
-    string RulesetFingerprint,
-    DateTimeOffset ClassifiedUtc,
-    IReadOnlyList<DetectedJobConcept> Concepts,
-    IReadOnlyDictionary<string, IReadOnlyList<string>> MatchedRuleIds,
-    IReadOnlyList<string> TimedOutRuleIds);
-
 public static class SemanticRuleValidation
 {
     public static void Validate(SemanticRuleCandidate candidate, JobConceptCatalog catalog,

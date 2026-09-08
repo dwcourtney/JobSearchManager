@@ -13,4 +13,5 @@
     <Compile Remove="Tests/**/*.cs" />
     <InternalsVisibleTo Include="Jsm.Qwen.Research.Tests" />
   </ItemGroup>
+  <ItemGroup><ProjectReference Include="../../migration/legacy-sqlite/Jsm.LegacySqlite.csproj" /></ItemGroup>
 </Project>

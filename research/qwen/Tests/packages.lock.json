@@ -48,15 +48,20 @@
         }
       },
       "jobsearchmanager": {
+        "type": "Project"
+      },
+      "jsm.legacysqlite": {
         "type": "Project",
         "dependencies": {
+          "JobSearchManager": "[1.0.0, )",
           "Microsoft.Data.Sqlite": "[10.0.11, )"
         }
       },
       "jsm.qwen.research": {
         "type": "Project",
         "dependencies": {
-          "JobSearchManager": "[1.0.0, )"
+          "JobSearchManager": "[1.0.0, )",
+          "Jsm.LegacySqlite": "[1.0.0, )"
         }
       }
     }

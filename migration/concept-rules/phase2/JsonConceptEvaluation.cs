@@ -15,7 +15,7 @@ internal static class JsonConceptEvaluation
         // receives write permission so the existing evaluator can record its comparison ledger.
         if (OperatingSystem.IsWindows()) File.SetAttributes(database, FileAttributes.Normal);
         else File.SetUnixFileMode(database, UnixFileMode.UserRead | UnixFileMode.UserWrite);
-        using var store=new SqliteSemanticRuleStore(database,catalog);var sql=new RegexSemanticClassifier(store,catalog);await sql.InitializeAsync();
+        using var store=new SqliteSemanticRuleStore(database,catalog);var sql=new LegacyRegexSemanticClassifier(store,catalog);await sql.InitializeAsync();
         var corpus=Path.Combine(archive,"RegexValidationCorpus.json");
         var sqliteReport=await new RegexEvaluationService(corpus,sql,store,catalog).EvaluateAsync(persist:false);
         var jsonReport=await new RegexEvaluationService(corpus,candidate.Matcher,store,catalog).EvaluateAsync(persist:false);
@@ -25,7 +25,7 @@ internal static class JsonConceptEvaluation
         File.WriteAllText(Path.Combine(output,"curated-json.json"),JsonConceptTests.Serialize(jsonReport));
         var files=new[]{"holdout.json","ai-holdout-manifest.json","labeler-a.jsonl","labeler-b.jsonl","adjudication.jsonl","ai-reference-labels-v1.json","labeler-a-prompt.txt","labeler-b-prompt.txt","adjudicator-prompt.txt"};
         var reports=new List<AiHoldoutEvaluationReport>();
-        foreach(var item in new[]{(Name:"sqlite",Matcher:sql),(Name:"json",Matcher:candidate.Matcher)})
+        foreach(var item in new[]{(Name:"sqlite",Matcher:(IConceptMatcher)sql),(Name:"json",Matcher:(IConceptMatcher)candidate.Matcher)})
         {
             var directory=Path.Combine(output,"holdout-"+item.Name);Directory.CreateDirectory(directory);
             foreach(var file in files)File.Copy(Path.Combine(archive,"artifacts","0",file),Path.Combine(directory,file));

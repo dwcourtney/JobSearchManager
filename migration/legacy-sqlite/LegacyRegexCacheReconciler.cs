@@ -3,21 +3,15 @@ using System.Text.Json;
 
 namespace JobSearchManager;
 
-public sealed record RegexCacheReconciliationReport(
-    string CacheRoot, int CacheFilesInspected, int JobsInspected, int StaleResultsFound,
-    int RecomputedResults, int InconsistenciesRepaired, int FilesUpdated, int FilesSkipped,
-    double ElapsedMilliseconds, string RulesetFingerprint, string TaxonomyFingerprint);
-
-public static class RegexCacheReconciler
+public static class LegacyRegexCacheReconciler
 {
     private static readonly JsonSerializerOptions JsonOptions =
         new(JsonSerializerDefaults.Web) { WriteIndented = true };
 
     public static async Task<RegexCacheReconciliationReport> ReconcileAsync(string cacheRoot,
-        RegexSemanticClassifier classifier, JobConceptCatalog catalog,
+        LegacyRegexSemanticClassifier classifier, JobConceptCatalog catalog,
         CancellationToken cancellationToken = default)
     {
-        var semantic = new SemanticClassificationService(catalog, classifier);
         var root = Path.GetFullPath(cacheRoot);
         var timer = System.Diagnostics.Stopwatch.StartNew();
         var files = 0;
@@ -60,7 +54,7 @@ public static class RegexCacheReconciler
                     continue;
                 }
                 var hydrated = original with { DescriptionHtml = description };
-                if (semantic.IsCurrent(hydrated))
+                if (IsCurrent(hydrated, classifier, catalog))
                 {
                     jobs.Add(original);
                     continue;
@@ -72,13 +66,13 @@ public static class RegexCacheReconciler
                     .ToHashSet(StringComparer.Ordinal);
                 var predictions = catalog.Concepts.Select(item =>
                     new SemanticConceptPrediction(item.Id, matched.Contains(item.Id))).ToArray();
-                var inputHash = semantic.InputFingerprint(hydrated);
-                var fingerprint = ConceptFingerprint.ClassificationFingerprint(
+                var inputHash = result.PostingContentHash;
+                var fingerprint = SemanticRulesetFingerprint.ClassificationFingerprint(
                     inputHash, result.RulesetFingerprint, catalog.Fingerprint);
                 var classification = new SemanticJobClassification(inputHash,
                     catalog.Version, catalog.Fingerprint, "deterministic-regex", "jsm-semantic-regex",
-                    "json-regex-v1", result.RulesetFingerprint, "", "", "",
-                    result.ClassifiedUtc, fingerprint, predictions, "json-regex-v1",
+                    "lifecycle-managed", result.RulesetFingerprint, "", "", "",
+                    result.ClassifiedUtc, fingerprint, predictions, classifier.AuthorityTag,
                     result.RulesetFingerprint);
                 var authoritative = result.Concepts.OrderBy(item => item.ConceptId, StringComparer.Ordinal)
                     .ToArray();
@@ -106,6 +100,26 @@ public static class RegexCacheReconciler
         timer.Stop();
         return new(root, files, inspected, stale, recomputed, repaired, updatedFiles, skipped,
             timer.Elapsed.TotalMilliseconds, classifier.RulesetFingerprint, catalog.Fingerprint);
+    }
+
+    private static bool IsCurrent(JobRecord job, LegacyRegexSemanticClassifier classifier,
+        JobConceptCatalog catalog)
+    {
+        if (job.SemanticClassification is null) return false;
+        var description = JobAnalysis.HtmlToPlainText(job.DescriptionHtml);
+        var contentHash = SemanticRulesetFingerprint.PostingContentHash(job.Title, description);
+        var value = job.SemanticClassification;
+        return value.PostingContentHash == contentHash && value.TaxonomyVersion == catalog.Version &&
+            value.TaxonomyFingerprint == catalog.Fingerprint &&
+            value.ModelType == "deterministic-regex" && value.ModelId == "jsm-semantic-regex" &&
+            value.ModelDigest == classifier.RulesetFingerprint &&
+            value.ClassifierConfigurationVersion == "sqlite-regex-v1" &&
+            value.ClassifierConfigurationFingerprint == classifier.RulesetFingerprint &&
+            value.ClassificationFingerprint == SemanticRulesetFingerprint.ClassificationFingerprint(
+                contentHash, classifier.RulesetFingerprint, catalog.Fingerprint) &&
+            value.Predictions.Count == catalog.Concepts.Count &&
+            value.Predictions.Select(item => item.ConceptId).ToHashSet(StringComparer.Ordinal)
+                .SetEquals(catalog.Concepts.Select(item => item.Id));
     }
 
     private static async Task<string> DescriptionAsync(JobRecord job, CancellationToken token)

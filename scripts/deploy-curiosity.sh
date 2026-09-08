@@ -14,9 +14,7 @@ deployed_sha_file="$state_root/deployed-sha"
 replacement_started=false
 previous_reference=""
 previous_sha=""
-candidate_audit_root=""
-cleanup_audit() { [[ -z "$candidate_audit_root" ]] || rm -rf -- "$candidate_audit_root"; }
-trap cleanup_audit EXIT
+
 
 if [[ ! "$target_sha" =~ ^[0-9a-f]{40}$ ]]; then
   echo "Deployment requires a lowercase full Git SHA." >&2
@@ -67,15 +65,16 @@ if [[ -f "$deployed_sha_file" ]]; then
   fi
 fi
 
+# This unused historical file is copied byte-for-byte solely for rollback preservation.
+# A live/nonempty WAL belongs to legacy tooling; never checkpoint or modify it here.
 if [[ -f "$lab_root/data/app/regex-rules.db" ]]; then
-  backup_name="regex-rules-predeploy-${previous_sha:-unknown}-$(date -u +%Y%m%dT%H%M%SZ).db"
-  docker exec "$current_container" dotnet JobSearchManager.dll --regex-maintenance backup \
-    /app/data/regex-rules.db "/app/data/$backup_name"
-  [[ -f "$lab_root/data/app/$backup_name" ]] || {
-    echo "Online RegEx database backup was not created; refusing deployment." >&2
+  [[ ! -s "$lab_root/data/app/regex-rules.db-wal" ]] || {
+    echo "Historical database has a nonempty WAL; seal it with isolated archive tooling before deployment." >&2
     exit 1
   }
-  mv -- "$lab_root/data/app/$backup_name" "$lab_root/backups/$backup_name"
+  backup_name="regex-rules-predeploy-${previous_sha:-unknown}-$(date -u +%Y%m%dT%H%M%SZ).db"
+  cp --preserve=mode,timestamps -- "$lab_root/data/app/regex-rules.db" "$lab_root/backups/$backup_name"
+  cmp --silent -- "$lab_root/data/app/regex-rules.db" "$lab_root/backups/$backup_name"
 fi
 
 docker build \
@@ -91,47 +90,21 @@ image_revision="$(docker image inspect --format '{{ index .Config.Labels "org.op
 }
 bash "$repository_root/scripts/security-scan.sh" image "jsm:$target_sha" "$security_cache"
 
-# Evaluate the exact candidate against the fixed corpus and every production cache in place.
-# Production data is mounted read-only and the candidate SQLite database is disposable.
-candidate_audit_root="$(mktemp -d "$state_root/candidate-regex-audit.XXXXXX")"
-sudo -n chown 1001:1001 "$candidate_audit_root"
-evaluation_report="$state_root/regex-evaluation-$target_sha.json"
-cache_benchmark_report="$state_root/regex-cache-benchmark-$target_sha.json"
+# Validate the exact JSON-authoritative matcher against immutable curated confusion matrices
+# and every cached posting, with production caches mounted read-only and no database/provider access.
+cache_benchmark_report="$state_root/json-concept-audit-$target_sha.json"
 docker run --rm --user 1001:1001 --read-only --tmpfs /tmp \
-  --volume "$candidate_audit_root:/audit" \
-  "jsm:$target_sha" --regex-maintenance evaluate /audit/regex-rules.db > "$evaluation_report"
-docker run --rm --user 1001:1001 --read-only --tmpfs /tmp \
-  --volume "$candidate_audit_root:/audit" \
-  --volume "$lab_root/data/app:/production:ro" \
-  "jsm:$target_sha" --regex-maintenance benchmark-cache /audit/regex-rules.db \
-  /production/workspaces > "$cache_benchmark_report"
-python3 - "$evaluation_report" "$cache_benchmark_report" <<'PY'
-import json, math, sys
-evaluation = json.load(open(sys.argv[1], encoding="utf-8"))
-benchmark = json.load(open(sys.argv[2], encoding="utf-8"))
-expected = {
-    "macro": 0.9976415094339622,
-    "micro": 0.9969230769230769,
-    "full_macro": 0.894597869692249,
-    "full_micro": 0.915770609318996,
-}
-actual = {
-    "macro": evaluation["historicalBenchmarkMacro"]["f1"],
-    "micro": evaluation["historicalBenchmarkMicro"]["f1"],
-    "full_macro": evaluation["macro"]["f1"],
-    "full_micro": evaluation["micro"]["f1"],
-}
-if any(not math.isclose(actual[key], value, rel_tol=0, abs_tol=1e-12)
-       for key, value in expected.items()):
-    raise SystemExit(f"RegEx candidate metric regression: {actual}")
-if evaluation["fixtureCount"] != 148 or evaluation["ruleCount"] != 288:
-    raise SystemExit("RegEx candidate corpus/rule inventory changed unexpectedly.")
-if benchmark["classifiedJobs"] < 1 or benchmark["jobsPerSecond"] <= 0:
-    raise SystemExit("RegEx production-cache benchmark classified no postings.")
-print("RegEx candidate metrics and production-cache benchmark passed:", actual, benchmark)
+  --volume "$lab_root/data/app/workspaces:/production/workspaces:ro" \
+  "jsm:$target_sha" --json-concept-audit /production/workspaces > "$cache_benchmark_report"
+python3 - "$cache_benchmark_report" <<'PY'
+import json, sys
+report = json.load(open(sys.argv[1], encoding="utf-8"))
+if not report["curatedExact"] or report["curatedPostings"] != 148 or report["classifiedJobs"] < 1:
+    raise SystemExit("JSON concept candidate regression or empty cache benchmark.")
+if report["authority"]["authority"] != "json-regex-v1" or report["cacheWritten"] or report["providersCalled"]:
+    raise SystemExit("Invalid JSON concept audit boundary.")
+print("JSON concept candidate confusion matrices and production-cache benchmark passed:", report)
 PY
-rm -rf -- "$candidate_audit_root"
-candidate_audit_root=""
 
 if [[ -f "$active_manifest" ]]; then
   cp -- "$active_manifest" "$previous_manifest.tmp"

@@ -408,6 +408,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("SQLite RegEx rules migrate, reload, evaluate, and track lifecycle telemetry", TestRegexRuleLifecycleAsync),
     ("List and detail presentations share immutable RegEx authority", TestRegexPresentationConsistencyAsync),
     ("Production holdout sampling is reproducible, blinded, and contamination-aware", TestHoldoutSamplingAsync),
+    ("Normal SQLite retirement and read-only JSON deployment audit", JsonAuthorityTests.RetirementAsync),
     ("AI holdout freezes complete A/B references before RegEx scoring", TestAiHoldoutEvaluationAsync),
     ("Offline cache reconciliation repairs every stale RegEx record idempotently", TestRegexCacheReconciliationAsync),
     ("Default RegEx has no model client dependency", TestDeterministicClassifierContractAsync),
@@ -992,9 +993,9 @@ static async Task TestDeterministicClassifierContractAsync()
     Directory.CreateDirectory(testDirectory);
     var store = new SqliteSemanticRuleStore(Path.Combine(testDirectory, "rules.db"), catalog);
     store.Initialize(RepositoryAsset("LegacyJobConceptRules.json"));
-    var regex = new RegexSemanticClassifier(store, catalog);
+    var regex = new LegacyRegexSemanticClassifier(store, catalog);
     await regex.InitializeAsync();
-    var service = new SemanticClassificationService(catalog, regex);
+    var service = new SemanticClassificationService(catalog, JsonAuthorityTests.Snapshot().Matcher);
     var job = CachedJob("leidos", "fixture", "/fixture", "<p>Build APIs.</p>") with
     {
         Title = "Backend Engineer"
@@ -1048,7 +1049,7 @@ static async Task TestRegexRuleLifecycleAsync()
         catch (InvalidDataException) { lifecycleBypassRejected = true; }
         Assert(lifecycleBypassRejected, "A new rule bypassed proposed status and lifecycle validation.");
 
-        var classifier = new RegexSemanticClassifier(store, catalog);
+        var classifier = new LegacyRegexSemanticClassifier(store, catalog);
         await classifier.InitializeAsync();
         var originalFingerprint = classifier.RulesetFingerprint;
         var active = rules.First(item => item.Status == SemanticRuleStatuses.Active);
@@ -1224,7 +1225,7 @@ static async Task TestAiHoldoutEvaluationAsync()
         var catalog = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
         using var store = new SqliteSemanticRuleStore(Path.Combine(directory, "regex-rules.db"), catalog);
         store.Initialize(RepositoryAsset("LegacyJobConceptRules.json"));
-        var classifier = new RegexSemanticClassifier(store, catalog);
+        var classifier = new LegacyRegexSemanticClassifier(store, catalog);
         await classifier.InitializeAsync();
         var reviewed = new AiLabelingPassItem(holdout.Examples[0].EvaluationExampleId,
             holdout.Examples[0].PostingContentHash, ["role.software-engineering"], [], 85);
@@ -1322,7 +1323,7 @@ static async Task TestRegexCacheReconciliationAsync()
         var catalog = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
         using var store = new SqliteSemanticRuleStore(Path.Combine(directory, "regex-rules.db"), catalog);
         store.Initialize(RepositoryAsset("LegacyJobConceptRules.json"));
-        var classifier = new RegexSemanticClassifier(store, catalog);
+        var classifier = new LegacyRegexSemanticClassifier(store, catalog);
         await classifier.InitializeAsync();
         var cacheDirectory = Path.Combine(directory, "caches");
         Directory.CreateDirectory(cacheDirectory);
@@ -1336,8 +1337,8 @@ static async Task TestRegexCacheReconciliationAsync()
         await File.WriteAllTextAsync(cachePath, JsonSerializer.Serialize(
             new JobsCacheDocument(5, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, 0, [job]),
             new JsonSerializerOptions(JsonSerializerDefaults.Web)));
-        var first = await RegexCacheReconciler.ReconcileAsync(cacheDirectory, classifier, catalog);
-        var second = await RegexCacheReconciler.ReconcileAsync(cacheDirectory, classifier, catalog);
+        var first = await LegacyRegexCacheReconciler.ReconcileAsync(cacheDirectory, classifier, catalog);
+        var second = await LegacyRegexCacheReconciler.ReconcileAsync(cacheDirectory, classifier, catalog);
         var revised = JsonSerializer.Deserialize<JobsCacheDocument>(await File.ReadAllTextAsync(cachePath),
             new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
         var current = revised.Jobs.Single();
@@ -1967,9 +1968,9 @@ static async Task TestListAnalysisAsync()
         var concepts = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
         using var rules = new SqliteSemanticRuleStore(Path.Combine(directory, "rules.db"), concepts);
         rules.Initialize(RepositoryAsset("LegacyJobConceptRules.json"));
-        var regex = new RegexSemanticClassifier(rules, concepts);
+        var regex = new LegacyRegexSemanticClassifier(rules, concepts);
         await regex.InitializeAsync();
-        var semantic = new SemanticClassificationService(concepts, regex);
+        var semantic = new SemanticClassificationService(concepts, JsonAuthorityTests.Snapshot().Matcher);
         var (catalog, _, state) = await CreateTestCatalogAsync(directory, handler, [pending, missing], query,
             semanticClassification: semantic);
         var client = CreateSourceClient(new HttpClient(handler));
