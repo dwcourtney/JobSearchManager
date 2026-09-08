@@ -1,0 +1,1338 @@
+[
+  {
+    "id": "prose-00",
+    "html": "",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "none",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "description-unavailable",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-01",
+    "html": "Build software.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "none",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-concern-detected",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-02",
+    "html": "This position is fully remote.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "none",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-concern-detected",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-03",
+    "html": "This role is remote.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "none",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-concern-detected",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-04",
+    "html": "Hybrid role.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "none",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-concern-detected",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-05",
+    "html": "This position is onsite.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "none",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-concern-detected",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-06",
+    "html": "Remote work limited to Florida residents.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "none",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-concern-detected",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-07",
+    "html": "This role requires one day per week onsite.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "strong",
+      "summary": "onsite duties; scheduled onsite attendance.",
+      "signals": [
+        {
+          "category": "onsite-duty",
+          "concernLevel": "strong",
+          "reason": "onsite duties",
+          "evidence": "This role requires one day per week onsite"
+        },
+        {
+          "category": "scheduled-onsite",
+          "concernLevel": "strong",
+          "reason": "scheduled onsite attendance",
+          "evidence": "This role requires one day per week onsite"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-08",
+    "html": "Must work two days per week in the office.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "strong",
+      "summary": "scheduled onsite attendance.",
+      "signals": [
+        {
+          "category": "scheduled-onsite",
+          "concernLevel": "strong",
+          "reason": "scheduled onsite attendance",
+          "evidence": "Must work two days per week in the office"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-09",
+    "html": "Will perform onsite work.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "strong",
+      "summary": "onsite duties.",
+      "signals": [
+        {
+          "category": "onsite-duty",
+          "concernLevel": "strong",
+          "reason": "onsite duties",
+          "evidence": "Will perform onsite work"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-10",
+    "html": "May be required to work onsite.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "questionable",
+      "summary": "periodic or as-needed onsite attendance.",
+      "signals": [
+        {
+          "category": "onsite-duty",
+          "concernLevel": "questionable",
+          "reason": "periodic or as-needed onsite attendance",
+          "evidence": "May be required to work onsite"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-11",
+    "html": "Work onsite on an as-needed basis.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "questionable",
+      "summary": "periodic or as-needed onsite attendance.",
+      "signals": [
+        {
+          "category": "onsite-duty",
+          "concernLevel": "questionable",
+          "reason": "periodic or as-needed onsite attendance",
+          "evidence": "Work onsite on an as-needed basis"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-12",
+    "html": "Must live within driving distance.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "questionable",
+      "summary": "a commuting-distance or local-residency requirement.",
+      "signals": [
+        {
+          "category": "commuting-area",
+          "concernLevel": "questionable",
+          "reason": "a commuting-distance or local-residency requirement",
+          "evidence": "Must live within driving distance"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-13",
+    "html": "Candidate must be within 50 miles of our office.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "questionable",
+      "summary": "a commuting-distance or local-residency requirement.",
+      "signals": [
+        {
+          "category": "commuting-area",
+          "concernLevel": "questionable",
+          "reason": "a commuting-distance or local-residency requirement",
+          "evidence": "Candidate must be within 50 miles of our office"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-14",
+    "html": "Candidate must live within 50 miles of an airport.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "none",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-concern-detected",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-15",
+    "html": "Candidates need to be within commutable distance.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "questionable",
+      "summary": "a commuting-distance or local-residency requirement.",
+      "signals": [
+        {
+          "category": "commuting-area",
+          "concernLevel": "questionable",
+          "reason": "a commuting-distance or local-residency requirement",
+          "evidence": "Candidates need to be within commutable distance"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-16",
+    "html": "Prior experience working onsite.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "none",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-concern-detected",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-17",
+    "html": "Prior experience working onsite; you will provide onsite support.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "strong",
+      "summary": "onsite duties.",
+      "signals": [
+        {
+          "category": "onsite-duty",
+          "concernLevel": "strong",
+          "reason": "onsite duties",
+          "evidence": "Prior experience working onsite; you will provide onsite support"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-18",
+    "html": "Conduct field testing.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "strong",
+      "summary": "field deployment or operational testing.",
+      "signals": [
+        {
+          "category": "field-deployment",
+          "concernLevel": "strong",
+          "reason": "field deployment or operational testing",
+          "evidence": "Conduct field testing"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-19",
+    "html": "Support field deployment operations.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "strong",
+      "summary": "field deployment or operational testing.",
+      "signals": [
+        {
+          "category": "field-deployment",
+          "concernLevel": "strong",
+          "reason": "field deployment or operational testing",
+          "evidence": "Support field deployment operations"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-20",
+    "html": "Perform installation and activation of equipment.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "strong",
+      "summary": "physical installation or activation work.",
+      "signals": [
+        {
+          "category": "physical-installation",
+          "concernLevel": "strong",
+          "reason": "physical installation or activation work",
+          "evidence": "Perform installation and activation of equipment"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-21",
+    "html": "Perform work at Army installations.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "strong",
+      "summary": "work at an operational site or facility.",
+      "signals": [
+        {
+          "category": "operational-site",
+          "concernLevel": "strong",
+          "reason": "work at an operational site or facility",
+          "evidence": "Perform work at Army installations"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-22",
+    "html": "Conduct work at manufacturing facilities.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "strong",
+      "summary": "work at an operational site or facility.",
+      "signals": [
+        {
+          "category": "operational-site",
+          "concernLevel": "strong",
+          "reason": "work at an operational site or facility",
+          "evidence": "Conduct work at manufacturing facilities"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-23",
+    "html": "Must work in laboratories.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "strong",
+      "summary": "work at an operational site or facility.",
+      "signals": [
+        {
+          "category": "operational-site",
+          "concernLevel": "strong",
+          "reason": "work at an operational site or facility",
+          "evidence": "Must work in laboratories"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-24",
+    "html": "Frequent travel required.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "questionable",
+      "summary": "frequent travel.",
+      "signals": [
+        {
+          "category": "frequent-travel",
+          "concernLevel": "questionable",
+          "reason": "frequent travel",
+          "evidence": "Frequent travel required"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-25",
+    "html": "Travel frequently.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "questionable",
+      "summary": "frequent travel.",
+      "signals": [
+        {
+          "category": "frequent-travel",
+          "concernLevel": "questionable",
+          "reason": "frequent travel",
+          "evidence": "Travel frequently"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-26",
+    "html": "Extensive travel.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "questionable",
+      "summary": "frequent travel.",
+      "signals": [
+        {
+          "category": "frequent-travel",
+          "concernLevel": "questionable",
+          "reason": "frequent travel",
+          "evidence": "Extensive travel"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-27",
+    "html": "Requires the ability to travel frequently.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "questionable",
+      "summary": "frequent travel.",
+      "signals": [
+        {
+          "category": "frequent-travel",
+          "concernLevel": "questionable",
+          "reason": "frequent travel",
+          "evidence": "Requires the ability to travel frequently"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-28",
+    "html": "Remote sensor operation in the office.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "none",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-concern-detected",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-29",
+    "html": "Historical knowledge of field operations.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "none",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-concern-detected",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-30",
+    "html": "No onsite work required.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "strong",
+      "summary": "onsite duties.",
+      "signals": [
+        {
+          "category": "onsite-duty",
+          "concernLevel": "strong",
+          "reason": "onsite duties",
+          "evidence": "No onsite work required"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-31",
+    "html": "Will not work onsite.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "strong",
+      "summary": "onsite duties.",
+      "signals": [
+        {
+          "category": "onsite-duty",
+          "concernLevel": "strong",
+          "reason": "onsite duties",
+          "evidence": "Will not work onsite"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-32",
+    "html": "Travel expenses are reimbursed.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "none",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-concern-detected",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-33",
+    "html": "This position follows a remote work schedule.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "none",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-concern-detected",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-34",
+    "html": "Work personas (flexible, remote, or required in office) are categories.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "none",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-concern-detected",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-35",
+    "html": "This is a US remote-telework role. This role requires one day per week on-site.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "strong",
+      "summary": "onsite duties; scheduled onsite attendance.",
+      "signals": [
+        {
+          "category": "onsite-duty",
+          "concernLevel": "strong",
+          "reason": "onsite duties",
+          "evidence": "This role requires one day per week on-site"
+        },
+        {
+          "category": "scheduled-onsite",
+          "concernLevel": "strong",
+          "reason": "scheduled onsite attendance",
+          "evidence": "This role requires one day per week on-site"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "metadata-0",
+    "html": "Must work onsite.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "strong",
+      "summary": "onsite duties.",
+      "signals": [
+        {
+          "category": "onsite-duty",
+          "concernLevel": "strong",
+          "reason": "onsite duties",
+          "evidence": "Must work onsite"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "metadata-1",
+    "html": "Must work onsite.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "strong",
+      "summary": "onsite duties.",
+      "signals": [
+        {
+          "category": "onsite-duty",
+          "concernLevel": "strong",
+          "reason": "onsite duties",
+          "evidence": "Must work onsite"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Virtual",
+    "additionalLocations": []
+  },
+  {
+    "id": "metadata-2",
+    "html": "Must work onsite.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "strong",
+      "summary": "onsite duties.",
+      "signals": [
+        {
+          "category": "onsite-duty",
+          "concernLevel": "strong",
+          "reason": "onsite duties",
+          "evidence": "Must work onsite"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Teleworker",
+    "additionalLocations": []
+  },
+  {
+    "id": "metadata-3",
+    "html": "Must work onsite.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "strong",
+      "summary": "onsite duties.",
+      "signals": [
+        {
+          "category": "onsite-duty",
+          "concernLevel": "strong",
+          "reason": "onsite duties",
+          "evidence": "Must work onsite"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "WFH",
+    "additionalLocations": []
+  },
+  {
+    "id": "metadata-4",
+    "html": "Must work onsite.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "strong",
+      "summary": "onsite duties.",
+      "signals": [
+        {
+          "category": "onsite-duty",
+          "concernLevel": "strong",
+          "reason": "onsite duties",
+          "evidence": "Must work onsite"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Home-based",
+    "additionalLocations": []
+  },
+  {
+    "id": "metadata-5",
+    "html": "Must work onsite.",
+    "expected": {
+      "isRemoteDesignated": false,
+      "concernLevel": "none",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "not-remote-designated",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Hybrid",
+    "additionalLocations": []
+  },
+  {
+    "id": "metadata-6",
+    "html": "Must work onsite.",
+    "expected": {
+      "isRemoteDesignated": false,
+      "concernLevel": "none",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "not-remote-designated",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Orlando, FL",
+    "additionalLocations": []
+  },
+  {
+    "id": "metadata-7",
+    "html": "Must work onsite.",
+    "expected": {
+      "isRemoteDesignated": false,
+      "concernLevel": "none",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "not-remote-designated",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "",
+    "additionalLocations": []
+  },
+  {
+    "id": "title-designation",
+    "html": "Must work onsite.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "strong",
+      "summary": "onsite duties.",
+      "signals": [
+        {
+          "category": "onsite-duty",
+          "concernLevel": "strong",
+          "reason": "onsite duties",
+          "evidence": "Must work onsite"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Remote Engineer",
+    "primaryLocation": "Orlando",
+    "additionalLocations": []
+  },
+  {
+    "id": "additional-designation",
+    "html": "Must work onsite.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "strong",
+      "summary": "onsite duties.",
+      "signals": [
+        {
+          "category": "onsite-duty",
+          "concernLevel": "strong",
+          "reason": "onsite duties",
+          "evidence": "Must work onsite"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Orlando",
+    "additionalLocations": [
+      "Virtual"
+    ]
+  },
+  {
+    "id": "no-designation",
+    "html": "Perform onsite work.",
+    "expected": {
+      "isRemoteDesignated": false,
+      "concernLevel": "none",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "not-remote-designated",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Orlando",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-designation-0",
+    "html": "This position is fully remote.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "none",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-concern-detected",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Orlando",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-designation-1",
+    "html": "This role is a U.S. remote role.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "none",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-concern-detected",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Orlando",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-designation-2",
+    "html": "This position follows a remote work schedule.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "none",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-concern-detected",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Orlando",
+    "additionalLocations": []
+  },
+  {
+    "id": "prose-designation-3",
+    "html": "Work personas (flexible, remote, or required in office) are categories.",
+    "expected": {
+      "isRemoteDesignated": false,
+      "concernLevel": "none",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "not-remote-designated",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Orlando",
+    "additionalLocations": []
+  },
+  {
+    "id": "travel-0",
+    "html": "This role requires 0% travel.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "none",
+      "summary": "0% travel.",
+      "signals": [
+        {
+          "category": "occasional-travel",
+          "concernLevel": "informational",
+          "reason": "0% travel",
+          "evidence": "This role requires 0% travel"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "travel-1",
+    "html": "This role requires 1% travel.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "none",
+      "summary": "1% travel.",
+      "signals": [
+        {
+          "category": "occasional-travel",
+          "concernLevel": "informational",
+          "reason": "1% travel",
+          "evidence": "This role requires 1% travel"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "travel-10",
+    "html": "This role requires 10% travel.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "none",
+      "summary": "10% travel.",
+      "signals": [
+        {
+          "category": "occasional-travel",
+          "concernLevel": "informational",
+          "reason": "10% travel",
+          "evidence": "This role requires 10% travel"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "travel-11",
+    "html": "This role requires 11% travel.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "questionable",
+      "summary": "11% travel.",
+      "signals": [
+        {
+          "category": "moderate-travel",
+          "concernLevel": "questionable",
+          "reason": "11% travel",
+          "evidence": "This role requires 11% travel"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "travel-49",
+    "html": "This role requires 49% travel.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "questionable",
+      "summary": "49% travel.",
+      "signals": [
+        {
+          "category": "moderate-travel",
+          "concernLevel": "questionable",
+          "reason": "49% travel",
+          "evidence": "This role requires 49% travel"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "travel-50",
+    "html": "This role requires 50% travel.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "strong",
+      "summary": "50% travel.",
+      "signals": [
+        {
+          "category": "substantial-travel",
+          "concernLevel": "strong",
+          "reason": "50% travel",
+          "evidence": "This role requires 50% travel"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "travel-100",
+    "html": "This role requires 100% travel.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "strong",
+      "summary": "100% travel.",
+      "signals": [
+        {
+          "category": "substantial-travel",
+          "concernLevel": "strong",
+          "reason": "100% travel",
+          "evidence": "This role requires 100% travel"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "travel-101",
+    "html": "This role requires 101% travel.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "none",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-concern-detected",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "travel-999",
+    "html": "This role requires 999% travel.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "none",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-concern-detected",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "travel-5% - 10",
+    "html": "This role requires 5% - 10% travel.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "none",
+      "summary": "5-10% travel.",
+      "signals": [
+        {
+          "category": "occasional-travel",
+          "concernLevel": "informational",
+          "reason": "5-10% travel",
+          "evidence": "This role requires 5% - 10% travel"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "travel-10% to 50",
+    "html": "This role requires 10% to 50% travel.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "strong",
+      "summary": "10-50% travel.",
+      "signals": [
+        {
+          "category": "substantial-travel",
+          "concernLevel": "strong",
+          "reason": "10-50% travel",
+          "evidence": "This role requires 10% to 50% travel"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "travel-50% - 10",
+    "html": "This role requires 50% - 10% travel.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "none",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-concern-detected",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "travel-order",
+    "html": "Travel 10% to 50%. Frequent travel required. Travel 5%.",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "strong",
+      "summary": "10-50% travel; frequent travel.",
+      "signals": [
+        {
+          "category": "substantial-travel",
+          "concernLevel": "strong",
+          "reason": "10-50% travel",
+          "evidence": "Travel 10% to 50%"
+        },
+        {
+          "category": "frequent-travel",
+          "concernLevel": "questionable",
+          "reason": "frequent travel",
+          "evidence": "Frequent travel required"
+        },
+        {
+          "category": "occasional-travel",
+          "concernLevel": "informational",
+          "reason": "5% travel",
+          "evidence": "Travel 5%"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "multiple-conflicts",
+    "html": "\u003Cp\u003EMust work two days per week onsite.\u003C/p\u003E\u003Cp\u003EPerform field deployment and onsite work.\u003C/p\u003E\u003Cp\u003EExtensive travel required.\u003C/p\u003E\u003Cp\u003EMust live within driving distance.\u003C/p\u003E",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "strong",
+      "summary": "field deployment or operational testing; onsite duties.",
+      "signals": [
+        {
+          "category": "field-deployment",
+          "concernLevel": "strong",
+          "reason": "field deployment or operational testing",
+          "evidence": "Perform field deployment and onsite work"
+        },
+        {
+          "category": "onsite-duty",
+          "concernLevel": "strong",
+          "reason": "onsite duties",
+          "evidence": "Must work two days per week onsite"
+        },
+        {
+          "category": "onsite-duty",
+          "concernLevel": "strong",
+          "reason": "onsite duties",
+          "evidence": "Perform field deployment and onsite work"
+        },
+        {
+          "category": "scheduled-onsite",
+          "concernLevel": "strong",
+          "reason": "scheduled onsite attendance",
+          "evidence": "Must work two days per week onsite"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "long-evidence",
+    "html": "Will provide additional context additional context additional context additional context additional context additional context additional context additional context additional context additional context additional context additional context additional context additional context additional context additional context additional context additional context additional context additional context additional context additional context additional context additional context additional context additional context additional context additional context additional context additional context onsite support. tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail ",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "none",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-concern-detected",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "duplicates",
+    "html": "\u003Cp\u003EMust work onsite.\u003C/p\u003E\u003Cp\u003EMust work onsite.\u003C/p\u003E",
+    "expected": {
+      "isRemoteDesignated": true,
+      "concernLevel": "strong",
+      "summary": "onsite duties.",
+      "signals": [
+        {
+          "category": "onsite-duty",
+          "concernLevel": "strong",
+          "reason": "onsite duties",
+          "evidence": "Must work onsite"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  }
+]

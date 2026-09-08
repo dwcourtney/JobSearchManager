@@ -1,0 +1,257 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "JSM remote-work rules v1",
+  "description": "All patterns use IgnoreCase, CultureInvariant and Compiled with the configured finite timeout. Runtime additionally checks unique IDs/priorities, scope-correct references/capture groups, override field pairing and complete travel bands.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "rulesetVersion",
+    "regexTimeoutMilliseconds",
+    "patterns",
+    "signalRules",
+    "travelBands",
+    "travelReasonTemplate",
+    "frequentTravel"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "rulesetVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "regexTimeoutMilliseconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000
+    },
+    "patterns": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 128,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "scope",
+          "pattern"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "type": {
+            "const": "regex"
+          },
+          "scope": {
+            "enum": [
+              "metadata",
+              "sentence",
+              "plainText",
+              "html",
+              "evidence"
+            ]
+          },
+          "pattern": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8192
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "signalRules": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 128,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "priority",
+          "patternId",
+          "category",
+          "concernLevel",
+          "reason",
+          "unlessContains",
+          "overridePatternId",
+          "overrideConcernLevel",
+          "overrideReason"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "patternId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "category": {
+            "enum": [
+              "scheduled-onsite",
+              "onsite-duty",
+              "field-deployment",
+              "physical-installation",
+              "operational-site",
+              "commuting-area",
+              "occasional-travel",
+              "moderate-travel",
+              "substantial-travel",
+              "frequent-travel"
+            ]
+          },
+          "concernLevel": {
+            "enum": [
+              "informational",
+              "questionable",
+              "strong"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "unlessContains": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "overridePatternId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "overrideConcernLevel": {
+            "enum": [
+              null,
+              "informational",
+              "questionable",
+              "strong"
+            ]
+          },
+          "overrideReason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 300
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "travelBands": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 128,
+      "items": {
+        "type": "object",
+        "required": [
+          "maximumPercent",
+          "category",
+          "concernLevel"
+        ],
+        "properties": {
+          "maximumPercent": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "category": {
+            "enum": [
+              "scheduled-onsite",
+              "onsite-duty",
+              "field-deployment",
+              "physical-installation",
+              "operational-site",
+              "commuting-area",
+              "occasional-travel",
+              "moderate-travel",
+              "substantial-travel",
+              "frequent-travel"
+            ]
+          },
+          "concernLevel": {
+            "enum": [
+              "informational",
+              "questionable",
+              "strong"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "travelReasonTemplate": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300,
+      "pattern": "\\{range\\}"
+    },
+    "frequentTravel": {
+      "type": "object",
+      "required": [
+        "patternId",
+        "category",
+        "concernLevel",
+        "reason"
+      ],
+      "properties": {
+        "patternId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "category": {
+          "enum": [
+            "scheduled-onsite",
+            "onsite-duty",
+            "field-deployment",
+            "physical-installation",
+            "operational-site",
+            "commuting-area",
+            "occasional-travel",
+            "moderate-travel",
+            "substantial-travel",
+            "frequent-travel"
+          ]
+        },
+        "concernLevel": {
+          "enum": [
+            "informational",
+            "questionable",
+            "strong"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

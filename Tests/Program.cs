@@ -12,6 +12,17 @@ using System.Net.Mail;
 using System.Security.Claims;
 using JobSearchManager;
 
+if (args is ["--remote-work-parity", var remoteInput, var remoteOutput])
+{
+    RemoteWorkMigrationTests.Compare(remoteInput, remoteOutput);
+    return;
+}
+if (args is ["--freeze-remote-work-fixtures", var remoteFixtures])
+{
+    RemoteWorkMigrationTests.Freeze(remoteFixtures);
+    return;
+}
+
 if (args is ["--education-parity", var educationInput, var educationOutput])
 {
     EducationMigrationTests.Compare(educationInput, educationOutput);
@@ -418,6 +429,8 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Academic detector recognizes advanced master's-or-higher wording", TestAdvancedDegreeAsync),
     ("Academic detector separates strict minimums from preferred higher degrees", TestAcademicPreferenceSeparationAsync),
     ("Academic detector treats ABET as accreditation", TestAbetAccreditationAsync),
+    ("Remote-work frozen behavior parity", RemoteWorkMigrationTests.RunAsync),
+    ("Remote-work rules validate configuration and bound matching", RemoteWorkMigrationTests.ValidationAsync),
     ("Education frozen behavior parity", EducationMigrationTests.RunAsync),
     ("Education rules validate configuration and bound matching", EducationMigrationTests.ValidationAsync),
     ("Work authorization frozen behavior parity", WorkAuthorizationMigrationTests.RunAsync),
