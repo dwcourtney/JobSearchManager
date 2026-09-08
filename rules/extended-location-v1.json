@@ -1,0 +1,369 @@
+{
+  "schemaVersion": 1,
+  "rulesetVersion": "1.0.0",
+  "regexTimeoutMilliseconds": 1000,
+  "patterns": [
+    {
+      "id": "HistoricalPattern",
+      "pattern": "\\b(?:prior|previous|past|demonstrated|relevant)\\s+(?:(?:OCONUS|overseas)\\s+)?(?:(?:deployment|assignment)\\s+)?experience\\b|\\bexperience\\s+(?:supporting|with|in|at)\\b"
+    },
+    {
+      "id": "CurrentObligationPattern",
+      "pattern": "\\b(?:must|required|requires?|will|shall|expected|position|role|employment|candidate|employee|willingness|ability|reside|relocate|work\\s+will)\\b"
+    },
+    {
+      "id": "ConditionalOnlyPattern",
+      "pattern": "\\b(?:may|might|could)\\b|\\bat\\s+(?:the\\s+)?discretion\\b"
+    },
+    {
+      "id": "DefiniteObligationPattern",
+      "pattern": "\\b(?:must|required|requires?|will|shall|expected|willing|willingness|ability|position|role|employee|candidate|accepts?|undertakes?|works?|travels?|completes?|remains?|continuous|long[- ]term)\\b"
+    },
+    {
+      "id": "ExplicitObligationPattern",
+      "pattern": "\\b(?:must|required|requires?|will|shall|expected)\\b"
+    },
+    {
+      "id": "AwayPresencePattern",
+      "pattern": "\\b(?:deploy(?:ment|ed|ing)?|assignments?|rotations?|on[- ]?site|customer\\s+site|field\\s+(?:site|camp)|remote\\s+site|reside|remain|stay|aboard|shipboard|at\\s+sea|in[- ]country|temporary\\s+duty|TDY|OCONUS|overseas|Antarct(?:ic|ica))\\b"
+    },
+    {
+      "id": "LongDurationTravelPresencePattern",
+      "pattern": "\\b(?:willing|required|expected)\\s+to\\s+travel(?:\\s+100\\s*%)?\\s+to\\b|\\bcontinuous\\s+travel\\s+assignments?\\b"
+    },
+    {
+      "id": "DurationPattern",
+      "pattern": "\\b(?<value>\\d{1,3}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)(?:\\s*(?:-|\u2013|\u2014|to)\\s*(?<upper>\\d{1,3}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve))?(?:\\s+consecutive)?\\s*[- ]?\\s*(?<unit>days?|weeks?|months?)\\b"
+    },
+    {
+      "id": "signal-explicit-job-location",
+      "pattern": "\\b(?:job|work)\\s+location\\s+is\\s+(?:the\\s+)?[^.!?;]{0,50}\\b(?:Guam|Antarctica|McMurdo(?:\\s+Station)?|South\\s+Pole(?:\\s+Station)?|Kwajalein|Marshall\\s+Islands?|Diego\\s+Garcia|OCONUS|overseas|Germany|Japan|Iraq|Lebanon|Kazakhstan|Middle\\s+East|Pacific\\s+Islands?)\\b|\\bposition\\s+is\\s+located\\s+(?:in|at)\\s+[^.!?;]{0,50}\\b(?:Guam|Antarctica|McMurdo(?:\\s+Station)?|South\\s+Pole(?:\\s+Station)?|Kwajalein|Marshall\\s+Islands?|Diego\\s+Garcia|OCONUS|overseas|Germany|Japan|Iraq|Lebanon|Kazakhstan|Middle\\s+East|Pacific\\s+Islands?)\\b|\\bwork\\s+will\\s+be\\s+performed\\s+(?:in|at)\\s+[^.!?;]{0,50}\\b(?:Guam|Antarctica|McMurdo(?:\\s+Station)?|South\\s+Pole(?:\\s+Station)?|Kwajalein|Marshall\\s+Islands?|Diego\\s+Garcia|OCONUS|overseas|Germany|Japan|Iraq|Lebanon|Kazakhstan|Middle\\s+East|Pacific\\s+Islands?)\\b"
+    },
+    {
+      "id": "signal-required-deployment",
+      "pattern": "\\bdeployment\\s+is\\s+required(?:\\s+in\\s+this\\s+(?:position|role))?\\b|\\bdeployment\\s+(?:to|in|at)\\s+[^.!?;]{1,100}\\s+is\\s+required\\b|\\b(?:must|required\\s+to|will|shall)\\s+deploy\\b|\\b(?:accepts?|undertakes?)\\s+(?:international\\s+|overseas\\s+|sea[- ]going\\s+|rotational\\s+)?deployments?\\b|\\bremains?\\s+deployed\\b|\\bdeployment[- ]only\\s+position\\b|\\bemployment\\s+is\\s+only\\s+provided\\s+during\\s+the\\s+deployment\\s+period\\b|\\bthis\\s+position\\s+(?:includes|requires)\\s+(?:an?\\s+)?(?:international|overseas|OCONUS)\\s+deployment\\b"
+    },
+    {
+      "id": "signal-recurring-deployment",
+      "pattern": "\\b(?:at\\s+least\\s+)?(?:annual|recurring|regular)\\s+deployments?\\b[^.!?]{0,90}\\b(?:OCONUS|overseas|international|Antarct(?:ic|ica))\\b"
+    },
+    {
+      "id": "signal-extended-deployment",
+      "pattern": "\\b(?:ability\\s+and\\s+willingness|willingness\\s+and\\s+ability|must\\s+be\\s+willing\\s+and\\s+able)\\s+to\\s+deploy\\b[^.!?]{0,100}\\b(?:for\\s+)?extended\\s+periods?\\b|\\bdeploy\\b[^.!?]{0,100}\\bfor\\s+extended\\s+periods?\\b|\\bmust\\s+be\\s+willing\\s+and\\s+able\\s+to\\s+deploy\\s+internationally\\b|\\bmust\\s+be\\s+willing\\s+and\\s+able\\s+to\\s+deploy\\b[^.!?]{0,120}\\bup\\s+to\\s+\\d{1,3}\\s+consecutive\\s+days\\b|\\bposition\\s+requires\\s+extended\\s+presence\\s+(?:in|at)\\b"
+    },
+    {
+      "id": "signal-winter-over-assignment",
+      "pattern": "\\b(?:winter[- ]?over|winter\\s+site\\s+manager)\\b"
+    },
+    {
+      "id": "signal-long-term-away-assignment",
+      "pattern": "\\b(?:100\\s*%\\s+)?long[- ]term\\s+(?:OCONUS|overseas|international)\\s+assignments?\\b|\\b(?:OCONUS|overseas|international)\\s+assignments?\\b[^.!?]{0,60}\\blong[- ]term\\b"
+    },
+    {
+      "id": "signal-forward-deployed",
+      "pattern": "\\b(?:will\\s+be|must\\s+be|employee\\s+(?:is|will\\s+be))?\\s*forward[- ]deployed\\b"
+    },
+    {
+      "id": "signal-oconus-assignment",
+      "pattern": "\\b(?:100\\s*%\\s+)?(?:long[- ]term\\s+)?OCONUS\\s+assignments?\\b|\\b(?:100\\s*%\\s+)?(?:long[- ]term\\s+)?overseas\\s+assignments?\\b|\\bthis\\s+is\\s+(?:an?\\s+)?\\(?international\\s+assignment\\)?\\b|\\bposition\\s+is\\s+(?:an?\\s+)?(?:international|overseas|OCONUS)\\s+assignment\\b|\\b(?:international|overseas|OCONUS)\\s+assignment\\b[^.!?]{0,80}\\bno\\s+remote\\s+work\\b|\\bno\\s+remote\\s+work\\b[^.!?]{0,80}\\b(?:international|overseas|OCONUS)\\s+assignment\\b"
+    },
+    {
+      "id": "signal-rotation",
+      "pattern": "\\b(?:this\\s+is\\s+)?(?:an?\\s+)?\\d{1,3}(?:[- ]day)?\\s+rotational\\s+assignment\\b|\\b(?:required|mandatory)\\s+rotational\\s+assignment\\b|\\b(?:accepts?|undertakes?|works?|travels?|completes?)\\b[^.!?]{0,80}\\brotational\\s+(?:assignments?|deployments?)\\b|\\b\\d{1,2}\\s+weeks?\\s+on\\s*/\\s*\\d{1,2}\\s+weeks?\\s+off\\b|\\b(?:international|overseas|OCONUS)\\s+assignments?\\b[^.!?]{0,80}\\bup\\s+to\\s+\\d{1,3}[- ]day\\s+rotations?\\b"
+    },
+    {
+      "id": "signal-temporary-duty",
+      "pattern": "\\b(?:temporary\\s+duty|TDY)\\s+assignment\\s+(?:in|to|at)\\b"
+    },
+    {
+      "id": "signal-required-unusual-relocation",
+      "pattern": "\\b(?:must|required\\s+to|will\\s+need\\s+to)\\s+(?:reside\\s+(?:in|at)|relocate\\s+to)\\s+[^.!?;]{0,70}\\b(?:Guam|Antarctica|McMurdo(?:\\s+Station)?|South\\s+Pole(?:\\s+Station)?|Kwajalein|Marshall\\s+Islands?|Diego\\s+Garcia|OCONUS|overseas|Germany|Japan|Iraq|Lebanon|Kazakhstan|Middle\\s+East|Pacific\\s+Islands?)\\b"
+    },
+    {
+      "id": "signal-possible-deployment",
+      "pattern": "\\bdeployment\\s+to\\s+[^.!?;]{0,70}\\b(?:Guam|Antarctica|McMurdo(?:\\s+Station)?|South\\s+Pole(?:\\s+Station)?|Kwajalein|Marshall\\s+Islands?|Diego\\s+Garcia|OCONUS|overseas|Germany|Japan|Iraq|Lebanon|Kazakhstan|Middle\\s+East|Pacific\\s+Islands?)\\b[^.!?]{0,60}\\b(?:may|might|could)\\s+be\\s+(?:necessary|required|expected)\\b|\\b(?:may|might|could)\\s+(?:be\\s+required\\s+to\\s+)?deploy\\s+(?:to|in|at)\\s+[^.!?;]{0,70}\\b(?:Guam|Antarctica|McMurdo(?:\\s+Station)?|South\\s+Pole(?:\\s+Station)?|Kwajalein|Marshall\\s+Islands?|Diego\\s+Garcia|OCONUS|overseas|Germany|Japan|Iraq|Lebanon|Kazakhstan|Middle\\s+East|Pacific\\s+Islands?)\\b"
+    },
+    {
+      "id": "signal-possible-extended-assignment",
+      "pattern": "\\bmay\\s+require\\s+(?:an?\\s+)?extended\\s+(?:deployment|assignment|presence)\\b"
+    },
+    {
+      "id": "destination-0",
+      "pattern": "\\bGuam\\b"
+    },
+    {
+      "id": "destination-1",
+      "pattern": "\\b(?:Antarctica|Antarctic|McMurdo(?:\\s+Station)?|South\\s+Pole(?:\\s+Station)?)\\b"
+    },
+    {
+      "id": "destination-2",
+      "pattern": "\\bKwajalein\\b"
+    },
+    {
+      "id": "destination-3",
+      "pattern": "\\bDiego\\s+Garcia\\b"
+    },
+    {
+      "id": "destination-4",
+      "pattern": "\\bGermany\\b"
+    },
+    {
+      "id": "destination-5",
+      "pattern": "\\bJapan\\b"
+    },
+    {
+      "id": "destination-6",
+      "pattern": "\\bMarshall\\s+Islands?\\b"
+    },
+    {
+      "id": "destination-7",
+      "pattern": "\\bIraq\\b"
+    },
+    {
+      "id": "destination-8",
+      "pattern": "\\bLebanon\\b"
+    },
+    {
+      "id": "destination-9",
+      "pattern": "\\bKazakhstan\\b"
+    },
+    {
+      "id": "destination-10",
+      "pattern": "\\bMiddle\\s+East\\b"
+    },
+    {
+      "id": "destination-11",
+      "pattern": "\\bPacific\\s+Islands?\\b"
+    },
+    {
+      "id": "destination-12",
+      "pattern": "\\bOCONUS\\b"
+    },
+    {
+      "id": "destination-13",
+      "pattern": "\\boverseas\\b"
+    }
+  ],
+  "signalRules": [
+    {
+      "id": "rule-explicit-job-location",
+      "priority": 0,
+      "patternId": "signal-explicit-job-location",
+      "category": "explicit-job-location",
+      "confidence": "strong",
+      "reason": "explicit unusual job location"
+    },
+    {
+      "id": "rule-required-deployment",
+      "priority": 1,
+      "patternId": "signal-required-deployment",
+      "category": "required-deployment",
+      "confidence": "strong",
+      "reason": "required deployment"
+    },
+    {
+      "id": "rule-recurring-deployment",
+      "priority": 2,
+      "patternId": "signal-recurring-deployment",
+      "category": "recurring-deployment",
+      "confidence": "strong",
+      "reason": "recurring overseas or OCONUS deployment"
+    },
+    {
+      "id": "rule-extended-deployment",
+      "priority": 3,
+      "patternId": "signal-extended-deployment",
+      "category": "extended-deployment",
+      "confidence": "strong",
+      "reason": "extended deployment or site presence"
+    },
+    {
+      "id": "rule-winter-over-assignment",
+      "priority": 4,
+      "patternId": "signal-winter-over-assignment",
+      "category": "winter-over-assignment",
+      "confidence": "strong",
+      "reason": "winter-over assignment"
+    },
+    {
+      "id": "rule-long-term-away-assignment",
+      "priority": 5,
+      "patternId": "signal-long-term-away-assignment",
+      "category": "long-term-away-assignment",
+      "confidence": "strong",
+      "reason": "long-term overseas or OCONUS assignment"
+    },
+    {
+      "id": "rule-forward-deployed",
+      "priority": 6,
+      "patternId": "signal-forward-deployed",
+      "category": "forward-deployed",
+      "confidence": "strong",
+      "reason": "forward-deployed assignment"
+    },
+    {
+      "id": "rule-oconus-assignment",
+      "priority": 7,
+      "patternId": "signal-oconus-assignment",
+      "category": "oconus-assignment",
+      "confidence": "strong",
+      "reason": "long-term OCONUS or overseas assignment"
+    },
+    {
+      "id": "rule-rotation",
+      "priority": 8,
+      "patternId": "signal-rotation",
+      "category": "rotation",
+      "confidence": "strong",
+      "reason": "required rotational assignment"
+    },
+    {
+      "id": "rule-temporary-duty",
+      "priority": 9,
+      "patternId": "signal-temporary-duty",
+      "category": "temporary-duty",
+      "confidence": "strong",
+      "reason": "temporary-duty assignment"
+    },
+    {
+      "id": "rule-required-unusual-relocation",
+      "priority": 10,
+      "patternId": "signal-required-unusual-relocation",
+      "category": "required-unusual-relocation",
+      "confidence": "strong",
+      "reason": "required relocation to an unusual location"
+    },
+    {
+      "id": "rule-possible-deployment",
+      "priority": 11,
+      "patternId": "signal-possible-deployment",
+      "category": "possible-deployment",
+      "confidence": "questionable",
+      "reason": "possible deployment"
+    },
+    {
+      "id": "rule-possible-extended-assignment",
+      "priority": 12,
+      "patternId": "signal-possible-extended-assignment",
+      "category": "possible-extended-assignment",
+      "confidence": "questionable",
+      "reason": "possible extended assignment"
+    }
+  ],
+  "destinations": [
+    {
+      "name": "Guam",
+      "patternId": "destination-0",
+      "priority": 0
+    },
+    {
+      "name": "Antarctica",
+      "patternId": "destination-1",
+      "priority": 1
+    },
+    {
+      "name": "Kwajalein",
+      "patternId": "destination-2",
+      "priority": 2
+    },
+    {
+      "name": "Diego Garcia",
+      "patternId": "destination-3",
+      "priority": 3
+    },
+    {
+      "name": "Germany",
+      "patternId": "destination-4",
+      "priority": 4
+    },
+    {
+      "name": "Japan",
+      "patternId": "destination-5",
+      "priority": 5
+    },
+    {
+      "name": "Marshall Islands",
+      "patternId": "destination-6",
+      "priority": 6
+    },
+    {
+      "name": "Iraq",
+      "patternId": "destination-7",
+      "priority": 7
+    },
+    {
+      "name": "Lebanon",
+      "patternId": "destination-8",
+      "priority": 8
+    },
+    {
+      "name": "Kazakhstan",
+      "patternId": "destination-9",
+      "priority": 9
+    },
+    {
+      "name": "Middle East",
+      "patternId": "destination-10",
+      "priority": 10
+    },
+    {
+      "name": "Pacific Islands",
+      "patternId": "destination-11",
+      "priority": 11
+    },
+    {
+      "name": "OCONUS",
+      "patternId": "destination-12",
+      "priority": 12
+    },
+    {
+      "name": "Overseas",
+      "patternId": "destination-13",
+      "priority": 13
+    }
+  ],
+  "duration": {
+    "minimumDays": 28,
+    "category": "extended-away-duration",
+    "confidence": "strong",
+    "reason": "mandatory extended away-from-home assignment",
+    "numbers": {
+      "one": 1,
+      "two": 2,
+      "three": 3,
+      "four": 4,
+      "five": 5,
+      "six": 6,
+      "seven": 7,
+      "eight": 8,
+      "nine": 9,
+      "ten": 10,
+      "eleven": 11,
+      "twelve": 12
+    },
+    "unitPrefixes": {
+      "month": 30,
+      "week": 7
+    },
+    "defaultDaysPerUnit": 1
+  },
+  "summaries": {
+    "explicit-job-location": "Job location is {destination}",
+    "required-deployment": "Deployment required",
+    "recurring-deployment": "Recurring deployment required",
+    "extended-deployment": "Extended site deployment required",
+    "extended-away-duration": "Extended away-from-home assignment required",
+    "winter-over-assignment": "Winter-over assignment required",
+    "long-term-away-assignment": "Long-term overseas assignment required",
+    "forward-deployed": "Forward-deployed assignment required",
+    "oconus-assignment": "Long-term overseas assignment required",
+    "rotation": "Rotational assignment required",
+    "temporary-duty": "Temporary-duty assignment required",
+    "required-unusual-relocation": "Relocation required",
+    "possible-deployment": "Deployment may be required",
+    "possible-extended-assignment": "Extended assignment may be required"
+  },
+  "unspecifiedDestination": "Destination not specified",
+  "strongFallbackSummary": "Deployment or relocation required",
+  "questionableFallbackSummary": "Possible deployment or relocation"
+}

@@ -1,0 +1,1358 @@
+[
+  {
+    "id": "extended-0",
+    "html": "",
+    "expected": {
+      "confidence": "none",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "description-unavailable",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-1",
+    "html": "Build software.",
+    "expected": {
+      "confidence": "none",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-requirement-detected",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-2",
+    "html": "Job location is Guam.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Guam",
+      "summary": "Job location is Guam",
+      "signals": [
+        {
+          "category": "explicit-job-location",
+          "confidence": "strong",
+          "reason": "explicit unusual job location",
+          "evidence": "Job location is Guam"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-3",
+    "html": "Position is located in Germany.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Germany",
+      "summary": "Job location is Germany",
+      "signals": [
+        {
+          "category": "explicit-job-location",
+          "confidence": "strong",
+          "reason": "explicit unusual job location",
+          "evidence": "Position is located in Germany"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-4",
+    "html": "Work will be performed at McMurdo Station.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Antarctica",
+      "summary": "Job location is Antarctica",
+      "signals": [
+        {
+          "category": "explicit-job-location",
+          "confidence": "strong",
+          "reason": "explicit unusual job location",
+          "evidence": "Work will be performed at McMurdo Station"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-5",
+    "html": "Deployment is required.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Destination not specified",
+      "summary": "Deployment required",
+      "signals": [
+        {
+          "category": "required-deployment",
+          "confidence": "strong",
+          "reason": "required deployment",
+          "evidence": "Deployment is required"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-6",
+    "html": "Deployment to Japan is required.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Japan",
+      "summary": "Deployment required",
+      "signals": [
+        {
+          "category": "required-deployment",
+          "confidence": "strong",
+          "reason": "required deployment",
+          "evidence": "Deployment to Japan is required"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-7",
+    "html": "Must deploy overseas.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Overseas",
+      "summary": "Deployment required",
+      "signals": [
+        {
+          "category": "required-deployment",
+          "confidence": "strong",
+          "reason": "required deployment",
+          "evidence": "Must deploy overseas"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-8",
+    "html": "Will deploy to Iraq.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Iraq",
+      "summary": "Deployment required",
+      "signals": [
+        {
+          "category": "required-deployment",
+          "confidence": "strong",
+          "reason": "required deployment",
+          "evidence": "Will deploy to Iraq"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-9",
+    "html": "Employee accepts international deployments.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Destination not specified",
+      "summary": "Deployment required",
+      "signals": [
+        {
+          "category": "required-deployment",
+          "confidence": "strong",
+          "reason": "required deployment",
+          "evidence": "Employee accepts international deployments"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-10",
+    "html": "Remains deployed in Lebanon.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Lebanon",
+      "summary": "Deployment required",
+      "signals": [
+        {
+          "category": "required-deployment",
+          "confidence": "strong",
+          "reason": "required deployment",
+          "evidence": "Remains deployed in Lebanon"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-11",
+    "html": "Deployment-only position.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Destination not specified",
+      "summary": "Deployment required",
+      "signals": [
+        {
+          "category": "required-deployment",
+          "confidence": "strong",
+          "reason": "required deployment",
+          "evidence": "Deployment-only position"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-12",
+    "html": "Employment is only provided during the deployment period.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Destination not specified",
+      "summary": "Deployment required",
+      "signals": [
+        {
+          "category": "required-deployment",
+          "confidence": "strong",
+          "reason": "required deployment",
+          "evidence": "Employment is only provided during the deployment period"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-13",
+    "html": "This position includes an international deployment.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Destination not specified",
+      "summary": "Deployment required",
+      "signals": [
+        {
+          "category": "required-deployment",
+          "confidence": "strong",
+          "reason": "required deployment",
+          "evidence": "This position includes an international deployment"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-14",
+    "html": "Annual deployments to Antarctica.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Antarctica",
+      "summary": "Recurring deployment required",
+      "signals": [
+        {
+          "category": "recurring-deployment",
+          "confidence": "strong",
+          "reason": "recurring overseas or OCONUS deployment",
+          "evidence": "Annual deployments to Antarctica"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-15",
+    "html": "Must be willing and able to deploy internationally.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Destination not specified",
+      "summary": "Extended site deployment required",
+      "signals": [
+        {
+          "category": "extended-deployment",
+          "confidence": "strong",
+          "reason": "extended deployment or site presence",
+          "evidence": "Must be willing and able to deploy internationally"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-16",
+    "html": "Deploy for extended periods.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Destination not specified",
+      "summary": "Extended site deployment required",
+      "signals": [
+        {
+          "category": "extended-deployment",
+          "confidence": "strong",
+          "reason": "extended deployment or site presence",
+          "evidence": "Deploy for extended periods"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-17",
+    "html": "Position requires extended presence in Japan.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Japan",
+      "summary": "Extended site deployment required",
+      "signals": [
+        {
+          "category": "extended-deployment",
+          "confidence": "strong",
+          "reason": "extended deployment or site presence",
+          "evidence": "Position requires extended presence in Japan"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-18",
+    "html": "Winter-over assignment.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Destination not specified",
+      "summary": "Winter-over assignment required",
+      "signals": [
+        {
+          "category": "winter-over-assignment",
+          "confidence": "strong",
+          "reason": "winter-over assignment",
+          "evidence": "Winter-over assignment"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-19",
+    "html": "Long-term overseas assignment.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Overseas",
+      "summary": "Long-term overseas assignment required",
+      "signals": [
+        {
+          "category": "long-term-away-assignment",
+          "confidence": "strong",
+          "reason": "long-term overseas or OCONUS assignment",
+          "evidence": "Long-term overseas assignment"
+        },
+        {
+          "category": "oconus-assignment",
+          "confidence": "strong",
+          "reason": "long-term OCONUS or overseas assignment",
+          "evidence": "Long-term overseas assignment"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-20",
+    "html": "Employee is forward-deployed.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Destination not specified",
+      "summary": "Forward-deployed assignment required",
+      "signals": [
+        {
+          "category": "forward-deployed",
+          "confidence": "strong",
+          "reason": "forward-deployed assignment",
+          "evidence": "Employee is forward-deployed"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-21",
+    "html": "This is an international assignment.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Destination not specified",
+      "summary": "Long-term overseas assignment required",
+      "signals": [
+        {
+          "category": "oconus-assignment",
+          "confidence": "strong",
+          "reason": "long-term OCONUS or overseas assignment",
+          "evidence": "This is an international assignment"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-22",
+    "html": "No remote work; this is an overseas assignment.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Overseas",
+      "summary": "Long-term overseas assignment required",
+      "signals": [
+        {
+          "category": "oconus-assignment",
+          "confidence": "strong",
+          "reason": "long-term OCONUS or overseas assignment",
+          "evidence": "No remote work; this is an overseas assignment"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-23",
+    "html": "Required rotational assignment.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Destination not specified",
+      "summary": "Rotational assignment required",
+      "signals": [
+        {
+          "category": "rotation",
+          "confidence": "strong",
+          "reason": "required rotational assignment",
+          "evidence": "Required rotational assignment"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-24",
+    "html": "90-day rotational assignment.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Destination not specified",
+      "summary": "Rotational assignment required",
+      "signals": [
+        {
+          "category": "rotation",
+          "confidence": "strong",
+          "reason": "required rotational assignment",
+          "evidence": "90-day rotational assignment"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-25",
+    "html": "Works rotational deployments.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Destination not specified",
+      "summary": "Rotational assignment required",
+      "signals": [
+        {
+          "category": "rotation",
+          "confidence": "strong",
+          "reason": "required rotational assignment",
+          "evidence": "Works rotational deployments"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-26",
+    "html": "4 weeks on / 4 weeks off.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Destination not specified",
+      "summary": "Rotational assignment required",
+      "signals": [
+        {
+          "category": "rotation",
+          "confidence": "strong",
+          "reason": "required rotational assignment",
+          "evidence": "4 weeks on / 4 weeks off"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-27",
+    "html": "Temporary duty assignment in Japan.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Japan",
+      "summary": "Temporary-duty assignment required",
+      "signals": [
+        {
+          "category": "temporary-duty",
+          "confidence": "strong",
+          "reason": "temporary-duty assignment",
+          "evidence": "Temporary duty assignment in Japan"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-28",
+    "html": "Must relocate to Guam.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Guam",
+      "summary": "Relocation required",
+      "signals": [
+        {
+          "category": "required-unusual-relocation",
+          "confidence": "strong",
+          "reason": "required relocation to an unusual location",
+          "evidence": "Must relocate to Guam"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-29",
+    "html": "Required to reside at McMurdo Station.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Antarctica",
+      "summary": "Relocation required",
+      "signals": [
+        {
+          "category": "required-unusual-relocation",
+          "confidence": "strong",
+          "reason": "required relocation to an unusual location",
+          "evidence": "Required to reside at McMurdo Station"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-30",
+    "html": "Deployment to Guam may be required.",
+    "expected": {
+      "confidence": "questionable",
+      "destination": "Guam",
+      "summary": "Deployment may be required",
+      "signals": [
+        {
+          "category": "possible-deployment",
+          "confidence": "questionable",
+          "reason": "possible deployment",
+          "evidence": "Deployment to Guam may be required"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-31",
+    "html": "May deploy overseas.",
+    "expected": {
+      "confidence": "none",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-requirement-detected",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-32",
+    "html": "May require an extended assignment.",
+    "expected": {
+      "confidence": "questionable",
+      "destination": "Destination not specified",
+      "summary": "Extended assignment may be required",
+      "signals": [
+        {
+          "category": "possible-extended-assignment",
+          "confidence": "questionable",
+          "reason": "possible extended assignment",
+          "evidence": "May require an extended assignment"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-33",
+    "html": "Prior overseas deployment experience.",
+    "expected": {
+      "confidence": "none",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-requirement-detected",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-34",
+    "html": "Experience supporting operations in Antarctica.",
+    "expected": {
+      "confidence": "none",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-requirement-detected",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-35",
+    "html": "Prior experience; must deploy to Guam.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Guam",
+      "summary": "Deployment required",
+      "signals": [
+        {
+          "category": "required-deployment",
+          "confidence": "strong",
+          "reason": "required deployment",
+          "evidence": "Prior experience; must deploy to Guam"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-36",
+    "html": "Ordinary business travel is required.",
+    "expected": {
+      "confidence": "none",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-requirement-detected",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-37",
+    "html": "Travel 10% for conferences.",
+    "expected": {
+      "confidence": "none",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-requirement-detected",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-38",
+    "html": "May relocate to Florida.",
+    "expected": {
+      "confidence": "none",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-requirement-detected",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-39",
+    "html": "Relocation assistance is available.",
+    "expected": {
+      "confidence": "none",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-requirement-detected",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-40",
+    "html": "No deployment is required.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Destination not specified",
+      "summary": "Deployment required",
+      "signals": [
+        {
+          "category": "required-deployment",
+          "confidence": "strong",
+          "reason": "required deployment",
+          "evidence": "No deployment is required"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-41",
+    "html": "Will not deploy.",
+    "expected": {
+      "confidence": "none",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-requirement-detected",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-42",
+    "html": "No overseas experience required.",
+    "expected": {
+      "confidence": "none",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-requirement-detected",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-43",
+    "html": "Possible rotation opportunity.",
+    "expected": {
+      "confidence": "none",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-requirement-detected",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-44",
+    "html": "Travel expenses reimbursed.",
+    "expected": {
+      "confidence": "none",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-requirement-detected",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-45",
+    "html": "Employee must remain at the customer site for 27 days.",
+    "expected": {
+      "confidence": "none",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-requirement-detected",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-46",
+    "html": "Employee must remain at the customer site for 28 days.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Destination not specified",
+      "summary": "Extended away-from-home assignment required",
+      "signals": [
+        {
+          "category": "extended-away-duration",
+          "confidence": "strong",
+          "reason": "mandatory extended away-from-home assignment",
+          "evidence": "Employee must remain at the customer site for 28 days"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-47",
+    "html": "Employee must remain at the customer site for 29 days.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Destination not specified",
+      "summary": "Extended away-from-home assignment required",
+      "signals": [
+        {
+          "category": "extended-away-duration",
+          "confidence": "strong",
+          "reason": "mandatory extended away-from-home assignment",
+          "evidence": "Employee must remain at the customer site for 29 days"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-48",
+    "html": "Employee must remain at the customer site for 3 weeks.",
+    "expected": {
+      "confidence": "none",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-requirement-detected",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-49",
+    "html": "Employee must remain at the customer site for 4 weeks.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Destination not specified",
+      "summary": "Extended away-from-home assignment required",
+      "signals": [
+        {
+          "category": "extended-away-duration",
+          "confidence": "strong",
+          "reason": "mandatory extended away-from-home assignment",
+          "evidence": "Employee must remain at the customer site for 4 weeks"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-50",
+    "html": "Employee must remain at the customer site for one month.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Destination not specified",
+      "summary": "Extended away-from-home assignment required",
+      "signals": [
+        {
+          "category": "extended-away-duration",
+          "confidence": "strong",
+          "reason": "mandatory extended away-from-home assignment",
+          "evidence": "Employee must remain at the customer site for one month"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-51",
+    "html": "Employee must remain at the customer site for two weeks.",
+    "expected": {
+      "confidence": "none",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-requirement-detected",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-52",
+    "html": "Employee must remain at the customer site for twelve months.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Destination not specified",
+      "summary": "Extended away-from-home assignment required",
+      "signals": [
+        {
+          "category": "extended-away-duration",
+          "confidence": "strong",
+          "reason": "mandatory extended away-from-home assignment",
+          "evidence": "Employee must remain at the customer site for twelve months"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-53",
+    "html": "Employee must remain at the customer site for 1 to 6 months.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Destination not specified",
+      "summary": "Extended away-from-home assignment required",
+      "signals": [
+        {
+          "category": "extended-away-duration",
+          "confidence": "strong",
+          "reason": "mandatory extended away-from-home assignment",
+          "evidence": "Employee must remain at the customer site for 1 to 6 months"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-54",
+    "html": "Employee must remain at the customer site for 14\u201390 days.",
+    "expected": {
+      "confidence": "none",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-requirement-detected",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-55",
+    "html": "Employee must remain at the customer site for 999 days.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Destination not specified",
+      "summary": "Extended away-from-home assignment required",
+      "signals": [
+        {
+          "category": "extended-away-duration",
+          "confidence": "strong",
+          "reason": "mandatory extended away-from-home assignment",
+          "evidence": "Employee must remain at the customer site for 999 days"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-56",
+    "html": "Employee must remain at the customer site for zero months.",
+    "expected": {
+      "confidence": "none",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-requirement-detected",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-57",
+    "html": "Employee must remain at the customer site for 3 years.",
+    "expected": {
+      "confidence": "none",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-requirement-detected",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-58",
+    "html": "Employee may remain at the customer site for 6 months.",
+    "expected": {
+      "confidence": "none",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-requirement-detected",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-59",
+    "html": "Employee may be required to remain at the customer site for 6 months.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Destination not specified",
+      "summary": "Extended away-from-home assignment required",
+      "signals": [
+        {
+          "category": "extended-away-duration",
+          "confidence": "strong",
+          "reason": "mandatory extended away-from-home assignment",
+          "evidence": "Employee may be required to remain at the customer site for 6 months"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-60",
+    "html": "Continuous travel assignments for six months.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Destination not specified",
+      "summary": "Extended away-from-home assignment required",
+      "signals": [
+        {
+          "category": "extended-away-duration",
+          "confidence": "strong",
+          "reason": "mandatory extended away-from-home assignment",
+          "evidence": "Continuous travel assignments for six months"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-61",
+    "html": "Must remain at customer site for 28 days.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Japan",
+      "summary": "Extended away-from-home assignment required",
+      "signals": [
+        {
+          "category": "extended-away-duration",
+          "confidence": "strong",
+          "reason": "mandatory extended away-from-home assignment",
+          "evidence": "Must remain at customer site for 28 days"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Japan",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-62",
+    "html": "Must remain at customer site for 28 days.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Guam",
+      "summary": "Extended away-from-home assignment required",
+      "signals": [
+        {
+          "category": "extended-away-duration",
+          "confidence": "strong",
+          "reason": "mandatory extended away-from-home assignment",
+          "evidence": "Must remain at customer site for 28 days"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": [
+      "Guam"
+    ]
+  },
+  {
+    "id": "extended-63",
+    "html": "Build software.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Antarctica",
+      "summary": "Winter-over assignment required",
+      "signals": [
+        {
+          "category": "winter-over-assignment",
+          "confidence": "strong",
+          "reason": "winter-over assignment",
+          "evidence": "Winter-over Site Manager"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Winter-over Site Manager",
+    "primaryLocation": "Antarctica",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-64",
+    "html": "Build software.",
+    "expected": {
+      "confidence": "none",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-requirement-detected",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Guam",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-65",
+    "html": "\u003Cp\u003EMust deploy to Guam.\u003C/p\u003E\u003Cp\u003EMust relocate to Japan.\u003C/p\u003E\u003Cp\u003EMay deploy overseas.\u003C/p\u003E\u003Cp\u003EMust deploy to Guam.\u003C/p\u003E",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Guam",
+      "summary": "Deployment required",
+      "signals": [
+        {
+          "category": "required-deployment",
+          "confidence": "strong",
+          "reason": "required deployment",
+          "evidence": "Must deploy to Guam"
+        },
+        {
+          "category": "required-unusual-relocation",
+          "confidence": "strong",
+          "reason": "required relocation to an unusual location",
+          "evidence": "Must relocate to Japan"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-66",
+    "html": "Must remain at customer site context context context context context context context context context context context context context context context context context context context context context context context context context context context context context context context context context context context context context context context context context context context context context for 60 days tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail .",
+    "expected": {
+      "confidence": "none",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "no-requirement-detected",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  },
+  {
+    "id": "extended-67",
+    "html": "Job location is Guam. Germany and Japan offices support the project.",
+    "expected": {
+      "confidence": "strong",
+      "destination": "Guam",
+      "summary": "Job location is Guam",
+      "signals": [
+        {
+          "category": "explicit-job-location",
+          "confidence": "strong",
+          "reason": "explicit unusual job location",
+          "evidence": "Job location is Guam"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    },
+    "title": "Engineer",
+    "primaryLocation": "Remote",
+    "additionalLocations": []
+  }
+]
