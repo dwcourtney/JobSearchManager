@@ -4,77 +4,27 @@ using System.Text.RegularExpressions;
 namespace JobSearchManager;
 
 /// <summary>
-/// Conservatively identifies candidate work-authorization and citizenship wording.
-/// Export-control references and uncertain language are review-only by design.
+/// Executes the packaged work-authorization rules without embedded domain vocabulary.
 /// </summary>
 public sealed class WorkAuthorizationDetector
 {
     public const int CurrentAnalysisVersion = 4;
-    private static readonly TimeSpan RegexTimeout = TimeSpan.FromMilliseconds(250);
-
-    private static readonly Regex CitizenOrResident = Pattern(
-        @"\b(?:u\.?s\.?|united states)\s+citizen\s+(?:or|and/or)\s+(?:an?\s+)?(?:(?:u\.?s\.?|united states)\s+)?(?:lawful\s+)?permanent\s+resident|" +
-        @"\b(?:u\.?s\.?|united states)\s+(?:citizen(?:ship)?|national)\b.{0,55}\b(?:or|and/or)\b.{0,35}(?:an?\s+)?(?:(?:u\.?s\.?|united states)\s+)?(?:lawful\s+)?permanent\s+resident|" +
-        @"\b(?:u\.?s\.?|united states)\s+(?:citizen(?:ship)?|national)\b.{0,55}\bgreen\s+card\b|" +
-        @"\b(?:u\.?s\.?|united states)\s+citizenship\b.{0,20}\bor\b.{0,20}\b(?:u\.?s\.?|united states)\s+permanency\b|" +
-        @"\b(?:citizen(?:ship)?\s+or\s+(?:u\.?s\.?\s+)?permanent\s+resident)\b");
-    private static readonly Regex UsCitizen = Pattern(
-        @"\b(?:must|shall|need(?:s)?\s+to|required\s+to)\s+be\s+(?:an?\s+)?(?:u\.?s\.?|united states)\s+citizen\b|" +
-        @"\b(?:u\.?s\.?|united states)\s+citizenship\b.{0,45}\b(?:is\s+)?(?:required|mandatory|must)\b|" +
-        @"\b(?:requires?|requirement)\b.{0,45}\b(?:u\.?s\.?|united states)\s+citizenship\b|" +
-        @"\bcandidate\b.{0,45}\b(?:u\.?s\.?|united states)\s+citizen\b");
-    private static readonly Regex AustralianCitizen = Pattern(
-        @"\b(?:must|shall|need(?:s)?\s+to|required\s+to)\s+be\s+(?:an?\s+)?australian\s+citizen\b|" +
-        @"\baustralian\s+citizenship\b.{0,45}\b(?:required|mandatory)\b|" +
-        @"\brequires?\b.{0,45}\baustralian\s+citizen\b");
-    private static readonly Regex PreferredUsCitizen = Pattern(
-        @"\b(?:u\.?s\.?|united states)\s+(?:citizen|citizenship)\b.{0,35}\b(?:preferred|desired|ideally)\b|" +
-        @"\b(?:preferred|desired|ideally)\b.{0,35}\b(?:u\.?s\.?|united states)\s+(?:citizen|citizenship)\b|" +
-        @"\bshould\s+(?:ideally\s+)?be\s+(?:an?\s+)?(?:u\.?s\.?|united states)\s+citizen\b");
-    private static readonly Regex PreferredAustralianCitizen = Pattern(
-        @"\baustralian\s+(?:citizen|citizenship)\b.{0,35}\b(?:preferred|desired|ideally)\b|" +
-        @"\b(?:preferred|desired|ideally)\b.{0,35}\baustralian\s+(?:citizen|citizenship)\b");
-    private static readonly Regex UsWorkAuthorized = Pattern(
-        @"\b(?:must\s+be|are)\s+(?:legally\s+)?authorized\s+to\s+work\s+in\s+the\s+(?:u\.?s\.?|united states)\b|" +
-        @"\b(?:legal\s+)?(?:right|authorization)\s+to\s+work\s+in\s+the\s+(?:u\.?s\.?|united states)\b");
-    private static readonly Regex LocationWorkAuthorized = Pattern(
-        @"\bvalid\s+work(?:ing)?\s+rights?\s+for\s+the\s+(?:role|job)\s+location\b|" +
-        @"\b(?:must\s+(?:have|hold)|required\s+to\s+have|valid|existing|unrestricted)\b.{0,35}" +
-        @"\b(?:legal\s+)?(?:right|rights|authori[sz]ation)\s+to\s+work\s+in\s+(?:the\s+)?[A-Za-z][A-Za-z .'-]{1,40}\b");
-    private static readonly Regex NoEmploymentSponsorship = Pattern(
-        @"\b(?:will|does|do|can)\s+not\s+(?:provide|offer)?\s*(?:employment\s+visa\s+|employment\s+|visa\s+|work(?:\s+authorization)?\s+)?sponsorship\b|" +
-        @"\b(?:employer|company|we)\s+will\s+not\s+sponsor\s+(?:applicants?|candidates?|individuals?)\b.{0,80}\b(?:employment\s+)?visa\s+status\b|" +
-        @"\bnot\s+(?:be\s+)?require(?:d)?\s+(?:employment\s+|visa\s+|work(?:\s+authorization)?\s+)?sponsorship\b|" +
-        @"\bwithout\s+(?:current\s+or\s+future\s+)?(?:employment\s+|visa\s+)?sponsorship\b|" +
-        @"\bno\s+(?:employment\s+|visa\s+|work(?:\s+authorization)?\s+)?sponsorship\b|" +
-        @"\bsponsorship\s+for\s+(?:u\.?s\.?\s+)?employment\s+authorization\s+is\s+not\s+available\b");
-    private static readonly Regex UsPerson = Pattern(@"\b(?:u\.?s\.?|united states)\s+person\b");
-    private static readonly Regex CandidateContext = Pattern(
-        @"\b(?:candidate|applicant|employee|individual|personnel|must|required|requirement|eligible|qualification)\b");
-    private static readonly Regex CandidateUsPersonPredicate = Pattern(
-        @"\b(?:be|are)\b.{0,35}\b(?:u\.?s\.?|united states)\s+person\b");
-    private static readonly Regex InformationContext = Pattern(
-        @"\b(?:information|data|communications?|queries|identit(?:y|ies)|privacy|surveillance)\b");
-    private static readonly Regex GenericCitizenship = Pattern(
-        @"\bcitizenship\b.{0,25}\b(?:required|mandatory)\b|\b(?:required|mandatory)\s+citizenship\b");
-    private static readonly Regex ExportControl = Pattern(
-        @"\b(?:ITAR|EAR|export\s+control(?:led|s)?|international\s+traffic\s+in\s+arms\s+regulations?)\b");
-    private static readonly Regex RequiredHeading = Pattern(
-        @"^(?:basic|required|minimum|mandatory|essential)\s+(?:qualifications?|requirements?|criteria)\s*:?$");
-    private static readonly Regex PreferredHeading = Pattern(
-        @"^(?:preferred|desired)\s+(?:qualifications?|requirements?|criteria)\s*:?$");
-    private static readonly Regex BareUsCitizen = Pattern(
-        @"^(?:an?\s+)?(?:u\.?s\.?|united states)\s+(?:citizen|citizenship)\s*\.?$");
-    private static readonly Regex BareAustralianCitizen = Pattern(
-        @"^(?:an?\s+)?australian\s+(?:citizen|citizenship)\s*\.?$");
-    private static readonly Regex Conditional = Pattern(
-        @"\b(?:may|might|could)\b.{0,35}\b(?:need|required|requirement|limitation)\b|\bin\s+certain\s+circumstances\b");
+    private readonly WorkAuthorizationRules rules;
+    public WorkAuthorizationDetector() : this(WorkAuthorizationRules.Default) { }
+    internal WorkAuthorizationDetector(WorkAuthorizationRules rules) => this.rules = rules;
 
     public WorkAuthorizationAnalysis Analyze(string descriptionHtml)
     {
-        if (string.IsNullOrWhiteSpace(descriptionHtml)) return NoneSpecified();
+        try { return Execute(descriptionHtml); }
+        catch (RegexMatchTimeoutException ex)
+        {
+            throw new InvalidOperationException($"Work-authorization rules {rules.Version} ({rules.Fingerprint}) exceeded the {rules.Rules.RegexTimeoutMilliseconds}ms regex timeout.", ex);
+        }
+    }
 
-        var segments = Segments(descriptionHtml).ToArray();
+    private WorkAuthorizationAnalysis Execute(string descriptionHtml)
+    {
+        if (string.IsNullOrWhiteSpace(descriptionHtml)) return NoneSpecified();
         var evidence = new List<string>();
         var eligibility = "noneSpecified";
         var sponsorship = "noneSpecified";
@@ -83,135 +33,59 @@ public sealed class WorkAuthorizationDetector
         string? countryCode = null;
         var sectionContext = "mentioned";
 
-        foreach (var segment in segments)
+        foreach (var segment in Segments(descriptionHtml))
         {
-            if (RequiredHeading.IsMatch(segment))
+            var section = rules.Rules.SectionRules.FirstOrDefault(rule => rules.Pattern(rule.PatternId).IsMatch(segment));
+            if (section is not null)
             {
-                sectionContext = "strict";
+                sectionContext = section.Result;
                 continue;
             }
-            if (PreferredHeading.IsMatch(segment))
+            foreach (var rule in rules.Rules.SponsorshipRules)
             {
-                sectionContext = "preferred";
-                continue;
+                var match = rules.Pattern(rule.PatternId).Match(segment);
+                if (!match.Success || rule.UnlessPatternIds.Any(id => rules.Pattern(id).IsMatch(segment))) continue;
+                sponsorship = rule.Result;
+                sponsorshipStrength = rule.Strength;
+                evidence.Add(Evidence(segment, match.Index));
             }
-            if (NoEmploymentSponsorship.IsMatch(segment) &&
-                !Regex.IsMatch(segment, @"\b(?:clearance|training|SOFA|command[- ]sponsor|enterprise\s+PKI)\b",
-                    RegexOptions.IgnoreCase, RegexTimeout))
+            foreach (var rule in rules.Rules.EligibilityRules)
             {
-                sponsorship = "notAvailable";
-                sponsorshipStrength = "strict";
-                evidence.Add(Evidence(segment, NoEmploymentSponsorship.Match(segment).Index));
-            }
+                var match = rules.Pattern(rule.PatternId).Match(segment);
+                if (!match.Success || (rule.OnlyWhenUnset && eligibility != "noneSpecified") ||
+                    (rule.AnyPatternIds.Length > 0 && !rule.AnyPatternIds.Any(id => rules.Pattern(id).IsMatch(segment))) ||
+                    rule.UnlessPatternIds.Any(id => rules.Pattern(id).IsMatch(segment))) continue;
 
-            if (UsPerson.IsMatch(segment) &&
-                (CandidateContext.IsMatch(segment) || CandidateUsPersonPredicate.IsMatch(segment)) &&
-                !InformationContext.IsMatch(segment))
-            {
-                eligibility = "usPerson";
-                countryCode = "US";
-                strength = "ambiguous";
-                evidence.Add(Evidence(segment, UsPerson.Match(segment).Index));
-            }
-            else if (CitizenOrResident.IsMatch(segment))
-            {
-                SetEligibility("usCitizenOrPermanentResident", "US", segment, CitizenOrResident.Match(segment).Index);
-            }
-            else if (UsCitizen.IsMatch(segment))
-            {
-                SetEligibility("usCitizen", "US", segment, UsCitizen.Match(segment).Index);
-            }
-            else if (AustralianCitizen.IsMatch(segment))
-            {
-                SetEligibility("australianCitizen", "AU", segment, AustralianCitizen.Match(segment).Index);
-            }
-            else if (UsWorkAuthorized.IsMatch(segment))
-            {
-                SetEligibility("usWorkAuthorized", "US", segment, UsWorkAuthorized.Match(segment).Index);
-            }
-            else if (LocationWorkAuthorized.IsMatch(segment))
-            {
-                eligibility = "locationWorkAuthorized";
-                strength = "strict";
-                evidence.Add(Evidence(segment, LocationWorkAuthorized.Match(segment).Index));
-            }
-            else if (PreferredUsCitizen.IsMatch(segment))
-            {
-                SetEligibility("usCitizen", "US", segment, PreferredUsCitizen.Match(segment).Index, "preferred");
-            }
-            else if (PreferredAustralianCitizen.IsMatch(segment))
-            {
-                SetEligibility("australianCitizen", "AU", segment,
-                    PreferredAustralianCitizen.Match(segment).Index, "preferred");
-            }
-            else if (BareUsCitizen.IsMatch(segment))
-            {
-                SetEligibility("usCitizen", "US", segment, 0,
-                    sectionContext == "preferred" ? "preferred" : "strict");
-            }
-            else if (BareAustralianCitizen.IsMatch(segment))
-            {
-                SetEligibility("australianCitizen", "AU", segment, 0,
-                    sectionContext == "preferred" ? "preferred" : "strict");
-            }
-            else if (GenericCitizenship.IsMatch(segment))
-            {
-                eligibility = eligibility == "noneSpecified" ? "ambiguousCitizenship" : eligibility;
-                strength = "ambiguous";
-                evidence.Add(Evidence(segment, GenericCitizenship.Match(segment).Index));
-            }
-            else if (ExportControl.IsMatch(segment) && eligibility == "noneSpecified")
-            {
-                eligibility = "exportControlled";
-                strength = Conditional.IsMatch(segment) ? "customerDependent" : "mentioned";
-                evidence.Add(Evidence(segment, ExportControl.Match(segment).Index));
+                // A recognized branch consumes this segment even if its first-specific guard declines it.
+                if (rule.Application == "firstSpecific" && eligibility is not ("noneSpecified" or "exportControlled")) break;
+                if (rule.Application != "fillUnset" || eligibility == "noneSpecified") eligibility = rule.Result;
+                if (rule.CountryCode is not null) countryCode = rule.CountryCode;
+                strength = rule.Strength == "section" ? sectionContext == "preferred" ? "preferred" : "strict" : rule.Strength;
+                if (rule.ConditionalPatternId is not null && rules.Pattern(rule.ConditionalPatternId).IsMatch(segment))
+                    strength = rule.ConditionalStrength!;
+                evidence.Add(Evidence(segment, rule.EvidenceIndex == "segmentStart" ? 0 : match.Index));
+                break;
             }
         }
-
         if (eligibility == "noneSpecified" && sponsorship == "noneSpecified") return NoneSpecified();
-        return new WorkAuthorizationAnalysis(
-            eligibility,
-            sponsorship,
-            strength,
-            sponsorshipStrength,
-            countryCode,
+        return new WorkAuthorizationAnalysis(eligibility, sponsorship, strength, sponsorshipStrength, countryCode,
             evidence.Distinct(StringComparer.OrdinalIgnoreCase).Take(6).ToArray(),
-            strength is "strict" or "preferred" || sponsorshipStrength == "strict"
-                ? "parsed"
-                : "review",
+            strength is "strict" or "preferred" || sponsorshipStrength == "strict" ? "parsed" : "review",
             CurrentAnalysisVersion);
-
-        void SetEligibility(
-            string value,
-            string country,
-            string segment,
-            int matchIndex,
-            string detectedStrength = "strict")
-        {
-            if (eligibility != "noneSpecified" && eligibility != "exportControlled") return;
-            eligibility = value;
-            countryCode = country;
-            strength = detectedStrength;
-            evidence.Add(Evidence(segment, matchIndex));
-        }
     }
 
-    public JobRecord AnalyzeJob(JobRecord job) => job with
-    {
-        WorkAuthorization = Analyze(job.DescriptionHtml)
-    };
+    public JobRecord AnalyzeJob(JobRecord job) => job with { WorkAuthorization = Analyze(job.DescriptionHtml) };
 
-    private static IEnumerable<string> Segments(string html)
+    private IEnumerable<string> Segments(string html)
     {
+        var timeout = TimeSpan.FromMilliseconds(rules.Rules.RegexTimeoutMilliseconds);
         var blockSeparated = Regex.Replace(html,
-            @"</?(?:p|div|li|ul|ol|h[1-6]|br|section|article)[^>]*>", "\n",
-            RegexOptions.IgnoreCase, RegexTimeout);
-        var plain = WebUtility.HtmlDecode(Regex.Replace(blockSeparated, "<[^>]+>", " ",
-            RegexOptions.Singleline, RegexTimeout));
-        // Prevent sentence splitting inside the common U.S. abbreviation.
-        plain = Regex.Replace(plain, @"\bU\.\s*S\.?", "US", RegexOptions.IgnoreCase, RegexTimeout);
-        return Regex.Split(plain, @"(?:\r?\n)+|(?<=[.!?;])\s+(?=[A-Z])", RegexOptions.None, RegexTimeout)
-            .Select(value => Regex.Replace(value, @"\s+", " ").Trim())
+            @"</?(?:p|div|li|ul|ol|h[1-6]|br|section|article)[^>]*>", "\n", RegexOptions.IgnoreCase, timeout);
+        var plain = WebUtility.HtmlDecode(Regex.Replace(blockSeparated, "<[^>]+>", " ", RegexOptions.Singleline, timeout));
+        foreach (var normalization in rules.Rules.Normalizations)
+            plain = rules.Pattern(normalization.PatternId).Replace(plain, normalization.Replacement);
+        return Regex.Split(plain, @"(?:\r?\n)+|(?<=[.!?;])\s+(?=[A-Z])", RegexOptions.None, timeout)
+            .Select(value => Regex.Replace(value, @"\s+", " ", RegexOptions.None, timeout).Trim())
             .Where(value => value.Length > 0);
     }
 
@@ -225,9 +99,4 @@ public sealed class WorkAuthorizationDetector
 
     private static WorkAuthorizationAnalysis NoneSpecified() => new(
         "noneSpecified", "noneSpecified", "none", "none", null, [], "not-mentioned", CurrentAnalysisVersion);
-
-    private static Regex Pattern(string pattern) => new(
-        pattern,
-        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled,
-        RegexTimeout);
 }

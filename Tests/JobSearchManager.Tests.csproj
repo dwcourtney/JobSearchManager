@@ -11,4 +11,5 @@
   </ItemGroup>
   <ItemGroup><Compile Remove="CheapRejectRuleTests.cs;CheapTriageShadowTests.cs;HumanReviewTests.cs;MaintenanceDetectionTests.cs" /></ItemGroup>
   <ItemGroup><None Update="clearance-fixtures.json" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
+  <ItemGroup><None Update="work-authorization-fixtures.json" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
 </Project>

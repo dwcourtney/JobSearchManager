@@ -12,6 +12,18 @@ using System.Net.Mail;
 using System.Security.Claims;
 using JobSearchManager;
 
+if (args is ["--work-authorization-parity", var authorizationInput, var authorizationOutput])
+{
+    WorkAuthorizationMigrationTests.Compare(authorizationInput, authorizationOutput);
+    return;
+}
+
+if (args is ["--freeze-work-authorization-fixtures", var authorizationFixtures])
+{
+    WorkAuthorizationMigrationTests.Freeze(authorizationFixtures);
+    return;
+}
+
 if (args is ["--clearance-parity", var clearanceInput, var clearanceOutput])
 {
     ClearanceMigrationTests.Compare(clearanceInput, clearanceOutput);
@@ -395,6 +407,8 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Academic detector recognizes advanced master's-or-higher wording", TestAdvancedDegreeAsync),
     ("Academic detector separates strict minimums from preferred higher degrees", TestAcademicPreferenceSeparationAsync),
     ("Academic detector treats ABET as accreditation", TestAbetAccreditationAsync),
+    ("Work authorization frozen behavior parity", WorkAuthorizationMigrationTests.RunAsync),
+    ("Work authorization rules validate configuration and bound matching", WorkAuthorizationMigrationTests.ValidationAsync),
     ("Work authorization detector recognizes strict U.S. citizenship", TestUsCitizenshipAsync),
     ("Work authorization detector distinguishes citizens and permanent residents", TestCitizenOrResidentAsync),
     ("Work authorization detector recognizes employment sponsorship", TestSponsorshipAsync),

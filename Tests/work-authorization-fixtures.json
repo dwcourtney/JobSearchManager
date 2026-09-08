@@ -1,0 +1,1204 @@
+[
+  {
+    "id": "empty",
+    "html": "",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "noneSpecified",
+      "strength": "none",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [],
+      "parseStatus": "not-mentioned",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "blank",
+    "html": "  ",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "noneSpecified",
+      "strength": "none",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [],
+      "parseStatus": "not-mentioned",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "ordinary",
+    "html": "Build cloud software and improve reliability.",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "noneSpecified",
+      "strength": "none",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [],
+      "parseStatus": "not-mentioned",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "us-required",
+    "html": "Must be a U.S. citizen.",
+    "expected": {
+      "eligibility": "usCitizen",
+      "sponsorship": "noneSpecified",
+      "strength": "strict",
+      "sponsorshipStrength": "none",
+      "countryCode": "US",
+      "evidence": [
+        "Must be a US citizen."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "us-mandatory",
+    "html": "United States citizenship is mandatory.",
+    "expected": {
+      "eligibility": "usCitizen",
+      "sponsorship": "noneSpecified",
+      "strength": "strict",
+      "sponsorshipStrength": "none",
+      "countryCode": "US",
+      "evidence": [
+        "United States citizenship is mandatory."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "us-candidate",
+    "html": "The candidate must be a United States citizen.",
+    "expected": {
+      "eligibility": "usCitizen",
+      "sponsorship": "noneSpecified",
+      "strength": "strict",
+      "sponsorshipStrength": "none",
+      "countryCode": "US",
+      "evidence": [
+        "The candidate must be a United States citizen."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "us-bare",
+    "html": "U.S. citizen",
+    "expected": {
+      "eligibility": "usCitizen",
+      "sponsorship": "noneSpecified",
+      "strength": "strict",
+      "sponsorshipStrength": "none",
+      "countryCode": "US",
+      "evidence": [
+        "US citizen"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "us-preferred",
+    "html": "U.S. citizenship preferred.",
+    "expected": {
+      "eligibility": "usCitizen",
+      "sponsorship": "noneSpecified",
+      "strength": "preferred",
+      "sponsorshipStrength": "none",
+      "countryCode": "US",
+      "evidence": [
+        "US citizenship preferred."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "us-should",
+    "html": "Should ideally be a U.S. citizen.",
+    "expected": {
+      "eligibility": "usCitizen",
+      "sponsorship": "noneSpecified",
+      "strength": "preferred",
+      "sponsorshipStrength": "none",
+      "countryCode": "US",
+      "evidence": [
+        "Should ideally be a US citizen."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "us-preferred-required",
+    "html": "Candidate must be a U.S. citizen, preferred.",
+    "expected": {
+      "eligibility": "usCitizen",
+      "sponsorship": "noneSpecified",
+      "strength": "strict",
+      "sponsorshipStrength": "none",
+      "countryCode": "US",
+      "evidence": [
+        "Candidate must be a US citizen, preferred."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "us-resident",
+    "html": "Must be a U.S. citizen or lawful permanent resident.",
+    "expected": {
+      "eligibility": "usCitizenOrPermanentResident",
+      "sponsorship": "noneSpecified",
+      "strength": "strict",
+      "sponsorshipStrength": "none",
+      "countryCode": "US",
+      "evidence": [
+        "Must be a US citizen or lawful permanent resident."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "green-card",
+    "html": "U.S. citizenship or a green card is required.",
+    "expected": {
+      "eligibility": "usCitizenOrPermanentResident",
+      "sponsorship": "noneSpecified",
+      "strength": "strict",
+      "sponsorshipStrength": "none",
+      "countryCode": "US",
+      "evidence": [
+        "US citizenship or a green card is required."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "resident-alone",
+    "html": "Must be a lawful permanent resident.",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "noneSpecified",
+      "strength": "none",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [],
+      "parseStatus": "not-mentioned",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "green-card-alone",
+    "html": "Green card holders may apply.",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "noneSpecified",
+      "strength": "none",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [],
+      "parseStatus": "not-mentioned",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "permanency",
+    "html": "U.S. citizenship or U.S. permanency required.",
+    "expected": {
+      "eligibility": "usCitizenOrPermanentResident",
+      "sponsorship": "noneSpecified",
+      "strength": "strict",
+      "sponsorshipStrength": "none",
+      "countryCode": "US",
+      "evidence": [
+        "US citizenship or US permanency required."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "au-required",
+    "html": "Must be an Australian citizen.",
+    "expected": {
+      "eligibility": "australianCitizen",
+      "sponsorship": "noneSpecified",
+      "strength": "strict",
+      "sponsorshipStrength": "none",
+      "countryCode": "AU",
+      "evidence": [
+        "Must be an Australian citizen."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "au-preferred",
+    "html": "Australian citizenship preferred.",
+    "expected": {
+      "eligibility": "australianCitizen",
+      "sponsorship": "noneSpecified",
+      "strength": "preferred",
+      "sponsorshipStrength": "none",
+      "countryCode": "AU",
+      "evidence": [
+        "Australian citizenship preferred."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "au-bare",
+    "html": "Australian citizenship",
+    "expected": {
+      "eligibility": "australianCitizen",
+      "sponsorship": "noneSpecified",
+      "strength": "strict",
+      "sponsorshipStrength": "none",
+      "countryCode": "AU",
+      "evidence": [
+        "Australian citizenship"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "generic",
+    "html": "Citizenship required.",
+    "expected": {
+      "eligibility": "ambiguousCitizenship",
+      "sponsorship": "noneSpecified",
+      "strength": "ambiguous",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [
+        "Citizenship required."
+      ],
+      "parseStatus": "review",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "generic-preferred",
+    "html": "Citizenship preferred.",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "noneSpecified",
+      "strength": "none",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [],
+      "parseStatus": "not-mentioned",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "us-person",
+    "html": "Applicants must be a U.S. person.",
+    "expected": {
+      "eligibility": "usPerson",
+      "sponsorship": "noneSpecified",
+      "strength": "ambiguous",
+      "sponsorshipStrength": "none",
+      "countryCode": "US",
+      "evidence": [
+        "Applicants must be a US person."
+      ],
+      "parseStatus": "review",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "us-person-predicate",
+    "html": "You are a U.S. person.",
+    "expected": {
+      "eligibility": "usPerson",
+      "sponsorship": "noneSpecified",
+      "strength": "ambiguous",
+      "sponsorshipStrength": "none",
+      "countryCode": "US",
+      "evidence": [
+        "You are a US person."
+      ],
+      "parseStatus": "review",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "us-person-bare",
+    "html": "U.S. person",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "noneSpecified",
+      "strength": "none",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [],
+      "parseStatus": "not-mentioned",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "us-person-information",
+    "html": "Applicants must protect U.S. person information.",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "noneSpecified",
+      "strength": "none",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [],
+      "parseStatus": "not-mentioned",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "us-person-data",
+    "html": "Protect U.S. person data under FISA.",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "noneSpecified",
+      "strength": "none",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [],
+      "parseStatus": "not-mentioned",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "work-us",
+    "html": "Must be legally authorized to work in the United States.",
+    "expected": {
+      "eligibility": "usWorkAuthorized",
+      "sponsorship": "noneSpecified",
+      "strength": "strict",
+      "sponsorshipStrength": "none",
+      "countryCode": "US",
+      "evidence": [
+        "Must be legally authorized to work in the United States."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "work-right",
+    "html": "Legal right to work in the U.S.",
+    "expected": {
+      "eligibility": "usWorkAuthorized",
+      "sponsorship": "noneSpecified",
+      "strength": "strict",
+      "sponsorshipStrength": "none",
+      "countryCode": "US",
+      "evidence": [
+        "Legal right to work in the US"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "location-right",
+    "html": "Valid work rights for the role location (no sponsorship available).",
+    "expected": {
+      "eligibility": "locationWorkAuthorized",
+      "sponsorship": "notAvailable",
+      "strength": "strict",
+      "sponsorshipStrength": "strict",
+      "countryCode": null,
+      "evidence": [
+        "Valid work rights for the role location (no sponsorship available)."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "location-country",
+    "html": "Must have authorization to work in Australia.",
+    "expected": {
+      "eligibility": "locationWorkAuthorized",
+      "sponsorship": "noneSpecified",
+      "strength": "strict",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [
+        "Must have authorization to work in Australia."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "sponsor-offer",
+    "html": "Visa sponsorship is available.",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "noneSpecified",
+      "strength": "none",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [],
+      "parseStatus": "not-mentioned",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "sponsor-can",
+    "html": "We can sponsor employment visas.",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "noneSpecified",
+      "strength": "none",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [],
+      "parseStatus": "not-mentioned",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "sponsor-not",
+    "html": "We will not provide employment visa sponsorship.",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "notAvailable",
+      "strength": "none",
+      "sponsorshipStrength": "strict",
+      "countryCode": null,
+      "evidence": [
+        "We will not provide employment visa sponsorship."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "sponsor-none",
+    "html": "No sponsorship available.",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "notAvailable",
+      "strength": "none",
+      "sponsorshipStrength": "strict",
+      "countryCode": null,
+      "evidence": [
+        "No sponsorship available."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "sponsor-future",
+    "html": "Must work without current or future visa sponsorship.",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "notAvailable",
+      "strength": "none",
+      "sponsorshipStrength": "strict",
+      "countryCode": null,
+      "evidence": [
+        "Must work without current or future visa sponsorship."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "sponsor-require",
+    "html": "Applicants must not require employment sponsorship.",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "notAvailable",
+      "strength": "none",
+      "sponsorshipStrength": "strict",
+      "countryCode": null,
+      "evidence": [
+        "Applicants must not require employment sponsorship."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "sponsor-status",
+    "html": "The employer will not sponsor candidates for employment visa status.",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "notAvailable",
+      "strength": "none",
+      "sponsorshipStrength": "strict",
+      "countryCode": null,
+      "evidence": [
+        "The employer will not sponsor candidates for employment visa status."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "sponsor-authorization",
+    "html": "Sponsorship for U.S. employment authorization is not available.",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "notAvailable",
+      "strength": "none",
+      "sponsorshipStrength": "strict",
+      "countryCode": null,
+      "evidence": [
+        "Sponsorship for US employment authorization is not available."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "sponsor-neither",
+    "html": "We do not offer sponsorship now or in the future.",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "notAvailable",
+      "strength": "none",
+      "sponsorshipStrength": "strict",
+      "countryCode": null,
+      "evidence": [
+        "We do not offer sponsorship now or in the future."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "sponsor-h1b",
+    "html": "We offer H-1B visa sponsorship.",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "noneSpecified",
+      "strength": "none",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [],
+      "parseStatus": "not-mentioned",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "sponsor-opt",
+    "html": "OPT and STEM OPT applicants are welcome.",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "noneSpecified",
+      "strength": "none",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [],
+      "parseStatus": "not-mentioned",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "visa-restriction",
+    "html": "No H-1B sponsorship.",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "noneSpecified",
+      "strength": "none",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [],
+      "parseStatus": "not-mentioned",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "sponsor-training",
+    "html": "No sponsorship for training.",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "noneSpecified",
+      "strength": "none",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [],
+      "parseStatus": "not-mentioned",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "sponsor-clearance",
+    "html": "No sponsorship for clearance.",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "noneSpecified",
+      "strength": "none",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [],
+      "parseStatus": "not-mentioned",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "sponsor-sofa",
+    "html": "No sponsorship for SOFA.",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "noneSpecified",
+      "strength": "none",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [],
+      "parseStatus": "not-mentioned",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "sponsor-command",
+    "html": "No command-sponsor sponsorship.",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "noneSpecified",
+      "strength": "none",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [],
+      "parseStatus": "not-mentioned",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "sponsor-pki",
+    "html": "No sponsorship for enterprise PKI.",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "noneSpecified",
+      "strength": "none",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [],
+      "parseStatus": "not-mentioned",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "sponsor-charity",
+    "html": "No sponsorship of charity events.",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "notAvailable",
+      "strength": "none",
+      "sponsorshipStrength": "strict",
+      "countryCode": null,
+      "evidence": [
+        "No sponsorship of charity events."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "citizen-developer",
+    "html": "Support the citizen developer community.",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "noneSpecified",
+      "strength": "none",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [],
+      "parseStatus": "not-mentioned",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "resident-engineer",
+    "html": "The resident engineer supports a permanent position.",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "noneSpecified",
+      "strength": "none",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [],
+      "parseStatus": "not-mentioned",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "export-itar",
+    "html": "This role is subject to ITAR.",
+    "expected": {
+      "eligibility": "exportControlled",
+      "sponsorship": "noneSpecified",
+      "strength": "mentioned",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [
+        "This role is subject to ITAR."
+      ],
+      "parseStatus": "review",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "export-ear",
+    "html": "EAR export controls apply.",
+    "expected": {
+      "eligibility": "exportControlled",
+      "sponsorship": "noneSpecified",
+      "strength": "mentioned",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [
+        "EAR export controls apply."
+      ],
+      "parseStatus": "review",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "export-conditional",
+    "html": "Applicants may need to meet International Traffic in Arms Regulations requirements.",
+    "expected": {
+      "eligibility": "exportControlled",
+      "sponsorship": "noneSpecified",
+      "strength": "customerDependent",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [
+        "Applicants may need to meet International Traffic in Arms Regulations requirements."
+      ],
+      "parseStatus": "review",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "export-circumstances",
+    "html": "In certain circumstances export control limitations apply.",
+    "expected": {
+      "eligibility": "exportControlled",
+      "sponsorship": "noneSpecified",
+      "strength": "customerDependent",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [
+        "In certain circumstances export control limitations apply."
+      ],
+      "parseStatus": "review",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "negative-citizen",
+    "html": "U.S. citizenship is not required.",
+    "expected": {
+      "eligibility": "usCitizen",
+      "sponsorship": "noneSpecified",
+      "strength": "strict",
+      "sponsorshipStrength": "none",
+      "countryCode": "US",
+      "evidence": [
+        "US citizenship is not required."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "mixed-sponsor",
+    "html": "Must be a U.S. citizen. We will not offer sponsorship.",
+    "expected": {
+      "eligibility": "usCitizen",
+      "sponsorship": "notAvailable",
+      "strength": "strict",
+      "sponsorshipStrength": "strict",
+      "countryCode": "US",
+      "evidence": [
+        "Must be a US citizen.",
+        "We will not offer sponsorship."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "mixed-available",
+    "html": "Visa sponsorship is available. No sponsorship available.",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "notAvailable",
+      "strength": "none",
+      "sponsorshipStrength": "strict",
+      "countryCode": null,
+      "evidence": [
+        "No sponsorship available."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "segments-html",
+    "html": "\u003Ch3\u003EPreferred Qualifications\u003C/h3\u003E\u003Cp\u003EU.S. citizenship\u003C/p\u003E",
+    "expected": {
+      "eligibility": "usCitizen",
+      "sponsorship": "noneSpecified",
+      "strength": "preferred",
+      "sponsorshipStrength": "none",
+      "countryCode": "US",
+      "evidence": [
+        "US citizenship"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "heading-required",
+    "html": "\u003Ch3\u003ERequired Qualifications\u003C/h3\u003E\u003Cp\u003EAustralian citizenship\u003C/p\u003E",
+    "expected": {
+      "eligibility": "australianCitizen",
+      "sponsorship": "noneSpecified",
+      "strength": "strict",
+      "sponsorshipStrength": "none",
+      "countryCode": "AU",
+      "evidence": [
+        "Australian citizenship"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "heading-reset",
+    "html": "\u003Ch3\u003EPreferred Qualifications\u003C/h3\u003E\u003Ch3\u003EBasic Requirements\u003C/h3\u003E\u003Cp\u003EU.S. citizen\u003C/p\u003E",
+    "expected": {
+      "eligibility": "usCitizen",
+      "sponsorship": "noneSpecified",
+      "strength": "strict",
+      "sponsorshipStrength": "none",
+      "countryCode": "US",
+      "evidence": [
+        "US citizen"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "html-entities",
+    "html": "\u003Cp\u003EMust be a U.S.\u0026nbsp;citizen.\u003C/p\u003E",
+    "expected": {
+      "eligibility": "usCitizen",
+      "sponsorship": "noneSpecified",
+      "strength": "strict",
+      "sponsorshipStrength": "none",
+      "countryCode": "US",
+      "evidence": [
+        "Must be a US citizen."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "abbreviation",
+    "html": "Must be a U. S. citizen. No sponsorship.",
+    "expected": {
+      "eligibility": "usCitizen",
+      "sponsorship": "notAvailable",
+      "strength": "strict",
+      "sponsorshipStrength": "strict",
+      "countryCode": "US",
+      "evidence": [
+        "Must be a US citizen.",
+        "No sponsorship."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "sentence-semicolon",
+    "html": "Must be a U.S. citizen; No sponsorship.",
+    "expected": {
+      "eligibility": "usCitizen",
+      "sponsorship": "notAvailable",
+      "strength": "strict",
+      "sponsorshipStrength": "strict",
+      "countryCode": "US",
+      "evidence": [
+        "Must be a US citizen;",
+        "No sponsorship."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "case",
+    "html": "MUST BE A UNITED STATES CITIZEN.",
+    "expected": {
+      "eligibility": "usCitizen",
+      "sponsorship": "noneSpecified",
+      "strength": "strict",
+      "sponsorshipStrength": "none",
+      "countryCode": "US",
+      "evidence": [
+        "MUST BE A UNITED STATES CITIZEN."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "preferred-explicit",
+    "html": "\u003Ch3\u003EPreferred Qualifications\u003C/h3\u003E\u003Cp\u003EMust be a U.S. citizen.\u003C/p\u003E",
+    "expected": {
+      "eligibility": "usCitizen",
+      "sponsorship": "noneSpecified",
+      "strength": "strict",
+      "sponsorshipStrength": "none",
+      "countryCode": "US",
+      "evidence": [
+        "Must be a US citizen."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "us-required-then-us-person",
+    "html": "\u003Cp\u003EMust be a U.S. citizen.\u003C/p\u003E\u003Cp\u003EApplicants must be a U.S. person.\u003C/p\u003E",
+    "expected": {
+      "eligibility": "usPerson",
+      "sponsorship": "noneSpecified",
+      "strength": "ambiguous",
+      "sponsorshipStrength": "none",
+      "countryCode": "US",
+      "evidence": [
+        "Must be a US citizen.",
+        "Applicants must be a US person."
+      ],
+      "parseStatus": "review",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "us-person-then-us-required",
+    "html": "\u003Cp\u003EApplicants must be a U.S. person.\u003C/p\u003E\u003Cp\u003EMust be a U.S. citizen.\u003C/p\u003E",
+    "expected": {
+      "eligibility": "usPerson",
+      "sponsorship": "noneSpecified",
+      "strength": "ambiguous",
+      "sponsorshipStrength": "none",
+      "countryCode": "US",
+      "evidence": [
+        "Applicants must be a US person."
+      ],
+      "parseStatus": "review",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "us-required-then-location-country",
+    "html": "\u003Cp\u003EMust be a U.S. citizen.\u003C/p\u003E\u003Cp\u003EMust have authorization to work in Australia.\u003C/p\u003E",
+    "expected": {
+      "eligibility": "locationWorkAuthorized",
+      "sponsorship": "noneSpecified",
+      "strength": "strict",
+      "sponsorshipStrength": "none",
+      "countryCode": "US",
+      "evidence": [
+        "Must be a US citizen.",
+        "Must have authorization to work in Australia."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "location-country-then-us-required",
+    "html": "\u003Cp\u003EMust have authorization to work in Australia.\u003C/p\u003E\u003Cp\u003EMust be a U.S. citizen.\u003C/p\u003E",
+    "expected": {
+      "eligibility": "locationWorkAuthorized",
+      "sponsorship": "noneSpecified",
+      "strength": "strict",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [
+        "Must have authorization to work in Australia."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "export-itar-then-us-required",
+    "html": "\u003Cp\u003EThis role is subject to ITAR.\u003C/p\u003E\u003Cp\u003EMust be a U.S. citizen.\u003C/p\u003E",
+    "expected": {
+      "eligibility": "usCitizen",
+      "sponsorship": "noneSpecified",
+      "strength": "strict",
+      "sponsorshipStrength": "none",
+      "countryCode": "US",
+      "evidence": [
+        "This role is subject to ITAR.",
+        "Must be a US citizen."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "us-required-then-export-itar",
+    "html": "\u003Cp\u003EMust be a U.S. citizen.\u003C/p\u003E\u003Cp\u003EThis role is subject to ITAR.\u003C/p\u003E",
+    "expected": {
+      "eligibility": "usCitizen",
+      "sponsorship": "noneSpecified",
+      "strength": "strict",
+      "sponsorshipStrength": "none",
+      "countryCode": "US",
+      "evidence": [
+        "Must be a US citizen."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "us-required-then-generic",
+    "html": "\u003Cp\u003EMust be a U.S. citizen.\u003C/p\u003E\u003Cp\u003ECitizenship required.\u003C/p\u003E",
+    "expected": {
+      "eligibility": "usCitizen",
+      "sponsorship": "noneSpecified",
+      "strength": "ambiguous",
+      "sponsorshipStrength": "none",
+      "countryCode": "US",
+      "evidence": [
+        "Must be a US citizen.",
+        "Citizenship required."
+      ],
+      "parseStatus": "review",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "generic-then-us-required",
+    "html": "\u003Cp\u003ECitizenship required.\u003C/p\u003E\u003Cp\u003EMust be a U.S. citizen.\u003C/p\u003E",
+    "expected": {
+      "eligibility": "ambiguousCitizenship",
+      "sponsorship": "noneSpecified",
+      "strength": "ambiguous",
+      "sponsorshipStrength": "none",
+      "countryCode": null,
+      "evidence": [
+        "Citizenship required."
+      ],
+      "parseStatus": "review",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "au-required-then-us-required",
+    "html": "\u003Cp\u003EMust be an Australian citizen.\u003C/p\u003E\u003Cp\u003EMust be a U.S. citizen.\u003C/p\u003E",
+    "expected": {
+      "eligibility": "australianCitizen",
+      "sponsorship": "noneSpecified",
+      "strength": "strict",
+      "sponsorshipStrength": "none",
+      "countryCode": "AU",
+      "evidence": [
+        "Must be an Australian citizen."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "us-preferred-then-us-required",
+    "html": "\u003Cp\u003EU.S. citizenship preferred.\u003C/p\u003E\u003Cp\u003EMust be a U.S. citizen.\u003C/p\u003E",
+    "expected": {
+      "eligibility": "usCitizen",
+      "sponsorship": "noneSpecified",
+      "strength": "preferred",
+      "sponsorshipStrength": "none",
+      "countryCode": "US",
+      "evidence": [
+        "US citizenship preferred."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "long-evidence",
+    "html": "Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro  Must be a U.S. citizen. tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail ",
+    "expected": {
+      "eligibility": "usCitizen",
+      "sponsorship": "noneSpecified",
+      "strength": "strict",
+      "sponsorshipStrength": "none",
+      "countryCode": "US",
+      "evidence": [
+        "\u2026o Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Intro Must be a US citizen. tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tail tai\u2026"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "evidence-limit",
+    "html": "\u003Cp\u003ENo sponsorship 0.\u003C/p\u003E\u003Cp\u003ENo sponsorship 1.\u003C/p\u003E\u003Cp\u003ENo sponsorship 2.\u003C/p\u003E\u003Cp\u003ENo sponsorship 3.\u003C/p\u003E\u003Cp\u003ENo sponsorship 4.\u003C/p\u003E\u003Cp\u003ENo sponsorship 5.\u003C/p\u003E\u003Cp\u003ENo sponsorship 6.\u003C/p\u003E\u003Cp\u003ENo sponsorship 7.\u003C/p\u003E\u003Cp\u003ENo sponsorship 8.\u003C/p\u003E",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "notAvailable",
+      "strength": "none",
+      "sponsorshipStrength": "strict",
+      "countryCode": null,
+      "evidence": [
+        "No sponsorship 0.",
+        "No sponsorship 1.",
+        "No sponsorship 2.",
+        "No sponsorship 3.",
+        "No sponsorship 4.",
+        "No sponsorship 5."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  },
+  {
+    "id": "evidence-dedup",
+    "html": "\u003Cp\u003ENo sponsorship.\u003C/p\u003E\u003Cp\u003ENO SPONSORSHIP.\u003C/p\u003E",
+    "expected": {
+      "eligibility": "noneSpecified",
+      "sponsorship": "notAvailable",
+      "strength": "none",
+      "sponsorshipStrength": "strict",
+      "countryCode": null,
+      "evidence": [
+        "No sponsorship."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4
+    }
+  }
+]

@@ -1,0 +1,435 @@
+{
+  "schemaVersion": 1,
+  "rulesetVersion": "1.0.0",
+  "regexTimeoutMilliseconds": 250,
+  "patterns": [
+    {
+      "id": "CitizenOrResident",
+      "type": "regex",
+      "pattern": "\\b(?:u\\.?s\\.?|united states)\\s+citizen\\s+(?:or|and/or)\\s+(?:an?\\s+)?(?:(?:u\\.?s\\.?|united states)\\s+)?(?:lawful\\s+)?permanent\\s+resident|\\b(?:u\\.?s\\.?|united states)\\s+(?:citizen(?:ship)?|national)\\b.{0,55}\\b(?:or|and/or)\\b.{0,35}(?:an?\\s+)?(?:(?:u\\.?s\\.?|united states)\\s+)?(?:lawful\\s+)?permanent\\s+resident|\\b(?:u\\.?s\\.?|united states)\\s+(?:citizen(?:ship)?|national)\\b.{0,55}\\bgreen\\s+card\\b|\\b(?:u\\.?s\\.?|united states)\\s+citizenship\\b.{0,20}\\bor\\b.{0,20}\\b(?:u\\.?s\\.?|united states)\\s+permanency\\b|\\b(?:citizen(?:ship)?\\s+or\\s+(?:u\\.?s\\.?\\s+)?permanent\\s+resident)\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "UsCitizen",
+      "type": "regex",
+      "pattern": "\\b(?:must|shall|need(?:s)?\\s+to|required\\s+to)\\s+be\\s+(?:an?\\s+)?(?:u\\.?s\\.?|united states)\\s+citizen\\b|\\b(?:u\\.?s\\.?|united states)\\s+citizenship\\b.{0,45}\\b(?:is\\s+)?(?:required|mandatory|must)\\b|\\b(?:requires?|requirement)\\b.{0,45}\\b(?:u\\.?s\\.?|united states)\\s+citizenship\\b|\\bcandidate\\b.{0,45}\\b(?:u\\.?s\\.?|united states)\\s+citizen\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "AustralianCitizen",
+      "type": "regex",
+      "pattern": "\\b(?:must|shall|need(?:s)?\\s+to|required\\s+to)\\s+be\\s+(?:an?\\s+)?australian\\s+citizen\\b|\\baustralian\\s+citizenship\\b.{0,45}\\b(?:required|mandatory)\\b|\\brequires?\\b.{0,45}\\baustralian\\s+citizen\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "PreferredUsCitizen",
+      "type": "regex",
+      "pattern": "\\b(?:u\\.?s\\.?|united states)\\s+(?:citizen|citizenship)\\b.{0,35}\\b(?:preferred|desired|ideally)\\b|\\b(?:preferred|desired|ideally)\\b.{0,35}\\b(?:u\\.?s\\.?|united states)\\s+(?:citizen|citizenship)\\b|\\bshould\\s+(?:ideally\\s+)?be\\s+(?:an?\\s+)?(?:u\\.?s\\.?|united states)\\s+citizen\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "PreferredAustralianCitizen",
+      "type": "regex",
+      "pattern": "\\baustralian\\s+(?:citizen|citizenship)\\b.{0,35}\\b(?:preferred|desired|ideally)\\b|\\b(?:preferred|desired|ideally)\\b.{0,35}\\baustralian\\s+(?:citizen|citizenship)\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "UsWorkAuthorized",
+      "type": "regex",
+      "pattern": "\\b(?:must\\s+be|are)\\s+(?:legally\\s+)?authorized\\s+to\\s+work\\s+in\\s+the\\s+(?:u\\.?s\\.?|united states)\\b|\\b(?:legal\\s+)?(?:right|authorization)\\s+to\\s+work\\s+in\\s+the\\s+(?:u\\.?s\\.?|united states)\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "LocationWorkAuthorized",
+      "type": "regex",
+      "pattern": "\\bvalid\\s+work(?:ing)?\\s+rights?\\s+for\\s+the\\s+(?:role|job)\\s+location\\b|\\b(?:must\\s+(?:have|hold)|required\\s+to\\s+have|valid|existing|unrestricted)\\b.{0,35}\\b(?:legal\\s+)?(?:right|rights|authori[sz]ation)\\s+to\\s+work\\s+in\\s+(?:the\\s+)?[A-Za-z][A-Za-z .'-]{1,40}\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "NoEmploymentSponsorship",
+      "type": "regex",
+      "pattern": "\\b(?:will|does|do|can)\\s+not\\s+(?:provide|offer)?\\s*(?:employment\\s+visa\\s+|employment\\s+|visa\\s+|work(?:\\s+authorization)?\\s+)?sponsorship\\b|\\b(?:employer|company|we)\\s+will\\s+not\\s+sponsor\\s+(?:applicants?|candidates?|individuals?)\\b.{0,80}\\b(?:employment\\s+)?visa\\s+status\\b|\\bnot\\s+(?:be\\s+)?require(?:d)?\\s+(?:employment\\s+|visa\\s+|work(?:\\s+authorization)?\\s+)?sponsorship\\b|\\bwithout\\s+(?:current\\s+or\\s+future\\s+)?(?:employment\\s+|visa\\s+)?sponsorship\\b|\\bno\\s+(?:employment\\s+|visa\\s+|work(?:\\s+authorization)?\\s+)?sponsorship\\b|\\bsponsorship\\s+for\\s+(?:u\\.?s\\.?\\s+)?employment\\s+authorization\\s+is\\s+not\\s+available\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "UsPerson",
+      "type": "regex",
+      "pattern": "\\b(?:u\\.?s\\.?|united states)\\s+person\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "CandidateContext",
+      "type": "regex",
+      "pattern": "\\b(?:candidate|applicant|employee|individual|personnel|must|required|requirement|eligible|qualification)\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "CandidateUsPersonPredicate",
+      "type": "regex",
+      "pattern": "\\b(?:be|are)\\b.{0,35}\\b(?:u\\.?s\\.?|united states)\\s+person\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "InformationContext",
+      "type": "regex",
+      "pattern": "\\b(?:information|data|communications?|queries|identit(?:y|ies)|privacy|surveillance)\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "GenericCitizenship",
+      "type": "regex",
+      "pattern": "\\bcitizenship\\b.{0,25}\\b(?:required|mandatory)\\b|\\b(?:required|mandatory)\\s+citizenship\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "ExportControl",
+      "type": "regex",
+      "pattern": "\\b(?:ITAR|EAR|export\\s+control(?:led|s)?|international\\s+traffic\\s+in\\s+arms\\s+regulations?)\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "RequiredHeading",
+      "type": "regex",
+      "pattern": "^(?:basic|required|minimum|mandatory|essential)\\s+(?:qualifications?|requirements?|criteria)\\s*:?$",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "PreferredHeading",
+      "type": "regex",
+      "pattern": "^(?:preferred|desired)\\s+(?:qualifications?|requirements?|criteria)\\s*:?$",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "BareUsCitizen",
+      "type": "regex",
+      "pattern": "^(?:an?\\s+)?(?:u\\.?s\\.?|united states)\\s+(?:citizen|citizenship)\\s*\\.?$",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "BareAustralianCitizen",
+      "type": "regex",
+      "pattern": "^(?:an?\\s+)?australian\\s+(?:citizen|citizenship)\\s*\\.?$",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "Conditional",
+      "type": "regex",
+      "pattern": "\\b(?:may|might|could)\\b.{0,35}\\b(?:need|required|requirement|limitation)\\b|\\bin\\s+certain\\s+circumstances\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "SponsorshipExclusion",
+      "type": "regex",
+      "pattern": "\\b(?:clearance|training|SOFA|command[- ]sponsor|enterprise\\s+PKI)\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase"
+      ]
+    },
+    {
+      "id": "CountryAbbreviation",
+      "type": "regex",
+      "pattern": "\\bU\\.\\s*S\\.?",
+      "scope": "plainText",
+      "options": [
+        "IgnoreCase"
+      ]
+    }
+  ],
+  "normalizations": [
+    {
+      "id": "normalize-country-abbreviation",
+      "patternId": "CountryAbbreviation",
+      "replacement": "US"
+    }
+  ],
+  "sectionRules": [
+    {
+      "id": "section-required",
+      "priority": 10,
+      "patternId": "RequiredHeading",
+      "result": "strict"
+    },
+    {
+      "id": "section-preferred",
+      "priority": 20,
+      "patternId": "PreferredHeading",
+      "result": "preferred"
+    }
+  ],
+  "sponsorshipRules": [
+    {
+      "id": "sponsorship-unavailable",
+      "priority": 10,
+      "patternId": "NoEmploymentSponsorship",
+      "unlessPatternIds": [
+        "SponsorshipExclusion"
+      ],
+      "result": "notAvailable",
+      "strength": "strict"
+    }
+  ],
+  "eligibilityRules": [
+    {
+      "id": "eligibility-UsPerson",
+      "priority": 10,
+      "patternId": "UsPerson",
+      "anyPatternIds": [
+        "CandidateContext",
+        "CandidateUsPersonPredicate"
+      ],
+      "unlessPatternIds": [
+        "InformationContext"
+      ],
+      "onlyWhenUnset": false,
+      "result": "usPerson",
+      "countryCode": "US",
+      "strength": "ambiguous",
+      "application": "replace",
+      "evidenceIndex": "match",
+      "conditionalPatternId": null,
+      "conditionalStrength": null
+    },
+    {
+      "id": "eligibility-CitizenOrResident",
+      "priority": 20,
+      "patternId": "CitizenOrResident",
+      "anyPatternIds": [],
+      "unlessPatternIds": [],
+      "onlyWhenUnset": false,
+      "result": "usCitizenOrPermanentResident",
+      "countryCode": "US",
+      "strength": "strict",
+      "application": "firstSpecific",
+      "evidenceIndex": "match",
+      "conditionalPatternId": null,
+      "conditionalStrength": null
+    },
+    {
+      "id": "eligibility-UsCitizen",
+      "priority": 30,
+      "patternId": "UsCitizen",
+      "anyPatternIds": [],
+      "unlessPatternIds": [],
+      "onlyWhenUnset": false,
+      "result": "usCitizen",
+      "countryCode": "US",
+      "strength": "strict",
+      "application": "firstSpecific",
+      "evidenceIndex": "match",
+      "conditionalPatternId": null,
+      "conditionalStrength": null
+    },
+    {
+      "id": "eligibility-AustralianCitizen",
+      "priority": 40,
+      "patternId": "AustralianCitizen",
+      "anyPatternIds": [],
+      "unlessPatternIds": [],
+      "onlyWhenUnset": false,
+      "result": "australianCitizen",
+      "countryCode": "AU",
+      "strength": "strict",
+      "application": "firstSpecific",
+      "evidenceIndex": "match",
+      "conditionalPatternId": null,
+      "conditionalStrength": null
+    },
+    {
+      "id": "eligibility-UsWorkAuthorized",
+      "priority": 50,
+      "patternId": "UsWorkAuthorized",
+      "anyPatternIds": [],
+      "unlessPatternIds": [],
+      "onlyWhenUnset": false,
+      "result": "usWorkAuthorized",
+      "countryCode": "US",
+      "strength": "strict",
+      "application": "firstSpecific",
+      "evidenceIndex": "match",
+      "conditionalPatternId": null,
+      "conditionalStrength": null
+    },
+    {
+      "id": "eligibility-LocationWorkAuthorized",
+      "priority": 60,
+      "patternId": "LocationWorkAuthorized",
+      "anyPatternIds": [],
+      "unlessPatternIds": [],
+      "onlyWhenUnset": false,
+      "result": "locationWorkAuthorized",
+      "countryCode": null,
+      "strength": "strict",
+      "application": "replace",
+      "evidenceIndex": "match",
+      "conditionalPatternId": null,
+      "conditionalStrength": null
+    },
+    {
+      "id": "eligibility-PreferredUsCitizen",
+      "priority": 70,
+      "patternId": "PreferredUsCitizen",
+      "anyPatternIds": [],
+      "unlessPatternIds": [],
+      "onlyWhenUnset": false,
+      "result": "usCitizen",
+      "countryCode": "US",
+      "strength": "preferred",
+      "application": "firstSpecific",
+      "evidenceIndex": "match",
+      "conditionalPatternId": null,
+      "conditionalStrength": null
+    },
+    {
+      "id": "eligibility-PreferredAustralianCitizen",
+      "priority": 80,
+      "patternId": "PreferredAustralianCitizen",
+      "anyPatternIds": [],
+      "unlessPatternIds": [],
+      "onlyWhenUnset": false,
+      "result": "australianCitizen",
+      "countryCode": "AU",
+      "strength": "preferred",
+      "application": "firstSpecific",
+      "evidenceIndex": "match",
+      "conditionalPatternId": null,
+      "conditionalStrength": null
+    },
+    {
+      "id": "eligibility-BareUsCitizen",
+      "priority": 90,
+      "patternId": "BareUsCitizen",
+      "anyPatternIds": [],
+      "unlessPatternIds": [],
+      "onlyWhenUnset": false,
+      "result": "usCitizen",
+      "countryCode": "US",
+      "strength": "section",
+      "application": "firstSpecific",
+      "evidenceIndex": "segmentStart",
+      "conditionalPatternId": null,
+      "conditionalStrength": null
+    },
+    {
+      "id": "eligibility-BareAustralianCitizen",
+      "priority": 100,
+      "patternId": "BareAustralianCitizen",
+      "anyPatternIds": [],
+      "unlessPatternIds": [],
+      "onlyWhenUnset": false,
+      "result": "australianCitizen",
+      "countryCode": "AU",
+      "strength": "section",
+      "application": "firstSpecific",
+      "evidenceIndex": "segmentStart",
+      "conditionalPatternId": null,
+      "conditionalStrength": null
+    },
+    {
+      "id": "eligibility-GenericCitizenship",
+      "priority": 110,
+      "patternId": "GenericCitizenship",
+      "anyPatternIds": [],
+      "unlessPatternIds": [],
+      "onlyWhenUnset": false,
+      "result": "ambiguousCitizenship",
+      "countryCode": null,
+      "strength": "ambiguous",
+      "application": "fillUnset",
+      "evidenceIndex": "match",
+      "conditionalPatternId": null,
+      "conditionalStrength": null
+    },
+    {
+      "id": "eligibility-ExportControl",
+      "priority": 120,
+      "patternId": "ExportControl",
+      "anyPatternIds": [],
+      "unlessPatternIds": [],
+      "onlyWhenUnset": true,
+      "result": "exportControlled",
+      "countryCode": null,
+      "strength": "mentioned",
+      "application": "replace",
+      "evidenceIndex": "match",
+      "conditionalPatternId": "Conditional",
+      "conditionalStrength": "customerDependent"
+    }
+  ]
+}

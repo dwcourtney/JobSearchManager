@@ -1,0 +1,303 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jsm:work-authorization-rules:v1",
+  "title": "JSM work-authorization rules v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "rulesetVersion",
+    "regexTimeoutMilliseconds",
+    "patterns",
+    "normalizations",
+    "sectionRules",
+    "sponsorshipRules",
+    "eligibilityRules"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "rulesetVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "regexTimeoutMilliseconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000
+    },
+    "patterns": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "type",
+          "pattern",
+          "scope",
+          "options"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "const": "regex"
+          },
+          "pattern": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8192
+          },
+          "scope": {
+            "enum": [
+              "segment",
+              "plainText"
+            ]
+          },
+          "options": {
+            "enum": [
+              [
+                "IgnoreCase"
+              ],
+              [
+                "IgnoreCase",
+                "CultureInvariant"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "normalizations": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "patternId",
+          "replacement"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "patternId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "replacement": {
+            "type": "string",
+            "maxLength": 256
+          }
+        }
+      }
+    },
+    "sectionRules": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "priority",
+          "patternId",
+          "result"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "patternId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "result": {
+            "enum": [
+              "strict",
+              "preferred"
+            ]
+          }
+        }
+      }
+    },
+    "sponsorshipRules": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "priority",
+          "patternId",
+          "unlessPatternIds",
+          "result",
+          "strength"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "patternId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "unlessPatternIds": {
+            "type": "array",
+            "minItems": 0,
+            "maxItems": 64,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "result": {
+            "const": "notAvailable"
+          },
+          "strength": {
+            "const": "strict"
+          }
+        }
+      }
+    },
+    "eligibilityRules": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "priority",
+          "patternId",
+          "anyPatternIds",
+          "unlessPatternIds",
+          "onlyWhenUnset",
+          "result",
+          "countryCode",
+          "strength",
+          "application",
+          "evidenceIndex",
+          "conditionalPatternId",
+          "conditionalStrength"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "patternId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "anyPatternIds": {
+            "type": "array",
+            "minItems": 0,
+            "maxItems": 64,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "unlessPatternIds": {
+            "type": "array",
+            "minItems": 0,
+            "maxItems": 64,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "onlyWhenUnset": {
+            "type": "boolean"
+          },
+          "result": {
+            "enum": [
+              "usPerson",
+              "usCitizenOrPermanentResident",
+              "usCitizen",
+              "australianCitizen",
+              "usWorkAuthorized",
+              "locationWorkAuthorized",
+              "ambiguousCitizenship",
+              "exportControlled"
+            ]
+          },
+          "countryCode": {
+            "enum": [
+              null,
+              "US",
+              "AU"
+            ]
+          },
+          "strength": {
+            "enum": [
+              "strict",
+              "preferred",
+              "ambiguous",
+              "mentioned",
+              "section"
+            ]
+          },
+          "application": {
+            "enum": [
+              "replace",
+              "firstSpecific",
+              "fillUnset"
+            ]
+          },
+          "evidenceIndex": {
+            "enum": [
+              "match",
+              "segmentStart"
+            ]
+          },
+          "conditionalPatternId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1
+          },
+          "conditionalStrength": {
+            "enum": [
+              null,
+              "customerDependent"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
