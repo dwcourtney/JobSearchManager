@@ -1,0 +1,277 @@
+{
+  "schemaVersion": 1,
+  "rulesetVersion": "1.0.0",
+  "regexTimeoutMilliseconds": 250,
+  "regexOptions": [
+    "IgnoreCase",
+    "CultureInvariant"
+  ],
+  "patterns": [
+    {
+      "id": "TopSecretSci",
+      "type": "regex",
+      "pattern": "\\b(?:TS\\s*/\\s*SCI|Top\\s+Secret\\s*/\\s*SCI|Top\\s+Secret\\s+(?:with\\s+)?SCI|SCI\\s+eligibility)\\b",
+      "scope": "normalizedText"
+    },
+    {
+      "id": "TopSecret",
+      "type": "regex",
+      "pattern": "\\bTop\\s+Secret\\b|\\bTS\\b.{0,30}\\bclearance\\b",
+      "scope": "normalizedText"
+    },
+    {
+      "id": "PublicTrust",
+      "type": "regex",
+      "pattern": "\\bPublic\\s+Trust\\b|\\b(?:FAA|TSA)\\s+(?:Public\\s+Trust\\s+)?Suitability\\s+Determination\\b",
+      "scope": "normalizedText"
+    },
+    {
+      "id": "Secret",
+      "type": "regex",
+      "pattern": "\\bSecret\\b.{0,35}\\bclearance\\b|\\bclearance\\b.{0,35}\\bSecret\\b",
+      "scope": "normalizedText"
+    },
+    {
+      "id": "OtherClearance",
+      "type": "regex",
+      "pattern": "\\bsecurity\\s+clearance\\b|\\bclearance\\b.{0,45}\\b(?:active|current|required|obtain|maintain|possess|eligible|preferred)\\b|\\b(?:active|current|required|obtain|maintain|possess|eligible|preferred)\\b.{0,45}\\bclearance\\b",
+      "scope": "normalizedText"
+    },
+    {
+      "id": "NoClearanceRequired",
+      "type": "regex",
+      "pattern": "\\b(?:security\\s+clearance\\s*:\\s*)?(?:(?:this\\s+)?(?:position|role|job)\\s+does\\s+not\\s+require|no)\\s+(?:an?\\s+)?(?:u\\.?s\\.?\\s+)?security\\s+clearance(?:\\s+is\\s+required)?\\b|\\bsecurity\\s+clearance\\s+requirement\\s*:\\s*(?:none|not\\s+required)\\b",
+      "scope": "normalizedText"
+    },
+    {
+      "id": "ClearanceContext",
+      "type": "regex",
+      "pattern": "\\b(?:clearance|Public\\s+Trust|TS\\s*/\\s*SCI|SCI\\s+eligibility|suitability\\s+determination|background\\s+investigation|polygraph)\\b",
+      "scope": "normalizedText"
+    },
+    {
+      "id": "RequiredPolygraph",
+      "type": "regex",
+      "pattern": "(?:\\bpolygraph\\b.{0,50}\\b(?:required|must|pass|current|active)\\b)|(?:\\b(?:required|must|pass|current|active)\\b.{0,50}\\bpolygraph\\b)",
+      "scope": "normalizedText"
+    },
+    {
+      "id": "PreferredClearance",
+      "type": "regex",
+      "pattern": "\\b(?:clearance|Public\\s+Trust)\\b.{0,50}\\bpreferred\\b|\\bpreferred\\b.{0,50}\\b(?:clearance|Public\\s+Trust)\\b",
+      "scope": "clearanceContext"
+    },
+    {
+      "id": "ActiveRequiredClearance",
+      "type": "regex",
+      "pattern": "\\b(?:active|current)\\b.{0,55}\\b(?:clearance|Public\\s+Trust)\\b(?![^.!?]{0,40}\\bpreferred\\b)|\\b(?:clearance|Public\\s+Trust)\\b.{0,55}\\b(?:active|current)\\b(?![^.!?]{0,40}\\bpreferred\\b)|\\bholds?\\b.{0,35}\\bactive\\b.{0,35}\\bclearance\\b(?![^.!?]{0,40}\\bpreferred\\b)|\\bmust\\s+currently\\s+hold\\b.{0,55}\\b(?:TS\\s*/\\s*SCI|Top\\s+Secret|Secret|clearance|Public\\s+Trust)\\b|\\b(?:TS\\s*/\\s*SCI|Top\\s+Secret|Secret|clearance|Public\\s+Trust)\\b.{0,45}\\b(?:required\\s+)?(?:on\\s+day\\s+one|at\\s+(?:the\\s+)?time\\s+of\\s+hire|at\\s+(?:the\\s+)?start\\s+date)\\b",
+      "scope": "clearanceContext"
+    },
+    {
+      "id": "MustPossessClearance",
+      "type": "regex",
+      "pattern": "\\bmust\\s+(?:have|possess|hold)\\b.{0,60}\\b(?:clearance|Public\\s+Trust)\\b(?![^.!?]{0,40}\\bpreferred\\b)|\\b(?:possess|hold)\\s+and\\s+maintain\\b.{0,55}\\bclearance\\b(?![^.!?]{0,40}\\bpreferred\\b)|\\bexisting\\b.{0,55}\\b(?:clearance|Public\\s+Trust)\\b",
+      "scope": "clearanceContext"
+    },
+    {
+      "id": "ObtainAndMaintainClearance",
+      "type": "regex",
+      "pattern": "\\b(?:ability\\s+to|able\\s+to|must)\\s+obtain\\s+and\\s+maintain\\b.{0,70}\\b(?:clearance|Public\\s+Trust|investigation)\\b",
+      "scope": "clearanceContext"
+    },
+    {
+      "id": "ObtainClearance",
+      "type": "regex",
+      "pattern": "\\b(?:ability\\s+to|able\\s+to|must)\\s+obtain\\b.{0,70}\\b(?:clearance|Public\\s+Trust)\\b|\\b(?:clearance|Public\\s+Trust)\\b.{0,50}\\bprior\\s+to\\s+(?:start|starting)\\b",
+      "scope": "clearanceContext"
+    },
+    {
+      "id": "MaintainClearance",
+      "type": "regex",
+      "pattern": "\\b(?:ability\\s+to|able\\s+to|must)\\s+maintain\\b.{0,60}\\b(?:clearance|Public\\s+Trust)\\b|\\b(?:clearance|Public\\s+Trust)\\b.{0,40}\\bmaintain\\b",
+      "scope": "clearanceContext"
+    },
+    {
+      "id": "EligibleClearance",
+      "type": "regex",
+      "pattern": "\\b(?:eligible|eligibility|meet\\s+the\\s+requirements)\\b.{0,70}\\b(?:clearance|Public\\s+Trust|one)\\b",
+      "scope": "clearanceContext"
+    },
+    {
+      "id": "AlternativeEligibility",
+      "type": "regex",
+      "pattern": "\\bmust\\s+(?:have|possess|hold)\\b.{0,90}\\bclearance\\b.{0,90}\\bor\\s+be\\s+able\\s+to\\s+meet\\s+the\\s+requirements\\b",
+      "scope": "clearanceContext"
+    },
+    {
+      "id": "SuitabilityInvestigation",
+      "type": "regex",
+      "pattern": "\\b(?:suitability\\s+determination|(?:favorable|extended|government)?\\s*background\\s+investigation)\\b",
+      "scope": "textOrContext"
+    },
+    {
+      "id": "AmbiguousPublicTrustAlternative",
+      "type": "regex",
+      "pattern": "\\bPublic\\s+Trust\\b.{0,30}\\bor\\s+(?:a\\s+)?security\\s+clearance\\b",
+      "scope": "normalizedText"
+    },
+    {
+      "id": "SectionMarker1",
+      "type": "literal",
+      "pattern": "Preferred Qualifications",
+      "scope": "sectionPrefix"
+    },
+    {
+      "id": "SectionMarker2",
+      "type": "literal",
+      "pattern": "Preferred Experience",
+      "scope": "sectionPrefix"
+    },
+    {
+      "id": "SectionMarker3",
+      "type": "literal",
+      "pattern": "Required Qualifications",
+      "scope": "sectionPrefix"
+    },
+    {
+      "id": "SectionMarker4",
+      "type": "literal",
+      "pattern": "Basic Qualifications",
+      "scope": "sectionPrefix"
+    }
+  ],
+  "negationPatternId": "NoClearanceRequired",
+  "contextPatternId": "ClearanceContext",
+  "polygraphPatternId": "RequiredPolygraph",
+  "sections": {
+    "lookbehindCharacters": 220,
+    "preferredMarkerIds": [
+      "SectionMarker1",
+      "SectionMarker2"
+    ],
+    "resetMarkerIds": [
+      "SectionMarker3",
+      "SectionMarker4"
+    ]
+  },
+  "levelRules": [
+    {
+      "id": "level-topSecretSCI",
+      "patternId": "TopSecretSci",
+      "priority": 10,
+      "result": "topSecretSCI"
+    },
+    {
+      "id": "level-topSecret",
+      "patternId": "TopSecret",
+      "priority": 20,
+      "result": "topSecret"
+    },
+    {
+      "id": "level-publicTrust",
+      "patternId": "PublicTrust",
+      "priority": 30,
+      "result": "publicTrust"
+    },
+    {
+      "id": "level-secret",
+      "patternId": "Secret",
+      "priority": 40,
+      "result": "secret"
+    },
+    {
+      "id": "level-other",
+      "patternId": "OtherClearance",
+      "priority": 50,
+      "result": "other"
+    }
+  ],
+  "requirementRules": [
+    {
+      "id": "requirement-ActiveRequiredClearance",
+      "patternId": "ActiveRequiredClearance",
+      "priority": 10,
+      "result": "activeRequired",
+      "level": null,
+      "unlessPatternIds": []
+    },
+    {
+      "id": "requirement-AlternativeEligibility",
+      "patternId": "AlternativeEligibility",
+      "priority": 20,
+      "result": "eligible",
+      "level": null,
+      "unlessPatternIds": []
+    },
+    {
+      "id": "requirement-SuitabilityInvestigation",
+      "patternId": "SuitabilityInvestigation",
+      "priority": 30,
+      "result": "publicTrustSuitability",
+      "level": "publicTrust",
+      "unlessPatternIds": [
+        "ObtainAndMaintainClearance",
+        "ObtainClearance"
+      ]
+    },
+    {
+      "id": "requirement-MustPossessClearance",
+      "patternId": "MustPossessClearance",
+      "priority": 40,
+      "result": "mustPossess",
+      "level": null,
+      "unlessPatternIds": []
+    },
+    {
+      "id": "requirement-ObtainAndMaintainClearance",
+      "patternId": "ObtainAndMaintainClearance",
+      "priority": 50,
+      "result": "obtainAndMaintain",
+      "level": null,
+      "unlessPatternIds": []
+    },
+    {
+      "id": "requirement-ObtainClearance",
+      "patternId": "ObtainClearance",
+      "priority": 60,
+      "result": "obtain",
+      "level": null,
+      "unlessPatternIds": []
+    },
+    {
+      "id": "requirement-MaintainClearance",
+      "patternId": "MaintainClearance",
+      "priority": 70,
+      "result": "maintain",
+      "level": null,
+      "unlessPatternIds": []
+    },
+    {
+      "id": "requirement-EligibleClearance",
+      "patternId": "EligibleClearance",
+      "priority": 80,
+      "result": "eligible",
+      "level": null,
+      "unlessPatternIds": []
+    },
+    {
+      "id": "requirement-PreferredClearance",
+      "patternId": "PreferredClearance",
+      "priority": 90,
+      "result": "preferred",
+      "level": null,
+      "unlessPatternIds": []
+    }
+  ],
+  "levelOverrides": [
+    {
+      "id": "public-trust-alternative",
+      "fromLevel": "publicTrust",
+      "result": "other",
+      "patternId": "AmbiguousPublicTrustAlternative",
+      "unlessPatternIds": [
+        "SuitabilityInvestigation"
+      ]
+    }
+  ]
+}

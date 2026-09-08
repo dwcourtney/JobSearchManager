@@ -22,3 +22,6 @@ CheapTriage/rulesets/1.0.1.json -text whitespace=blank-at-eol,blank-at-eof,space
 # Retired source snapshots preserve original bytes for research and rollback provenance.
 research/cheap-triage/archive/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 research/qwen/archive/** -text whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
+
+# Packaged clearance rules use identical fingerprint bytes on Windows and Linux.
+rules/** text eol=lf

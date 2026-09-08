@@ -169,6 +169,7 @@ if (args.Length >= 3 && args[0] == "--regex-maintenance")
 const int ApplicationPort = 54321;
 const string ApplicationUrl = "http://127.0.0.1:54321";
 
+var clearanceRules = ClearanceRules.Default; // Validate packaged rules before starting the host.
 var builder = WebApplication.CreateBuilder(args);
 var hosting = HostingConfiguration.FromConfiguration(builder.Configuration);
 
@@ -328,6 +329,7 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
     options.Level = CompressionLevel.Fastest);
 
 var app = builder.Build();
+app.Logger.LogInformation("Clearance rules {Version}, SHA-256 {Fingerprint}", clearanceRules.Version, clearanceRules.Fingerprint);
 var versionInfo = VersionEndpoint.Create(builder.Configuration, hosting);
 
 app.Use(async (context, next) =>

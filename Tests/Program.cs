@@ -12,6 +12,18 @@ using System.Net.Mail;
 using System.Security.Claims;
 using JobSearchManager;
 
+if (args is ["--clearance-parity", var clearanceInput, var clearanceOutput])
+{
+    ClearanceMigrationTests.Compare(clearanceInput, clearanceOutput);
+    return;
+}
+
+if (args is ["--freeze-clearance-fixtures", var fixturePath])
+{
+    ClearanceMigrationTests.Freeze(fixturePath);
+    return;
+}
+
 if (args.Length >= 2 && args[0] == "--extended-location-corpus")
 {
     var detector = new ExtendedLocationRequirementDetector();
@@ -390,6 +402,8 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Work authorization detector ignores unrelated sponsor and resident language", TestAuthorizationFalsePositivesAsync),
     ("Work authorization detector surfaces non-U.S. and export wording for review", TestInternationalAuthorizationAsync),
     ("Work authorization detector recognizes location-specific work rights", TestLocationWorkRightsAsync),
+    ("Clearance frozen behavior parity", ClearanceMigrationTests.RunAsync),
+    ("Clearance rules reject invalid configuration and bound matching", ClearanceMigrationTests.ValidationAsync),
     ("Clearance detector ignores explicit no-clearance statements", TestNoClearanceRequiredAsync),
     ("Remote detector finds explicit onsite duties", TestRemoteOnsiteAsync),
     ("Remote detector finds field deployment requirements", TestRemoteFieldDeploymentAsync),

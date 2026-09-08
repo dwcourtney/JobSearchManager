@@ -1,0 +1,717 @@
+[
+  {
+    "id": "empty",
+    "html": "",
+    "expected": {
+      "level": "noneMentioned",
+      "requirement": "none",
+      "polygraphRequired": false,
+      "evidence": null,
+      "parseStatus": "description-unavailable"
+    }
+  },
+  {
+    "id": "whitespace",
+    "html": "  ",
+    "expected": {
+      "level": "noneMentioned",
+      "requirement": "none",
+      "polygraphRequired": false,
+      "evidence": null,
+      "parseStatus": "description-unavailable"
+    }
+  },
+  {
+    "id": "none",
+    "html": "Build reliable software.",
+    "expected": {
+      "level": "noneMentioned",
+      "requirement": "none",
+      "polygraphRequired": false,
+      "evidence": null,
+      "parseStatus": "not-mentioned"
+    }
+  },
+  {
+    "id": "secret",
+    "html": "Active Secret clearance required.",
+    "expected": {
+      "level": "secret",
+      "requirement": "activeRequired",
+      "polygraphRequired": false,
+      "evidence": "Active Secret clearance required.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "top-secret",
+    "html": "Active Top Secret clearance required.",
+    "expected": {
+      "level": "topSecret",
+      "requirement": "activeRequired",
+      "polygraphRequired": false,
+      "evidence": "Active Top Secret clearance required.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "ts-sci",
+    "html": "Must currently hold TS/SCI.",
+    "expected": {
+      "level": "topSecretSCI",
+      "requirement": "activeRequired",
+      "polygraphRequired": false,
+      "evidence": "Must currently hold TS/SCI.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "sci-only",
+    "html": "SCI required.",
+    "expected": {
+      "level": "noneMentioned",
+      "requirement": "none",
+      "polygraphRequired": false,
+      "evidence": null,
+      "parseStatus": "not-mentioned"
+    }
+  },
+  {
+    "id": "sci-eligible",
+    "html": "SCI eligibility required.",
+    "expected": {
+      "level": "topSecretSCI",
+      "requirement": "ambiguous",
+      "polygraphRequired": false,
+      "evidence": "SCI eligibility required.",
+      "parseStatus": "ambiguous"
+    }
+  },
+  {
+    "id": "ts-abbrev",
+    "html": "TS clearance required.",
+    "expected": {
+      "level": "topSecret",
+      "requirement": "ambiguous",
+      "polygraphRequired": false,
+      "evidence": "TS clearance required.",
+      "parseStatus": "ambiguous"
+    }
+  },
+  {
+    "id": "ts-sci-spaces",
+    "html": "TS / SCI clearance required.",
+    "expected": {
+      "level": "topSecretSCI",
+      "requirement": "ambiguous",
+      "polygraphRequired": false,
+      "evidence": "TS / SCI clearance required.",
+      "parseStatus": "ambiguous"
+    }
+  },
+  {
+    "id": "ts-with-sci",
+    "html": "Top Secret with SCI clearance required.",
+    "expected": {
+      "level": "topSecretSCI",
+      "requirement": "ambiguous",
+      "polygraphRequired": false,
+      "evidence": "Top Secret with SCI clearance required.",
+      "parseStatus": "ambiguous"
+    }
+  },
+  {
+    "id": "public-trust",
+    "html": "Public Trust required.",
+    "expected": {
+      "level": "publicTrust",
+      "requirement": "ambiguous",
+      "polygraphRequired": false,
+      "evidence": "Public Trust required.",
+      "parseStatus": "ambiguous"
+    }
+  },
+  {
+    "id": "faa",
+    "html": "FAA Suitability Determination required.",
+    "expected": {
+      "level": "publicTrust",
+      "requirement": "publicTrustSuitability",
+      "polygraphRequired": false,
+      "evidence": "FAA Suitability Determination required.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "tsa",
+    "html": "TSA Public Trust Suitability Determination.",
+    "expected": {
+      "level": "publicTrust",
+      "requirement": "publicTrustSuitability",
+      "polygraphRequired": false,
+      "evidence": "TSA Public Trust Suitability Determination.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "suitability",
+    "html": "Public Trust with favorable background investigation.",
+    "expected": {
+      "level": "publicTrust",
+      "requirement": "publicTrustSuitability",
+      "polygraphRequired": false,
+      "evidence": "Public Trust with favorable background investigation.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "suitability-only",
+    "html": "Government background investigation required.",
+    "expected": {
+      "level": "noneMentioned",
+      "requirement": "none",
+      "polygraphRequired": false,
+      "evidence": null,
+      "parseStatus": "not-mentioned"
+    }
+  },
+  {
+    "id": "active",
+    "html": "Current security clearance required.",
+    "expected": {
+      "level": "other",
+      "requirement": "activeRequired",
+      "polygraphRequired": false,
+      "evidence": "Current security clearance required.",
+      "parseStatus": "ambiguous"
+    }
+  },
+  {
+    "id": "hold",
+    "html": "Must possess a Secret clearance.",
+    "expected": {
+      "level": "secret",
+      "requirement": "mustPossess",
+      "polygraphRequired": false,
+      "evidence": "Must possess a Secret clearance.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "existing",
+    "html": "Existing Top Secret clearance.",
+    "expected": {
+      "level": "topSecret",
+      "requirement": "mustPossess",
+      "polygraphRequired": false,
+      "evidence": "Existing Top Secret clearance.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "obtain",
+    "html": "Ability to obtain a Secret clearance.",
+    "expected": {
+      "level": "secret",
+      "requirement": "obtain",
+      "polygraphRequired": false,
+      "evidence": "Ability to obtain a Secret clearance.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "obtain-maintain",
+    "html": "Ability to obtain and maintain a Secret clearance.",
+    "expected": {
+      "level": "secret",
+      "requirement": "obtainAndMaintain",
+      "polygraphRequired": false,
+      "evidence": "Ability to obtain and maintain a Secret clearance.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "maintain",
+    "html": "Ability to maintain a Secret clearance.",
+    "expected": {
+      "level": "secret",
+      "requirement": "maintain",
+      "polygraphRequired": false,
+      "evidence": "Ability to maintain a Secret clearance.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "prior-start",
+    "html": "Secret clearance prior to start.",
+    "expected": {
+      "level": "secret",
+      "requirement": "obtain",
+      "polygraphRequired": false,
+      "evidence": "Secret clearance prior to start.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "eligible",
+    "html": "Eligible for a Secret clearance.",
+    "expected": {
+      "level": "secret",
+      "requirement": "eligible",
+      "polygraphRequired": false,
+      "evidence": "Eligible for a Secret clearance.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "alternative",
+    "html": "Must have a security clearance or be able to meet the requirements for one.",
+    "expected": {
+      "level": "other",
+      "requirement": "eligible",
+      "polygraphRequired": false,
+      "evidence": "Must have a security clearance or be able to meet the requirements for one.",
+      "parseStatus": "ambiguous"
+    }
+  },
+  {
+    "id": "preferred",
+    "html": "Secret clearance preferred.",
+    "expected": {
+      "level": "secret",
+      "requirement": "preferred",
+      "polygraphRequired": false,
+      "evidence": "Secret clearance preferred.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "preferred-active",
+    "html": "Active Secret clearance preferred.",
+    "expected": {
+      "level": "secret",
+      "requirement": "preferred",
+      "polygraphRequired": false,
+      "evidence": "Active Secret clearance preferred.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "preferred-section",
+    "html": "Preferred Qualifications: Active Top Secret clearance.",
+    "expected": {
+      "level": "other",
+      "requirement": "activeRequired",
+      "polygraphRequired": false,
+      "evidence": "Preferred Qualifications: Active Top Secret clearance.",
+      "parseStatus": "ambiguous"
+    }
+  },
+  {
+    "id": "required-resets",
+    "html": "Preferred Qualifications: Other skills. Required Qualifications: Active Secret clearance.",
+    "expected": {
+      "level": "secret",
+      "requirement": "activeRequired",
+      "polygraphRequired": false,
+      "evidence": "Preferred Qualifications: Other skills. Required Qualifications: Active Secret clearance.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "basic-resets",
+    "html": "Preferred Experience: Other skills. Basic Qualifications: Active Secret clearance.",
+    "expected": {
+      "level": "secret",
+      "requirement": "activeRequired",
+      "polygraphRequired": false,
+      "evidence": "Preferred Experience: Other skills. Basic Qualifications: Active Secret clearance.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "mixed-sections",
+    "html": "Required Qualifications: Secret clearance. Preferred Qualifications: Top Secret clearance.",
+    "expected": {
+      "level": "secret",
+      "requirement": "preferred",
+      "polygraphRequired": false,
+      "evidence": "Required Qualifications: Secret clearance. Preferred Qualifications: Top Secret clearance.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "both-preferred-markers",
+    "html": "Preferred Qualifications: skills. Required Qualifications: skills. Preferred Experience: Top Secret clearance.",
+    "expected": {
+      "level": "topSecret",
+      "requirement": "preferred",
+      "polygraphRequired": false,
+      "evidence": "Preferred Qualifications: skills. Required Qualifications: skills. Preferred Experience: Top Secret clearance.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "ambiguous",
+    "html": "Security clearance.",
+    "expected": {
+      "level": "other",
+      "requirement": "ambiguous",
+      "polygraphRequired": false,
+      "evidence": "Security clearance.",
+      "parseStatus": "ambiguous"
+    }
+  },
+  {
+    "id": "public-alternative",
+    "html": "Public Trust or a security clearance required.",
+    "expected": {
+      "level": "other",
+      "requirement": "ambiguous",
+      "polygraphRequired": false,
+      "evidence": "Public Trust or a security clearance required.",
+      "parseStatus": "ambiguous"
+    }
+  },
+  {
+    "id": "public-alternative-suitability",
+    "html": "Public Trust or a security clearance with favorable background investigation.",
+    "expected": {
+      "level": "publicTrust",
+      "requirement": "publicTrustSuitability",
+      "polygraphRequired": false,
+      "evidence": "Public Trust or a security clearance with favorable background investigation.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "poly-required",
+    "html": "Polygraph required.",
+    "expected": {
+      "level": "other",
+      "requirement": "ambiguous",
+      "polygraphRequired": true,
+      "evidence": "Polygraph required.",
+      "parseStatus": "ambiguous"
+    }
+  },
+  {
+    "id": "poly-pass",
+    "html": "Must pass a polygraph.",
+    "expected": {
+      "level": "other",
+      "requirement": "ambiguous",
+      "polygraphRequired": true,
+      "evidence": "Must pass a polygraph.",
+      "parseStatus": "ambiguous"
+    }
+  },
+  {
+    "id": "poly-active",
+    "html": "Current polygraph.",
+    "expected": {
+      "level": "other",
+      "requirement": "ambiguous",
+      "polygraphRequired": true,
+      "evidence": "Current polygraph.",
+      "parseStatus": "ambiguous"
+    }
+  },
+  {
+    "id": "poly-preferred",
+    "html": "Polygraph preferred.",
+    "expected": {
+      "level": "noneMentioned",
+      "requirement": "none",
+      "polygraphRequired": false,
+      "evidence": null,
+      "parseStatus": "not-mentioned"
+    }
+  },
+  {
+    "id": "poly-mentioned",
+    "html": "Experience with polygraph equipment.",
+    "expected": {
+      "level": "noneMentioned",
+      "requirement": "none",
+      "polygraphRequired": false,
+      "evidence": null,
+      "parseStatus": "not-mentioned"
+    }
+  },
+  {
+    "id": "poly-negative",
+    "html": "No polygraph required.",
+    "expected": {
+      "level": "other",
+      "requirement": "ambiguous",
+      "polygraphRequired": true,
+      "evidence": "No polygraph required.",
+      "parseStatus": "ambiguous"
+    }
+  },
+  {
+    "id": "poly-clearance",
+    "html": "Must currently hold TS/SCI with polygraph required.",
+    "expected": {
+      "level": "topSecretSCI",
+      "requirement": "activeRequired",
+      "polygraphRequired": true,
+      "evidence": "Must currently hold TS/SCI with polygraph required.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "no-clearance",
+    "html": "This position does not require a Security Clearance.",
+    "expected": {
+      "level": "noneMentioned",
+      "requirement": "none",
+      "polygraphRequired": false,
+      "evidence": null,
+      "parseStatus": "not-mentioned"
+    }
+  },
+  {
+    "id": "no-then-positive",
+    "html": "\u003Cp\u003EThis position does not require a Security Clearance.\u003C/p\u003E\u003Cp\u003ECandidate must obtain a U.S. Secret clearance.\u003C/p\u003E",
+    "expected": {
+      "level": "secret",
+      "requirement": "ambiguous",
+      "polygraphRequired": false,
+      "evidence": ". Candidate must obtain a U.S. Secret clearance.",
+      "parseStatus": "ambiguous"
+    }
+  },
+  {
+    "id": "none-label",
+    "html": "Security Clearance Requirement: None.",
+    "expected": {
+      "level": "noneMentioned",
+      "requirement": "none",
+      "polygraphRequired": false,
+      "evidence": null,
+      "parseStatus": "not-mentioned"
+    }
+  },
+  {
+    "id": "not-required-label",
+    "html": "Security Clearance Requirement: Not required.",
+    "expected": {
+      "level": "noneMentioned",
+      "requirement": "none",
+      "polygraphRequired": false,
+      "evidence": null,
+      "parseStatus": "not-mentioned"
+    }
+  },
+  {
+    "id": "irrelevant",
+    "html": "We protect trade secrets and maintain clearance between equipment.",
+    "expected": {
+      "level": "other",
+      "requirement": "ambiguous",
+      "polygraphRequired": false,
+      "evidence": "We protect trade secrets and maintain clearance between equipment.",
+      "parseStatus": "ambiguous"
+    }
+  },
+  {
+    "id": "bare-secret",
+    "html": "Secret recipe.",
+    "expected": {
+      "level": "noneMentioned",
+      "requirement": "none",
+      "polygraphRequired": false,
+      "evidence": null,
+      "parseStatus": "not-mentioned"
+    }
+  },
+  {
+    "id": "mixed-active-obtain",
+    "html": "Active Secret clearance required. Ability to obtain Top Secret clearance.",
+    "expected": {
+      "level": "topSecret",
+      "requirement": "activeRequired",
+      "polygraphRequired": false,
+      "evidence": "Active Secret clearance required. Ability to obtain Top Secret clearance.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "multiple",
+    "html": "Secret clearance and Top Secret clearance required.",
+    "expected": {
+      "level": "topSecret",
+      "requirement": "ambiguous",
+      "polygraphRequired": false,
+      "evidence": "Secret clearance and Top Secret clearance required.",
+      "parseStatus": "ambiguous"
+    }
+  },
+  {
+    "id": "trust-secret",
+    "html": "Public Trust and Secret clearance required.",
+    "expected": {
+      "level": "publicTrust",
+      "requirement": "ambiguous",
+      "polygraphRequired": false,
+      "evidence": "Public Trust and Secret clearance required.",
+      "parseStatus": "ambiguous"
+    }
+  },
+  {
+    "id": "trust-obtain-suitability",
+    "html": "Ability to obtain Public Trust following background investigation.",
+    "expected": {
+      "level": "publicTrust",
+      "requirement": "obtain",
+      "polygraphRequired": false,
+      "evidence": "Ability to obtain Public Trust following background investigation.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "trust-obtain-maintain",
+    "html": "Must obtain and maintain Public Trust investigation.",
+    "expected": {
+      "level": "publicTrust",
+      "requirement": "obtainAndMaintain",
+      "polygraphRequired": false,
+      "evidence": "Must obtain and maintain Public Trust investigation.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "day-one",
+    "html": "Secret required on day one.",
+    "expected": {
+      "level": "noneMentioned",
+      "requirement": "none",
+      "polygraphRequired": false,
+      "evidence": null,
+      "parseStatus": "not-mentioned"
+    }
+  },
+  {
+    "id": "hire",
+    "html": "Top Secret at the time of hire.",
+    "expected": {
+      "level": "topSecret",
+      "requirement": "activeRequired",
+      "polygraphRequired": false,
+      "evidence": "Top Secret at the time of hire.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "start-date",
+    "html": "TS/SCI at the start date.",
+    "expected": {
+      "level": "topSecretSCI",
+      "requirement": "activeRequired",
+      "polygraphRequired": false,
+      "evidence": "TS/SCI at the start date.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "html",
+    "html": "\u003Ch3\u003ERequired Qualifications\u003C/h3\u003E\u003Cp\u003EAbility\u0026nbsp;to obtain and maintain a \u003Cstrong\u003ESecret\u003C/strong\u003E clearance.\u003C/p\u003E",
+    "expected": {
+      "level": "secret",
+      "requirement": "obtainAndMaintain",
+      "polygraphRequired": false,
+      "evidence": "Required Qualifications Ability to obtain and maintain a Secret clearance.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "unicode",
+    "html": "CURRENT SECRET CLEARANCE REQUIRED. \u0130\u0131\u017F\u212A",
+    "expected": {
+      "level": "secret",
+      "requirement": "activeRequired",
+      "polygraphRequired": false,
+      "evidence": "CURRENT SECRET CLEARANCE REQUIRED. \u0130\u0131\u017F\u212A",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "punctuation",
+    "html": "Secret clearance. Preferred experience in programming.",
+    "expected": {
+      "level": "secret",
+      "requirement": "ambiguous",
+      "polygraphRequired": false,
+      "evidence": "Secret clearance. Preferred experience in programming.",
+      "parseStatus": "ambiguous"
+    }
+  },
+  {
+    "id": "far-context",
+    "html": "Active word word word word word word word word word word word word word word word word word word word word Secret clearance.",
+    "expected": {
+      "level": "secret",
+      "requirement": "ambiguous",
+      "polygraphRequired": false,
+      "evidence": "Active word word word word word word word word word word word word word word word word word word word word Secret clearance.",
+      "parseStatus": "ambiguous"
+    }
+  },
+  {
+    "id": "long-evidence",
+    "html": "Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Active Secret clearance required. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. ",
+    "expected": {
+      "level": "secret",
+      "requirement": "activeRequired",
+      "polygraphRequired": false,
+      "evidence": "\u2026Ordinary duties. Ordinary duties. Ordinary duties. Ordinary duties. Active Secret clearance required. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work. Additional work.\u2026",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "preferred-window",
+    "html": "Preferred Qualifications: x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x Active Secret clearance.",
+    "expected": {
+      "level": "secret",
+      "requirement": "activeRequired",
+      "polygraphRequired": false,
+      "evidence": "Preferred Qualifications: x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x Active Secret clearance.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "preferred-evidence",
+    "html": "Preferred Qualifications: Top Secret clearance. Required Qualifications: a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a Top Secret clearance required.",
+    "expected": {
+      "level": "topSecret",
+      "requirement": "preferred",
+      "polygraphRequired": false,
+      "evidence": "Preferred Qualifications: Top Secret clearance. Required Qualifications: a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a Top Secret clearance\u2026",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "northrop-unit",
+    "html": "\u003Cp\u003EU.S. citizen. Ability to obtain and maintain a Secret clearance. Travel up to 75%.\u003C/p\u003E",
+    "expected": {
+      "level": "secret",
+      "requirement": "obtainAndMaintain",
+      "polygraphRequired": false,
+      "evidence": "U.S. citizen. Ability to obtain and maintain a Secret clearance. Travel up to 75%.",
+      "parseStatus": "parsed"
+    }
+  },
+  {
+    "id": "parsons-unit",
+    "html": "\u003Cp\u003EMust be a U.S. Citizen and able to pass required federal background checks. Security Clearance Requirement: None.\u003C/p\u003E",
+    "expected": {
+      "level": "noneMentioned",
+      "requirement": "none",
+      "polygraphRequired": false,
+      "evidence": null,
+      "parseStatus": "not-mentioned"
+    }
+  }
+]

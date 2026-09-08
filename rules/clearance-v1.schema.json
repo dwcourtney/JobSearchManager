@@ -1,0 +1,305 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jsm:clearance-rules:v1",
+  "title": "JSM clearance rules v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "rulesetVersion",
+    "regexTimeoutMilliseconds",
+    "regexOptions",
+    "patterns",
+    "negationPatternId",
+    "contextPatternId",
+    "polygraphPatternId",
+    "sections",
+    "levelRules",
+    "requirementRules",
+    "levelOverrides"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "rulesetVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+(?:\\.\\d+){0,2}$"
+    },
+    "regexTimeoutMilliseconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000
+    },
+    "regexOptions": {
+      "const": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    "patterns": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "type",
+          "pattern",
+          "scope"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "enum": [
+              "regex",
+              "literal"
+            ]
+          },
+          "pattern": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8192
+          },
+          "scope": {
+            "enum": [
+              "normalizedText",
+              "clearanceContext",
+              "textOrContext",
+              "sectionPrefix"
+            ]
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "literal"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "scope": {
+                  "const": "sectionPrefix"
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "scope": {
+                  "enum": [
+                    "normalizedText",
+                    "clearanceContext",
+                    "textOrContext"
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "negationPatternId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "contextPatternId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "polygraphPatternId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sections": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lookbehindCharacters",
+        "preferredMarkerIds",
+        "resetMarkerIds"
+      ],
+      "properties": {
+        "lookbehindCharacters": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "preferredMarkerIds": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "resetMarkerIds": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "levelRules": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "patternId",
+          "priority",
+          "result"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "patternId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "priority": {
+            "type": "integer"
+          },
+          "result": {
+            "enum": [
+              "topSecretSCI",
+              "topSecret",
+              "publicTrust",
+              "secret",
+              "other"
+            ]
+          }
+        }
+      }
+    },
+    "requirementRules": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "patternId",
+          "priority",
+          "result",
+          "level",
+          "unlessPatternIds"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "patternId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "priority": {
+            "type": "integer"
+          },
+          "result": {
+            "enum": [
+              "activeRequired",
+              "eligible",
+              "publicTrustSuitability",
+              "mustPossess",
+              "obtainAndMaintain",
+              "obtain",
+              "maintain",
+              "preferred"
+            ]
+          },
+          "level": {
+            "enum": [
+              null,
+              "topSecretSCI",
+              "topSecret",
+              "publicTrust",
+              "secret",
+              "other"
+            ]
+          },
+          "unlessPatternIds": {
+            "type": "array",
+            "maxItems": 64,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "levelOverrides": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "fromLevel",
+          "result",
+          "patternId",
+          "unlessPatternIds"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fromLevel": {
+            "enum": [
+              "topSecretSCI",
+              "topSecret",
+              "publicTrust",
+              "secret",
+              "other"
+            ]
+          },
+          "result": {
+            "enum": [
+              "topSecretSCI",
+              "topSecret",
+              "publicTrust",
+              "secret",
+              "other"
+            ]
+          },
+          "patternId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "unlessPatternIds": {
+            "type": "array",
+            "maxItems": 64,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    }
+  }
+}

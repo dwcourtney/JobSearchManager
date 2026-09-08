@@ -1,10 +1,11 @@
+// Test-only frozen parser from 41eda623187db07bfd5550823325e1ecf72aa3fd. Do not update semantics.
 using System.Globalization;
 using System.Net;
 using System.Text.RegularExpressions;
 
 namespace JobSearchManager;
 
-internal static partial class JobAnalysis
+internal static partial class LegacyClearanceBaseline
 {
     private const string AmountRangePattern =
         @"\$\s*(?<minimum>\d[\d,]*(?:\.\d{1,2})?)\s*(?<minimumScale>[kK])?\s*(?:-|–|—|to)\s*" +
@@ -209,6 +210,70 @@ internal static partial class JobAnalysis
         return new RemoteLocationAnalysis(false, null, null);
     }
 
+    public static ClearanceAnalysis AnalyzeClearance(string descriptionHtml)
+    {
+        if (string.IsNullOrWhiteSpace(descriptionHtml))
+        {
+            return new ClearanceAnalysis(
+                "noneMentioned", "none", false, null, "description-unavailable");
+        }
+
+        var text = HtmlToPlainText(descriptionHtml);
+        // Explicit negative statements are not clearance requirements. Remove only
+        // the negative clause so a separate positive requirement can still win.
+        text = NoClearanceRequiredRegex().Replace(text, " ");
+        var polygraphRequired = RequiredPolygraphRegex().IsMatch(text);
+
+        var (level, levelMatch) = FindClearanceLevel(text, excludePreferredSections: true);
+        var onlyPreferredLevel = false;
+        if (level == "noneMentioned")
+        {
+            (level, levelMatch) = FindClearanceLevel(text, excludePreferredSections: false);
+            onlyPreferredLevel = level != "noneMentioned";
+        }
+
+        if (level == "publicTrust" &&
+            AmbiguousPublicTrustAlternativeRegex().IsMatch(text) &&
+            !SuitabilityInvestigationRegex().IsMatch(text))
+        {
+            level = "other";
+            levelMatch = AmbiguousPublicTrustAlternativeRegex().Match(text);
+        }
+
+        if (level == "noneMentioned" && polygraphRequired)
+        {
+            level = "other";
+            levelMatch = RequiredPolygraphRegex().Match(text);
+        }
+        else if (level == "noneMentioned")
+        {
+            return new ClearanceAnalysis(
+                "noneMentioned", "none", false, null, "not-mentioned");
+        }
+
+        var clearanceContext = GetClearanceContext(text);
+        var requirement = onlyPreferredLevel
+            ? "preferred"
+            : AnalyzeClearanceRequirement(clearanceContext, level);
+        var evidenceMatch = FindBestClearanceEvidenceMatch(
+            text,
+            level,
+            requirement,
+            polygraphRequired,
+            levelMatch);
+        var evidence = CreateSnippet(text, evidenceMatch.Index);
+        var parseStatus = level == "other" || requirement == "ambiguous"
+            ? "ambiguous"
+            : "parsed";
+
+        return new ClearanceAnalysis(
+            level,
+            requirement,
+            polygraphRequired,
+            evidence,
+            parseStatus);
+    }
+
     internal static string HtmlToPlainText(string html)
     {
         var withSeparators = BlockTagRegex().Replace(html, " ");
@@ -299,6 +364,146 @@ internal static partial class JobAnalysis
 
         return (start > 0 ? "…" : "") + snippet +
             (start + length < normalized.Length ? "…" : "");
+    }
+
+    private static string GetClearanceContext(string text)
+    {
+        var sentences = SentenceSplitRegex().Split(text);
+        var relevant = sentences
+            .Where(sentence => ClearanceContextRegex().IsMatch(sentence))
+            .Select(sentence => WhitespaceRegex().Replace(sentence, " ").Trim())
+            .Where(sentence => sentence.Length > 0)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        return relevant.Length > 0 ? string.Join(" ", relevant) : text;
+    }
+
+    private static (string Level, Match Match) FindClearanceLevel(
+        string text,
+        bool excludePreferredSections)
+    {
+        var candidates = new (string Level, Regex Pattern)[]
+        {
+            ("topSecretSCI", TopSecretSciRegex()),
+            ("topSecret", TopSecretRegex()),
+            ("publicTrust", PublicTrustRegex()),
+            ("secret", SecretRegex()),
+            ("other", OtherClearanceRegex())
+        };
+
+        foreach (var (level, pattern) in candidates)
+        {
+            foreach (Match match in pattern.Matches(text))
+            {
+                if (!excludePreferredSections || !IsInPreferredSection(text, match.Index))
+                {
+                    return (level, match);
+                }
+            }
+        }
+
+        return ("noneMentioned", Match.Empty);
+    }
+
+    private static bool IsInPreferredSection(string text, int matchIndex)
+    {
+        var start = Math.Max(0, matchIndex - 220);
+        var prefix = text[start..matchIndex];
+        var preferredIndex = prefix.LastIndexOf("Preferred Qualifications", StringComparison.OrdinalIgnoreCase);
+        if (preferredIndex < 0)
+        {
+            preferredIndex = prefix.LastIndexOf("Preferred Experience", StringComparison.OrdinalIgnoreCase);
+        }
+
+        var requiredIndex = prefix.LastIndexOf("Required Qualifications", StringComparison.OrdinalIgnoreCase);
+        var basicIndex = prefix.LastIndexOf("Basic Qualifications", StringComparison.OrdinalIgnoreCase);
+        return preferredIndex >= 0 && preferredIndex > Math.Max(requiredIndex, basicIndex);
+    }
+
+    private static string AnalyzeClearanceRequirement(string context, string level)
+    {
+        if (ActiveRequiredClearanceRegex().IsMatch(context))
+        {
+            return "activeRequired";
+        }
+
+        if (AlternativeEligibilityRegex().IsMatch(context))
+        {
+            return "eligible";
+        }
+
+        if (level == "publicTrust" && SuitabilityInvestigationRegex().IsMatch(context) &&
+            !ObtainAndMaintainClearanceRegex().IsMatch(context) &&
+            !ObtainClearanceRegex().IsMatch(context))
+        {
+            return "publicTrustSuitability";
+        }
+
+        if (MustPossessClearanceRegex().IsMatch(context))
+        {
+            return "mustPossess";
+        }
+
+        if (ObtainAndMaintainClearanceRegex().IsMatch(context))
+        {
+            return "obtainAndMaintain";
+        }
+
+        if (ObtainClearanceRegex().IsMatch(context))
+        {
+            return "obtain";
+        }
+
+        if (MaintainClearanceRegex().IsMatch(context))
+        {
+            return "maintain";
+        }
+
+        if (EligibleClearanceRegex().IsMatch(context))
+        {
+            return "eligible";
+        }
+
+        if (PreferredClearanceRegex().IsMatch(context))
+        {
+            return "preferred";
+        }
+
+        return "ambiguous";
+    }
+
+    private static Match FindBestClearanceEvidenceMatch(
+        string text,
+        string level,
+        string requirement,
+        bool polygraphRequired,
+        Match fallback)
+    {
+        Regex? preferredPattern = level switch
+        {
+            "topSecretSCI" => TopSecretSciRegex(),
+            "topSecret" => TopSecretRegex(),
+            "publicTrust" => PublicTrustRegex(),
+            "secret" => SecretRegex(),
+            _ => OtherClearanceRegex()
+        };
+
+        var match = preferredPattern.Match(text);
+        if (match.Success)
+        {
+            return match;
+        }
+
+        if (polygraphRequired)
+        {
+            match = RequiredPolygraphRegex().Match(text);
+            if (match.Success)
+            {
+                return match;
+            }
+        }
+
+        return fallback;
     }
 
     [GeneratedRegex(
@@ -414,4 +619,105 @@ internal static partial class JobAnalysis
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex CommutingPlusRegex();
 
+    [GeneratedRegex(
+        @"\b(?:TS\s*/\s*SCI|Top\s+Secret\s*/\s*SCI|Top\s+Secret\s+(?:with\s+)?SCI|SCI\s+eligibility)\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex TopSecretSciRegex();
+
+    [GeneratedRegex(
+        @"\bTop\s+Secret\b|\bTS\b.{0,30}\bclearance\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex TopSecretRegex();
+
+    [GeneratedRegex(
+        @"\bPublic\s+Trust\b|\b(?:FAA|TSA)\s+(?:Public\s+Trust\s+)?Suitability\s+Determination\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex PublicTrustRegex();
+
+    [GeneratedRegex(
+        @"\bSecret\b.{0,35}\bclearance\b|\bclearance\b.{0,35}\bSecret\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex SecretRegex();
+
+    [GeneratedRegex(
+        @"\bsecurity\s+clearance\b|\bclearance\b.{0,45}\b(?:active|current|required|obtain|maintain|possess|eligible|preferred)\b|" +
+        @"\b(?:active|current|required|obtain|maintain|possess|eligible|preferred)\b.{0,45}\bclearance\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex OtherClearanceRegex();
+
+    [GeneratedRegex(
+        @"\b(?:security\s+clearance\s*:\s*)?(?:(?:this\s+)?(?:position|role|job)\s+does\s+not\s+require|no)\s+(?:an?\s+)?(?:u\.?s\.?\s+)?security\s+clearance(?:\s+is\s+required)?\b|" +
+        @"\bsecurity\s+clearance\s+requirement\s*:\s*(?:none|not\s+required)\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex NoClearanceRequiredRegex();
+
+    [GeneratedRegex(
+        @"\b(?:clearance|Public\s+Trust|TS\s*/\s*SCI|SCI\s+eligibility|suitability\s+determination|background\s+investigation|polygraph)\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex ClearanceContextRegex();
+
+    [GeneratedRegex(
+        @"(?:\bpolygraph\b.{0,50}\b(?:required|must|pass|current|active)\b)|" +
+        @"(?:\b(?:required|must|pass|current|active)\b.{0,50}\bpolygraph\b)",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex RequiredPolygraphRegex();
+
+    [GeneratedRegex(
+        @"\b(?:clearance|Public\s+Trust)\b.{0,50}\bpreferred\b|" +
+        @"\bpreferred\b.{0,50}\b(?:clearance|Public\s+Trust)\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex PreferredClearanceRegex();
+
+    [GeneratedRegex(
+        @"\b(?:active|current)\b.{0,55}\b(?:clearance|Public\s+Trust)\b(?![^.!?]{0,40}\bpreferred\b)|" +
+        @"\b(?:clearance|Public\s+Trust)\b.{0,55}\b(?:active|current)\b(?![^.!?]{0,40}\bpreferred\b)|" +
+        @"\bholds?\b.{0,35}\bactive\b.{0,35}\bclearance\b(?![^.!?]{0,40}\bpreferred\b)|" +
+        @"\bmust\s+currently\s+hold\b.{0,55}\b(?:TS\s*/\s*SCI|Top\s+Secret|Secret|clearance|Public\s+Trust)\b|" +
+        @"\b(?:TS\s*/\s*SCI|Top\s+Secret|Secret|clearance|Public\s+Trust)\b.{0,45}\b(?:required\s+)?(?:on\s+day\s+one|at\s+(?:the\s+)?time\s+of\s+hire|at\s+(?:the\s+)?start\s+date)\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex ActiveRequiredClearanceRegex();
+
+    [GeneratedRegex(
+        @"\bmust\s+(?:have|possess|hold)\b.{0,60}\b(?:clearance|Public\s+Trust)\b(?![^.!?]{0,40}\bpreferred\b)|" +
+        @"\b(?:possess|hold)\s+and\s+maintain\b.{0,55}\bclearance\b(?![^.!?]{0,40}\bpreferred\b)|" +
+        @"\bexisting\b.{0,55}\b(?:clearance|Public\s+Trust)\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex MustPossessClearanceRegex();
+
+    [GeneratedRegex(
+        @"\b(?:ability\s+to|able\s+to|must)\s+obtain\s+and\s+maintain\b.{0,70}\b(?:clearance|Public\s+Trust|investigation)\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex ObtainAndMaintainClearanceRegex();
+
+    [GeneratedRegex(
+        @"\b(?:ability\s+to|able\s+to|must)\s+obtain\b.{0,70}\b(?:clearance|Public\s+Trust)\b|" +
+        @"\b(?:clearance|Public\s+Trust)\b.{0,50}\bprior\s+to\s+(?:start|starting)\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex ObtainClearanceRegex();
+
+    [GeneratedRegex(
+        @"\b(?:ability\s+to|able\s+to|must)\s+maintain\b.{0,60}\b(?:clearance|Public\s+Trust)\b|" +
+        @"\b(?:clearance|Public\s+Trust)\b.{0,40}\bmaintain\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex MaintainClearanceRegex();
+
+    [GeneratedRegex(
+        @"\b(?:eligible|eligibility|meet\s+the\s+requirements)\b.{0,70}\b(?:clearance|Public\s+Trust|one)\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex EligibleClearanceRegex();
+
+    [GeneratedRegex(
+        @"\bmust\s+(?:have|possess|hold)\b.{0,90}\bclearance\b.{0,90}\bor\s+be\s+able\s+to\s+meet\s+the\s+requirements\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex AlternativeEligibilityRegex();
+
+    [GeneratedRegex(
+        @"\b(?:suitability\s+determination|(?:favorable|extended|government)?\s*background\s+investigation)\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex SuitabilityInvestigationRegex();
+
+    [GeneratedRegex(
+        @"\bPublic\s+Trust\b.{0,30}\bor\s+(?:a\s+)?security\s+clearance\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex AmbiguousPublicTrustAlternativeRegex();
 }
