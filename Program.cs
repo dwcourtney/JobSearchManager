@@ -170,6 +170,7 @@ const int ApplicationPort = 54321;
 const string ApplicationUrl = "http://127.0.0.1:54321";
 
 var clearanceRules = ClearanceRules.Default; // Validate packaged rules before starting the host.
+var educationRules = EducationRules.Default; // Validate packaged education rules before host startup.
 var workAuthorizationRules = WorkAuthorizationRules.Default; // Validate packaged authorization rules before host startup.
 var builder = WebApplication.CreateBuilder(args);
 var hosting = HostingConfiguration.FromConfiguration(builder.Configuration);
@@ -331,6 +332,7 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
 
 var app = builder.Build();
 app.Logger.LogInformation("Clearance rules {Version}, SHA-256 {Fingerprint}", clearanceRules.Version, clearanceRules.Fingerprint);
+app.Logger.LogInformation("Education rules {Version}, SHA-256 {Fingerprint}", educationRules.Version, educationRules.Fingerprint);
 app.Logger.LogInformation("Work-authorization rules {Version}, SHA-256 {Fingerprint}", workAuthorizationRules.Version, workAuthorizationRules.Fingerprint);
 var versionInfo = VersionEndpoint.Create(builder.Configuration, hosting);
 

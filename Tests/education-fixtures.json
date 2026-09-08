@@ -1,0 +1,2595 @@
+[
+  {
+    "id": "education-001",
+    "html": "",
+    "expected": {
+      "minimumLevel": "noneSpecified",
+      "specificDegree": null,
+      "requirementType": "noDegreeSpecified",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [],
+      "evidence": [],
+      "parseStatus": "notFound",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-002",
+    "html": "\u003Cp\u003ENo degree specified.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "noneSpecified",
+      "specificDegree": null,
+      "requirementType": "noDegreeSpecified",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [],
+      "evidence": [],
+      "parseStatus": "notFound",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-003",
+    "html": "\u003Cp\u003Ehigh school diploma required\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "highSchool",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "highSchool",
+          "specificDegree": null,
+          "requirement": "required",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "high school diploma required"
+        }
+      ],
+      "evidence": [
+        "high school diploma required"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-004",
+    "html": "\u003Cp\u003EGED required\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "highSchool",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "highSchool",
+          "specificDegree": null,
+          "requirement": "required",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "GED required"
+        }
+      ],
+      "evidence": [
+        "GED required"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-005",
+    "html": "\u003Cp\u003Esecondary education\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "highSchool",
+      "specificDegree": null,
+      "requirementType": "mentionedUnclear",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "highSchool",
+          "specificDegree": null,
+          "requirement": "mentioned",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "secondary education"
+        }
+      ],
+      "evidence": [
+        "secondary education"
+      ],
+      "parseStatus": "ambiguous",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-006",
+    "html": "\u003Cp\u003Eassociate degree required\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "associate",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "associate",
+          "specificDegree": null,
+          "requirement": "required",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "associate degree required"
+        }
+      ],
+      "evidence": [
+        "associate degree required"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-007",
+    "html": "\u003Cp\u003Eassociate\u2019s degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "associate",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "associate",
+          "specificDegree": null,
+          "requirement": "minimum",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "associate\u2019s degree"
+        }
+      ],
+      "evidence": [
+        "associate\u2019s degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-008",
+    "html": "\u003Cp\u003EAssociate of Applied Science\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "associate",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "associate",
+          "specificDegree": null,
+          "requirement": "minimum",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Associate of Applied Science"
+        }
+      ],
+      "evidence": [
+        "Associate of Applied Science"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-009",
+    "html": "\u003Cp\u003EBachelor\u0027s degree in Computer Science required.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [
+        "Computer Science"
+      ],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "required",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [
+            "Computer Science"
+          ],
+          "evidence": "Bachelor\u0027s degree in Computer Science required."
+        }
+      ],
+      "evidence": [
+        "Bachelor\u0027s degree in Computer Science required."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-010",
+    "html": "\u003Cp\u003EMaster\u0027s degree preferred.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "master",
+      "specificDegree": null,
+      "requirementType": "preferredOnly",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [
+        "master"
+      ],
+      "paths": [
+        {
+          "level": "master",
+          "specificDegree": null,
+          "requirement": "preferred",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Master\u0027s degree preferred."
+        }
+      ],
+      "evidence": [
+        "Master\u0027s degree preferred."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-011",
+    "html": "\u003Cp\u003EDoctorate required.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "doctorate",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "doctorate",
+          "specificDegree": null,
+          "requirement": "required",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Doctorate required."
+        }
+      ],
+      "evidence": [
+        "Doctorate required."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-012",
+    "html": "\u003Cp\u003EPh.D. required.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "doctorate",
+      "specificDegree": "phD",
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "doctorate",
+          "specificDegree": "phD",
+          "requirement": "required",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Ph.D. required."
+        }
+      ],
+      "evidence": [
+        "Ph.D. required."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-013",
+    "html": "\u003Cp\u003EDoctor of Philosophy\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "doctorate",
+      "specificDegree": "phD",
+      "requirementType": "mentionedUnclear",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "doctorate",
+          "specificDegree": "phD",
+          "requirement": "mentioned",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Doctor of Philosophy"
+        }
+      ],
+      "evidence": [
+        "Doctor of Philosophy"
+      ],
+      "parseStatus": "ambiguous",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-014",
+    "html": "\u003Cp\u003EBachelor\u0027s or equivalent experience required.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "degreeOrExperience",
+      "experienceSubstitutionAccepted": true,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "required",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u0027s or equivalent experience required."
+        }
+      ],
+      "evidence": [
+        "Bachelor\u0027s or equivalent experience required."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-015",
+    "html": "\u003Cp\u003EBachelor\u0027s degree or equivalent professional experience\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "degreeOrExperience",
+      "experienceSubstitutionAccepted": true,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "minimum",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u0027s degree or equivalent professional experience"
+        }
+      ],
+      "evidence": [
+        "Bachelor\u0027s degree or equivalent professional experience"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-016",
+    "html": "\u003Cp\u003EAdditional experience may be considered in lieu of the degree requirements.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "noneSpecified",
+      "specificDegree": null,
+      "requirementType": "degreeOrExperience",
+      "experienceSubstitutionAccepted": true,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [],
+      "evidence": [
+        "Additional experience may be considered in lieu of the degree requirements."
+      ],
+      "parseStatus": "ambiguous",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-017",
+    "html": "\u003Cp\u003EBachelor\u0027s degree with 8 years or Master\u0027s degree with 6 years required.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "degreeWithExperienceSubstitution",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "master",
+          "specificDegree": null,
+          "requirement": "required",
+          "minimumExperienceYears": 6,
+          "maximumExperienceYears": 6,
+          "fields": [],
+          "evidence": "Bachelor\u0027s degree with 8 years or Master\u0027s degree with 6 years required."
+        },
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "minimum",
+          "minimumExperienceYears": 8,
+          "maximumExperienceYears": 8,
+          "fields": [],
+          "evidence": "Bachelor\u0027s degree with 8 years or Master\u0027s degree with 6 years required."
+        }
+      ],
+      "evidence": [
+        "Bachelor\u0027s degree with 8 years or Master\u0027s degree with 6 years required."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-018",
+    "html": "\u003Cp\u003EBachelor\u0027s degree required. Master\u0027s degree may substitute for required experience.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "degreeWithExperienceSubstitution",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "required",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u0027s degree required. Master\u0027s degree may substitute for required experience."
+        },
+        {
+          "level": "master",
+          "specificDegree": null,
+          "requirement": "required",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u0027s degree required. Master\u0027s degree may substitute for required experience."
+        }
+      ],
+      "evidence": [
+        "Bachelor\u0027s degree required. Master\u0027s degree may substitute for required experience."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-019",
+    "html": "\u003Cp\u003EDegree in engineering required.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "noneSpecified",
+      "specificDegree": null,
+      "requirementType": "noDegreeSpecified",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [],
+      "evidence": [],
+      "parseStatus": "notFound",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-020",
+    "html": "\u003Cp\u003EWe offer tuition reimbursement.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "noneSpecified",
+      "specificDegree": null,
+      "requirementType": "noDegreeSpecified",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [],
+      "evidence": [],
+      "parseStatus": "notFound",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-021",
+    "html": "\u003Cp\u003EMaster data management and bachelor apartments.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "noneSpecified",
+      "specificDegree": null,
+      "requirementType": "noDegreeSpecified",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [],
+      "evidence": [],
+      "parseStatus": "notFound",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-022",
+    "html": "\u003Cp\u003EB.S. required. M.S./PhD preferred.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [
+        "master",
+        "doctorate"
+      ],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "required",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "B.S. required. M.S./PhD preferred."
+        },
+        {
+          "level": "master",
+          "specificDegree": null,
+          "requirement": "preferred",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "B.S. required. M.S./PhD preferred."
+        },
+        {
+          "level": "doctorate",
+          "specificDegree": "phD",
+          "requirement": "preferred",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "B.S. required. M.S./PhD preferred."
+        }
+      ],
+      "evidence": [
+        "B.S. required. M.S./PhD preferred."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-023",
+    "html": "\u003Cp\u003EBachelor\u0027s minimum; graduate degree desirable.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [
+        "master"
+      ],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "minimum",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u0027s minimum; graduate degree desirable."
+        },
+        {
+          "level": "master",
+          "specificDegree": null,
+          "requirement": "desired",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u0027s minimum; graduate degree desirable."
+        }
+      ],
+      "evidence": [
+        "Bachelor\u0027s minimum; graduate degree desirable."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-024",
+    "html": "\u003Cp\u003EBachelor\u0027s or Master\u0027s degree required.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "required",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u0027s or Master\u0027s degree required."
+        },
+        {
+          "level": "master",
+          "specificDegree": null,
+          "requirement": "required",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u0027s or Master\u0027s degree required."
+        }
+      ],
+      "evidence": [
+        "Bachelor\u0027s or Master\u0027s degree required."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-025",
+    "html": "\u003Cp\u003EAdvanced degree (Master\u2019s or higher) in computer science or a related discipline.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "master",
+      "specificDegree": null,
+      "requirementType": "mentionedUnclear",
+      "experienceSubstitutionAccepted": false,
+      "fields": [
+        "computer science",
+        "Related field accepted"
+      ],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "master",
+          "specificDegree": null,
+          "requirement": "mentioned",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [
+            "computer science",
+            "Related field accepted"
+          ],
+          "evidence": "Advanced degree (Master\u2019s or higher) in computer science or a related discipline."
+        }
+      ],
+      "evidence": [
+        "Advanced degree (Master\u2019s or higher) in computer science or a related discipline."
+      ],
+      "parseStatus": "ambiguous",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-026",
+    "html": "\u003Cp\u003EBachelor\u0027s degree in Civil, preferred, or Mechanical Engineering.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [
+        "Civil",
+        "Mechanical Engineering"
+      ],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "minimum",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [
+            "Civil",
+            "Mechanical Engineering"
+          ],
+          "evidence": "Bachelor\u0027s degree in Civil, preferred, or Mechanical Engineering."
+        }
+      ],
+      "evidence": [
+        "Bachelor\u0027s degree in Civil, preferred, or Mechanical Engineering."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-027",
+    "html": "\u003Cp\u003EBachelor\u0027s degree in Civil, Electrical, or Mechanical Engineering; Civil Engineering is preferred.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [
+        "Civil",
+        "Electrical",
+        "Mechanical Engineering"
+      ],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "minimum",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [
+            "Civil",
+            "Electrical",
+            "Mechanical Engineering"
+          ],
+          "evidence": "Bachelor\u0027s degree in Civil, Electrical, or Mechanical Engineering; Civil Engineering is preferred."
+        }
+      ],
+      "evidence": [
+        "Bachelor\u0027s degree in Civil, Electrical, or Mechanical Engineering; Civil Engineering is preferred."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-028",
+    "html": "\u003Cp\u003EBachelor\u0027s degree from an ABET-accredited program is required.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "required",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u0027s degree from an ABET-accredited program is required."
+        }
+      ],
+      "evidence": [
+        "Bachelor\u0027s degree from an ABET-accredited program is required."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": [
+        {
+          "name": "ABET",
+          "requirement": "required",
+          "evidence": "Bachelor\u0027s degree from an ABET-accredited program is required."
+        }
+      ]
+    }
+  },
+  {
+    "id": "education-029",
+    "html": "\u003Cp\u003EABET accreditation is preferred, although not required.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "noneSpecified",
+      "specificDegree": null,
+      "requirementType": "accreditationOnly",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [],
+      "evidence": [
+        "ABET accreditation is preferred, although not required."
+      ],
+      "parseStatus": "ambiguous",
+      "analysisVersion": 4,
+      "accreditations": [
+        {
+          "name": "ABET",
+          "requirement": "preferred",
+          "evidence": "ABET accreditation is preferred, although not required."
+        }
+      ]
+    }
+  },
+  {
+    "id": "education-030",
+    "html": "\u003Cp\u003EABET-accredited program must be completed.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "noneSpecified",
+      "specificDegree": null,
+      "requirementType": "accreditationOnly",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [],
+      "evidence": [
+        "ABET-accredited program must be completed."
+      ],
+      "parseStatus": "ambiguous",
+      "analysisVersion": 4,
+      "accreditations": [
+        {
+          "name": "ABET",
+          "requirement": "required",
+          "evidence": "ABET-accredited program must be completed."
+        }
+      ]
+    }
+  },
+  {
+    "id": "education-031",
+    "html": "\u003Cp\u003EABET accreditation.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "noneSpecified",
+      "specificDegree": null,
+      "requirementType": "accreditationOnly",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [],
+      "evidence": [
+        "ABET accreditation."
+      ],
+      "parseStatus": "ambiguous",
+      "analysisVersion": 4,
+      "accreditations": [
+        {
+          "name": "ABET",
+          "requirement": "mentioned",
+          "evidence": "ABET accreditation."
+        }
+      ]
+    }
+  },
+  {
+    "id": "education-032",
+    "html": "\u003Cp\u003EBachelor\u0027s degree not required.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "preferredOnly",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [
+        "bachelor"
+      ],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "preferred",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u0027s degree not required."
+        }
+      ],
+      "evidence": [
+        "Bachelor\u0027s degree not required."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-033",
+    "html": "\u003Cp\u003ENo GED required.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "highSchool",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "highSchool",
+          "specificDegree": null,
+          "requirement": "required",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "No GED required."
+        }
+      ],
+      "evidence": [
+        "No GED required."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-034",
+    "html": "\u003Cp\u003EB.S. degree in Physics\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [
+        "Physics"
+      ],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "minimum",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [
+            "Physics"
+          ],
+          "evidence": "B.S. degree in Physics"
+        }
+      ],
+      "evidence": [
+        "B.S. degree in Physics"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-035",
+    "html": "\u003Cp\u003EM.S./PhD with significant compiler related project or thesis work preferred\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "master",
+      "specificDegree": null,
+      "requirementType": "preferredOnly",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [
+        "master",
+        "doctorate"
+      ],
+      "paths": [
+        {
+          "level": "master",
+          "specificDegree": null,
+          "requirement": "preferred",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "M.S./PhD with significant compiler related project or thesis work preferred"
+        },
+        {
+          "level": "doctorate",
+          "specificDegree": "phD",
+          "requirement": "preferred",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "M.S./PhD with significant compiler related project or thesis work preferred"
+        }
+      ],
+      "evidence": [
+        "M.S./PhD with significant compiler related project or thesis work preferred"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-036",
+    "html": "\u003Cp\u003EB.S. or degree in Computer Science/Engineering or equivalent experience\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "degreeOrExperience",
+      "experienceSubstitutionAccepted": true,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "minimum",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "B.S. or degree in Computer Science/Engineering or equivalent experience"
+        }
+      ],
+      "evidence": [
+        "B.S. or degree in Computer Science/Engineering or equivalent experience"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-037",
+    "html": "\u003Cp\u003EBachelor\u0027s degree in Electrical Engineering, or a related field (preferred), with 10 years of experience.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "preferredOnly",
+      "experienceSubstitutionAccepted": false,
+      "fields": [
+        "Electrical Engineering",
+        "Related field accepted"
+      ],
+      "preferredLevels": [
+        "bachelor"
+      ],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "preferred",
+          "minimumExperienceYears": 10,
+          "maximumExperienceYears": 10,
+          "fields": [
+            "Electrical Engineering",
+            "Related field accepted"
+          ],
+          "evidence": "Bachelor\u0027s degree in Electrical Engineering, or a related field (preferred), with 10 years of experience."
+        }
+      ],
+      "evidence": [
+        "Bachelor\u0027s degree in Electrical Engineering, or a related field (preferred), with 10 years of experience."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-038",
+    "html": "\u003Cp\u003EMaster\u0027s degree in Engineering required. PhD preferred.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "master",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [
+        "Engineering"
+      ],
+      "preferredLevels": [
+        "doctorate"
+      ],
+      "paths": [
+        {
+          "level": "master",
+          "specificDegree": null,
+          "requirement": "required",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [
+            "Engineering"
+          ],
+          "evidence": "Master\u0027s degree in Engineering required. PhD preferred."
+        },
+        {
+          "level": "doctorate",
+          "specificDegree": "phD",
+          "requirement": "preferred",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [
+            "Engineering"
+          ],
+          "evidence": "Master\u0027s degree in Engineering required. PhD preferred."
+        }
+      ],
+      "evidence": [
+        "Master\u0027s degree in Engineering required. PhD preferred."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-039",
+    "html": "\u003Cp\u003EExperience accepted in lieu of degree.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "noneSpecified",
+      "specificDegree": null,
+      "requirementType": "degreeOrExperience",
+      "experienceSubstitutionAccepted": true,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [],
+      "evidence": [
+        "Experience accepted in lieu of degree."
+      ],
+      "parseStatus": "ambiguous",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-040",
+    "html": "\u003Cp\u003EDirect experience may substitute.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "noneSpecified",
+      "specificDegree": null,
+      "requirementType": "noDegreeSpecified",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [],
+      "evidence": [],
+      "parseStatus": "notFound",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-041",
+    "html": "\u003Cp\u003E5 years of experience with a Bachelor degree required.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "required",
+          "minimumExperienceYears": 5,
+          "maximumExperienceYears": 5,
+          "fields": [],
+          "evidence": "5 years of experience with a Bachelor degree required."
+        }
+      ],
+      "evidence": [
+        "5 years of experience with a Bachelor degree required."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-042",
+    "html": "\u003Cp\u003EBachelor\u0027s degree plus 2\u20134 years experience.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "minimum",
+          "minimumExperienceYears": 2,
+          "maximumExperienceYears": 4,
+          "fields": [],
+          "evidence": "Bachelor\u0027s degree plus 2\u20134 years experience."
+        }
+      ],
+      "evidence": [
+        "Bachelor\u0027s degree plus 2\u20134 years experience."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-043",
+    "html": "\u003Cp\u003EBachelor\u0027s degree in Engineering from an accredited university.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [
+        "Engineering"
+      ],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "minimum",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [
+            "Engineering"
+          ],
+          "evidence": "Bachelor\u0027s degree in Engineering from an accredited university."
+        }
+      ],
+      "evidence": [
+        "Bachelor\u0027s degree in Engineering from an accredited university."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-044",
+    "html": "\u003Cp\u003EAA degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "associate",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "associate",
+          "specificDegree": null,
+          "requirement": "minimum",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "AA degree"
+        }
+      ],
+      "evidence": [
+        "AA degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-045",
+    "html": "\u003Cp\u003EAS degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "noneSpecified",
+      "specificDegree": null,
+      "requirementType": "noDegreeSpecified",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [],
+      "evidence": [],
+      "parseStatus": "notFound",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-046",
+    "html": "\u003Cp\u003EAAS degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "associate",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "associate",
+          "specificDegree": null,
+          "requirement": "minimum",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "AAS degree"
+        }
+      ],
+      "evidence": [
+        "AAS degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-047",
+    "html": "\u003Cp\u003EBA degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "minimum",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "BA degree"
+        }
+      ],
+      "evidence": [
+        "BA degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-048",
+    "html": "\u003Cp\u003EBS degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "minimum",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "BS degree"
+        }
+      ],
+      "evidence": [
+        "BS degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-049",
+    "html": "\u003Cp\u003EBSC degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "mentionedUnclear",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "mentioned",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "BSC degree"
+        }
+      ],
+      "evidence": [
+        "BSC degree"
+      ],
+      "parseStatus": "ambiguous",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-050",
+    "html": "\u003Cp\u003EBSEE degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "mentionedUnclear",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "mentioned",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "BSEE degree"
+        }
+      ],
+      "evidence": [
+        "BSEE degree"
+      ],
+      "parseStatus": "ambiguous",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-051",
+    "html": "\u003Cp\u003EMA degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "master",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "master",
+          "specificDegree": null,
+          "requirement": "minimum",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "MA degree"
+        }
+      ],
+      "evidence": [
+        "MA degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-052",
+    "html": "\u003Cp\u003EMS degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "master",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "master",
+          "specificDegree": null,
+          "requirement": "minimum",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "MS degree"
+        }
+      ],
+      "evidence": [
+        "MS degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-053",
+    "html": "\u003Cp\u003EMBA degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "master",
+      "specificDegree": null,
+      "requirementType": "mentionedUnclear",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "master",
+          "specificDegree": null,
+          "requirement": "mentioned",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "MBA degree"
+        }
+      ],
+      "evidence": [
+        "MBA degree"
+      ],
+      "parseStatus": "ambiguous",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-054",
+    "html": "\u003Cp\u003EMSC degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "master",
+      "specificDegree": null,
+      "requirementType": "mentionedUnclear",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "master",
+          "specificDegree": null,
+          "requirement": "mentioned",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "MSC degree"
+        }
+      ],
+      "evidence": [
+        "MSC degree"
+      ],
+      "parseStatus": "ambiguous",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-055",
+    "html": "\u003Cp\u003EDoctoral-level degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "doctorate",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "doctorate",
+          "specificDegree": null,
+          "requirement": "minimum",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Doctoral-level degree"
+        }
+      ],
+      "evidence": [
+        "Doctoral-level degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-056",
+    "html": "\u003Cp\u003Eundergraduate degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "mentionedUnclear",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "mentioned",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "undergraduate degree"
+        }
+      ],
+      "evidence": [
+        "undergraduate degree"
+      ],
+      "parseStatus": "ambiguous",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-057",
+    "html": "\u003Cp\u003Egraduate degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "master",
+      "specificDegree": null,
+      "requirementType": "mentionedUnclear",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "master",
+          "specificDegree": null,
+          "requirement": "mentioned",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "graduate degree"
+        }
+      ],
+      "evidence": [
+        "graduate degree"
+      ],
+      "parseStatus": "ambiguous",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-058",
+    "html": "\u003Cp\u003EAn academic degree is desirable.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "noneSpecified",
+      "specificDegree": null,
+      "requirementType": "noDegreeSpecified",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [],
+      "evidence": [],
+      "parseStatus": "notFound",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-059",
+    "html": "\u003Cp\u003EMust possess professional credentials.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "noneSpecified",
+      "specificDegree": null,
+      "requirementType": "noDegreeSpecified",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [],
+      "evidence": [],
+      "parseStatus": "notFound",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-060",
+    "html": "\u003Ch3\u003EMinimum Qualifications\u003C/h3\u003E\u003Cp\u003EBachelor\u2019s degree\u003C/p\u003E\u003Ch3\u003EPreferred Qualifications\u003C/h3\u003E\u003Cp\u003EPhD\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [
+        "doctorate"
+      ],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "minimum",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u2019s degree"
+        },
+        {
+          "level": "doctorate",
+          "specificDegree": "phD",
+          "requirement": "preferred",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "PhD"
+        }
+      ],
+      "evidence": [
+        "Bachelor\u2019s degree",
+        "PhD"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-061",
+    "html": "\u003Ch3\u003ERequired Qualifications\u003C/h3\u003E\u003Cp\u003EMaster\u2019s degree in Structural Engineering.\u003C/p\u003E\u003Cp\u003EBachelor\u2019s degree in Civil, preferred, or Mechanical Engineering.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [
+        "Civil",
+        "Mechanical Engineering",
+        "Structural Engineering"
+      ],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "required",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [
+            "Civil",
+            "Mechanical Engineering"
+          ],
+          "evidence": "Bachelor\u2019s degree in Civil, preferred, or Mechanical Engineering."
+        },
+        {
+          "level": "master",
+          "specificDegree": null,
+          "requirement": "required",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [
+            "Structural Engineering"
+          ],
+          "evidence": "Master\u2019s degree in Structural Engineering."
+        }
+      ],
+      "evidence": [
+        "Bachelor\u2019s degree in Civil, preferred, or Mechanical Engineering.",
+        "Master\u2019s degree in Structural Engineering."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-062",
+    "html": "\u003Ch3\u003EBasic Qualifications\u003C/h3\u003E\u003Cp\u003EBachelor\u2019s degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "minimum",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u2019s degree"
+        }
+      ],
+      "evidence": [
+        "Bachelor\u2019s degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-063",
+    "html": "\u003Ch3\u003ERequired Qualifications\u003C/h3\u003E\u003Cp\u003EBachelor\u2019s degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "required",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u2019s degree"
+        }
+      ],
+      "evidence": [
+        "Bachelor\u2019s degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-064",
+    "html": "\u003Ch3\u003EMinimum Education\u003C/h3\u003E\u003Cp\u003EBachelor\u2019s degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "minimum",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u2019s degree"
+        }
+      ],
+      "evidence": [
+        "Bachelor\u2019s degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-065",
+    "html": "\u003Ch3\u003ERequirements\u003C/h3\u003E\u003Cp\u003EBachelor\u2019s degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "required",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u2019s degree"
+        }
+      ],
+      "evidence": [
+        "Bachelor\u2019s degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-066",
+    "html": "\u003Ch3\u003EWhat we need to see\u003C/h3\u003E\u003Cp\u003EBachelor\u2019s degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "required",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u2019s degree"
+        }
+      ],
+      "evidence": [
+        "Bachelor\u2019s degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-067",
+    "html": "\u003Ch3\u003EWhat does Acme need from me\u003C/h3\u003E\u003Cp\u003EBachelor\u2019s degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "required",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u2019s degree"
+        }
+      ],
+      "evidence": [
+        "Bachelor\u2019s degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-068",
+    "html": "\u003Ch3\u003EAbout the must haves\u003C/h3\u003E\u003Cp\u003EBachelor\u2019s degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "required",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u2019s degree"
+        }
+      ],
+      "evidence": [
+        "Bachelor\u2019s degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-069",
+    "html": "\u003Ch3\u003EPreferred Qualifications\u003C/h3\u003E\u003Cp\u003EBachelor\u2019s degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "preferredOnly",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [
+        "bachelor"
+      ],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "preferred",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u2019s degree"
+        }
+      ],
+      "evidence": [
+        "Bachelor\u2019s degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-070",
+    "html": "\u003Ch3\u003EFavorable Education\u003C/h3\u003E\u003Cp\u003EBachelor\u2019s degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "preferredOnly",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [
+        "bachelor"
+      ],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "preferred",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u2019s degree"
+        }
+      ],
+      "evidence": [
+        "Bachelor\u2019s degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-071",
+    "html": "\u003Ch3\u003EPreferred\u003C/h3\u003E\u003Cp\u003EBachelor\u2019s degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "preferredOnly",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [
+        "bachelor"
+      ],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "preferred",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u2019s degree"
+        }
+      ],
+      "evidence": [
+        "Bachelor\u2019s degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-072",
+    "html": "\u003Ch3\u003EWays to stand out from the crowd\u003C/h3\u003E\u003Cp\u003EBachelor\u2019s degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "preferredOnly",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [
+        "bachelor"
+      ],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "preferred",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u2019s degree"
+        }
+      ],
+      "evidence": [
+        "Bachelor\u2019s degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-073",
+    "html": "\u003Ch3\u003ENice to have\u003C/h3\u003E\u003Cp\u003EBachelor\u2019s degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "preferredOnly",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [
+        "bachelor"
+      ],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "preferred",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u2019s degree"
+        }
+      ],
+      "evidence": [
+        "Bachelor\u2019s degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-074",
+    "html": "\u003Ch3\u003EYou might also have\u003C/h3\u003E\u003Cp\u003EBachelor\u2019s degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "preferredOnly",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [
+        "bachelor"
+      ],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "preferred",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u2019s degree"
+        }
+      ],
+      "evidence": [
+        "Bachelor\u2019s degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-075",
+    "html": "\u003Ch3\u003EBonus points\u003C/h3\u003E\u003Cp\u003EBachelor\u2019s degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "preferredOnly",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [
+        "bachelor"
+      ],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "preferred",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u2019s degree"
+        }
+      ],
+      "evidence": [
+        "Bachelor\u2019s degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-076",
+    "html": "\u003Ch3\u003EWhat would help you stand out\u003C/h3\u003E\u003Cp\u003EBachelor\u2019s degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "preferredOnly",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [
+        "bachelor"
+      ],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "preferred",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u2019s degree"
+        }
+      ],
+      "evidence": [
+        "Bachelor\u2019s degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-077",
+    "html": "\u003Ch3\u003EDesired Education\u003C/h3\u003E\u003Cp\u003EBachelor\u2019s degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "preferredOnly",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [
+        "bachelor"
+      ],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "desired",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u2019s degree"
+        }
+      ],
+      "evidence": [
+        "Bachelor\u2019s degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-078",
+    "html": "\u003Ch3\u003EResponsibilities\u003C/h3\u003E\u003Cp\u003EBachelor\u2019s degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "minimum",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u2019s degree"
+        }
+      ],
+      "evidence": [
+        "Bachelor\u2019s degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-079",
+    "html": "\u003Ch3\u003EPrimary duties\u003C/h3\u003E\u003Cp\u003EBachelor\u2019s degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "minimum",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u2019s degree"
+        }
+      ],
+      "evidence": [
+        "Bachelor\u2019s degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-080",
+    "html": "\u003Ch3\u003EJob description\u003C/h3\u003E\u003Cp\u003EBachelor\u2019s degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "minimum",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u2019s degree"
+        }
+      ],
+      "evidence": [
+        "Bachelor\u2019s degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-081",
+    "html": "\u003Ch3\u003EOriginal posting\u003C/h3\u003E\u003Cp\u003EBachelor\u2019s degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "minimum",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u2019s degree"
+        }
+      ],
+      "evidence": [
+        "Bachelor\u2019s degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-082",
+    "html": "\u003Ch3\u003EPay range\u003C/h3\u003E\u003Cp\u003EBachelor\u2019s degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "minimum",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u2019s degree"
+        }
+      ],
+      "evidence": [
+        "Bachelor\u2019s degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-083",
+    "html": "\u003Ch3\u003ERequired Qualifications\u003C/h3\u003E\u003Cp\u003EBachelor\u2019s degree\u003C/p\u003E\u003Ch3\u003EResponsibilities\u003C/h3\u003E\u003Cp\u003EMaster\u2019s degree\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "required",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u2019s degree"
+        },
+        {
+          "level": "master",
+          "specificDegree": null,
+          "requirement": "minimum",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Master\u2019s degree"
+        }
+      ],
+      "evidence": [
+        "Bachelor\u2019s degree",
+        "Master\u2019s degree"
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-084",
+    "html": "\u003Cp\u003EOrdinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Bachelor\u0027s degree required.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "required",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "\u2026ontext. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Bachelor\u0027s degree required."
+        }
+      ],
+      "evidence": [
+        "\u2026ontext. Ordinary context. Ordinary context. Ordinary context. Ordinary context. Bachelor\u0027s degree required."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-085",
+    "html": "\u003Cp\u003EBachelor\u0026#39;s degree\u0026nbsp;in Physics required.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [
+        "Physics"
+      ],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "required",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [
+            "Physics"
+          ],
+          "evidence": "Bachelor\u0027s degree in Physics required."
+        }
+      ],
+      "evidence": [
+        "Bachelor\u0027s degree in Physics required."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-086",
+    "html": "\u003Cp\u003EBachelor\u2019s degree required. Bachelor\u2019s degree required.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "bachelor",
+      "specificDegree": null,
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "bachelor",
+          "specificDegree": null,
+          "requirement": "required",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "Bachelor\u2019s degree required. Bachelor\u2019s degree required."
+        }
+      ],
+      "evidence": [
+        "Bachelor\u2019s degree required. Bachelor\u2019s degree required."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  },
+  {
+    "id": "education-087",
+    "html": "\u003Cp\u003EPhD / Doctorate required.\u003C/p\u003E",
+    "expected": {
+      "minimumLevel": "doctorate",
+      "specificDegree": "phD",
+      "requirementType": "strictDegree",
+      "experienceSubstitutionAccepted": false,
+      "fields": [],
+      "preferredLevels": [],
+      "paths": [
+        {
+          "level": "doctorate",
+          "specificDegree": null,
+          "requirement": "required",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "PhD / Doctorate required."
+        },
+        {
+          "level": "doctorate",
+          "specificDegree": "phD",
+          "requirement": "minimum",
+          "minimumExperienceYears": null,
+          "maximumExperienceYears": null,
+          "fields": [],
+          "evidence": "PhD / Doctorate required."
+        }
+      ],
+      "evidence": [
+        "PhD / Doctorate required."
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 4,
+      "accreditations": []
+    }
+  }
+]

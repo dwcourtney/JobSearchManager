@@ -10,11 +10,24 @@ namespace JobSearchManager;
 public sealed class AcademicQualificationDetector
 {
     public const int CurrentAnalysisVersion = 4;
-    private static readonly TimeSpan RegexTimeout = TimeSpan.FromMilliseconds(250);
+    private readonly EducationRules rules;
+    public AcademicQualificationDetector() : this(EducationRules.Default) { }
+    internal AcademicQualificationDetector(EducationRules rules) => this.rules = rules;
+    public string RulesetVersion => rules.Version;
+    public string RulesetFingerprint => rules.Fingerprint;
 
     public int AnalysisVersion => CurrentAnalysisVersion;
 
     public AcademicQualificationAnalysis Analyze(string descriptionHtml)
+    {
+        try { return Execute(descriptionHtml); }
+        catch (RegexMatchTimeoutException ex)
+        {
+            throw new InvalidOperationException($"Education rules {rules.Version} ({rules.Fingerprint}) exceeded the {rules.Rules.RegexTimeoutMilliseconds}ms regex timeout.", ex);
+        }
+    }
+
+    private AcademicQualificationAnalysis Execute(string descriptionHtml)
     {
         if (string.IsNullOrWhiteSpace(descriptionHtml))
         {
@@ -30,22 +43,22 @@ public sealed class AcademicQualificationDetector
         foreach (var segment in segments)
         {
             sectionRequirement = UpdateSectionRequirement(segment, sectionRequirement);
-            var abetMatch = AbetRegex.Match(segment);
+            var abetMatch = rules.Pattern(rules.Rules.Accreditation.PatternId).Match(segment);
             if (abetMatch.Success)
             {
                 accreditations.Add(new AcademicAccreditation(
-                    "ABET",
+                    rules.Rules.Accreditation.Name,
                     ClassifyAccreditationRequirement(segment, sectionRequirement),
                     CreateEvidence(segment, abetMatch.Index)));
             }
             var mentions = FindDegreeMentions(segment);
             if (mentions.Count == 0)
             {
-                if (InLieuOfDegreeRegex.IsMatch(segment))
+                if (rules.Pattern("InLieuOfDegree").IsMatch(segment))
                 {
                     degreeSubstitutionEvidence.Add(CreateEvidence(
                         segment,
-                        InLieuOfDegreeRegex.Match(segment).Index));
+                        rules.Pattern("InLieuOfDegree").Match(segment).Index));
                 }
                 continue;
             }
@@ -150,8 +163,8 @@ public sealed class AcademicQualificationDetector
             minimumLevel,
             specificDegree,
             DetermineRequirementType(segments, mergedPaths),
-            segments.Any(segment => InLieuOfDegreeRegex.IsMatch(segment)) ||
-                DegreeOrExperienceRegex.IsMatch(string.Join(" ", allEvidence)),
+            segments.Any(segment => rules.Pattern("InLieuOfDegree").IsMatch(segment)) ||
+                rules.Pattern("DegreeOrExperience").IsMatch(string.Join(" ", allEvidence)),
             allFields,
             preferredLevels,
             mergedPaths,
@@ -166,7 +179,7 @@ public sealed class AcademicQualificationDetector
         AcademicQualification = Analyze(job.DescriptionHtml)
     };
 
-    private static AcademicQualificationAnalysis NoneSpecified() => new(
+    private AcademicQualificationAnalysis NoneSpecified() => new(
         "noneSpecified",
         null,
         "noDegreeSpecified",
@@ -179,22 +192,14 @@ public sealed class AcademicQualificationDetector
         CurrentAnalysisVersion,
         []);
 
-    private static string ClassifyAccreditationRequirement(string segment, string sectionRequirement)
+    private string ClassifyAccreditationRequirement(string segment, string sectionRequirement)
     {
-        if (Regex.IsMatch(segment, @"\bpreferred\b|\bnot\s+required\b",
-                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, RegexTimeout))
-        {
-            return "preferred";
-        }
-        if (Regex.IsMatch(segment, @"\b(?:required|must)\b",
-                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, RegexTimeout))
-        {
-            return "required";
-        }
+        foreach (var rule in rules.Rules.Accreditation.RequirementRules)
+            if (rules.Pattern(rule.PatternId).IsMatch(segment)) return rule.Result;
         return sectionRequirement;
     }
 
-    private static string DetermineRequirementType(
+    private string DetermineRequirementType(
         IReadOnlyList<string> segments,
         IReadOnlyList<AcademicQualificationPath> paths)
     {
@@ -204,13 +209,13 @@ public sealed class AcademicQualificationDetector
         var relevantText = string.Join(" ", paths.Select(path => path.Evidence));
         if (requiredPaths.Select(path => path.Level).Distinct(StringComparer.Ordinal).Count() > 1 &&
             (requiredPaths.Count(path => path.MinimumExperienceYears is not null) > 1 ||
-                HigherDegreeSubstitutionRegex.IsMatch(relevantText)))
+                rules.Pattern("HigherDegreeSubstitution").IsMatch(relevantText)))
         {
             return "degreeWithExperienceSubstitution";
         }
 
-        if (DegreeOrExperienceRegex.IsMatch(relevantText) ||
-            segments.Any(segment => InLieuOfDegreeRegex.IsMatch(segment)))
+        if (rules.Pattern("DegreeOrExperience").IsMatch(relevantText) ||
+            segments.Any(segment => rules.Pattern("InLieuOfDegree").IsMatch(segment)))
         {
             return "degreeOrExperience";
         }
@@ -225,30 +230,19 @@ public sealed class AcademicQualificationDetector
             : "mentionedUnclear";
     }
 
-    private static List<DegreeMention> FindDegreeMentions(string segment)
+    private List<DegreeMention> FindDegreeMentions(string segment)
     {
         var mentions = new List<DegreeMention>();
-        AddMatches(mentions, segment, HighSchoolRegex, "highSchool", null);
-        AddMatches(mentions, segment, AssociateRegex, "associate", null);
-        AddMatches(mentions, segment, BachelorRegex, "bachelor", null);
-        AddMatches(mentions, segment, MasterRegex, "master", null);
-        AddMatches(mentions, segment, DoctorateRegex, "doctorate", null);
-        AddMatches(mentions, segment, PhDRegex, "doctorate", "phD");
+        foreach (var rule in rules.Rules.DegreeRules)
+            AddMatches(mentions, segment, rules.Pattern(rule.PatternId), rule.Level, rule.SpecificDegree);
 
-        foreach (Match match in ContextualAbbreviationRegex.Matches(segment))
+        var abbreviations = rules.Rules.Abbreviations;
+        foreach (Match match in rules.Pattern(abbreviations.PatternId).Matches(segment))
         {
-            var token = Regex.Replace(match.Groups["degree"].Value, @"[.\s]", "").ToUpperInvariant();
-            var level = token switch
-            {
-                "AA" or "AS" or "AAS" => "associate",
-                "BA" or "BS" or "BSC" or "BSEE" => "bachelor",
-                "MA" or "MS" or "MBA" or "MSC" => "master",
-                _ => null
-            };
-            if (level is not null)
-            {
+            var token = rules.Pattern(abbreviations.NormalizationPatternId)
+                .Replace(match.Groups[abbreviations.CaptureGroup].Value, "").ToUpperInvariant();
+            if (abbreviations.Levels.TryGetValue(token, out var level))
                 mentions.Add(new DegreeMention(level, null, match.Index, match.Length));
-            }
         }
 
         // Prefer the explicit Ph.D classification over a generic doctorate match at
@@ -267,7 +261,7 @@ public sealed class AcademicQualificationDetector
             });
     }
 
-    private static void AddMatches(
+    private void AddMatches(
         ICollection<DegreeMention> target,
         string segment,
         Regex regex,
@@ -280,17 +274,17 @@ public sealed class AcademicQualificationDetector
         }
     }
 
-    private static bool RangesOverlap(DegreeMention left, DegreeMention right) =>
+    private bool RangesOverlap(DegreeMention left, DegreeMention right) =>
         left.Index < right.Index + right.Length && right.Index < left.Index + left.Length;
 
-    private static (int? Minimum, int? Maximum) ExtractExperience(
+    private (int? Minimum, int? Maximum) ExtractExperience(
         string segment,
         DegreeMention mention,
         int nextMentionIndex)
     {
         var afterLength = Math.Min(Math.Max(0, nextMentionIndex - mention.Index), 150);
         var after = segment.Substring(mention.Index, afterLength);
-        var afterMatch = ExperienceAfterDegreeRegex.Match(after);
+        var afterMatch = rules.Pattern("ExperienceAfterDegree").Match(after);
         if (afterMatch.Success)
         {
             return ParseExperience(afterMatch);
@@ -298,13 +292,13 @@ public sealed class AcademicQualificationDetector
 
         var beforeStart = Math.Max(0, mention.Index - 80);
         var before = segment.Substring(beforeStart, mention.Index - beforeStart);
-        var beforeMatches = ExperienceBeforeDegreeRegex.Matches(before);
+        var beforeMatches = rules.Pattern("ExperienceBeforeDegree").Matches(before);
         return beforeMatches.Count > 0
             ? ParseExperience(beforeMatches[^1])
             : (null, null);
     }
 
-    private static (int? Minimum, int? Maximum) ParseExperience(Match match)
+    private (int? Minimum, int? Maximum) ParseExperience(Match match)
     {
         var minimum = int.TryParse(match.Groups["min"].Value, out var parsedMinimum)
             ? parsedMinimum
@@ -315,66 +309,66 @@ public sealed class AcademicQualificationDetector
         return (minimum, maximum);
     }
 
-    private static IReadOnlyList<string> ExtractFields(string segment, DegreeMention firstMention)
+    private IReadOnlyList<string> ExtractFields(string segment, DegreeMention firstMention)
     {
         var tail = segment[(firstMention.Index + firstMention.Length)..];
-        var match = FieldListRegex.Match(tail);
+        var match = rules.Pattern("FieldList").Match(tail);
         if (!match.Success)
         {
             return [];
         }
 
-        var value = FieldStopRegex.Split(match.Groups["fields"].Value, 2)[0]
+        var value = rules.Pattern("FieldStop").Split(match.Groups["fields"].Value, 2)[0]
             .Trim(' ', '.', ';', ':');
         if (value.Length == 0 || value.Length > 260)
         {
             return [];
         }
 
-        var acceptedRelatedField = RelatedFieldMentionRegex.IsMatch(value);
-        value = ParentheticalRegex.Replace(value, " ");
-        var fields = FieldSeparatorRegex.Split(value)
+        var acceptedRelatedField = rules.Pattern("RelatedFieldMention").IsMatch(value);
+        value = rules.Pattern("Parenthetical").Replace(value, " ");
+        var fields = rules.Pattern("FieldSeparator").Split(value)
             .Select(NormalizeField)
             .Where(field => field.Length is > 1 and <= 80 &&
-                !IgnoredFieldFragmentRegex.IsMatch(field))
+                !rules.Pattern("IgnoredFieldFragment").IsMatch(field))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .Take(10)
             .ToList();
         if (acceptedRelatedField &&
-            !fields.Contains("Related field accepted", StringComparer.OrdinalIgnoreCase))
+            !fields.Contains(rules.Rules.RelatedFieldResult, StringComparer.OrdinalIgnoreCase))
         {
-            fields.Add("Related field accepted");
+            fields.Add(rules.Rules.RelatedFieldResult);
         }
         return fields;
     }
 
-    private static string NormalizeField(string value)
+    private string NormalizeField(string value)
     {
-        var field = WhitespaceRegex.Replace(value, " ")
+        var field = rules.Pattern("Whitespace").Replace(value, " ")
             .Trim(' ', '.', ';', ':', '(', ')');
-        field = PreferenceParentheticalRegex.Replace(field, "").Trim();
-        field = TrailingFieldQualifierRegex.Replace(field, "").Trim();
-        if (RelatedFieldRegex.IsMatch(field))
+        field = rules.Pattern("PreferenceParenthetical").Replace(field, "").Trim();
+        field = rules.Pattern("TrailingFieldQualifier").Replace(field, "").Trim();
+        if (rules.Pattern("RelatedField").IsMatch(field))
         {
-            return "Related field accepted";
+            return rules.Rules.RelatedFieldResult;
         }
         return field;
     }
 
-    private static string ClassifyRequirement(
+    private string ClassifyRequirement(
         string segment,
         IReadOnlyList<DegreeMention> mentions,
         int mentionIndex,
         string sectionRequirement)
     {
         var groupStart = mentionIndex;
-        while (groupStart > 0 && DegreeAlternativeConnectorRegex.IsMatch(
+        while (groupStart > 0 && rules.Pattern("DegreeAlternativeConnector").IsMatch(
             segment[RangeEnd(mentions[groupStart - 1])..mentions[groupStart].Index]))
         {
             groupStart--;
         }
         var groupEnd = mentionIndex;
-        while (groupEnd + 1 < mentions.Count && DegreeAlternativeConnectorRegex.IsMatch(
+        while (groupEnd + 1 < mentions.Count && rules.Pattern("DegreeAlternativeConnector").IsMatch(
             segment[RangeEnd(mentions[groupEnd])..mentions[groupEnd + 1].Index]))
         {
             groupEnd++;
@@ -390,25 +384,19 @@ public sealed class AcademicQualificationDetector
         {
             return explicitRequirement;
         }
-        if (sectionRequirement == "mentioned" && ImplicitQualificationRegex.IsMatch(segment))
+        if (sectionRequirement == "mentioned" && rules.Pattern("ImplicitQualification").IsMatch(segment))
         {
             return "minimum";
         }
         return sectionRequirement;
     }
 
-    private static int RangeEnd(DegreeMention mention) => mention.Index + mention.Length;
+    private int RangeEnd(DegreeMention mention) => mention.Index + mention.Length;
 
-    private static string? EarliestExplicitRequirement(string context)
+    private string? EarliestExplicitRequirement(string context)
     {
-        var matches = new (Match Match, string Requirement)[]
-        {
-            (NotRequiredCueRegex.Match(context), "preferred"),
-            (PreferredQualifierRegex.Match(context), "preferred"),
-            (DesiredQualifierRegex.Match(context), "desired"),
-            (RequiredQualifierRegex.Match(context), "required"),
-            (MinimumQualifierRegex.Match(context), "minimum")
-        };
+        var matches = rules.Rules.QualifierRules.Select(rule =>
+            (Match: rules.Pattern(rule.PatternId).Match(context), Requirement: rule.Result));
         return matches
             .Where(candidate => candidate.Match.Success)
             .Where(candidate => candidate.Requirement != "preferred" ||
@@ -419,9 +407,9 @@ public sealed class AcademicQualificationDetector
             .FirstOrDefault();
     }
 
-    private static bool IsFieldPreferenceQualifier(string context, Match qualifier)
+    private bool IsFieldPreferenceQualifier(string context, Match qualifier)
     {
-        foreach (Match fieldPreference in FieldPreferenceQualifierRegex.Matches(context))
+        foreach (Match fieldPreference in rules.Pattern("FieldPreferenceQualifier").Matches(context))
         {
             if (qualifier.Index >= fieldPreference.Index &&
                 qualifier.Index < fieldPreference.Index + fieldPreference.Length)
@@ -432,39 +420,29 @@ public sealed class AcademicQualificationDetector
         return false;
     }
 
-    private static string UpdateSectionRequirement(string segment, string current)
+    private string UpdateSectionRequirement(string segment, string current)
     {
-        if (RequiredSectionRegex.IsMatch(segment))
+        foreach (var rule in rules.Rules.SectionRules)
         {
-            return RequiredSectionMinimumRegex.IsMatch(segment) ? "minimum" : "required";
-        }
-        if (PreferredSectionRegex.IsMatch(segment))
-        {
-            return "preferred";
-        }
-        if (DesiredSectionRegex.IsMatch(segment))
-        {
-            return "desired";
-        }
-        if (SectionResetRegex.IsMatch(segment))
-        {
-            return "mentioned";
+            if (!rules.Pattern(rule.PatternId).IsMatch(segment)) continue;
+            return rule.ConditionalPatternId is not null && rules.Pattern(rule.ConditionalPatternId).IsMatch(segment)
+                ? rule.ConditionalResult! : rule.Result;
         }
         return current;
     }
 
-    private static IReadOnlyList<string> CreateSegments(string html)
+    private IReadOnlyList<string> CreateSegments(string html)
     {
-        var withBreaks = BlockTagRegex.Replace(html, "\n");
-        var withoutTags = AnyTagRegex.Replace(withBreaks, " ");
+        var withBreaks = rules.Pattern("BlockTag").Replace(html, "\n");
+        var withoutTags = rules.Pattern("AnyTag").Replace(withBreaks, " ");
         return WebUtility.HtmlDecode(withoutTags)
             .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Select(segment => WhitespaceRegex.Replace(segment, " ").Trim())
+            .Select(segment => rules.Pattern("Whitespace").Replace(segment, " ").Trim())
             .Where(segment => segment.Length > 0)
             .ToArray();
     }
 
-    private static string CreateEvidence(string segment, int matchIndex)
+    private string CreateEvidence(string segment, int matchIndex)
     {
         const int maximumLength = 360;
         if (segment.Length <= maximumLength)
@@ -479,7 +457,7 @@ public sealed class AcademicQualificationDetector
             (start + length < segment.Length ? "…" : "");
     }
 
-    private static int LevelRank(string level) => level switch
+    private int LevelRank(string level) => level switch
     {
         "highSchool" => 1,
         "associate" => 2,
@@ -489,7 +467,7 @@ public sealed class AcademicQualificationDetector
         _ => 0
     };
 
-    private static int RequirementPriority(string requirement) => requirement switch
+    private int RequirementPriority(string requirement) => requirement switch
     {
         "required" => 0,
         "minimum" => 1,
@@ -504,100 +482,4 @@ public sealed class AcademicQualificationDetector
         int Index,
         int Length);
 
-    private static readonly Regex BlockTagRegex = CreateRegex(
-        @"</?(?:p|li|ul|ol|div|h[1-6]|br|section|article|table|tr|td|th)[^>]*>");
-    private static readonly Regex AnyTagRegex = CreateRegex(@"<[^>]+>");
-    private static readonly Regex WhitespaceRegex = CreateRegex(@"\s+");
-    private static readonly Regex HighSchoolRegex = CreateRegex(
-        @"\b(?:high\s+school\s+(?:diploma|education)|GED|secondary\s+education)\b");
-    private static readonly Regex AssociateRegex = CreateRegex(
-        @"\bassociate(?:['’]s)?\s+(?:degree|of\s+(?:arts|science|applied\s+science))\b");
-    private static readonly Regex BachelorRegex = CreateRegex(
-        @"\bbachelor(?:['’]s|s)?(?:\s+degree|\s+of\s+(?:arts|science)|" +
-        @"(?=\s+in\b)|(?=\s+(?:is\s+)?(?:required|preferred|desired|desirable|minimum|a\s+plus)\b)|" +
-        @"(?=\s+or\s+))\b|\bundergraduate\s+degree\b");
-    private static readonly Regex MasterRegex = CreateRegex(
-        @"\bmaster(?:['’]s|s)?(?:\s+degree|\s+of\s+(?:arts|science)|" +
-        @"(?=\s+(?:is\s+)?(?:required|preferred|desired|desirable|minimum|a\s+plus)\b)|" +
-        @"(?=\s*(?:/|or\b)))\b|\bgraduate\s+degree\b|\bMBA\s+degree\b|" +
-        @"\badvanced\s+degree\s*\(\s*master(?:['’]s|s)?\s+or\s+higher\s*\)");
-    private static readonly Regex DoctorateRegex = CreateRegex(
-        @"\b(?:doctoral(?:-level)?\s+degree|doctorate(?:\s+degree)?)\b");
-    private static readonly Regex PhDRegex = CreateRegex(
-        @"(?<![\p{L}\p{N}])Ph\.?\s*D\.?(?![\p{L}\p{N}])|\bDoctor\s+of\s+Philosophy\b");
-    private static readonly Regex ContextualAbbreviationRegex = CreateRegex(
-        @"(?<![\p{L}\p{N}])(?<degree>A\.?\s*A\.?\s*S?\.?|B\.?\s*A\.?|B\.?\s*S\.?\s*(?:C|EE)?\.?|M\.?\s*A\.?|M\.?\s*S\.?\s*C?\.?|MBA)(?![\p{L}\p{N}])" +
-        @"(?=\s*(?:degree\b|or\s+(?:an?\s+)?degree\b|" +
-        @"[/+]\s*(?:\d|Ph\.?\s*D\.?|doctorate|doctoral|[BM]\.?\s*[AS]\.?)|" +
-        @"(?:is\s+)?(?:required|preferred|desired|desirable|minimum)\b|" +
-        @"(?:and|with)\s+(?:at\s+least\s+)?\d|\bin\s+[A-Za-z]))");
-    private static readonly Regex ExperienceAfterDegreeRegex = CreateRegex(
-        @"(?:\b(?:with|and|plus)\b|\+)\s*(?:at\s+least\s+|minimum\s+(?:of\s+)?)?(?<min>\d{1,2})\s*\+?\s*(?:[–—-]\s*(?<max>\d{1,2}))?\s*\+?\s*(?:years?|yrs?)\b");
-    private static readonly Regex ExperienceBeforeDegreeRegex = CreateRegex(
-        @"(?<min>\d{1,2})\s*\+?\s*(?:[–—-]\s*(?<max>\d{1,2}))?\s*\+?\s*(?:years?|yrs?)\s+(?:of\s+[^,;.]{0,50}\s+)?(?:with|for)\s+(?:an?\s+)?$");
-    private static readonly Regex DegreeOrExperienceRegex = CreateRegex(
-        @"\bor\s+(?:an?\s+)?equivalent\s+(?:professional\s+|relevant\s+)?experience\b|" +
-        @"\bequivalent\s+(?:experience|combination\s+of\s+education\s+and\s+experience)\b|" +
-        @"\bexperience\s+(?:may|will|can)\s+be\s+(?:considered|accepted|substituted)\b.{0,80}\bin\s+lieu\s+of\b|" +
-        @"\bdirect\s+experience\s+may\s+substitute\b");
-    private static readonly Regex HigherDegreeSubstitutionRegex = CreateRegex(
-        @"\b(?:master|doctorate|doctoral|Ph\.?\s*D\.?).{0,80}\b(?:may|can|will)\s+substitute\s+for\s+(?:the\s+)?required\s+experience\b");
-    private static readonly Regex InLieuOfDegreeRegex = CreateRegex(
-        @"\b(?:additional\s+(?:years?\s+of\s+)?|equivalent\s+|relevant\s+)?experience\b.{0,100}\bin\s+lieu\s+of\s+(?:an?\s+)?(?:the\s+)?degree(?:\s+requirements?)?\b");
-    private static readonly Regex FieldListRegex = CreateRegex(
-        @"^\s*(?:degree\s+)?(?:from\s+an?\s+accredited\s+(?:college|university|program|institution)\s+)?(?:in|in\s+the\s+field\s+of)\s+(?<fields>.+)$");
-    private static readonly Regex FieldStopRegex = CreateRegex(
-        @"\s+(?:with|and)\s+(?:(?:at\s+least|minimum\s+of)\s+)?(?:\d|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)|" +
-        @"\s+from\s+(?:an?\s+)?(?:ABET\s+)?accredited\b|\s*;|\s*\.\s*|" +
-        @"\s+or\s+(?:an?\s+)?equivalent\s+experience|\s*\((?:or\s+)?equivalent\s+experience\)");
-    private static readonly Regex FieldSeparatorRegex = CreateRegex(@"\s*,\s*(?:or\s+)?|\s+or\s+");
-    private static readonly Regex RelatedFieldRegex = CreateRegex(
-        @"^(?:(?:an?|other)\s+)?related\s+(?:technical\s+)?(?:field|discipline|degree)\b");
-    private static readonly Regex RelatedFieldMentionRegex = CreateRegex(
-        @"\brelated\s+(?:technical\s+)?(?:field|discipline|degree)\b");
-    private static readonly Regex PreferenceParentheticalRegex = CreateRegex(
-        @"\s*\((?:[^)]*\s+)?preferred\)\s*$");
-    private static readonly Regex ParentheticalRegex = CreateRegex(@"\([^)]*\)");
-    private static readonly Regex TrailingFieldQualifierRegex = CreateRegex(
-        @"\s+(?:is\s+)?(?:preferred|desired|required)$");
-    private static readonly Regex IgnoredFieldFragmentRegex = CreateRegex(
-        @"^(?:preferred|desired)$|\b(?:years?|experience|project\s+designs?|completion\s+of|more\s+years?)\b");
-    private static readonly Regex DegreeAlternativeConnectorRegex = CreateRegex(
-        @"^\s*(?:/|,?\s*(?:or|and)\s*)$");
-    private static readonly Regex NotRequiredCueRegex = CreateRegex(@"\bnot\s+required\b");
-    private static readonly Regex PreferredQualifierRegex = CreateRegex(
-        @"\bpreferred\b|\ba\s+plus\b|\b(?:an?\s+)?(?:asset|advantage)\b|\bbonus\b");
-    private static readonly Regex FieldPreferenceQualifierRegex = CreateRegex(
-        @",\s*preferred\s*,\s*or\b|;\s*[^;.]{1,100}\b(?:is\s+)?preferred\b");
-    private static readonly Regex DesiredQualifierRegex = CreateRegex(
-        @"\b(?:desired|highly\s+desired|desirable|advantageous)\b");
-    private static readonly Regex RequiredQualifierRegex = CreateRegex(
-        @"\brequired\b|\bmust\s+(?:have|possess|hold)\b");
-    private static readonly Regex MinimumQualifierRegex = CreateRegex(
-        @"\bminimum(?:\s+(?:education|degree|qualification))?\b");
-    private static readonly Regex ImplicitQualificationRegex = CreateRegex(
-        @"^(?:[•*·-]\s*)?(?:education\s*:\s*)?(?:high\s+school|GED|associate(?:['’]s|s)?|bachelor(?:['’]s|s)?|master(?:['’]s|s)?|doctorate|doctoral|Ph\.?\s*D\.?|" +
-        @"A\.?\s*A\.?\s*S?\.?|B\.?\s*[AS]\.?|M\.?\s*[AS]\.?)\b");
-    private static readonly Regex RequiredSectionRegex = CreateRegex(
-        @"^(?:basic|required|minimum)\s+(?:qualifications?|requirements?|education|experience)\b|" +
-        @"^requirements?\s*:?$|^what\s+we\s+need\s+to\s+see\b|" +
-        @"^what\s+(?:does\s+)?(?:[\p{L}\p{N}&.'-]+\s+){0,4}need\s+from\s+me\b|^about\s+the\s+must\s+haves\b");
-    private static readonly Regex RequiredSectionMinimumRegex = CreateRegex(@"^(?:basic|minimum)\b");
-    private static readonly Regex PreferredSectionRegex = CreateRegex(
-        @"^(?:preferred|favorable)\s+(?:qualifications?|requirements?|education|experience)\b|" +
-        @"^preferred\s*:?$|^ways?\s+to\s+stand\s+out(?:\s+from\s+the\s+crowd)?\b|" +
-        @"^nice\s+to\s+have\b|^you\s+might\s+also\s+have\b|^bonus(?:\s+points)?\b|" +
-        @"^what\s+(?:will|would)\s+help\s+you\s+stand\s+out\b");
-    private static readonly Regex DesiredSectionRegex = CreateRegex(
-        @"^desired\s+(?:qualifications?|requirements?|education|experience)\b");
-    private static readonly Regex SectionResetRegex = CreateRegex(
-        @"^(?:responsibilities|primary\s+duties|what\s+you['’]ll\s+be\s+doing|original\s+posting|pay\s+range|job\s+description)\s*:?");
-
-    private static readonly Regex AbetRegex = CreateRegex(
-        @"\bABET(?:-accredited|\s+accredited|\s+accreditation)\b");
-
-    private static Regex CreateRegex(string pattern) => new(
-        pattern,
-        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant,
-        RegexTimeout);
-}
+    }

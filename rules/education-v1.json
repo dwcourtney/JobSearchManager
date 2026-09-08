@@ -1,0 +1,561 @@
+{
+  "schemaVersion": 1,
+  "rulesetVersion": "1.0.0",
+  "regexTimeoutMilliseconds": 250,
+  "patterns": [
+    {
+      "id": "BlockTag",
+      "type": "regex",
+      "pattern": "</?(?:p|li|ul|ol|div|h[1-6]|br|section|article|table|tr|td|th)[^>]*>",
+      "scope": "html",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "AnyTag",
+      "type": "regex",
+      "pattern": "<[^>]+>",
+      "scope": "html",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "Whitespace",
+      "type": "regex",
+      "pattern": "\\s+",
+      "scope": "text",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "HighSchool",
+      "type": "regex",
+      "pattern": "\\b(?:high\\s+school\\s+(?:diploma|education)|GED|secondary\\s+education)\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "Associate",
+      "type": "regex",
+      "pattern": "\\bassociate(?:['’]s)?\\s+(?:degree|of\\s+(?:arts|science|applied\\s+science))\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "Bachelor",
+      "type": "regex",
+      "pattern": "\\bbachelor(?:['’]s|s)?(?:\\s+degree|\\s+of\\s+(?:arts|science)|(?=\\s+in\\b)|(?=\\s+(?:is\\s+)?(?:required|preferred|desired|desirable|minimum|a\\s+plus)\\b)|(?=\\s+or\\s+))\\b|\\bundergraduate\\s+degree\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "Master",
+      "type": "regex",
+      "pattern": "\\bmaster(?:['’]s|s)?(?:\\s+degree|\\s+of\\s+(?:arts|science)|(?=\\s+(?:is\\s+)?(?:required|preferred|desired|desirable|minimum|a\\s+plus)\\b)|(?=\\s*(?:/|or\\b)))\\b|\\bgraduate\\s+degree\\b|\\bMBA\\s+degree\\b|\\badvanced\\s+degree\\s*\\(\\s*master(?:['’]s|s)?\\s+or\\s+higher\\s*\\)",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "Doctorate",
+      "type": "regex",
+      "pattern": "\\b(?:doctoral(?:-level)?\\s+degree|doctorate(?:\\s+degree)?)\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "PhD",
+      "type": "regex",
+      "pattern": "(?<![\\p{L}\\p{N}])Ph\\.?\\s*D\\.?(?![\\p{L}\\p{N}])|\\bDoctor\\s+of\\s+Philosophy\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "ContextualAbbreviation",
+      "type": "regex",
+      "pattern": "(?<![\\p{L}\\p{N}])(?<degree>A\\.?\\s*A\\.?\\s*S?\\.?|B\\.?\\s*A\\.?|B\\.?\\s*S\\.?\\s*(?:C|EE)?\\.?|M\\.?\\s*A\\.?|M\\.?\\s*S\\.?\\s*C?\\.?|MBA)(?![\\p{L}\\p{N}])(?=\\s*(?:degree\\b|or\\s+(?:an?\\s+)?degree\\b|[/+]\\s*(?:\\d|Ph\\.?\\s*D\\.?|doctorate|doctoral|[BM]\\.?\\s*[AS]\\.?)|(?:is\\s+)?(?:required|preferred|desired|desirable|minimum)\\b|(?:and|with)\\s+(?:at\\s+least\\s+)?\\d|\\bin\\s+[A-Za-z]))",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "ExperienceAfterDegree",
+      "type": "regex",
+      "pattern": "(?:\\b(?:with|and|plus)\\b|\\+)\\s*(?:at\\s+least\\s+|minimum\\s+(?:of\\s+)?)?(?<min>\\d{1,2})\\s*\\+?\\s*(?:[–—-]\\s*(?<max>\\d{1,2}))?\\s*\\+?\\s*(?:years?|yrs?)\\b",
+      "scope": "window",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "ExperienceBeforeDegree",
+      "type": "regex",
+      "pattern": "(?<min>\\d{1,2})\\s*\\+?\\s*(?:[–—-]\\s*(?<max>\\d{1,2}))?\\s*\\+?\\s*(?:years?|yrs?)\\s+(?:of\\s+[^,;.]{0,50}\\s+)?(?:with|for)\\s+(?:an?\\s+)?$",
+      "scope": "window",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "DegreeOrExperience",
+      "type": "regex",
+      "pattern": "\\bor\\s+(?:an?\\s+)?equivalent\\s+(?:professional\\s+|relevant\\s+)?experience\\b|\\bequivalent\\s+(?:experience|combination\\s+of\\s+education\\s+and\\s+experience)\\b|\\bexperience\\s+(?:may|will|can)\\s+be\\s+(?:considered|accepted|substituted)\\b.{0,80}\\bin\\s+lieu\\s+of\\b|\\bdirect\\s+experience\\s+may\\s+substitute\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "HigherDegreeSubstitution",
+      "type": "regex",
+      "pattern": "\\b(?:master|doctorate|doctoral|Ph\\.?\\s*D\\.?).{0,80}\\b(?:may|can|will)\\s+substitute\\s+for\\s+(?:the\\s+)?required\\s+experience\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "InLieuOfDegree",
+      "type": "regex",
+      "pattern": "\\b(?:additional\\s+(?:years?\\s+of\\s+)?|equivalent\\s+|relevant\\s+)?experience\\b.{0,100}\\bin\\s+lieu\\s+of\\s+(?:an?\\s+)?(?:the\\s+)?degree(?:\\s+requirements?)?\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "FieldList",
+      "type": "regex",
+      "pattern": "^\\s*(?:degree\\s+)?(?:from\\s+an?\\s+accredited\\s+(?:college|university|program|institution)\\s+)?(?:in|in\\s+the\\s+field\\s+of)\\s+(?<fields>.+)$",
+      "scope": "tail",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "FieldStop",
+      "type": "regex",
+      "pattern": "\\s+(?:with|and)\\s+(?:(?:at\\s+least|minimum\\s+of)\\s+)?(?:\\d|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)|\\s+from\\s+(?:an?\\s+)?(?:ABET\\s+)?accredited\\b|\\s*;|\\s*\\.\\s*|\\s+or\\s+(?:an?\\s+)?equivalent\\s+experience|\\s*\\((?:or\\s+)?equivalent\\s+experience\\)",
+      "scope": "field",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "FieldSeparator",
+      "type": "regex",
+      "pattern": "\\s*,\\s*(?:or\\s+)?|\\s+or\\s+",
+      "scope": "field",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "RelatedField",
+      "type": "regex",
+      "pattern": "^(?:(?:an?|other)\\s+)?related\\s+(?:technical\\s+)?(?:field|discipline|degree)\\b",
+      "scope": "field",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "RelatedFieldMention",
+      "type": "regex",
+      "pattern": "\\brelated\\s+(?:technical\\s+)?(?:field|discipline|degree)\\b",
+      "scope": "field",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "PreferenceParenthetical",
+      "type": "regex",
+      "pattern": "\\s*\\((?:[^)]*\\s+)?preferred\\)\\s*$",
+      "scope": "field",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "Parenthetical",
+      "type": "regex",
+      "pattern": "\\([^)]*\\)",
+      "scope": "field",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "TrailingFieldQualifier",
+      "type": "regex",
+      "pattern": "\\s+(?:is\\s+)?(?:preferred|desired|required)$",
+      "scope": "field",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "IgnoredFieldFragment",
+      "type": "regex",
+      "pattern": "^(?:preferred|desired)$|\\b(?:years?|experience|project\\s+designs?|completion\\s+of|more\\s+years?)\\b",
+      "scope": "field",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "DegreeAlternativeConnector",
+      "type": "regex",
+      "pattern": "^\\s*(?:/|,?\\s*(?:or|and)\\s*)$",
+      "scope": "connector",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "NotRequiredCue",
+      "type": "regex",
+      "pattern": "\\bnot\\s+required\\b",
+      "scope": "context",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "PreferredQualifier",
+      "type": "regex",
+      "pattern": "\\bpreferred\\b|\\ba\\s+plus\\b|\\b(?:an?\\s+)?(?:asset|advantage)\\b|\\bbonus\\b",
+      "scope": "context",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "FieldPreferenceQualifier",
+      "type": "regex",
+      "pattern": ",\\s*preferred\\s*,\\s*or\\b|;\\s*[^;.]{1,100}\\b(?:is\\s+)?preferred\\b",
+      "scope": "context",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "DesiredQualifier",
+      "type": "regex",
+      "pattern": "\\b(?:desired|highly\\s+desired|desirable|advantageous)\\b",
+      "scope": "context",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "RequiredQualifier",
+      "type": "regex",
+      "pattern": "\\brequired\\b|\\bmust\\s+(?:have|possess|hold)\\b",
+      "scope": "context",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "MinimumQualifier",
+      "type": "regex",
+      "pattern": "\\bminimum(?:\\s+(?:education|degree|qualification))?\\b",
+      "scope": "context",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "ImplicitQualification",
+      "type": "regex",
+      "pattern": "^(?:[•*·-]\\s*)?(?:education\\s*:\\s*)?(?:high\\s+school|GED|associate(?:['’]s|s)?|bachelor(?:['’]s|s)?|master(?:['’]s|s)?|doctorate|doctoral|Ph\\.?\\s*D\\.?|A\\.?\\s*A\\.?\\s*S?\\.?|B\\.?\\s*[AS]\\.?|M\\.?\\s*[AS]\\.?)\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "RequiredSection",
+      "type": "regex",
+      "pattern": "^(?:basic|required|minimum)\\s+(?:qualifications?|requirements?|education|experience)\\b|^requirements?\\s*:?$|^what\\s+we\\s+need\\s+to\\s+see\\b|^what\\s+(?:does\\s+)?(?:[\\p{L}\\p{N}&.'-]+\\s+){0,4}need\\s+from\\s+me\\b|^about\\s+the\\s+must\\s+haves\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "RequiredSectionMinimum",
+      "type": "regex",
+      "pattern": "^(?:basic|minimum)\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "PreferredSection",
+      "type": "regex",
+      "pattern": "^(?:preferred|favorable)\\s+(?:qualifications?|requirements?|education|experience)\\b|^preferred\\s*:?$|^ways?\\s+to\\s+stand\\s+out(?:\\s+from\\s+the\\s+crowd)?\\b|^nice\\s+to\\s+have\\b|^you\\s+might\\s+also\\s+have\\b|^bonus(?:\\s+points)?\\b|^what\\s+(?:will|would)\\s+help\\s+you\\s+stand\\s+out\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "DesiredSection",
+      "type": "regex",
+      "pattern": "^desired\\s+(?:qualifications?|requirements?|education|experience)\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "SectionReset",
+      "type": "regex",
+      "pattern": "^(?:responsibilities|primary\\s+duties|what\\s+you['’]ll\\s+be\\s+doing|original\\s+posting|pay\\s+range|job\\s+description)\\s*:?",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "Abet",
+      "type": "regex",
+      "pattern": "\\bABET(?:-accredited|\\s+accredited|\\s+accreditation)\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "AccreditationPreferred",
+      "type": "regex",
+      "pattern": "\\bpreferred\\b|\\bnot\\s+required\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "AccreditationRequired",
+      "type": "regex",
+      "pattern": "\\b(?:required|must)\\b",
+      "scope": "segment",
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ]
+    },
+    {
+      "id": "AbbreviationNormalization",
+      "type": "regex",
+      "pattern": "[.\\s]",
+      "scope": "token",
+      "options": []
+    }
+  ],
+  "degreeRules": [
+    {
+      "id": "degree-HighSchool",
+      "patternId": "HighSchool",
+      "priority": 0,
+      "level": "highSchool",
+      "specificDegree": null
+    },
+    {
+      "id": "degree-Associate",
+      "patternId": "Associate",
+      "priority": 1,
+      "level": "associate",
+      "specificDegree": null
+    },
+    {
+      "id": "degree-Bachelor",
+      "patternId": "Bachelor",
+      "priority": 2,
+      "level": "bachelor",
+      "specificDegree": null
+    },
+    {
+      "id": "degree-Master",
+      "patternId": "Master",
+      "priority": 3,
+      "level": "master",
+      "specificDegree": null
+    },
+    {
+      "id": "degree-Doctorate",
+      "patternId": "Doctorate",
+      "priority": 4,
+      "level": "doctorate",
+      "specificDegree": null
+    },
+    {
+      "id": "degree-PhD",
+      "patternId": "PhD",
+      "priority": 5,
+      "level": "doctorate",
+      "specificDegree": "phD"
+    }
+  ],
+  "abbreviations": {
+    "patternId": "ContextualAbbreviation",
+    "normalizationPatternId": "AbbreviationNormalization",
+    "captureGroup": "degree",
+    "levels": {
+      "AA": "associate",
+      "AS": "associate",
+      "AAS": "associate",
+      "BA": "bachelor",
+      "BS": "bachelor",
+      "BSC": "bachelor",
+      "BSEE": "bachelor",
+      "MA": "master",
+      "MS": "master",
+      "MBA": "master",
+      "MSC": "master"
+    }
+  },
+  "qualifierRules": [
+    {
+      "id": "qualifier-NotRequiredCue",
+      "patternId": "NotRequiredCue",
+      "priority": 0,
+      "result": "preferred"
+    },
+    {
+      "id": "qualifier-PreferredQualifier",
+      "patternId": "PreferredQualifier",
+      "priority": 1,
+      "result": "preferred"
+    },
+    {
+      "id": "qualifier-DesiredQualifier",
+      "patternId": "DesiredQualifier",
+      "priority": 2,
+      "result": "desired"
+    },
+    {
+      "id": "qualifier-RequiredQualifier",
+      "patternId": "RequiredQualifier",
+      "priority": 3,
+      "result": "required"
+    },
+    {
+      "id": "qualifier-MinimumQualifier",
+      "patternId": "MinimumQualifier",
+      "priority": 4,
+      "result": "minimum"
+    }
+  ],
+  "sectionRules": [
+    {
+      "id": "section-RequiredSection",
+      "patternId": "RequiredSection",
+      "priority": 0,
+      "result": "required",
+      "conditionalPatternId": "RequiredSectionMinimum",
+      "conditionalResult": "minimum"
+    },
+    {
+      "id": "section-PreferredSection",
+      "patternId": "PreferredSection",
+      "priority": 1,
+      "result": "preferred",
+      "conditionalPatternId": null,
+      "conditionalResult": null
+    },
+    {
+      "id": "section-DesiredSection",
+      "patternId": "DesiredSection",
+      "priority": 2,
+      "result": "desired",
+      "conditionalPatternId": null,
+      "conditionalResult": null
+    },
+    {
+      "id": "section-SectionReset",
+      "patternId": "SectionReset",
+      "priority": 3,
+      "result": "mentioned",
+      "conditionalPatternId": null,
+      "conditionalResult": null
+    }
+  ],
+  "accreditation": {
+    "patternId": "Abet",
+    "name": "ABET",
+    "requirementRules": [
+      {
+        "id": "accreditation-preferred",
+        "patternId": "AccreditationPreferred",
+        "priority": 0,
+        "result": "preferred"
+      },
+      {
+        "id": "accreditation-required",
+        "patternId": "AccreditationRequired",
+        "priority": 1,
+        "result": "required"
+      }
+    ]
+  },
+  "relatedFieldResult": "Related field accepted"
+}
