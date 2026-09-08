@@ -12,6 +12,17 @@ using System.Net.Mail;
 using System.Security.Claims;
 using JobSearchManager;
 
+if (args is ["--salary-parity", var salaryInput, var salaryOutput])
+{
+    SalaryMigrationTests.Compare(salaryInput, salaryOutput);
+    return;
+}
+if (args is ["--freeze-salary-fixtures", var salaryFixtures])
+{
+    SalaryMigrationTests.Freeze(salaryFixtures);
+    return;
+}
+
 if (args is ["--extended-location-parity", var extendedInput, var extendedOutput])
 {
     ExtendedLocationMigrationTests.Compare(extendedInput, extendedOutput);
@@ -440,6 +451,8 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Academic detector recognizes advanced master's-or-higher wording", TestAdvancedDegreeAsync),
     ("Academic detector separates strict minimums from preferred higher degrees", TestAcademicPreferenceSeparationAsync),
     ("Academic detector treats ABET as accreditation", TestAbetAccreditationAsync),
+    ("Salary migration has exact frozen parity", SalaryMigrationTests.RunAsync),
+    ("Salary rules validate and preserve numeric/culture semantics", SalaryMigrationTests.ValidationAsync),
     ("Extended-location migration has exact frozen parity", ExtendedLocationMigrationTests.RunAsync),
     ("Extended-location declarative rules validate and bound execution", ExtendedLocationMigrationTests.ValidationAsync),
     ("Remote-work frozen behavior parity", RemoteWorkMigrationTests.RunAsync),

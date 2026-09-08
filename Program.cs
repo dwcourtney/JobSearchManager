@@ -170,6 +170,7 @@ const int ApplicationPort = 54321;
 const string ApplicationUrl = "http://127.0.0.1:54321";
 
 var clearanceRules = ClearanceRules.Default; // Validate packaged rules before starting the host.
+var salaryRules = SalaryRules.Default; // Validate packaged salary rules before host startup.
 var extendedLocationRules = ExtendedLocationRules.Default; // Validate packaged extended-location rules before host startup.
 var remoteWorkRules = RemoteWorkRules.Default; // Validate packaged remote-work rules before host startup.
 var educationRules = EducationRules.Default; // Validate packaged education rules before host startup.
@@ -334,6 +335,7 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
 
 var app = builder.Build();
 app.Logger.LogInformation("Clearance rules {Version}, SHA-256 {Fingerprint}", clearanceRules.Version, clearanceRules.Fingerprint);
+app.Logger.LogInformation("Salary rules {Version}, SHA-256 {Fingerprint}", salaryRules.Version, salaryRules.Fingerprint);
 app.Logger.LogInformation("Extended-location rules {Version}, SHA-256 {Fingerprint}", extendedLocationRules.Version, extendedLocationRules.Fingerprint);
 app.Logger.LogInformation("Remote-work rules {Version}, SHA-256 {Fingerprint}", remoteWorkRules.Version, remoteWorkRules.Fingerprint);
 app.Logger.LogInformation("Education rules {Version}, SHA-256 {Fingerprint}", educationRules.Version, educationRules.Fingerprint);

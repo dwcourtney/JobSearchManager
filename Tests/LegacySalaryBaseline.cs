@@ -4,8 +4,14 @@ using System.Text.RegularExpressions;
 
 namespace JobSearchManager;
 
-internal static partial class JobAnalysis
+internal static partial class LegacySalaryBaseline
 {
+    private const string AmountRangePattern =
+        @"\$\s*(?<minimum>\d[\d,]*(?:\.\d{1,2})?)\s*(?<minimumScale>[kK])?\s*(?:-|–|—|to)\s*" +
+        @"\$?\s*(?<maximum>\d[\d,]*(?:\.\d{1,2})?)\s*(?<maximumScale>[kK])?";
+    private const string SummaryAmountRangePattern =
+        @"(?<minimumDollar>\$)?\s*(?<minimum>\d+(?:,\s*\d{3})*(?:\.\d{1,2})?)\s*(?<minimumScale>[kK])?\s*(?:-|–|—|to)\s*" +
+        @"(?<maximumDollar>\$)?\s*(?<maximum>\d+(?:,\s*\d{3})*(?:\.\d{1,2})?)\s*(?<maximumScale>[kK])?";
 
     private static readonly (string Category, Regex Pattern)[] LocationRules =
     [
@@ -16,16 +22,7 @@ internal static partial class JobAnalysis
         ("regional-preference", RegionalPreferenceRegex())
     ];
 
-    public static SalaryAnalysis AnalyzeSalary(string descriptionHtml) => AnalyzeSalary(descriptionHtml, SalaryRules.Default);
-
-    internal static SalaryAnalysis AnalyzeSalary(string descriptionHtml, SalaryRules rules)
-    {
-        try { return ExecuteSalary(descriptionHtml, rules); }
-        catch (RegexMatchTimeoutException ex)
-        { throw new InvalidOperationException($"Salary rules {rules.Version} ({rules.Fingerprint}) exceeded the {rules.Rules.RegexTimeoutMilliseconds}ms regex timeout.", ex); }
-    }
-
-    private static SalaryAnalysis ExecuteSalary(string descriptionHtml, SalaryRules rules)
+    public static SalaryAnalysis AnalyzeSalary(string descriptionHtml)
     {
         if (string.IsNullOrWhiteSpace(descriptionHtml))
         {
@@ -36,43 +33,44 @@ internal static partial class JobAnalysis
 
         // Two current Antarctic postings contain a role-specific anticipated salary
         // followed by a broader job-level pay band. Prefer the role-specific range.
-        var specificMatch = rules.Pattern("SpecificSalaryRegex").Match(text);
+        var specificMatch = SpecificSalaryRegex().Match(text);
         if (specificMatch.Success)
         {
-            return CreateSalaryAnalysis(specificMatch, "specific-role-range", rules);
+            return CreateSalaryAnalysis(specificMatch, "specific-role-range");
         }
 
-        var summaryRanges = AnalyzeSummaryPayRanges(descriptionHtml, rules);
+        var summaryRanges = AnalyzeSummaryPayRanges(descriptionHtml);
         if (summaryRanges.Length > 0)
         {
             return AggregateSummaryPayRanges(summaryRanges);
         }
 
-        var usdMatch = rules.Pattern("UsdSalaryRangeRegex").Match(text);
+        var usdMatch = UsdSalaryRangeRegex().Match(text);
         if (usdMatch.Success)
         {
-            return CreateSalaryAnalysis(usdMatch, "usd-pay-range", rules);
+            return CreateSalaryAnalysis(usdMatch, "usd-pay-range");
         }
 
-        var standardMatch = rules.Pattern("StandardPayRangeRegex").Match(text);
+        var standardMatch = StandardPayRangeRegex().Match(text);
         if (standardMatch.Success)
         {
-            return CreateSalaryAnalysis(standardMatch, "standard-pay-range", rules);
+            return CreateSalaryAnalysis(standardMatch, "standard-pay-range");
         }
 
-        var compensationMatch = rules.Pattern("CompensationRangeRegex").Match(text);
+        var compensationMatch = CompensationRangeRegex().Match(text);
         if (compensationMatch.Success)
         {
-            return CreateSalaryAnalysis(compensationMatch, "compensation-range", rules);
+            return CreateSalaryAnalysis(compensationMatch, "compensation-range");
         }
 
-        var separatedBoundsMatch = rules.Pattern("SeparatedSalaryBoundsRegex").Match(text);
+        var separatedBoundsMatch = SeparatedSalaryBoundsRegex().Match(text);
         if (separatedBoundsMatch.Success)
         {
-            return CreateSalaryAnalysis(separatedBoundsMatch, "separate-salary-bounds", rules);
+            return CreateSalaryAnalysis(separatedBoundsMatch, "separate-salary-bounds");
         }
 
-        if (rules.Rules.UnparseablePhrases.Any(phrase => text.Contains(phrase, StringComparison.OrdinalIgnoreCase)))
+        if (text.Contains("Pay Range", StringComparison.OrdinalIgnoreCase) ||
+            text.Contains("salary range", StringComparison.OrdinalIgnoreCase))
         {
             return new SalaryAnalysis(null, null, "unknown", "unparseable");
         }
@@ -88,44 +86,44 @@ internal static partial class JobAnalysis
         analysis.Period != "unknown" ||
         analysis.Maximum >= 10_000m;
 
-    private static SalaryAnalysis[] AnalyzeSummaryPayRanges(string descriptionHtml, SalaryRules rules)
+    private static SalaryAnalysis[] AnalyzeSummaryPayRanges(string descriptionHtml)
     {
         var lines = HtmlToTextLines(descriptionHtml);
         var ranges = new List<SalaryAnalysis>();
         for (var index = 0; index < lines.Length; index++)
         {
-            if (!rules.Pattern("SummaryPayHeadingRegex").IsMatch(lines[index]))
+            if (!SummaryPayHeadingRegex().IsMatch(lines[index]))
             {
                 continue;
             }
 
-            AddSummaryPayRange(rules.Pattern("SummaryPayRangeRegex").Match(lines[index]), ranges, rules);
+            AddSummaryPayRange(SummaryPayRangeRegex().Match(lines[index]), ranges);
             for (var next = index + 1; next < lines.Length; next++)
             {
-                if (rules.Pattern("SummaryPayHeadingRegex").IsMatch(lines[next]))
+                if (SummaryPayHeadingRegex().IsMatch(lines[next]))
                 {
                     break;
                 }
 
-                var match = rules.Pattern("SummarySectionRangeRegex").Match(lines[next]);
+                var match = SummarySectionRangeRegex().Match(lines[next]);
                 if (!match.Success)
                 {
                     break;
                 }
-                AddSummaryPayRange(match, ranges, rules);
+                AddSummaryPayRange(match, ranges);
                 index = next;
             }
         }
         return ranges.ToArray();
     }
 
-    private static void AddSummaryPayRange(Match match, List<SalaryAnalysis> ranges, SalaryRules rules)
+    private static void AddSummaryPayRange(Match match, List<SalaryAnalysis> ranges)
     {
         if (!match.Success)
         {
             return;
         }
-        var analysis = CreateSalaryAnalysis(match, "summary-pay-range", rules);
+        var analysis = CreateSalaryAnalysis(match, "summary-pay-range");
         if (IsDefensibleSummaryPayRange(match, analysis))
         {
             ranges.Add(analysis);
@@ -229,7 +227,7 @@ internal static partial class JobAnalysis
             .ToArray();
     }
 
-    private static SalaryAnalysis CreateSalaryAnalysis(Match match, string parsedStatus, SalaryRules rules)
+    private static SalaryAnalysis CreateSalaryAnalysis(Match match, string parsedStatus)
     {
         if (!decimal.TryParse(
                 RemoveWhitespace(match.Groups["minimum"].Value),
@@ -254,13 +252,13 @@ internal static partial class JobAnalysis
         }
 
         var nearbyText = match.Value + " " + match.Groups["context"].Value;
-        if (rules.Pattern("HourlyCueRegex").IsMatch(nearbyText))
+        if (HourlyCueRegex().IsMatch(nearbyText))
         {
             // Do not compare hourly dollars directly with an annual threshold.
             return new SalaryAnalysis(minimum, maximum, "hourly", "hourly-unconverted");
         }
 
-        if (rules.Pattern("AnnualCueRegex").IsMatch(nearbyText) || maximum >= 10_000m)
+        if (AnnualCueRegex().IsMatch(nearbyText) || maximum >= 10_000m)
         {
             return new SalaryAnalysis(minimum, maximum, "annual", parsedStatus);
         }
@@ -302,6 +300,62 @@ internal static partial class JobAnalysis
         return (start > 0 ? "…" : "") + snippet +
             (start + length < normalized.Length ? "…" : "");
     }
+
+    [GeneratedRegex(
+        @"anticipated\s+salary\s+range\s+for\s+this\s+role(?:\s+will\s+be|\s+is)?\s*" +
+        AmountRangePattern + @"(?<context>.{0,100})",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex SpecificSalaryRegex();
+
+    [GeneratedRegex(
+        @"\bSummary\s+(?:Pay|Salary)\s+Ranges?" +
+        @"[^$.!?]{0,100}?" + SummaryAmountRangePattern +
+        @"(?<context>[^.!?]{0,100})",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex SummaryPayRangeRegex();
+
+    [GeneratedRegex(
+        @"\bSummary\s+(?:Pay|Salary)\s+Ranges?\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex SummaryPayHeadingRegex();
+
+    [GeneratedRegex(
+        @"^[^$.!?]{0,100}?" + SummaryAmountRangePattern + @"(?<context>[^.!?]{0,100})",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex SummarySectionRangeRegex();
+
+    [GeneratedRegex(
+        @"\b(?:base\s+)?salary\s+range(?:\s+for\s+this\s+role)?\s*(?:is|:)?\s*" +
+        @"(?<minimum>\d[\d,]*(?:\.\d{1,2})?)\s*USD\s*(?:-|to)\s*" +
+        @"(?<maximum>\d[\d,]*(?:\.\d{1,2})?)\s*USD(?<context>.{0,100})",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex UsdSalaryRangeRegex();
+
+    [GeneratedRegex(
+        @"\b(?:Pay|Salary)\s+Range\s*:?\s*(?:(?:Pay|Salary)\s+Range\s*)?" + AmountRangePattern +
+        @"(?<context>.{0,100})",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex StandardPayRangeRegex();
+
+    [GeneratedRegex(
+        @"\b(?:(?:Basic|Projected)\s+Compensation|Compensation\s+Details|" +
+        @"projected\s+compensation\s+range(?:\s+for\s+this\s+position)?)\s*(?:is|:)?\s*" +
+        AmountRangePattern + @"(?<context>.{0,100})",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex CompensationRangeRegex();
+
+    [GeneratedRegex(
+        @"\b(?:Minimum|Min)\s+(?:Annual\s+)?Salary\s*:?\s*\$\s*(?<minimum>\d[\d,]*(?:\.\d{1,2})?)" +
+        @"(?<context>.{0,100}?)\b(?:Maximum|Max)\s+(?:Annual\s+)?Salary\s*:?\s*\$\s*" +
+        @"(?<maximum>\d[\d,]*(?:\.\d{1,2})?)(?<context>.{0,100})",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex SeparatedSalaryBoundsRegex();
+
+    [GeneratedRegex(@"\b(?:hourly|per\s+hour)\b|/\s*(?:hr|hour)\b", RegexOptions.IgnoreCase)]
+    private static partial Regex HourlyCueRegex();
+
+    [GeneratedRegex(@"\b(?:annual|annually|per\s+year|yearly)\b", RegexOptions.IgnoreCase)]
+    private static partial Regex AnnualCueRegex();
 
     [GeneratedRegex(@"(?is)<br\s*/?>|</?(?:p|div|h[1-6]|li|ul|ol)[^>]*>")]
     private static partial Regex BlockTagRegex();

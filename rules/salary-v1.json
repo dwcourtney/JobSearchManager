@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "rulesetVersion": "1.0.0",
+  "regexTimeoutMilliseconds": 1000,
+  "patterns": [
+    {
+      "id": "SpecificSalaryRegex",
+      "pattern": "anticipated\\s+salary\\s+range\\s+for\\s+this\\s+role(?:\\s+will\\s+be|\\s+is)?\\s*\\$\\s*(?<minimum>\\d[\\d,]*(?:\\.\\d{1,2})?)\\s*(?<minimumScale>[kK])?\\s*(?:-|\u2013|\u2014|to)\\s*\\$?\\s*(?<maximum>\\d[\\d,]*(?:\\.\\d{1,2})?)\\s*(?<maximumScale>[kK])?(?<context>.{0,100})",
+      "ignoreCase": true,
+      "cultureInvariant": true
+    },
+    {
+      "id": "SummaryPayRangeRegex",
+      "pattern": "\\bSummary\\s+(?:Pay|Salary)\\s+Ranges?[^$.!?]{0,100}?(?<minimumDollar>\\$)?\\s*(?<minimum>\\d+(?:,\\s*\\d{3})*(?:\\.\\d{1,2})?)\\s*(?<minimumScale>[kK])?\\s*(?:-|\u2013|\u2014|to)\\s*(?<maximumDollar>\\$)?\\s*(?<maximum>\\d+(?:,\\s*\\d{3})*(?:\\.\\d{1,2})?)\\s*(?<maximumScale>[kK])?(?<context>[^.!?]{0,100})",
+      "ignoreCase": true,
+      "cultureInvariant": true
+    },
+    {
+      "id": "SummaryPayHeadingRegex",
+      "pattern": "\\bSummary\\s+(?:Pay|Salary)\\s+Ranges?\\b",
+      "ignoreCase": true,
+      "cultureInvariant": true
+    },
+    {
+      "id": "SummarySectionRangeRegex",
+      "pattern": "^[^$.!?]{0,100}?(?<minimumDollar>\\$)?\\s*(?<minimum>\\d+(?:,\\s*\\d{3})*(?:\\.\\d{1,2})?)\\s*(?<minimumScale>[kK])?\\s*(?:-|\u2013|\u2014|to)\\s*(?<maximumDollar>\\$)?\\s*(?<maximum>\\d+(?:,\\s*\\d{3})*(?:\\.\\d{1,2})?)\\s*(?<maximumScale>[kK])?(?<context>[^.!?]{0,100})",
+      "ignoreCase": true,
+      "cultureInvariant": true
+    },
+    {
+      "id": "UsdSalaryRangeRegex",
+      "pattern": "\\b(?:base\\s+)?salary\\s+range(?:\\s+for\\s+this\\s+role)?\\s*(?:is|:)?\\s*(?<minimum>\\d[\\d,]*(?:\\.\\d{1,2})?)\\s*USD\\s*(?:-|to)\\s*(?<maximum>\\d[\\d,]*(?:\\.\\d{1,2})?)\\s*USD(?<context>.{0,100})",
+      "ignoreCase": true,
+      "cultureInvariant": true
+    },
+    {
+      "id": "StandardPayRangeRegex",
+      "pattern": "\\b(?:Pay|Salary)\\s+Range\\s*:?\\s*(?:(?:Pay|Salary)\\s+Range\\s*)?\\$\\s*(?<minimum>\\d[\\d,]*(?:\\.\\d{1,2})?)\\s*(?<minimumScale>[kK])?\\s*(?:-|\u2013|\u2014|to)\\s*\\$?\\s*(?<maximum>\\d[\\d,]*(?:\\.\\d{1,2})?)\\s*(?<maximumScale>[kK])?(?<context>.{0,100})",
+      "ignoreCase": true,
+      "cultureInvariant": true
+    },
+    {
+      "id": "CompensationRangeRegex",
+      "pattern": "\\b(?:(?:Basic|Projected)\\s+Compensation|Compensation\\s+Details|projected\\s+compensation\\s+range(?:\\s+for\\s+this\\s+position)?)\\s*(?:is|:)?\\s*\\$\\s*(?<minimum>\\d[\\d,]*(?:\\.\\d{1,2})?)\\s*(?<minimumScale>[kK])?\\s*(?:-|\u2013|\u2014|to)\\s*\\$?\\s*(?<maximum>\\d[\\d,]*(?:\\.\\d{1,2})?)\\s*(?<maximumScale>[kK])?(?<context>.{0,100})",
+      "ignoreCase": true,
+      "cultureInvariant": true
+    },
+    {
+      "id": "SeparatedSalaryBoundsRegex",
+      "pattern": "\\b(?:Minimum|Min)\\s+(?:Annual\\s+)?Salary\\s*:?\\s*\\$\\s*(?<minimum>\\d[\\d,]*(?:\\.\\d{1,2})?)(?<context>.{0,100}?)\\b(?:Maximum|Max)\\s+(?:Annual\\s+)?Salary\\s*:?\\s*\\$\\s*(?<maximum>\\d[\\d,]*(?:\\.\\d{1,2})?)(?<context>.{0,100})",
+      "ignoreCase": true,
+      "cultureInvariant": true
+    },
+    {
+      "id": "HourlyCueRegex",
+      "pattern": "\\b(?:hourly|per\\s+hour)\\b|/\\s*(?:hr|hour)\\b",
+      "ignoreCase": true,
+      "cultureInvariant": false
+    },
+    {
+      "id": "AnnualCueRegex",
+      "pattern": "\\b(?:annual|annually|per\\s+year|yearly)\\b",
+      "ignoreCase": true,
+      "cultureInvariant": false
+    }
+  ],
+  "unparseablePhrases": [
+    "Pay Range",
+    "salary range"
+  ]
+}

@@ -1,0 +1,782 @@
+[
+  {
+    "id": "salary-0",
+    "html": "",
+    "expected": {
+      "minimum": null,
+      "maximum": null,
+      "period": "unknown",
+      "parseStatus": "description-unavailable"
+    }
+  },
+  {
+    "id": "salary-1",
+    "html": "Build software.",
+    "expected": {
+      "minimum": null,
+      "maximum": null,
+      "period": "unknown",
+      "parseStatus": "not-found"
+    }
+  },
+  {
+    "id": "salary-2",
+    "html": "Annual salary is $100,000.",
+    "expected": {
+      "minimum": null,
+      "maximum": null,
+      "period": "unknown",
+      "parseStatus": "not-found"
+    }
+  },
+  {
+    "id": "salary-3",
+    "html": "Pay Range: $100,000 - $150,000 annually.",
+    "expected": {
+      "minimum": 100000,
+      "maximum": 150000,
+      "period": "annual",
+      "parseStatus": "standard-pay-range"
+    }
+  },
+  {
+    "id": "salary-4",
+    "html": "Salary Range $30 - $45 per hour.",
+    "expected": {
+      "minimum": 30,
+      "maximum": 45,
+      "period": "hourly",
+      "parseStatus": "hourly-unconverted"
+    }
+  },
+  {
+    "id": "salary-5",
+    "html": "Salary range 100,000 USD to 150,000 USD annually.",
+    "expected": {
+      "minimum": 100000,
+      "maximum": 150000,
+      "period": "annual",
+      "parseStatus": "usd-pay-range"
+    }
+  },
+  {
+    "id": "salary-6",
+    "html": "Anticipated salary range for this role is $80,000 - $100,000. Pay Range $60,000 - $160,000.",
+    "expected": {
+      "minimum": 80000,
+      "maximum": 100000,
+      "period": "annual",
+      "parseStatus": "specific-role-range"
+    }
+  },
+  {
+    "id": "salary-7",
+    "html": "Basic Compensation: $70,000 - $90,000.",
+    "expected": {
+      "minimum": 70000,
+      "maximum": 90000,
+      "period": "annual",
+      "parseStatus": "compensation-range"
+    }
+  },
+  {
+    "id": "salary-8",
+    "html": "Projected Compensation: $70,000 - $90,000.",
+    "expected": {
+      "minimum": 70000,
+      "maximum": 90000,
+      "period": "annual",
+      "parseStatus": "compensation-range"
+    }
+  },
+  {
+    "id": "salary-9",
+    "html": "Compensation Details: $70,000 - $90,000.",
+    "expected": {
+      "minimum": 70000,
+      "maximum": 90000,
+      "period": "annual",
+      "parseStatus": "compensation-range"
+    }
+  },
+  {
+    "id": "salary-10",
+    "html": "Projected compensation range for this position is $70,000 - $90,000.",
+    "expected": {
+      "minimum": 70000,
+      "maximum": 90000,
+      "period": "annual",
+      "parseStatus": "compensation-range"
+    }
+  },
+  {
+    "id": "salary-11",
+    "html": "Minimum Annual Salary: $80,000 Maximum Annual Salary: $120,000.",
+    "expected": {
+      "minimum": 80000,
+      "maximum": 120000,
+      "period": "annual",
+      "parseStatus": "separate-salary-bounds"
+    }
+  },
+  {
+    "id": "salary-12",
+    "html": "Min Salary: $80,000 Max Salary: $120,000.",
+    "expected": {
+      "minimum": 80000,
+      "maximum": 120000,
+      "period": "annual",
+      "parseStatus": "separate-salary-bounds"
+    }
+  },
+  {
+    "id": "salary-13",
+    "html": "Salary Range: $1,000 - $2,000 monthly.",
+    "expected": {
+      "minimum": 1000,
+      "maximum": 2000,
+      "period": "unknown",
+      "parseStatus": "ambiguous-period"
+    }
+  },
+  {
+    "id": "salary-14",
+    "html": "Pay Range unavailable.",
+    "expected": {
+      "minimum": null,
+      "maximum": null,
+      "period": "unknown",
+      "parseStatus": "unparseable"
+    }
+  },
+  {
+    "id": "salary-15",
+    "html": "salary range competitive.",
+    "expected": {
+      "minimum": null,
+      "maximum": null,
+      "period": "unknown",
+      "parseStatus": "unparseable"
+    }
+  },
+  {
+    "id": "salary-16",
+    "html": "Pay: $80,000.",
+    "expected": {
+      "minimum": null,
+      "maximum": null,
+      "period": "unknown",
+      "parseStatus": "not-found"
+    }
+  },
+  {
+    "id": "salary-17",
+    "html": "$1,000 equipment allowance.",
+    "expected": {
+      "minimum": null,
+      "maximum": null,
+      "period": "unknown",
+      "parseStatus": "not-found"
+    }
+  },
+  {
+    "id": "salary-18",
+    "html": "Bonus $10,000 to $20,000.",
+    "expected": {
+      "minimum": null,
+      "maximum": null,
+      "period": "unknown",
+      "parseStatus": "not-found"
+    }
+  },
+  {
+    "id": "salary-19",
+    "html": "Salary Range: \u20AC70,000 - \u20AC90,000.",
+    "expected": {
+      "minimum": null,
+      "maximum": null,
+      "period": "unknown",
+      "parseStatus": "unparseable"
+    }
+  },
+  {
+    "id": "salary-20",
+    "html": "Salary Range: \u00A370,000 - \u00A390,000.",
+    "expected": {
+      "minimum": null,
+      "maximum": null,
+      "period": "unknown",
+      "parseStatus": "unparseable"
+    }
+  },
+  {
+    "id": "salary-21",
+    "html": "Salary Range: $70,000 - $90,000 plus $5,000 bonus.",
+    "expected": {
+      "minimum": 70000,
+      "maximum": 90000,
+      "period": "annual",
+      "parseStatus": "standard-pay-range"
+    }
+  },
+  {
+    "id": "salary-22",
+    "html": "\u003Cp\u003ESummary Pay Range: $70,000 - $90,000 annually\u003C/p\u003E\u003Cp\u003ESummary Salary Range: $90,000 - $120,000 annually\u003C/p\u003E",
+    "expected": {
+      "minimum": 70000,
+      "maximum": 120000,
+      "period": "annual",
+      "parseStatus": "summary-pay-range-aggregate"
+    }
+  },
+  {
+    "id": "salary-23",
+    "html": "\u003Cp\u003ESummary Pay Ranges\u003C/p\u003E\u003Cp\u003E$70,000 - $90,000\u003C/p\u003E\u003Cp\u003E$90,000 - $120,000\u003C/p\u003E",
+    "expected": {
+      "minimum": 70000,
+      "maximum": 120000,
+      "period": "annual",
+      "parseStatus": "summary-pay-range-aggregate"
+    }
+  },
+  {
+    "id": "salary-24",
+    "html": "\u003Cp\u003ESummary Pay Ranges\u003C/p\u003E\u003Cp\u003E$30 - $40 hourly\u003C/p\u003E\u003Cp\u003E$50 - $60 hourly\u003C/p\u003E",
+    "expected": {
+      "minimum": 30,
+      "maximum": 60,
+      "period": "hourly",
+      "parseStatus": "hourly-unconverted-summary-aggregate"
+    }
+  },
+  {
+    "id": "salary-25",
+    "html": "\u003Cp\u003ESummary Pay Ranges\u003C/p\u003E\u003Cp\u003E$30 - $40 hourly\u003C/p\u003E\u003Cp\u003E$90,000 - $120,000 annually\u003C/p\u003E",
+    "expected": {
+      "minimum": null,
+      "maximum": null,
+      "period": "unknown",
+      "parseStatus": "ambiguous-mixed-periods"
+    }
+  },
+  {
+    "id": "salary-26",
+    "html": "\u003Cp\u003ESummary Salary Range\u003C/p\u003E\u003Cp\u003E70, 000 - 90, 000\u003C/p\u003E",
+    "expected": {
+      "minimum": 70000,
+      "maximum": 90000,
+      "period": "annual",
+      "parseStatus": "summary-pay-range"
+    }
+  },
+  {
+    "id": "salary-27",
+    "html": "\u003Cp\u003ESummary Pay Range 10 - 20\u003C/p\u003E",
+    "expected": {
+      "minimum": null,
+      "maximum": null,
+      "period": "unknown",
+      "parseStatus": "unparseable"
+    }
+  },
+  {
+    "id": "salary-28",
+    "html": "\u003Cp\u003ESummary Pay Range 10 - 20 annually\u003C/p\u003E",
+    "expected": {
+      "minimum": 10,
+      "maximum": 20,
+      "period": "annual",
+      "parseStatus": "summary-pay-range"
+    }
+  },
+  {
+    "id": "salary-29",
+    "html": "\u003Cp\u003ESummary Pay Ranges\u003C/p\u003E\u003Cp\u003Enot a salary\u003C/p\u003E\u003Cp\u003E$70,000 - $90,000\u003C/p\u003E",
+    "expected": {
+      "minimum": null,
+      "maximum": null,
+      "period": "unknown",
+      "parseStatus": "unparseable"
+    }
+  },
+  {
+    "id": "salary-30",
+    "html": "Salary Range: $90,000 - $70,000.",
+    "expected": {
+      "minimum": 90000,
+      "maximum": 70000,
+      "period": "annual",
+      "parseStatus": "standard-pay-range"
+    }
+  },
+  {
+    "id": "salary-31",
+    "html": "Salary Range: $100,000 - $100,000.",
+    "expected": {
+      "minimum": 100000,
+      "maximum": 100000,
+      "period": "annual",
+      "parseStatus": "standard-pay-range"
+    }
+  },
+  {
+    "id": "salary-32",
+    "html": "Pay Range: $50.25 - $70.75.",
+    "expected": {
+      "minimum": 50.25,
+      "maximum": 70.75,
+      "period": "unknown",
+      "parseStatus": "ambiguous-period"
+    }
+  },
+  {
+    "id": "salary-33",
+    "html": "Pay Range: $50.25 - $70.75 per hour.",
+    "expected": {
+      "minimum": 50.25,
+      "maximum": 70.75,
+      "period": "hourly",
+      "parseStatus": "hourly-unconverted"
+    }
+  },
+  {
+    "id": "salary-34",
+    "html": "Pay Range: $50.25 - $70.75 annually.",
+    "expected": {
+      "minimum": 50.25,
+      "maximum": 70.75,
+      "period": "annual",
+      "parseStatus": "standard-pay-range"
+    }
+  },
+  {
+    "id": "salary-35",
+    "html": "Pay Range: $100k - $150k.",
+    "expected": {
+      "minimum": 100000,
+      "maximum": 150000,
+      "period": "annual",
+      "parseStatus": "standard-pay-range"
+    }
+  },
+  {
+    "id": "salary-36",
+    "html": "Pay Range: $100k - $150k per hour.",
+    "expected": {
+      "minimum": 100000,
+      "maximum": 150000,
+      "period": "hourly",
+      "parseStatus": "hourly-unconverted"
+    }
+  },
+  {
+    "id": "salary-37",
+    "html": "Pay Range: $100k - $150k annually.",
+    "expected": {
+      "minimum": 100000,
+      "maximum": 150000,
+      "period": "annual",
+      "parseStatus": "standard-pay-range"
+    }
+  },
+  {
+    "id": "salary-38",
+    "html": "Pay Range: $100K to 150K.",
+    "expected": {
+      "minimum": 100000,
+      "maximum": 150000,
+      "period": "annual",
+      "parseStatus": "standard-pay-range"
+    }
+  },
+  {
+    "id": "salary-39",
+    "html": "Pay Range: $100K to 150K per hour.",
+    "expected": {
+      "minimum": 100000,
+      "maximum": 150000,
+      "period": "hourly",
+      "parseStatus": "hourly-unconverted"
+    }
+  },
+  {
+    "id": "salary-40",
+    "html": "Pay Range: $100K to 150K annually.",
+    "expected": {
+      "minimum": 100000,
+      "maximum": 150000,
+      "period": "annual",
+      "parseStatus": "standard-pay-range"
+    }
+  },
+  {
+    "id": "salary-41",
+    "html": "Pay Range: $100 - 150k.",
+    "expected": {
+      "minimum": 100,
+      "maximum": 150000,
+      "period": "annual",
+      "parseStatus": "standard-pay-range"
+    }
+  },
+  {
+    "id": "salary-42",
+    "html": "Pay Range: $100 - 150k per hour.",
+    "expected": {
+      "minimum": 100,
+      "maximum": 150000,
+      "period": "hourly",
+      "parseStatus": "hourly-unconverted"
+    }
+  },
+  {
+    "id": "salary-43",
+    "html": "Pay Range: $100 - 150k annually.",
+    "expected": {
+      "minimum": 100,
+      "maximum": 150000,
+      "period": "annual",
+      "parseStatus": "standard-pay-range"
+    }
+  },
+  {
+    "id": "salary-44",
+    "html": "Pay Range: $1,00 - $2,00.",
+    "expected": {
+      "minimum": 100,
+      "maximum": 200,
+      "period": "unknown",
+      "parseStatus": "ambiguous-period"
+    }
+  },
+  {
+    "id": "salary-45",
+    "html": "Pay Range: $1,00 - $2,00 per hour.",
+    "expected": {
+      "minimum": 100,
+      "maximum": 200,
+      "period": "hourly",
+      "parseStatus": "hourly-unconverted"
+    }
+  },
+  {
+    "id": "salary-46",
+    "html": "Pay Range: $1,00 - $2,00 annually.",
+    "expected": {
+      "minimum": 100,
+      "maximum": 200,
+      "period": "annual",
+      "parseStatus": "standard-pay-range"
+    }
+  },
+  {
+    "id": "salary-47",
+    "html": "Pay Range: $100,000.123 - $150,000.987.",
+    "expected": {
+      "minimum": null,
+      "maximum": null,
+      "period": "unknown",
+      "parseStatus": "unparseable"
+    }
+  },
+  {
+    "id": "salary-48",
+    "html": "Pay Range: $100,000.123 - $150,000.987 per hour.",
+    "expected": {
+      "minimum": null,
+      "maximum": null,
+      "period": "unknown",
+      "parseStatus": "unparseable"
+    }
+  },
+  {
+    "id": "salary-49",
+    "html": "Pay Range: $100,000.123 - $150,000.987 annually.",
+    "expected": {
+      "minimum": null,
+      "maximum": null,
+      "period": "unknown",
+      "parseStatus": "unparseable"
+    }
+  },
+  {
+    "id": "salary-50",
+    "html": "Pay Range: $0 - $0.",
+    "expected": {
+      "minimum": 0,
+      "maximum": 0,
+      "period": "unknown",
+      "parseStatus": "ambiguous-period"
+    }
+  },
+  {
+    "id": "salary-51",
+    "html": "Pay Range: $0 - $0 per hour.",
+    "expected": {
+      "minimum": 0,
+      "maximum": 0,
+      "period": "hourly",
+      "parseStatus": "hourly-unconverted"
+    }
+  },
+  {
+    "id": "salary-52",
+    "html": "Pay Range: $0 - $0 annually.",
+    "expected": {
+      "minimum": 0,
+      "maximum": 0,
+      "period": "annual",
+      "parseStatus": "standard-pay-range"
+    }
+  },
+  {
+    "id": "salary-53",
+    "html": "Pay Range: $-50 - $70.",
+    "expected": {
+      "minimum": null,
+      "maximum": null,
+      "period": "unknown",
+      "parseStatus": "unparseable"
+    }
+  },
+  {
+    "id": "salary-54",
+    "html": "Pay Range: $-50 - $70 per hour.",
+    "expected": {
+      "minimum": null,
+      "maximum": null,
+      "period": "unknown",
+      "parseStatus": "unparseable"
+    }
+  },
+  {
+    "id": "salary-55",
+    "html": "Pay Range: $-50 - $70 annually.",
+    "expected": {
+      "minimum": null,
+      "maximum": null,
+      "period": "unknown",
+      "parseStatus": "unparseable"
+    }
+  },
+  {
+    "id": "salary-56",
+    "html": "Pay Range: $999999999999999999999999999999999 - $100.",
+    "expected": {
+      "minimum": null,
+      "maximum": null,
+      "period": "unknown",
+      "parseStatus": "unparseable"
+    }
+  },
+  {
+    "id": "salary-57",
+    "html": "Pay Range: $999999999999999999999999999999999 - $100 per hour.",
+    "expected": {
+      "minimum": null,
+      "maximum": null,
+      "period": "unknown",
+      "parseStatus": "unparseable"
+    }
+  },
+  {
+    "id": "salary-58",
+    "html": "Pay Range: $999999999999999999999999999999999 - $100 annually.",
+    "expected": {
+      "minimum": null,
+      "maximum": null,
+      "period": "unknown",
+      "parseStatus": "unparseable"
+    }
+  },
+  {
+    "id": "salary-59",
+    "html": "Pay Range: $9,999 - $10,000.",
+    "expected": {
+      "minimum": 9999,
+      "maximum": 10000,
+      "period": "annual",
+      "parseStatus": "standard-pay-range"
+    }
+  },
+  {
+    "id": "salary-60",
+    "html": "Pay Range: $9,999 - $10,000 per hour.",
+    "expected": {
+      "minimum": 9999,
+      "maximum": 10000,
+      "period": "hourly",
+      "parseStatus": "hourly-unconverted"
+    }
+  },
+  {
+    "id": "salary-61",
+    "html": "Pay Range: $9,999 - $10,000 annually.",
+    "expected": {
+      "minimum": 9999,
+      "maximum": 10000,
+      "period": "annual",
+      "parseStatus": "standard-pay-range"
+    }
+  },
+  {
+    "id": "salary-62",
+    "html": "Pay Range: $9,000 - $9,999.",
+    "expected": {
+      "minimum": 9000,
+      "maximum": 9999,
+      "period": "unknown",
+      "parseStatus": "ambiguous-period"
+    }
+  },
+  {
+    "id": "salary-63",
+    "html": "Pay Range: $9,000 - $9,999 per hour.",
+    "expected": {
+      "minimum": 9000,
+      "maximum": 9999,
+      "period": "hourly",
+      "parseStatus": "hourly-unconverted"
+    }
+  },
+  {
+    "id": "salary-64",
+    "html": "Pay Range: $9,000 - $9,999 annually.",
+    "expected": {
+      "minimum": 9000,
+      "maximum": 9999,
+      "period": "annual",
+      "parseStatus": "standard-pay-range"
+    }
+  },
+  {
+    "id": "salary-65",
+    "html": "Pay Range $50 - $70 hourly.",
+    "expected": {
+      "minimum": 50,
+      "maximum": 70,
+      "period": "hourly",
+      "parseStatus": "hourly-unconverted"
+    }
+  },
+  {
+    "id": "salary-66",
+    "html": "Pay Range $50 - $70 HOURLY.",
+    "expected": {
+      "minimum": 50,
+      "maximum": 70,
+      "period": "hourly",
+      "parseStatus": "hourly-unconverted"
+    }
+  },
+  {
+    "id": "salary-67",
+    "html": "Pay Range $50 - $70 per hour.",
+    "expected": {
+      "minimum": 50,
+      "maximum": 70,
+      "period": "hourly",
+      "parseStatus": "hourly-unconverted"
+    }
+  },
+  {
+    "id": "salary-68",
+    "html": "Pay Range $50 - $70 /hr.",
+    "expected": {
+      "minimum": 50,
+      "maximum": 70,
+      "period": "hourly",
+      "parseStatus": "hourly-unconverted"
+    }
+  },
+  {
+    "id": "salary-69",
+    "html": "Pay Range $50 - $70 /hour.",
+    "expected": {
+      "minimum": 50,
+      "maximum": 70,
+      "period": "hourly",
+      "parseStatus": "hourly-unconverted"
+    }
+  },
+  {
+    "id": "salary-70",
+    "html": "Pay Range $50 - $70 annual.",
+    "expected": {
+      "minimum": 50,
+      "maximum": 70,
+      "period": "annual",
+      "parseStatus": "standard-pay-range"
+    }
+  },
+  {
+    "id": "salary-71",
+    "html": "Pay Range $50 - $70 ANNUALLY.",
+    "expected": {
+      "minimum": 50,
+      "maximum": 70,
+      "period": "annual",
+      "parseStatus": "standard-pay-range"
+    }
+  },
+  {
+    "id": "salary-72",
+    "html": "Pay Range $50 - $70 per year.",
+    "expected": {
+      "minimum": 50,
+      "maximum": 70,
+      "period": "annual",
+      "parseStatus": "standard-pay-range"
+    }
+  },
+  {
+    "id": "salary-73",
+    "html": "Pay Range $50 - $70 yearly.",
+    "expected": {
+      "minimum": 50,
+      "maximum": 70,
+      "period": "annual",
+      "parseStatus": "standard-pay-range"
+    }
+  },
+  {
+    "id": "salary-74",
+    "html": "Pay Range $50 - $70 weekly.",
+    "expected": {
+      "minimum": 50,
+      "maximum": 70,
+      "period": "unknown",
+      "parseStatus": "ambiguous-period"
+    }
+  },
+  {
+    "id": "salary-75",
+    "html": "Pay Range $50 - $70 per month.",
+    "expected": {
+      "minimum": 50,
+      "maximum": 70,
+      "period": "unknown",
+      "parseStatus": "ambiguous-period"
+    }
+  },
+  {
+    "id": "salary-76",
+    "html": "Salary Range $80,000 - $120,000. Anticipated salary range for this role is $70,000 - $90,000.",
+    "expected": {
+      "minimum": 70000,
+      "maximum": 90000,
+      "period": "annual",
+      "parseStatus": "specific-role-range"
+    }
+  },
+  {
+    "id": "salary-77",
+    "html": "Pay Range $80,000 - $120,000. Salary range 100,000 USD to 150,000 USD.",
+    "expected": {
+      "minimum": 100000,
+      "maximum": 150000,
+      "period": "annual",
+      "parseStatus": "usd-pay-range"
+    }
+  }
+]
