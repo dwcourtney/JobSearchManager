@@ -1,21 +1,18 @@
+using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace JobSearchManager;
 
-public sealed class CredentialDetector
+public sealed class LegacyCredentialBaseline
 {
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromMilliseconds(250);
-    private readonly CredentialRules _rules;
     private readonly CredentialCatalogDocument _catalog;
     private readonly CompiledCredential[] _credentials;
 
-    public CredentialDetector(ILogger<CredentialDetector> logger) : this(logger, CredentialRules.Default) { }
-
-    internal CredentialDetector(ILogger<CredentialDetector> logger, CredentialRules rules)
+    public LegacyCredentialBaseline(ILogger<LegacyCredentialBaseline> logger)
     {
-        _rules = rules;
         var catalogPath = Path.Combine(AppContext.BaseDirectory, "CredentialCatalog.json");
         try
         {
@@ -109,12 +106,12 @@ public sealed class CredentialDetector
             unknownRequirements.AddRange(ExtractUnknownRequirements(segment, segmentMatches));
 
             if (segmentMatches.Count == 0 &&
-                _rules.Pattern("GeneralCredentialLanguageRegex").IsMatch(segment) &&
-                !_rules.Pattern("IgnoredGeneralLanguageRegex").IsMatch(segment))
+                GeneralCredentialLanguageRegex.IsMatch(segment) &&
+                !IgnoredGeneralLanguageRegex.IsMatch(segment))
             {
                 unrecognized.Add(CreateEvidence(
                     segment,
-                    _rules.Pattern("GeneralCredentialLanguageRegex").Match(segment).Index));
+                    GeneralCredentialLanguageRegex.Match(segment).Index));
             }
         }
 
@@ -403,7 +400,8 @@ public sealed class CredentialDetector
         @"^desired\s+(?:experience|qualifications|skills|education)\b");
     private static readonly Regex SectionResetRegex = CreateRegex(
         @"^(?:responsibilities|primary\s+duties|what\s+you['’]ll\s+be\s+doing|original\s+posting|pay\s+range)\s*:?");
-
+    private static readonly Regex GeneralCredentialLanguageRegex = CreateRegex(
+        @"\b(?:certification|certifications|certified|credential|credentials|professional\s+licen[cs]e|professional\s+licensure|licen[cs]ed\s+[A-Za-z]+)\b");
     private static readonly Regex UnequivocalCredentialRequirementRegex = CreateRegex(
         @"\b(?:must|shall)\s+(?:possess|hold|have|maintain|obtain)\b.{0,180}\b(?:certification|credential|licen[cs]e|licensure)\b|" +
         @"\b(?:must|shall)\s+be\b.{0,120}\bcertified\b|" +
@@ -425,45 +423,18 @@ public sealed class CredentialDetector
     private static readonly Regex IgnoredUnknownNameRegex = CreateRegex(
         @"^(?:required|professional|relevant|technical|industry|industry-recognized|applicable|current|prior|" +
         @"one\s+or\s+more|(?:or\s+)?(?:be\s+)?able\s+to\s+obtain|obtain)$");
-
+    private static readonly Regex IgnoredGeneralLanguageRegex = CreateRegex(
+        @"\bassistance\s+with\s+obtaining\s+pertinent\s+certifications\b|" +
+        @"\bcertification\s+(?:activities|packages|authority)\b|" +
+        @"\bfacility\s+credentials?\s*/\s*authorization\b|" +
+        @"\bcertificate\s+management\b|\blicen[cs]ed\s+software\b|" +
+        @"\bidentity,?\s+credential,?\s+and\s+access\s+management\b|" +
+        @"\bOEM\s+certified\s+technician\b|" +
+        @"^must\s+have\s+required\s+certifications?\s+to\s+be\s+considered\s*:?$|" +
+        @"^possession\s+of\s+one\s+or\s+more\s+of\s+the\s+following\s+industry-recognized\s+certifications?\s*:?$");
 
     private static Regex CreateRegex(string pattern) => new(
         pattern,
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant,
         RegexTimeout);
-}
-
-internal sealed class CredentialCatalogDocument
-{
-    public int SchemaVersion { get; init; }
-    public List<CredentialDefinition> Credentials { get; init; } = [];
-}
-
-internal sealed class CredentialDefinition
-{
-    public string Id { get; init; } = "";
-    public string Name { get; init; } = "";
-    public string FullName { get; init; } = "";
-    public string Issuer { get; init; } = "";
-    public string Type { get; init; } = "";
-    public string Category { get; init; } = "";
-    public string Family { get; init; } = "";
-    public List<string> LegacyNames { get; init; } = [];
-    public List<string> EquivalentCredentialIds { get; init; } = [];
-    public List<string> RelatedCredentialIds { get; init; } = [];
-    public List<CredentialAliasDefinition> Aliases { get; init; } = [];
-}
-
-public sealed record CredentialCatalogItem(
-    string Id,
-    string Name,
-    string FullName,
-    string Issuer,
-    string Category,
-    string Family);
-
-internal sealed class CredentialAliasDefinition
-{
-    public string Text { get; init; } = "";
-    public string? Pattern { get; init; }
 }

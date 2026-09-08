@@ -12,6 +12,17 @@ using System.Net.Mail;
 using System.Security.Claims;
 using JobSearchManager;
 
+if (args is ["--credential-parity", var credentialInput, var credentialOutput])
+{
+    CredentialMigrationTests.Compare(credentialInput, credentialOutput);
+    return;
+}
+if (args is ["--freeze-credential-fixtures", var credentialFixtures])
+{
+    CredentialMigrationTests.Freeze(credentialFixtures);
+    return;
+}
+
 if (args is ["--salary-parity", var salaryInput, var salaryOutput])
 {
     SalaryMigrationTests.Compare(salaryInput, salaryOutput);
@@ -451,6 +462,8 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Academic detector recognizes advanced master's-or-higher wording", TestAdvancedDegreeAsync),
     ("Academic detector separates strict minimums from preferred higher degrees", TestAcademicPreferenceSeparationAsync),
     ("Academic detector treats ABET as accreditation", TestAbetAccreditationAsync),
+    ("Credential migration has exact frozen parity", CredentialMigrationTests.RunAsync),
+    ("Credential rules validate and preserve catalog and grammar", CredentialMigrationTests.ValidationAsync),
     ("Salary migration has exact frozen parity", SalaryMigrationTests.RunAsync),
     ("Salary rules validate and preserve numeric/culture semantics", SalaryMigrationTests.ValidationAsync),
     ("Extended-location migration has exact frozen parity", ExtendedLocationMigrationTests.RunAsync),
