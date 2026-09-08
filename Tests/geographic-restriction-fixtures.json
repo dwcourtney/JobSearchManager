@@ -1,0 +1,873 @@
+[
+  {
+    "id": "geo-0",
+    "html": "Must live within 50 miles of Orlando.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "distance-radius",
+      "snippet": "Must live within 50 miles of Orlando."
+    }
+  },
+  {
+    "id": "geo-1",
+    "html": "A 2 hour radius is required.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "distance-radius",
+      "snippet": "A 2 hour radius is required."
+    }
+  },
+  {
+    "id": "geo-2",
+    "html": "Must be within commuting distance of Orlando.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "commuting-distance",
+      "snippet": "Must be within commuting distance of Orlando."
+    }
+  },
+  {
+    "id": "geo-3",
+    "html": "Must be able to work a hybrid schedule in either Orlando or Tampa.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "hybrid-local",
+      "snippet": "Must be able to work a hybrid schedule in either Orlando or Tampa."
+    }
+  },
+  {
+    "id": "geo-4",
+    "html": "Local to Orlando to work 3 days in the office.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "hybrid-local",
+      "snippet": "Local to Orlando to work 3 days in the office."
+    }
+  },
+  {
+    "id": "geo-5",
+    "html": "Must be located near Orlando.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "hybrid-local",
+      "snippet": "Must be located near Orlando."
+    }
+  },
+  {
+    "id": "geo-6",
+    "html": "Must live in Florida.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "required-region",
+      "snippet": "Must live in Florida."
+    }
+  },
+  {
+    "id": "geo-7",
+    "html": "Must be located in the eastern part of the country.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "required-region",
+      "snippet": "Must be located in the eastern part of the country."
+    }
+  },
+  {
+    "id": "geo-8",
+    "html": "Candidate must reside in Florida.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "required-region",
+      "snippet": "Candidate must reside in Florida."
+    }
+  },
+  {
+    "id": "geo-9",
+    "html": "Candidates must be located in Florida.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "required-region",
+      "snippet": "Candidates must be located in Florida."
+    }
+  },
+  {
+    "id": "geo-10",
+    "html": "Candidates must located in Florida.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "required-region",
+      "snippet": "Candidates must located in Florida."
+    }
+  },
+  {
+    "id": "geo-11",
+    "html": "Candidates should be located in Florida.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "required-region",
+      "snippet": "Candidates should be located in Florida."
+    }
+  },
+  {
+    "id": "geo-12",
+    "html": "Must be located in (Florida).",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "required-region",
+      "snippet": "Must be located in (Florida)."
+    }
+  },
+  {
+    "id": "geo-13",
+    "html": "Work remotely within the eastern time zone.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "required-region",
+      "snippet": "Work remotely within the eastern time zone."
+    }
+  },
+  {
+    "id": "geo-14",
+    "html": "Located in the United States within the following states: Florida.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "required-region",
+      "snippet": "Located in the United States within the following states: Florida."
+    }
+  },
+  {
+    "id": "geo-15",
+    "html": "If remote, ideally reside in Florida.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "regional-preference",
+      "snippet": "If remote, ideally reside in Florida."
+    }
+  },
+  {
+    "id": "geo-16",
+    "html": "Remote candidates preferably live in Florida.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "regional-preference",
+      "snippet": "Remote candidates preferably live in Florida."
+    }
+  },
+  {
+    "id": "geo-17",
+    "html": "Ideally located near Orlando.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "regional-preference",
+      "snippet": "Ideally located near Orlando."
+    }
+  },
+  {
+    "id": "geo-18",
+    "html": "Preference for staff local to Orlando.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "regional-preference",
+      "snippet": "Preference for staff local to Orlando."
+    }
+  },
+  {
+    "id": "geo-19",
+    "html": "Pacific time zone is preferred.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "regional-preference",
+      "snippet": "Pacific time zone is preferred."
+    }
+  },
+  {
+    "id": "geo-20",
+    "html": "Preferred to be in the central time zone.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "regional-preference",
+      "snippet": "Preferred to be in the central time zone."
+    }
+  },
+  {
+    "id": "geo-21",
+    "html": "All candidates residing in either Florida or Texas may work remote.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "regional-preference",
+      "snippet": "All candidates residing in either Florida or Texas may work remote."
+    }
+  },
+  {
+    "id": "geo-22",
+    "html": "Any candidate located in Florida may work remote.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "regional-preference",
+      "snippet": "Any candidate located in Florida may work remote."
+    }
+  },
+  {
+    "id": "geo-23",
+    "html": "",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": false,
+      "category": null,
+      "snippet": null
+    }
+  },
+  {
+    "id": "geo-24",
+    "html": "Build software.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": false,
+      "category": null,
+      "snippet": null
+    }
+  },
+  {
+    "id": "geo-25",
+    "html": "Remote work with no geographic restriction.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": false,
+      "category": null,
+      "snippet": null
+    }
+  },
+  {
+    "id": "geo-26",
+    "html": "Commuting distance is a plus.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": false,
+      "category": null,
+      "snippet": null
+    }
+  },
+  {
+    "id": "geo-27",
+    "html": "Commuting distance to Orlando is a plus.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": false,
+      "category": null,
+      "snippet": null
+    }
+  },
+  {
+    "id": "geo-28",
+    "html": "Commuting distance xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx is a plus.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "commuting-distance",
+      "snippet": "Commuting distance xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx is a plus."
+    }
+  },
+  {
+    "id": "geo-29",
+    "html": "Must live in the U.S.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": false,
+      "category": null,
+      "snippet": null
+    }
+  },
+  {
+    "id": "geo-30",
+    "html": "Must live in the United States.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": false,
+      "category": null,
+      "snippet": null
+    }
+  },
+  {
+    "id": "geo-31",
+    "html": "Candidate must reside in the United States.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": false,
+      "category": null,
+      "snippet": null
+    }
+  },
+  {
+    "id": "geo-32",
+    "html": "Candidates must be located in the United States.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": false,
+      "category": null,
+      "snippet": null
+    }
+  },
+  {
+    "id": "geo-33",
+    "html": "Must live in US.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "required-region",
+      "snippet": "Must live in US."
+    }
+  },
+  {
+    "id": "geo-34",
+    "html": "Must live in United States.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "required-region",
+      "snippet": "Must live in United States."
+    }
+  },
+  {
+    "id": "geo-35",
+    "html": "Must live in the U.S. Virgin Islands.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": false,
+      "category": null,
+      "snippet": null
+    }
+  },
+  {
+    "id": "geo-36",
+    "html": "Candidates must located in the United States.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "required-region",
+      "snippet": "Candidates must located in the United States."
+    }
+  },
+  {
+    "id": "geo-37",
+    "html": "We discuss commuting distances in traffic models.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": false,
+      "category": null,
+      "snippet": null
+    }
+  },
+  {
+    "id": "geo-38",
+    "html": "Not required to be within 50 miles of Orlando.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "distance-radius",
+      "snippet": "Not required to be within 50 miles of Orlando."
+    }
+  },
+  {
+    "id": "geo-39",
+    "html": "Must live within 1000 miles of Orlando.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": false,
+      "category": null,
+      "snippet": null
+    }
+  },
+  {
+    "id": "geo-40",
+    "html": "An 100 hour radius is discussed.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": false,
+      "category": null,
+      "snippet": null
+    }
+  },
+  {
+    "id": "geo-41",
+    "html": "Commuting distance is a plus. Must live in Florida.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "required-region",
+      "snippet": "Must live in Florida."
+    }
+  },
+  {
+    "id": "geo-42",
+    "html": "\u003Cp\u003ECommuting distance is a plus.\u003C/p\u003E\u003Cp\u003ECommuting distance is required.\u003C/p\u003E",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "commuting-distance",
+      "snippet": "Commuting distance is required."
+    }
+  },
+  {
+    "id": "geo-43",
+    "html": "Must live in Florida.",
+    "primaryLocation": "Orlando",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": false,
+      "category": null,
+      "snippet": null
+    }
+  },
+  {
+    "id": "geo-44",
+    "html": "Must live in Florida.",
+    "primaryLocation": "Orlando",
+    "additionalLocations": [
+      "Remote, US"
+    ],
+    "expected": {
+      "isRestricted": true,
+      "category": "required-region",
+      "snippet": "Must live in Florida."
+    }
+  },
+  {
+    "id": "geo-45",
+    "html": "Remote role. Must live in Florida.",
+    "primaryLocation": "Orlando",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "required-region",
+      "snippet": "Must live in Florida."
+    }
+  },
+  {
+    "id": "geo-46",
+    "html": "Must live in Florida.",
+    "primaryLocation": "REMOTE",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "required-region",
+      "snippet": "Must live in Florida."
+    }
+  },
+  {
+    "id": "geo-47",
+    "html": "Must live in Florida.",
+    "primaryLocation": "Remote-control lab",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "required-region",
+      "snippet": "Must live in Florida."
+    }
+  },
+  {
+    "id": "geo-48",
+    "html": "Remotely operate drones. Must live in Florida.",
+    "primaryLocation": "Orlando",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "required-region",
+      "snippet": "Must live in Florida."
+    }
+  },
+  {
+    "id": "geo-49",
+    "html": "Must live in Florida.",
+    "primaryLocation": "Virtual",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": false,
+      "category": null,
+      "snippet": null
+    }
+  },
+  {
+    "id": "geo-50",
+    "html": "",
+    "primaryLocation": "Remote",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": false,
+      "category": null,
+      "snippet": null
+    }
+  },
+  {
+    "id": "geo-51",
+    "html": "Must live within 50 miles of Orlando. Must live within 50 miles of Orlando.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "distance-radius",
+      "snippet": "Must live within 50 miles of Orlando."
+    }
+  },
+  {
+    "id": "geo-52",
+    "html": "Must live within 50 miles of Orlando. Must be within commuting distance of Orlando.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "distance-radius",
+      "snippet": "Must live within 50 miles of Orlando."
+    }
+  },
+  {
+    "id": "geo-53",
+    "html": "Must live within 50 miles of Orlando. Must be able to work a hybrid schedule in either Orlando or Tampa.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "distance-radius",
+      "snippet": "Must live within 50 miles of Orlando."
+    }
+  },
+  {
+    "id": "geo-54",
+    "html": "Must live within 50 miles of Orlando. Must live in Florida.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "distance-radius",
+      "snippet": "Must live within 50 miles of Orlando."
+    }
+  },
+  {
+    "id": "geo-55",
+    "html": "Must live within 50 miles of Orlando. Pacific time zone is preferred.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "distance-radius",
+      "snippet": "Must live within 50 miles of Orlando."
+    }
+  },
+  {
+    "id": "geo-56",
+    "html": "Must be within commuting distance of Orlando. Must live within 50 miles of Orlando.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "distance-radius",
+      "snippet": "Must live within 50 miles of Orlando."
+    }
+  },
+  {
+    "id": "geo-57",
+    "html": "Must be within commuting distance of Orlando. Must be within commuting distance of Orlando.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "commuting-distance",
+      "snippet": "Must be within commuting distance of Orlando."
+    }
+  },
+  {
+    "id": "geo-58",
+    "html": "Must be within commuting distance of Orlando. Must be able to work a hybrid schedule in either Orlando or Tampa.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "commuting-distance",
+      "snippet": "Must be within commuting distance of Orlando."
+    }
+  },
+  {
+    "id": "geo-59",
+    "html": "Must be within commuting distance of Orlando. Must live in Florida.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "commuting-distance",
+      "snippet": "Must be within commuting distance of Orlando."
+    }
+  },
+  {
+    "id": "geo-60",
+    "html": "Must be within commuting distance of Orlando. Pacific time zone is preferred.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "commuting-distance",
+      "snippet": "Must be within commuting distance of Orlando."
+    }
+  },
+  {
+    "id": "geo-61",
+    "html": "Must be able to work a hybrid schedule in either Orlando or Tampa. Must live within 50 miles of Orlando.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "distance-radius",
+      "snippet": "Must live within 50 miles of Orlando."
+    }
+  },
+  {
+    "id": "geo-62",
+    "html": "Must be able to work a hybrid schedule in either Orlando or Tampa. Must be within commuting distance of Orlando.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "commuting-distance",
+      "snippet": "Must be within commuting distance of Orlando."
+    }
+  },
+  {
+    "id": "geo-63",
+    "html": "Must be able to work a hybrid schedule in either Orlando or Tampa. Must be able to work a hybrid schedule in either Orlando or Tampa.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "hybrid-local",
+      "snippet": "Must be able to work a hybrid schedule in either Orlando or Tampa."
+    }
+  },
+  {
+    "id": "geo-64",
+    "html": "Must be able to work a hybrid schedule in either Orlando or Tampa. Must live in Florida.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "hybrid-local",
+      "snippet": "Must be able to work a hybrid schedule in either Orlando or Tampa."
+    }
+  },
+  {
+    "id": "geo-65",
+    "html": "Must be able to work a hybrid schedule in either Orlando or Tampa. Pacific time zone is preferred.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "hybrid-local",
+      "snippet": "Must be able to work a hybrid schedule in either Orlando or Tampa."
+    }
+  },
+  {
+    "id": "geo-66",
+    "html": "Must live in Florida. Must live within 50 miles of Orlando.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "distance-radius",
+      "snippet": "Must live within 50 miles of Orlando."
+    }
+  },
+  {
+    "id": "geo-67",
+    "html": "Must live in Florida. Must be within commuting distance of Orlando.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "commuting-distance",
+      "snippet": "Must be within commuting distance of Orlando."
+    }
+  },
+  {
+    "id": "geo-68",
+    "html": "Must live in Florida. Must be able to work a hybrid schedule in either Orlando or Tampa.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "hybrid-local",
+      "snippet": "Must be able to work a hybrid schedule in either Orlando or Tampa."
+    }
+  },
+  {
+    "id": "geo-69",
+    "html": "Must live in Florida. Must live in Florida.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "required-region",
+      "snippet": "Must live in Florida."
+    }
+  },
+  {
+    "id": "geo-70",
+    "html": "Must live in Florida. Pacific time zone is preferred.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "required-region",
+      "snippet": "Must live in Florida."
+    }
+  },
+  {
+    "id": "geo-71",
+    "html": "Pacific time zone is preferred. Must live within 50 miles of Orlando.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "distance-radius",
+      "snippet": "Must live within 50 miles of Orlando."
+    }
+  },
+  {
+    "id": "geo-72",
+    "html": "Pacific time zone is preferred. Must be within commuting distance of Orlando.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "commuting-distance",
+      "snippet": "Must be within commuting distance of Orlando."
+    }
+  },
+  {
+    "id": "geo-73",
+    "html": "Pacific time zone is preferred. Must be able to work a hybrid schedule in either Orlando or Tampa.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "hybrid-local",
+      "snippet": "Must be able to work a hybrid schedule in either Orlando or Tampa."
+    }
+  },
+  {
+    "id": "geo-74",
+    "html": "Pacific time zone is preferred. Must live in Florida.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "required-region",
+      "snippet": "Must live in Florida."
+    }
+  },
+  {
+    "id": "geo-75",
+    "html": "Pacific time zone is preferred. Pacific time zone is preferred.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "regional-preference",
+      "snippet": "Pacific time zone is preferred."
+    }
+  },
+  {
+    "id": "geo-76",
+    "html": "First site must live within 40 miles of Tampa. Second site must live within 60 miles of Orlando.",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "distance-radius",
+      "snippet": "First site must live within 40 miles of Tampa."
+    }
+  },
+  {
+    "id": "geo-77",
+    "html": "x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x Must live in Florida. z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z ",
+    "primaryLocation": "Remote, US",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "required-region",
+      "snippet": "\u2026x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x Must live in Florida. z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z z\u2026"
+    }
+  },
+  {
+    "id": "geo-78",
+    "html": "\u003Cdiv\u003EREMOTE role.\u003C/div\u003E\u003Cp\u003EMust\u0026nbsp;live in Florida.\u003C/p\u003E",
+    "primaryLocation": "Orlando",
+    "additionalLocations": [],
+    "expected": {
+      "isRestricted": true,
+      "category": "required-region",
+      "snippet": "Must live in Florida."
+    }
+  }
+]

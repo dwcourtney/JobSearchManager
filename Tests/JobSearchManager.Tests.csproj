@@ -17,4 +17,5 @@
   <ItemGroup><None Update="extended-location-fixtures.json" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
   <ItemGroup><None Update="salary-fixtures.json" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
   <ItemGroup><None Update="credential-fixtures.json" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
+  <ItemGroup><None Update="geographic-restriction-fixtures.json" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
 </Project>

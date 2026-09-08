@@ -12,6 +12,17 @@ using System.Net.Mail;
 using System.Security.Claims;
 using JobSearchManager;
 
+if (args is ["--geographic-restriction-parity", var geographicInput, var geographicOutput])
+{
+    GeographicRestrictionMigrationTests.Compare(geographicInput, geographicOutput);
+    return;
+}
+if (args is ["--freeze-geographic-restriction-fixtures", var geographicFixtures])
+{
+    GeographicRestrictionMigrationTests.Freeze(geographicFixtures);
+    return;
+}
+
 if (args is ["--credential-parity", var credentialInput, var credentialOutput])
 {
     CredentialMigrationTests.Compare(credentialInput, credentialOutput);
@@ -462,6 +473,8 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Academic detector recognizes advanced master's-or-higher wording", TestAdvancedDegreeAsync),
     ("Academic detector separates strict minimums from preferred higher degrees", TestAcademicPreferenceSeparationAsync),
     ("Academic detector treats ABET as accreditation", TestAbetAccreditationAsync),
+    ("Geographic-restriction migration has exact frozen parity", GeographicRestrictionMigrationTests.RunAsync),
+    ("Geographic-restriction rules validate precedence and bounded execution", GeographicRestrictionMigrationTests.ValidationAsync),
     ("Credential migration has exact frozen parity", CredentialMigrationTests.RunAsync),
     ("Credential rules validate and preserve catalog and grammar", CredentialMigrationTests.ValidationAsync),
     ("Salary migration has exact frozen parity", SalaryMigrationTests.RunAsync),

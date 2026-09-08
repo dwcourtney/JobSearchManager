@@ -4,8 +4,17 @@ using System.Text.RegularExpressions;
 
 namespace JobSearchManager;
 
-internal static partial class JobAnalysis
+internal static partial class LegacyGeographicRestrictionBaseline
 {
+
+    private static readonly (string Category, Regex Pattern)[] LocationRules =
+    [
+        ("distance-radius", DistanceRadiusRegex()),
+        ("commuting-distance", CommutingDistanceRegex()),
+        ("hybrid-local", HybridLocalRegex()),
+        ("required-region", RequiredRegionRegex()),
+        ("regional-preference", RegionalPreferenceRegex())
+    ];
 
     public static SalaryAnalysis AnalyzeSalary(string descriptionHtml) => AnalyzeSalary(descriptionHtml, SalaryRules.Default);
 
@@ -156,19 +165,7 @@ internal static partial class JobAnalysis
     public static RemoteLocationAnalysis AnalyzeRemoteLocation(
         string descriptionHtml,
         string primaryLocation,
-        IReadOnlyList<string> additionalLocations) =>
-        AnalyzeRemoteLocation(descriptionHtml, primaryLocation, additionalLocations, GeographicRestrictionRules.Default);
-
-    internal static RemoteLocationAnalysis AnalyzeRemoteLocation(string descriptionHtml, string primaryLocation,
-        IReadOnlyList<string> additionalLocations, GeographicRestrictionRules rules)
-    {
-        try { return ExecuteRemoteLocation(descriptionHtml, primaryLocation, additionalLocations, rules); }
-        catch (RegexMatchTimeoutException ex)
-        { throw new InvalidOperationException($"Geographic-restriction rules {rules.Version} ({rules.Fingerprint}) exceeded the {rules.Rules.RegexTimeoutMilliseconds}ms regex timeout.", ex); }
-    }
-
-    private static RemoteLocationAnalysis ExecuteRemoteLocation(string descriptionHtml, string primaryLocation,
-        IReadOnlyList<string> additionalLocations, GeographicRestrictionRules rules)
+        IReadOnlyList<string> additionalLocations)
     {
         if (string.IsNullOrWhiteSpace(descriptionHtml))
         {
@@ -176,10 +173,10 @@ internal static partial class JobAnalysis
         }
 
         var text = HtmlToPlainText(descriptionHtml);
-        var isRemoteListing = primaryLocation.Contains(rules.Rules.RemoteDesignationCues.PrimaryLocation, StringComparison.OrdinalIgnoreCase) ||
+        var isRemoteListing = primaryLocation.Contains("Remote", StringComparison.OrdinalIgnoreCase) ||
             additionalLocations.Any(location =>
-                location.Contains(rules.Rules.RemoteDesignationCues.AdditionalLocation, StringComparison.OrdinalIgnoreCase)) ||
-            text.Contains(rules.Rules.RemoteDesignationCues.Description, StringComparison.OrdinalIgnoreCase);
+                location.Contains("Remote", StringComparison.OrdinalIgnoreCase)) ||
+            text.Contains("remote", StringComparison.OrdinalIgnoreCase);
 
         if (!isRemoteListing)
         {
@@ -187,24 +184,26 @@ internal static partial class JobAnalysis
         }
 
         var sentences = SentenceSplitRegex().Split(text);
-        foreach (var rule in rules.OrderedRules)
+        foreach (var (category, pattern) in LocationRules)
         {
             foreach (var sentence in sentences)
             {
-                var match = rules.Pattern(rule.PatternId).Match(sentence);
+                var match = pattern.Match(sentence);
                 if (!match.Success)
                 {
                     continue;
                 }
 
-                if (rule.UnlessPatternIds.Any(id => rules.Pattern(id).IsMatch(sentence)))
+                // "Commuting distance ... is a plus" is advantageous, not a restriction.
+                if (category == "commuting-distance" &&
+                    CommutingPlusRegex().IsMatch(sentence))
                 {
                     continue;
                 }
 
                 return new RemoteLocationAnalysis(
                     true,
-                    rule.Category,
+                    category,
                     CreateSnippet(sentence, match.Index));
             }
         }
@@ -315,5 +314,50 @@ internal static partial class JobAnalysis
 
     [GeneratedRegex(@"(?<=[.!?])\s+(?=[A-Z#*])")]
     private static partial Regex SentenceSplitRegex();
+
+    [GeneratedRegex(
+        @"\bwithin\s+\d{1,3}\s+miles?\s+of\b|\b\d{1,2}\s*hour\s+radius\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex DistanceRadiusRegex();
+
+    [GeneratedRegex(@"\bcommuting\s+distance\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex CommutingDistanceRegex();
+
+    [GeneratedRegex(
+        @"\bmust\s+be\s+able\s+to\s+work\s+a\s+hybrid\s+schedule\s+in\s+either\b|" +
+        @"\blocal\s+to\b.{0,160}\b(?:work\s+3\s+days|hybrid)\b|" +
+        @"\bmust\s+be\s+located\s+near\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex HybridLocalRegex();
+
+    [GeneratedRegex(
+        @"\bmust\s+live\s+in\s+(?!the\s+(?:u\.s\.|united\s+states))|" +
+        @"\bmust\s+be\s+located\s+in\s+the\s+eastern\s+part\b|" +
+        @"\bcandidate\s+must\s+reside\s+in\s+(?!the\s+(?:u\.s\.|united\s+states))|" +
+        @"\bcandidates?\s+must\s+(?:be\s+)?located\s+in\s+(?!the\s+(?:u\.s\.|united\s+states))|" +
+        @"\bcandidates?\s+must\s+located\s+in\b|" +
+        @"\bcandidates?\s+should\s+be\s+located\s+in\b|" +
+        @"\bmust\s+be\s+located\s+in\s*\(|" +
+        @"\bremote(?:ly)?\s+within\s+the\s+(?:eastern|central|mountain|pacific)\s+time\s+zone\b|" +
+        @"\blocated\s+in\s+the\s+United\s+States\s+within\s+the\s+following\s+states\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex RequiredRegionRegex();
+
+    [GeneratedRegex(
+        @"\bif\s+remote\b.{0,180}\b(?:ideally|preference)\b.{0,120}\b(?:reside|time\s+zone)\b|" +
+        @"\bremote\s+candidates\b.{0,160}\bpreferably\b|" +
+        @"\bideally\b.{0,180}\b(?:located|reside|local\s+to)\b|" +
+        @"\bpreference\b.{0,160}\b(?:local\s+to|reside\s+within)\b|" +
+        @"\b(?:mountain|central|eastern|pacific)\s+time\s+zone\s+is\s+preferred\b|" +
+        @"\bpreferred\s+to\s+be\s+in\s+the\s+(?:central|eastern|mountain|pacific)\s+time\s+zone\b|" +
+        @"\ball\s+candidates\s+residing\s+in\s+either\b.{0,160}\bremote\b|" +
+        @"\bany\s+candidate\s+located\s+in\b.{0,160}\bremote\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex RegionalPreferenceRegex();
+
+    [GeneratedRegex(
+        @"commuting\s+distance.{0,60}\bis\s+a\s+plus\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex CommutingPlusRegex();
 
 }

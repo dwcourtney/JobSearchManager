@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "rulesetVersion": "1.0.0",
+  "regexTimeoutMilliseconds": 1000,
+  "patterns": [
+    {
+      "id": "DistanceRadiusRegex",
+      "pattern": "\\bwithin\\s+\\d{1,3}\\s+miles?\\s+of\\b|\\b\\d{1,2}\\s*hour\\s+radius\\b"
+    },
+    {
+      "id": "CommutingDistanceRegex",
+      "pattern": "\\bcommuting\\s+distance\\b"
+    },
+    {
+      "id": "HybridLocalRegex",
+      "pattern": "\\bmust\\s+be\\s+able\\s+to\\s+work\\s+a\\s+hybrid\\s+schedule\\s+in\\s+either\\b|\\blocal\\s+to\\b.{0,160}\\b(?:work\\s+3\\s+days|hybrid)\\b|\\bmust\\s+be\\s+located\\s+near\\b"
+    },
+    {
+      "id": "RequiredRegionRegex",
+      "pattern": "\\bmust\\s+live\\s+in\\s+(?!the\\s+(?:u\\.s\\.|united\\s+states))|\\bmust\\s+be\\s+located\\s+in\\s+the\\s+eastern\\s+part\\b|\\bcandidate\\s+must\\s+reside\\s+in\\s+(?!the\\s+(?:u\\.s\\.|united\\s+states))|\\bcandidates?\\s+must\\s+(?:be\\s+)?located\\s+in\\s+(?!the\\s+(?:u\\.s\\.|united\\s+states))|\\bcandidates?\\s+must\\s+located\\s+in\\b|\\bcandidates?\\s+should\\s+be\\s+located\\s+in\\b|\\bmust\\s+be\\s+located\\s+in\\s*\\(|\\bremote(?:ly)?\\s+within\\s+the\\s+(?:eastern|central|mountain|pacific)\\s+time\\s+zone\\b|\\blocated\\s+in\\s+the\\s+United\\s+States\\s+within\\s+the\\s+following\\s+states\\b"
+    },
+    {
+      "id": "RegionalPreferenceRegex",
+      "pattern": "\\bif\\s+remote\\b.{0,180}\\b(?:ideally|preference)\\b.{0,120}\\b(?:reside|time\\s+zone)\\b|\\bremote\\s+candidates\\b.{0,160}\\bpreferably\\b|\\bideally\\b.{0,180}\\b(?:located|reside|local\\s+to)\\b|\\bpreference\\b.{0,160}\\b(?:local\\s+to|reside\\s+within)\\b|\\b(?:mountain|central|eastern|pacific)\\s+time\\s+zone\\s+is\\s+preferred\\b|\\bpreferred\\s+to\\s+be\\s+in\\s+the\\s+(?:central|eastern|mountain|pacific)\\s+time\\s+zone\\b|\\ball\\s+candidates\\s+residing\\s+in\\s+either\\b.{0,160}\\bremote\\b|\\bany\\s+candidate\\s+located\\s+in\\b.{0,160}\\bremote\\b"
+    },
+    {
+      "id": "CommutingPlusRegex",
+      "pattern": "commuting\\s+distance.{0,60}\\bis\\s+a\\s+plus\\b"
+    }
+  ],
+  "remoteDesignationCues": {
+    "primaryLocation": "Remote",
+    "additionalLocation": "Remote",
+    "description": "remote"
+  },
+  "rules": [
+    {
+      "id": "distance-radius",
+      "priority": 0,
+      "patternId": "DistanceRadiusRegex",
+      "category": "distance-radius",
+      "unlessPatternIds": []
+    },
+    {
+      "id": "commuting-distance",
+      "priority": 1,
+      "patternId": "CommutingDistanceRegex",
+      "category": "commuting-distance",
+      "unlessPatternIds": [
+        "CommutingPlusRegex"
+      ]
+    },
+    {
+      "id": "hybrid-local",
+      "priority": 2,
+      "patternId": "HybridLocalRegex",
+      "category": "hybrid-local",
+      "unlessPatternIds": []
+    },
+    {
+      "id": "required-region",
+      "priority": 3,
+      "patternId": "RequiredRegionRegex",
+      "category": "required-region",
+      "unlessPatternIds": []
+    },
+    {
+      "id": "regional-preference",
+      "priority": 4,
+      "patternId": "RegionalPreferenceRegex",
+      "category": "regional-preference",
+      "unlessPatternIds": []
+    }
+  ]
+}
