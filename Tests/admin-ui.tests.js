@@ -18,7 +18,7 @@ assert.match(index,
   /id="administrator-bootstrap-section"[^>]*hidden[\s\S]*?id="administrator-bootstrap-code"[\s\S]*?minlength="8"[\s\S]*?maxlength="8"[\s\S]*?Claim Administrator/);
 assert.doesNotMatch(index, /annotation-labeling-ui|detector-evaluation-ui/,
   "Removed experimental Admin assets must not load.");
-assert.match(index, /app\.js\?v=57/);
+assert.match(index, /app\.js\?v=58/);
 
 assert.match(app, /synchronizeAdminNavigation\(account\.isAdmin === true\)/);
 assert.match(app, /if \(!isAdmin\)[\s\S]*?adminTab\?\.remove\(\)[\s\S]*?return;/,
@@ -32,17 +32,17 @@ assert.match(app,
 assert.match(app, /postAccountJson\("\/api\/account\/admin-bootstrap"/);
 assert.match(app, /fetch\("\/api\/admin\/status"/,
   "Admin Overview must verify its server authorization endpoint.");
-assert.match(app, /classifierTab.textContent = "Job Fit Rules"/);
-assert.match(app, /evaluationTab.textContent = "Job Fit Evaluation"/);
+assert.match(app, /classifierTab.textContent = "Concept Detection"/);
+assert.match(app, /evaluationTab.textContent = "Concept Detection Evaluation"/);
 assert.doesNotMatch(app, /cheapTab|Cheap Triage/);
 assert.doesNotMatch(app, /RuleMaintenance.renderStatus\(elements.adminCheapPanel,/);
 assert.doesNotMatch(app, /These benchmarks do not evaluate Cheap Triage KEEP\/REJECT decisions/);
-assert.match(app, /Run Curated Regression Benchmark/);
-assert.match(app, /Run AI-Adjudicated Holdout Evaluation/);
+assert.doesNotMatch(app, /Run Curated Regression Benchmark/);
+assert.doesNotMatch(app, /Run AI-Adjudicated Holdout Evaluation/);
 assert.doesNotMatch(app, /renderLlm|renderTriage|llmHoldout|LLM_HOLDOUT|activeEvaluationTab|Run LLM Holdout|CHEAP HIGH-RECALL TRIAGE|Deep Analyze with LLM/,
   "Retired workflows must have no controls, polling, or remembered tab in shipped UI.");
 assert.doesNotMatch(styles, /\.llm-|\.admin-evaluation-subtabs/);
-assert.match(app, /evaluate.className = "primary-button admin-evaluation-action"/);
+assert.match(app, /Read-only concept detection rules/);
 assert.match(app, /admin-compact-table[\s\S]*?Previous[\s\S]*?Next/,
   "RegEx rules must use a compact paginated table instead of giant cards.");
 assert.match(app, /Worst F1[\s\S]*?Lowest support[\s\S]*?Highest disagreement[\s\S]*?Concept name/);
@@ -66,10 +66,10 @@ assert.match(program,
   /MapGet\("\/api\/admin\/classifier\/backfill\/status"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)/);
 assert.match(program,
   /MapPost\("\/api\/admin\/classifier\/backfill"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)[\s\S]*?RequireRateLimiting\("state"\)/);
-assert.match(program, /MapPost\("\/api\/admin\/regex-rules\/evaluate"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)/);
+assert.doesNotMatch(program, /MapPost\("\/api\/admin\/regex-rules\/evaluate"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)/);
 assert.match(program, /MapGet\("\/api\/admin\/evaluations"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)/);
-assert.match(program, /MapPost\("\/api\/admin\/evaluations\/ai-holdout"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)[\s\S]*?RequireRateLimiting\("state"\)/);
-assert.match(program, /MapPost\("\/api\/admin\/regex-rules\/reload"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)/);
+assert.doesNotMatch(program, /MapPost\("\/api\/admin\/evaluations\/ai-holdout"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)[\s\S]*?RequireRateLimiting\("state"\)/);
+assert.doesNotMatch(program, /MapPost\("\/api\/admin\/regex-rules\/reload"[\s\S]*?RequireAuthorization\(AdminAuthorization\.Policy\)/);
 assert.doesNotMatch(program, /api\/admin\/annotations/,
   "Removed annotation APIs must not remain reachable.");
 assert.match(program,
@@ -87,3 +87,8 @@ assert.doesNotMatch(styles, /annotation-|detector-|training-data-/,
 assert.doesNotMatch(program, /app.Map(?:Get|Post)\("\/api\/admin\/evaluations\/(?:llm-holdout|triage)/,
   "Retired research run/status APIs must not remain in the normal web host.");
 console.log("All Admin role, Job Fit maintenance/evaluation, and cheap-triage separation tests passed.");
+
+assert.doesNotMatch(app, /applyRegexRuleAction|regexRuleActions|reloadRegexRules|pollAiHoldoutEvaluation/);
+assert.doesNotMatch(program, /app.Map(?:Post|Get)\("\/api\/admin\/regex-rules/);
+assert.match(program, /MapGet\("\/api\/admin\/concept-detection"[\s\S]*?RequireAuthorization\(AdminAuthorization.Policy\)/);
+assert.match(app, /item\?\.status \|\| "UNAVAILABLE"/);

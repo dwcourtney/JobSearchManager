@@ -9,7 +9,10 @@ for (const source of [program,service,read("compose.yaml"),read("deploy/compose.
   assert.doesNotMatch(source, /ClassifierClient|QwenDeepAnalysisContract|DeepAnalysis__|OLLAMA_|--llm-benchmark|gpus:/);
 assert.match(service, /regexClassifier\.Classify/);
 assert.match(service, /"deterministic-regex"/);
-assert.match(service, /"sqlite-regex-v1"/);
+assert.match(service, /"json-regex-v1"/);
+assert.doesNotMatch(program, /AddSingleton<SqliteSemanticRuleStore>|AddHostedService<RegexTelemetryFlushService>/);
+assert.match(program, /ConceptRuleSnapshot.Load[\s\S]*?WebApplication.CreateBuilder/);
+assert.match(read("JobCatalog.cs"), /CanPersist\(current, classification\)/);
 assert.doesNotMatch(read("JobCatalog.cs"), /DeepAnalyzeWithQwenAsync|PersistDeepAnalysisStateAsync/);
 assert.match(program, /AddSingleton<SemanticClassificationService>/);
 assert.match(program, /ConceptDiagnosticRequest request/);

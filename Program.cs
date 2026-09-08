@@ -31,6 +31,17 @@ if (args is ["--healthcheck"])
     return;
 }
 
+// Explicit offline repair uses the same immutable authority as normal startup.
+// Run against a copied cache or while its owning application is stopped.
+if (args is ["--json-concept-cache-reconcile", var jsonCacheRoot])
+{
+    var catalog = JobConceptCatalog.LoadDefault();
+    var snapshot = ConceptRuleSnapshot.Load(Path.Combine(AppContext.BaseDirectory, "rules", "concepts-v1.json"), catalog);
+    var report = await RegexCacheReconciler.ReconcileAsync(Path.GetFullPath(jsonCacheRoot), snapshot.Matcher, catalog);
+    Console.WriteLine(JsonSerializer.Serialize(report, new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true }));
+    return;
+}
+
 if (args.Length >= 3 && args[0] == "--regex-maintenance")
 {
     var action = args[1];
@@ -177,6 +188,9 @@ var extendedLocationRules = ExtendedLocationRules.Default; // Validate packaged 
 var remoteWorkRules = RemoteWorkRules.Default; // Validate packaged remote-work rules before host startup.
 var educationRules = EducationRules.Default; // Validate packaged education rules before host startup.
 var workAuthorizationRules = WorkAuthorizationRules.Default; // Validate packaged authorization rules before host startup.
+var conceptCatalog = JobConceptCatalog.LoadDefault();
+var conceptRules = ConceptRuleSnapshot.Load(Path.Combine(AppContext.BaseDirectory, "rules", "concepts-v1.json"), conceptCatalog);
+var conceptEvaluationReports = new ConceptEvaluationReports(Path.Combine(AppContext.BaseDirectory, "evaluation", "concept-detection"));
 var builder = WebApplication.CreateBuilder(args);
 var hosting = HostingConfiguration.FromConfiguration(builder.Configuration);
 
@@ -209,12 +223,10 @@ builder.Services.AddSingleton<AcademicQualificationDetector>();
 builder.Services.AddSingleton<WorkAuthorizationDetector>();
 builder.Services.AddSingleton<RemoteWorkDetector>();
 builder.Services.AddSingleton<ExtendedLocationRequirementDetector>();
-builder.Services.AddSingleton<JobConceptCatalog>();
-builder.Services.AddSingleton<SqliteSemanticRuleStore>();
-builder.Services.AddSingleton<RegexSemanticClassifier>();
-builder.Services.AddSingleton<RegexEvaluationService>();
-builder.Services.AddSingleton<AiHoldoutEvaluationService>();
-builder.Services.AddHostedService<RegexTelemetryFlushService>();
+builder.Services.AddSingleton(conceptCatalog);
+builder.Services.AddSingleton(conceptRules);
+builder.Services.AddSingleton(conceptEvaluationReports);
+builder.Services.AddSingleton(conceptRules.Matcher);
 builder.Services.AddSingleton<SemanticClassificationService>();
 builder.Services.AddSingleton<PortableWorkspaceService>();
 builder.Services.AddSingleton<SharedSourceRefreshCoordinator>();
@@ -581,163 +593,14 @@ app.MapPost("/api/admin/classifier-diagnostic", async Task<IResult> (
     return Results.Ok(result);
 }).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
 
-app.MapGet("/api/admin/regex-rules", async (
-    string? status, string? conceptId, SqliteSemanticRuleStore store, CancellationToken token) =>
-    Results.Ok(await store.ListRulesAsync(status, conceptId, token)))
-    .RequireAuthorization(AdminAuthorization.Policy);
+app.MapGet("/api/admin/concept-detection", (ConceptRuleSnapshot snapshot) =>
+    Results.Ok(new { identity = snapshot.Identity, validation = "validated-before-listening",
+        totalRules = snapshot.Rules.Length, totalConcepts = snapshot.Rules.Select(r => r.ConceptId).Distinct().Count(),
+        countsByKind = snapshot.Rules.GroupBy(r => r.Kind).ToDictionary(g => g.Key, g => g.Count()),
+        rules = snapshot.Rules })).RequireAuthorization(AdminAuthorization.Policy);
 
-app.MapGet("/api/admin/regex-rules/overview", async (
-    SqliteSemanticRuleStore store, RegexSemanticClassifier classifier, CancellationToken token) =>
-{
-    var rules = await store.ListRulesAsync(cancellationToken: token);
-    return Results.Ok(new
-    {
-        classifier.RulesetFingerprint,
-        classifier.ActiveRuleCount,
-        database = Path.GetFileName(store.DatabasePath),
-        statuses = rules.GroupBy(item => item.Status, StringComparer.Ordinal)
-            .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal),
-        store.Policy
-    });
-}).RequireAuthorization(AdminAuthorization.Policy);
-
-app.MapPost("/api/admin/regex-rules", async Task<IResult> (
-    SemanticRuleCandidate candidate, SqliteSemanticRuleStore store, CancellationToken token) =>
-{
-    try { return Results.Created($"/api/admin/regex-rules", await store.CreateAsync(candidate, token)); }
-    catch (Exception exception) when (exception is InvalidDataException or ArgumentException)
-    { return Results.BadRequest(new { error = exception.Message }); }
-}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
-
-app.MapPost("/api/admin/regex-rules/{ruleId}/transition/{status}", async Task<IResult> (
-    string ruleId, string status, SqliteSemanticRuleStore store,
-    RegexSemanticClassifier classifier, WorkspaceRuntimeProvider provider, CancellationToken token) =>
-{
-    try
-    {
-        var value = await store.TransitionAsync(ruleId, status, token);
-        if (SemanticRuleStatuses.RunsInProduction(value.Status) || value.Status == SemanticRuleStatuses.Retired)
-        {
-            await classifier.ReloadAsync(token);
-            (await provider.GetAsync(token)).Catalog.StartSemanticClassificationBackfill();
-        }
-        return Results.Ok(value);
-    }
-    catch (KeyNotFoundException) { return Results.NotFound(); }
-    catch (Exception exception) when (exception is InvalidOperationException or ArgumentException)
-    { return Results.BadRequest(new { error = exception.Message }); }
-}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
-
-app.MapPost("/api/admin/regex-rules/{ruleId}/validate", async Task<IResult> (
-    string ruleId, RegexEvaluationService evaluation, CancellationToken token) =>
-{
-    try { return Results.Ok(await evaluation.ValidateCandidateAsync(ruleId, token)); }
-    catch (KeyNotFoundException) { return Results.NotFound(); }
-    catch (Exception exception) when (exception is InvalidOperationException or InvalidDataException)
-    { return Results.BadRequest(new { error = exception.Message }); }
-}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
-
-app.MapPost("/api/admin/regex-rules/relationships", async Task<IResult> (
-    SemanticRuleRelationshipCandidate relationship, SqliteSemanticRuleStore store,
-    CancellationToken token) =>
-{
-    try
-    {
-        await store.AddRelationshipAsync(relationship.SourceRuleId, relationship.TargetRuleId,
-            relationship.RelationshipType, token);
-        return Results.NoContent();
-    }
-    catch (KeyNotFoundException) { return Results.NotFound(); }
-    catch (InvalidDataException exception) { return Results.BadRequest(new { error = exception.Message }); }
-}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
-
-app.MapPost("/api/admin/regex-rules/reload", async (
-    RegexSemanticClassifier classifier, WorkspaceRuntimeProvider provider, CancellationToken token) =>
-{
-    var rulesetFingerprint = await classifier.ReloadAsync(token);
-    var reconciliation = (await provider.GetAsync(token)).Catalog.StartSemanticClassificationBackfill();
-    return Results.Ok(new { rulesetFingerprint, reconciliation });
-})
-    .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
-
-app.MapPost("/api/admin/regex-rules/review-stale", async (
-    SqliteSemanticRuleStore store, RegexSemanticClassifier classifier,
-    WorkspaceRuntimeProvider provider, CancellationToken token) =>
-{
-    var count = await store.MarkReviewDueAsync(DateTimeOffset.UtcNow, token);
-    if (count > 0)
-    {
-        await classifier.ReloadAsync(token);
-        (await provider.GetAsync(token)).Catalog.StartSemanticClassificationBackfill();
-    }
-    return Results.Ok(new { reviewDue = count });
-}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
-
-app.MapPost("/api/admin/regex-rules/retention", async (
-    SqliteSemanticRuleStore store, CancellationToken token) =>
-    Results.Ok(new { deleted = await store.ApplyRetiredRetentionAsync(DateTimeOffset.UtcNow, token) }))
-    .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
-
-app.MapGet("/api/admin/regex-rules/export", async (
-    SqliteSemanticRuleStore store, CancellationToken token) =>
-    Results.Text(await store.ExportJsonAsync(token), "application/json"))
-    .RequireAuthorization(AdminAuthorization.Policy);
-
-app.MapPost("/api/admin/regex-rules/import", async Task<IResult> (
-    HttpRequest request, SqliteSemanticRuleStore store, CancellationToken token) =>
-{
-    using var reader = new StreamReader(request.Body);
-    var json = await reader.ReadToEndAsync(token);
-    if (json.Length > 5_000_000) return Results.BadRequest(new { error = "Rule import is too large." });
-    try { return Results.Ok(await store.ImportCandidatesAsync(json, "admin-json-import", token)); }
-    catch (InvalidDataException exception) { return Results.BadRequest(new { error = exception.Message }); }
-}).RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
-
-app.MapPost("/api/admin/regex-rules/evaluate", async (
-    RegexEvaluationService evaluation, CancellationToken token) =>
-    Results.Ok(await evaluation.EvaluateAsync(persist: true, cancellationToken: token)))
-    .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
-
-app.MapGet("/api/admin/evaluations", async (
-    SqliteSemanticRuleStore store, AiHoldoutEvaluationService holdout,
-    CancellationToken token) =>
-{
-    var runs = await store.ListEvaluationRunsAsync(token);
-    var holdoutStatus = holdout.GetStatus();
-    var holdoutReport = holdout.GetLatestReport();
-    return Results.Ok(new
-    {
-        runs,
-        holdoutStatus,
-        holdoutReport,
-        datasetRoles = new object[]
-        {
-            new { role = EvaluationDatasetRoles.DevelopmentRegression,
-                displayName = "CURATED REGRESSION BENCHMARK", status = "available",
-                warning = "Known-case development/regression evidence; not production accuracy." },
-            new { role = EvaluationDatasetRoles.Validation, displayName = "VALIDATION",
-                status = "not-yet-available",
-                warning = "An independently maintained labeled validation dataset has not been established." },
-            new { role = EvaluationDatasetRoles.ProductionHoldout,
-                displayName = "AI-ADJUDICATED PRODUCTION HOLDOUT",
-                status = holdoutReport is null ? holdoutStatus.State : "available",
-                warning = AiHoldoutEvaluationService.ExactDisclaimer }
-        }
-    });
-}).RequireAuthorization(AdminAuthorization.Policy);
-
-app.MapGet("/api/admin/evaluations/ai-holdout/status", (
-    AiHoldoutEvaluationService evaluation) => Results.Ok(new
-    {
-        status = evaluation.GetStatus(),
-        report = evaluation.GetLatestReport()
-    })).RequireAuthorization(AdminAuthorization.Policy);
-
-app.MapPost("/api/admin/evaluations/ai-holdout", (
-    AiHoldoutEvaluationService evaluation) => evaluation.TryStart()
-        ? Results.Accepted(value: evaluation.GetStatus())
-        : Results.Conflict(new { error = "An AI-adjudicated holdout evaluation is already running." }))
-    .RequireAuthorization(AdminAuthorization.Policy).RequireRateLimiting("state");
+app.MapGet("/api/admin/evaluations", (ConceptEvaluationReports reports, ConceptRuleSnapshot snapshot) =>
+    Results.Ok(reports.View(snapshot))).RequireAuthorization(AdminAuthorization.Policy);
 
 app.MapGet("/api/admin/classifier/backfill/status", async (
     WorkspaceRuntimeProvider provider,
@@ -1118,7 +981,7 @@ app.MapPut("/api/history/workflow-state", async (
     .RequireRateLimiting("state");
 
 var dataStores = app.Services.GetRequiredService<IWorkspaceDataStoreFactory>();
-await app.Services.GetRequiredService<RegexSemanticClassifier>().InitializeAsync();
+// The complete JSON snapshot was validated and compiled before host construction.
 await dataStores.ValidateAsync();
 await app.Services.GetRequiredService<IAccountRegistryStore>().ValidateAsync();
 await app.Services.GetRequiredService<AdminBootstrapService>().InitializeAsync();

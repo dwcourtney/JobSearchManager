@@ -1,0 +1,962 @@
+[
+  {
+    "id": "fixture-00",
+    "title": "",
+    "html": ""
+  },
+  {
+    "id": "fixture-01",
+    "title": "Software Engineer",
+    "html": ""
+  },
+  {
+    "id": "fixture-02",
+    "title": "Program Manager",
+    "html": "Develop software and Python APIs."
+  },
+  {
+    "id": "fixture-03",
+    "title": "Engineer",
+    "html": "not Python. Python development."
+  },
+  {
+    "id": "fixture-04",
+    "title": "Engineer",
+    "html": "not directly responsible for software development. Software development."
+  },
+  {
+    "id": "fixture-05",
+    "title": "Engineer",
+    "html": "We do not develop software."
+  },
+  {
+    "id": "fixture-06",
+    "title": "Laboratory Technician",
+    "html": "Operate instrumentation and test equipment."
+  },
+  {
+    "id": "fixture-07",
+    "title": "Engineer",
+    "html": "Laboratory equipment and apparatus."
+  },
+  {
+    "id": "fixture-08",
+    "title": "Engineer",
+    "html": "Calibrate lab instrumentation and equipment."
+  },
+  {
+    "id": "fixture-09",
+    "title": "Engineer",
+    "html": "Operate manufacturing line equipment."
+  },
+  {
+    "id": "fixture-10",
+    "title": "Engineer",
+    "html": "Manufacturing equipment."
+  },
+  {
+    "id": "fixture-11",
+    "title": "Engineer",
+    "html": "Python python PYTHON; C++ software development and APIs."
+  },
+  {
+    "id": "fixture-12",
+    "title": "Engineer",
+    "html": "<p>Develop&nbsp;software.</p><div>Python<br>Linux.</div>"
+  },
+  {
+    "id": "fixture-13",
+    "title": "Project manager",
+    "html": "Software engineer Python developer"
+  },
+  {
+    "id": "fixture-14",
+    "title": "Engineer",
+    "html": "Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers Python software development API backend Linux containers"
+  },
+  {
+    "id": "legacy-24e942a270d0af8dfee5cf79",
+    "title": "",
+    "html": "",
+    "remoteWork": {
+      "isRemoteDesignated": false,
+      "concernLevel": "high",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "extendedLocation": {
+      "confidence": "high",
+      "destination": null,
+      "summary": null,
+      "signals": [
+        {
+          "category": "recurring-deployment",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "frozen synthetic signal",
+          "evidence": "First evidence."
+        },
+        {
+          "category": "recurring-deployment",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "second",
+          "evidence": "SECOND MUST NOT WIN"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 2
+    }
+  },
+  {
+    "id": "legacy-39944b223861179ad2280b57",
+    "title": "",
+    "html": "",
+    "remoteWork": {
+      "isRemoteDesignated": false,
+      "concernLevel": "high",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "extendedLocation": {
+      "confidence": "high",
+      "destination": null,
+      "summary": null,
+      "signals": [
+        {
+          "category": "possible-deployment",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "frozen synthetic signal",
+          "evidence": "First evidence."
+        },
+        {
+          "category": "possible-deployment",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "second",
+          "evidence": "SECOND MUST NOT WIN"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 2
+    }
+  },
+  {
+    "id": "legacy-6ed3e9b90684b842b6905ef9",
+    "title": "",
+    "html": "",
+    "remoteWork": {
+      "isRemoteDesignated": false,
+      "concernLevel": "high",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "extendedLocation": {
+      "confidence": "high",
+      "destination": null,
+      "summary": null,
+      "signals": [
+        {
+          "category": "extended-deployment",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "frozen synthetic signal",
+          "evidence": "First evidence."
+        },
+        {
+          "category": "extended-deployment",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "second",
+          "evidence": "SECOND MUST NOT WIN"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 2
+    }
+  },
+  {
+    "id": "legacy-747f61fc92edf56b8305e23f",
+    "title": "",
+    "html": "",
+    "remoteWork": {
+      "isRemoteDesignated": false,
+      "concernLevel": "high",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "extendedLocation": {
+      "confidence": "high",
+      "destination": null,
+      "summary": null,
+      "signals": [
+        {
+          "category": "forward-deployed",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "frozen synthetic signal",
+          "evidence": "First evidence."
+        },
+        {
+          "category": "forward-deployed",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "second",
+          "evidence": "SECOND MUST NOT WIN"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 2
+    }
+  },
+  {
+    "id": "legacy-e694fb2d23a1756c12af40b5",
+    "title": "",
+    "html": "",
+    "remoteWork": {
+      "isRemoteDesignated": false,
+      "concernLevel": "high",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "extendedLocation": {
+      "confidence": "high",
+      "destination": null,
+      "summary": null,
+      "signals": [
+        {
+          "category": "required-deployment",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "frozen synthetic signal",
+          "evidence": "First evidence."
+        },
+        {
+          "category": "required-deployment",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "second",
+          "evidence": "SECOND MUST NOT WIN"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 2
+    }
+  },
+  {
+    "id": "legacy-f8fa3e814f43dca4917f0d61",
+    "title": "",
+    "html": "",
+    "remoteWork": {
+      "isRemoteDesignated": false,
+      "concernLevel": "high",
+      "summary": null,
+      "signals": [
+        {
+          "category": "field-deployment",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "frozen synthetic signal",
+          "evidence": "First evidence."
+        },
+        {
+          "category": "field-deployment",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "second",
+          "evidence": "SECOND MUST NOT WIN"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "extendedLocation": {
+      "confidence": "high",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "parsed",
+      "analysisVersion": 2
+    }
+  },
+  {
+    "id": "legacy-09d0ff8d26548e20e408ca8b",
+    "title": "",
+    "html": "",
+    "remoteWork": {
+      "isRemoteDesignated": false,
+      "concernLevel": "high",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "extendedLocation": {
+      "confidence": "high",
+      "destination": null,
+      "summary": null,
+      "signals": [
+        {
+          "category": "long-term-away-assignment",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "frozen synthetic signal",
+          "evidence": "First evidence."
+        },
+        {
+          "category": "long-term-away-assignment",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "second",
+          "evidence": "SECOND MUST NOT WIN"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 2
+    }
+  },
+  {
+    "id": "legacy-357b16b0dbddb8f1b02ca111",
+    "title": "",
+    "html": "",
+    "remoteWork": {
+      "isRemoteDesignated": false,
+      "concernLevel": "high",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "extendedLocation": {
+      "confidence": "high",
+      "destination": null,
+      "summary": null,
+      "signals": [
+        {
+          "category": "extended-away-duration",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "frozen synthetic signal",
+          "evidence": "First evidence."
+        },
+        {
+          "category": "extended-away-duration",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "second",
+          "evidence": "SECOND MUST NOT WIN"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 2
+    }
+  },
+  {
+    "id": "legacy-45ecafa122a0285219308d1e",
+    "title": "",
+    "html": "",
+    "remoteWork": {
+      "isRemoteDesignated": false,
+      "concernLevel": "high",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "extendedLocation": {
+      "confidence": "high",
+      "destination": null,
+      "summary": null,
+      "signals": [
+        {
+          "category": "extended-deployment",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "frozen synthetic signal",
+          "evidence": "First evidence."
+        },
+        {
+          "category": "extended-deployment",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "second",
+          "evidence": "SECOND MUST NOT WIN"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 2
+    }
+  },
+  {
+    "id": "legacy-b0e68d17f59f181c68df6e12",
+    "title": "",
+    "html": "",
+    "remoteWork": {
+      "isRemoteDesignated": false,
+      "concernLevel": "high",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "extendedLocation": {
+      "confidence": "high",
+      "destination": null,
+      "summary": null,
+      "signals": [
+        {
+          "category": "winter-over-assignment",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "frozen synthetic signal",
+          "evidence": "First evidence."
+        },
+        {
+          "category": "winter-over-assignment",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "second",
+          "evidence": "SECOND MUST NOT WIN"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 2
+    }
+  },
+  {
+    "id": "legacy-22c325317e4727237ee3bef5",
+    "title": "",
+    "html": "",
+    "remoteWork": {
+      "isRemoteDesignated": false,
+      "concernLevel": "high",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "extendedLocation": {
+      "confidence": "high",
+      "destination": null,
+      "summary": null,
+      "signals": [
+        {
+          "category": "oconus-assignment",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "frozen synthetic signal",
+          "evidence": "First evidence."
+        },
+        {
+          "category": "oconus-assignment",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "second",
+          "evidence": "SECOND MUST NOT WIN"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 2
+    }
+  },
+  {
+    "id": "legacy-2e3ac2bf64058c86bee6c676",
+    "title": "",
+    "html": "",
+    "remoteWork": {
+      "isRemoteDesignated": false,
+      "concernLevel": "high",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "extendedLocation": {
+      "confidence": "high",
+      "destination": null,
+      "summary": null,
+      "signals": [
+        {
+          "category": "possible-extended-assignment",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "frozen synthetic signal",
+          "evidence": "First evidence."
+        },
+        {
+          "category": "possible-extended-assignment",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "second",
+          "evidence": "SECOND MUST NOT WIN"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 2
+    }
+  },
+  {
+    "id": "legacy-34a5d1006d6883e754ac8d7b",
+    "title": "",
+    "html": "",
+    "remoteWork": {
+      "isRemoteDesignated": false,
+      "concernLevel": "high",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "extendedLocation": {
+      "confidence": "high",
+      "destination": null,
+      "summary": null,
+      "signals": [
+        {
+          "category": "explicit-job-location",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "frozen synthetic signal",
+          "evidence": "First evidence."
+        },
+        {
+          "category": "explicit-job-location",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "second",
+          "evidence": "SECOND MUST NOT WIN"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 2
+    }
+  },
+  {
+    "id": "legacy-72fc5fbe727fe741717e9fa2",
+    "title": "",
+    "html": "",
+    "remoteWork": {
+      "isRemoteDesignated": false,
+      "concernLevel": "high",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "extendedLocation": {
+      "confidence": "high",
+      "destination": null,
+      "summary": null,
+      "signals": [
+        {
+          "category": "temporary-duty",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "frozen synthetic signal",
+          "evidence": "First evidence."
+        },
+        {
+          "category": "temporary-duty",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "second",
+          "evidence": "SECOND MUST NOT WIN"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 2
+    }
+  },
+  {
+    "id": "legacy-08d830de52515388b0380b42",
+    "title": "",
+    "html": "",
+    "remoteWork": {
+      "isRemoteDesignated": false,
+      "concernLevel": "high",
+      "summary": null,
+      "signals": [
+        {
+          "category": "scheduled-onsite",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "frozen synthetic signal",
+          "evidence": "First evidence."
+        },
+        {
+          "category": "scheduled-onsite",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "second",
+          "evidence": "SECOND MUST NOT WIN"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "extendedLocation": {
+      "confidence": "high",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "parsed",
+      "analysisVersion": 2
+    }
+  },
+  {
+    "id": "legacy-5c9def8d7bb49326d2ddfe72",
+    "title": "",
+    "html": "",
+    "remoteWork": {
+      "isRemoteDesignated": false,
+      "concernLevel": "high",
+      "summary": null,
+      "signals": [
+        {
+          "category": "onsite-duty",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "frozen synthetic signal",
+          "evidence": "First evidence."
+        },
+        {
+          "category": "onsite-duty",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "second",
+          "evidence": "SECOND MUST NOT WIN"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "extendedLocation": {
+      "confidence": "high",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "parsed",
+      "analysisVersion": 2
+    }
+  },
+  {
+    "id": "legacy-977bbbafa8743278b30e536b",
+    "title": "",
+    "html": "",
+    "remoteWork": {
+      "isRemoteDesignated": false,
+      "concernLevel": "high",
+      "summary": null,
+      "signals": [
+        {
+          "category": "physical-installation",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "frozen synthetic signal",
+          "evidence": "First evidence."
+        },
+        {
+          "category": "physical-installation",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "second",
+          "evidence": "SECOND MUST NOT WIN"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "extendedLocation": {
+      "confidence": "high",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "parsed",
+      "analysisVersion": 2
+    }
+  },
+  {
+    "id": "legacy-de5c16b874671c49c8294815",
+    "title": "",
+    "html": "",
+    "remoteWork": {
+      "isRemoteDesignated": false,
+      "concernLevel": "high",
+      "summary": null,
+      "signals": [
+        {
+          "category": "operational-site",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "frozen synthetic signal",
+          "evidence": "First evidence."
+        },
+        {
+          "category": "operational-site",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "second",
+          "evidence": "SECOND MUST NOT WIN"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "extendedLocation": {
+      "confidence": "high",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "parsed",
+      "analysisVersion": 2
+    }
+  },
+  {
+    "id": "legacy-758654674de4bf8f01bcacef",
+    "title": "",
+    "html": "",
+    "remoteWork": {
+      "isRemoteDesignated": false,
+      "concernLevel": "high",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "extendedLocation": {
+      "confidence": "high",
+      "destination": null,
+      "summary": null,
+      "signals": [
+        {
+          "category": "required-unusual-relocation",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "frozen synthetic signal",
+          "evidence": "First evidence."
+        },
+        {
+          "category": "required-unusual-relocation",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "second",
+          "evidence": "SECOND MUST NOT WIN"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 2
+    }
+  },
+  {
+    "id": "legacy-8a9b280d7e5efc3fc7dbf1a7",
+    "title": "",
+    "html": "",
+    "remoteWork": {
+      "isRemoteDesignated": true,
+      "concernLevel": "high",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "extendedLocation": {
+      "confidence": "high",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "parsed",
+      "analysisVersion": 2
+    }
+  },
+  {
+    "id": "legacy-abc1e4319311516c45fa12fc",
+    "title": "",
+    "html": "",
+    "remoteWork": {
+      "isRemoteDesignated": false,
+      "concernLevel": "high",
+      "summary": null,
+      "signals": [],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "extendedLocation": {
+      "confidence": "high",
+      "destination": null,
+      "summary": null,
+      "signals": [
+        {
+          "category": "rotation",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "frozen synthetic signal",
+          "evidence": "First evidence."
+        },
+        {
+          "category": "rotation",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "second",
+          "evidence": "SECOND MUST NOT WIN"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 2
+    }
+  },
+  {
+    "id": "legacy-8b468c254ef357fd732c950b",
+    "title": "",
+    "html": "",
+    "remoteWork": {
+      "isRemoteDesignated": false,
+      "concernLevel": "high",
+      "summary": null,
+      "signals": [
+        {
+          "category": "frequent-travel",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "frozen synthetic signal",
+          "evidence": "First evidence."
+        },
+        {
+          "category": "frequent-travel",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "second",
+          "evidence": "SECOND MUST NOT WIN"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "extendedLocation": {
+      "confidence": "high",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "parsed",
+      "analysisVersion": 2
+    }
+  },
+  {
+    "id": "legacy-8bbc6c5a41525e2daa028a16",
+    "title": "",
+    "html": "",
+    "remoteWork": {
+      "isRemoteDesignated": false,
+      "concernLevel": "high",
+      "summary": null,
+      "signals": [
+        {
+          "category": "moderate-travel",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "frozen synthetic signal",
+          "evidence": "First evidence."
+        },
+        {
+          "category": "moderate-travel",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "second",
+          "evidence": "SECOND MUST NOT WIN"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "extendedLocation": {
+      "confidence": "high",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "parsed",
+      "analysisVersion": 2
+    }
+  },
+  {
+    "id": "legacy-da5c9838781e5c15723fc995",
+    "title": "",
+    "html": "",
+    "remoteWork": {
+      "isRemoteDesignated": false,
+      "concernLevel": "high",
+      "summary": null,
+      "signals": [
+        {
+          "category": "occasional-travel",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "frozen synthetic signal",
+          "evidence": "First evidence."
+        },
+        {
+          "category": "occasional-travel",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "second",
+          "evidence": "SECOND MUST NOT WIN"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "extendedLocation": {
+      "confidence": "high",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "parsed",
+      "analysisVersion": 2
+    }
+  },
+  {
+    "id": "legacy-2b73a3e696f00f1227b7cafe",
+    "title": "",
+    "html": "",
+    "remoteWork": {
+      "isRemoteDesignated": false,
+      "concernLevel": "high",
+      "summary": null,
+      "signals": [
+        {
+          "category": "substantial-travel",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "frozen synthetic signal",
+          "evidence": "First evidence."
+        },
+        {
+          "category": "substantial-travel",
+          "concernLevel": "high",
+          "confidence": "high",
+          "reason": "second",
+          "evidence": "SECOND MUST NOT WIN"
+        }
+      ],
+      "parseStatus": "parsed",
+      "analysisVersion": 3
+    },
+    "extendedLocation": {
+      "confidence": "high",
+      "destination": null,
+      "summary": null,
+      "signals": [],
+      "parseStatus": "parsed",
+      "analysisVersion": 2
+    }
+  }
+]

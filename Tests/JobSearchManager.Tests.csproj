@@ -18,4 +18,9 @@
   <ItemGroup><None Update="salary-fixtures.json" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
   <ItemGroup><None Update="credential-fixtures.json" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
   <ItemGroup><None Update="geographic-restriction-fixtures.json" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
+  <ItemGroup><None Include="../migration/concept-rules/*.json" Link="concept-oracle/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
+  <ItemGroup><None Update="concept-oracle-fixtures.json" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
+  <ItemGroup>
+    <Compile Include="../migration/concept-rules/phase2/*.cs" Link="Migration/%(Filename)%(Extension)" />
+  </ItemGroup>
 </Project>

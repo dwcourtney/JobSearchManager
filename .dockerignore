@@ -27,3 +27,6 @@ mailpit-data
 *.zip
 azure-deploy-*
 publish
+
+# Migration-only oracles and archive tooling are never image inputs.
+migration

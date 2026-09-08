@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "reports": [
+    {
+      "role": "curated",
+      "file": "curated-078577e0489c4a5ba235270caa2b4559.json",
+      "sha256": "e0d099fce5cead9bc9e1f683d980e0cf485c1cd71dd8bbdd3840b66f0fb38c7b",
+      "datasetFingerprint": "615f9db007cb9a8cfc33936c9acbe0671525036e50d2c017248f904786508f2b",
+      "referenceFingerprint": "615f9db007cb9a8cfc33936c9acbe0671525036e50d2c017248f904786508f2b"
+    },
+    {
+      "role": "holdout",
+      "file": "holdout-353767f11fec4b48baee6cc5b49ec25d.json",
+      "sha256": "34573be47346e86fafbdcfb397a00a31b34ec21102cf799cb0fc1d046e96a61b",
+      "datasetFingerprint": "2a5f532f4241368e1b21d30ef9a50ad16886749076e9111dce354baaa045b963",
+      "referenceFingerprint": "a0844aea385906da94073fffe76a22b03d583c21efcf7e4cf60cfd978bc86282"
+    }
+  ]
+}

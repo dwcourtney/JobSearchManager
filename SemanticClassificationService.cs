@@ -25,7 +25,7 @@ public sealed class SemanticClassificationService(
         if (string.IsNullOrWhiteSpace(job.DescriptionHtml) || job.SemanticClassification is null)
             return false;
         var description = JobAnalysis.HtmlToPlainText(job.DescriptionHtml);
-        var contentHash = SemanticRulesetFingerprint.PostingContentHash(job.Title, description);
+        var contentHash = InputFingerprint(job);
         var value = job.SemanticClassification;
         return value.PostingContentHash == contentHash &&
             value.TaxonomyVersion == catalog.Version &&
@@ -33,7 +33,7 @@ public sealed class SemanticClassificationService(
             value.ModelType == "deterministic-regex" &&
             value.ModelId == "jsm-semantic-regex" &&
             value.ModelDigest == regexClassifier.RulesetFingerprint &&
-            value.ClassifierConfigurationVersion == "sqlite-regex-v1" &&
+            value.ClassifierConfigurationVersion == regexClassifier.AuthorityTag &&
             value.ClassifierConfigurationFingerprint == ExpectedConfigurationFingerprint &&
             value.ClassificationFingerprint ==
                 SemanticRulesetFingerprint.ClassificationFingerprint(
@@ -43,12 +43,30 @@ public sealed class SemanticClassificationService(
                 .SetEquals(catalog.Concepts.Select(item => item.Id));
     }
 
+    // JSON freshness includes every consumed fact and its relevant provider inputs. UTC cache
+    // timestamps are deliberately excluded. The SQLite branch is rollback/test compatibility.
+    public string InputFingerprint(JobRecord job) => regexClassifier.UsesSqliteCompatibility
+        ? SemanticRulesetFingerprint.PostingContentHash(job.Title, JobAnalysis.HtmlToPlainText(job.DescriptionHtml))
+        : Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(
+            System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(new
+            {
+                contract = "posting-and-consumed-facts-v1", job.Title,
+                description = JobAnalysis.HtmlToPlainText(job.DescriptionHtml),
+                job.CompanyId, job.PrimaryLocation, job.AdditionalLocations,
+                job.RemoteWork, job.ExtendedLocationRequirement
+            })));
+
+    public bool CanPersist(JobRecord job, SemanticJobClassification classification) =>
+        IsCurrent(job with { SemanticClassification = classification });
+
     public Task<SemanticClassificationAttempt> ClassifyAsync(
         JobRecord job,
         CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(job.DescriptionHtml))
+            return Task.FromResult(new SemanticClassificationAttempt(false, null, "Description unavailable."));
         var description = JobAnalysis.HtmlToPlainText(job.DescriptionHtml);
-        var contentHash = SemanticRulesetFingerprint.PostingContentHash(job.Title, description);
+        var contentHash = InputFingerprint(job);
         var fingerprint = SemanticRulesetFingerprint.ClassificationFingerprint(
             contentHash, regexClassifier.RulesetFingerprint, catalog.Fingerprint);
         if (_completed.TryGetValue(fingerprint, out var cached))
@@ -74,17 +92,18 @@ public sealed class SemanticClassificationService(
     {
         cancellationToken.ThrowIfCancellationRequested();
         var result = regexClassifier.Classify(job.Title, job.DescriptionHtml, job.RemoteWork,
-            job.ExtendedLocationRequirement, productionUsage: true);
+            job.ExtendedLocationRequirement, productionUsage: regexClassifier.UsesSqliteCompatibility);
+        var inputHash = InputFingerprint(job);
         var fingerprint = SemanticRulesetFingerprint.ClassificationFingerprint(
-            result.PostingContentHash, result.RulesetFingerprint, catalog.Fingerprint);
+            inputHash, result.RulesetFingerprint, catalog.Fingerprint);
         var matched = result.Concepts.Select(item => item.ConceptId).ToHashSet(StringComparer.Ordinal);
         var classification = new SemanticJobClassification(
-            result.PostingContentHash, catalog.Version, catalog.Fingerprint,
-            "deterministic-regex", "jsm-semantic-regex", "lifecycle-managed",
+            inputHash, catalog.Version, catalog.Fingerprint,
+            "deterministic-regex", "jsm-semantic-regex", regexClassifier.UsesSqliteCompatibility ? "lifecycle-managed" : "json-regex-v1",
             result.RulesetFingerprint, "", "", "", result.ClassifiedUtc, fingerprint,
             catalog.Concepts.Select(item => new SemanticConceptPrediction(
                 item.Id, matched.Contains(item.Id))).ToArray(),
-            "sqlite-regex-v1", result.RulesetFingerprint);
+            regexClassifier.AuthorityTag, result.RulesetFingerprint);
         if (_completed.Count >= MaximumProcessCacheEntries) _completed.Clear();
         _completed[fingerprint] = classification;
         return await Task.FromResult(new SemanticClassificationAttempt(true, classification, null));

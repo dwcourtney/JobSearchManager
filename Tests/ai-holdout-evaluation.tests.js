@@ -25,8 +25,9 @@ assert.doesNotMatch(source, /Qwen|DeepAnalysis|ClassifierClient/,
   "The reference-label pipeline must not depend on the dormant LLM stack.");
 assert.match(source, /AI-ADJUDICATED PRODUCTION HOLDOUT/);
 assert.match(source, /They are not human-ground-truth labels/);
-assert.match(program, /AddSingleton<AiHoldoutEvaluationService>/);
-assert.match(program, /api\/admin\/evaluations\/ai-holdout\/status/);
+assert.doesNotMatch(program, /AddSingleton<AiHoldoutEvaluationService>/);
+assert.doesNotMatch(program, /api\/admin\/evaluations\/ai-holdout/);
+assert.match(program, /ConceptEvaluationReports reports/);
 assert.match(docs, /share model-family biases/i);
 assert.match(docs, /agreement measures consistency rather than truth/i);
 assert.match(docs, /holdout failure must not immediately become a new rule/i);

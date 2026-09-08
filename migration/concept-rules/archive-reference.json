@@ -1,0 +1,487 @@
+{
+  "sourceDatabase": "/home/codex/jsm-lab/data/app/regex-rules.db",
+  "sourceVersion": {
+    "commit": "2c8a2e2735b1b812853ff6eeb0da19d969d82ebb",
+    "version": "1.0.0+2c8a2e2735b1b812853ff6eeb0da19d969d82ebb",
+    "hostingMode": "Container"
+  },
+  "databaseSha256": "ce8469d4bd067ce3cfdb0de44e9cd9c994bd8d5da403c598890197387085ed3c",
+  "manifestSha256": "4d501a05f0ad9a2a2fd34e1153d55ca5a204e6a7ee5b0ba9414e525582b2e0f8",
+  "tableCounts": {
+    "CandidateValidations": 0,
+    "ConceptEvaluationResults": 302,
+    "EvaluationRuns": 4,
+    "LlmEvaluationRunDetails": 1,
+    "RuleEvaluationResults": 576,
+    "RuleRelationships": 0,
+    "SchemaInfo": 3,
+    "SemanticRules": 288
+  },
+  "schemaHistory": [
+    {
+      "SchemaVersion": 2,
+      "AppliedUtc": "2026-09-02T01:32:52.9231623Z"
+    },
+    {
+      "SchemaVersion": 4,
+      "AppliedUtc": "2026-09-02T03:29:16.4845791Z"
+    },
+    {
+      "SchemaVersion": 5,
+      "AppliedUtc": "2026-09-02T14:06:25.2405360Z"
+    }
+  ],
+  "artifacts": [
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/adjudication.jsonl",
+      "archive": "artifacts/0/adjudication.jsonl",
+      "bytes": 589643,
+      "sha256": "5c0460ef23d886ff99e6920e542dc017e864f2c5a53c84b8484dd08402ddf085"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/adjudicator-prompt.txt",
+      "archive": "artifacts/0/adjudicator-prompt.txt",
+      "bytes": 708,
+      "sha256": "5e9f980b29b7c6337532581fdc3e064875fcb18c3cec65ce5766e54208f628e1"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/ai-holdout-manifest.json",
+      "archive": "artifacts/0/ai-holdout-manifest.json",
+      "bytes": 2105,
+      "sha256": "c764569c02e6e58b00dfa8e853ab11fc31b13235268e0b87716775f69a551a0e"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/ai-holdout-report-9d28c456dca54c0b9fce10d22730db02.json",
+      "archive": "artifacts/0/ai-holdout-report-9d28c456dca54c0b9fce10d22730db02.json",
+      "bytes": 84149,
+      "sha256": "85fda5606b837612959eb78f57cf75577ff27a81596b543b50b7550334e472ac"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/ai-holdout-report-latest.json",
+      "archive": "artifacts/0/ai-holdout-report-latest.json",
+      "bytes": 84149,
+      "sha256": "85fda5606b837612959eb78f57cf75577ff27a81596b543b50b7550334e472ac"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/ai-holdout-status.json",
+      "archive": "artifacts/0/ai-holdout-status.json",
+      "bytes": 446,
+      "sha256": "bafe67d886cf933911ec5398569699589f203dc3f394776518323edbe8aa76a0"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/ai-reference-labels-v1.json",
+      "archive": "artifacts/0/ai-reference-labels-v1.json",
+      "bytes": 9332767,
+      "sha256": "8f35fb445c1aa13b1ef0440eca73bb35d06efaae0835d8375e08205754e9ffea"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/disagreements-for-adjudication.jsonl",
+      "archive": "artifacts/0/disagreements-for-adjudication.jsonl",
+      "bytes": 19813138,
+      "sha256": "a17d14952a3670f52af85881bc9dfadb75558013b08e587455e7bd4a5aa91391"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/holdout.json",
+      "archive": "artifacts/0/holdout.json",
+      "bytes": 2085336,
+      "sha256": "5be7fa382048eee4cd104d901c33367b522c5a4fb1a9962f63521c069bcde88b"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/labeler-a-prompt.txt",
+      "archive": "artifacts/0/labeler-a-prompt.txt",
+      "bytes": 1602,
+      "sha256": "546bd1dde02a678f71e7b406ed6339e7409d8dea485fdf6d03ecbedc0605b31d"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/labeler-a.jsonl",
+      "archive": "artifacts/0/labeler-a.jsonl",
+      "bytes": 121816,
+      "sha256": "5999c7e8fc30f2516f70632454c7497bd300bafc5b3cfb367419cb73b90d4e45"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/labeler-b-prompt.txt",
+      "archive": "artifacts/0/labeler-b-prompt.txt",
+      "bytes": 1602,
+      "sha256": "8bcb4d231cb6569d1963019a02352b60d41a0ebf3e9a997c95c9c54246cd0ef6"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/labeler-b.jsonl",
+      "archive": "artifacts/0/labeler-b.jsonl",
+      "bytes": 88708,
+      "sha256": "6614e7ff96367376eb5357dec5cbeabc84e7dd33169bc643a1c221f175d04336"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/llm-hardware-comparison-v1.json",
+      "archive": "artifacts/0/llm-hardware-comparison-v1.json",
+      "bytes": 122517,
+      "sha256": "3c33e1ab9b3c1c7c1a4ac8e78a98e44dfb0445cdfd65bb22fde1e55c33cd0653"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/llm-holdout-report-ab3ad325aff24bcaa89833007992dd5a.json",
+      "archive": "artifacts/0/llm-holdout-report-ab3ad325aff24bcaa89833007992dd5a.json",
+      "bytes": 53343,
+      "sha256": "ff6610c866dfaf133bfa2f554a7167f91b84a782cfdd610e79c40d41a9e782a9"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/llm-holdout-report-latest.json",
+      "archive": "artifacts/0/llm-holdout-report-latest.json",
+      "bytes": 53343,
+      "sha256": "ff6610c866dfaf133bfa2f554a7167f91b84a782cfdd610e79c40d41a9e782a9"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/llm-holdout-resource-observation-v2.json",
+      "archive": "artifacts/0/llm-holdout-resource-observation-v2.json",
+      "bytes": 457,
+      "sha256": "252857270d367abc6be67cea44c005baa653c690aeb48de6da684a2a8c1ce708"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/llm-holdout-resource-observation.json",
+      "archive": "artifacts/0/llm-holdout-resource-observation.json",
+      "bytes": 456,
+      "sha256": "3722b687059e6373b0dd5b3c32d44ce872cf229c0fc1aa0e35560347b91da548"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/llm-holdout-status.json",
+      "archive": "artifacts/0/llm-holdout-status.json",
+      "bytes": 485,
+      "sha256": "99339cb15fc4eae4541adf68118cb0707c2a8e9159b75437f1f5866cebbdccb6"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/llm-predictions-progress-v2.json",
+      "archive": "artifacts/0/llm-predictions-progress-v2.json",
+      "bytes": 2113388,
+      "sha256": "962f8b15ae69564a25dcfdfaa394e1d24b36385ed30dbe98508659c7d66df231"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/llm-predictions-progress.json",
+      "archive": "artifacts/0/llm-predictions-progress.json",
+      "bytes": 264178,
+      "sha256": "fd571df0a019183ce12f99fd044bce4b818f01c991e72dbcb06f8423348972cc"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/llm-predictions-v2.json",
+      "archive": "artifacts/0/llm-predictions-v2.json",
+      "bytes": 2292911,
+      "sha256": "0dbaf0c49764bc18d9e4986df9e12880f715345b62fa50dc86f232e8c35f40d9"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/llm-technical-preflight-v2-af7ffa90b1fb4872bba5569ac0246919.json",
+      "archive": "artifacts/0/llm-technical-preflight-v2-af7ffa90b1fb4872bba5569ac0246919.json",
+      "bytes": 1084,
+      "sha256": "9a3c4351a6dd153fa8e8b161c2e4fcf5e557fe3e8d2e7188e0e02bd777c364f0"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/llm-technical-preflight-v2-checkpoint.json",
+      "archive": "artifacts/0/llm-technical-preflight-v2-checkpoint.json",
+      "bytes": 11192,
+      "sha256": "1e55c7d7950ff56207ee5d520759c17f6520c07bcfccad186cd9d7571cc45200"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/llm-technical-preflight-v2-latest.json",
+      "archive": "artifacts/0/llm-technical-preflight-v2-latest.json",
+      "bytes": 1084,
+      "sha256": "9a3c4351a6dd153fa8e8b161c2e4fcf5e557fe3e8d2e7188e0e02bd777c364f0"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/rtx5080-benchmark-status-v1.json",
+      "archive": "artifacts/0/rtx5080-benchmark-status-v1.json",
+      "bytes": 453,
+      "sha256": "509014f4b8567a31001d8766208f1fe165226ee4c3b6495041f8a348a91cfec9"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/rtx5080-holdout-report-latest.json",
+      "archive": "artifacts/0/rtx5080-holdout-report-latest.json",
+      "bytes": 53308,
+      "sha256": "10716e32088b58a1a9c10b4284908fb5c444c96a86e9e4083027281aa1e8c807"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/triage-evaluation-report-5980bff55a1d408e9b195df41fd2cb4e.json",
+      "archive": "artifacts/0/triage-evaluation-report-5980bff55a1d408e9b195df41fd2cb4e.json",
+      "bytes": 46726,
+      "sha256": "852d09dfc3a9c3698c701b27d97380813c1ed896edff7b665faf43843f29b94c"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/triage-evaluation-report-latest.json",
+      "archive": "artifacts/0/triage-evaluation-report-latest.json",
+      "bytes": 46726,
+      "sha256": "852d09dfc3a9c3698c701b27d97380813c1ed896edff7b665faf43843f29b94c"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/triage-evaluation-status.json",
+      "archive": "artifacts/0/triage-evaluation-status.json",
+      "bytes": 336,
+      "sha256": "73a56b909d5ba347b2a242bec68a3ccf16f85fd71930ff064b896313ffb3b91d"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/evaluation/triage-reference-labels-v2.json",
+      "archive": "artifacts/0/triage-reference-labels-v2.json",
+      "bytes": 83094,
+      "sha256": "a31b534aa53cc5ddb1c543323701e56f480f2c31393636ecc7b8b61c0e981cd8"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/artifacts/cheap-triage-discovery/920afedfe59930a07bf2c1ea78d900289a88b4b4f1ffdb64647dcedcc5ecbd0c/observations.json",
+      "archive": "artifacts/1/artifacts/cheap-triage-discovery/920afedfe59930a07bf2c1ea78d900289a88b4b4f1ffdb64647dcedcc5ecbd0c/observations.json",
+      "bytes": 19688,
+      "sha256": "49388050d5dfff5739cc5d6b15a94c31d8250869fcb06cc889035b534e3d6aa1"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/artifacts/cheap-triage-discovery/920afedfe59930a07bf2c1ea78d900289a88b4b4f1ffdb64647dcedcc5ecbd0c/trigger-policy.json",
+      "archive": "artifacts/1/artifacts/cheap-triage-discovery/920afedfe59930a07bf2c1ea78d900289a88b4b4f1ffdb64647dcedcc5ecbd0c/trigger-policy.json",
+      "bytes": 903,
+      "sha256": "5a3f47bf1ec7282f34357392381989448a51540585be078b021c26cdf773cb7d"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/artifacts/cheap-triage-human-review.db",
+      "archive": "artifacts/1/artifacts/cheap-triage-human-review.db",
+      "bytes": 32768,
+      "sha256": "8267347bb9e1121dd2ca9796f33490923b9c1764f3bf79a363eecd9af76bbad3"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/artifacts/cheap-triage-maintenance/920afedfe59930a07bf2c1ea78d900289a88b4b4f1ffdb64647dcedcc5ecbd0c.json",
+      "archive": "artifacts/1/artifacts/cheap-triage-maintenance/920afedfe59930a07bf2c1ea78d900289a88b4b4f1ffdb64647dcedcc5ecbd0c.json",
+      "bytes": 23334,
+      "sha256": "1c8c570ad94588485b849d461eea16ec41dd7c3f22c449247b9f95bf4070ee54"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/artifacts/cheap-triage-maintenance/candidate-inbox.json",
+      "archive": "artifacts/1/artifacts/cheap-triage-maintenance/candidate-inbox.json",
+      "bytes": 17310,
+      "sha256": "6f4f51b0b68589556c0ba885b84d1bc4b4af6eb349368db871cc5ba6d882f662"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/artifacts/cheap-triage-maintenance/f0ae1133dc4375f858d50c62b3360d50263832b8fdbb0c03a0c39925edffc14a.json",
+      "archive": "artifacts/1/artifacts/cheap-triage-maintenance/f0ae1133dc4375f858d50c62b3360d50263832b8fdbb0c03a0c39925edffc14a.json",
+      "bytes": 397121,
+      "sha256": "bedbc61b4b40c1e10cccc06907b759b9780df202c54d55c72100b1a86b56938b"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/artifacts/cheap-triage-maintenance/f0ae1133dc4375f858d50c62b3360d50263832b8fdbb0c03a0c39925edffc14a.release.json",
+      "archive": "artifacts/1/artifacts/cheap-triage-maintenance/f0ae1133dc4375f858d50c62b3360d50263832b8fdbb0c03a0c39925edffc14a.release.json",
+      "bytes": 302,
+      "sha256": "7bffe74edd7c8243decb93fd5f3599aaf854d1aaa4f75446a68e7a50bda113cf"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/artifacts/rule-update-artifacts/b2c269cc766fe41cd82ed594f8bcbff04f940103361dbff172b7a480f051db0c/human-review.json",
+      "archive": "artifacts/1/artifacts/rule-update-artifacts/b2c269cc766fe41cd82ed594f8bcbff04f940103361dbff172b7a480f051db0c/human-review.json",
+      "bytes": 93436,
+      "sha256": "5010d49f71c996d4591f0aac9be2be55326e882f3ea22f52e919a441c79952f2"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/artifacts/rule-update-artifacts/b2c269cc766fe41cd82ed594f8bcbff04f940103361dbff172b7a480f051db0c/live-shadow.json",
+      "archive": "artifacts/1/artifacts/rule-update-artifacts/b2c269cc766fe41cd82ed594f8bcbff04f940103361dbff172b7a480f051db0c/live-shadow.json",
+      "bytes": 90928,
+      "sha256": "a7e35aed1ff3319b765df9ca8ffef24ee903863aa4b36f98162b0ae00ab590b8"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/artifacts/rule-update-artifacts/b2c269cc766fe41cd82ed594f8bcbff04f940103361dbff172b7a480f051db0c/manifest.json",
+      "archive": "artifacts/1/artifacts/rule-update-artifacts/b2c269cc766fe41cd82ed594f8bcbff04f940103361dbff172b7a480f051db0c/manifest.json",
+      "bytes": 622,
+      "sha256": "b2c269cc766fe41cd82ed594f8bcbff04f940103361dbff172b7a480f051db0c"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/artifacts/rule-update-artifacts/ce2297c9214b85e699085696ba306a1196b960fa960f5e3323cce2c2c9b9ea83/human-review.json",
+      "archive": "artifacts/1/artifacts/rule-update-artifacts/ce2297c9214b85e699085696ba306a1196b960fa960f5e3323cce2c2c9b9ea83/human-review.json",
+      "bytes": 93436,
+      "sha256": "5010d49f71c996d4591f0aac9be2be55326e882f3ea22f52e919a441c79952f2"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/artifacts/rule-update-artifacts/ce2297c9214b85e699085696ba306a1196b960fa960f5e3323cce2c2c9b9ea83/live-shadow.json",
+      "archive": "artifacts/1/artifacts/rule-update-artifacts/ce2297c9214b85e699085696ba306a1196b960fa960f5e3323cce2c2c9b9ea83/live-shadow.json",
+      "bytes": 322334,
+      "sha256": "a05c78555473805878888ee5d7c8e2a5e986e28c2ab5bae4e96c863dc0a6e560"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/artifacts/rule-update-artifacts/ce2297c9214b85e699085696ba306a1196b960fa960f5e3323cce2c2c9b9ea83/manifest.json",
+      "archive": "artifacts/1/artifacts/rule-update-artifacts/ce2297c9214b85e699085696ba306a1196b960fa960f5e3323cce2c2c9b9ea83/manifest.json",
+      "bytes": 622,
+      "sha256": "ce2297c9214b85e699085696ba306a1196b960fa960f5e3323cce2c2c9b9ea83"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/artifacts/rule-update-artifacts/e5a8c89ddebabc0587b12a8fe6483c86c921c7a69af0bc35d4ba79c77fa221e6/human-review.json",
+      "archive": "artifacts/1/artifacts/rule-update-artifacts/e5a8c89ddebabc0587b12a8fe6483c86c921c7a69af0bc35d4ba79c77fa221e6/human-review.json",
+      "bytes": 93436,
+      "sha256": "5010d49f71c996d4591f0aac9be2be55326e882f3ea22f52e919a441c79952f2"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/artifacts/rule-update-artifacts/e5a8c89ddebabc0587b12a8fe6483c86c921c7a69af0bc35d4ba79c77fa221e6/live-shadow.json",
+      "archive": "artifacts/1/artifacts/rule-update-artifacts/e5a8c89ddebabc0587b12a8fe6483c86c921c7a69af0bc35d4ba79c77fa221e6/live-shadow.json",
+      "bytes": 91275,
+      "sha256": "9c6fae72aa10c8607400385751bfea6acdba3ddaebcc44563082365f7e69262b"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/artifacts/rule-update-artifacts/e5a8c89ddebabc0587b12a8fe6483c86c921c7a69af0bc35d4ba79c77fa221e6/manifest.json",
+      "archive": "artifacts/1/artifacts/rule-update-artifacts/e5a8c89ddebabc0587b12a8fe6483c86c921c7a69af0bc35d4ba79c77fa221e6/manifest.json",
+      "bytes": 622,
+      "sha256": "e5a8c89ddebabc0587b12a8fe6483c86c921c7a69af0bc35d4ba79c77fa221e6"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/compose.previous.yaml",
+      "archive": "artifacts/1/compose.previous.yaml",
+      "bytes": 1235,
+      "sha256": "3e8dae488da607215c7944cf693dc6ada648775efd5a1426229b36211839b942"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/definitions/evaluation-context.json",
+      "archive": "artifacts/1/definitions/evaluation-context.json",
+      "bytes": 10554,
+      "sha256": "9da301b5265244311e766013f2e8a65dcd3a9532edeb9f7b84c94203b23c617f"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/definitions/human-reviewed-prompt-v1.txt",
+      "archive": "artifacts/1/definitions/human-reviewed-prompt-v1.txt",
+      "bytes": 2299,
+      "sha256": "c2fea106f9450c328ab1885c1aba8c41486509b391f30545cfaadb90a7e0f4ec"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/definitions/human-reviewed-prompt-v2.txt",
+      "archive": "artifacts/1/definitions/human-reviewed-prompt-v2.txt",
+      "bytes": 2904,
+      "sha256": "ba3358e1a6fcb33fbb0ed9f9a7f3fe8314130bdafe7c78041c4de47f59867005"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/definitions/maintenance-prompt-v1.txt",
+      "archive": "artifacts/1/definitions/maintenance-prompt-v1.txt",
+      "bytes": 4171,
+      "sha256": "e35c3ff12918c189edcf49eac30dc0dcbb320ac8d00e7f143869fbafa46ce948"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/definitions/maintenance-trigger-policy-v1.json",
+      "archive": "artifacts/1/definitions/maintenance-trigger-policy-v1.json",
+      "bytes": 903,
+      "sha256": "5a3f47bf1ec7282f34357392381989448a51540585be078b021c26cdf773cb7d"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/definitions/release-prompt-v1.txt",
+      "archive": "artifacts/1/definitions/release-prompt-v1.txt",
+      "bytes": 1963,
+      "sha256": "49b9a504cdb79b785767e538b4f0a6885d517b008fcf3dfe29caa1b4442dcf0d"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/definitions/review-queues/human-review-v1.json",
+      "archive": "artifacts/1/definitions/review-queues/human-review-v1.json",
+      "bytes": 72107,
+      "sha256": "2c66bac39adcc36b69090927cf0c244ca3f1a2eb9c52288e0e0ab38e01542b61"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/definitions/ruleset-schema-v1.json",
+      "archive": "artifacts/1/definitions/ruleset-schema-v1.json",
+      "bytes": 4560,
+      "sha256": "11d93797999e078b939d67b32c05182518ee4f0c84bcef0a1255f03eadda6f7e"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/definitions/rulesets/1.0.0.json",
+      "archive": "artifacts/1/definitions/rulesets/1.0.0.json",
+      "bytes": 19855,
+      "sha256": "269be7264e56f641723c254910d026d20687f5d61aaa39d967c5d52e4bc51983"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/definitions/rulesets/1.0.1.json",
+      "archive": "artifacts/1/definitions/rulesets/1.0.1.json",
+      "bytes": 27384,
+      "sha256": "ecb3621ce7157f044fa68dd1b2653052b8102549ecdf0e52c00fd2f1de10b1d1"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/human-review.verified.db",
+      "archive": "artifacts/1/human-review.verified.db",
+      "bytes": 32768,
+      "sha256": "f7b7911757caf22466b3903f42ec0faf9e0134eb8dce03f3a05e566dd70d6a57"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/manifest.json",
+      "archive": "artifacts/1/manifest.json",
+      "bytes": 4630,
+      "sha256": "8574a44eedbba108e07973febfc5d2f9a351920f396c94925a7df172686a6fad"
+    },
+    {
+      "source": "/home/codex/jsm-research/archives/cheap-triage-retirement-be1a6a725cc7/runtime.previous.env",
+      "archive": "artifacts/1/runtime.previous.env",
+      "bytes": 25,
+      "sha256": "092a547ac6483af8414bc8b884120be5296ba8755362fdf5f0356d1950fb2c1d"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/aecom/3c55b12f8055996ccdc2c365b783b022579f495c3ed94e832674c6cc0ba8efa2.json",
+      "archive": "cache-inputs/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/aecom/3c55b12f8055996ccdc2c365b783b022579f495c3ed94e832674c6cc0ba8efa2.json",
+      "bytes": 1984756,
+      "sha256": "b1a2e9d802350b947382dcdeacc3230aeb693d8a3be69d0a137076607cdded4a"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/aecom/e06784f416eb9f0717083a1a136095b6116dee8313c76fd99b88642394f49fca.json",
+      "archive": "cache-inputs/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/aecom/e06784f416eb9f0717083a1a136095b6116dee8313c76fd99b88642394f49fca.json",
+      "bytes": 1698277,
+      "sha256": "6de6dabf54652cbf5ccbc27fc67045f7dfec03a51e076aaea36c1535c5ae07e6"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/amentum/6508afb282c3aa18510060d27cd39ff410340061a2f2b5c34f8eefe1e012a0e4.json",
+      "archive": "cache-inputs/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/amentum/6508afb282c3aa18510060d27cd39ff410340061a2f2b5c34f8eefe1e012a0e4.json",
+      "bytes": 316491,
+      "sha256": "10cc5a982fb2df1fd94d0d5fc4de24b37c850c3a04b0f95ad4b86218820aa772"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/boeing/4d21f41f376cd401ed6e020e6254ec1e70c2e07eb6c34a2f1b6d743cc1d1d718.json",
+      "archive": "cache-inputs/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/boeing/4d21f41f376cd401ed6e020e6254ec1e70c2e07eb6c34a2f1b6d743cc1d1d718.json",
+      "bytes": 275511,
+      "sha256": "e027f64e9d54945b69323923ee907aabec90d40a115c12819cda442e53b99fc2"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/boeing/887541f2dc785e4555ddc3335ac156d667708970b1216138b2540382ca5cf66f.json",
+      "archive": "cache-inputs/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/boeing/887541f2dc785e4555ddc3335ac156d667708970b1216138b2540382ca5cf66f.json",
+      "bytes": 68856,
+      "sha256": "5c3250dc81ff1f73e128f7c2f0e4d57b6f8c6a2f82f09f3ad97fabe472d4f943"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/kbr/b694b75d628deb174d3609d5da833907cc60ca21abd24951a3a31ca305bc2f24.json",
+      "archive": "cache-inputs/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/kbr/b694b75d628deb174d3609d5da833907cc60ca21abd24951a3a31ca305bc2f24.json",
+      "bytes": 1033509,
+      "sha256": "af1fdae2dc4949866d6e0bbed7a74cbca8510e76b9c00647289cfe00a43d1e18"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/leidos/697e9a0d8c74997954ef0e68219601eef0c4783b278a6267c3250aae5c876c50.json",
+      "archive": "cache-inputs/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/leidos/697e9a0d8c74997954ef0e68219601eef0c4783b278a6267c3250aae5c876c50.json",
+      "bytes": 4321474,
+      "sha256": "db1e9346f265657d310179304e4c690fa2a2680e3f2fbceb846549e6c089b5fb"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/northrop-grumman/c706f3e21f845a6ed5161556b5f5e06e6041bd94f694bb9f108920e6e1e59e11.json",
+      "archive": "cache-inputs/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/northrop-grumman/c706f3e21f845a6ed5161556b5f5e06e6041bd94f694bb9f108920e6e1e59e11.json",
+      "bytes": 716851,
+      "sha256": "fcd649213b924869fca296628917d0e65400bddb5061c48569997a8223253c2e"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/nvidia/68d60566b13a1d569a81a9438cd17b67666dd1e1e73bc4e69f8622c9be964cf8.json",
+      "archive": "cache-inputs/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/nvidia/68d60566b13a1d569a81a9438cd17b67666dd1e1e73bc4e69f8622c9be964cf8.json",
+      "bytes": 9649733,
+      "sha256": "875f8563590f7234ea57387f027bbe47f0b853d63e0421dadaae1b06042833eb"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/nxp-semiconductors/31fff07f6d5ca527d753690928be4bef8bbe993077cf673788f60fb1873d2447.json",
+      "archive": "cache-inputs/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/nxp-semiconductors/31fff07f6d5ca527d753690928be4bef8bbe993077cf673788f60fb1873d2447.json",
+      "bytes": 243863,
+      "sha256": "4f1655f37bd3b031387d57141a906e41fdc6a08cb13d4271ecd9b2e050e32168"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/parsons/cfd0f01f911887bdcef9e5a022443484c49c5a6da0471caba8e9024afa93baf1.json",
+      "archive": "cache-inputs/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/parsons/cfd0f01f911887bdcef9e5a022443484c49c5a6da0471caba8e9024afa93baf1.json",
+      "bytes": 4082164,
+      "sha256": "d18bc79f347eb551fd1579dddcd592e306b13b80fb432a46201d383af1bddb11"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/rtx/363a4d87be07d61263d5c73d01a6a3671f5e5488273aef6ee265d5f49b31c5bc.json",
+      "archive": "cache-inputs/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/rtx/363a4d87be07d61263d5c73d01a6a3671f5e5488273aef6ee265d5f49b31c5bc.json",
+      "bytes": 3718132,
+      "sha256": "2b34086c2ecdcab94a8d7c9376dc0159e344a2bbd78cda00e943010cfe62b6bf"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/workspaces/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/servicenow/a6b6217f7f08ffa370a51d94d2e74aab198a50274bb16b2021f40042af7de90f.json",
+      "archive": "cache-inputs/27c44c64d2564eca19028a8a55ef416a377597528d43182addb189672fe02c78/shared/job-caches/servicenow/a6b6217f7f08ffa370a51d94d2e74aab198a50274bb16b2021f40042af7de90f.json",
+      "bytes": 2954505,
+      "sha256": "d63c5d4197d722d59d8a36d50e0f3f4a58ec655a8c7c46770efd4a5c12923d5c"
+    },
+    {
+      "source": "/home/codex/jsm-lab/data/app/workspaces/a0a5c7e770c8057bf6829752bb04cc79908b96848f56ae0fd2883ce8a950a838/shared/job-caches/boeing/79fbd27ebfc41219a37002560059254b648175c5d595a65130553bdc88ec82ef.json",
+      "archive": "cache-inputs/a0a5c7e770c8057bf6829752bb04cc79908b96848f56ae0fd2883ce8a950a838/shared/job-caches/boeing/79fbd27ebfc41219a37002560059254b648175c5d595a65130553bdc88ec82ef.json",
+      "bytes": 5950335,
+      "sha256": "08cd6cec8171e43a428ab99e41660e5fe621d424166eeb5b8ec8b056d6e695c8"
+    }
+  ],
+  "effectiveExportSha256": "e6a3e05ceccec71e7e2a50e4aaea64e36e667ed9278fe4eb234da951a1acb3f0"
+}

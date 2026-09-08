@@ -1063,7 +1063,7 @@ function synchronizeAdminNavigation(isAdmin) {
   classifierTab.setAttribute("aria-selected", "false");
   classifierTab.setAttribute("aria-controls", "admin-classifier-panel");
   classifierTab.tabIndex = -1;
-  classifierTab.textContent = "Job Fit Rules";
+  classifierTab.textContent = "Concept Detection";
   const evaluationTab = document.createElement("button");
   evaluationTab.id = "admin-evaluation-tab";
   evaluationTab.className = "detail-tab";
@@ -1072,7 +1072,7 @@ function synchronizeAdminNavigation(isAdmin) {
   evaluationTab.setAttribute("aria-selected", "false");
   evaluationTab.setAttribute("aria-controls", "admin-evaluation-panel");
   evaluationTab.tabIndex = -1;
-  evaluationTab.textContent = "Job Fit Evaluation";
+  evaluationTab.textContent = "Concept Detection Evaluation";
   overviewTab.addEventListener("click", () => showAdminSection("overview", true));
   classifierTab.addEventListener("click", () => showAdminSection("classifier", true));
   evaluationTab.addEventListener("click", () => showAdminSection("evaluation", true));
@@ -1103,9 +1103,9 @@ function synchronizeAdminNavigation(isAdmin) {
   classifierPanel.setAttribute("aria-labelledby", "admin-classifier-tab");
   classifierPanel.hidden = true;
   const classifierTitle = document.createElement("h3");
-  classifierTitle.textContent = "Job Fit Rules";
+  classifierTitle.textContent = "Concept Detection";
   const classifierIntro = document.createElement("p");
-  classifierIntro.textContent = "Search and inspect the production Job Fit rules. Open a row for its full pattern, provenance, lifecycle details, and carefully scoped controls.";
+  classifierIntro.textContent = "Read-only concept detection rules. Changes require source control review and CI; the validated JSON snapshot is fixed for this application run.";
   const classifierStatus = document.createElement("div");
   classifierStatus.className = "settings-status admin-rule-summary";
   classifierStatus.setAttribute("role", "status");
@@ -1115,73 +1115,31 @@ function synchronizeAdminNavigation(isAdmin) {
   backfill.className = "primary-button admin-evaluation-action confirmation-secondary-button";
   backfill.textContent = "Reclassify stale cache";
   backfill.addEventListener("click", () => void startClassifierBackfill());
-  const evaluate = document.createElement("button");
-  evaluate.type = "button";
-  evaluate.className = "primary-button admin-evaluation-action";
-  evaluate.textContent = "Run Curated Regression Benchmark";
-  evaluate.title = "Read-only evaluation of current rules against known regression cases. It does not change rules, jobs, or production match counters; it records evaluation results only.";
-  evaluate.addEventListener("click", () => void evaluateRegexRules());
-  const reload = document.createElement("button");
-  reload.type = "button";
-  reload.className = "primary-button admin-evaluation-action confirmation-secondary-button";
-  reload.textContent = "Verify and Apply Current Rule Set";
-  reload.title = "Validates and compiles the already-approved active rules. On success it replaces the in-memory ruleset and reclassifies stale cache entries; it does not create or edit rules.";
-  reload.addEventListener("click", () => void reloadRegexRules());
-  const actionHelp = document.createElement("p");
-  actionHelp.className = "account-help";
-  actionHelp.textContent = "Benchmark is read-only. Verify and Apply changes production classification only when approved rule records already differ from the running ruleset.";
-  const filters = document.createElement("div");
-  filters.className = "admin-rule-filters";
+  const filters = document.createElement("div"); filters.className = "admin-rule-filters";
   const statusFilter = document.createElement("select");
-  for (const value of ["", "proposed", "validated", "active", "review-due", "retired", "deleted"]) {
-    const option = document.createElement("option");
-    option.value = value;
-    option.textContent = value || "All statuses";
-    statusFilter.append(option);
+  for (const value of ["", "positive-evidence", "title-evidence", "exclusion", "required-context", "remote-designation", "remote-signal", "extended-location-signal"]) {
+    const option = document.createElement("option"); option.value = value; option.textContent = value || "All kinds"; statusFilter.append(option);
   }
-  const conceptFilter = document.createElement("input");
-  conceptFilter.placeholder = "Filter concept";
-  const usageFilter = document.createElement("select");
-  for (const [value, label] of [["", "All usage"], ["unused", "Never matched"],
-    ["low", "Low usage (1–5)"], ["high", "High usage (100+)"], ["stale", "Last used 30+ days ago"]]) {
-    const option = document.createElement("option");
-    option.value = value;
-    option.textContent = label;
-    usageFilter.append(option);
-  }
-  const provenanceFilter = document.createElement("input");
-  provenanceFilter.placeholder = "Filter provenance";
+  const conceptFilter = document.createElement("input"); conceptFilter.placeholder = "Search rules";
+  const provenanceFilter = document.createElement("input"); provenanceFilter.placeholder = "Filter provenance";
   const ruleSort = document.createElement("select");
-  for (const [value, label] of [["concept", "Sort: concept"], ["status", "Sort: status"],
-    ["lastMatched", "Sort: last matched"], ["lifetime", "Sort: lifetime matches"],
-    ["timeouts", "Sort: timeouts"]]) {
-    const option = document.createElement("option");
-    option.value = value;
-    option.textContent = label;
-    ruleSort.append(option);
+  for (const [value, label] of [["order", "Execution order"], ["concept", "Concept"]]) {
+    const option = document.createElement("option"); option.value = value; option.textContent = label; ruleSort.append(option);
   }
-  const rulesList = document.createElement("div");
-  rulesList.className = "admin-regex-rule-list";
-  for (const [control, name] of [[statusFilter, "Lifecycle status"], [conceptFilter, "Concept"], [usageFilter, "Usage"], [provenanceFilter, "Provenance"], [ruleSort, "Sort rules"]]) {
+  const rulesList = document.createElement("div"); rulesList.className = "admin-regex-rule-list";
+  for (const [control, name] of [[statusFilter, "Rule kind"], [conceptFilter, "Search rules"], [provenanceFilter, "Provenance"], [ruleSort, "Sort rules"]]) {
     control.className = `text-control ${control.tagName === "SELECT" ? "admin-evaluation-filter-select" : "admin-evaluation-filter-input"}`;
     control.setAttribute("aria-label", name);
-    control.addEventListener("input", () => {
-      state.adminRegexRulePage = 0;
-      renderAdminRegexRules();
-    });
+    control.addEventListener("input", () => { state.adminRegexRulePage = 0; renderAdminRegexRules(); });
     const label = document.createElement("label"); label.textContent = name; label.append(control); filters.append(label);
   }
   const summaryPanel = document.createElement("section"); summaryPanel.className = "admin-evaluation-card admin-rule-section";
   const summaryTitle = document.createElement("h4"); summaryTitle.textContent = "Runtime summary";
-  summaryPanel.append(summaryTitle, classifierStatus);
-  const actionPanel = document.createElement("section"); actionPanel.className = "admin-evaluation-card admin-rule-section";
-  const actionTitle = document.createElement("h4"); actionTitle.textContent = "Rule maintenance actions";
-  const toolbar = document.createElement("div"); toolbar.className = "admin-evaluation-table-controls";
-  toolbar.append(evaluate, reload, backfill); actionPanel.append(actionTitle, toolbar, actionHelp);
+  summaryPanel.append(summaryTitle, classifierStatus, backfill);
   const rulesPanel = document.createElement("section"); rulesPanel.className = "admin-evaluation-card admin-rule-section";
   const rulesTitle = document.createElement("h4"); rulesTitle.textContent = "Browse rules";
   rulesPanel.append(rulesTitle, filters, rulesList);
-  classifierPanel.append(classifierTitle, classifierIntro, summaryPanel, actionPanel, rulesPanel);
+  classifierPanel.append(classifierTitle, classifierIntro, summaryPanel, rulesPanel);
   const evaluationPanel = document.createElement("section");
   evaluationPanel.id = "admin-evaluation-panel";
   evaluationPanel.className = "settings-section admin-subtab-panel";
@@ -1189,9 +1147,9 @@ function synchronizeAdminNavigation(isAdmin) {
   evaluationPanel.setAttribute("aria-labelledby", "admin-evaluation-tab");
   evaluationPanel.hidden = true;
   const evaluationTitle = document.createElement("h3");
-  evaluationTitle.textContent = "Job Fit Evaluation";
+  evaluationTitle.textContent = "Concept Detection Evaluation";
   const evaluationIntro = document.createElement("p");
-  evaluationIntro.textContent = "Evaluate production Job Fit concept detection. Development regression is not a production accuracy estimate; the frozen holdout uses provisional machine labels.";
+  evaluationIntro.textContent = "Immutable concept detection reports. CURRENT requires matching pipeline, dataset, reference and metric identities. Curated regression is not production accuracy; the frozen holdout uses machine-reference labels.";
   const evaluationContent = document.createElement("div");
   evaluationContent.className = "admin-evaluation-list";
   evaluationPanel.append(evaluationTitle, evaluationIntro, evaluationContent);
@@ -1213,7 +1171,6 @@ function synchronizeAdminNavigation(isAdmin) {
   elements.adminClassifierBackfill = backfill;
   elements.adminRegexStatusFilter = statusFilter;
   elements.adminRegexConceptFilter = conceptFilter;
-  elements.adminRegexUsageFilter = usageFilter;
   elements.adminRegexProvenanceFilter = provenanceFilter;
   elements.adminRegexRuleSort = ruleSort;
   elements.adminRegexRulesList = rulesList;
@@ -1270,81 +1227,38 @@ function renderEvaluationNavigation(result) {
 }
 
 function renderCuratedEvaluationCard(result) {
-  const latest = result.runs.find(run => run.datasetRole === "development-regression");
-  const article = document.createElement("article");
-  article.className = "settings-section admin-evaluation-card";
-  const heading = document.createElement("h4");
-  heading.textContent = "CURATED REGRESSION BENCHMARK";
-  const warning = document.createElement("strong");
-  warning.textContent = "Not a production generalization estimate.";
-  const purpose = document.createElement("p");
-  purpose.textContent = "Known-case regression protection for the current rule set. Running it does not modify rules, jobs, or production match counters; it records evaluation evidence only.";
-  const action = document.createElement("button");
-  action.type = "button";
-  action.className = "primary-button admin-evaluation-action";
-  action.textContent = "Run Curated Regression Benchmark";
-  action.addEventListener("click", async () => {
-    action.disabled = true;
-    action.setAttribute("aria-busy", "true");
-    action.textContent = "Running Curated Regression Benchmark…";
-    try {
-      await evaluateRegexRules();
-      await loadEvaluationLedger();
-    } finally {
-      action.disabled = false;
-      action.setAttribute("aria-busy", "false");
-      action.textContent = "Run Curated Regression Benchmark";
-    }
-  });
-  article.append(heading, warning, purpose, action);
-  if (latest) {
-    article.append(renderEvaluationMetrics(latest.macroPrecision, latest.macroRecall,
-      latest.macroF1, latest.microPrecision, latest.microRecall, latest.microF1));
-    const metadata = document.createElement("p");
-    metadata.className = "admin-evaluation-metadata";
-    metadata.textContent = `${latest.postingCount} postings · last run ${formatLongDate(latest.evaluatedUtc) || latest.evaluatedUtc} · dataset ${latest.datasetFingerprint} · ruleset ${latest.rulesetFingerprint}`;
-    article.append(metadata);
-  }
-  return article;
+  return renderConceptEvaluationCard(result.reports.find(item => item.role === "curated"), "CURATED REGRESSION BENCHMARK");
 }
 
 function renderHoldoutEvaluationCard(result) {
-  const report = result.holdoutReport;
-  const runStatus = result.holdoutStatus || { state: "not-started", displayState: "Not started", completed: 0, total: 200 };
-  const article = document.createElement("article");
-  article.className = "settings-section admin-evaluation-card";
-  const heading = document.createElement("h4");
-  heading.textContent = "AI-ADJUDICATED PRODUCTION HOLDOUT";
-  const disclaimer = document.createElement("strong");
-  disclaimer.textContent = "Reference labels were generated through prediction-blinded AI review and adjudication. They are not human-ground-truth labels.";
-  const purpose = document.createElement("p");
-  purpose.textContent = "200 frozen production postings · prediction-blinded Codex A/B passes · disagreement adjudication · RegEx scoring only after reference freeze. JSM validates durable Codex artifacts and never stores Codex credentials or substitutes Qwen.";
-  const action = document.createElement("button");
-  action.type = "button";
-  action.className = "primary-button admin-evaluation-action";
-  const running = !["not-started", "complete", "failed"].includes(runStatus.state);
-  action.textContent = running
-    ? "AI-Adjudicated Holdout Evaluation Running…"
-    : "Run AI-Adjudicated Holdout Evaluation";
-  action.disabled = running;
-  action.setAttribute("aria-busy", String(running));
-  action.addEventListener("click", () => void startAiHoldoutEvaluation(action));
-  const progress = document.createElement("p");
-  progress.className = "settings-status";
-  progress.setAttribute("role", "status");
-  progress.textContent = `${runStatus.displayState}${runStatus.total ? `: ${runStatus.completed} / ${runStatus.total}` : ""}${runStatus.message ? ` · ${runStatus.message}` : ""}`;
-  article.append(heading, disclaimer, purpose, action, progress);
-  if (report) {
-    const reliability = document.createElement("p");
-    reliability.textContent = `A/B agreement ${formatPercent(1 - report.agreement.disagreementRate)} · ${report.agreement.disagreements} disagreements adjudicated · ${report.unresolvedExcludedDecisions} unresolved decisions excluded.`;
-    article.append(reliability, renderEvaluationMetrics(report.macro.precision,
-      report.macro.recall, report.macro.f1, report.micro.precision, report.micro.recall,
-      report.micro.f1), renderHoldoutConceptTable(report.concepts));
-    const metadata = document.createElement("p");
-    metadata.className = "admin-evaluation-metadata";
-    metadata.textContent = `Reference ${report.referenceLabelFingerprint} · holdout ${report.datasetFingerprint} · ruleset ${report.rulesetFingerprint} · ${formatLongDate(report.evaluatedUtc) || report.evaluatedUtc}`;
-    article.append(metadata);
+  return renderConceptEvaluationCard(result.reports.find(item => item.role === "holdout"), "FROZEN CODEX-REFERENCE HOLDOUT");
+}
+
+function renderConceptEvaluationCard(item, title) {
+  const article = document.createElement("article"); article.className = "settings-section admin-evaluation-card";
+  const heading = document.createElement("h4"); heading.textContent = title;
+  const stateLabel = document.createElement("strong"); stateLabel.textContent = item?.status || "UNAVAILABLE";
+  article.append(heading, stateLabel);
+  if (!item) return article;
+  const report = item.artifact;
+  const warning = document.createElement("p");
+  warning.textContent = item.role === "holdout"
+    ? "Reference labels were generated through prediction-blinded AI review and adjudication. They are not human-ground-truth labels."
+    : "Known-case curated regression; not production accuracy.";
+  article.append(warning, renderEvaluationMetrics(report.macro.precision, report.macro.recall, report.macro.f1,
+    report.micro.precision, report.micro.recall, report.micro.f1));
+  const metadata = document.createElement("dl"); metadata.className = "admin-evaluation-metrics";
+  for (const [label, value] of [["Postings", report.postingCount], ["Eligible decisions", report.eligibleDecisions],
+    ["Unresolved excluded", report.unresolvedCount], ["Dataset", report.datasetFingerprint],
+    ["Reference", report.referenceFingerprint], ["Pipeline", report.authority.pipelineFingerprint],
+    ["Ruleset", `${report.authority.version} · ${report.authority.byteHash}`],
+    ["Source", report.sourceIdentity], ["Metric implementation", report.metricImplementationHash],
+    ["Run", report.runId], ["Evaluated", report.evaluatedUtc]]) {
+    const row = document.createElement("div"), term = document.createElement("dt"), valueNode = document.createElement("dd");
+    term.textContent = label; valueNode.textContent = value; row.append(term, valueNode); metadata.append(row);
   }
+  article.append(metadata);
+  if (item.role === "holdout" && report.concepts) article.append(renderHoldoutConceptTable(report.concepts));
   return article;
 }
 
@@ -1425,33 +1339,9 @@ function renderHoldoutConceptTable(concepts) {
   return details;
 }
 
-async function startAiHoldoutEvaluation(button) {
-  button.disabled = true;
-  button.setAttribute("aria-busy", "true");
-  button.textContent = "AI-Adjudicated Holdout Evaluation Running…";
-  try {
-    const response = await fetch("/api/admin/evaluations/ai-holdout", { method: "POST" });
-    if (!response.ok && response.status !== 409) {
-      const failure = await response.json().catch(() => ({}));
-      throw new Error(failure.error || "AI-adjudicated holdout evaluation could not be started.");
-    }
-    await pollAiHoldoutEvaluation();
-  } catch (error) {
-    button.disabled = false;
-    button.setAttribute("aria-busy", "false");
-    button.textContent = "Run AI-Adjudicated Holdout Evaluation";
-    elements.adminEvaluationContent.textContent = error.message || String(error);
-  }
-}
 
-async function pollAiHoldoutEvaluation() {
-  await new Promise(resolve => window.setTimeout(resolve, 750));
-  const response = await fetch("/api/admin/evaluations/ai-holdout/status", { cache: "no-store" });
-  if (!response.ok) throw new Error("Holdout evaluation status could not be loaded.");
-  const result = await response.json();
-  await loadEvaluationLedger();
-  if (!["complete", "failed"].includes(result.status.state)) await pollAiHoldoutEvaluation();
-}
+
+
 
 function formatPercent(value) {
   return Number.isFinite(value) ? `${(value * 100).toFixed(1)}%` : "undefined";
@@ -1477,37 +1367,34 @@ async function loadAdminStatus() {
 
 async function loadClassifierStatus(force = false) {
   if (!elements.adminClassifierStatus || state.classifierStatusLoaded && !force) return;
-  elements.adminClassifierStatus.textContent = "Loading classifier status…";
+  elements.adminClassifierStatus.textContent = "Loading concept detection status…";
   try {
-    const [overviewResponse, cacheResponse, rulesResponse] = await Promise.all([
-      fetch("/api/admin/regex-rules/overview", { cache: "no-store" }),
-      fetch("/api/admin/classifier/backfill/status", { cache: "no-store" }),
-      fetch("/api/admin/regex-rules", { cache: "no-store" })
+    const [overviewResponse, cacheResponse] = await Promise.all([
+      fetch("/api/admin/concept-detection", { cache: "no-store" }),
+      fetch("/api/admin/classifier/backfill/status", { cache: "no-store" })
     ]);
-    if (!overviewResponse.ok || !cacheResponse.ok || !rulesResponse.ok) {
-      throw new Error("RegEx rule status could not be loaded.");
-    }
-    const overview = await overviewResponse.json();
-    const result = await cacheResponse.json();
-    state.adminRegexRules = await rulesResponse.json();
+    if (!overviewResponse.ok || !cacheResponse.ok) throw new Error("Concept detection status could not be loaded.");
+    const overview = await overviewResponse.json(), result = await cacheResponse.json();
+    const identity = overview.identity;
+    state.adminRegexRules = overview.rules;
     state.classifierStatusLoaded = true;
-    const reconciliation = result.jobsInspected > 0
-      ? ` · last reconciliation: ${result.jobsInspected} inspected, ${result.staleResultsFound} stale, ${result.recomputedResults} recomputed, ${result.inconsistenciesRepaired} repaired in ${Math.round(result.elapsedMilliseconds)} ms`
-      : "";
     const metrics = document.createElement("dl"); metrics.className = "admin-evaluation-metrics";
-    for (const [label, value] of [["Active runtime rules", overview.activeRuleCount], ["Current cached postings", `${result.current} / ${result.total}`], ["Stale postings", result.pending]]) {
+    for (const [label, value] of [["Authority", identity.authority], ["Validation", overview.validation],
+      ["Rules / concepts", `${overview.totalRules} / ${overview.totalConcepts}`],
+      ["Current cached postings", `${result.current} / ${result.total}`], ["Stale postings", result.pending],
+      ["Pipeline", identity.pipelineFingerprint], ["Taxonomy", `${identity.taxonomyIdentity.version} · ${identity.taxonomyIdentity.sha256}`],
+      ["Ruleset", `${identity.version} · ${identity.byteHash}`], ["Schema", identity.schemaHash],
+      ["Engine", `${identity.engineContract.id} v${identity.engineContract.version} · ${identity.engineContractHash}`],
+      ["Regex policy", identity.policyHash], ["Factual dependencies", JSON.stringify(identity.factualDependencies)],
+      ["Counts by kind", JSON.stringify(overview.countsByKind)]]) {
       const item = document.createElement("div"), term = document.createElement("dt"), count = document.createElement("dd");
       term.textContent = label; count.textContent = value; item.append(term, count); metrics.append(item);
     }
-    const identity = document.createElement("p"); identity.className = "admin-evaluation-metadata";
-    identity.textContent = `Runtime ruleset fingerprint: ${overview.rulesetFingerprint}`;
-    const progress = document.createElement("p"); progress.textContent = result.running ? "Cache reclassification running" : reconciliation ? reconciliation.replace(/^ · /, "") : "Cache reconciliation idle";
-    elements.adminClassifierStatus.replaceChildren(metrics, identity, progress);
+    const progress = document.createElement("p"); progress.textContent = result.running ? "Cache reclassification running" : "Cache reconciliation idle";
+    elements.adminClassifierStatus.replaceChildren(metrics, progress);
     elements.adminClassifierBackfill.disabled = result.running || result.pending === 0;
     renderAdminRegexRules();
-  } catch (error) {
-    elements.adminClassifierStatus.textContent = error.message || String(error);
-  }
+  } catch (error) { elements.adminClassifierStatus.textContent = error.message || String(error); }
 }
 
 async function startClassifierBackfill() {
@@ -1527,27 +1414,14 @@ async function startClassifierBackfill() {
 
 function renderAdminRegexRules() {
   if (!elements.adminRegexRulesList) return;
-  const status = elements.adminRegexStatusFilter?.value || "";
-  const concept = (elements.adminRegexConceptFilter?.value || "").trim().toLowerCase();
+  const kind = elements.adminRegexStatusFilter?.value || "";
+  const search = (elements.adminRegexConceptFilter?.value || "").trim().toLowerCase();
   const provenance = (elements.adminRegexProvenanceFilter?.value || "").trim().toLowerCase();
-  const usage = elements.adminRegexUsageFilter?.value || "";
-  const staleCutoff = Date.now() - 30 * 86400000;
-  const rules = state.adminRegexRules.filter(rule => {
-    if (status && rule.status !== status) return false;
-    if (concept && !rule.conceptId.toLowerCase().includes(concept)) return false;
-    if (provenance && !rule.provenance.toLowerCase().includes(provenance)) return false;
-    if (usage === "unused" && rule.matchCountLifetime !== 0) return false;
-    if (usage === "low" && !(rule.matchCountLifetime >= 1 && rule.matchCountLifetime <= 5)) return false;
-    if (usage === "high" && rule.matchCountLifetime < 100) return false;
-    if (usage === "stale" && rule.lastMatchedUtc && Date.parse(rule.lastMatchedUtc) > staleCutoff) return false;
-    return true;
-  });
-  const sort = elements.adminRegexRuleSort?.value || "concept";
-  rules.sort((a, b) => sort === "status" ? a.status.localeCompare(b.status) || a.conceptId.localeCompare(b.conceptId)
-    : sort === "lastMatched" ? (Date.parse(b.lastMatchedUtc || 0) || 0) - (Date.parse(a.lastMatchedUtc || 0) || 0)
-      : sort === "lifetime" ? b.matchCountLifetime - a.matchCountLifetime
-        : sort === "timeouts" ? b.timeoutCountLifetime - a.timeoutCountLifetime
-          : a.conceptId.localeCompare(b.conceptId) || a.ruleId.localeCompare(b.ruleId));
+  const rules = state.adminRegexRules.filter(rule => (!kind || rule.kind === kind) &&
+    (!search || JSON.stringify(rule).toLowerCase().includes(search)) &&
+    (!provenance || rule.provenance.toLowerCase().includes(provenance)));
+  const sort = elements.adminRegexRuleSort?.value || "order";
+  rules.sort((a, b) => sort === "concept" ? a.conceptId.localeCompare(b.conceptId) || a.executionOrder - b.executionOrder : a.executionOrder - b.executionOrder);
   const pageSize = 50;
   const pageCount = Math.max(1, Math.ceil(rules.length / pageSize));
   state.adminRegexRulePage = Math.min(state.adminRegexRulePage || 0, pageCount - 1);
@@ -1577,8 +1451,7 @@ function renderAdminRegexRules() {
   table.className = "admin-compact-table admin-rule-table";
   const head = document.createElement("thead");
   const headerRow = document.createElement("tr");
-  for (const label of ["Concept", "Pattern", "Type / scope", "Status", "Last matched",
-    "Lifetime", "Recent", "Timeouts"] ) {
+  for (const label of ["Concept", "Rule ID", "Kind", "Scope", "Order", "Context group", "Pattern / selector", "Provenance"] ) {
     const cell = document.createElement("th");
     cell.textContent = label; cell.scope = "col";
     headerRow.append(cell);
@@ -1599,102 +1472,38 @@ function renderAdminRegexRules() {
     detailsSummary.setAttribute("aria-controls", expandedRow.id); detailsSummary.setAttribute("aria-expanded", "false");
     details.addEventListener("toggle", () => { expandedRow.hidden = !details.open; detailsSummary.setAttribute("aria-expanded", String(details.open)); });
     const fullPattern = document.createElement("code");
-    fullPattern.textContent = rule.pattern;
+    fullPattern.textContent = rule.pattern || JSON.stringify(rule.selector);
     const metadata = document.createElement("dl"); metadata.className = "admin-evaluation-metrics";
-    for (const [label, value] of [["Rule ID", rule.ruleId], ["Created", formatLongDate(rule.createdUtc) || rule.createdUtc], ["Modified", formatLongDate(rule.lastModifiedUtc) || rule.lastModifiedUtc], ["Provenance", rule.provenance], ["Reason", rule.reason || "Not recorded"]]) {
+    for (const [label, value] of [["Rule ID", rule.ruleId], ["Kind / scope", `${rule.kind} / ${rule.scope}`], ["Execution order", rule.executionOrder], ["Context group", rule.contextGroupId || "None"], ["Typed selector", rule.selector ? JSON.stringify(rule.selector) : "None"], ["Provenance", rule.provenance], ["Description", rule.description]]) {
       const item = document.createElement("div"), term = document.createElement("dt"), description = document.createElement("dd");
       term.textContent = label; description.textContent = value; item.append(term, description); metadata.append(item);
     }
     details.append(detailsSummary);
     expanded.append(fullPattern, metadata);
-    const rowActions = document.createElement("div"); rowActions.className = "admin-evaluation-table-controls";
-    for (const [label, action] of regexRuleActions(rule)) {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "primary-button admin-evaluation-action confirmation-secondary-button";
-      button.textContent = label;
-      button.addEventListener("click", () => void applyRegexRuleAction(rule.ruleId, action));
-      rowActions.append(button);
-    }
-    expanded.append(rowActions);
     conceptCell.append(details);
-    const abbreviated = rule.pattern.length > 72 ? `${rule.pattern.slice(0, 69)}…` : rule.pattern;
-    for (const value of [abbreviated, `${rule.ruleType} / ${rule.scope}`, rule.status,
-      rule.lastMatchedUtc ? formatLongDate(rule.lastMatchedUtc) : "Never", rule.matchCountLifetime,
-      rule.matchCountSinceReview, rule.timeoutCountLifetime]) {
-      const cell = document.createElement("td");
-      if (value === rule.status) {
-        const statusLabel = document.createElement("strong"); statusLabel.className = "admin-rule-status"; statusLabel.textContent = value; cell.append(statusLabel);
-      } else cell.textContent = value;
-      cell.title = value === abbreviated ? rule.pattern : "";
-      row.append(cell);
+    const pattern = rule.pattern || JSON.stringify(rule.selector);
+    const abbreviated = pattern.length > 72 ? `${pattern.slice(0, 69)}…` : pattern;
+    for (const value of [rule.ruleId, rule.kind, rule.scope, rule.executionOrder, rule.contextGroupId || "", abbreviated, rule.provenance]) {
+      const cell = document.createElement("td"); cell.textContent = value;
+      cell.title = value === abbreviated ? pattern : ""; row.append(cell);
     }
     row.prepend(conceptCell);
     body.append(row, expandedRow);
   }
   table.append(head, body);
   const viewport = document.createElement("div"); viewport.className = "admin-rule-table-viewport";
-  viewport.tabIndex = 0; viewport.setAttribute("role", "region"); viewport.setAttribute("aria-label", "Job Fit rules; scroll to see all columns and rows");
+  viewport.tabIndex = 0; viewport.setAttribute("role", "region"); viewport.setAttribute("aria-label", "Concept detection rules; scroll to see all columns and rows");
   viewport.append(table);
   elements.adminRegexRulesList.append(pager, viewport);
 }
 
-function regexRuleActions(rule) {
-  return rule.status === "proposed" ? [["Validate candidate", "validate"]]
-    : rule.status === "validated" ? [["Activate", "active"], ["Return to proposed", "proposed"]]
-      : rule.status === "active" ? [["Retire", "retired"]]
-        : rule.status === "review-due" ? [["Approve review", "active"], ["Retire", "retired"]]
-          : rule.status === "retired" ? [["Restore as validated", "validated"]] : [];
-}
 
-async function applyRegexRuleAction(ruleId, action) {
-  elements.adminClassifierStatus.textContent = action === "validate"
-    ? "Comparing candidate against the fixed validation corpus…"
-    : "Applying rule lifecycle transition…";
-  const endpoint = action === "validate"
-    ? `/api/admin/regex-rules/${encodeURIComponent(ruleId)}/validate`
-    : `/api/admin/regex-rules/${encodeURIComponent(ruleId)}/transition/${encodeURIComponent(action)}`;
-  let response = await fetch(endpoint, { method: "POST" });
-  if (response.ok && action === "validate") {
-    response = await fetch(`/api/admin/regex-rules/${encodeURIComponent(ruleId)}/transition/validated`,
-      { method: "POST" });
-  }
-  if (!response.ok) {
-    const failure = await response.json().catch(() => ({}));
-    elements.adminClassifierStatus.textContent = failure.error || "Rule action was rejected.";
-    return;
-  }
-  state.classifierStatusLoaded = false;
-  await loadClassifierStatus(true);
-}
 
-async function reloadRegexRules() {
-  elements.adminClassifierStatus.textContent = "Validating and compiling active rules…";
-  const response = await fetch("/api/admin/regex-rules/reload", { method: "POST" });
-  if (!response.ok) {
-    elements.adminClassifierStatus.textContent = "Rule reload was rejected; the previous runtime ruleset remains active.";
-    return;
-  }
-  state.classifierStatusLoaded = false;
-  await loadClassifierStatus(true);
-}
 
-async function evaluateRegexRules() {
-  elements.adminClassifierStatus.textContent = "Running CURATED REGRESSION BENCHMARK…";
-  const response = await fetch("/api/admin/regex-rules/evaluate", { method: "POST" });
-  if (!response.ok) {
-    elements.adminClassifierStatus.textContent = "RegEx evaluation failed.";
-    return;
-  }
-  const result = await response.json();
-  const metrics = document.createElement("dl"); metrics.className = "admin-evaluation-metrics";
-  for (const [label, value] of [["Curated regression run", result.evaluationRunId], ["Postings", result.postingCount], ["Concept decisions", result.conceptDecisionCount], ["Macro F1", formatMetric(result.historicalBenchmarkMacro.f1)], ["Micro F1", formatMetric(result.historicalBenchmarkMicro.f1)]]) {
-    const item = document.createElement("div"), term = document.createElement("dt"), count = document.createElement("dd");
-    term.textContent = label; count.textContent = value; item.append(term, count); metrics.append(item);
-  }
-  const note = document.createElement("p"); note.textContent = "CURATED REGRESSION BENCHMARK. Not production accuracy.";
-  elements.adminClassifierStatus.replaceChildren(metrics, note);
-}
+
+
+
+
 async function claimAdministrator(event) {
   event.preventDefault();
   elements.administratorBootstrapStatus.textContent = "";

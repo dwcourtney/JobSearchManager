@@ -1256,9 +1256,7 @@ public sealed partial class JobCatalog
                 return;
             if (classification is not null)
             {
-                var description = JobAnalysis.HtmlToPlainText(current.DescriptionHtml);
-                var contentHash = SemanticRulesetFingerprint.PostingContentHash(current.Title, description);
-                if (contentHash != classification.PostingContentHash)
+                if (!_semanticClassification!.CanPersist(current, classification))
                     return;
             }
             else if (current.SemanticClassification != expectedPrevious &&

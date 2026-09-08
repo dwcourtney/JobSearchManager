@@ -1,0 +1,548 @@
+{
+  "version": 9,
+  "concepts": [
+    {
+      "id": "work.remote",
+      "displayName": "Remote Work",
+      "category": "Work Arrangement",
+      "definition": "Work performed primarily away from an employer or customer site, with remote work explicitly available.",
+      "userConfigurable": false,
+      "workLocationLevel": 2
+    },
+    {
+      "id": "work.remote.full",
+      "displayName": "100% Remote Work",
+      "category": "Work Arrangement",
+      "definition": "Work explicitly described as fully remote, remote-only, or 100 percent remote.",
+      "supersedes": [
+        "work.remote"
+      ],
+      "userConfigurable": false,
+      "workLocationLevel": 0
+    },
+    {
+      "id": "work.hybrid",
+      "displayName": "Hybrid Work",
+      "category": "Work Arrangement",
+      "definition": "A recurring mix of remote work and scheduled work at an office, facility, or customer site.",
+      "userConfigurable": false,
+      "workLocationLevel": 3
+    },
+    {
+      "id": "work.onsite",
+      "displayName": "Onsite Work",
+      "category": "Work Arrangement",
+      "definition": "Work that requires regular physical presence at an office, facility, installation, or customer site.",
+      "userConfigurable": false,
+      "workLocationLevel": 5
+    },
+    {
+      "id": "work.travel.occasional",
+      "displayName": "Occasional Travel",
+      "category": "Work Arrangement",
+      "definition": "Occasional or limited work travel, generally no more than about 10 percent.",
+      "userConfigurable": false,
+      "travelLevel": 3
+    },
+    {
+      "id": "work.travel.moderate",
+      "displayName": "Moderate Travel",
+      "category": "Work Arrangement",
+      "definition": "Recurring moderate work travel, generally around 11 to 25 percent.",
+      "supersedes": [
+        "work.travel.occasional"
+      ],
+      "userConfigurable": false,
+      "travelLevel": 4
+    },
+    {
+      "id": "work.travel.frequent",
+      "displayName": "Frequent Travel",
+      "category": "Work Arrangement",
+      "definition": "Frequent or extensive work travel, generally more than 50 percent.",
+      "userConfigurable": false,
+      "travelLevel": 5
+    },
+    {
+      "id": "work.travel.substantial",
+      "displayName": "Substantial Travel",
+      "category": "Work Arrangement",
+      "definition": "Substantial work travel, generally around 26 to 50 percent.",
+      "supersedes": [
+        "work.travel.frequent",
+        "work.travel.moderate",
+        "work.travel.occasional"
+      ],
+      "userConfigurable": false,
+      "travelLevel": 6
+    },
+    {
+      "id": "work.deployment",
+      "displayName": "Deployment",
+      "category": "Work Arrangement",
+      "definition": "Temporary deployment away from the normal work location to support operations, projects, or customer missions."
+    },
+    {
+      "id": "work.extended-away-assignment",
+      "displayName": "Extended Away-from-Home Assignment",
+      "category": "Work Arrangement",
+      "definition": "An assignment requiring extended periods away from home or the normal duty location."
+    },
+    {
+      "id": "work.relocation",
+      "displayName": "Relocation",
+      "category": "Work Arrangement",
+      "definition": "A requirement or explicit expectation that the candidate relocate for the role."
+    },
+    {
+      "id": "work.rotation",
+      "displayName": "Rotational Assignment",
+      "category": "Work Arrangement",
+      "definition": "A recurring rotational work schedule that alternates blocks of duty and time away."
+    },
+    {
+      "id": "work.international-assignment",
+      "displayName": "International / OCONUS Assignment",
+      "category": "Work Arrangement",
+      "definition": "A role or assignment requiring work in another country or an OCONUS location."
+    },
+    {
+      "id": "work.data-center",
+      "displayName": "Data Center",
+      "category": "Work Environment",
+      "definition": "Hands-on or operational work inside data-center environments."
+    },
+    {
+      "id": "work.physical-infrastructure",
+      "displayName": "Physical Infrastructure",
+      "category": "Work Environment",
+      "definition": "Hands-on interaction with racks, equipment, cabling, power, or facilities systems."
+    },
+    {
+      "id": "work.lab-environment",
+      "displayName": "Lab Environment",
+      "category": "Work Environment",
+      "definition": "Work regularly performed in engineering, research, test, or hardware laboratories."
+    },
+    {
+      "id": "work.manufacturing-floor",
+      "displayName": "Manufacturing Floor",
+      "category": "Work Environment",
+      "definition": "Work performed in production, assembly, or manufacturing environments."
+    },
+    {
+      "id": "work.aircraft-flight-line",
+      "displayName": "Aircraft / Flight Line",
+      "category": "Work Environment",
+      "definition": "Work around aircraft, hangars, ramps, or flight-line operations."
+    },
+    {
+      "id": "work.classified-facility",
+      "displayName": "Classified Facility / SCIF",
+      "category": "Work Environment",
+      "definition": "Routine work inside secure classified facilities with access or device restrictions."
+    },
+    {
+      "id": "work.customer-site",
+      "displayName": "Customer Site",
+      "category": "Work Environment",
+      "definition": "Routine work performed at customer-controlled facilities rather than your normal office or home."
+    },
+    {
+      "id": "work.outdoor-field",
+      "displayName": "Outdoor Field Work",
+      "category": "Work Environment",
+      "definition": "Regular work outdoors at operational, test, construction, or equipment sites."
+    },
+    {
+      "id": "work.shipboard",
+      "displayName": "Shipboard / Sea-going Work",
+      "category": "Work Environment",
+      "definition": "Work aboard ships or vessels, potentially including time underway."
+    },
+    {
+      "id": "work.scuba",
+      "displayName": "SCUBA / Diving",
+      "category": "Work Environment",
+      "definition": "Work requiring underwater or diving activities."
+    },
+    {
+      "id": "work.confined-spaces",
+      "displayName": "Confined Spaces",
+      "category": "Work Environment",
+      "definition": "Work requiring entry into restricted spaces such as tanks, shafts, or crawlspaces."
+    },
+    {
+      "id": "work.heights",
+      "displayName": "Work at Heights",
+      "category": "Work Environment",
+      "definition": "Work requiring ladders, lifts, towers, rooftops, or elevated platforms."
+    },
+    {
+      "id": "work.field-engineering",
+      "displayName": "Field Engineering",
+      "category": "Work Environment",
+      "definition": "Engineering work performed at operational, customer, or equipment sites."
+    },
+    {
+      "id": "role.individual-contributor",
+      "displayName": "Individual Contributor",
+      "category": "Role Type / Career Direction",
+      "definition": "Primarily responsible for direct technical work rather than managing people."
+    },
+    {
+      "id": "role.software-engineering",
+      "displayName": "Software Engineering",
+      "category": "Role Type / Career Direction",
+      "definition": "Designing, implementing, testing, and maintaining software systems."
+    },
+    {
+      "id": "role.systems-engineering",
+      "displayName": "Systems Engineering",
+      "category": "Role Type / Career Direction",
+      "definition": "Requirements, architecture, integration, interfaces, verification, and whole-system behavior."
+    },
+    {
+      "id": "role.devops-platform",
+      "displayName": "DevOps / Platform Engineering",
+      "category": "Role Type / Career Direction",
+      "definition": "CI/CD, developer platforms, infrastructure automation, and operational tooling."
+    },
+    {
+      "id": "role.cloud-engineering",
+      "displayName": "Cloud Engineering",
+      "category": "Role Type / Career Direction",
+      "definition": "Designing and operating cloud infrastructure, services, and platforms."
+    },
+    {
+      "id": "role.ai-ml-engineering",
+      "displayName": "AI / ML Engineering",
+      "category": "Role Type / Career Direction",
+      "definition": "Building, integrating, or operationalizing machine-learning and AI systems."
+    },
+    {
+      "id": "role.data-engineering",
+      "displayName": "Data Engineering",
+      "category": "Role Type / Career Direction",
+      "definition": "Building data pipelines, storage, transformation, and data-platform systems."
+    },
+    {
+      "id": "role.data-science",
+      "displayName": "Data Science",
+      "category": "Role Type / Career Direction",
+      "definition": "Statistical analysis, experimentation, predictive modeling, and analytical modeling."
+    },
+    {
+      "id": "role.cybersecurity",
+      "displayName": "Cybersecurity",
+      "category": "Role Type / Career Direction",
+      "definition": "Security engineering, analysis, architecture, or other cybersecurity work."
+    },
+    {
+      "id": "role.network-engineering",
+      "displayName": "Network Engineering",
+      "category": "Role Type / Career Direction",
+      "definition": "Network architecture, routing, switching, connectivity, and related systems."
+    },
+    {
+      "id": "role.infrastructure-engineering",
+      "displayName": "Infrastructure Engineering",
+      "category": "Role Type / Career Direction",
+      "definition": "Systems, servers, virtualization, storage, operating platforms, and related infrastructure."
+    },
+    {
+      "id": "role.field-service",
+      "displayName": "Field Service",
+      "category": "Role Type / Career Direction",
+      "definition": "Hands-on technical work performed at customer, equipment, or operational sites."
+    },
+    {
+      "id": "role.test-validation-engineering",
+      "displayName": "Test / Validation Engineering",
+      "category": "Role Type / Career Direction",
+      "definition": "Verification, validation, test design, automation, and proving systems meet requirements."
+    },
+    {
+      "id": "role.program-management",
+      "displayName": "Program Management",
+      "category": "Role Type / Career Direction",
+      "definition": "Coordinating broad programs, budgets, schedules, stakeholders, and delivery across projects."
+    },
+    {
+      "id": "role.project-management",
+      "displayName": "Project Management",
+      "category": "Role Type / Career Direction",
+      "definition": "Planning and coordinating defined projects, schedules, resources, risks, and deliverables."
+    },
+    {
+      "id": "role.people-management",
+      "displayName": "People Management",
+      "category": "Role Type / Career Direction",
+      "definition": "Formal responsibility for employees, staffing, performance, development, or hiring."
+    },
+    {
+      "id": "role.hardware-engineering",
+      "displayName": "Hardware Engineering",
+      "category": "Role Type / Career Direction",
+      "definition": "Design, integration, testing, or support of hardware and physical electronic systems."
+    },
+    {
+      "id": "role.mechanical-maintenance-repair",
+      "displayName": "Mechanical Maintenance / Repair",
+      "category": "Role Type / Career Direction",
+      "definition": "Hands-on maintenance, repair, servicing, and mechanical troubleshooting of vehicles, machinery, equipment, or physical systems."
+    },
+    {
+      "id": "role.fabrication-assembly-machining",
+      "displayName": "Fabrication / Assembly / Machining",
+      "category": "Role Type / Career Direction",
+      "definition": "Producing, assembling, machining, welding, or fabricating physical parts, structures, equipment, or assemblies."
+    },
+    {
+      "id": "role.physical-inspection-quality-control",
+      "displayName": "Physical Inspection / Quality Control",
+      "category": "Role Type / Career Direction",
+      "definition": "Hands-on inspection, acceptance, and quality-control verification of physical equipment, parts, installations, materials, or workmanship."
+    },
+    {
+      "id": "role.lab-test-technician",
+      "displayName": "Laboratory / Test Technician Work",
+      "category": "Role Type / Career Direction",
+      "definition": "Technician-level hands-on setup, instrumentation, measurement, test execution, and laboratory support.",
+      "supersedes": [
+        "work.lab-environment"
+      ]
+    },
+    {
+      "id": "role.warehouse-material-handling",
+      "displayName": "Warehouse / Material Handling Operations",
+      "category": "Role Type / Career Direction",
+      "definition": "Physical receiving, stocking, picking, shipping, inventory movement, warehouse operations, and material handling."
+    },
+    {
+      "id": "role.manufacturing-production-operations",
+      "displayName": "Manufacturing / Production Operations",
+      "category": "Role Type / Career Direction",
+      "definition": "Direct plant-floor production, assembly-line, manufacturing, or production-equipment operations.",
+      "supersedes": [
+        "work.manufacturing-floor"
+      ]
+    },
+    {
+      "id": "role.management-heavy",
+      "displayName": "Management-heavy Role",
+      "category": "Responsibility Shape",
+      "definition": "A large portion of the job is coordination, planning, or management rather than direct technical execution."
+    },
+    {
+      "id": "responsibility.hands-on-implementation",
+      "displayName": "Hands-on Implementation",
+      "category": "Responsibility Shape",
+      "definition": "Significant direct building, coding, configuring, testing, or troubleshooting."
+    },
+    {
+      "id": "responsibility.architecture-heavy",
+      "displayName": "Architecture-heavy",
+      "category": "Responsibility Shape",
+      "definition": "Significant responsibility for architecture, design direction, interfaces, and technical decisions."
+    },
+    {
+      "id": "responsibility.customer-facing",
+      "displayName": "Customer-facing",
+      "category": "Responsibility Shape",
+      "definition": "Regular direct interaction with customers, stakeholders, or external users."
+    },
+    {
+      "id": "responsibility.team-leadership",
+      "displayName": "Team Leadership",
+      "category": "Responsibility Shape",
+      "definition": "Leading a technical team without necessarily having formal personnel authority."
+    },
+    {
+      "id": "responsibility.personnel-management",
+      "displayName": "Personnel Management",
+      "category": "Responsibility Shape",
+      "definition": "Formal employee responsibility including hiring, reviews, staffing, or development."
+    },
+    {
+      "id": "responsibility.budget-ownership",
+      "displayName": "Budget Ownership",
+      "category": "Responsibility Shape",
+      "definition": "Accountability for budgets, cost performance, or financial planning."
+    },
+    {
+      "id": "responsibility.schedule-ownership",
+      "displayName": "Schedule Ownership",
+      "category": "Responsibility Shape",
+      "definition": "Accountability for schedules, milestones, dependencies, or delivery performance."
+    },
+    {
+      "id": "responsibility.proposal-capture",
+      "displayName": "Proposal / Capture",
+      "category": "Responsibility Shape",
+      "definition": "Business-development work involving proposals, bids, capture strategy, or winning new work."
+    },
+    {
+      "id": "responsibility.documentation-heavy",
+      "displayName": "Documentation-heavy",
+      "category": "Responsibility Shape",
+      "definition": "A substantial portion of the role involves formal documentation or compliance artifacts."
+    },
+    {
+      "id": "responsibility.operations-sustainment",
+      "displayName": "Operations / Sustainment",
+      "category": "Responsibility Shape",
+      "definition": "Ongoing support, maintenance, monitoring, incident response, or lifecycle sustainment."
+    },
+    {
+      "id": "responsibility.research-oriented",
+      "displayName": "Research-oriented",
+      "category": "Responsibility Shape",
+      "definition": "Investigation, experimentation, prototyping, or evaluation of new techniques."
+    },
+    {
+      "id": "technical.application-development",
+      "displayName": "Application Development",
+      "category": "Technical Domain",
+      "definition": "Building user-facing or business-facing applications."
+    },
+    {
+      "id": "technical.backend-development",
+      "displayName": "Backend Development",
+      "category": "Technical Domain",
+      "definition": "Server-side services, business logic, databases, and APIs."
+    },
+    {
+      "id": "technical.frontend-development",
+      "displayName": "Frontend Development",
+      "category": "Technical Domain",
+      "definition": "Client-side application interfaces and user-facing web or UI development."
+    },
+    {
+      "id": "technical.api-development",
+      "displayName": "API Development",
+      "category": "Technical Domain",
+      "definition": "Designing and implementing programmatic service interfaces."
+    },
+    {
+      "id": "technical.automation-scripting",
+      "displayName": "Automation / Scripting",
+      "category": "Technical Domain",
+      "definition": "Automating workflows, operations, or repetitive tasks with scripts or tooling."
+    },
+    {
+      "id": "technical.linux-administration",
+      "displayName": "Linux Administration",
+      "category": "Technical Domain",
+      "definition": "Administration, configuration, maintenance, and troubleshooting of Linux systems."
+    },
+    {
+      "id": "technical.windows-administration",
+      "displayName": "Windows Administration",
+      "category": "Technical Domain",
+      "definition": "Administration, configuration, maintenance, and troubleshooting of Windows systems."
+    },
+    {
+      "id": "technical.containers",
+      "displayName": "Kubernetes / Containers",
+      "category": "Technical Domain",
+      "definition": "Containerization, orchestration, Docker, Kubernetes, and related platforms."
+    },
+    {
+      "id": "technical.infrastructure-as-code",
+      "displayName": "Infrastructure as Code",
+      "category": "Technical Domain",
+      "definition": "Declarative infrastructure using tools such as Terraform or CloudFormation."
+    },
+    {
+      "id": "technical.networking",
+      "displayName": "Network Engineering",
+      "category": "Technical Domain",
+      "definition": "Network architecture, routing, switching, connectivity, and related technologies."
+    },
+    {
+      "id": "technical.cisco-networking",
+      "displayName": "Cisco Networking",
+      "category": "Technical Domain",
+      "definition": "Cisco-specific networking technologies, platforms, and tooling."
+    },
+    {
+      "id": "technical.storage",
+      "displayName": "Storage",
+      "category": "Technical Domain",
+      "definition": "Storage systems, platforms, capacity, performance, and related administration."
+    },
+    {
+      "id": "technical.virtualization",
+      "displayName": "Virtualization",
+      "category": "Technical Domain",
+      "definition": "Virtual machines, hypervisors, virtual infrastructure, and related platforms."
+    },
+    {
+      "id": "technical.power-facilities",
+      "displayName": "Power / Facilities Infrastructure",
+      "category": "Technical Domain",
+      "definition": "Electrical power, cooling, facilities, or other physical infrastructure systems."
+    },
+    {
+      "id": "technical.cabling-racking",
+      "displayName": "Cabling / Racking",
+      "category": "Technical Domain",
+      "definition": "Physical installation, cabling, rack-mounted equipment, and related infrastructure work."
+    },
+    {
+      "id": "technical.embedded-systems",
+      "displayName": "Embedded Systems",
+      "category": "Technical Domain",
+      "definition": "Software and systems running on embedded or device-level hardware."
+    },
+    {
+      "id": "technical.machine-learning",
+      "displayName": "Machine Learning",
+      "category": "Technical Domain",
+      "definition": "Statistical or learned models trained from data."
+    },
+    {
+      "id": "technical.artificial-intelligence",
+      "displayName": "Artificial Intelligence",
+      "category": "Technical Domain",
+      "definition": "Broad AI systems, techniques, and AI-enabled capabilities."
+    },
+    {
+      "id": "technical.nlp",
+      "displayName": "Natural Language Processing",
+      "category": "Technical Domain",
+      "definition": "Processing, understanding, or generating human language."
+    },
+    {
+      "id": "technical.large-language-models",
+      "displayName": "Large Language Models",
+      "category": "Technical Domain",
+      "definition": "Transformer and LLM-based systems for language understanding, generation, or reasoning."
+    },
+    {
+      "id": "technical.software-development",
+      "displayName": "Software Development",
+      "category": "Technical Domain",
+      "definition": "General implementation and maintenance of software systems."
+    },
+    {
+      "id": "technical.linux",
+      "displayName": "Linux",
+      "category": "Technical Domain",
+      "definition": "Developing or operating in Linux environments."
+    },
+    {
+      "id": "technical.cloud",
+      "displayName": "Cloud Platforms",
+      "category": "Technical Domain",
+      "definition": "AWS, Azure, GCP, and related cloud-native services."
+    },
+    {
+      "id": "technical.cicd",
+      "displayName": "CI/CD",
+      "category": "Technical Domain",
+      "definition": "Automated build, test, release, and deployment pipelines."
+    }
+  ]
+}

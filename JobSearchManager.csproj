@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Update="evaluation/**/*.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Update="rules/**/*.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Update="CredentialCatalog.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Update="CompanyCatalog.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
@@ -46,6 +47,9 @@
     <None Remove="research/**/*;ollama-runtime/**/*;Dockerfile.hardware-benchmark" />
     <Compile Remove="Tests\**\*.cs" />
     <Compile Remove="classifier-service\**\*.cs" />
+    <Compile Remove="migration/**/*.cs" />
+    <Content Remove="migration/**/*" />
+    <None Remove="migration/**/*" />
     <Content Remove="Tests\**\*" />
     <Content Remove="classifier-service\**\*" />
     <None Remove="Tests\**\*" />

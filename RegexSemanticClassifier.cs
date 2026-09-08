@@ -11,7 +11,8 @@ public sealed class RegexSemanticClassifier
     private static readonly Regex LocalNegationPattern = new(
         @"(?:\b(?:do|does|did|is|are|was|were|will|would|should|can|cannot)\s+not|\bnot\s+(?:directly\s+)?(?:responsible\s+for\s+)?|\bno\s+(?:direct\s+)?)$",
         BaseOptions, TimeSpan.FromMilliseconds(100));
-    private readonly SqliteSemanticRuleStore _store;
+    private readonly SqliteSemanticRuleStore? _store;
+    private readonly SemanticRulePolicy _policy;
     private readonly JobConceptCatalog _catalog;
     private readonly ConcurrentDictionary<string, long> _pendingUsage = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, long> _pendingTimeouts = new(StringComparer.Ordinal);
@@ -21,11 +22,24 @@ public sealed class RegexSemanticClassifier
     public RegexSemanticClassifier(SqliteSemanticRuleStore store, JobConceptCatalog catalog)
     {
         _store = store;
+        _policy = store.Policy;
         _catalog = catalog;
+    }
+
+    // An immutable, store-free snapshot is available only to internal migration tooling.
+    // Matching branches stay shared with the SQLite production path.
+    internal RegexSemanticClassifier(SemanticRulesSnapshot snapshot, JobConceptCatalog catalog, SemanticRulePolicy policy)
+    {
+        _catalog = catalog;
+        _policy = policy;
+        _current = Compile(snapshot);
     }
 
     public string RulesetFingerprint => Volatile.Read(ref _current)?.Fingerprint
         ?? throw new InvalidOperationException("Semantic RegEx rules have not been loaded.");
+
+    internal bool UsesSqliteCompatibility => _store is not null;
+    internal string AuthorityTag => UsesSqliteCompatibility ? "sqlite-regex-v1" : "json-regex-v1";
 
     public int ActiveRuleCount => Volatile.Read(ref _current)?.Rules.Count ?? 0;
 
@@ -34,6 +48,7 @@ public sealed class RegexSemanticClassifier
 
     public async Task<string> ReloadAsync(CancellationToken cancellationToken = default)
     {
+        if (_store is null) throw new InvalidOperationException("An immutable migration snapshot cannot reload from a store.");
         await _reloadGate.WaitAsync(cancellationToken);
         try
         {
@@ -49,6 +64,7 @@ public sealed class RegexSemanticClassifier
         RemoteWorkAnalysis? remoteWork, ExtendedLocationRequirementAnalysis? extendedLocation,
         bool productionUsage)
     {
+        if (productionUsage && _store is null) throw new InvalidOperationException("An immutable migration snapshot cannot record production telemetry.");
         var current = Volatile.Read(ref _current)
             ?? throw new InvalidOperationException("Semantic RegEx rules have not been loaded.");
         var description = string.IsNullOrWhiteSpace(descriptionHtml)
@@ -146,6 +162,7 @@ public sealed class RegexSemanticClassifier
 
     public async Task FlushUsageAsync(CancellationToken cancellationToken = default)
     {
+        if (_store is null) throw new InvalidOperationException("An immutable migration snapshot has no telemetry store.");
         var batch = new Dictionary<string, long>(StringComparer.Ordinal);
         var timeoutBatch = new Dictionary<string, long>(StringComparer.Ordinal);
         foreach (var item in _pendingUsage)
@@ -185,7 +202,7 @@ public sealed class RegexSemanticClassifier
 
     private Regex CompilePattern(string pattern)
     {
-        var timeout = TimeSpan.FromMilliseconds(_store.Policy.RegexTimeoutMilliseconds);
+        var timeout = TimeSpan.FromMilliseconds(_policy.RegexTimeoutMilliseconds);
         try { return new(pattern, BaseOptions | RegexOptions.NonBacktracking, timeout); }
         catch (NotSupportedException) { return new(pattern, BaseOptions, timeout); }
     }

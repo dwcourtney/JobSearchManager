@@ -1,0 +1,6 @@
+# Isolated migration image. Build from a private context containing only published tests.
+FROM mcr.microsoft.com/dotnet/aspnet:10.0.11-noble@sha256:1dcd9841b075d1d1013caa170b86ae58b8a8a563de9a3e319fd46a45e7ecc130
+WORKDIR /validation
+COPY application/ ./
+USER 1001:1001
+ENTRYPOINT ["dotnet", "JobSearchManager.Tests.dll"]

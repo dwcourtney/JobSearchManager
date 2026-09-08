@@ -12,6 +12,22 @@ using System.Net.Mail;
 using System.Security.Claims;
 using JobSearchManager;
 
+if (args is ["--json-concept-dto", var jsonDtoInput, var jsonDtoOutput])
+{ JobSearchManager.Migration.JsonConceptPresentation.Compare(jsonDtoInput, jsonDtoOutput); return; }
+if (args is ["--json-concept-parity", var jsonInput, var jsonOutput, var jsonDatabase])
+{ await JobSearchManager.Migration.JsonConceptTests.CompareAsync(jsonInput, jsonOutput, jsonDatabase); return; }
+if (args is ["--json-concept-evaluation", var jsonArchive, var jsonReports])
+{ await JobSearchManager.Migration.JsonConceptEvaluation.CompareAsync(jsonArchive, jsonReports); return; }
+if (args is ["--json-concept-cases", var jsonCases])
+{ JobSearchManager.Migration.JsonConceptTests.WriteValidationCases(jsonCases); return; }
+if (args is ["--json-concept-host", var jsonRules, var jsonUrl])
+{ await JobSearchManager.Migration.JsonConceptTests.HostAsync(jsonRules, jsonUrl); return; }
+if (args is ["--concept-oracle-parity", var conceptInput, var conceptOutput, var conceptDatabase])
+{
+    await ConceptOracleTests.CompareAsync(conceptInput, conceptOutput, conceptDatabase);
+    return;
+}
+
 if (args is ["--geographic-restriction-parity", var geographicInput, var geographicOutput])
 {
     GeographicRestrictionMigrationTests.Compare(geographicInput, geographicOutput);
@@ -395,6 +411,11 @@ var tests = new (string Name, Func<Task> Run)[]
     ("AI holdout freezes complete A/B references before RegEx scoring", TestAiHoldoutEvaluationAsync),
     ("Offline cache reconciliation repairs every stale RegEx record idempotently", TestRegexCacheReconciliationAsync),
     ("Default RegEx has no model client dependency", TestDeterministicClassifierContractAsync),
+    ("Frozen SQLite concept oracle preserves complete baseline behavior", ConceptOracleTests.RunAsync),
+    ("JSON concept candidate preserves SQLite/frozen parity and rejects invalid rules", JobSearchManager.Migration.JsonConceptTests.RunAsync),
+    ("Production JSON freshness binds posting, facts and pipeline across restart", JsonAuthorityTests.RunAsync),
+    ("Immutable evaluation reports verify CURRENT STALE HISTORICAL identities", JsonAuthorityTests.ReportsAsync),
+    ("Production cache persistence rejects stale inputs and in-flight authority", TestJsonPersistenceGuardAsync),
     ("Semantic taxonomy identity is versioned", TestSemanticTaxonomyAsync),
     ("First-admin bootstrap is hashed, expiring, single-use, and durable", TestAdminBootstrapLifecycleAsync),
     ("Concurrent first-admin claims grant exactly one account", TestAdminBootstrapConcurrencyAsync),
@@ -5280,6 +5301,28 @@ static string RepositoryAsset(string name)
     var outputCopy = Path.Combine(AppContext.BaseDirectory, name);
     if (File.Exists(outputCopy)) return outputCopy;
     return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", name));
+}
+
+static async Task TestJsonPersistenceGuardAsync()
+{
+    var directory=TestDirectory("json-persistence-guard");
+    var snapshot=JsonAuthorityTests.Snapshot();var service=new SemanticClassificationService(JobConceptCatalog.LoadDefault(),snapshot.Matcher);
+    var handler=new ThrowingHttpMessageHandler();
+    var client=CreateSourceClient(new HttpClient(handler));
+    var job=client.Reclassify(CachedJob("leidos","json-guard","/job/json-guard","<p>Software engineering and APIs.</p>"));
+    var good=(await service.ClassifyAsync(job)).Classification!;
+    job=job with{SemanticClassification=good,SemanticClassificationStatus="complete"};
+    var query=new JobSourceQuery("bc33aa3152ec42d4995f4791a106ed09","United States of America",false,true,[]);
+    var (catalog,_,state)=await CreateTestCatalogAsync(directory,handler,[job],query,semanticClassification:service);
+    var persist=typeof(JobCatalog).GetMethod("PersistSemanticClassificationAsync",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!;
+    foreach(var stale in new[]{good with{ClassifierConfigurationVersion="sqlite-regex-v1"},good with{ClassifierConfigurationFingerprint="old-pipeline"},good with{PostingContentHash="old-input"}})
+    {
+        await (Task)persist.Invoke(catalog,[job.StableId,stale,"complete",good])!;
+        var saved=(await state.LoadJobsCacheAsync(query))!.Jobs.Single();
+        Assert(saved.SemanticClassification==good || JsonSerializer.Serialize(saved.SemanticClassification)==JsonSerializer.Serialize(good),"Old in-flight classification overwrote current shared cache");
+    }
+    var restarted=await CreateTestCatalogAsync(directory,handler,[],query,seedCache:false,semanticClassification:new SemanticClassificationService(JobConceptCatalog.LoadDefault(),JsonAuthorityTests.Snapshot().Matcher));
+    Assert(restarted.Catalog.GetSemanticClassificationStatus().Current==1,"JSON cache did not remain current after catalog restart");
 }
 
 internal sealed record TestDocument(string Name, int Value);

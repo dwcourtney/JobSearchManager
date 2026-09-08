@@ -17,6 +17,7 @@ public static class RegexCacheReconciler
         RegexSemanticClassifier classifier, JobConceptCatalog catalog,
         CancellationToken cancellationToken = default)
     {
+        var semantic = new SemanticClassificationService(catalog, classifier);
         var root = Path.GetFullPath(cacheRoot);
         var timer = System.Diagnostics.Stopwatch.StartNew();
         var files = 0;
@@ -59,7 +60,7 @@ public static class RegexCacheReconciler
                     continue;
                 }
                 var hydrated = original with { DescriptionHtml = description };
-                if (IsCurrent(hydrated, classifier, catalog))
+                if (classifier.UsesSqliteCompatibility ? IsCurrent(hydrated, classifier, catalog) : semantic.IsCurrent(hydrated))
                 {
                     jobs.Add(original);
                     continue;
@@ -71,12 +72,13 @@ public static class RegexCacheReconciler
                     .ToHashSet(StringComparer.Ordinal);
                 var predictions = catalog.Concepts.Select(item =>
                     new SemanticConceptPrediction(item.Id, matched.Contains(item.Id))).ToArray();
+                var inputHash = classifier.UsesSqliteCompatibility ? result.PostingContentHash : semantic.InputFingerprint(hydrated);
                 var fingerprint = SemanticRulesetFingerprint.ClassificationFingerprint(
-                    result.PostingContentHash, result.RulesetFingerprint, catalog.Fingerprint);
-                var classification = new SemanticJobClassification(result.PostingContentHash,
+                    inputHash, result.RulesetFingerprint, catalog.Fingerprint);
+                var classification = new SemanticJobClassification(inputHash,
                     catalog.Version, catalog.Fingerprint, "deterministic-regex", "jsm-semantic-regex",
-                    "lifecycle-managed", result.RulesetFingerprint, "", "", "",
-                    result.ClassifiedUtc, fingerprint, predictions, "sqlite-regex-v1",
+                    classifier.UsesSqliteCompatibility ? "lifecycle-managed" : "json-regex-v1", result.RulesetFingerprint, "", "", "",
+                    result.ClassifiedUtc, fingerprint, predictions, classifier.AuthorityTag,
                     result.RulesetFingerprint);
                 var authoritative = result.Concepts.OrderBy(item => item.ConceptId, StringComparer.Ordinal)
                     .ToArray();

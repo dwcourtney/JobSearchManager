@@ -33,8 +33,8 @@ const context = {
 vm.createContext(context);
 vm.runInContext(["synchronizeAdminNavigation", "showAdminSection", "renderEvaluationNavigation"].map(extract).join("\n"), context);
 context.synchronizeAdminNavigation(true);
-assert.equal(elements.adminClassifierTab.textContent, "Job Fit Rules");
-assert.equal(elements.adminEvaluationTab.textContent, "Job Fit Evaluation");
+assert.equal(elements.adminClassifierTab.textContent, "Concept Detection");
+assert.equal(elements.adminEvaluationTab.textContent, "Concept Detection Evaluation");
 assert.equal(elements.adminCheapTab, undefined);
 assert.equal(elements.adminCheapPanel, undefined);
 context.showAdminSection("cheap-triage", true);
