@@ -2563,6 +2563,25 @@ mark {
 }
 
 .admin-evaluation-list { display: grid; gap: 1rem; margin-top: 1rem; }
+.admin-evaluation-accuracy { padding: 1rem; border: var(--border-width-default) solid var(--color-border); border-radius: var(--radius-control); background: var(--color-surface-secondary); }
+.admin-evaluation-accuracy h4 { margin: 0 0 .35rem; color: var(--color-text-secondary); }
+.admin-evaluation-accuracy > strong { color: var(--color-text-heading); font-size: 1.25rem; }
+.admin-evaluation-accuracy p { max-width: 78ch; margin: .65rem 0 0; line-height: var(--line-height-note); }
+.admin-evaluation-references { min-width: 0; border: var(--border-width-default) solid var(--color-border); border-radius: var(--radius-control); padding: .8rem 1rem; }
+.admin-evaluation-references summary { cursor: pointer; color: var(--color-text-heading); font-weight: var(--font-weight-semibold); }
+.admin-evaluation-references summary:focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: .2rem; }
+.admin-evaluation-references > p, .admin-evaluation-reference p { margin: .55rem 0; color: var(--color-text-secondary); line-height: var(--line-height-note); }
+.admin-evaluation-reference { padding: .8rem 0; border-top: var(--border-width-default) solid var(--color-border); }
+.admin-evaluation-reference header { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: .4rem 1rem; }
+.admin-evaluation-reference h4 { margin: 0; color: var(--color-text-heading); }
+.admin-evaluation-reference header strong { font-size: var(--font-size-caption); color: var(--color-text-secondary); }
+.admin-evaluation-reference-scores { font-variant-numeric: tabular-nums; }
+.admin-evaluation-technical { margin-top: .65rem; font-size: var(--font-size-caption); }
+.admin-evaluation-identities { margin: .75rem 0; }
+.admin-evaluation-identities > div { margin: .5rem 0; }
+.admin-evaluation-identities dt { color: var(--color-text-secondary); }
+.admin-evaluation-identities dd { margin: .15rem 0 0; overflow-wrap: anywhere; }
+
 .admin-evaluation-card { border: var(--border-width-default) solid var(--color-border); border-radius: var(--radius-control); }
 .admin-evaluation-card > h4 { margin: 0 0 .55rem; color: var(--color-text-heading); }
 .admin-evaluation-card > strong { display: block; color: var(--color-text-secondary); line-height: var(--line-height-note); }
@@ -2644,3 +2663,14 @@ mark {
 }
 
 #admin-view > .settings-surface, #admin-view > .settings-header { width: min(100%, 94rem); }
+
+/* Operational summary values; full diagnostic identities stay in native disclosures. */
+.admin-rule-summary .admin-runtime-metrics dd { font-size: var(--font-size-ui); }
+.admin-runtime-summary h5 { margin: .7rem 0 .4rem; font-size: var(--font-size-ui); color: var(--color-text-heading); }
+.admin-runtime-kinds { display: flex; flex-wrap: wrap; gap: .4rem 1.5rem; margin: 0 0 .9rem; font-size: var(--font-size-caption); }
+.admin-runtime-kinds > div { display: flex; gap: .4rem; }
+.admin-runtime-kinds dt { color: var(--color-text-secondary); }
+.admin-runtime-kinds dd { margin: 0; font-weight: var(--font-weight-semibold); font-variant-numeric: tabular-nums; }
+.admin-runtime-technical { font-size: var(--font-size-caption); }
+.admin-runtime-technical > summary { cursor: pointer; color: var(--color-text-heading); font-weight: var(--font-weight-semibold); }
+.admin-runtime-technical > summary:focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: .2rem; }

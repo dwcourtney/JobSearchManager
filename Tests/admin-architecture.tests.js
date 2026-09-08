@@ -42,7 +42,10 @@ assert.equal(state.activeAdminTab, "overview");
 assert.equal(cheapLoads, 0); assert.equal(jobFitLoads, 0);
 context.showAdminSection("classifier"); assert.equal(jobFitLoads, 1);
 const ledger = context.renderEvaluationNavigation({ llmHoldoutReport: {}, triageReport: {} });
-assert.deepEqual(ledger.children, ["curated-job-fit", "frozen-job-fit"]);
+assert.equal(ledger.tag, "details");
+assert.ok(!ledger.open);
+assert.equal(ledger.children[0].textContent, "Historical / Regression References");
+assert.deepEqual(ledger.children.slice(2), ["curated-job-fit", "frozen-job-fit"]);
 context.synchronizeAdminNavigation(false);
 assert.equal(elements.adminView, null);
 // Audit archive preservation without opening the blinded holdout or running inference.

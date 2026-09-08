@@ -1148,11 +1148,16 @@ function synchronizeAdminNavigation(isAdmin) {
   evaluationPanel.hidden = true;
   const evaluationTitle = document.createElement("h3");
   evaluationTitle.textContent = "Concept Detection Evaluation";
-  const evaluationIntro = document.createElement("p");
-  evaluationIntro.textContent = "Immutable concept detection reports. CURRENT requires matching pipeline, dataset, reference and metric identities. Curated regression is not production accuracy; the frozen holdout uses machine-reference labels.";
+  const accuracyPanel = document.createElement("section");
+  accuracyPanel.className = "admin-evaluation-accuracy";
+  const accuracyTitle = document.createElement("h4"); accuracyTitle.textContent = "Production accuracy";
+  const accuracyStatus = document.createElement("strong"); accuracyStatus.textContent = "Not yet measured";
+  const accuracyExplanation = document.createElement("p");
+  accuracyExplanation.textContent = "No independently human-labeled validation corpus is currently available. Existing regression datasets can detect behavioral changes between rule versions, but they do not establish real-world production accuracy.";
+  accuracyPanel.append(accuracyTitle, accuracyStatus, accuracyExplanation);
   const evaluationContent = document.createElement("div");
   evaluationContent.className = "admin-evaluation-list";
-  evaluationPanel.append(evaluationTitle, evaluationIntro, evaluationContent);
+  evaluationPanel.append(evaluationTitle, accuracyPanel, evaluationContent);
   surface.append(tabs, overviewPanel, classifierPanel, evaluationPanel);
   view.append(surface);
   elements.settingsView.after(view);
@@ -1220,45 +1225,59 @@ async function loadEvaluationLedger() {
 }
 
 function renderEvaluationNavigation(result) {
-  const wrapper = document.createElement("div");
-  wrapper.className = "admin-evaluation-list";
-  wrapper.append(renderCuratedEvaluationCard(result), renderHoldoutEvaluationCard(result));
-  return wrapper;
+  const references = document.createElement("details");
+  references.className = "admin-evaluation-references";
+  const summary = document.createElement("summary"); summary.textContent = "Historical / Regression References";
+  const explanation = document.createElement("p");
+  explanation.textContent = "These datasets are retained only to compare current rule behavior with previously frozen reference behavior. They are not measures of production accuracy.";
+  references.append(summary, explanation, renderCuratedEvaluationCard(result), renderHoldoutEvaluationCard(result));
+  return references;
 }
 
 function renderCuratedEvaluationCard(result) {
-  return renderConceptEvaluationCard(result.reports.find(item => item.role === "curated"), "CURATED REGRESSION BENCHMARK");
+  return renderConceptEvaluationCard(result.reports.find(item => item.role === "curated"), "Curated regression");
 }
 
 function renderHoldoutEvaluationCard(result) {
-  return renderConceptEvaluationCard(result.reports.find(item => item.role === "holdout"), "FROZEN CODEX-REFERENCE HOLDOUT");
+  return renderConceptEvaluationCard(result.reports.find(item => item.role === "holdout"), "Frozen machine-reference holdout");
 }
 
 function renderConceptEvaluationCard(item, title) {
-  const article = document.createElement("article"); article.className = "settings-section admin-evaluation-card";
+  const article = document.createElement("article"); article.className = "admin-evaluation-reference";
   const heading = document.createElement("h4"); heading.textContent = title;
   const stateLabel = document.createElement("strong"); stateLabel.textContent = item?.status || "UNAVAILABLE";
-  article.append(heading, stateLabel);
+  const header = document.createElement("header"); header.append(heading, stateLabel); article.append(header);
   if (!item) return article;
   const report = item.artifact;
-  const warning = document.createElement("p");
-  warning.textContent = item.role === "holdout"
-    ? "Reference labels were generated through prediction-blinded AI review and adjudication. They are not human-ground-truth labels."
-    : "Known-case curated regression; not production accuracy.";
-  article.append(warning, renderEvaluationMetrics(report.macro.precision, report.macro.recall, report.macro.f1,
-    report.micro.precision, report.micro.recall, report.micro.f1));
-  const metadata = document.createElement("dl"); metadata.className = "admin-evaluation-metrics";
-  for (const [label, value] of [["Postings", report.postingCount], ["Eligible decisions", report.eligibleDecisions],
-    ["Unresolved excluded", report.unresolvedCount], ["Dataset", report.datasetFingerprint],
-    ["Reference", report.referenceFingerprint], ["Pipeline", report.authority.pipelineFingerprint],
+  if (item.role === "holdout") {
+    const warning = document.createElement("p");
+    warning.textContent = "Machine-reference / AI-adjudicated labels, not human ground truth.";
+    article.append(warning);
+  }
+  const counts = document.createElement("p");
+  counts.textContent = item.role === "holdout"
+    ? `${report.postingCount.toLocaleString("en-US")} postings · ${report.eligibleDecisions.toLocaleString("en-US")} eligible decisions · ${report.unresolvedCount.toLocaleString("en-US")} unresolved`
+    : `${report.postingCount.toLocaleString("en-US")} postings · ${report.eligibleDecisions.toLocaleString("en-US")} labeled decisions`;
+  const scores = document.createElement("p"); scores.className = "admin-evaluation-reference-scores";
+  scores.textContent = `Macro F1: ${formatMetric(report.macro.f1)} · Micro F1: ${formatMetric(report.micro.f1)}`;
+  article.append(counts, scores);
+  const details = document.createElement("details"); details.className = "admin-evaluation-technical";
+  const summary = document.createElement("summary"); summary.textContent = "Technical details";
+  const statusExplanation = document.createElement("p");
+  statusExplanation.textContent = "CURRENT requires matching pipeline, dataset, reference and metric identities. This status describes reference compatibility, not production accuracy.";
+  const metadata = document.createElement("dl"); metadata.className = "admin-evaluation-identities";
+  for (const [label, value] of [["Dataset hash", report.datasetFingerprint],
+    ["Reference hash", report.referenceFingerprint], ["Pipeline hash", report.authority.pipelineFingerprint],
     ["Ruleset", `${report.authority.version} · ${report.authority.byteHash}`],
-    ["Source", report.sourceIdentity], ["Metric implementation", report.metricImplementationHash],
-    ["Run", report.runId], ["Evaluated", report.evaluatedUtc]]) {
+    ["Source identity", report.sourceIdentity], ["Metric implementation hash", report.metricImplementationHash],
+    ["Run ID", report.runId], ["Evaluated", report.evaluatedUtc]]) {
     const row = document.createElement("div"), term = document.createElement("dt"), valueNode = document.createElement("dd");
     term.textContent = label; valueNode.textContent = value; row.append(term, valueNode); metadata.append(row);
   }
-  article.append(metadata);
-  if (item.role === "holdout" && report.concepts) article.append(renderHoldoutConceptTable(report.concepts));
+  details.append(summary, statusExplanation, metadata, renderEvaluationMetrics(report.macro.precision, report.macro.recall,
+    report.macro.f1, report.micro.precision, report.micro.recall, report.micro.f1));
+  if (item.role === "holdout" && report.concepts) details.append(renderHoldoutConceptTable(report.concepts));
+  article.append(details);
   return article;
 }
 
@@ -1365,6 +1384,49 @@ async function loadAdminStatus() {
   }
 }
 
+function renderConceptRuntimeSummary(overview, cache) {
+  const identity = overview.identity;
+  const remote = identity.factualDependencies.remoteWork;
+  const extended = identity.factualDependencies.extendedLocation;
+  const wrapper = document.createElement("div"); wrapper.className = "admin-runtime-summary";
+  const metrics = document.createElement("dl"); metrics.className = "admin-evaluation-metrics admin-runtime-metrics";
+  const pipeline = identity.pipelineFingerprint;
+  for (const [label, value] of [["Authority", identity.authority],
+    ["Validation", overview.validation === "validated-before-listening" ? "Validated before startup" : overview.validation],
+    ["Rules / concepts", `${overview.totalRules} / ${overview.totalConcepts}`],
+    ["Cached postings", `${cache.current} / ${cache.total} current`], ["Stale postings", cache.pending],
+    ["Taxonomy", `v${identity.taxonomyIdentity.version}`], ["Ruleset", `v${identity.version}`],
+    ["Engine", `${identity.engineContract.id} v${identity.engineContract.version}`],
+    ["Regex policy", `${identity.regexPolicy.timeoutMilliseconds} ms bounded matching`],
+    ["Remote Work dependency", `v${remote.version} / analysis ${remote.analysisVersion}`],
+    ["Extended Location dependency", `v${extended.version} / analysis ${extended.analysisVersion}`],
+    ["Pipeline", `${pipeline.slice(0, 8)}...${pipeline.slice(-6)}`]]) {
+    const row = document.createElement("div"), term = document.createElement("dt"), valueNode = document.createElement("dd");
+    term.textContent = label; valueNode.textContent = value; row.append(term, valueNode); metrics.append(row);
+  }
+  const kindsTitle = document.createElement("h5"); kindsTitle.textContent = "Counts by kind";
+  const kinds = document.createElement("dl"); kinds.className = "admin-runtime-kinds";
+  const labels = { "positive-evidence": "Positive evidence", "title-evidence": "Title evidence", exclusion: "Exclusions",
+    "required-context": "Required context", "extended-location-signal": "Extended-location signals",
+    "remote-signal": "Remote signals", "remote-designation": "Remote designation" };
+  for (const [kind, count] of Object.entries(overview.countsByKind)) {
+    const row = document.createElement("div"), term = document.createElement("dt"), value = document.createElement("dd");
+    term.textContent = labels[kind] || kind; value.textContent = count; row.append(term, value); kinds.append(row);
+  }
+  const details = document.createElement("details"); details.className = "admin-runtime-technical";
+  const summary = document.createElement("summary"); summary.textContent = "Technical details";
+  const identities = document.createElement("dl"); identities.className = "admin-evaluation-identities";
+  for (const [label, value] of [["Pipeline hash", pipeline], ["Taxonomy hash", identity.taxonomyIdentity.sha256],
+    ["Ruleset hash", identity.byteHash], ["Schema hash", identity.schemaHash], ["Engine hash", identity.engineContractHash],
+    ["Regex-policy hash", identity.policyHash], ["Remote Work hash", remote.hash], ["Remote Work analysis version", remote.analysisVersion],
+    ["Extended Location hash", extended.hash], ["Extended Location analysis version", extended.analysisVersion]]) {
+    const row = document.createElement("div"), term = document.createElement("dt"), valueNode = document.createElement("dd");
+    term.textContent = label; valueNode.textContent = value; row.append(term, valueNode); identities.append(row);
+  }
+  details.append(summary, identities); wrapper.append(metrics, kindsTitle, kinds, details);
+  return wrapper;
+}
+
 async function loadClassifierStatus(force = false) {
   if (!elements.adminClassifierStatus || state.classifierStatusLoaded && !force) return;
   elements.adminClassifierStatus.textContent = "Loading concept detection status…";
@@ -1375,21 +1437,9 @@ async function loadClassifierStatus(force = false) {
     ]);
     if (!overviewResponse.ok || !cacheResponse.ok) throw new Error("Concept detection status could not be loaded.");
     const overview = await overviewResponse.json(), result = await cacheResponse.json();
-    const identity = overview.identity;
     state.adminRegexRules = overview.rules;
     state.classifierStatusLoaded = true;
-    const metrics = document.createElement("dl"); metrics.className = "admin-evaluation-metrics";
-    for (const [label, value] of [["Authority", identity.authority], ["Validation", overview.validation],
-      ["Rules / concepts", `${overview.totalRules} / ${overview.totalConcepts}`],
-      ["Current cached postings", `${result.current} / ${result.total}`], ["Stale postings", result.pending],
-      ["Pipeline", identity.pipelineFingerprint], ["Taxonomy", `${identity.taxonomyIdentity.version} · ${identity.taxonomyIdentity.sha256}`],
-      ["Ruleset", `${identity.version} · ${identity.byteHash}`], ["Schema", identity.schemaHash],
-      ["Engine", `${identity.engineContract.id} v${identity.engineContract.version} · ${identity.engineContractHash}`],
-      ["Regex policy", identity.policyHash], ["Factual dependencies", JSON.stringify(identity.factualDependencies)],
-      ["Counts by kind", JSON.stringify(overview.countsByKind)]]) {
-      const item = document.createElement("div"), term = document.createElement("dt"), count = document.createElement("dd");
-      term.textContent = label; count.textContent = value; item.append(term, count); metrics.append(item);
-    }
+    const metrics = renderConceptRuntimeSummary(overview, result);
     const progress = document.createElement("p"); progress.textContent = result.running ? "Cache reclassification running" : "Cache reconciliation idle";
     elements.adminClassifierStatus.replaceChildren(metrics, progress);
     elements.adminClassifierBackfill.disabled = result.running || result.pending === 0;

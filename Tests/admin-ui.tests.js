@@ -46,12 +46,12 @@ assert.match(app, /Read-only concept detection rules/);
 assert.match(app, /admin-compact-table[\s\S]*?Previous[\s\S]*?Next/,
   "RegEx rules must use a compact paginated table instead of giant cards.");
 assert.match(app, /Worst F1[\s\S]*?Lowest support[\s\S]*?Highest disagreement[\s\S]*?Concept name/);
-assert.match(app, /Reference labels were generated through prediction-blinded AI review and adjudication\. They are not human-ground-truth labels\./);
+assert.match(app, /Machine-reference \/ AI-adjudicated labels, not human ground truth\./);
 assert.match(app, /Not production accuracy|not production accuracy/i);
 assert.match(app, /Job Fit TBD/);
 assert.match(app, /fetch\("\/api\/admin\/classifier\/backfill\/status"/);
 assert.match(app, /fetch\("\/api\/admin\/classifier\/backfill", \{ method: "POST" \}\)/);
-assert.match(app, /result\.current[\s\S]*?result\.total[\s\S]*?result\.pending[\s\S]*?result\.running/,
+assert.match(app, /cache\.current[\s\S]*?cache\.total[\s\S]*?cache\.pending[\s\S]*?result\.running/,
   "Classifier status must expose persisted coverage and bounded worker state.");
 assert.doesNotMatch(app, /Training Data|Human Labeling|Machine Labeling|Detector Evaluation|AnnotationLabeling|DetectorEvaluationUi/,
   "Removed experimental Admin workflows must not remain dormant in the application.");
