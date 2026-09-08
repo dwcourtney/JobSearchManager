@@ -90,6 +90,13 @@ public sealed partial class JobCatalog
     public async Task<JobsListSnapshot> GetListSnapshotAsync(CancellationToken cancellationToken = default)
     {
         if (Snapshot.IsRefreshing) return CompactSnapshot;
+        // Refresh/cache initialization schedules local classification after creating
+        // its snapshot. Wait outside the source gate (persistence needs that gate),
+        // then reload the cache rather than exposing that earlier pending snapshot.
+        Task? classification;
+        lock (_gate) classification = _semanticClassificationTask;
+        if (classification is not null)
+            await classification.WaitAsync(cancellationToken);
         await _sourceOperationGate.WaitAsync(cancellationToken);
         try
         {

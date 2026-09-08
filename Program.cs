@@ -632,8 +632,8 @@ app.MapPost("/api/refresh", async (
     {
         return Results.Conflict(new { error = "Configure and apply a job source before refreshing jobs." });
     }
-    var snapshot = await runtime.Catalog.RefreshAsync(token);
-    return Results.Ok(JobsListSnapshot.FromSnapshot(snapshot));
+    await runtime.Catalog.RefreshAsync(token);
+    return Results.Ok(await runtime.Catalog.GetListSnapshotAsync(token));
 }).RequireRateLimiting("provider");
 
 app.MapGet("/api/location-facets", async Task<IResult> (
@@ -729,7 +729,9 @@ app.MapPost("/api/query", async Task<IResult> (
     {
         await stateStore.SaveSettingsAsync(current);
     }
-    return Results.Ok(JobsListSnapshot.FromSnapshot(snapshot));
+    return Results.Ok(snapshot.Error is not null
+        ? JobsListSnapshot.FromSnapshot(snapshot)
+        : await runtime.Catalog.GetListSnapshotAsync(token));
 }).RequireRateLimiting("provider");
 
 app.MapGet("/api/settings", async (

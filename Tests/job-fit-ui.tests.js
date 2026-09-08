@@ -559,3 +559,132 @@ for (const status of [undefined, "pending", "unavailable"]) {
   assert.equal(evaluations.length, 0, "Incomplete classification must never enter the scorer.");
 }
 console.log("All saved-preference Jobs caller regressions passed.");
+
+
+// Execute initial loading, snapshot application, row selection, and detail
+// hydration. The server supplies ready compact inputs before any row is opened.
+async function firstRenderSequencing() {
+  function loadFunction(name, asyncFunction = false) {
+    const start = app.indexOf(`${asyncFunction ? "async " : ""}function ${name}(`);
+    const end = app.indexOf("\n}", start) + 2;
+    assert.ok(start >= 0 && end > start);
+    vm.runInContext(app.slice(start, end), runtime);
+  }
+  loadFunction("loadInitialState", true);
+  loadFunction("applySnapshot");
+  loadFunction("loadJobDetail", true);
+  loadFunction("renderResults");
+  loadFunction("createAgeGroup");
+  runtime.AGE_GROUPS = [{ id: "current", label: "Current" }];
+  runtime.groupJobsByAge = jobs => new Map([["current", jobs]]);
+  runtime.jobsPassingGeneralFilters = () => runtime.state.jobs;
+  runtime.buildFilterSummary = () => "";
+  runtime.JobWorkflowState.belongsToTab = (id, tab) => tab === "normal";
+  runtime.document.createDocumentFragment = element;
+  for (const name of ["allJobCount", "savedJobCount", "appliedJobCount", "closedJobCount",
+    "hiddenJobCount", "resultCount", "filterSummary"]) runtime.elements[name] = element();
+  const realRenderDetail = runtime.renderDetail;
+  runtime.renderDetail = job => {
+    try { realRenderDetail(job); } catch (error) { if (error !== detailComplete) throw error; }
+  };
+  for (const name of ["updateWorkspaceIdentityUi", "renderAccountUi", "populateCompanySelect",
+    "populateCredentialInventory", "hydrateSourceControls", "updateSourceSummary", "setLoading",
+    "showSnapshotError", "refreshDescriptionMatches", "updateLastRefreshed", "updateCacheStatus",
+    "updateQueryControls", "markJobViewed"]) runtime[name] = () => {};
+  runtime.handleAccountLink = async () => false;
+  runtime.showClientError = error => { throw error; };
+  runtime.descriptionToText = text => text;
+  runtime.document.createElement = () => {
+    const node = element(); node.events = {};
+    node.addEventListener = (name, callback) => { node.events[name] = callback; };
+    return node;
+  };
+  const base = { stableId: "first-render", title: "Cached scored posting", analysisPending: false,
+    semanticClassificationStatus: "complete", detectedConcepts: [{ conceptId: "work.onsite" }] };
+  const fixtures = [
+    { name: "hydrated", configuration: { enabled: true, preferredWorkLocation: 0 }, score: 3 },
+    { name: "asynchronous settings", delayed: true, configuration: { enabled: true, preferredWorkLocation: 0 }, score: 3 },
+    { name: "null preferences", configuration: { enabled: true, travelTolerance: null, preferredWorkLocation: null }, score: 5 },
+    { name: "disabled", configuration: { enabled: false }, score: null },
+    { name: "pending", configuration: { enabled: true }, status: "pending", score: null },
+    { name: "unavailable", configuration: { enabled: true }, status: "unavailable", score: null }
+  ];
+  for (const fixture of fixtures) {
+    const job = { ...base, semanticClassificationStatus: fixture.status || "complete" };
+    const sentinel = { ...base, stableId: "automatic-selection" };
+    const snapshot = { jobs: [sentinel, job], lastRefreshedUtc: "2026-09-08T00:00:00Z", isRefreshing: false };
+    let releaseSettings;
+    const settingsReady = new Promise(resolve => { releaseSettings = resolve; });
+    const renders = []; const detailRequests = []; let targetReads = 0; let releaseAutomaticDetail;
+    const automaticDetailReady = new Promise(resolve => { releaseAutomaticDetail = resolve; });
+    const realLoadDetail = runtime.loadJobDetail;
+    runtime.loadJobDetail = job => { const request = realLoadDetail(job); detailRequests.push(request); return request; };
+    Object.assign(runtime.state, { isInitializing: true, hasConfiguredSource: true, jobFitEnabled: false,
+      jobs: [], selectedJobId: null, activeResultsTab: "all", collapsedAgeGroups: {}, detailLoadingIds: new Set(), scope: "metadata" });
+    runtime.applySettings = settings => {
+      const normalized = JobFit.normalizeConfiguration(settings.jobFit);
+      Object.assign(runtime.state, { jobFitEnabled: normalized.enabled, jobFitSignals: normalized.signals,
+        travelTolerance: normalized.travelTolerance, preferredWorkLocation: normalized.preferredWorkLocation,
+        jobFitGroupHardConflicts: normalized.groupHardConflicts });
+    };
+    runtime.fetch = async url => {
+      if (url.startsWith("/api/jobs/detail?")) {
+        const automatic = url.includes("automatic-selection");
+        if (automatic) await automaticDetailReady; else targetReads++;
+        return { ok: true, json: async () => ({ ...(automatic ? sentinel : job), descriptionHtml: "<p>Cached posting</p>" }) };
+      }
+      if (url === "/api/settings" && fixture.delayed) await settingsReady;
+      const payloads = { "/api/companies": [], "/api/credentials": [], "/api/job-fit/concepts": catalog.concepts,
+        "/api/settings": { jobFit: fixture.configuration }, "/api/jobs": snapshot,
+        "/api/workspace/identity": {}, "/api/account/status": {} };
+      assert.ok(Object.hasOwn(payloads, url), `Unexpected request: ${url}`);
+      return { ok: true, json: async () => payloads[url] };
+    };
+    runtime.elements.jobList = element();
+    runtime.elements.jobList.replaceChildren = function () { this.children = []; };
+    runtime.elements.jobList.append = function (fragment) {
+      this.children.push(fragment);
+      const labels = [];
+      function visit(node) {
+        if (node.className?.split(" ").includes("job-fit-badge")) labels.push(node.textContent);
+        for (const child of node.children || []) visit(child);
+      }
+      visit(fragment); renders.push(labels);
+    };
+    const loading = runtime.loadInitialState();
+    if (fixture.delayed) {
+      await new Promise(resolve => setImmediate(resolve));
+      assert.equal(renders.length, 0, "Jobs must not render before saved settings arrive.");
+      releaseSettings();
+    }
+    await loading;
+    const expected = fixture.score === null
+      ? (fixture.configuration.enabled ? "Job Fit TBD" : undefined) : `Job Fit ${fixture.score}/10`;
+    assert.equal(renders[0].at(-1), expected, `${fixture.name}: first render`);
+    assert.equal(runtime.state.selectedJobId, sentinel.stableId, "Automatic selection must remain unchanged.");
+    assert.equal(targetReads, 0, "Initial score must not depend on a target detail request.");
+    releaseAutomaticDetail(); await Promise.all(detailRequests);
+    const card = runtime.createJobListItem(runtime.state.jobs[1]);
+    card.children.find(n => n.className === "job-card-main").events.click();
+    await Promise.all(detailRequests);
+    assert.equal(targetReads, 1);
+    assert.ok(renders.every(labels => labels.at(-1) === expected), `${fixture.name}: selection repaired/changed the score`);
+    runtime.renderDetail = realRenderDetail;
+    assert.equal(detailScore(runtime.state.jobs[1]), fixture.score === null ? undefined : `${fixture.score} / 10`);
+    runtime.renderDetail = job => {
+      try { realRenderDetail(job); } catch (error) { if (error !== detailComplete) throw error; }
+    };
+    runtime.loadJobDetail = realLoadDetail;
+    console.log(`First-render lifecycle: ${fixture.name}: initial/selected/detail ${fixture.score ?? "no score"}`);
+  }
+}
+
+// All ready-list entry points must avoid the immutable pre-reconciliation snapshot.
+const server = fs.readFileSync(path.join(root, "Program.cs"), "utf8");
+for (const route of ["/api/refresh", "/api/query"]) {
+  const start = server.indexOf(`app.MapPost("${route}"`);
+  const end = server.indexOf("}).RequireRateLimiting", start);
+  assert.match(server.slice(start, end), /await runtime\.Catalog\.GetListSnapshotAsync\(token\)/,
+    `${route} must return current classification inputs, not the captured refresh snapshot.`);
+}
+firstRenderSequencing().catch(error => { console.error(error); process.exitCode = 1; });

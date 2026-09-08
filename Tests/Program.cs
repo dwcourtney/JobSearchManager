@@ -434,6 +434,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("File storage round-trips beside its configured base", TestFileStoreAsync),
     ("Workspace reset deletes only known local state documents", TestFileResetAsync),
     ("Job lists load current persisted analysis without opening details", TestListAnalysisAsync),
+    ("First list waits for scheduled classification before projecting scores", TestFirstListClassificationAsync),
     ("Different workspaces resolve identical sources to one shared cache", TestSharedSourceCacheAsync),
     ("Concurrent workspace refreshes use one provider request", TestSharedRefreshSingleFlightAsync),
     ("Workspace preferences cannot mutate canonical shared source data", TestPreferencesDoNotMutateSharedCacheAsync),
@@ -1952,6 +1953,72 @@ static async Task TestObsoleteAutomaticSettingsIgnoredAsync()
     }
     finally
     {
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+    }
+}
+
+static async Task TestFirstListClassificationAsync()
+{
+    var directory = TestDirectory("first-list-classification");
+    var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+    try
+    {
+        var handler = CreateWorkdayHandler(() => 1);
+        var (_, query) = WorkdaySource();
+        var missing = CachedJob("leidos", "REQ-0000", "/job/0", "");
+        var concepts = new JobConceptCatalog(new TestHostEnvironment(AppContext.BaseDirectory));
+        var semantic = new SemanticClassificationService(concepts, JsonAuthorityTests.Snapshot().Matcher);
+        var (catalog, _, state) = await CreateTestCatalogAsync(directory, handler, [missing], query,
+            semanticClassification: semantic);
+        while (catalog.GetSemanticClassificationStatus().Running) await Task.Delay(10);
+        var analyzed = CreateSourceClient(new HttpClient(handler)).Reclassify(missing with
+        {
+            DescriptionHtml = "<p>Python software development and machine learning.</p>"
+        });
+        var classification = await semantic.ClassifyAsync(analyzed);
+        analyzed = analyzed with
+        {
+            SemanticClassification = classification.Classification,
+            SemanticClassificationStatus = SemanticClassificationStates.Complete
+        };
+        Assert(semantic.IsCurrent(analyzed), "Fixture classification must be complete/current.");
+        // Freeze the already-scheduled producer at its persistence boundary. This
+        // deterministically models a refresh response racing local reconciliation.
+        typeof(JobCatalog).GetField("_semanticClassificationTask",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+            .SetValue(catalog, completion.Task);
+        var captured = catalog.Snapshot;
+        var initial = catalog.GetListSnapshotAsync();
+        await Task.Delay(50);
+        Assert(!initial.IsCompleted, "First list escaped the scheduled classification barrier with TBD inputs.");
+        using var canceled = new CancellationTokenSource();
+        var canceledRead = catalog.GetListSnapshotAsync(canceled.Token);
+        canceled.Cancel();
+        try { await canceledRead; throw new InvalidOperationException("List cancellation was ignored."); }
+        catch (OperationCanceledException) { }
+        Assert(!completion.Task.IsCompleted, "Canceling a list read must not cancel shared classification.");
+        await state.SaveJobsCacheAsync([analyzed], DateTimeOffset.UtcNow, 0, query);
+        completion.SetResult();
+        var list = await initial;
+        var before = JobsListSnapshot.FromSnapshot(captured).Jobs.Single();
+        Assert(before.SemanticClassificationStatus == SemanticClassificationStates.Pending,
+            "The captured refresh snapshot must demonstrate the former TBD response.");
+        var job = list.Jobs.Single();
+        Assert(job.SemanticClassificationStatus == SemanticClassificationStates.Complete && job.DetectedConcepts.Count > 0,
+            "Initial response must project the newly persisted current classification.");
+        var detail = JobPresentation.AuthoritativeRegexDetail((await catalog.GetJobDetailAsync(analyzed.StableId))!);
+        var afterSelection = (await catalog.GetListSnapshotAsync()).Jobs.Single();
+        Assert(job.DetectedConcepts.SequenceEqual(detail.DetectedConcepts!) &&
+            job.DetectedConcepts.SequenceEqual(afterSelection.DetectedConcepts) &&
+            job.SemanticClassificationStatus == detail.SemanticClassificationStatus,
+            "Selection must not repair or change the initial scoring inputs.");
+        Assert(handler.DetailRequests == 0 && handler.ListingRequests == 0,
+            "First-render reconciliation must not fetch provider data.");
+        Console.WriteLine("First-render sequencing: captured=pending; ready/selected/detail=complete; provider requests=0.");
+    }
+    finally
+    {
+        completion.TrySetResult();
         if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
     }
 }
