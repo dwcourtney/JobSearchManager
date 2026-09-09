@@ -1,0 +1,20 @@
+{
+  "noUnexplainedRegression": true,
+  "noBroadFalsePositiveFamily": true,
+  "decision": "ACCEPT for release validation",
+  "reason": "Repeatable fresh recall/F1/AP gains with no added fresh false positives; near-duplicate-excluded gains repeat; all 84 other concepts exactly unchanged.",
+  "freshValidation": "200 postings, 29 positives: P 100%, R 68.97 to 82.76, F1 81.63 to 90.57, AP 73.47 to 85.26.",
+  "secondValidation": "200 postings, 30 positives: P 94.74 to 96.15, R 60 to 83.33, F1 73.47 to 89.29, AP 63.02 to 84.29.",
+  "historicalRegression": "Global 500 recovers all five FN and removes both FP. Curated decisions unchanged. Old holdout worsens: TP 3 to 4, FP 1 to 3, F1 75 to 72.73. Both newly marked FPs individually reviewed: Security Accreditation Lead explicitly requires VMware private-cloud familiarity; Identity Security Analyst explicitly supports VM backup configuration. These satisfy the unchanged virtual infrastructure definition despite old negative machine references. Labels remain unchanged, metric loss reported.",
+  "remainingFalsePositive": "ServiceNow JB0074458 uses service virtualization for mock/test services. This inherited literal-match boundary is real and remains unresolved; no held-out-driven edit made.",
+  "limitations": [
+    "AI references, not human truth",
+    "Enriched available-cache samples, not population estimates",
+    "One Harvester supporting example",
+    "Post-hoc near-duplicate sensitivity, not predeclared gate",
+    "Existing negation case does not use virtualization remains true in both baseline and candidate",
+    "Generic cloud/VPC/OpenStack and less explicit virtual-environment misses remain"
+  ],
+  "completeCorpusReview": "All 29 changed decisions reviewed against matched text and source context; 27 additions and 2 local data/UI removals.",
+  "targetScope": "No taxonomy, algorithm, Job Fit, provider, Admin or framework edits."
+}

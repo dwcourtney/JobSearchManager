@@ -1,0 +1,292 @@
+{
+  "method": "Post-hoc conservative word-5-shingle Jaccard >= 0.8 against all development text, and first validation for second sample. No labels changed; not an independently predeclared gate.",
+  "roles": {
+    "sensitivity": {
+      "excluded": [
+        {
+          "id": "nvidia:JR2020323",
+          "jaccard": 0.85,
+          "nearest": "nvidia:JR2018908"
+        },
+        {
+          "id": "leidos:R-00188299",
+          "jaccard": 0.9021505376344086,
+          "nearest": "leidos:R-00189350"
+        },
+        {
+          "id": "leidos:R-00188360",
+          "jaccard": 0.9754601226993865,
+          "nearest": "leidos:R-00190851"
+        },
+        {
+          "id": "leidos:R-00191667",
+          "jaccard": 0.9864559819413092,
+          "nearest": "leidos:R-00189350"
+        },
+        {
+          "id": "servicenow:JB0073709",
+          "jaccard": 0.9051724137931034,
+          "nearest": "servicenow:JB0074731"
+        },
+        {
+          "id": "leidos:R-00191567",
+          "jaccard": 0.863517060367454,
+          "nearest": "leidos:R-00191598"
+        },
+        {
+          "id": "aecom:REF59219S",
+          "jaccard": 0.839425587467363,
+          "nearest": "aecom:REF59213I"
+        },
+        {
+          "id": "leidos:R-00188370",
+          "jaccard": 0.9865410497981157,
+          "nearest": "leidos:R-00187135"
+        },
+        {
+          "id": "servicenow:JB0074461",
+          "jaccard": 0.9847715736040609,
+          "nearest": "servicenow:JB0074993"
+        },
+        {
+          "id": "nvidia:JR2019933",
+          "jaccard": 0.950920245398773,
+          "nearest": "nvidia:JR2021860"
+        },
+        {
+          "id": "leidos:R-00187421",
+          "jaccard": 0.8901569186875892,
+          "nearest": "leidos:R-00187419"
+        },
+        {
+          "id": "aecom:J10146608",
+          "jaccard": 0.929957805907173,
+          "nearest": "aecom:J10151918"
+        },
+        {
+          "id": "leidos:R-00187261",
+          "jaccard": 0.8391304347826087,
+          "nearest": "leidos:R-00189640"
+        },
+        {
+          "id": "nvidia:JR2008070",
+          "jaccard": 0.8875255623721882,
+          "nearest": "nvidia:JR2023733"
+        },
+        {
+          "id": "aecom:J10146609",
+          "jaccard": 0.9396551724137931,
+          "nearest": "aecom:J10155737"
+        },
+        {
+          "id": "leidos:R-00184339",
+          "jaccard": 0.8583765112262521,
+          "nearest": "leidos:R-00182170"
+        },
+        {
+          "id": "nvidia:JR2024468",
+          "jaccard": 0.9782608695652174,
+          "nearest": "nvidia:JR2015676"
+        },
+        {
+          "id": "boeing:JR2026522457",
+          "jaccard": 0.8601472134595163,
+          "nearest": "boeing:JR2026522451"
+        },
+        {
+          "id": "leidos:R-00191376",
+          "jaccard": 0.9283551967709385,
+          "nearest": "leidos:R-00184684"
+        },
+        {
+          "id": "servicenow:JB0074038",
+          "jaccard": 0.9323529411764706,
+          "nearest": "servicenow:JB0074731"
+        },
+        {
+          "id": "servicenow:JB0074525",
+          "jaccard": 0.9506641366223909,
+          "nearest": "servicenow:JB0073993"
+        },
+        {
+          "id": "rtx:01855140",
+          "jaccard": 0.9391143911439115,
+          "nearest": "rtx:01855133"
+        }
+      ],
+      "metrics": {
+        "baseline": {
+          "averagePrecision": 0.5871310861423221,
+          "f1": 0.7,
+          "fn": 11,
+          "fp": 1,
+          "negativeSupport": 153,
+          "precision": 0.9333333333333333,
+          "recall": 0.56,
+          "support": 25,
+          "tn": 152,
+          "tp": 14
+        },
+        "candidate": {
+          "averagePrecision": 0.8406537282941777,
+          "f1": 0.8936170212765957,
+          "fn": 4,
+          "fp": 1,
+          "negativeSupport": 153,
+          "precision": 0.9545454545454546,
+          "recall": 0.84,
+          "support": 25,
+          "tn": 152,
+          "tp": 21
+        }
+      },
+      "retained": 178
+    },
+    "validation": {
+      "excluded": [
+        {
+          "id": "parsons:R184395",
+          "jaccard": 0.9295774647887324,
+          "nearest": "parsons:R185556"
+        },
+        {
+          "id": "leidos:R-00191562",
+          "jaccard": 0.9847908745247148,
+          "nearest": "leidos:R-00190862"
+        },
+        {
+          "id": "nvidia:JR1987356",
+          "jaccard": 0.9233128834355828,
+          "nearest": "nvidia:JR2024565"
+        },
+        {
+          "id": "servicenow:JB0073999",
+          "jaccard": 1.0,
+          "nearest": "servicenow:JB0074554"
+        },
+        {
+          "id": "nvidia:JR2019643",
+          "jaccard": 0.9029126213592233,
+          "nearest": "nvidia:JR2021335"
+        },
+        {
+          "id": "leidos:R-00185725",
+          "jaccard": 0.883441258094357,
+          "nearest": "leidos:R-00187187"
+        },
+        {
+          "id": "servicenow:JB0074093",
+          "jaccard": 0.8233576642335766,
+          "nearest": "servicenow:JB0074933"
+        },
+        {
+          "id": "rtx:01859141",
+          "jaccard": 0.9135174418604651,
+          "nearest": "rtx:01859143"
+        },
+        {
+          "id": "boeing:JR2026514187",
+          "jaccard": 0.9773399014778326,
+          "nearest": "boeing:JR2026519937"
+        },
+        {
+          "id": "servicenow:JB0075004",
+          "jaccard": 0.9717114568599717,
+          "nearest": "servicenow:JB0073916"
+        },
+        {
+          "id": "boeing:JR2026522760",
+          "jaccard": 0.9492957746478873,
+          "nearest": "boeing:JR2026522757"
+        },
+        {
+          "id": "boeing:JR2026511060",
+          "jaccard": 0.8028293545534925,
+          "nearest": "boeing:JR2026510182"
+        },
+        {
+          "id": "leidos:R-00188082",
+          "jaccard": 0.8487394957983193,
+          "nearest": "leidos:R-00183929"
+        },
+        {
+          "id": "aecom:J10147489",
+          "jaccard": 0.9130925507900677,
+          "nearest": "aecom:J10147449"
+        },
+        {
+          "id": "aecom:J10147216",
+          "jaccard": 0.9007299270072993,
+          "nearest": "aecom:J10150806"
+        },
+        {
+          "id": "aecom:J10137034",
+          "jaccard": 0.9187620889748549,
+          "nearest": "aecom:J10151656"
+        },
+        {
+          "id": "servicenow:JB0074264",
+          "jaccard": 0.8295454545454546,
+          "nearest": "servicenow:JB0074993"
+        },
+        {
+          "id": "servicenow:JB0073983",
+          "jaccard": 0.9514866979655712,
+          "nearest": "servicenow:JB0074933"
+        },
+        {
+          "id": "nvidia:JR2020710",
+          "jaccard": 0.8545688545688546,
+          "nearest": "nvidia:JR2024339"
+        },
+        {
+          "id": "leidos:R-00186247",
+          "jaccard": 0.9920582395764395,
+          "nearest": "leidos:R-00190945"
+        },
+        {
+          "id": "parsons:R184187",
+          "jaccard": 0.9362017804154302,
+          "nearest": "parsons:R184194"
+        },
+        {
+          "id": "leidos:R-00190785",
+          "jaccard": 0.9275053304904051,
+          "nearest": "leidos:R-00190192"
+        },
+        {
+          "id": "leidos:R-00190214",
+          "jaccard": 0.8671497584541062,
+          "nearest": "leidos:R-00175417"
+        }
+      ],
+      "metrics": {
+        "baseline": {
+          "averagePrecision": 0.7478813559322034,
+          "f1": 0.8292682926829268,
+          "fn": 7,
+          "fp": 0,
+          "negativeSupport": 153,
+          "precision": 1.0,
+          "recall": 0.7083333333333334,
+          "support": 24,
+          "tn": 153,
+          "tp": 17
+        },
+        "candidate": {
+          "averagePrecision": 0.8199152542372882,
+          "f1": 0.8837209302325582,
+          "fn": 5,
+          "fp": 0,
+          "negativeSupport": 153,
+          "precision": 1.0,
+          "recall": 0.7916666666666666,
+          "support": 24,
+          "tn": 153,
+          "tp": 19
+        }
+      },
+      "retained": 177
+    }
+  }
+}

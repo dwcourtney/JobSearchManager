@@ -1,0 +1,171 @@
+{
+  "legacy-1cdc541111c30c6f13500905": {
+    "falsePositiveRisk": "Local exclusions only; other unobserved UI/data synonyms can still match. No whole-posting veto.",
+    "observedSupportingPostings": 3,
+    "rationale": "Exclude the two observed non-compute local modifiers while preserving independent virtualization mentions in mixed postings.",
+    "sourcePhrases": [
+      "data virtualization/replication",
+      "paging/virtualization",
+      "compute/virtualization"
+    ],
+    "supportingPostingIds": [
+      "leidos:R-00191013",
+      "rtx:01869758",
+      "rtx:01858741"
+    ]
+  },
+  "virtualization-environment-setup-v1": {
+    "falsePositiveRisk": "Python virtual environment setup remains a possible ambiguity; do not match generic work in a virtual environment.",
+    "observedSupportingPostings": 1,
+    "rationale": "Operational setup of virtual environments, observed alongside server and database support.",
+    "sourcePhrases": [
+      "setup of virtual environments"
+    ],
+    "supportingPostingIds": [
+      "boeing:JR2026513231"
+    ]
+  },
+  "virtualization-harvester-context-v1": {
+    "falsePositiveRisk": "Only one development posting supports this low-frequency family; require Kubernetes context, never agricultural Harvester alone.",
+    "observedSupportingPostings": 1,
+    "rationale": "Observed Kubernetes Harvester HCI platform reference, corroborated by official Harvester documentation.",
+    "sourcePhrases": [
+      "Kubernetes on-prem, preferably Harvester"
+    ],
+    "supportingPostingIds": [
+      "leidos:R-00184171"
+    ]
+  },
+  "virtualization-hypervisors-v1": {
+    "falsePositiveRisk": "Hypervisor mentions in role requirements count; unrelated Hyper words do not.",
+    "observedSupportingPostings": 3,
+    "rationale": "Hypervisor engineering or infrastructure integration is direct virtualization evidence.",
+    "sourcePhrases": [
+      "hypervisors",
+      "Hypervisor and RTOS"
+    ],
+    "supportingPostingIds": [
+      "nvidia:JR2024462",
+      "servicenow:JB0074886",
+      "leidos:R-00188988"
+    ]
+  },
+  "virtualization-kvm-context-v1": {
+    "falsePositiveRisk": "Avoid keyboard/video/mouse KVM switch meaning; no unconditional acronym.",
+    "observedSupportingPostings": 3,
+    "rationale": "KVM requires nearby virtual machine or hypervisor context.",
+    "sourcePhrases": [
+      "virtualization technologies (e.g. VMware, KVM",
+      "Virtual machine lifecycle management (VMware and KVM)"
+    ],
+    "supportingPostingIds": [
+      "parsons:R184397",
+      "leidos:R-00189680",
+      "parsons:R185556"
+    ]
+  },
+  "virtualization-platforms-v1": {
+    "falsePositiveRisk": "Product integration and desired experience count under unchanged definition; generic vendor/employer mentions are not a new trigger.",
+    "observedSupportingPostings": 7,
+    "rationale": "Observed unambiguous virtualization platform names.",
+    "sourcePhrases": [
+      "vCenter",
+      "ESXi",
+      "Proxmox"
+    ],
+    "supportingPostingIds": [
+      "parsons:R184397",
+      "servicenow:JB0074886",
+      "leidos:R-00185734",
+      "leidos:R-00188503",
+      "leidos:R-00188314",
+      "leidos:R-00190260",
+      "parsons:R185556"
+    ]
+  },
+  "virtualization-virtual-desktops-v1": {
+    "falsePositiveRisk": "Does not match VDI or Horizon alone; long-horizon AI planning is an observed negative.",
+    "observedSupportingPostings": 1,
+    "rationale": "Explicit virtual desktop/server infrastructure.",
+    "sourcePhrases": [
+      "virtual servers, virtual desktops"
+    ],
+    "supportingPostingIds": [
+      "leidos:R-00188503"
+    ]
+  },
+  "virtualization-virtual-machines-v1": {
+    "falsePositiveRisk": "Could include language-runtime virtual machines; no JVM-only cue is added.",
+    "observedSupportingPostings": 5,
+    "rationale": "Explicit virtual-machine workloads and lifecycle operations.",
+    "sourcePhrases": [
+      "Virtual machines",
+      "virtual machine provisioning",
+      "Virtual machine lifecycle management"
+    ],
+    "supportingPostingIds": [
+      "boeing:JR2026507046",
+      "parsons:R184584",
+      "amentum:R0164523",
+      "leidos:R-00191340",
+      "leidos:R-00189680"
+    ]
+  },
+  "virtualization-virtualized-v1": {
+    "falsePositiveRisk": "Virtualized networking can be broader than compute; inspect validation errors. Do not match plain virtual teams or meetings.",
+    "observedSupportingPostings": 7,
+    "rationale": "Recognize virtualized infrastructure/environment wording, including coordinated adjectives.",
+    "sourcePhrases": [
+      "Virtualized environments",
+      "virtualized infrastructures",
+      "physical, virtualized, hybrid cloud"
+    ],
+    "supportingPostingIds": [
+      "leidos:R-00190368",
+      "servicenow:JB0074192",
+      "leidos:R-00185734",
+      "servicenow:JB0074554",
+      "leidos:R-00189463",
+      "leidos:R-00189236",
+      "leidos:R-00190260"
+    ]
+  },
+  "virtualization-vm-context-v1": {
+    "falsePositiveRisk": "Never match VM/VMS alone: video/vehicle management and virtual manufacturing are observed negatives. Same-line cloud list context may still be incidental.",
+    "observedSupportingPostings": 3,
+    "rationale": "VM acronyms only with nearby cloud/host context or explicit lifecycle terminology.",
+    "sourcePhrases": [
+      "VM-based environments",
+      "Azure: Defender for Cloud, WAF, Key Vault / App Service Certificates, Monitor, Activity Log, ACI, AKS, VNet, Cosmos DB, VMs",
+      "Linux host/VM networking"
+    ],
+    "supportingPostingIds": [
+      "boeing:JR2026507046",
+      "nvidia:JR2023005",
+      "parsons:R180251"
+    ]
+  },
+  "virtualization-vmware-context-v1": {
+    "falsePositiveRisk": "Avoid unconditional VMware; bounded same-line role context can still include incidental lists and is reviewed out of sample.",
+    "observedSupportingPostings": 8,
+    "rationale": "VMware role experience and explicitly named virtual infrastructure/products.",
+    "sourcePhrases": [
+      "experience in one of these areas: Networking, VMware",
+      "VMware-based private cloud",
+      "VMware Cloud Foundation",
+      "VMware Workstation",
+      "VMware ThinApp",
+      "VMWare Horizon"
+    ],
+    "supportingPostingIds": [
+      "parsons:R182210",
+      "leidos:R-00191013",
+      "leidos:R-00190944",
+      "leidos:R-00190862",
+      "leidos:R-00191011",
+      "leidos:R-00188503",
+      "leidos:R-00191340",
+      "leidos:R-00189236"
+    ]
+  }
+}

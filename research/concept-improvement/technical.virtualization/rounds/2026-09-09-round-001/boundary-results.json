@@ -1,0 +1,210 @@
+{
+  "cases": [
+    {
+      "actual": true,
+      "expected": true,
+      "passed": true,
+      "text": "Virtual machines support enterprise workloads."
+    },
+    {
+      "actual": true,
+      "expected": true,
+      "passed": true,
+      "text": "Manage virtual machine provisioning."
+    },
+    {
+      "actual": true,
+      "expected": true,
+      "passed": true,
+      "text": "Build virtualized infrastructure."
+    },
+    {
+      "actual": true,
+      "expected": true,
+      "passed": true,
+      "text": "Experience with VMware private cloud."
+    },
+    {
+      "actual": true,
+      "expected": true,
+      "passed": true,
+      "text": "Experience with VMware."
+    },
+    {
+      "actual": true,
+      "expected": true,
+      "passed": true,
+      "text": "Configure vCenter and ESXi."
+    },
+    {
+      "actual": true,
+      "expected": true,
+      "passed": true,
+      "text": "Operate Proxmox servers."
+    },
+    {
+      "actual": true,
+      "expected": true,
+      "passed": true,
+      "text": "Develop hypervisor software."
+    },
+    {
+      "actual": true,
+      "expected": true,
+      "passed": true,
+      "text": "Kubernetes on-prem, preferably Harvester."
+    },
+    {
+      "actual": true,
+      "expected": true,
+      "passed": true,
+      "text": "Setup of virtual environments for server support."
+    },
+    {
+      "actual": true,
+      "expected": true,
+      "passed": true,
+      "text": "Migrate VM-based environments."
+    },
+    {
+      "actual": true,
+      "expected": true,
+      "passed": true,
+      "text": "Operate Azure VMs."
+    },
+    {
+      "actual": true,
+      "expected": true,
+      "passed": true,
+      "text": "Linux host/VM networking."
+    },
+    {
+      "actual": true,
+      "expected": true,
+      "passed": true,
+      "text": "Virtual machine management (VMware and KVM)."
+    },
+    {
+      "actual": true,
+      "expected": true,
+      "passed": true,
+      "text": "Support virtual desktops and virtual servers."
+    },
+    {
+      "actual": true,
+      "expected": true,
+      "passed": true,
+      "text": "Experience with VMware Horizon VDI."
+    },
+    {
+      "actual": false,
+      "expected": false,
+      "passed": true,
+      "text": "Use data virtualization/replication."
+    },
+    {
+      "actual": false,
+      "expected": false,
+      "passed": true,
+      "text": "Use server-side paging/virtualization."
+    },
+    {
+      "actual": true,
+      "expected": true,
+      "passed": true,
+      "text": "Data virtualization. Later manage virtualization platforms."
+    },
+    {
+      "actual": true,
+      "expected": true,
+      "passed": true,
+      "text": "Paging/virtualization. Operate Hyper-V hosts."
+    },
+    {
+      "actual": false,
+      "expected": false,
+      "passed": true,
+      "text": "Work with virtual teams and virtual meetings."
+    },
+    {
+      "actual": false,
+      "expected": false,
+      "passed": true,
+      "text": "Build virtual reality applications."
+    },
+    {
+      "actual": false,
+      "expected": false,
+      "passed": true,
+      "text": "Support Video Management Systems (VMS)."
+    },
+    {
+      "actual": false,
+      "expected": false,
+      "passed": true,
+      "text": "Build Vehicle Management Systems (VMS)."
+    },
+    {
+      "actual": false,
+      "expected": false,
+      "passed": true,
+      "text": "Virtual Manufacturing (VM) simulation reviews."
+    },
+    {
+      "actual": false,
+      "expected": false,
+      "passed": true,
+      "text": "Operate KVM switches."
+    },
+    {
+      "actual": false,
+      "expected": false,
+      "passed": true,
+      "text": "Research long-horizon planning."
+    },
+    {
+      "actual": false,
+      "expected": false,
+      "passed": true,
+      "text": "Develop software for a harvester."
+    },
+    {
+      "actual": false,
+      "expected": false,
+      "passed": true,
+      "text": "Work in a virtual environment."
+    },
+    {
+      "actual": false,
+      "expected": false,
+      "passed": true,
+      "text": "Use AWS VPC, Azure VNet and GCP VPC."
+    },
+    {
+      "actual": false,
+      "expected": false,
+      "passed": true,
+      "text": "VMware is a customer."
+    },
+    {
+      "actual": false,
+      "expected": false,
+      "passed": true,
+      "text": "VCF NSX VDI AHV are acronyms."
+    },
+    {
+      "actual": true,
+      "expected": false,
+      "passed": false,
+      "text": "This role does not use virtualization."
+    },
+    {
+      "actual": true,
+      "expected": true,
+      "passed": true,
+      "text": "This role does not use virtualization. Operate Hyper-V hosts."
+    }
+  ],
+  "passed": 33,
+  "total": 34
+}

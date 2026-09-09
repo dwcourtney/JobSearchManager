@@ -1,0 +1,33 @@
+{
+  "broaderMiningPopulation": 622,
+  "conceptId": "technical.virtualization",
+  "createdUtc": "2026-09-09T14:30:54.280491+00:00",
+  "decision": "ACCEPT",
+  "discovery": 100,
+  "limitations": "Newly labeled and unreviewed for Virtualization, excluding prior full-taxonomy AI references by ID/description. Some text appeared in AI/CI-CD-specific prior work; not claimed never seen across all tasks. Predeclared broad lexical enrichment; not population accuracy.",
+  "minedDevelopmentPostings": 722,
+  "policy": {
+    "maximumPrecisionLoss": 0.03,
+    "minimumAPGain": 0,
+    "minimumF1Gain": 0.05,
+    "minimumNegativeSupport": 10,
+    "minimumPositiveSupport": 10,
+    "minimumPrecision": 0.8
+  },
+  "population": {
+    "cachedCopies": 10971,
+    "duplicateDescription": 27,
+    "duplicateIdOrWorkspaceCopy": 4763,
+    "eligibleUniquePostings": 1863,
+    "missingOrShortDescription": 2264,
+    "unavailable": 2054
+  },
+  "privateArchive": "curiosity:/home/codex/jsm-research/concept-improvement/technical.virtualization/2026-09-09-round-001.tar.gz",
+  "productionRulesHash": "ea6ccfa9ac2fcf09dac2979370b1391a8b7a20433425709acf062d5eeabb9d1a",
+  "requested": 100,
+  "reservedValidationPopulation": 1141,
+  "runId": "2026-09-09-round-001",
+  "schemaVersion": 1,
+  "seed": "virtualization-20260909-001",
+  "totalDeduplicatedCorpus": 1863
+}

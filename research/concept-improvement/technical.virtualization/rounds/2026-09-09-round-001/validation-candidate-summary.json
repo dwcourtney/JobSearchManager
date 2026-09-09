@@ -1,0 +1,100 @@
+{
+  "conceptId": "technical.virtualization",
+  "createdUtc": "2026-09-09T14:46:08.196298+00:00",
+  "curve": {
+    "averagePrecision": 0.8525862068965517,
+    "points": [
+      {
+        "fn": 29,
+        "fp": 0,
+        "precision": 1,
+        "recall": 0,
+        "threshold": null,
+        "tn": 171,
+        "tp": 0
+      },
+      {
+        "fn": 28,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.034482758620689655,
+        "threshold": 0.96875,
+        "tn": 171,
+        "tp": 1
+      },
+      {
+        "fn": 26,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.10344827586206896,
+        "threshold": 0.9375,
+        "tn": 171,
+        "tp": 3
+      },
+      {
+        "fn": 21,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.27586206896551724,
+        "threshold": 0.875,
+        "tn": 171,
+        "tp": 8
+      },
+      {
+        "fn": 16,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.4482758620689655,
+        "threshold": 0.75,
+        "tn": 171,
+        "tp": 13
+      },
+      {
+        "fn": 5,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.8275862068965517,
+        "threshold": 0.5,
+        "tn": 171,
+        "tp": 24
+      },
+      {
+        "fn": 0,
+        "fp": 171,
+        "precision": 0.145,
+        "recall": 1.0,
+        "threshold": 0,
+        "tn": 0,
+        "tp": 29
+      }
+    ]
+  },
+  "metrics": {
+    "f1": 0.9056603773584906,
+    "fn": 5,
+    "fp": 0,
+    "negativeSupport": 171,
+    "precision": 1.0,
+    "recall": 0.8275862068965517,
+    "support": 29,
+    "tn": 171,
+    "tp": 24
+  },
+  "postings": 200,
+  "predictionsHash": "0300a221013155c8082e8a19763e92b80447389f971c1b80d264e3b4635f6250",
+  "referenceHash": "23eacb0c4757f1d2b8efd77611cee2673f471d69550773bf731e642addee7144",
+  "resolved": 200,
+  "role": "validation",
+  "rulesHash": "42a2e58303ea71159c12f8e9ab5def7517dc151ad26dda6ff8b5e7b32350cdd5",
+  "scoreDistribution": {
+    "0": 176,
+    "0.5": 11,
+    "0.75": 5,
+    "0.875": 5,
+    "0.9375": 2,
+    "0.96875": 1
+  },
+  "scorePolicyHash": "107e636b7eb709bb77c5c87e992f8320b0f2948321480998072d24518881d7fb",
+  "unresolved": 0,
+  "variant": "candidate"
+}

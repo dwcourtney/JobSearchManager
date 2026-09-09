@@ -2131,7 +2131,7 @@
       "executionOrder": 209,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
-      "pattern": "\\bvirtualization\\b"
+      "pattern": "(?<!\\bdata\\s)(?<!\\bpaging/)\\bvirtualization\\b"
     },
     {
       "ruleId": "legacy-7cef27b09ac95e98e0c637fc",
@@ -2154,11 +2154,111 @@
       "pattern": "\\bVMware\\s+(?:vSphere|ESXi)\\b"
     },
     {
+      "ruleId": "virtualization-environment-setup-v1",
+      "conceptId": "technical.virtualization",
+      "kind": "positive-evidence",
+      "scope": "both",
+      "executionOrder": 212,
+      "provenance": "virtualization-corpus-review-20260909",
+      "description": "Operational setup of virtual environments, observed alongside server and database support.",
+      "pattern": "\\b(?:setup|provisioning|deployment)\\s+of\\s+virtual\\s+environments?\\b"
+    },
+    {
+      "ruleId": "virtualization-harvester-context-v1",
+      "conceptId": "technical.virtualization",
+      "kind": "positive-evidence",
+      "scope": "both",
+      "executionOrder": 213,
+      "provenance": "virtualization-corpus-review-20260909",
+      "description": "Observed Kubernetes Harvester HCI platform reference, corroborated by official Harvester documentation.",
+      "pattern": "\\bKubernetes\\b[^.!?\\r\\n]{0,80}\\bHarvester\\b"
+    },
+    {
+      "ruleId": "virtualization-hypervisors-v1",
+      "conceptId": "technical.virtualization",
+      "kind": "positive-evidence",
+      "scope": "both",
+      "executionOrder": 214,
+      "provenance": "virtualization-corpus-review-20260909",
+      "description": "Hypervisor engineering or infrastructure integration is direct virtualization evidence.",
+      "pattern": "\\bhypervisors?\\b"
+    },
+    {
+      "ruleId": "virtualization-kvm-context-v1",
+      "conceptId": "technical.virtualization",
+      "kind": "positive-evidence",
+      "scope": "both",
+      "executionOrder": 215,
+      "provenance": "virtualization-corpus-review-20260909",
+      "description": "KVM requires nearby virtual machine or hypervisor context.",
+      "pattern": "\\b(?:virtualization|hypervisors?|virtual\\s+(?:machines?|systems?))\\b[^.!?\\r\\n]{0,100}\\bKVM\\b"
+    },
+    {
+      "ruleId": "virtualization-platforms-v1",
+      "conceptId": "technical.virtualization",
+      "kind": "positive-evidence",
+      "scope": "both",
+      "executionOrder": 216,
+      "provenance": "virtualization-corpus-review-20260909",
+      "description": "Observed unambiguous virtualization platform names.",
+      "pattern": "\\b(?:vSphere|ESXi|vCenter|Proxmox)\\b"
+    },
+    {
+      "ruleId": "virtualization-virtual-desktops-v1",
+      "conceptId": "technical.virtualization",
+      "kind": "positive-evidence",
+      "scope": "both",
+      "executionOrder": 217,
+      "provenance": "virtualization-corpus-review-20260909",
+      "description": "Explicit virtual desktop/server infrastructure.",
+      "pattern": "\\bvirtual\\s+(?:desktops?|servers?)\\b"
+    },
+    {
+      "ruleId": "virtualization-virtual-machines-v1",
+      "conceptId": "technical.virtualization",
+      "kind": "positive-evidence",
+      "scope": "both",
+      "executionOrder": 218,
+      "provenance": "virtualization-corpus-review-20260909",
+      "description": "Explicit virtual-machine workloads and lifecycle operations.",
+      "pattern": "\\bvirtual[ -]+machines?\\b"
+    },
+    {
+      "ruleId": "virtualization-virtualized-v1",
+      "conceptId": "technical.virtualization",
+      "kind": "positive-evidence",
+      "scope": "both",
+      "executionOrder": 219,
+      "provenance": "virtualization-corpus-review-20260909",
+      "description": "Recognize virtualized infrastructure/environment wording, including coordinated adjectives.",
+      "pattern": "(?<!\\bdata\\s)\\bvirtualized\\b"
+    },
+    {
+      "ruleId": "virtualization-vm-context-v1",
+      "conceptId": "technical.virtualization",
+      "kind": "positive-evidence",
+      "scope": "both",
+      "executionOrder": 220,
+      "provenance": "virtualization-corpus-review-20260909",
+      "description": "VM acronyms only with nearby cloud/host context or explicit lifecycle terminology.",
+      "pattern": "\\bVM-based\\s+(?:environments?|infrastructure)\\b|\\b(?:Azure|cloud|Linux|host)\\b[^.!?\\r\\n]{0,180}\\bVMs?\\b|\\bVM\\s+(?:provisioning|management)\\b"
+    },
+    {
+      "ruleId": "virtualization-vmware-context-v1",
+      "conceptId": "technical.virtualization",
+      "kind": "positive-evidence",
+      "scope": "both",
+      "executionOrder": 221,
+      "provenance": "virtualization-corpus-review-20260909",
+      "description": "VMware role experience and explicitly named virtual infrastructure/products.",
+      "pattern": "\\b(?:experience|knowledge|familiarity|technologies|virtualization|virtual\\s+systems?|management|supporting|integrating)\\b[^.!?\\r\\n]{0,100}\\bVMware\\b|\\bVMware(?:-based)?\\s+(?:private\\s+cloud|Cloud\\s+Foundation|Workstation|ThinApp|Horizon)\\b"
+    },
+    {
       "ruleId": "legacy-6023b0bc372ec72c4e7acc45",
       "conceptId": "technical.windows-administration",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 212,
+      "executionOrder": 222,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bWindows\\s+(?:Server\\s+|system\\s+)?administration\\b"
@@ -2168,7 +2268,7 @@
       "conceptId": "technical.windows-administration",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 213,
+      "executionOrder": 223,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\badminister(?:s|ed|ing)?\\b.{0,40}\\bWindows\\s+(?:systems|servers)\\b"
@@ -2178,7 +2278,7 @@
       "conceptId": "work.aircraft-flight-line",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 214,
+      "executionOrder": 224,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bflight\\s+line\\b"
@@ -2188,7 +2288,7 @@
       "conceptId": "work.aircraft-flight-line",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 215,
+      "executionOrder": 225,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\b(?:on|around)\\s+aircraft\\b"
@@ -2198,7 +2298,7 @@
       "conceptId": "work.aircraft-flight-line",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 216,
+      "executionOrder": 226,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\baircraft\\s+maintenance\\s+(?:hangar|environment)\\b"
@@ -2208,7 +2308,7 @@
       "conceptId": "work.aircraft-flight-line",
       "kind": "title-evidence",
       "scope": "title",
-      "executionOrder": 217,
+      "executionOrder": 227,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bairborne(?:\\s+sensor)?\\s+operator\\b"
@@ -2218,7 +2318,7 @@
       "conceptId": "work.classified-facility",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 218,
+      "executionOrder": 228,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bSCIF\\b"
@@ -2228,7 +2328,7 @@
       "conceptId": "work.classified-facility",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 219,
+      "executionOrder": 229,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bclassified\\s+(?:facility|environment|workspace)\\b"
@@ -2238,7 +2338,7 @@
       "conceptId": "work.classified-facility",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 220,
+      "executionOrder": 230,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bsensitive\\s+compartmented\\s+information\\s+facility\\b"
@@ -2248,7 +2348,7 @@
       "conceptId": "work.confined-spaces",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 221,
+      "executionOrder": 231,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bconfined\\s+spaces?\\b"
@@ -2258,7 +2358,7 @@
       "conceptId": "work.customer-site",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 222,
+      "executionOrder": 232,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\b(?:work|support|perform\\s+duties)\\s+(?:at|on)\\s+(?:the\\s+)?customer(?:'s)?\\s+site\\b"
@@ -2268,7 +2368,7 @@
       "conceptId": "work.customer-site",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 223,
+      "executionOrder": 233,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bon[- ]site\\s+at\\s+customer\\s+locations?\\b"
@@ -2278,7 +2378,7 @@
       "conceptId": "work.data-center",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 224,
+      "executionOrder": 234,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bwithin\\s+(?:a|the)\\s+data\\s+cent(?:er|re)\\b"
@@ -2288,7 +2388,7 @@
       "conceptId": "work.data-center",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 225,
+      "executionOrder": 235,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bdata\\s+cent(?:er|re)\\s+(?:environment|operations?|facilit(?:y|ies)|technician|infrastructure)\\b"
@@ -2298,13 +2398,13 @@
       "conceptId": "work.deployment",
       "kind": "extended-location-signal",
       "scope": "both",
-      "executionOrder": 226,
+      "executionOrder": 236,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "selector": {
-        "source": "extendedLocation.signals",
+        "category": "recurring-deployment",
         "operator": "firstCategoryEquals",
-        "category": "recurring-deployment"
+        "source": "extendedLocation.signals"
       }
     },
     {
@@ -2312,13 +2412,13 @@
       "conceptId": "work.deployment",
       "kind": "extended-location-signal",
       "scope": "both",
-      "executionOrder": 227,
+      "executionOrder": 237,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "selector": {
-        "source": "extendedLocation.signals",
+        "category": "possible-deployment",
         "operator": "firstCategoryEquals",
-        "category": "possible-deployment"
+        "source": "extendedLocation.signals"
       }
     },
     {
@@ -2326,13 +2426,13 @@
       "conceptId": "work.deployment",
       "kind": "extended-location-signal",
       "scope": "both",
-      "executionOrder": 228,
+      "executionOrder": 238,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "selector": {
-        "source": "extendedLocation.signals",
+        "category": "extended-deployment",
         "operator": "firstCategoryEquals",
-        "category": "extended-deployment"
+        "source": "extendedLocation.signals"
       }
     },
     {
@@ -2340,13 +2440,13 @@
       "conceptId": "work.deployment",
       "kind": "extended-location-signal",
       "scope": "both",
-      "executionOrder": 229,
+      "executionOrder": 239,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "selector": {
-        "source": "extendedLocation.signals",
+        "category": "forward-deployed",
         "operator": "firstCategoryEquals",
-        "category": "forward-deployed"
+        "source": "extendedLocation.signals"
       }
     },
     {
@@ -2354,13 +2454,13 @@
       "conceptId": "work.deployment",
       "kind": "extended-location-signal",
       "scope": "both",
-      "executionOrder": 230,
+      "executionOrder": 240,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "selector": {
-        "source": "extendedLocation.signals",
+        "category": "required-deployment",
         "operator": "firstCategoryEquals",
-        "category": "required-deployment"
+        "source": "extendedLocation.signals"
       }
     },
     {
@@ -2368,13 +2468,13 @@
       "conceptId": "work.deployment",
       "kind": "remote-signal",
       "scope": "both",
-      "executionOrder": 231,
+      "executionOrder": 241,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "selector": {
-        "source": "remoteWork.signals",
+        "category": "field-deployment",
         "operator": "firstCategoryEquals",
-        "category": "field-deployment"
+        "source": "remoteWork.signals"
       }
     },
     {
@@ -2382,13 +2482,13 @@
       "conceptId": "work.extended-away-assignment",
       "kind": "extended-location-signal",
       "scope": "both",
-      "executionOrder": 232,
+      "executionOrder": 242,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "selector": {
-        "source": "extendedLocation.signals",
+        "category": "long-term-away-assignment",
         "operator": "firstCategoryEquals",
-        "category": "long-term-away-assignment"
+        "source": "extendedLocation.signals"
       }
     },
     {
@@ -2396,13 +2496,13 @@
       "conceptId": "work.extended-away-assignment",
       "kind": "extended-location-signal",
       "scope": "both",
-      "executionOrder": 233,
+      "executionOrder": 243,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "selector": {
-        "source": "extendedLocation.signals",
+        "category": "extended-away-duration",
         "operator": "firstCategoryEquals",
-        "category": "extended-away-duration"
+        "source": "extendedLocation.signals"
       }
     },
     {
@@ -2410,13 +2510,13 @@
       "conceptId": "work.extended-away-assignment",
       "kind": "extended-location-signal",
       "scope": "both",
-      "executionOrder": 234,
+      "executionOrder": 244,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "selector": {
-        "source": "extendedLocation.signals",
+        "category": "extended-deployment",
         "operator": "firstCategoryEquals",
-        "category": "extended-deployment"
+        "source": "extendedLocation.signals"
       }
     },
     {
@@ -2424,13 +2524,13 @@
       "conceptId": "work.extended-away-assignment",
       "kind": "extended-location-signal",
       "scope": "both",
-      "executionOrder": 235,
+      "executionOrder": 245,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "selector": {
-        "source": "extendedLocation.signals",
+        "category": "winter-over-assignment",
         "operator": "firstCategoryEquals",
-        "category": "winter-over-assignment"
+        "source": "extendedLocation.signals"
       }
     },
     {
@@ -2438,7 +2538,7 @@
       "conceptId": "work.field-engineering",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 236,
+      "executionOrder": 246,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bfield\\s+service\\s+engineer(?:ing)?\\b"
@@ -2448,7 +2548,7 @@
       "conceptId": "work.field-engineering",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 237,
+      "executionOrder": 247,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bfield\\s+engineer(?:ing)?\\b"
@@ -2458,7 +2558,7 @@
       "conceptId": "work.heights",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 238,
+      "executionOrder": 248,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bwork(?:ing)?\\s+at\\s+heights?\\b"
@@ -2468,7 +2568,7 @@
       "conceptId": "work.heights",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 239,
+      "executionOrder": 249,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bclimb(?:ing)?\\s+(?:ladders?|towers?|structures?)\\b"
@@ -2478,7 +2578,7 @@
       "conceptId": "work.hybrid",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 240,
+      "executionOrder": 250,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bhybrid\\b[^.!?]{0,100}\\b(?:one|two|three|four|five|[1-5])\\s*(?:-|–)?\\s*days?\\b[^.!?]{0,70}\\b(?:on[- ]?site|in[- ]person|office|facility)\\b"
@@ -2488,7 +2588,7 @@
       "conceptId": "work.hybrid",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 241,
+      "executionOrder": 251,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bhybrid[- ]remote\\b"
@@ -2498,7 +2598,7 @@
       "conceptId": "work.hybrid",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 242,
+      "executionOrder": 252,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bhybrid\\s+(?:work|role|position|schedule)\\b"
@@ -2508,13 +2608,13 @@
       "conceptId": "work.international-assignment",
       "kind": "extended-location-signal",
       "scope": "both",
-      "executionOrder": 243,
+      "executionOrder": 253,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "selector": {
-        "source": "extendedLocation.signals",
+        "category": "oconus-assignment",
         "operator": "firstCategoryEquals",
-        "category": "oconus-assignment"
+        "source": "extendedLocation.signals"
       }
     },
     {
@@ -2522,13 +2622,13 @@
       "conceptId": "work.international-assignment",
       "kind": "extended-location-signal",
       "scope": "both",
-      "executionOrder": 244,
+      "executionOrder": 254,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "selector": {
-        "source": "extendedLocation.signals",
+        "category": "possible-extended-assignment",
         "operator": "firstCategoryEquals",
-        "category": "possible-extended-assignment"
+        "source": "extendedLocation.signals"
       }
     },
     {
@@ -2536,13 +2636,13 @@
       "conceptId": "work.international-assignment",
       "kind": "extended-location-signal",
       "scope": "both",
-      "executionOrder": 245,
+      "executionOrder": 255,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "selector": {
-        "source": "extendedLocation.signals",
+        "category": "explicit-job-location",
         "operator": "firstCategoryEquals",
-        "category": "explicit-job-location"
+        "source": "extendedLocation.signals"
       }
     },
     {
@@ -2550,13 +2650,13 @@
       "conceptId": "work.international-assignment",
       "kind": "extended-location-signal",
       "scope": "both",
-      "executionOrder": 246,
+      "executionOrder": 256,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "selector": {
-        "source": "extendedLocation.signals",
+        "category": "temporary-duty",
         "operator": "firstCategoryEquals",
-        "category": "temporary-duty"
+        "source": "extendedLocation.signals"
       }
     },
     {
@@ -2564,7 +2664,7 @@
       "conceptId": "work.lab-environment",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 247,
+      "executionOrder": 257,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\blab(?:oratory)?\\s+environment\\b"
@@ -2574,7 +2674,7 @@
       "conceptId": "work.lab-environment",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 248,
+      "executionOrder": 258,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bwork\\s+in\\s+(?:a|the)\\s+lab(?:oratory)?\\b"
@@ -2584,7 +2684,7 @@
       "conceptId": "work.manufacturing-floor",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 249,
+      "executionOrder": 259,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bproduction\\s+floor\\b"
@@ -2594,7 +2694,7 @@
       "conceptId": "work.manufacturing-floor",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 250,
+      "executionOrder": 260,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bmanufacturing\\s+(?:floor|facility|environment)\\b"
@@ -2604,7 +2704,7 @@
       "conceptId": "work.onsite",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 251,
+      "executionOrder": 261,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bmostly\\s+on[- ]?site\\b"
@@ -2614,7 +2714,7 @@
       "conceptId": "work.onsite",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 252,
+      "executionOrder": 262,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bno\\s+remote\\s+work\\b"
@@ -2624,7 +2724,7 @@
       "conceptId": "work.onsite",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 253,
+      "executionOrder": 263,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\b(?:fully|100\\s*%)\\s+on[- ]?site\\b"
@@ -2634,13 +2734,13 @@
       "conceptId": "work.onsite",
       "kind": "remote-signal",
       "scope": "both",
-      "executionOrder": 254,
+      "executionOrder": 264,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "selector": {
-        "source": "remoteWork.signals",
+        "category": "scheduled-onsite",
         "operator": "firstCategoryEquals",
-        "category": "scheduled-onsite"
+        "source": "remoteWork.signals"
       }
     },
     {
@@ -2648,13 +2748,13 @@
       "conceptId": "work.onsite",
       "kind": "remote-signal",
       "scope": "both",
-      "executionOrder": 255,
+      "executionOrder": 265,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "selector": {
-        "source": "remoteWork.signals",
+        "category": "onsite-duty",
         "operator": "firstCategoryEquals",
-        "category": "onsite-duty"
+        "source": "remoteWork.signals"
       }
     },
     {
@@ -2662,13 +2762,13 @@
       "conceptId": "work.onsite",
       "kind": "remote-signal",
       "scope": "both",
-      "executionOrder": 256,
+      "executionOrder": 266,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "selector": {
-        "source": "remoteWork.signals",
+        "category": "physical-installation",
         "operator": "firstCategoryEquals",
-        "category": "physical-installation"
+        "source": "remoteWork.signals"
       }
     },
     {
@@ -2676,13 +2776,13 @@
       "conceptId": "work.onsite",
       "kind": "remote-signal",
       "scope": "both",
-      "executionOrder": 257,
+      "executionOrder": 267,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "selector": {
-        "source": "remoteWork.signals",
+        "category": "operational-site",
         "operator": "firstCategoryEquals",
-        "category": "operational-site"
+        "source": "remoteWork.signals"
       }
     },
     {
@@ -2690,7 +2790,7 @@
       "conceptId": "work.outdoor-field",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 258,
+      "executionOrder": 268,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bexposure\\s+to\\s+(?:adverse|inclement)\\s+weather\\b"
@@ -2700,7 +2800,7 @@
       "conceptId": "work.outdoor-field",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 259,
+      "executionOrder": 269,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\boutdoor\\s+field\\s+work\\b"
@@ -2710,7 +2810,7 @@
       "conceptId": "work.outdoor-field",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 260,
+      "executionOrder": 270,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bwork\\s+outdoors\\s+in\\s+(?:all|various)\\s+weather\\b"
@@ -2720,7 +2820,7 @@
       "conceptId": "work.physical-infrastructure",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 261,
+      "executionOrder": 271,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bphysical\\s+infrastructure\\b"
@@ -2730,7 +2830,7 @@
       "conceptId": "work.physical-infrastructure",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 262,
+      "executionOrder": 272,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\binstall(?:ing|ation)?\\s+(?:and\\s+maintain(?:ing|ance)\\s+)?(?:servers?|switches|routers?|hardware)\\b"
@@ -2740,13 +2840,13 @@
       "conceptId": "work.relocation",
       "kind": "extended-location-signal",
       "scope": "both",
-      "executionOrder": 263,
+      "executionOrder": 273,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "selector": {
-        "source": "extendedLocation.signals",
+        "category": "required-unusual-relocation",
         "operator": "firstCategoryEquals",
-        "category": "required-unusual-relocation"
+        "source": "extendedLocation.signals"
       }
     },
     {
@@ -2754,7 +2854,7 @@
       "conceptId": "work.relocation",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 264,
+      "executionOrder": 274,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\brelocates?\\s+(?:internationally|overseas|to)\\b"
@@ -2764,7 +2864,7 @@
       "conceptId": "work.relocation",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 265,
+      "executionOrder": 275,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\b(?:must|will|shall|may|required\\s+to)\\s+relocate\\b"
@@ -2774,7 +2874,7 @@
       "conceptId": "work.relocation",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 266,
+      "executionOrder": 276,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\brelocation\\s+(?:is\\s+)?required\\b"
@@ -2784,7 +2884,7 @@
       "conceptId": "work.remote",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 267,
+      "executionOrder": 277,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\b(?:currently|initially)\\s+remote\\b[^.!?]{0,140}\\b(?:transition|return|move)\\b[^.!?]{0,80}\\bon[- ]?site\\b"
@@ -2794,7 +2894,7 @@
       "conceptId": "work.remote",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 268,
+      "executionOrder": 278,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\b(?:mostly\\s+remote|remote[- ]first)\\b"
@@ -2804,7 +2904,7 @@
       "conceptId": "work.remote",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 269,
+      "executionOrder": 279,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bremote\\b[^.!?]{0,120}\\b(?:quarterly|once|twice)\\b[^.!?]{0,70}\\b(?:office|on[- ]?site|in[- ]person|facility|visits?)\\b"
@@ -2814,7 +2914,7 @@
       "conceptId": "work.remote",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 270,
+      "executionOrder": 280,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bremote\\b[^.!?]{0,120}\\b(?:occasional(?:ly)?|periodic(?:ally)?|as[- ]needed)\\b[^.!?]{0,70}\\b(?:office|on[- ]?site|in[- ]person|facility|visits?)\\b"
@@ -2824,12 +2924,12 @@
       "conceptId": "work.remote",
       "kind": "remote-designation",
       "scope": "both",
-      "executionOrder": 271,
+      "executionOrder": 281,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "selector": {
-        "source": "remoteWork.isRemoteDesignated",
-        "operator": "isTrue"
+        "operator": "isTrue",
+        "source": "remoteWork.isRemoteDesignated"
       }
     },
     {
@@ -2837,7 +2937,7 @@
       "conceptId": "work.remote.full",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 272,
+      "executionOrder": 282,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\b(?:100\\s*%|fully|completely)\\s+remote\\b"
@@ -2847,7 +2947,7 @@
       "conceptId": "work.remote.full",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 273,
+      "executionOrder": 283,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bremote[- ]only\\b"
@@ -2857,13 +2957,13 @@
       "conceptId": "work.rotation",
       "kind": "extended-location-signal",
       "scope": "both",
-      "executionOrder": 274,
+      "executionOrder": 284,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "selector": {
-        "source": "extendedLocation.signals",
+        "category": "rotation",
         "operator": "firstCategoryEquals",
-        "category": "rotation"
+        "source": "extendedLocation.signals"
       }
     },
     {
@@ -2871,7 +2971,7 @@
       "conceptId": "work.scuba",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 275,
+      "executionOrder": 285,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bSCUBA\\b"
@@ -2881,7 +2981,7 @@
       "conceptId": "work.scuba",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 276,
+      "executionOrder": 286,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bcommercial\\s+diving\\b"
@@ -2891,7 +2991,7 @@
       "conceptId": "work.shipboard",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 277,
+      "executionOrder": 287,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bat\\s+sea\\b"
@@ -2901,7 +3001,7 @@
       "conceptId": "work.shipboard",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 278,
+      "executionOrder": 288,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bsea\\s+trials?\\b"
@@ -2911,7 +3011,7 @@
       "conceptId": "work.shipboard",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 279,
+      "executionOrder": 289,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bshipboard\\b"
@@ -2921,7 +3021,7 @@
       "conceptId": "work.shipboard",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 280,
+      "executionOrder": 290,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\baboard\\s+(?:a\\s+)?(?:ship|vessel)\\b"
@@ -2931,7 +3031,7 @@
       "conceptId": "work.shipboard",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 281,
+      "executionOrder": 291,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bsea[- ]going\\b"
@@ -2941,7 +3041,7 @@
       "conceptId": "work.travel.frequent",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 282,
+      "executionOrder": 292,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\b(?:frequent|extensive)\\s+travel\\b"
@@ -2951,7 +3051,7 @@
       "conceptId": "work.travel.frequent",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 283,
+      "executionOrder": 293,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\btravel\\s+frequently\\b"
@@ -2961,13 +3061,13 @@
       "conceptId": "work.travel.frequent",
       "kind": "remote-signal",
       "scope": "both",
-      "executionOrder": 284,
+      "executionOrder": 294,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "selector": {
-        "source": "remoteWork.signals",
+        "category": "frequent-travel",
         "operator": "firstCategoryEquals",
-        "category": "frequent-travel"
+        "source": "remoteWork.signals"
       }
     },
     {
@@ -2975,7 +3075,7 @@
       "conceptId": "work.travel.moderate",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 285,
+      "executionOrder": 295,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\b(?:1[1-9]|[2-4]\\d)\\s*%\\s+travel\\b"
@@ -2985,7 +3085,7 @@
       "conceptId": "work.travel.moderate",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 286,
+      "executionOrder": 296,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\btravel\\b[^.!?]{0,30}\\b(?:1[1-9]|[2-4]\\d)\\s*%"
@@ -2995,13 +3095,13 @@
       "conceptId": "work.travel.moderate",
       "kind": "remote-signal",
       "scope": "both",
-      "executionOrder": 287,
+      "executionOrder": 297,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "selector": {
-        "source": "remoteWork.signals",
+        "category": "moderate-travel",
         "operator": "firstCategoryEquals",
-        "category": "moderate-travel"
+        "source": "remoteWork.signals"
       }
     },
     {
@@ -3009,7 +3109,7 @@
       "conceptId": "work.travel.occasional",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 288,
+      "executionOrder": 298,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\b(?:occasional|limited)\\s+travel\\b"
@@ -3019,7 +3119,7 @@
       "conceptId": "work.travel.occasional",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 289,
+      "executionOrder": 299,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\btravel\\b[^.!?]{0,80}\\btypically\\s+lasting\\s+no\\s+more\\s+than\\s+one\\s+week\\b"
@@ -3029,7 +3129,7 @@
       "conceptId": "work.travel.occasional",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 290,
+      "executionOrder": 300,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\btravel\\s*,?\\s+as\\s+needed\\b"
@@ -3039,7 +3139,7 @@
       "conceptId": "work.travel.occasional",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 291,
+      "executionOrder": 301,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\bat\\s+most\\s+one\\s+(?:short\\s+)?trip\\s+every\\s+(?:2\\s*[-–—]\\s*3|two\\s+to\\s+three)\\s+years?\\b"
@@ -3049,7 +3149,7 @@
       "conceptId": "work.travel.occasional",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 292,
+      "executionOrder": 302,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\b(?:[0-9]|10)\\s*%(?!\\s*(?:-|–|—|to)\\s*\\d)\\s+travel\\b"
@@ -3059,7 +3159,7 @@
       "conceptId": "work.travel.occasional",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 293,
+      "executionOrder": 303,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\btravel\\b[^.!?]{0,30}\\b(?:[0-9]|10)\\s*%(?!\\s*(?:-|–|—|to)\\s*\\d)"
@@ -3069,7 +3169,7 @@
       "conceptId": "work.travel.occasional",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 294,
+      "executionOrder": 304,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\b(?:one|1)\\s+(?:short\\s+)?trip\\s+every\\s+(?:12\\s*[-–—]\\s*18|twelve\\s+to\\s+eighteen)\\s+months?\\b"
@@ -3079,13 +3179,13 @@
       "conceptId": "work.travel.occasional",
       "kind": "remote-signal",
       "scope": "both",
-      "executionOrder": 295,
+      "executionOrder": 305,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "selector": {
-        "source": "remoteWork.signals",
+        "category": "occasional-travel",
         "operator": "firstCategoryEquals",
-        "category": "occasional-travel"
+        "source": "remoteWork.signals"
       }
     },
     {
@@ -3093,7 +3193,7 @@
       "conceptId": "work.travel.substantial",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 296,
+      "executionOrder": 306,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\b(?:[5-9]\\d|100)\\s*%\\s+travel\\b"
@@ -3103,7 +3203,7 @@
       "conceptId": "work.travel.substantial",
       "kind": "positive-evidence",
       "scope": "both",
-      "executionOrder": 297,
+      "executionOrder": 307,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "pattern": "\\btravel\\b[^.!?]{0,30}\\b(?:[5-9]\\d|100)\\s*%"
@@ -3113,13 +3213,13 @@
       "conceptId": "work.travel.substantial",
       "kind": "remote-signal",
       "scope": "both",
-      "executionOrder": 298,
+      "executionOrder": 308,
       "provenance": "legacy-regex-catalog-v9",
       "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
       "selector": {
-        "source": "remoteWork.signals",
+        "category": "substantial-travel",
         "operator": "firstCategoryEquals",
-        "category": "substantial-travel"
+        "source": "remoteWork.signals"
       }
     }
   ]

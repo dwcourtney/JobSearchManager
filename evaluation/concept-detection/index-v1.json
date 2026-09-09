@@ -2,10 +2,10 @@
   "reports": [
     {
       "datasetFingerprint": "615f9db007cb9a8cfc33936c9acbe0671525036e50d2c017248f904786508f2b",
-      "file": "curated-ai-20260909-production-replay.json",
+      "file": "curated-virtualization-20260909-production-replay.json",
       "referenceFingerprint": "615f9db007cb9a8cfc33936c9acbe0671525036e50d2c017248f904786508f2b",
       "role": "curated",
-      "sha256": "db9c638092bccf5ee005a67ab197faf99516d102bc1b4bea3c40d73717f50fdf"
+      "sha256": "4a1b71e871983f69e5f9fc7832ffbcb19760ceec381789530c3bccaaaa1bb87c"
     },
     {
       "datasetFingerprint": "2a5f532f4241368e1b21d30ef9a50ad16886749076e9111dce354baaa045b963",

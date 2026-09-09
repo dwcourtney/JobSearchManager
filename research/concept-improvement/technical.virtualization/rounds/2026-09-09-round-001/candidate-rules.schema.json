@@ -1,0 +1,473 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobsearchmanager.local/schemas/concepts-v1.schema.json",
+  "title": "Migration-only concept rules v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "rulesetVersion": {
+      "const": "1.0.0"
+    },
+    "taxonomy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "const": 9
+        },
+        "sha256": {
+          "const": "514ed1c8c644d1eec426b5fdcf4d5a2c447aa61ce5572ae70b2d03fc3815a049"
+        }
+      },
+      "required": [
+        "version",
+        "sha256"
+      ]
+    },
+    "engineContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "const": "jsm-concept-matching"
+        },
+        "version": {
+          "const": 1
+        }
+      },
+      "required": [
+        "id",
+        "version"
+      ]
+    },
+    "regexPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMilliseconds": {
+          "const": 100
+        },
+        "maximumPatternLength": {
+          "const": 4096
+        },
+        "options": {
+          "const": [
+            "IgnoreCase",
+            "CultureInvariant"
+          ]
+        },
+        "preferNonBacktracking": {
+          "const": true
+        },
+        "unsupportedRegexFallback": {
+          "const": "bounded-backtracking"
+        },
+        "ruleTimeoutBehavior": {
+          "const": "record-non-match"
+        },
+        "localNegationTimeoutBehavior": {
+          "const": "reject-match"
+        }
+      },
+      "required": [
+        "timeoutMilliseconds",
+        "maximumPatternLength",
+        "options",
+        "preferNonBacktracking",
+        "unsupportedRegexFallback",
+        "ruleTimeoutBehavior",
+        "localNegationTimeoutBehavior"
+      ]
+    },
+    "migrationProvenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "phase1ExportSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "sqliteRuntimeFingerprint": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "archiveDatabaseSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "phase1ExportSha256",
+        "sqliteRuntimeFingerprint",
+        "archiveDatabaseSha256"
+      ]
+    },
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 10000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "ruleId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "conceptId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "kind": {
+            "enum": [
+              "exclusion",
+              "extended-location-signal",
+              "positive-evidence",
+              "remote-designation",
+              "remote-signal",
+              "required-context",
+              "title-evidence"
+            ]
+          },
+          "scope": {
+            "enum": [
+              "title",
+              "posting",
+              "both"
+            ]
+          },
+          "executionOrder": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9999
+          },
+          "provenance": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "pattern": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "contextGroupId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "selector": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "const": "remoteWork.isRemoteDesignated"
+                  },
+                  "operator": {
+                    "const": "isTrue"
+                  }
+                },
+                "required": [
+                  "source",
+                  "operator"
+                ]
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "const": "remoteWork.signals"
+                  },
+                  "operator": {
+                    "const": "firstCategoryEquals"
+                  },
+                  "category": {
+                    "enum": [
+                      "commuting-area",
+                      "field-deployment",
+                      "frequent-travel",
+                      "moderate-travel",
+                      "occasional-travel",
+                      "onsite-duty",
+                      "operational-site",
+                      "physical-installation",
+                      "scheduled-onsite",
+                      "substantial-travel"
+                    ]
+                  }
+                },
+                "required": [
+                  "source",
+                  "operator",
+                  "category"
+                ]
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "const": "extendedLocation.signals"
+                  },
+                  "operator": {
+                    "const": "firstCategoryEquals"
+                  },
+                  "category": {
+                    "enum": [
+                      "explicit-job-location",
+                      "extended-away-duration",
+                      "extended-deployment",
+                      "forward-deployed",
+                      "long-term-away-assignment",
+                      "oconus-assignment",
+                      "possible-deployment",
+                      "possible-extended-assignment",
+                      "recurring-deployment",
+                      "required-deployment",
+                      "required-unusual-relocation",
+                      "rotation",
+                      "temporary-duty",
+                      "winter-over-assignment"
+                    ]
+                  }
+                },
+                "required": [
+                  "source",
+                  "operator",
+                  "category"
+                ]
+              }
+            ]
+          }
+        },
+        "required": [
+          "ruleId",
+          "conceptId",
+          "kind",
+          "scope",
+          "executionOrder",
+          "provenance",
+          "description"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "positive-evidence",
+                    "title-evidence",
+                    "exclusion",
+                    "required-context"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "pattern"
+              ],
+              "not": {
+                "required": [
+                  "selector"
+                ]
+              }
+            },
+            "else": {
+              "required": [
+                "selector"
+              ],
+              "not": {
+                "required": [
+                  "pattern"
+                ]
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "required-context"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "contextGroupId"
+              ]
+            },
+            "else": {
+              "not": {
+                "required": [
+                  "contextGroupId"
+                ]
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "remote-designation"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "selector": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "source": {
+                      "const": "remoteWork.isRemoteDesignated"
+                    },
+                    "operator": {
+                      "const": "isTrue"
+                    }
+                  },
+                  "required": [
+                    "source",
+                    "operator"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "remote-signal"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "selector": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "source": {
+                      "const": "remoteWork.signals"
+                    },
+                    "operator": {
+                      "const": "firstCategoryEquals"
+                    },
+                    "category": {
+                      "enum": [
+                        "commuting-area",
+                        "field-deployment",
+                        "frequent-travel",
+                        "moderate-travel",
+                        "occasional-travel",
+                        "onsite-duty",
+                        "operational-site",
+                        "physical-installation",
+                        "scheduled-onsite",
+                        "substantial-travel"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "source",
+                    "operator",
+                    "category"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "extended-location-signal"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "selector": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "source": {
+                      "const": "extendedLocation.signals"
+                    },
+                    "operator": {
+                      "const": "firstCategoryEquals"
+                    },
+                    "category": {
+                      "enum": [
+                        "explicit-job-location",
+                        "extended-away-duration",
+                        "extended-deployment",
+                        "forward-deployed",
+                        "long-term-away-assignment",
+                        "oconus-assignment",
+                        "possible-deployment",
+                        "possible-extended-assignment",
+                        "recurring-deployment",
+                        "required-deployment",
+                        "required-unusual-relocation",
+                        "rotation",
+                        "temporary-duty",
+                        "winter-over-assignment"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "source",
+                    "operator",
+                    "category"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "title-evidence",
+                    "exclusion"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "scope": {
+                  "const": "title"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "rulesetVersion",
+    "taxonomy",
+    "engineContract",
+    "regexPolicy",
+    "migrationProvenance",
+    "rules"
+  ],
+  "$comment": "Loader additionally validates unique IDs/positions, canonical contiguous SQL order, taxonomy membership, regex compilation, and context groups."
+}

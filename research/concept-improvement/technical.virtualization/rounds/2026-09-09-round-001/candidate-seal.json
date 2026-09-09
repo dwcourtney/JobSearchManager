@@ -1,0 +1,22 @@
+{
+  "changedRuleIds": [
+    "legacy-1cdc541111c30c6f13500905",
+    "virtualization-environment-setup-v1",
+    "virtualization-harvester-context-v1",
+    "virtualization-hypervisors-v1",
+    "virtualization-kvm-context-v1",
+    "virtualization-platforms-v1",
+    "virtualization-virtual-desktops-v1",
+    "virtualization-virtual-machines-v1",
+    "virtualization-virtualized-v1",
+    "virtualization-vm-context-v1",
+    "virtualization-vmware-context-v1"
+  ],
+  "conceptId": "technical.virtualization",
+  "files": {
+    "candidate-rationale.json": "e6c139d1e6444d06e453dd94d81fc05b4298a67df492b76d7d5ef09c0f9e54d6",
+    "candidate-rules.json": "42a2e58303ea71159c12f8e9ab5def7517dc151ad26dda6ff8b5e7b32350cdd5",
+    "candidate-rules.schema.json": "f1d7f95e374cdf6d123caeb7417b4e051a2593bfc0467927d49d209adef31a7d"
+  },
+  "sealedUtc": "2026-09-09T14:40:33.281080+00:00"
+}

@@ -1,0 +1,194 @@
+{
+  "baselineAP": 0.7346551724137932,
+  "candidateAP": 0.8525862068965517,
+  "candidateSealHash": "6b81711cc383aa0fbfdd44907dea13aeafa277993c491b757b355a13bc139735",
+  "changedValidationDecisions": [
+    {
+      "after": {
+        "company": "leidos",
+        "descriptionHash": "9966fe7fe90b5dda099d5a4d5165fa03e605b7b78c3a77b8b2d37c60a960e37b",
+        "evidence": "experience or Masters with less than 2 years of prior relevant experience in one of these areas: Networking, VMware",
+        "id": "leidos:R-00191562",
+        "outcome": "TP",
+        "prediction": true,
+        "reference": true,
+        "referenceEvidence": "prior relevant experience in one of these areas: Networking, VMware, or Microsoft servers.",
+        "ruleIds": [
+          "virtualization-vmware-context-v1"
+        ],
+        "score": 0.5,
+        "title": "Deployed Field Service Representative (FSR)"
+      },
+      "before": {
+        "company": "leidos",
+        "descriptionHash": "9966fe7fe90b5dda099d5a4d5165fa03e605b7b78c3a77b8b2d37c60a960e37b",
+        "evidence": "",
+        "id": "leidos:R-00191562",
+        "outcome": "FN",
+        "prediction": false,
+        "reference": true,
+        "referenceEvidence": "prior relevant experience in one of these areas: Networking, VMware, or Microsoft servers.",
+        "ruleIds": [],
+        "score": 0,
+        "title": "Deployed Field Service Representative (FSR)"
+      },
+      "id": "leidos:R-00191562"
+    },
+    {
+      "after": {
+        "company": "leidos",
+        "descriptionHash": "d1c73344b4fa065340430ffb5584deea29ec4aea9ba3d31fcd0558fbb18d91e2",
+        "evidence": "virtual machine",
+        "id": "leidos:R-00190742",
+        "outcome": "TP",
+        "prediction": true,
+        "reference": true,
+        "referenceEvidence": "from bare-metal and virtual machine Kickstart configurations through enterprise-wide configuration management using Ansible and Bash",
+        "ruleIds": [
+          "virtualization-virtual-machines-v1"
+        ],
+        "score": 0.5,
+        "title": "Sr Systems Engineer (Linux/Automation)"
+      },
+      "before": {
+        "company": "leidos",
+        "descriptionHash": "d1c73344b4fa065340430ffb5584deea29ec4aea9ba3d31fcd0558fbb18d91e2",
+        "evidence": "",
+        "id": "leidos:R-00190742",
+        "outcome": "FN",
+        "prediction": false,
+        "reference": true,
+        "referenceEvidence": "from bare-metal and virtual machine Kickstart configurations through enterprise-wide configuration management using Ansible and Bash",
+        "ruleIds": [],
+        "score": 0,
+        "title": "Sr Systems Engineer (Linux/Automation)"
+      },
+      "id": "leidos:R-00190742"
+    },
+    {
+      "after": {
+        "company": "nvidia",
+        "descriptionHash": "62d67507aa650960f08f0d8e55c9857dc7376b2b1b187ed91d2546188a9e83d5",
+        "evidence": "Virtual Machines",
+        "id": "nvidia:JR2016366",
+        "outcome": "TP",
+        "prediction": true,
+        "reference": true,
+        "referenceEvidence": "Excellent knowledge and working experience with Docker containers and Virtual Machines.",
+        "ruleIds": [
+          "virtualization-virtual-machines-v1"
+        ],
+        "score": 0.5,
+        "title": "Senior Solutions Architect, IPP"
+      },
+      "before": {
+        "company": "nvidia",
+        "descriptionHash": "62d67507aa650960f08f0d8e55c9857dc7376b2b1b187ed91d2546188a9e83d5",
+        "evidence": "",
+        "id": "nvidia:JR2016366",
+        "outcome": "FN",
+        "prediction": false,
+        "reference": true,
+        "referenceEvidence": "Excellent knowledge and working experience with Docker containers and Virtual Machines.",
+        "ruleIds": [],
+        "score": 0,
+        "title": "Senior Solutions Architect, IPP"
+      },
+      "id": "nvidia:JR2016366"
+    },
+    {
+      "after": {
+        "company": "servicenow",
+        "descriptionHash": "b4df0dfe2c2d7da022bc4c8127f9ed5e8cbc55622e9381c98f1f8748622f4e15",
+        "evidence": "Virtualized",
+        "id": "servicenow:JB0073999",
+        "outcome": "TP",
+        "prediction": true,
+        "reference": true,
+        "referenceEvidence": "Virtualized environments",
+        "ruleIds": [
+          "virtualization-virtualized-v1"
+        ],
+        "score": 0.5,
+        "title": "Sr Advisory Solution Consultant, Federal (Armis)"
+      },
+      "before": {
+        "company": "servicenow",
+        "descriptionHash": "b4df0dfe2c2d7da022bc4c8127f9ed5e8cbc55622e9381c98f1f8748622f4e15",
+        "evidence": "",
+        "id": "servicenow:JB0073999",
+        "outcome": "FN",
+        "prediction": false,
+        "reference": true,
+        "referenceEvidence": "Virtualized environments",
+        "ruleIds": [],
+        "score": 0,
+        "title": "Sr Advisory Solution Consultant, Federal (Armis)"
+      },
+      "id": "servicenow:JB0073999"
+    }
+  ],
+  "checks": {
+    "apMaintained": true,
+    "f1Gain": true,
+    "precisionFloor": true,
+    "precisionLoss": true,
+    "reviewedFamilies": true,
+    "support": true,
+    "untouchedParity": true
+  },
+  "createdUtc": "2026-09-09T14:49:31.056779+00:00",
+  "criteria": {
+    "maximumPrecisionLoss": 0.03,
+    "minimumAPGain": 0,
+    "minimumF1Gain": 0.05,
+    "minimumNegativeSupport": 10,
+    "minimumPositiveSupport": 10,
+    "minimumPrecision": 0.8
+  },
+  "decision": "ACCEPTABLE FOR RELEASE REVIEW",
+  "productionSwitch": false,
+  "regressionHash": "77be653d276cb2f9d61ffb530873f369f8ea3f01670fc5ecf30f60a6b4da311d",
+  "review": {
+    "completeCorpusReview": "All 29 changed decisions reviewed against matched text and source context; 27 additions and 2 local data/UI removals.",
+    "decision": "ACCEPT for release validation",
+    "freshValidation": "200 postings, 29 positives: P 100%, R 68.97 to 82.76, F1 81.63 to 90.57, AP 73.47 to 85.26.",
+    "historicalRegression": "Global 500 recovers all five FN and removes both FP. Curated decisions unchanged. Old holdout worsens: TP 3 to 4, FP 1 to 3, F1 75 to 72.73. Both newly marked FPs individually reviewed: Security Accreditation Lead explicitly requires VMware private-cloud familiarity; Identity Security Analyst explicitly supports VM backup configuration. These satisfy the unchanged virtual infrastructure definition despite old negative machine references. Labels remain unchanged, metric loss reported.",
+    "limitations": [
+      "AI references, not human truth",
+      "Enriched available-cache samples, not population estimates",
+      "One Harvester supporting example",
+      "Post-hoc near-duplicate sensitivity, not predeclared gate",
+      "Existing negation case does not use virtualization remains true in both baseline and candidate",
+      "Generic cloud/VPC/OpenStack and less explicit virtual-environment misses remain"
+    ],
+    "noBroadFalsePositiveFamily": true,
+    "noUnexplainedRegression": true,
+    "reason": "Repeatable fresh recall/F1/AP gains with no added fresh false positives; near-duplicate-excluded gains repeat; all 84 other concepts exactly unchanged.",
+    "remainingFalsePositive": "ServiceNow JB0074458 uses service virtualization for mock/test services. This inherited literal-match boundary is real and remains unresolved; no held-out-driven edit made.",
+    "secondValidation": "200 postings, 30 positives: P 94.74 to 96.15, R 60 to 83.33, F1 73.47 to 89.29, AP 63.02 to 84.29.",
+    "targetScope": "No taxonomy, algorithm, Job Fit, provider, Admin or framework edits."
+  },
+  "validationBaseline": {
+    "f1": 0.8163265306122449,
+    "fn": 9,
+    "fp": 0,
+    "negativeSupport": 171,
+    "precision": 1.0,
+    "recall": 0.6896551724137931,
+    "support": 29,
+    "tn": 171,
+    "tp": 20
+  },
+  "validationCandidate": {
+    "f1": 0.9056603773584906,
+    "fn": 5,
+    "fp": 0,
+    "negativeSupport": 171,
+    "precision": 1.0,
+    "recall": 0.8275862068965517,
+    "support": 29,
+    "tn": 171,
+    "tp": 24
+  }
+}

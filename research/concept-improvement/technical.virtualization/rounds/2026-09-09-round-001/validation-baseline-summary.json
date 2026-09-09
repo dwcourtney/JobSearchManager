@@ -1,0 +1,70 @@
+{
+  "conceptId": "technical.virtualization",
+  "createdUtc": "2026-09-09T14:46:02.146171+00:00",
+  "curve": {
+    "averagePrecision": 0.7346551724137932,
+    "points": [
+      {
+        "fn": 29,
+        "fp": 0,
+        "precision": 1,
+        "recall": 0,
+        "threshold": null,
+        "tn": 171,
+        "tp": 0
+      },
+      {
+        "fn": 24,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.1724137931034483,
+        "threshold": 0.75,
+        "tn": 171,
+        "tp": 5
+      },
+      {
+        "fn": 9,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.6896551724137931,
+        "threshold": 0.5,
+        "tn": 171,
+        "tp": 20
+      },
+      {
+        "fn": 0,
+        "fp": 171,
+        "precision": 0.145,
+        "recall": 1.0,
+        "threshold": 0,
+        "tn": 0,
+        "tp": 29
+      }
+    ]
+  },
+  "metrics": {
+    "f1": 0.8163265306122449,
+    "fn": 9,
+    "fp": 0,
+    "negativeSupport": 171,
+    "precision": 1.0,
+    "recall": 0.6896551724137931,
+    "support": 29,
+    "tn": 171,
+    "tp": 20
+  },
+  "postings": 200,
+  "predictionsHash": "828803a5a2cabeb7a43c43af9990fc29081d0d1e028cbe0eb84f1519ba1e9137",
+  "referenceHash": "23eacb0c4757f1d2b8efd77611cee2673f471d69550773bf731e642addee7144",
+  "resolved": 200,
+  "role": "validation",
+  "rulesHash": "c4f4c7179b7d8529bf6400a581943798614cf6e6edd0f33ed30b358450efd82a",
+  "scoreDistribution": {
+    "0": 180,
+    "0.5": 15,
+    "0.75": 5
+  },
+  "scorePolicyHash": "107e636b7eb709bb77c5c87e992f8320b0f2948321480998072d24518881d7fb",
+  "unresolved": 0,
+  "variant": "baseline"
+}

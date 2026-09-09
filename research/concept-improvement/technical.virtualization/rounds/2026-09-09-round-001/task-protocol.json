@@ -1,0 +1,21 @@
+{
+  "acceptance": "Evidence-led judgment: repeatable recall/F1/AP gains, high precision, individually inspected new FPs, exact untouched-concept parity and unchanged Job Fit logic. Historical global corpus regression only. Up to three serious candidates if enough unused support remains.",
+  "allocation": "Validation allocation only after immutable candidate seal; second sample disjoint. No held-out texts, labels or classifier predictions inspected before seal. Broad lexical strata use user-supplied terminology, including ambiguous distractors; strata are not ground truth or detector predictions.",
+  "baseline": "5428574e4a4d1ab9dd837c86ce54ddff15443ded",
+  "conceptId": "technical.virtualization",
+  "cuePattern": "virtual(?:iz|is|[ -]*(?:machines?|infrastructure|environments?|desktops?))|\\b(?:VMware|vSphere|ESXi|vCenter|Hyper-V|hypervisors?|KVM|QEMU|libvirt|Xen|Nutanix|Proxmox|VDI|VCF|AHV|NSX|Horizon|Citrix|Harvester|VMs?)\\b",
+  "discovery": {
+    "control": 75,
+    "cue": 25
+  },
+  "freshnessDefinition": "Newly labeled and unreviewed for Virtualization, excluding prior full-taxonomy AI references by ID/description. Some text appeared in AI/CI-CD-specific prior work; not claimed never seen across all tasks.",
+  "limitations": "Enriched available-cache sample; AI labels not human truth; same-model error correlation. All 83 cue-bearing fresh records support one discovery and two validation samples; any later round requires genuinely unreviewed data with adequate positives.",
+  "sensitivity": {
+    "control": 171,
+    "cue": 29
+  },
+  "validation": {
+    "control": 171,
+    "cue": 29
+  }
+}

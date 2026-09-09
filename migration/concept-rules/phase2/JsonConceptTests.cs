@@ -61,7 +61,7 @@ internal static class JsonConceptTests
     internal static async Task RunAsync()
     {
         var catalog=JobConceptCatalog.LoadDefault();var candidate=JsonConceptCandidate.Load(CandidatePath,catalog);
-        Require(candidate.Rules.Length==299 && candidate.Rules.Select(r=>r.ConceptId).Distinct().Count()==85,"Candidate inventory");
+        Require(candidate.Rules.Length==309 && candidate.Rules.Select(r=>r.ConceptId).Distinct().Count()==85,"Candidate inventory");
         Require(candidate.PipelineFingerprint!=candidate.MigrationProvenance.SqliteRuntimeFingerprint,"Separate candidate identity required");
         foreach(var item in InvalidCases())
         {
@@ -109,11 +109,11 @@ internal static class JsonConceptTests
             using var store=new SqliteSemanticRuleStore(path,catalog);if(database=="seed")store.Initialize(Path.Combine(AppContext.BaseDirectory,"LegacyJobConceptRules.json"));
             var snapshot=await store.LoadRuntimeSnapshotAsync();
             Require(snapshot.Fingerprint==candidate.MigrationProvenance.SqliteRuntimeFingerprint,"Archived runtime drift");
-            // The accepted AI update adds rules; every original rule must retain exact semantics and relative order.
-            var originalRules=candidate.Rules.Where(r=>!r.RuleId.StartsWith("ai-20260909-",StringComparison.Ordinal)).ToArray();
-            foreach(var pair in snapshot.Rules.Zip(originalRules))
+            // Accepted AI/Virtualization revisions are tested separately; archived untouched rules retain exact semantics and relative order.
+            var originalRules=candidate.Rules.Where(r=>!r.RuleId.StartsWith("ai-20260909-",StringComparison.Ordinal) && r.ConceptId!="technical.virtualization").ToArray();
+            foreach(var pair in snapshot.Rules.Where(r=>r.ConceptId!="technical.virtualization").Zip(originalRules))
                 Require(pair.First.RuleId==pair.Second.RuleId && pair.First.ConceptId==pair.Second.ConceptId && pair.First.RuleType==pair.Second.Kind && pair.First.Scope==pair.Second.Scope && pair.First.ContextGroupId==pair.Second.ContextGroupId && pair.First.Pattern==(pair.Second.Pattern??pair.Second.Selector!.Category??"remote-designation"),"Definition or order drift");
-            Require(snapshot.Rules.Count==originalRules.Length,"Rule count drift");
+            Require(snapshot.Rules.Count(r=>r.ConceptId!="technical.virtualization")==originalRules.Length,"Rule count drift");
             var sqlite=new LegacyRegexSemanticClassifier(store,catalog);await sqlite.InitializeAsync();
             var frozen=new FrozenSqliteConceptOracle(new(snapshot.Fingerprint,DateTimeOffset.UnixEpoch,definitions,[]),catalog,store.Policy);
             var fixtures=JsonSerializer.Deserialize<ConceptOracleTests.Input[]>(File.ReadAllBytes(input),Json)!;

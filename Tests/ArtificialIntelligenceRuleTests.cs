@@ -7,10 +7,10 @@ internal static class ArtificialIntelligenceRuleTests
     {
         const string target = "technical.artificial-intelligence";
         var snapshot = JsonAuthorityTests.Snapshot();
-        if (snapshot.Rules.Length != 299 || snapshot.Rules.Count(r => r.ConceptId == target) != 14)
+        if (snapshot.Rules.Length != 309 || snapshot.Rules.Count(r => r.ConceptId == target) != 14)
             throw new Exception("Expected exactly eleven added AI rules and the original three.");
         using var baseline = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "concept-oracle", "sqlite-effective-rules.json")));
-        foreach (var old in baseline.RootElement.GetProperty("rules").EnumerateArray())
+        foreach (var old in baseline.RootElement.GetProperty("rules").EnumerateArray().Where(r => r.GetProperty("conceptId").GetString() != "technical.virtualization"))
         {
             var rule = snapshot.Rules.Single(r => r.RuleId == old.GetProperty("ruleId").GetString());
             if (rule.ConceptId != old.GetProperty("conceptId").GetString() || rule.Kind != old.GetProperty("ruleType").GetString() ||
@@ -58,7 +58,7 @@ internal static class ArtificialIntelligenceRuleTests
             if (result.TimedOutRuleIds.Count != 0 || result.Concepts.Any(c => c.ConceptId == target) != expected)
                 throw new Exception("AI rule boundary failed: " + title + " / " + text);
         }
-        Console.WriteLine($"PASS AI rules: {cases.Length} positive/acronym/marketing/context/negation cases; original rules preserved.");
+        Console.WriteLine($"PASS AI rules: {cases.Length} positive/acronym/marketing/context/negation cases; original non-Virtualization rules preserved.");
         return Task.CompletedTask;
     }
 }

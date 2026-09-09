@@ -24,4 +24,5 @@
     <Compile Include="../migration/concept-rules/phase2/*.cs" Link="Migration/%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup><ProjectReference Include="../migration/legacy-sqlite/Jsm.LegacySqlite.csproj" /></ItemGroup>
+  <ItemGroup><None Include="../research/concept-improvement/technical.artificial-intelligence/rounds/2026-09-09-round-001/candidate-rules.json" Link="concept-oracle/pre-virtualization-rules.json" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
 </Project>

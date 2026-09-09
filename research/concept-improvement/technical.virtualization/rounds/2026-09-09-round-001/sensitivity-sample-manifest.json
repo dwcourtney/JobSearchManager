@@ -1,0 +1,824 @@
+{
+  "actual": 200,
+  "candidateSealHash": "6b81711cc383aa0fbfdd44907dea13aeafa277993c491b757b355a13bc139735",
+  "candidateSealedUtc": "2026-09-09T14:40:33.281080+00:00",
+  "conceptId": "technical.virtualization",
+  "controlPostings": 171,
+  "createdUtc": "2026-09-09T14:41:02.957325+00:00",
+  "cuePostings": 29,
+  "files": {
+    "full-taxonomy.json": "0d03033750c54ffc804f4175fa091a01210e9cc90fd335f836da153601fd4956",
+    "sample.json": "75e9e6a5c3faa6ef6bd5b912a96065c74f8bc278f239cb97cedff08a6d95443b",
+    "taxonomy.json": "9419592017853d941996d0a528328d73ffcb2cf440ea5238192aed7fa486cf66"
+  },
+  "freshnessDefinition": "Newly labeled and unreviewed for Virtualization, excluding prior full-taxonomy AI references by ID/description. Some text appeared in AI/CI-CD-specific prior work; not claimed never seen across all tasks.",
+  "method": "sha256-seeded-simple-random-without-replacement-v1",
+  "requested": 200,
+  "role": "sensitivity",
+  "runId": "2026-09-09-round-001",
+  "samplingDesign": "Predeclared broad lexical strata; independent SHA256 selection within each stratum.",
+  "schemaVersion": 2,
+  "seed": "virtualization-sensitivity-20260909-001",
+  "selected": [
+    {
+      "descriptionHash": "b72459c7005232fa6e29c18ffffff067472a758f39452f71aa390d029d576837",
+      "id": "boeing:JR2026519788"
+    },
+    {
+      "descriptionHash": "bc6471513cae38b1c15e94124091b449e23a136c4b26b7c7216ddd49c158c349",
+      "id": "nvidia:JR2023036"
+    },
+    {
+      "descriptionHash": "5bf17202d18692a992ccc981439074875068fae0cd5460114ed77630bd25ca83",
+      "id": "nvidia:JR2020323"
+    },
+    {
+      "descriptionHash": "c7b76f979a564ddd7d7e313f19ce48633553158343cd4362821ad5568c0c3435",
+      "id": "leidos:R-00188911"
+    },
+    {
+      "descriptionHash": "094c3c01bec5bd294dd24a9157d763d88916dd2bf27c6b2bda93e404fe6dd7f2",
+      "id": "nvidia:JR2024369"
+    },
+    {
+      "descriptionHash": "64bc5875241c608e56e0a9bc8a3e4d30a694427008b0876cfab240619195f87d",
+      "id": "leidos:R-00184457"
+    },
+    {
+      "descriptionHash": "73aff63e538b921e9af402c52ddd0b672ef7a33d12234835c4199dafdc0d88d7",
+      "id": "nvidia:JR2021239"
+    },
+    {
+      "descriptionHash": "292dace69af2e477a9bb033fe422e6c4e4c8f5a39fb1de06910d5e0c9a52e77b",
+      "id": "leidos:R-00189237"
+    },
+    {
+      "descriptionHash": "6591e73c5f2f45fd15b2d44cb4d0b172e2ae7179ea2c4fac271e2e0675eb7efb",
+      "id": "servicenow:JB0074458"
+    },
+    {
+      "descriptionHash": "9594382b5b09a03c004f364c49a2400d270944a1e0d6f66394b52d294f2897e6",
+      "id": "northrop-grumman:R10243013"
+    },
+    {
+      "descriptionHash": "66dd069ff59a1741c7eb7835916dd80af4ecef9f554e576bb75e66d5052ba38c",
+      "id": "boeing:JR2026518572"
+    },
+    {
+      "descriptionHash": "60c979eed5965667502363aca94ce3b4cc524cd2424c7e992f77baeb52f64587",
+      "id": "nvidia:JR2022999"
+    },
+    {
+      "descriptionHash": "a1fdbb95a47bcc7eb873f0730e1a876abe3b56d7eb4af874fc99ca999180f98e",
+      "id": "nvidia:JR2023153"
+    },
+    {
+      "descriptionHash": "6845248bab2b1b22e419aabd6373fc7b7ad0bc125bd083cb83e7c6e00ecb7127",
+      "id": "nvidia:JR2013418"
+    },
+    {
+      "descriptionHash": "9fab96d624e9af7ebf60b131612af6a8c393929c2a56945f75e8f552527f427a",
+      "id": "nvidia:JR1996987"
+    },
+    {
+      "descriptionHash": "7a989aea350bd965852cc37fa958731a51db39fe04b94316d829854b0854ba94",
+      "id": "nvidia:JR2023179"
+    },
+    {
+      "descriptionHash": "82786ab7d06d6c61a4f4c8e20c013396d730d143d2864d6a213cc92a15a45ef0",
+      "id": "leidos:R-00189035"
+    },
+    {
+      "descriptionHash": "d4f8d0dcb09d32ecf30530c2dbb47202850ae31801fd963863f5494f50cec5e8",
+      "id": "nvidia:JR2014785"
+    },
+    {
+      "descriptionHash": "8d7c1f1c872d60484b103a47e40437dd2980d4324b86ec0ddfa5621192c4a911",
+      "id": "leidos:R-00188299"
+    },
+    {
+      "descriptionHash": "ec2d6bff4b778f314cf9c87b432beb30a29716e350e09b6c76339c478ebc4ed8",
+      "id": "leidos:R-00187709"
+    },
+    {
+      "descriptionHash": "28bc7b2fa98da1ee2566d151596a466eaca7c7888f66f04c9047e8b5be536b07",
+      "id": "nvidia:JR2017895"
+    },
+    {
+      "descriptionHash": "e51f1d7cb82b3218daaa9e88504ba2cacf22a908fc140eb9af113ba6ffdc9bab",
+      "id": "leidos:R-00189038"
+    },
+    {
+      "descriptionHash": "cbdd6e969075101c2ce191efbb0c2fc0548291fcd1822db0e567565b41d6a510",
+      "id": "boeing:JR2026511366"
+    },
+    {
+      "descriptionHash": "f47445f658bfee8e2f85de7e31a2da79041c3322a65b8241f4719cedd522139a",
+      "id": "leidos:R-00189239"
+    },
+    {
+      "descriptionHash": "da2e3917c7acf035e60e273aa1fb426415fd61753e2093109bb7b44ea1e62fa9",
+      "id": "leidos:R-00188360"
+    },
+    {
+      "descriptionHash": "af92efc153543fcd5fe98ab9aa5d86ae9c8ff20cd0a138a5e1b01393a905ae24",
+      "id": "leidos:R-00191667"
+    },
+    {
+      "descriptionHash": "701e4838498a20507eda155fcc99f02371c5729745dcdbe380bb1f4bb66b6701",
+      "id": "nvidia:JR2023055"
+    },
+    {
+      "descriptionHash": "28126537223bec3c853e2220a4be5e72598edd520535709e4d742f2895006303",
+      "id": "nvidia:JR2021355"
+    },
+    {
+      "descriptionHash": "9cc1e58dcc91c0ba056f43cdd270e277e18d6d8851b9702a9663430bfd6769bc",
+      "id": "leidos:R-00189421"
+    },
+    {
+      "descriptionHash": "dfe1d3f8c90ad2bd49656aebc0bbd598a7333f07c6f229eefcf3f966a918cb0a",
+      "id": "leidos:R-00189731"
+    },
+    {
+      "descriptionHash": "f02f8bf480ce399ad0dc890be45a27b3067b0482fe155b0b64fcf90700a9f61d",
+      "id": "northrop-grumman:R10245964"
+    },
+    {
+      "descriptionHash": "4001ffa302a2319a8247dd55102c4d0a5aaf8e3426ab85c68e8845890f035df8",
+      "id": "leidos:R-00189062"
+    },
+    {
+      "descriptionHash": "dea283d6c7ab9fd9968510d52d8a20f0a0c1578665dd4591ca5486b0a4bc65ac",
+      "id": "servicenow:JB0074218"
+    },
+    {
+      "descriptionHash": "114475d268c3de3f3d2ad7aed42f701be04eac475f0a6ed8e259124ab3c59228",
+      "id": "servicenow:JB0073709"
+    },
+    {
+      "descriptionHash": "adc39481be7428aec20010c6968152ece4291d4cfdbd7cdf8773dd88e7428156",
+      "id": "leidos:R-00186742"
+    },
+    {
+      "descriptionHash": "b34fa762a52c1c4f708acc4fb6a55b528a8bd504cb1a4fe3c169b0d4cd8d8165",
+      "id": "parsons:R183745"
+    },
+    {
+      "descriptionHash": "932e307ce73a34b88ccdde4c6b0f97b0c84ae850799bb7a23bce15df3f33672c",
+      "id": "parsons:R180930"
+    },
+    {
+      "descriptionHash": "bf4fe71c699065f7a20f4d9909008e7e9633d8623e0419ce81aea26d3322b047",
+      "id": "servicenow:JB0073578"
+    },
+    {
+      "descriptionHash": "ffde170191d1822e86f41bf90fee6a7c2358915132178d1a9ddcd7ad091d7712",
+      "id": "parsons:R184758"
+    },
+    {
+      "descriptionHash": "e070bc296e3083bc365301f36c54e0a5d8c386cd1dc055481b199eabecdcb411",
+      "id": "aecom:J10151163"
+    },
+    {
+      "descriptionHash": "e59d529aa13f360789989cdb6373a066a0793d353fc3c052ca719b76a1ba5e3a",
+      "id": "parsons:R185731"
+    },
+    {
+      "descriptionHash": "95c5173604f23769490262bf598852e6ad1c034c11c5a64d6a7a0106bc74a4c5",
+      "id": "leidos:R-00187128"
+    },
+    {
+      "descriptionHash": "1a41d85e66266355b2c4e6fdca622ae5e3845a1c676c33311193a11050717e5d",
+      "id": "leidos:R-00188704"
+    },
+    {
+      "descriptionHash": "b28a85075a8faaadc1fe9be9887bc9e0a1eae1db45a8cb4d68a1e174bb8d5376",
+      "id": "nvidia:JR2020161"
+    },
+    {
+      "descriptionHash": "3ed8e3a999f5fa7ed07d99e758c6d0292cab29a47eabe26e3e39800fa9adec11",
+      "id": "nvidia:JR2022830"
+    },
+    {
+      "descriptionHash": "1dee62cf4572f03791050166aca7cd22bcfc7960b51e10f737cf19aa6273fc7b",
+      "id": "rtx:01867802"
+    },
+    {
+      "descriptionHash": "04afd29c93722dbac8e1cab5cbb68aaf8593d5e6649e297e7a26f4ede629af4c",
+      "id": "leidos:R-00189260"
+    },
+    {
+      "descriptionHash": "0d2250e0b83da59e3b47a8ac4c242a8fbb1b9f6cc9b0bab795e28fe936a149aa",
+      "id": "rtx:01868616"
+    },
+    {
+      "descriptionHash": "7245ceb862b5284cd6f8e1dddc89f9b0d15b9318d20503d4dc518c1be2033420",
+      "id": "nvidia:JR2008808"
+    },
+    {
+      "descriptionHash": "3463479166d648a953334d07bda84d04c5f296d93ad3282908a5b841304c0efc",
+      "id": "nvidia:JR2021006"
+    },
+    {
+      "descriptionHash": "31b2f06fcd05372e758f0f4f6259c11c402af94584a1b438630e2796915219d2",
+      "id": "parsons:R181166"
+    },
+    {
+      "descriptionHash": "978a9e6518e9c9620db9a8f6679b4a23541eb7701f70b44b020a2e8a56e44914",
+      "id": "leidos:R-00189644"
+    },
+    {
+      "descriptionHash": "b4d4ab4b44fed1acf6ff926f8187bd3e3675d57c5dcdc8cd8730c95b95ebdf4b",
+      "id": "rtx:01850099"
+    },
+    {
+      "descriptionHash": "36058cc3b0598e9151da42916a18d3c2feaf1af2b27fc23a7afbff132d541749",
+      "id": "leidos:R-00191567"
+    },
+    {
+      "descriptionHash": "acdf564af475cfd061cc01febabbead80baf8eb8fa68946afa0e88163a9ca565",
+      "id": "nvidia:JR2023181"
+    },
+    {
+      "descriptionHash": "877361924554f0ea1062f694478c806e97af6b2a72b79ca3fcf689a731a9b765",
+      "id": "parsons:R185611"
+    },
+    {
+      "descriptionHash": "cf52b857184093361eda40e4cb6fc784dbff4043ff243f0b6d3d3d3fdae94ebd",
+      "id": "aecom:J10143666"
+    },
+    {
+      "descriptionHash": "695049ee7e06e6e31b47e3a88d640f56da842886dc7e71c23d2ef5cc746f464b",
+      "id": "parsons:R176592"
+    },
+    {
+      "descriptionHash": "812ff3092a28f8a7b152ad2816754ba9c716025c499e22c6740fea9a11686165",
+      "id": "leidos:R-00190948"
+    },
+    {
+      "descriptionHash": "abb99dccb13236176d605796467a1c7b28fe51cb4335da0f778351e6763ee948",
+      "id": "boeing:JR2026501155"
+    },
+    {
+      "descriptionHash": "b82d098d17e6213c6112975c3448d1664b759be06f3aa4e23b46266d06e67472",
+      "id": "nvidia:JR2017242"
+    },
+    {
+      "descriptionHash": "1e50ce41b2f0d0b5766565b96fd13fb90346f872427eb193ac58fcf547f0779f",
+      "id": "northrop-grumman:R10231705"
+    },
+    {
+      "descriptionHash": "8c8b4bebd723f51959672bad0c2f0fa7d9ecdbaed53741e4f93414978edbdc5b",
+      "id": "aecom:REF59219S"
+    },
+    {
+      "descriptionHash": "29fb8496f8a5cee244078f0bf5b8bc53bb393ae9e6997a5baec92d65a28c0fa8",
+      "id": "northrop-grumman:R10240523"
+    },
+    {
+      "descriptionHash": "ee48a6eec34b175d8780de51fb634a88d0c4271874d8348ab9a337772288d1a2",
+      "id": "servicenow:JB0074724"
+    },
+    {
+      "descriptionHash": "f60bd81d673e4d69909382b53b457ccbc16f9b5d7370cf4ea511f820d25391aa",
+      "id": "kbr:R2128824"
+    },
+    {
+      "descriptionHash": "770f3d7fd89b30ebf5960707e1ce31701184d37e42b7b5e0417361c9388de609",
+      "id": "leidos:R-00189746"
+    },
+    {
+      "descriptionHash": "df2d33f12771362800a6c614a20bc566320895f974bc29e6127b0bd3e7028457",
+      "id": "parsons:R185828"
+    },
+    {
+      "descriptionHash": "01a355454ecc9ee7a5553d62e680e5b3fd746255114ba886fa7b64e314d5c420",
+      "id": "rtx:01867494"
+    },
+    {
+      "descriptionHash": "59ee9d5e5a5a8f19622885a96d8dd2245f3daddcd3de2c04fc9a22272a9d7c5d",
+      "id": "northrop-grumman:R10246726"
+    },
+    {
+      "descriptionHash": "575533dfb00a9d3c6f7cc98fef013c30a526c7020e34e81ec70bbe6fb145d129",
+      "id": "kbr:R2126249"
+    },
+    {
+      "descriptionHash": "8aa3b5d1a3466f350618651ac5a2108e833340728f67d111642a41eed15dda6a",
+      "id": "boeing:JR2026515241"
+    },
+    {
+      "descriptionHash": "04826e11a009f6a1683fb0e2f184cc3a2c488ceebe31e13ec526f61087efe2ee",
+      "id": "leidos:R-00189683"
+    },
+    {
+      "descriptionHash": "7928aff33a93d128093fe0a09f9a08c6a3a414ca6b39c32799fb42d2dbb3738d",
+      "id": "leidos:R-00186077"
+    },
+    {
+      "descriptionHash": "fbf8f542927398c994acbb36a4485b7c9576a59da6d7ac2c1c5b395bb0c9b953",
+      "id": "nvidia:JR2022912"
+    },
+    {
+      "descriptionHash": "f4d374c04b7a35b1c86ebae8e0b23bebeb55834fb1186fb52f1e954b4f26ea3c",
+      "id": "servicenow:JB0073814"
+    },
+    {
+      "descriptionHash": "5a49537ca17922193be047e6f0b2019457412699fe300ca854b5c16c16225f42",
+      "id": "parsons:R182057"
+    },
+    {
+      "descriptionHash": "5d84761e04c23f2f56795457459b13abbf8c2f7bde93a2b1491ac532e47a7722",
+      "id": "servicenow:JB0073969"
+    },
+    {
+      "descriptionHash": "fbf6bda3091cd68db0398a0a1515de827a17edf2038d90334decb9c47e16a684",
+      "id": "nvidia:JR2024103"
+    },
+    {
+      "descriptionHash": "36401f00c90e8979f8434a53b6cea55320e6703b8dbb2c977c6124472b2288fe",
+      "id": "leidos:R-00188370"
+    },
+    {
+      "descriptionHash": "7aa47b181173e572f385e3012165bbdcd263d2514f42aff24c50eff621fe1e4a",
+      "id": "parsons:R177639"
+    },
+    {
+      "descriptionHash": "efdfccd2d1488dcb3e16e60f32f41d7d4b7a252f6f46d06204aa971cb70447f7",
+      "id": "northrop-grumman:R10247811"
+    },
+    {
+      "descriptionHash": "a9dd9842c1f9fcb498e22724f664971b9090f221727a2c3e9812377bc96b67af",
+      "id": "nvidia:JR2021099"
+    },
+    {
+      "descriptionHash": "1d5300f57f0bf93faa7f4c1a0725ae5274e925652d5732ca18ba6048f040a841",
+      "id": "leidos:R-00191390"
+    },
+    {
+      "descriptionHash": "dd074ee58b69a81319d7bcac1da11524ea11f55434ec3323a660d834f4a932d0",
+      "id": "aecom:J10150929"
+    },
+    {
+      "descriptionHash": "6a31d997969d1220e0a95b2ac61268556eeaa52dd432929263100df79e39a9f1",
+      "id": "nvidia:JR2014705"
+    },
+    {
+      "descriptionHash": "68f34263230455ded7eb3491ec07ab640fb53bc0dcaf78f3fd3cde196a3997ed",
+      "id": "servicenow:JB0074461"
+    },
+    {
+      "descriptionHash": "e7d67258a433cfade3b1aa783f4e099a15af5ab56ed025f674425790992bebea",
+      "id": "nvidia:JR2020937"
+    },
+    {
+      "descriptionHash": "04634e947e6c54be11943a6b77036c90006a60fa61cc7cc97f1b3c764a22eb05",
+      "id": "leidos:R-00189665"
+    },
+    {
+      "descriptionHash": "9a290875793930a4b5c8f4d84e7e47782bfd251520f1584ef4d0ce249ce182e6",
+      "id": "servicenow:JB0074684"
+    },
+    {
+      "descriptionHash": "307101bc7dec330dedbb580d67dd6ab146c15ec5d07d8f2910f997e0a5d1f29c",
+      "id": "nvidia:JR2022492"
+    },
+    {
+      "descriptionHash": "fba7262c80584489cae4a2f0922ed10d8cd8603d8f8d2d1ec8c2749cccd7b4c0",
+      "id": "servicenow:JB0074298"
+    },
+    {
+      "descriptionHash": "dec1772836e511cb47624e812a63a1e9f9b838e08baed6809720476aa88e5201",
+      "id": "servicenow:JB0074244"
+    },
+    {
+      "descriptionHash": "de446ac6639a1581bbd9f49d4c0eb014619d3c6de5d36ad16b775e6d4d94de64",
+      "id": "northrop-grumman:R10244886"
+    },
+    {
+      "descriptionHash": "7187812a0a631c41d4eb286d9196d6b8f7a5fe741a3cc7ce010dc026b2fbe50d",
+      "id": "nvidia:JR2019933"
+    },
+    {
+      "descriptionHash": "6b42f0ac0eaffd4825f11af123bcd7a1b8a1fddd7b72dfbc58f622b9af9d24dd",
+      "id": "leidos:R-00172543"
+    },
+    {
+      "descriptionHash": "36f2c0c772fa435319aba103114b9c3bc03ce374e8305b3761cb0cf6bc1f920f",
+      "id": "leidos:R-00190782"
+    },
+    {
+      "descriptionHash": "af308342fb86db83560fe5f33a94ff28371e560a9e9efb6cbaab79dbef25f7fc",
+      "id": "leidos:R-00187421"
+    },
+    {
+      "descriptionHash": "c2a4f218ef8374fa08d2aa018ffc4cc0ed2ebd110788001cab8ab9262c6a7122",
+      "id": "aecom:J10155843"
+    },
+    {
+      "descriptionHash": "9073bd75424acd2ead5db8bdc43b6b8878c726c515c8a28679c483676560b3f8",
+      "id": "rtx:01866743"
+    },
+    {
+      "descriptionHash": "1f1bb7574d058b9456c02ca3cd226f42efbe03527bf1f450f9aecb4f0e0dac7a",
+      "id": "aecom:J10147451"
+    },
+    {
+      "descriptionHash": "138ca5c4aab636a2a05190bb974b56cfb94c80a31ae2ed9970d39a0f400eed1a",
+      "id": "nvidia:JR2019258"
+    },
+    {
+      "descriptionHash": "cb086c496231df251ab9988892a57d7b3955baa6512770bd00350a3e8ec31def",
+      "id": "boeing:JR2026519968"
+    },
+    {
+      "descriptionHash": "157f39c1d1d0d84a3751b260c8fb552cc8acc16d1bda15083da0234045063ad0",
+      "id": "aecom:J10146608"
+    },
+    {
+      "descriptionHash": "ef4a9779e4e78c827df2301d8d182a936b169a147308f53c8581582c72bb7df4",
+      "id": "rtx:01866857"
+    },
+    {
+      "descriptionHash": "7af31c89baab23ab8cfc2313dcddd6b5f3ecd25d90485d6bd71f601d884f634f",
+      "id": "nvidia:JR2021478"
+    },
+    {
+      "descriptionHash": "40ce3235a2e5a3259f3550f5b491b119f3b884e65883eb28d6339c547b353c5d",
+      "id": "boeing:JR2026521123"
+    },
+    {
+      "descriptionHash": "504984e774139d566ccdab6a8e04aa787fd8dcfd9f925d2ab9c117da8324c7d4",
+      "id": "leidos:R-00186747"
+    },
+    {
+      "descriptionHash": "62d77e981e24632b3a23ff7ad0e52e5828b76392d35cea3c7806ace564ebd1c0",
+      "id": "leidos:R-00188923"
+    },
+    {
+      "descriptionHash": "912e83024480cd9f6484f0c5f5d0e5dfe2897c2f9af1da08d45e758ffbda46fc",
+      "id": "leidos:R-00187261"
+    },
+    {
+      "descriptionHash": "2ac271cb20fe9b7015ccf1b94acaa09ee1c347de63308b61d2da989d62e95b52",
+      "id": "nvidia:JR1996103"
+    },
+    {
+      "descriptionHash": "ddfa503d98d47e2440b95c95b8221ebe7529581bd36886b683be736b1f25c099",
+      "id": "nvidia:JR2021002"
+    },
+    {
+      "descriptionHash": "ffa8b0570b97c8d25a3f2736444499c10c8292a25030587683c48ffbbe6f832a",
+      "id": "leidos:R-00174218"
+    },
+    {
+      "descriptionHash": "fc99278061d45f03969f1ff22c72b38d80c195c1807bedfbb2220e04889c3341",
+      "id": "boeing:JR2026521703"
+    },
+    {
+      "descriptionHash": "e8a5e2e141e77363a1b85f27603b8bb3f8183573a0bb609d6e9c072e67cde1bc",
+      "id": "rtx:01861799"
+    },
+    {
+      "descriptionHash": "7d42f402b50a5c7a0a2f40e675910000187e0abbbf6668cd896ae385200e4ad3",
+      "id": "boeing:JR2026518406"
+    },
+    {
+      "descriptionHash": "5ff14f89117c083ab4946c4d98bc19525169af2fd9ae49fcc4010bac75d8e71d",
+      "id": "nvidia:JR2023115"
+    },
+    {
+      "descriptionHash": "67c3114696ef880711b1b12cdee09c35f15096dc0464bbb712f5007756d98a7b",
+      "id": "rtx:01865186"
+    },
+    {
+      "descriptionHash": "3142ec4d1a5937eedda3a5f766750ebac74d1b7f247f919a918016027bf2609e",
+      "id": "rtx:01867267"
+    },
+    {
+      "descriptionHash": "19a2acb5035a598562099a307281ce01dbc87b9bb690513ff7d1beb93d2bf5ea",
+      "id": "leidos:R-00188591"
+    },
+    {
+      "descriptionHash": "15b5b364dc27fe31205260b99e847675d1767df399c90c594cfc7244f2937ad8",
+      "id": "leidos:R-00188798"
+    },
+    {
+      "descriptionHash": "ba0ff9d1a59423aa51ad8d32f1a096cb6daa7ea080244e8974ab9a73abc5e474",
+      "id": "leidos:R-00184306"
+    },
+    {
+      "descriptionHash": "4cfdde2da93697085855381b2102a930ebecf9a5e0c040dcd29d2c8073f42027",
+      "id": "parsons:R178527"
+    },
+    {
+      "descriptionHash": "bfb36933b1295a9693f57a04268d6a99903e42db4a6c67b7171db122251cb6ff",
+      "id": "nvidia:JR2008070"
+    },
+    {
+      "descriptionHash": "52731e462aab7a7d9e95c2e053f2da2eb7d6ae860a2ef5d7fcfe885ff8ccf9f4",
+      "id": "parsons:R185173"
+    },
+    {
+      "descriptionHash": "9da6f0fdf19b997a6106afbcbdd400209b14d07ed9a24727ee97570473df7052",
+      "id": "leidos:R-00189802"
+    },
+    {
+      "descriptionHash": "31492876356f9316e39ae46f352ccb842bfa256aab21ab78a49b3de1ab6c5f5c",
+      "id": "leidos:R-00190408"
+    },
+    {
+      "descriptionHash": "d012b3206e19e1f730a56bf488bd40bdffaf818063761c5593d3a08d1c2e3a5b",
+      "id": "rtx:01859149"
+    },
+    {
+      "descriptionHash": "0b61d99db95203cc8d69297b0a052299db58007f58665a759c68bf0971f2a339",
+      "id": "aecom:J10158002"
+    },
+    {
+      "descriptionHash": "3ebab5c6bca16b7f21753b697492f58d7809c96eef95dd04a7243c96fa6079df",
+      "id": "boeing:JR2026515431"
+    },
+    {
+      "descriptionHash": "0d92e8c373c4c090f71be7e4561b03df3ab52206d7efd8d8ddff9e1329d3a104",
+      "id": "leidos:R-00191302"
+    },
+    {
+      "descriptionHash": "ba05895176e1cd2193aae1a9ddd347694af98f6b9d4a5f714c8238f77c00b31f",
+      "id": "leidos:R-00180375"
+    },
+    {
+      "descriptionHash": "254f04f02d757f94087f7253e9e775b5f30f6243542dcd5eb954a3a4bcc46639",
+      "id": "leidos:R-00187936"
+    },
+    {
+      "descriptionHash": "a320576db1485b11a99422f1ad4d1c5586f233fa31d1a8d3c8c29144b34bb176",
+      "id": "nvidia:JR2024816"
+    },
+    {
+      "descriptionHash": "0c9f3812a129dd3329e6b23a774aab0168724982468aca9b751efbce4f6b9cb0",
+      "id": "nvidia:JR2022034"
+    },
+    {
+      "descriptionHash": "0a7c1dd692cca81f0683e3d22e6f2af9205455b82e3f28a4ee762d63b35ba717",
+      "id": "parsons:R178529"
+    },
+    {
+      "descriptionHash": "dce269d2c3f068f8daaf2641f0b7ae8d03ffa2bb0519a80bfcbdc69d16e7c248",
+      "id": "nvidia:JR2019679"
+    },
+    {
+      "descriptionHash": "c82571eec3a48c98a90ab079f77b55c37f4bac81df11d9b87aaa525906de5007",
+      "id": "nvidia:JR2021114"
+    },
+    {
+      "descriptionHash": "8e0fa10efec1a032bbcbfdc69515e44bfe139c066cdf20e273918d77237a9a27",
+      "id": "boeing:JR2026512732"
+    },
+    {
+      "descriptionHash": "07061e5660966d75d21445ad734a5afec089e8f5675cff6a12c78e96e6705803",
+      "id": "nvidia:JR2022541"
+    },
+    {
+      "descriptionHash": "545adc867f51c26a8f88e055d8520ad55dcb383fe409513cddbdd6c0e80af305",
+      "id": "nxp-semiconductors:R-10064931"
+    },
+    {
+      "descriptionHash": "5dc9fbce8139646343218c6f3df7a47edba7ab1ab30b2e32810371ee86ffb993",
+      "id": "leidos:R-00188626"
+    },
+    {
+      "descriptionHash": "1f18977d12268edbf7d6c850bc9272a04e61d3f558d79381382a91a19e6d7e53",
+      "id": "aecom:J10146609"
+    },
+    {
+      "descriptionHash": "1d076a4a6d5ee36a687a62443e4101f1b7a65e34b7b176dfb4e2537c6da95db0",
+      "id": "northrop-grumman:R10248340"
+    },
+    {
+      "descriptionHash": "42000298be96498afc19dd016ade4e8f3c140ecbdf8cb346944933073197170c",
+      "id": "leidos:R-00177551"
+    },
+    {
+      "descriptionHash": "ff6316b221bca061f9b930ef85e3fa1483fef7cbb15a08fdf5129d5a28afd8e7",
+      "id": "servicenow:JB0074763"
+    },
+    {
+      "descriptionHash": "2c92dee54c0ced3affa37e2947ef50a694502b51715b05a49d8da7bbfa154085",
+      "id": "parsons:R184086"
+    },
+    {
+      "descriptionHash": "a0b9d434658fd908209d8465313050448561afa77339d6dfdef5967e0dfaa989",
+      "id": "northrop-grumman:R10249339"
+    },
+    {
+      "descriptionHash": "1d0caaeadfc1d786d7609a606065b1f24b525caf43310440854881e1a31e3918",
+      "id": "leidos:R-00188322"
+    },
+    {
+      "descriptionHash": "e31b959a0f8dc2b9cb2f12f7f64ffeb614ef339331a2de35154cc4c47f6ddcf2",
+      "id": "rtx:01865916"
+    },
+    {
+      "descriptionHash": "0378dcaf46d8444415e05aeb61c7e5a00d355da7e9e97263611156ad9d51c5e2",
+      "id": "nvidia:JR2013736"
+    },
+    {
+      "descriptionHash": "2b1647dcf2d3e306bd0e88a11e8ceb48674881f1c4d2300373e9164feabcfef1",
+      "id": "leidos:R-00189799"
+    },
+    {
+      "descriptionHash": "41c35b720a0a34199a15e31386df328c1d58d2e4918cf65e3b65d38fdcc065e3",
+      "id": "boeing:JR2026517680"
+    },
+    {
+      "descriptionHash": "76c6d103db0ec2bb59edf27d886be991cccc7647142a9929b110943121d04b0d",
+      "id": "nvidia:JR2014877"
+    },
+    {
+      "descriptionHash": "acc1ba9ba333b50fc24130d29c910d6597dbebd1bf341d54a9c14ea5b8108dd5",
+      "id": "boeing:JR2026521824"
+    },
+    {
+      "descriptionHash": "bf781931af71be59c7bd268a3bafb0eb4e717b987fbc504926159a4a4f4b26c2",
+      "id": "leidos:R-00188678"
+    },
+    {
+      "descriptionHash": "0219496b7fb049e23c24793c63f9f78c1ef37b5601ee8c0b0f82297889b06bfc",
+      "id": "nxp-semiconductors:R-10064545"
+    },
+    {
+      "descriptionHash": "f155a1d18d5da0ad986cc7acdc946e9ea057795e03b061313dae4915c8817781",
+      "id": "leidos:R-00189742"
+    },
+    {
+      "descriptionHash": "4d5d41af7d3985a0348c4f300b078a6aeb119ef66b59ebcc84ebdd7a44eaf0ee",
+      "id": "nvidia:JR2021226"
+    },
+    {
+      "descriptionHash": "01abacd586424a4897a345a3efd5a4526339fd5a9d9163a8c6cf7bdb0749e510",
+      "id": "leidos:R-00179816"
+    },
+    {
+      "descriptionHash": "399e3ae77a4adb329fbbba29ecaa63d560540643107c04059f53d8ab341f6d8a",
+      "id": "kbr:R2127334"
+    },
+    {
+      "descriptionHash": "89ed1b7d9eb39a93fc6bda12dff0c40456f26b2bb374ece9be5c77fee6a297ba",
+      "id": "nvidia:JR2013937"
+    },
+    {
+      "descriptionHash": "a4de38c60d0d53a101cf035441f3af44f8eacd41e22fc2c6a0e8351374fdabac",
+      "id": "northrop-grumman:R10247080"
+    },
+    {
+      "descriptionHash": "912d737900313ae5020eed9fea3728ffd3dc371616a25c838c1907576afb3256",
+      "id": "rtx:01866397"
+    },
+    {
+      "descriptionHash": "94160e487e69dd324f2e0581d533b435e23152ea6674720e2d8f49425ab09bf5",
+      "id": "leidos:R-00184339"
+    },
+    {
+      "descriptionHash": "db49d01c4e70926c93e59ad0cc147ef1089d82e15a46320edf1d2d359e0bade3",
+      "id": "aecom:J10154267"
+    },
+    {
+      "descriptionHash": "8227371835cdd8f117ed524dcfe52b8c895aeb07e90ea122e395c6e6c43827db",
+      "id": "amentum:R0164919"
+    },
+    {
+      "descriptionHash": "8c05e4d55a83d5fdb0e2dbcbbca2b26a1342d56c21d5443a3244edf746775a37",
+      "id": "nvidia:JR2024468"
+    },
+    {
+      "descriptionHash": "8f362e111cfb7ac63ec9db777fb29dfdc23b32d997d15c0792d57c0ccab22be8",
+      "id": "leidos:R-00189791"
+    },
+    {
+      "descriptionHash": "0d6ff9d8f117e6f3501de0499615d89dfd46e209ec38146ed29bdd3d569032ed",
+      "id": "rtx:01868753"
+    },
+    {
+      "descriptionHash": "2f83c27ad6dac61eb7fde026db642369e41592adb2788f9609062c0cc14713e3",
+      "id": "boeing:JR2026522457"
+    },
+    {
+      "descriptionHash": "4316650f91a19757e983161e5a1fafed5606855c88e5faaf39bc189b33034700",
+      "id": "boeing:JR2026518773"
+    },
+    {
+      "descriptionHash": "7a01051f314245bc9133d897449579f5153c5b4835feec537c052c5d39ff441c",
+      "id": "leidos:R-00189598"
+    },
+    {
+      "descriptionHash": "052e144694aa9e6073412773eeb1425ae1badfae2216de1f22a77b18290f99c2",
+      "id": "servicenow:JB0074049"
+    },
+    {
+      "descriptionHash": "44e154bb90b46fd7adb576b08e379ca0d4f9d852e3317890957feb70ecdcfde1",
+      "id": "parsons:R185693"
+    },
+    {
+      "descriptionHash": "92d5a7440adb7c660da0a6a9143f11d3143d3015ed0dadcaf794f75593efb1ca",
+      "id": "leidos:R-00186968"
+    },
+    {
+      "descriptionHash": "62a5ff07757ff27d6f98540b011e0682fff1ab668e8edeb5f3d55b852d77b41f",
+      "id": "servicenow:JB0073662"
+    },
+    {
+      "descriptionHash": "d6bab8fdac848ff63592c33cba60b1c0c46ec763e03492187eaa8a8970e9fdc3",
+      "id": "leidos:R-00191376"
+    },
+    {
+      "descriptionHash": "1934dd6a3b3beba1abcba09191837b943ba151be12cb6d6b5f5367d004b94b98",
+      "id": "parsons:R181416"
+    },
+    {
+      "descriptionHash": "bf894c110be19baedbe80309d56d688e402c53d2d9acea7e564178cfdafd64b4",
+      "id": "rtx:01855535"
+    },
+    {
+      "descriptionHash": "e293d6ff6984b8376a3f145d068a928440c9d987b14359fe117ead1b145651c5",
+      "id": "boeing:JR2026516297"
+    },
+    {
+      "descriptionHash": "a5d6c3016cde955a7888f06733b38ef468c1fac4b1e4293a356052f7c7015e0d",
+      "id": "nvidia:JR2021595"
+    },
+    {
+      "descriptionHash": "be9910ddce8ce79188d83969d9b11a69c3ad54c0763ead2530dc8ea25fedfaa1",
+      "id": "parsons:R178563"
+    },
+    {
+      "descriptionHash": "d061e3141ab58a492cdfaecfef9cb7deba62fd74fd7229656beb3ebc7af1f198",
+      "id": "servicenow:JB0074118"
+    },
+    {
+      "descriptionHash": "5a84b3de2b37037bc62a4a66d2b69a43fcd585c0518df8b5cc5e5e0b396b8ded",
+      "id": "nvidia:JR2022718"
+    },
+    {
+      "descriptionHash": "b873bb60cfc898b68e9230354681099e7584a229dd23d4868979fc16c00c0dd2",
+      "id": "nvidia:JR2023339"
+    },
+    {
+      "descriptionHash": "f8d241c23f67634704be570716a25604820d6d68e56ad41ab4edb082c32c0969",
+      "id": "rtx:01865173"
+    },
+    {
+      "descriptionHash": "8b808f9a4fe2abea119b2906e974abbf84258f8a78dc965024d56d3734f03ec5",
+      "id": "servicenow:JB0074038"
+    },
+    {
+      "descriptionHash": "178ebe2ef7877526570517b6f3f6ac86879e051669995aef1d39762750eed47f",
+      "id": "leidos:R-00188778"
+    },
+    {
+      "descriptionHash": "8287e764fe304c6b3b3a54df39de1cd8de05acd54eb3201e3755df3e658605fc",
+      "id": "leidos:R-00187969"
+    },
+    {
+      "descriptionHash": "43daee174cfc58b8733030cdde5f6c6c43629b22bf1bad70e7bbaa0e0bd5e286",
+      "id": "parsons:R184997"
+    },
+    {
+      "descriptionHash": "ac767c92fbb2e3c583f15f91cb9cdb02edeec30ec4002270b237638099d8fa89",
+      "id": "boeing:JR2026512478"
+    },
+    {
+      "descriptionHash": "bdf4ac60e3097527323664ec47267f3ad047ba0ea2edde7f384bc85385592787",
+      "id": "parsons:R178002"
+    },
+    {
+      "descriptionHash": "1ef256eaa1ba2893222f4635ab1066856382267a9dddfefba249d37fa5156bcc",
+      "id": "nvidia:JR2020114"
+    },
+    {
+      "descriptionHash": "0804a547ee18e32d1ed7b74b70f2ed6dc3368252f4dbab02dd9328bedd8c7f03",
+      "id": "boeing:JR2026517988"
+    },
+    {
+      "descriptionHash": "55733736ac4a50791a68e40056cffedf7425de824dad7d08afca540450b8b272",
+      "id": "servicenow:JB0074525"
+    },
+    {
+      "descriptionHash": "5521cd0b28ae63372f507288bd850b35c869c6eb5cf91fc161ac40d7733af531",
+      "id": "rtx:01855140"
+    },
+    {
+      "descriptionHash": "c9fa5e942420377907148187da62748d2fb1ad68a256d1f1e406fe750b04ac6b",
+      "id": "nvidia:JR2016911"
+    },
+    {
+      "descriptionHash": "304850f81259d20db2e8a712f638a94f4a06202acec37ba14234a59034bfab12",
+      "id": "nvidia:JR2019884"
+    },
+    {
+      "descriptionHash": "42b27c74af7d7eeb1083f48bd2da2aca4e09a7f3993f0df3bc24955a11681ce8",
+      "id": "parsons:R184149"
+    }
+  ]
+}

@@ -1,0 +1,116 @@
+[
+  {
+    "preference": "neutral",
+    "postings": 1369,
+    "changedScores": 0,
+    "examples": []
+  },
+  {
+    "preference": "ideal",
+    "postings": 1369,
+    "changedScores": 19,
+    "examples": [
+      {
+        "id": "leidos:R-00190368",
+        "before": 5,
+        "after": 7
+      },
+      {
+        "id": "leidos:R-00190742",
+        "before": 5,
+        "after": 7
+      },
+      {
+        "id": "leidos:R-00190944",
+        "before": 5,
+        "after": 7
+      },
+      {
+        "id": "leidos:R-00190862",
+        "before": 5,
+        "after": 7
+      }
+    ]
+  },
+  {
+    "preference": "positive",
+    "postings": 1369,
+    "changedScores": 19,
+    "examples": [
+      {
+        "id": "leidos:R-00190368",
+        "before": 5,
+        "after": 6
+      },
+      {
+        "id": "leidos:R-00190742",
+        "before": 5,
+        "after": 6
+      },
+      {
+        "id": "leidos:R-00190944",
+        "before": 5,
+        "after": 6
+      },
+      {
+        "id": "leidos:R-00190862",
+        "before": 5,
+        "after": 6
+      }
+    ]
+  },
+  {
+    "preference": "negative",
+    "postings": 1369,
+    "changedScores": 19,
+    "examples": [
+      {
+        "id": "leidos:R-00190368",
+        "before": 5,
+        "after": 3
+      },
+      {
+        "id": "leidos:R-00190742",
+        "before": 5,
+        "after": 3
+      },
+      {
+        "id": "leidos:R-00190944",
+        "before": 5,
+        "after": 3
+      },
+      {
+        "id": "leidos:R-00190862",
+        "before": 5,
+        "after": 3
+      }
+    ]
+  },
+  {
+    "preference": "hardConflict",
+    "postings": 1369,
+    "changedScores": 19,
+    "examples": [
+      {
+        "id": "leidos:R-00190368",
+        "before": 5,
+        "after": 2
+      },
+      {
+        "id": "leidos:R-00190742",
+        "before": 5,
+        "after": 2
+      },
+      {
+        "id": "leidos:R-00190944",
+        "before": 5,
+        "after": 2
+      },
+      {
+        "id": "leidos:R-00190862",
+        "before": 5,
+        "after": 2
+      }
+    ]
+  }
+]

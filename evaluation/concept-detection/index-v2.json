@@ -10,6 +10,11 @@
       "file": "run-2026-09-09-ai-production-replay-v2.json",
       "runId": "2026-09-09-ai-production-replay-v2",
       "sha256": "7c8b3d187ade46ecb1c6a61d4a06c9ae7f9102c62fa0d849a23885397c953f68"
+    },
+    {
+      "file": "run-2026-09-09-virtualization-production-replay-v2.json",
+      "runId": "2026-09-09-virtualization-production-replay-v2",
+      "sha256": "ae00f92147915aa95fbc1bca3a5330e064f097e1763492f209549cf3d847a9ed"
     }
   ],
   "schemaVersion": 2

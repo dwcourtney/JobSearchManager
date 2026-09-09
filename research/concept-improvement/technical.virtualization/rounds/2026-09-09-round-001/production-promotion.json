@@ -1,0 +1,8 @@
+{
+  "candidateHash": "42a2e58303ea71159c12f8e9ab5def7517dc151ad26dda6ff8b5e7b32350cdd5",
+  "logicalJsonExactlyEqual": true,
+  "onlySerializationDiffers": "Preserve existing JSON property order; mechanically renumber canonical execution positions.",
+  "productionHash": "ea6ccfa9ac2fcf09dac2979370b1391a8b7a20433425709acf062d5eeabb9d1a",
+  "rulesetVersion": "1.0.0",
+  "versionNote": "Schema/loader pin version; exact byte and pipeline hashes identify revision."
+}

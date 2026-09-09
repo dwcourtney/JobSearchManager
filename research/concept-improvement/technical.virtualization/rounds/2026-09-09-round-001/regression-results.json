@@ -1,0 +1,2753 @@
+{
+  "conceptId": "technical.virtualization",
+  "createdUtc": "2026-09-09T14:48:00.354013+00:00",
+  "datasets": [
+    {
+      "baseline": {
+        "f1": 0.8,
+        "fn": 5,
+        "fp": 2,
+        "negativeSupport": 481,
+        "precision": 0.875,
+        "recall": 0.7368421052631579,
+        "support": 19,
+        "tn": 479,
+        "tp": 14
+      },
+      "baselineAP": 0.6613157894736843,
+      "candidate": {
+        "f1": 1.0,
+        "fn": 0,
+        "fp": 0,
+        "negativeSupport": 481,
+        "precision": 1.0,
+        "recall": 1.0,
+        "support": 19,
+        "tn": 481,
+        "tp": 19
+      },
+      "candidateAP": 1.0,
+      "changedTargetDecisions": [
+        {
+          "after": {
+            "company": "boeing",
+            "descriptionHash": "91b6e3bfa5a8971ac64b64d6e23836652d485707e44f4258dda05d7b5e161c02",
+            "evidence": "Virtual machines; VM-based environments",
+            "id": "boeing:JR2026507046",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-virtual-machines-v1",
+              "virtualization-vm-context-v1"
+            ],
+            "score": 0.75,
+            "title": "Cloud Application Deployment and Migration Specialist (Mid-Level, Senior or Lead) **Sign on Bonus Potential**"
+          },
+          "before": {
+            "company": "boeing",
+            "descriptionHash": "91b6e3bfa5a8971ac64b64d6e23836652d485707e44f4258dda05d7b5e161c02",
+            "evidence": "",
+            "id": "boeing:JR2026507046",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Cloud Application Deployment and Migration Specialist (Mid-Level, Senior or Lead) **Sign on Bonus Potential**"
+          },
+          "id": "boeing:JR2026507046"
+        },
+        {
+          "after": {
+            "company": "boeing",
+            "descriptionHash": "f3b595b1ab209a53a14ea01ccc54bf45b19f61ec8c516683bcc011021bada6ad",
+            "evidence": "setup of virtual environments",
+            "id": "boeing:JR2026513231",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-environment-setup-v1"
+            ],
+            "score": 0.5,
+            "title": "DevSecOps Software Engineer (Associate/Experienced)"
+          },
+          "before": {
+            "company": "boeing",
+            "descriptionHash": "f3b595b1ab209a53a14ea01ccc54bf45b19f61ec8c516683bcc011021bada6ad",
+            "evidence": "",
+            "id": "boeing:JR2026513231",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "DevSecOps Software Engineer (Associate/Experienced)"
+          },
+          "id": "boeing:JR2026513231"
+        },
+        {
+          "after": {
+            "company": "servicenow",
+            "descriptionHash": "b3bdde35ca28972651c6648aed294d77e04dbf5349c00b89823466895df3f332",
+            "evidence": "Virtualized",
+            "id": "servicenow:JB0074192",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-virtualized-v1"
+            ],
+            "score": 0.5,
+            "title": "Sr Advisory Solution Consultant, Federal (Armis/Veza) - Washington DC Area "
+          },
+          "before": {
+            "company": "servicenow",
+            "descriptionHash": "b3bdde35ca28972651c6648aed294d77e04dbf5349c00b89823466895df3f332",
+            "evidence": "",
+            "id": "servicenow:JB0074192",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Sr Advisory Solution Consultant, Federal (Armis/Veza) - Washington DC Area "
+          },
+          "id": "servicenow:JB0074192"
+        },
+        {
+          "after": {
+            "company": "rtx",
+            "descriptionHash": "bcc1ff66156a303abe88b9680b906c849875ee54124ebe4b6a5c32ebd0efd64d",
+            "evidence": "",
+            "id": "rtx:01858741",
+            "outcome": "TN",
+            "prediction": false,
+            "reference": false,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Data Architect, S/4HANA Transition, Remote position"
+          },
+          "before": {
+            "company": "rtx",
+            "descriptionHash": "bcc1ff66156a303abe88b9680b906c849875ee54124ebe4b6a5c32ebd0efd64d",
+            "evidence": "virtualization",
+            "id": "rtx:01858741",
+            "outcome": "FP",
+            "prediction": true,
+            "reference": false,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-1cdc541111c30c6f13500905"
+            ],
+            "score": 0.5,
+            "title": "Data Architect, S/4HANA Transition, Remote position"
+          },
+          "id": "rtx:01858741"
+        },
+        {
+          "after": {
+            "company": "rtx",
+            "descriptionHash": "767f44a78242c3e787eef5d8f0570a1d7737868a8d739626106e16de8340cdf4",
+            "evidence": "",
+            "id": "rtx:01869758",
+            "outcome": "TN",
+            "prediction": false,
+            "reference": false,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Full-Stack Web Application Developer"
+          },
+          "before": {
+            "company": "rtx",
+            "descriptionHash": "767f44a78242c3e787eef5d8f0570a1d7737868a8d739626106e16de8340cdf4",
+            "evidence": "virtualization",
+            "id": "rtx:01869758",
+            "outcome": "FP",
+            "prediction": true,
+            "reference": false,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-1cdc541111c30c6f13500905"
+            ],
+            "score": 0.5,
+            "title": "Full-Stack Web Application Developer"
+          },
+          "id": "rtx:01869758"
+        },
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "5c9b035f83310a30e0a4b0a2f56d37838a2296344ee1181ac045825f55c5b08f",
+            "evidence": "Kubernetes on-prem, preferably Harvester",
+            "id": "leidos:R-00184171",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-harvester-context-v1"
+            ],
+            "score": 0.5,
+            "title": "Kubernetes Architect"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "5c9b035f83310a30e0a4b0a2f56d37838a2296344ee1181ac045825f55c5b08f",
+            "evidence": "",
+            "id": "leidos:R-00184171",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Kubernetes Architect"
+          },
+          "id": "leidos:R-00184171"
+        },
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "67ecdc4840628be8caca570379f5f01d0eefef9723f77af6b81b1b787e9f0aed",
+            "evidence": "virtualized",
+            "id": "leidos:R-00190368",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-virtualized-v1"
+            ],
+            "score": 0.5,
+            "title": "Principal Solutions Architect"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "67ecdc4840628be8caca570379f5f01d0eefef9723f77af6b81b1b787e9f0aed",
+            "evidence": "",
+            "id": "leidos:R-00190368",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Principal Solutions Architect"
+          },
+          "id": "leidos:R-00190368"
+        }
+      ],
+      "freshValidation": false,
+      "name": "global-ai-reference-500",
+      "postings": 500,
+      "resolved": 500,
+      "role": "later-regression",
+      "sourceHashes": {
+        "baseline": "9ee26ccd9b809bbd798b8420469cb58bc625a3ad630065de74c6ed8f1d14f744",
+        "candidate": "d31fb2d2e6555f5e7aaed1bfe62b76c644f3328680edbbe46cae7168324f0e5a"
+      },
+      "unresolved": 0,
+      "untouchedConceptChanges": []
+    },
+    {
+      "baseline": {
+        "f1": 1.0,
+        "fn": 0,
+        "fp": 0,
+        "negativeSupport": 34,
+        "precision": 1.0,
+        "recall": 1.0,
+        "support": 6,
+        "tn": 34,
+        "tp": 6
+      },
+      "baselineAP": 1.0,
+      "candidate": {
+        "f1": 1.0,
+        "fn": 0,
+        "fp": 0,
+        "negativeSupport": 34,
+        "precision": 1.0,
+        "recall": 1.0,
+        "support": 6,
+        "tn": 34,
+        "tp": 6
+      },
+      "candidateAP": 1.0,
+      "changedTargetDecisions": [],
+      "freshValidation": false,
+      "name": "curated-148",
+      "postings": 148,
+      "resolved": 40,
+      "role": "later-regression",
+      "sourceHashes": {
+        "baseline": "d770a3aabae7eb350fb5b465e9f676fb8a93ddc71bd867cb5470010d2a597ccf",
+        "candidate": "67328b9daf73fe35ec8a08cfcc3015d534b875d20c83aa7a94a00d99130a1db3"
+      },
+      "unresolved": 108,
+      "untouchedConceptChanges": []
+    },
+    {
+      "baseline": {
+        "f1": 0,
+        "fn": 0,
+        "fp": 0,
+        "negativeSupport": 0,
+        "precision": 0,
+        "recall": 0,
+        "support": 0,
+        "tn": 0,
+        "tp": 0
+      },
+      "baselineAP": null,
+      "candidate": {
+        "f1": 0,
+        "fn": 0,
+        "fp": 0,
+        "negativeSupport": 0,
+        "precision": 0,
+        "recall": 0,
+        "support": 0,
+        "tn": 0,
+        "tp": 0
+      },
+      "candidateAP": null,
+      "changedTargetDecisions": [],
+      "freshValidation": false,
+      "name": "frozen-oracle-40",
+      "postings": 40,
+      "resolved": 0,
+      "role": "later-regression",
+      "sourceHashes": {
+        "baseline": "cd1eb1a66419ab120cec581dc9517b9f51c6824eb69d4f521407ca4105d52e02",
+        "candidate": "0d7448b8704b1ac62f409a21efc828feebe3ccae46045249d90d7d2bddbbad79"
+      },
+      "unresolved": 40,
+      "untouchedConceptChanges": []
+    },
+    {
+      "baseline": {
+        "f1": 0.75,
+        "fn": 1,
+        "fp": 1,
+        "negativeSupport": 196,
+        "precision": 0.75,
+        "recall": 0.75,
+        "support": 4,
+        "tn": 195,
+        "tp": 3
+      },
+      "baselineAP": 0.5675,
+      "candidate": {
+        "f1": 0.7272727272727273,
+        "fn": 0,
+        "fp": 3,
+        "negativeSupport": 196,
+        "precision": 0.5714285714285714,
+        "recall": 1.0,
+        "support": 4,
+        "tn": 193,
+        "tp": 4
+      },
+      "candidateAP": 0.5535714285714286,
+      "changedTargetDecisions": [
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "6d98248574ee1d0f2187afaa62fcffe9ae5be00b730d507b1176fc076c9872e2",
+            "evidence": "Familiarity with VMware",
+            "id": "fb68dd41359a6736002c58be03f07af60644284e2916a42ceb113132168dd6be",
+            "outcome": "FP",
+            "prediction": true,
+            "reference": false,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-vmware-context-v1"
+            ],
+            "score": 0.5,
+            "title": "Security Accreditation Lead"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "6d98248574ee1d0f2187afaa62fcffe9ae5be00b730d507b1176fc076c9872e2",
+            "evidence": "",
+            "id": "fb68dd41359a6736002c58be03f07af60644284e2916a42ceb113132168dd6be",
+            "outcome": "TN",
+            "prediction": false,
+            "reference": false,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Security Accreditation Lead"
+          },
+          "id": "fb68dd41359a6736002c58be03f07af60644284e2916a42ceb113132168dd6be"
+        },
+        {
+          "after": {
+            "company": "parsons",
+            "descriptionHash": "9d3adb49facbb7ed5831a557185a7e47b90d17072f6be9076ba78c977addfe3a",
+            "evidence": "virtual machines",
+            "id": "58f137f58abdea337d94b9cb0881707aa525cefc4a90902d591a13b38df5d4aa",
+            "outcome": "FP",
+            "prediction": true,
+            "reference": false,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-virtual-machines-v1"
+            ],
+            "score": 0.5,
+            "title": "Identity Security Analyst"
+          },
+          "before": {
+            "company": "parsons",
+            "descriptionHash": "9d3adb49facbb7ed5831a557185a7e47b90d17072f6be9076ba78c977addfe3a",
+            "evidence": "",
+            "id": "58f137f58abdea337d94b9cb0881707aa525cefc4a90902d591a13b38df5d4aa",
+            "outcome": "TN",
+            "prediction": false,
+            "reference": false,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Identity Security Analyst"
+          },
+          "id": "58f137f58abdea337d94b9cb0881707aa525cefc4a90902d591a13b38df5d4aa"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "43ed253f41f7cdfe1f5f9660448c910ad9048b4c211c797fde93957e4c446e46",
+            "evidence": "Linux host/VM",
+            "id": "00ca34bce1b5cc6b506127935d59e2e09759ba4d60860492d3ed52157ccce6eb",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-vm-context-v1"
+            ],
+            "score": 0.5,
+            "title": "Senior System Software Engineer, Defined Networking"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "43ed253f41f7cdfe1f5f9660448c910ad9048b4c211c797fde93957e4c446e46",
+            "evidence": "",
+            "id": "00ca34bce1b5cc6b506127935d59e2e09759ba4d60860492d3ed52157ccce6eb",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior System Software Engineer, Defined Networking"
+          },
+          "id": "00ca34bce1b5cc6b506127935d59e2e09759ba4d60860492d3ed52157ccce6eb"
+        }
+      ],
+      "freshValidation": false,
+      "name": "frozen-machine-holdout-200",
+      "postings": 200,
+      "resolved": 200,
+      "role": "later-regression",
+      "sourceHashes": {
+        "baseline": "1b406e34d20c4d1233ca5e01c8c3f9b900b40f31dcf64764a17d5ed179104864",
+        "candidate": "4e8be4f370303bb878afa3a01126cdc1aaacb069c88c537e7770694da84f6fc4"
+      },
+      "unresolved": 0,
+      "untouchedConceptChanges": []
+    },
+    {
+      "baseline": {
+        "f1": 0,
+        "fn": 0,
+        "fp": 0,
+        "negativeSupport": 0,
+        "precision": 0,
+        "recall": 0,
+        "support": 0,
+        "tn": 0,
+        "tp": 0
+      },
+      "baselineAP": null,
+      "candidate": {
+        "f1": 0,
+        "fn": 0,
+        "fp": 0,
+        "negativeSupport": 0,
+        "precision": 0,
+        "recall": 0,
+        "support": 0,
+        "tn": 0,
+        "tp": 0
+      },
+      "candidateAP": null,
+      "changedTargetDecisions": [
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "67ecdc4840628be8caca570379f5f01d0eefef9723f77af6b81b1b787e9f0aed",
+            "evidence": "virtualized",
+            "id": "leidos:R-00190368",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-virtualized-v1"
+            ],
+            "score": 0.5,
+            "title": "Principal Solutions Architect"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "67ecdc4840628be8caca570379f5f01d0eefef9723f77af6b81b1b787e9f0aed",
+            "evidence": "",
+            "id": "leidos:R-00190368",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Principal Solutions Architect"
+          },
+          "id": "leidos:R-00190368"
+        },
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "d1c73344b4fa065340430ffb5584deea29ec4aea9ba3d31fcd0558fbb18d91e2",
+            "evidence": "virtual machine",
+            "id": "leidos:R-00190742",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-virtual-machines-v1"
+            ],
+            "score": 0.5,
+            "title": "Sr Systems Engineer (Linux/Automation)"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "d1c73344b4fa065340430ffb5584deea29ec4aea9ba3d31fcd0558fbb18d91e2",
+            "evidence": "",
+            "id": "leidos:R-00190742",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Sr Systems Engineer (Linux/Automation)"
+          },
+          "id": "leidos:R-00190742"
+        },
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "6d98248574ee1d0f2187afaa62fcffe9ae5be00b730d507b1176fc076c9872e2",
+            "evidence": "Familiarity with VMware",
+            "id": "leidos:R-00190944",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-vmware-context-v1"
+            ],
+            "score": 0.5,
+            "title": "Security Accreditation Lead"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "6d98248574ee1d0f2187afaa62fcffe9ae5be00b730d507b1176fc076c9872e2",
+            "evidence": "",
+            "id": "leidos:R-00190944",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Security Accreditation Lead"
+          },
+          "id": "leidos:R-00190944"
+        },
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "00353aaa2fe2b9ee92daee533fc73afa723a6d2f9ee9ebbfc733bc99ffc5afe3",
+            "evidence": "experience or Masters with less than 2 years of prior relevant experience in one of these areas: Networking, VMware",
+            "id": "leidos:R-00190862",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-vmware-context-v1"
+            ],
+            "score": 0.5,
+            "title": "Deployed Field Service Representative (FSR)"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "00353aaa2fe2b9ee92daee533fc73afa723a6d2f9ee9ebbfc733bc99ffc5afe3",
+            "evidence": "",
+            "id": "leidos:R-00190862",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Deployed Field Service Representative (FSR)"
+          },
+          "id": "leidos:R-00190862"
+        },
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "9966fe7fe90b5dda099d5a4d5165fa03e605b7b78c3a77b8b2d37c60a960e37b",
+            "evidence": "experience or Masters with less than 2 years of prior relevant experience in one of these areas: Networking, VMware",
+            "id": "leidos:R-00191562",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-vmware-context-v1"
+            ],
+            "score": 0.5,
+            "title": "Deployed Field Service Representative (FSR)"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "9966fe7fe90b5dda099d5a4d5165fa03e605b7b78c3a77b8b2d37c60a960e37b",
+            "evidence": "",
+            "id": "leidos:R-00191562",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Deployed Field Service Representative (FSR)"
+          },
+          "id": "leidos:R-00191562"
+        },
+        {
+          "after": {
+            "company": "boeing",
+            "descriptionHash": "91b6e3bfa5a8971ac64b64d6e23836652d485707e44f4258dda05d7b5e161c02",
+            "evidence": "Virtual machines; VM-based environments",
+            "id": "boeing:JR2026507046",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-virtual-machines-v1",
+              "virtualization-vm-context-v1"
+            ],
+            "score": 0.75,
+            "title": "Cloud Application Deployment and Migration Specialist (Mid-Level, Senior or Lead) **Sign on Bonus Potential**"
+          },
+          "before": {
+            "company": "boeing",
+            "descriptionHash": "91b6e3bfa5a8971ac64b64d6e23836652d485707e44f4258dda05d7b5e161c02",
+            "evidence": "",
+            "id": "boeing:JR2026507046",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Cloud Application Deployment and Migration Specialist (Mid-Level, Senior or Lead) **Sign on Bonus Potential**"
+          },
+          "id": "boeing:JR2026507046"
+        },
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "5c9b035f83310a30e0a4b0a2f56d37838a2296344ee1181ac045825f55c5b08f",
+            "evidence": "Kubernetes on-prem, preferably Harvester",
+            "id": "leidos:R-00184171",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-harvester-context-v1"
+            ],
+            "score": 0.5,
+            "title": "Kubernetes Architect"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "5c9b035f83310a30e0a4b0a2f56d37838a2296344ee1181ac045825f55c5b08f",
+            "evidence": "",
+            "id": "leidos:R-00184171",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Kubernetes Architect"
+          },
+          "id": "leidos:R-00184171"
+        },
+        {
+          "after": {
+            "company": "boeing",
+            "descriptionHash": "f3b595b1ab209a53a14ea01ccc54bf45b19f61ec8c516683bcc011021bada6ad",
+            "evidence": "setup of virtual environments",
+            "id": "boeing:JR2026513231",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-environment-setup-v1"
+            ],
+            "score": 0.5,
+            "title": "DevSecOps Software Engineer (Associate/Experienced)"
+          },
+          "before": {
+            "company": "boeing",
+            "descriptionHash": "f3b595b1ab209a53a14ea01ccc54bf45b19f61ec8c516683bcc011021bada6ad",
+            "evidence": "",
+            "id": "boeing:JR2026513231",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "DevSecOps Software Engineer (Associate/Experienced)"
+          },
+          "id": "boeing:JR2026513231"
+        },
+        {
+          "after": {
+            "company": "boeing",
+            "descriptionHash": "cbdd6e969075101c2ce191efbb0c2fc0548291fcd1822db0e567565b41d6a510",
+            "evidence": "setup of virtual environments",
+            "id": "boeing:JR2026511366",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-environment-setup-v1"
+            ],
+            "score": 0.5,
+            "title": "DevSecOps Software Engineer, Phantom Works (Associate or Experienced)"
+          },
+          "before": {
+            "company": "boeing",
+            "descriptionHash": "cbdd6e969075101c2ce191efbb0c2fc0548291fcd1822db0e567565b41d6a510",
+            "evidence": "",
+            "id": "boeing:JR2026511366",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "DevSecOps Software Engineer, Phantom Works (Associate or Experienced)"
+          },
+          "id": "boeing:JR2026511366"
+        },
+        {
+          "after": {
+            "company": "servicenow",
+            "descriptionHash": "b2127faca2f744548010f828e1d990ae182298428554f0e34d314cd07edbd054",
+            "evidence": "Virtualized",
+            "id": "servicenow:JB0074554",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-virtualized-v1"
+            ],
+            "score": 0.5,
+            "title": "Advisory Solution Consultant, SLED Southwest (Armis)"
+          },
+          "before": {
+            "company": "servicenow",
+            "descriptionHash": "b2127faca2f744548010f828e1d990ae182298428554f0e34d314cd07edbd054",
+            "evidence": "",
+            "id": "servicenow:JB0074554",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Advisory Solution Consultant, SLED Southwest (Armis)"
+          },
+          "id": "servicenow:JB0074554"
+        },
+        {
+          "after": {
+            "company": "servicenow",
+            "descriptionHash": "b3bdde35ca28972651c6648aed294d77e04dbf5349c00b89823466895df3f332",
+            "evidence": "Virtualized",
+            "id": "servicenow:JB0074192",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-virtualized-v1"
+            ],
+            "score": 0.5,
+            "title": "Sr Advisory Solution Consultant, Federal (Armis/Veza) - Washington DC Area "
+          },
+          "before": {
+            "company": "servicenow",
+            "descriptionHash": "b3bdde35ca28972651c6648aed294d77e04dbf5349c00b89823466895df3f332",
+            "evidence": "",
+            "id": "servicenow:JB0074192",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Sr Advisory Solution Consultant, Federal (Armis/Veza) - Washington DC Area "
+          },
+          "id": "servicenow:JB0074192"
+        },
+        {
+          "after": {
+            "company": "servicenow",
+            "descriptionHash": "b4df0dfe2c2d7da022bc4c8127f9ed5e8cbc55622e9381c98f1f8748622f4e15",
+            "evidence": "Virtualized",
+            "id": "servicenow:JB0073999",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-virtualized-v1"
+            ],
+            "score": 0.5,
+            "title": "Sr Advisory Solution Consultant, Federal (Armis)"
+          },
+          "before": {
+            "company": "servicenow",
+            "descriptionHash": "b4df0dfe2c2d7da022bc4c8127f9ed5e8cbc55622e9381c98f1f8748622f4e15",
+            "evidence": "",
+            "id": "servicenow:JB0073999",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Sr Advisory Solution Consultant, Federal (Armis)"
+          },
+          "id": "servicenow:JB0073999"
+        },
+        {
+          "after": {
+            "company": "amentum",
+            "descriptionHash": "3c92689feadf4927589d2d51575f9721f2a8d5b2181971a4f4b3e8b46d527d27",
+            "evidence": "Virtual Machines",
+            "id": "amentum:R0164523",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-virtual-machines-v1"
+            ],
+            "score": 0.5,
+            "title": "Application Integration Technical Lead"
+          },
+          "before": {
+            "company": "amentum",
+            "descriptionHash": "3c92689feadf4927589d2d51575f9721f2a8d5b2181971a4f4b3e8b46d527d27",
+            "evidence": "",
+            "id": "amentum:R0164523",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Application Integration Technical Lead"
+          },
+          "id": "amentum:R0164523"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "43ed253f41f7cdfe1f5f9660448c910ad9048b4c211c797fde93957e4c446e46",
+            "evidence": "Linux host/VM",
+            "id": "nvidia:JR2023005",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-vm-context-v1"
+            ],
+            "score": 0.5,
+            "title": "Senior System Software Engineer, Defined Networking"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "43ed253f41f7cdfe1f5f9660448c910ad9048b4c211c797fde93957e4c446e46",
+            "evidence": "",
+            "id": "nvidia:JR2023005",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior System Software Engineer, Defined Networking"
+          },
+          "id": "nvidia:JR2023005"
+        },
+        {
+          "after": {
+            "company": "rtx",
+            "descriptionHash": "767f44a78242c3e787eef5d8f0570a1d7737868a8d739626106e16de8340cdf4",
+            "evidence": "",
+            "id": "rtx:01869758",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Full-Stack Web Application Developer"
+          },
+          "before": {
+            "company": "rtx",
+            "descriptionHash": "767f44a78242c3e787eef5d8f0570a1d7737868a8d739626106e16de8340cdf4",
+            "evidence": "virtualization",
+            "id": "rtx:01869758",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-1cdc541111c30c6f13500905"
+            ],
+            "score": 0.5,
+            "title": "Full-Stack Web Application Developer"
+          },
+          "id": "rtx:01869758"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "28bc7b2fa98da1ee2566d151596a466eaca7c7888f66f04c9047e8b5be536b07",
+            "evidence": "virtualized",
+            "id": "nvidia:JR2017895",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-virtualized-v1"
+            ],
+            "score": 0.5,
+            "title": "Senior Solutions Architect, AI Hyperscalers"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "28bc7b2fa98da1ee2566d151596a466eaca7c7888f66f04c9047e8b5be536b07",
+            "evidence": "",
+            "id": "nvidia:JR2017895",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior Solutions Architect, AI Hyperscalers"
+          },
+          "id": "nvidia:JR2017895"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "62d67507aa650960f08f0d8e55c9857dc7376b2b1b187ed91d2546188a9e83d5",
+            "evidence": "Virtual Machines",
+            "id": "nvidia:JR2016366",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-virtual-machines-v1"
+            ],
+            "score": 0.5,
+            "title": "Senior Solutions Architect, IPP"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "62d67507aa650960f08f0d8e55c9857dc7376b2b1b187ed91d2546188a9e83d5",
+            "evidence": "",
+            "id": "nvidia:JR2016366",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior Solutions Architect, IPP"
+          },
+          "id": "nvidia:JR2016366"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "701e4838498a20507eda155fcc99f02371c5729745dcdbe380bb1f4bb66b6701",
+            "evidence": "hypervisor",
+            "id": "nvidia:JR2023055",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-hypervisors-v1"
+            ],
+            "score": 0.5,
+            "title": "Senior MLOps Engineer - DSX Enablement"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "701e4838498a20507eda155fcc99f02371c5729745dcdbe380bb1f4bb66b6701",
+            "evidence": "",
+            "id": "nvidia:JR2023055",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior MLOps Engineer - DSX Enablement"
+          },
+          "id": "nvidia:JR2023055"
+        },
+        {
+          "after": {
+            "company": "rtx",
+            "descriptionHash": "bcc1ff66156a303abe88b9680b906c849875ee54124ebe4b6a5c32ebd0efd64d",
+            "evidence": "",
+            "id": "rtx:01858741",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Data Architect, S/4HANA Transition, Remote position"
+          },
+          "before": {
+            "company": "rtx",
+            "descriptionHash": "bcc1ff66156a303abe88b9680b906c849875ee54124ebe4b6a5c32ebd0efd64d",
+            "evidence": "virtualization",
+            "id": "rtx:01858741",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-1cdc541111c30c6f13500905"
+            ],
+            "score": 0.5,
+            "title": "Data Architect, S/4HANA Transition, Remote position"
+          },
+          "id": "rtx:01858741"
+        }
+      ],
+      "freshValidation": false,
+      "name": "current-cache",
+      "postings": 1369,
+      "resolved": 0,
+      "role": "later-regression",
+      "sourceHashes": {
+        "baseline": "a88c6152c3d6556b17f2c57475b3edb801c478894254695fe3e3b5be599da5d8",
+        "candidate": "9d17eb7a85fcafc28ddc19cfdbeac83e645a9d58c2c6343ee0a46bd86dc7af74"
+      },
+      "unresolved": 1369,
+      "untouchedConceptChanges": []
+    },
+    {
+      "baseline": {
+        "f1": 0,
+        "fn": 0,
+        "fp": 0,
+        "negativeSupport": 0,
+        "precision": 0,
+        "recall": 0,
+        "support": 0,
+        "tn": 0,
+        "tp": 0
+      },
+      "baselineAP": null,
+      "candidate": {
+        "f1": 0,
+        "fn": 0,
+        "fp": 0,
+        "negativeSupport": 0,
+        "precision": 0,
+        "recall": 0,
+        "support": 0,
+        "tn": 0,
+        "tp": 0
+      },
+      "candidateAP": null,
+      "changedTargetDecisions": [
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "67ecdc4840628be8caca570379f5f01d0eefef9723f77af6b81b1b787e9f0aed",
+            "evidence": "virtualized",
+            "id": "leidos:R-00190368",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-virtualized-v1"
+            ],
+            "score": 0.5,
+            "title": "Principal Solutions Architect"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "67ecdc4840628be8caca570379f5f01d0eefef9723f77af6b81b1b787e9f0aed",
+            "evidence": "",
+            "id": "leidos:R-00190368",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Principal Solutions Architect"
+          },
+          "id": "leidos:R-00190368"
+        },
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "d1c73344b4fa065340430ffb5584deea29ec4aea9ba3d31fcd0558fbb18d91e2",
+            "evidence": "virtual machine",
+            "id": "leidos:R-00190742",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-virtual-machines-v1"
+            ],
+            "score": 0.5,
+            "title": "Sr Systems Engineer (Linux/Automation)"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "d1c73344b4fa065340430ffb5584deea29ec4aea9ba3d31fcd0558fbb18d91e2",
+            "evidence": "",
+            "id": "leidos:R-00190742",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Sr Systems Engineer (Linux/Automation)"
+          },
+          "id": "leidos:R-00190742"
+        },
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "6d98248574ee1d0f2187afaa62fcffe9ae5be00b730d507b1176fc076c9872e2",
+            "evidence": "Familiarity with VMware",
+            "id": "leidos:R-00190944",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-vmware-context-v1"
+            ],
+            "score": 0.5,
+            "title": "Security Accreditation Lead"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "6d98248574ee1d0f2187afaa62fcffe9ae5be00b730d507b1176fc076c9872e2",
+            "evidence": "",
+            "id": "leidos:R-00190944",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Security Accreditation Lead"
+          },
+          "id": "leidos:R-00190944"
+        },
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "00353aaa2fe2b9ee92daee533fc73afa723a6d2f9ee9ebbfc733bc99ffc5afe3",
+            "evidence": "experience or Masters with less than 2 years of prior relevant experience in one of these areas: Networking, VMware",
+            "id": "leidos:R-00190862",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-vmware-context-v1"
+            ],
+            "score": 0.5,
+            "title": "Deployed Field Service Representative (FSR)"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "00353aaa2fe2b9ee92daee533fc73afa723a6d2f9ee9ebbfc733bc99ffc5afe3",
+            "evidence": "",
+            "id": "leidos:R-00190862",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Deployed Field Service Representative (FSR)"
+          },
+          "id": "leidos:R-00190862"
+        },
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "9966fe7fe90b5dda099d5a4d5165fa03e605b7b78c3a77b8b2d37c60a960e37b",
+            "evidence": "experience or Masters with less than 2 years of prior relevant experience in one of these areas: Networking, VMware",
+            "id": "leidos:R-00191562",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-vmware-context-v1"
+            ],
+            "score": 0.5,
+            "title": "Deployed Field Service Representative (FSR)"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "9966fe7fe90b5dda099d5a4d5165fa03e605b7b78c3a77b8b2d37c60a960e37b",
+            "evidence": "",
+            "id": "leidos:R-00191562",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Deployed Field Service Representative (FSR)"
+          },
+          "id": "leidos:R-00191562"
+        },
+        {
+          "after": {
+            "company": "boeing",
+            "descriptionHash": "91b6e3bfa5a8971ac64b64d6e23836652d485707e44f4258dda05d7b5e161c02",
+            "evidence": "Virtual machines; VM-based environments",
+            "id": "boeing:JR2026507046",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-virtual-machines-v1",
+              "virtualization-vm-context-v1"
+            ],
+            "score": 0.75,
+            "title": "Cloud Application Deployment and Migration Specialist (Mid-Level, Senior or Lead) **Sign on Bonus Potential**"
+          },
+          "before": {
+            "company": "boeing",
+            "descriptionHash": "91b6e3bfa5a8971ac64b64d6e23836652d485707e44f4258dda05d7b5e161c02",
+            "evidence": "",
+            "id": "boeing:JR2026507046",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Cloud Application Deployment and Migration Specialist (Mid-Level, Senior or Lead) **Sign on Bonus Potential**"
+          },
+          "id": "boeing:JR2026507046"
+        },
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "5c9b035f83310a30e0a4b0a2f56d37838a2296344ee1181ac045825f55c5b08f",
+            "evidence": "Kubernetes on-prem, preferably Harvester",
+            "id": "leidos:R-00184171",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-harvester-context-v1"
+            ],
+            "score": 0.5,
+            "title": "Kubernetes Architect"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "5c9b035f83310a30e0a4b0a2f56d37838a2296344ee1181ac045825f55c5b08f",
+            "evidence": "",
+            "id": "leidos:R-00184171",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Kubernetes Architect"
+          },
+          "id": "leidos:R-00184171"
+        },
+        {
+          "after": {
+            "company": "boeing",
+            "descriptionHash": "f3b595b1ab209a53a14ea01ccc54bf45b19f61ec8c516683bcc011021bada6ad",
+            "evidence": "setup of virtual environments",
+            "id": "boeing:JR2026513231",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-environment-setup-v1"
+            ],
+            "score": 0.5,
+            "title": "DevSecOps Software Engineer (Associate/Experienced)"
+          },
+          "before": {
+            "company": "boeing",
+            "descriptionHash": "f3b595b1ab209a53a14ea01ccc54bf45b19f61ec8c516683bcc011021bada6ad",
+            "evidence": "",
+            "id": "boeing:JR2026513231",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "DevSecOps Software Engineer (Associate/Experienced)"
+          },
+          "id": "boeing:JR2026513231"
+        },
+        {
+          "after": {
+            "company": "boeing",
+            "descriptionHash": "cbdd6e969075101c2ce191efbb0c2fc0548291fcd1822db0e567565b41d6a510",
+            "evidence": "setup of virtual environments",
+            "id": "boeing:JR2026511366",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-environment-setup-v1"
+            ],
+            "score": 0.5,
+            "title": "DevSecOps Software Engineer, Phantom Works (Associate or Experienced)"
+          },
+          "before": {
+            "company": "boeing",
+            "descriptionHash": "cbdd6e969075101c2ce191efbb0c2fc0548291fcd1822db0e567565b41d6a510",
+            "evidence": "",
+            "id": "boeing:JR2026511366",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "DevSecOps Software Engineer, Phantom Works (Associate or Experienced)"
+          },
+          "id": "boeing:JR2026511366"
+        },
+        {
+          "after": {
+            "company": "servicenow",
+            "descriptionHash": "b2127faca2f744548010f828e1d990ae182298428554f0e34d314cd07edbd054",
+            "evidence": "Virtualized",
+            "id": "servicenow:JB0074554",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-virtualized-v1"
+            ],
+            "score": 0.5,
+            "title": "Advisory Solution Consultant, SLED Southwest (Armis)"
+          },
+          "before": {
+            "company": "servicenow",
+            "descriptionHash": "b2127faca2f744548010f828e1d990ae182298428554f0e34d314cd07edbd054",
+            "evidence": "",
+            "id": "servicenow:JB0074554",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Advisory Solution Consultant, SLED Southwest (Armis)"
+          },
+          "id": "servicenow:JB0074554"
+        },
+        {
+          "after": {
+            "company": "servicenow",
+            "descriptionHash": "b3bdde35ca28972651c6648aed294d77e04dbf5349c00b89823466895df3f332",
+            "evidence": "Virtualized",
+            "id": "servicenow:JB0074192",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-virtualized-v1"
+            ],
+            "score": 0.5,
+            "title": "Sr Advisory Solution Consultant, Federal (Armis/Veza) - Washington DC Area "
+          },
+          "before": {
+            "company": "servicenow",
+            "descriptionHash": "b3bdde35ca28972651c6648aed294d77e04dbf5349c00b89823466895df3f332",
+            "evidence": "",
+            "id": "servicenow:JB0074192",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Sr Advisory Solution Consultant, Federal (Armis/Veza) - Washington DC Area "
+          },
+          "id": "servicenow:JB0074192"
+        },
+        {
+          "after": {
+            "company": "servicenow",
+            "descriptionHash": "b4df0dfe2c2d7da022bc4c8127f9ed5e8cbc55622e9381c98f1f8748622f4e15",
+            "evidence": "Virtualized",
+            "id": "servicenow:JB0073999",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-virtualized-v1"
+            ],
+            "score": 0.5,
+            "title": "Sr Advisory Solution Consultant, Federal (Armis)"
+          },
+          "before": {
+            "company": "servicenow",
+            "descriptionHash": "b4df0dfe2c2d7da022bc4c8127f9ed5e8cbc55622e9381c98f1f8748622f4e15",
+            "evidence": "",
+            "id": "servicenow:JB0073999",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Sr Advisory Solution Consultant, Federal (Armis)"
+          },
+          "id": "servicenow:JB0073999"
+        },
+        {
+          "after": {
+            "company": "amentum",
+            "descriptionHash": "3c92689feadf4927589d2d51575f9721f2a8d5b2181971a4f4b3e8b46d527d27",
+            "evidence": "Virtual Machines",
+            "id": "amentum:R0164523",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-virtual-machines-v1"
+            ],
+            "score": 0.5,
+            "title": "Application Integration Technical Lead"
+          },
+          "before": {
+            "company": "amentum",
+            "descriptionHash": "3c92689feadf4927589d2d51575f9721f2a8d5b2181971a4f4b3e8b46d527d27",
+            "evidence": "",
+            "id": "amentum:R0164523",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Application Integration Technical Lead"
+          },
+          "id": "amentum:R0164523"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "43ed253f41f7cdfe1f5f9660448c910ad9048b4c211c797fde93957e4c446e46",
+            "evidence": "Linux host/VM",
+            "id": "nvidia:JR2023005",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-vm-context-v1"
+            ],
+            "score": 0.5,
+            "title": "Senior System Software Engineer, Defined Networking"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "43ed253f41f7cdfe1f5f9660448c910ad9048b4c211c797fde93957e4c446e46",
+            "evidence": "",
+            "id": "nvidia:JR2023005",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior System Software Engineer, Defined Networking"
+          },
+          "id": "nvidia:JR2023005"
+        },
+        {
+          "after": {
+            "company": "rtx",
+            "descriptionHash": "767f44a78242c3e787eef5d8f0570a1d7737868a8d739626106e16de8340cdf4",
+            "evidence": "",
+            "id": "rtx:01869758",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Full-Stack Web Application Developer"
+          },
+          "before": {
+            "company": "rtx",
+            "descriptionHash": "767f44a78242c3e787eef5d8f0570a1d7737868a8d739626106e16de8340cdf4",
+            "evidence": "virtualization",
+            "id": "rtx:01869758",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-1cdc541111c30c6f13500905"
+            ],
+            "score": 0.5,
+            "title": "Full-Stack Web Application Developer"
+          },
+          "id": "rtx:01869758"
+        },
+        {
+          "after": {
+            "company": "parsons",
+            "descriptionHash": "9d3adb49facbb7ed5831a557185a7e47b90d17072f6be9076ba78c977addfe3a",
+            "evidence": "virtual machines",
+            "id": "parsons:R184584",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-virtual-machines-v1"
+            ],
+            "score": 0.5,
+            "title": "Identity Security Analyst"
+          },
+          "before": {
+            "company": "parsons",
+            "descriptionHash": "9d3adb49facbb7ed5831a557185a7e47b90d17072f6be9076ba78c977addfe3a",
+            "evidence": "",
+            "id": "parsons:R184584",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Identity Security Analyst"
+          },
+          "id": "parsons:R184584"
+        },
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "04d3e39f9f92dfdefc90a0983449025d5f6e638617666027ae8cfe615ce459a8",
+            "evidence": "virtualized",
+            "id": "leidos:R-00189463",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-virtualized-v1"
+            ],
+            "score": 0.5,
+            "title": "Senior Network Solutions Architect"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "04d3e39f9f92dfdefc90a0983449025d5f6e638617666027ae8cfe615ce459a8",
+            "evidence": "",
+            "id": "leidos:R-00189463",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior Network Solutions Architect"
+          },
+          "id": "leidos:R-00189463"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "28bc7b2fa98da1ee2566d151596a466eaca7c7888f66f04c9047e8b5be536b07",
+            "evidence": "virtualized",
+            "id": "nvidia:JR2017895",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-virtualized-v1"
+            ],
+            "score": 0.5,
+            "title": "Senior Solutions Architect, AI Hyperscalers"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "28bc7b2fa98da1ee2566d151596a466eaca7c7888f66f04c9047e8b5be536b07",
+            "evidence": "",
+            "id": "nvidia:JR2017895",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior Solutions Architect, AI Hyperscalers"
+          },
+          "id": "nvidia:JR2017895"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "62d67507aa650960f08f0d8e55c9857dc7376b2b1b187ed91d2546188a9e83d5",
+            "evidence": "Virtual Machines",
+            "id": "nvidia:JR2016366",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-virtual-machines-v1"
+            ],
+            "score": 0.5,
+            "title": "Senior Solutions Architect, IPP"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "62d67507aa650960f08f0d8e55c9857dc7376b2b1b187ed91d2546188a9e83d5",
+            "evidence": "",
+            "id": "nvidia:JR2016366",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior Solutions Architect, IPP"
+          },
+          "id": "nvidia:JR2016366"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "701e4838498a20507eda155fcc99f02371c5729745dcdbe380bb1f4bb66b6701",
+            "evidence": "hypervisor",
+            "id": "nvidia:JR2023055",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-hypervisors-v1"
+            ],
+            "score": 0.5,
+            "title": "Senior MLOps Engineer - DSX Enablement"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "701e4838498a20507eda155fcc99f02371c5729745dcdbe380bb1f4bb66b6701",
+            "evidence": "",
+            "id": "nvidia:JR2023055",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior MLOps Engineer - DSX Enablement"
+          },
+          "id": "nvidia:JR2023055"
+        },
+        {
+          "after": {
+            "company": "rtx",
+            "descriptionHash": "bcc1ff66156a303abe88b9680b906c849875ee54124ebe4b6a5c32ebd0efd64d",
+            "evidence": "",
+            "id": "rtx:01858741",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Data Architect, S/4HANA Transition, Remote position"
+          },
+          "before": {
+            "company": "rtx",
+            "descriptionHash": "bcc1ff66156a303abe88b9680b906c849875ee54124ebe4b6a5c32ebd0efd64d",
+            "evidence": "virtualization",
+            "id": "rtx:01858741",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-1cdc541111c30c6f13500905"
+            ],
+            "score": 0.5,
+            "title": "Data Architect, S/4HANA Transition, Remote position"
+          },
+          "id": "rtx:01858741"
+        },
+        {
+          "after": {
+            "company": "northrop-grumman",
+            "descriptionHash": "9594382b5b09a03c004f364c49a2400d270944a1e0d6f66394b52d294f2897e6",
+            "evidence": "experience and/or certification Knowledge of Windows management Knowledge of Windows LDAP, VMWare",
+            "id": "northrop-grumman:R10243013",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-vmware-context-v1"
+            ],
+            "score": 0.5,
+            "title": "Principal  Solumina MES Systems Software Analyst"
+          },
+          "before": {
+            "company": "northrop-grumman",
+            "descriptionHash": "9594382b5b09a03c004f364c49a2400d270944a1e0d6f66394b52d294f2897e6",
+            "evidence": "",
+            "id": "northrop-grumman:R10243013",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Principal  Solumina MES Systems Software Analyst"
+          },
+          "id": "northrop-grumman:R10243013"
+        },
+        {
+          "after": {
+            "company": "parsons",
+            "descriptionHash": "2abefc26d8660a97222b5d957eb2378dcb327c608cd24507f07be0dfb2c174ec",
+            "evidence": "Azure: Defender for Cloud, WAF, Key Vault / App Service Certificates, Monitor, Activity Log, ACI, AKS, VNet, Cosmos DB, VMs",
+            "id": "parsons:R180251",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-vm-context-v1"
+            ],
+            "score": 0.5,
+            "title": "Cloud Solutions Engineer"
+          },
+          "before": {
+            "company": "parsons",
+            "descriptionHash": "2abefc26d8660a97222b5d957eb2378dcb327c608cd24507f07be0dfb2c174ec",
+            "evidence": "",
+            "id": "parsons:R180251",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Cloud Solutions Engineer"
+          },
+          "id": "parsons:R180251"
+        },
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "614dd50bfb92c8cb45b83e3b9c760061e9b2b59884186c44c32f047b0a9f941e",
+            "evidence": "Virtual machine lifecycle management (VMware and KVM; Virtual machine; management (VMware",
+            "id": "leidos:R-00189680",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-kvm-context-v1",
+              "virtualization-virtual-machines-v1",
+              "virtualization-vmware-context-v1"
+            ],
+            "score": 0.875,
+            "title": "Software Developer"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "614dd50bfb92c8cb45b83e3b9c760061e9b2b59884186c44c32f047b0a9f941e",
+            "evidence": "",
+            "id": "leidos:R-00189680",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Software Developer"
+          },
+          "id": "leidos:R-00189680"
+        },
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "64bc5875241c608e56e0a9bc8a3e4d30a694427008b0876cfab240619195f87d",
+            "evidence": "Virtualized",
+            "id": "leidos:R-00184457",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-virtualized-v1"
+            ],
+            "score": 0.5,
+            "title": "Linux System Administrator"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "64bc5875241c608e56e0a9bc8a3e4d30a694427008b0876cfab240619195f87d",
+            "evidence": "",
+            "id": "leidos:R-00184457",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Linux System Administrator"
+          },
+          "id": "leidos:R-00184457"
+        },
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "ec2d6bff4b778f314cf9c87b432beb30a29716e350e09b6c76339c478ebc4ed8",
+            "evidence": "technologies: Windows Server 2003/2007/2012 , VMware",
+            "id": "leidos:R-00187709",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-vmware-context-v1"
+            ],
+            "score": 0.5,
+            "title": "Systems Engineer"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "ec2d6bff4b778f314cf9c87b432beb30a29716e350e09b6c76339c478ebc4ed8",
+            "evidence": "",
+            "id": "leidos:R-00187709",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Systems Engineer"
+          },
+          "id": "leidos:R-00187709"
+        },
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "9448e98dd1313f13c3978aa73e573f268711ba78445f0e1a90fe96aad74eeb38",
+            "evidence": "vCenter; Experience aggregating and correlating telemetry from diverse tools, specifically SolarWinds, ServiceNow, and VMware",
+            "id": "leidos:R-00188314",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-platforms-v1",
+              "virtualization-vmware-context-v1"
+            ],
+            "score": 0.75,
+            "title": "AIOps Engineer SME"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "9448e98dd1313f13c3978aa73e573f268711ba78445f0e1a90fe96aad74eeb38",
+            "evidence": "",
+            "id": "leidos:R-00188314",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "AIOps Engineer SME"
+          },
+          "id": "leidos:R-00188314"
+        },
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "e51f1d7cb82b3218daaa9e88504ba2cacf22a908fc140eb9af113ba6ffdc9bab",
+            "evidence": "virtualized",
+            "id": "leidos:R-00189038",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-virtualized-v1"
+            ],
+            "score": 0.5,
+            "title": "Senior DevOps Engineer"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "e51f1d7cb82b3218daaa9e88504ba2cacf22a908fc140eb9af113ba6ffdc9bab",
+            "evidence": "",
+            "id": "leidos:R-00189038",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior DevOps Engineer"
+          },
+          "id": "leidos:R-00189038"
+        },
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "f44598e84d2f164433c9c4b8dafabc897d289678ac494186c14eaf65665fc33b",
+            "evidence": "hypervisors",
+            "id": "leidos:R-00188988",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "virtualization-hypervisors-v1"
+            ],
+            "score": 0.5,
+            "title": "OpenShift Enterprise Architect"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "f44598e84d2f164433c9c4b8dafabc897d289678ac494186c14eaf65665fc33b",
+            "evidence": "",
+            "id": "leidos:R-00188988",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "OpenShift Enterprise Architect"
+          },
+          "id": "leidos:R-00188988"
+        }
+      ],
+      "freshValidation": false,
+      "name": "complete-corpus",
+      "postings": 1863,
+      "resolved": 0,
+      "role": "later-regression",
+      "sourceHashes": {
+        "baseline": "b64f3a54083361cc52e4ad0d81858aaa7ea78c1d7333b8a9c2c9c444fe450294",
+        "candidate": "fabfffa7396af76ac7f0a9ec4100b846048bb2197f790721dbef74cbe37f2702"
+      },
+      "unresolved": 1863,
+      "untouchedConceptChanges": []
+    },
+    {
+      "baseline": {
+        "f1": 0.7692307692307693,
+        "fn": 9,
+        "fp": 0,
+        "negativeSupport": 76,
+        "precision": 1.0,
+        "recall": 0.625,
+        "support": 24,
+        "tn": 76,
+        "tp": 15
+      },
+      "baselineAP": 0.715,
+      "candidate": {
+        "f1": 0.9787234042553191,
+        "fn": 1,
+        "fp": 0,
+        "negativeSupport": 76,
+        "precision": 1.0,
+        "recall": 0.9583333333333334,
+        "support": 24,
+        "tn": 76,
+        "tp": 23
+      },
+      "candidateAP": 0.9683333333333333,
+      "changedTargetDecisions": [
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "00353aaa2fe2b9ee92daee533fc73afa723a6d2f9ee9ebbfc733bc99ffc5afe3",
+            "evidence": "experience or Masters with less than 2 years of prior relevant experience in one of these areas: Networking, VMware",
+            "id": "leidos:R-00190862",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "prior relevant experience in one of these areas: Networking, VMware, or Microsoft servers.",
+            "ruleIds": [
+              "virtualization-vmware-context-v1"
+            ],
+            "score": 0.5,
+            "title": "Deployed Field Service Representative (FSR)"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "00353aaa2fe2b9ee92daee533fc73afa723a6d2f9ee9ebbfc733bc99ffc5afe3",
+            "evidence": "",
+            "id": "leidos:R-00190862",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "prior relevant experience in one of these areas: Networking, VMware, or Microsoft servers.",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Deployed Field Service Representative (FSR)"
+          },
+          "id": "leidos:R-00190862"
+        },
+        {
+          "after": {
+            "company": "servicenow",
+            "descriptionHash": "b2127faca2f744548010f828e1d990ae182298428554f0e34d314cd07edbd054",
+            "evidence": "Virtualized",
+            "id": "servicenow:JB0074554",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "Virtualized environments",
+            "ruleIds": [
+              "virtualization-virtualized-v1"
+            ],
+            "score": 0.5,
+            "title": "Advisory Solution Consultant, SLED Southwest (Armis)"
+          },
+          "before": {
+            "company": "servicenow",
+            "descriptionHash": "b2127faca2f744548010f828e1d990ae182298428554f0e34d314cd07edbd054",
+            "evidence": "",
+            "id": "servicenow:JB0074554",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "Virtualized environments",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Advisory Solution Consultant, SLED Southwest (Armis)"
+          },
+          "id": "servicenow:JB0074554"
+        },
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "04d3e39f9f92dfdefc90a0983449025d5f6e638617666027ae8cfe615ce459a8",
+            "evidence": "virtualized",
+            "id": "leidos:R-00189463",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "Design, implement, and manage enterprise network architectures across physical, virtualized, hybrid cloud, and multi-cloud environments.",
+            "ruleIds": [
+              "virtualization-virtualized-v1"
+            ],
+            "score": 0.5,
+            "title": "Senior Network Solutions Architect"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "04d3e39f9f92dfdefc90a0983449025d5f6e638617666027ae8cfe615ce459a8",
+            "evidence": "",
+            "id": "leidos:R-00189463",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "Design, implement, and manage enterprise network architectures across physical, virtualized, hybrid cloud, and multi-cloud environments.",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior Network Solutions Architect"
+          },
+          "id": "leidos:R-00189463"
+        },
+        {
+          "after": {
+            "company": "amentum",
+            "descriptionHash": "3c92689feadf4927589d2d51575f9721f2a8d5b2181971a4f4b3e8b46d527d27",
+            "evidence": "Virtual Machines",
+            "id": "amentum:R0164523",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "Utilize or interact with Azure resources such as Azure Virtual Machines",
+            "ruleIds": [
+              "virtualization-virtual-machines-v1"
+            ],
+            "score": 0.5,
+            "title": "Application Integration Technical Lead"
+          },
+          "before": {
+            "company": "amentum",
+            "descriptionHash": "3c92689feadf4927589d2d51575f9721f2a8d5b2181971a4f4b3e8b46d527d27",
+            "evidence": "",
+            "id": "amentum:R0164523",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "Utilize or interact with Azure resources such as Azure Virtual Machines",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Application Integration Technical Lead"
+          },
+          "id": "amentum:R0164523"
+        },
+        {
+          "after": {
+            "company": "parsons",
+            "descriptionHash": "2abefc26d8660a97222b5d957eb2378dcb327c608cd24507f07be0dfb2c174ec",
+            "evidence": "Azure: Defender for Cloud, WAF, Key Vault / App Service Certificates, Monitor, Activity Log, ACI, AKS, VNet, Cosmos DB, VMs",
+            "id": "parsons:R180251",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "Azure: Defender for Cloud, WAF, Key Vault / App Service Certificates, Monitor, Activity Log, ACI, AKS, VNet, Cosmos DB, VMs, Database for PostgreSQL, Blob Storage.",
+            "ruleIds": [
+              "virtualization-vm-context-v1"
+            ],
+            "score": 0.5,
+            "title": "Cloud Solutions Engineer"
+          },
+          "before": {
+            "company": "parsons",
+            "descriptionHash": "2abefc26d8660a97222b5d957eb2378dcb327c608cd24507f07be0dfb2c174ec",
+            "evidence": "",
+            "id": "parsons:R180251",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "Azure: Defender for Cloud, WAF, Key Vault / App Service Certificates, Monitor, Activity Log, ACI, AKS, VNet, Cosmos DB, VMs, Database for PostgreSQL, Blob Storage.",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Cloud Solutions Engineer"
+          },
+          "id": "parsons:R180251"
+        },
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "9448e98dd1313f13c3978aa73e573f268711ba78445f0e1a90fe96aad74eeb38",
+            "evidence": "vCenter; Experience aggregating and correlating telemetry from diverse tools, specifically SolarWinds, ServiceNow, and VMware",
+            "id": "leidos:R-00188314",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "Experience aggregating and correlating telemetry from diverse tools, specifically SolarWinds, ServiceNow, and VMware vCenter.",
+            "ruleIds": [
+              "virtualization-platforms-v1",
+              "virtualization-vmware-context-v1"
+            ],
+            "score": 0.75,
+            "title": "AIOps Engineer SME"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "9448e98dd1313f13c3978aa73e573f268711ba78445f0e1a90fe96aad74eeb38",
+            "evidence": "",
+            "id": "leidos:R-00188314",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "Experience aggregating and correlating telemetry from diverse tools, specifically SolarWinds, ServiceNow, and VMware vCenter.",
+            "ruleIds": [],
+            "score": 0,
+            "title": "AIOps Engineer SME"
+          },
+          "id": "leidos:R-00188314"
+        },
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "614dd50bfb92c8cb45b83e3b9c760061e9b2b59884186c44c32f047b0a9f941e",
+            "evidence": "Virtual machine lifecycle management (VMware and KVM; Virtual machine; management (VMware",
+            "id": "leidos:R-00189680",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "Virtual machine lifecycle management (VMware and KVM)",
+            "ruleIds": [
+              "virtualization-kvm-context-v1",
+              "virtualization-virtual-machines-v1",
+              "virtualization-vmware-context-v1"
+            ],
+            "score": 0.875,
+            "title": "Software Developer"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "614dd50bfb92c8cb45b83e3b9c760061e9b2b59884186c44c32f047b0a9f941e",
+            "evidence": "",
+            "id": "leidos:R-00189680",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "Virtual machine lifecycle management (VMware and KVM)",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Software Developer"
+          },
+          "id": "leidos:R-00189680"
+        },
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "f44598e84d2f164433c9c4b8dafabc897d289678ac494186c14eaf65665fc33b",
+            "evidence": "hypervisors",
+            "id": "leidos:R-00188988",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "Define infrastructure integration patterns with hypervisors, bare‑metal, storage subsystems, and enterprise identity platforms.",
+            "ruleIds": [
+              "virtualization-hypervisors-v1"
+            ],
+            "score": 0.5,
+            "title": "OpenShift Enterprise Architect"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "f44598e84d2f164433c9c4b8dafabc897d289678ac494186c14eaf65665fc33b",
+            "evidence": "",
+            "id": "leidos:R-00188988",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "Define infrastructure integration patterns with hypervisors, bare‑metal, storage subsystems, and enterprise identity platforms.",
+            "ruleIds": [],
+            "score": 0,
+            "title": "OpenShift Enterprise Architect"
+          },
+          "id": "leidos:R-00188988"
+        }
+      ],
+      "freshValidation": false,
+      "name": "discovery",
+      "postings": 100,
+      "resolved": 100,
+      "role": "later-regression",
+      "sourceHashes": {
+        "baseline": "d012e0e90caf3203631ae9073fab8f87bf2f545b7fda8479a0f38157db97d86c",
+        "candidate": "b92961292f98b5e8e0d371387ee9ff3edff2e669df2dc8fe0e0caa62c0ed835c"
+      },
+      "unresolved": 0,
+      "untouchedConceptChanges": []
+    },
+    {
+      "baseline": {
+        "f1": 0.8163265306122449,
+        "fn": 9,
+        "fp": 0,
+        "negativeSupport": 171,
+        "precision": 1.0,
+        "recall": 0.6896551724137931,
+        "support": 29,
+        "tn": 171,
+        "tp": 20
+      },
+      "baselineAP": 0.7346551724137932,
+      "candidate": {
+        "f1": 0.9056603773584906,
+        "fn": 5,
+        "fp": 0,
+        "negativeSupport": 171,
+        "precision": 1.0,
+        "recall": 0.8275862068965517,
+        "support": 29,
+        "tn": 171,
+        "tp": 24
+      },
+      "candidateAP": 0.8525862068965517,
+      "changedTargetDecisions": [
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "9966fe7fe90b5dda099d5a4d5165fa03e605b7b78c3a77b8b2d37c60a960e37b",
+            "evidence": "experience or Masters with less than 2 years of prior relevant experience in one of these areas: Networking, VMware",
+            "id": "leidos:R-00191562",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "prior relevant experience in one of these areas: Networking, VMware, or Microsoft servers.",
+            "ruleIds": [
+              "virtualization-vmware-context-v1"
+            ],
+            "score": 0.5,
+            "title": "Deployed Field Service Representative (FSR)"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "9966fe7fe90b5dda099d5a4d5165fa03e605b7b78c3a77b8b2d37c60a960e37b",
+            "evidence": "",
+            "id": "leidos:R-00191562",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "prior relevant experience in one of these areas: Networking, VMware, or Microsoft servers.",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Deployed Field Service Representative (FSR)"
+          },
+          "id": "leidos:R-00191562"
+        },
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "d1c73344b4fa065340430ffb5584deea29ec4aea9ba3d31fcd0558fbb18d91e2",
+            "evidence": "virtual machine",
+            "id": "leidos:R-00190742",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "from bare-metal and virtual machine Kickstart configurations through enterprise-wide configuration management using Ansible and Bash",
+            "ruleIds": [
+              "virtualization-virtual-machines-v1"
+            ],
+            "score": 0.5,
+            "title": "Sr Systems Engineer (Linux/Automation)"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "d1c73344b4fa065340430ffb5584deea29ec4aea9ba3d31fcd0558fbb18d91e2",
+            "evidence": "",
+            "id": "leidos:R-00190742",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "from bare-metal and virtual machine Kickstart configurations through enterprise-wide configuration management using Ansible and Bash",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Sr Systems Engineer (Linux/Automation)"
+          },
+          "id": "leidos:R-00190742"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "62d67507aa650960f08f0d8e55c9857dc7376b2b1b187ed91d2546188a9e83d5",
+            "evidence": "Virtual Machines",
+            "id": "nvidia:JR2016366",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "Excellent knowledge and working experience with Docker containers and Virtual Machines.",
+            "ruleIds": [
+              "virtualization-virtual-machines-v1"
+            ],
+            "score": 0.5,
+            "title": "Senior Solutions Architect, IPP"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "62d67507aa650960f08f0d8e55c9857dc7376b2b1b187ed91d2546188a9e83d5",
+            "evidence": "",
+            "id": "nvidia:JR2016366",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "Excellent knowledge and working experience with Docker containers and Virtual Machines.",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior Solutions Architect, IPP"
+          },
+          "id": "nvidia:JR2016366"
+        },
+        {
+          "after": {
+            "company": "servicenow",
+            "descriptionHash": "b4df0dfe2c2d7da022bc4c8127f9ed5e8cbc55622e9381c98f1f8748622f4e15",
+            "evidence": "Virtualized",
+            "id": "servicenow:JB0073999",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "Virtualized environments",
+            "ruleIds": [
+              "virtualization-virtualized-v1"
+            ],
+            "score": 0.5,
+            "title": "Sr Advisory Solution Consultant, Federal (Armis)"
+          },
+          "before": {
+            "company": "servicenow",
+            "descriptionHash": "b4df0dfe2c2d7da022bc4c8127f9ed5e8cbc55622e9381c98f1f8748622f4e15",
+            "evidence": "",
+            "id": "servicenow:JB0073999",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "Virtualized environments",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Sr Advisory Solution Consultant, Federal (Armis)"
+          },
+          "id": "servicenow:JB0073999"
+        }
+      ],
+      "freshValidation": false,
+      "name": "validation",
+      "postings": 200,
+      "resolved": 200,
+      "role": "later-regression",
+      "sourceHashes": {
+        "baseline": "828803a5a2cabeb7a43c43af9990fc29081d0d1e028cbe0eb84f1519ba1e9137",
+        "candidate": "0300a221013155c8082e8a19763e92b80447389f971c1b80d264e3b4635f6250"
+      },
+      "unresolved": 0,
+      "untouchedConceptChanges": []
+    },
+    {
+      "baseline": {
+        "f1": 0.7346938775510204,
+        "fn": 12,
+        "fp": 1,
+        "negativeSupport": 170,
+        "precision": 0.9473684210526315,
+        "recall": 0.6,
+        "support": 30,
+        "tn": 169,
+        "tp": 18
+      },
+      "baselineAP": 0.6301754385964913,
+      "candidate": {
+        "f1": 0.8928571428571429,
+        "fn": 5,
+        "fp": 1,
+        "negativeSupport": 170,
+        "precision": 0.9615384615384616,
+        "recall": 0.8333333333333334,
+        "support": 30,
+        "tn": 169,
+        "tp": 25
+      },
+      "candidateAP": 0.842948717948718,
+      "changedTargetDecisions": [
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "64bc5875241c608e56e0a9bc8a3e4d30a694427008b0876cfab240619195f87d",
+            "evidence": "Virtualized",
+            "id": "leidos:R-00184457",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "Experience in the design, implementation, and sustainment of containerized and Virtualized Machine (VM) architectures.",
+            "ruleIds": [
+              "virtualization-virtualized-v1"
+            ],
+            "score": 0.5,
+            "title": "Linux System Administrator"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "64bc5875241c608e56e0a9bc8a3e4d30a694427008b0876cfab240619195f87d",
+            "evidence": "",
+            "id": "leidos:R-00184457",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "Experience in the design, implementation, and sustainment of containerized and Virtualized Machine (VM) architectures.",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Linux System Administrator"
+          },
+          "id": "leidos:R-00184457"
+        },
+        {
+          "after": {
+            "company": "northrop-grumman",
+            "descriptionHash": "9594382b5b09a03c004f364c49a2400d270944a1e0d6f66394b52d294f2897e6",
+            "evidence": "experience and/or certification Knowledge of Windows management Knowledge of Windows LDAP, VMWare",
+            "id": "northrop-grumman:R10243013",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "Knowledge of Windows LDAP, VMWare, and SAN storage systems",
+            "ruleIds": [
+              "virtualization-vmware-context-v1"
+            ],
+            "score": 0.5,
+            "title": "Principal  Solumina MES Systems Software Analyst"
+          },
+          "before": {
+            "company": "northrop-grumman",
+            "descriptionHash": "9594382b5b09a03c004f364c49a2400d270944a1e0d6f66394b52d294f2897e6",
+            "evidence": "",
+            "id": "northrop-grumman:R10243013",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "Knowledge of Windows LDAP, VMWare, and SAN storage systems",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Principal  Solumina MES Systems Software Analyst"
+          },
+          "id": "northrop-grumman:R10243013"
+        },
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "ec2d6bff4b778f314cf9c87b432beb30a29716e350e09b6c76339c478ebc4ed8",
+            "evidence": "technologies: Windows Server 2003/2007/2012 , VMware",
+            "id": "leidos:R-00187709",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "Experience with VMware and VDI technologies",
+            "ruleIds": [
+              "virtualization-vmware-context-v1"
+            ],
+            "score": 0.5,
+            "title": "Systems Engineer"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "ec2d6bff4b778f314cf9c87b432beb30a29716e350e09b6c76339c478ebc4ed8",
+            "evidence": "",
+            "id": "leidos:R-00187709",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "Experience with VMware and VDI technologies",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Systems Engineer"
+          },
+          "id": "leidos:R-00187709"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "28bc7b2fa98da1ee2566d151596a466eaca7c7888f66f04c9047e8b5be536b07",
+            "evidence": "virtualized",
+            "id": "nvidia:JR2017895",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "Experience developing in cloud and/or virtualized environments",
+            "ruleIds": [
+              "virtualization-virtualized-v1"
+            ],
+            "score": 0.5,
+            "title": "Senior Solutions Architect, AI Hyperscalers"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "28bc7b2fa98da1ee2566d151596a466eaca7c7888f66f04c9047e8b5be536b07",
+            "evidence": "",
+            "id": "nvidia:JR2017895",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "Experience developing in cloud and/or virtualized environments",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior Solutions Architect, AI Hyperscalers"
+          },
+          "id": "nvidia:JR2017895"
+        },
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "e51f1d7cb82b3218daaa9e88504ba2cacf22a908fc140eb9af113ba6ffdc9bab",
+            "evidence": "virtualized",
+            "id": "leidos:R-00189038",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "Design, develop, and support scalable, redundant infrastructure to include physical and virtualized environments.",
+            "ruleIds": [
+              "virtualization-virtualized-v1"
+            ],
+            "score": 0.5,
+            "title": "Senior DevOps Engineer"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "e51f1d7cb82b3218daaa9e88504ba2cacf22a908fc140eb9af113ba6ffdc9bab",
+            "evidence": "",
+            "id": "leidos:R-00189038",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "Design, develop, and support scalable, redundant infrastructure to include physical and virtualized environments.",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior DevOps Engineer"
+          },
+          "id": "leidos:R-00189038"
+        },
+        {
+          "after": {
+            "company": "boeing",
+            "descriptionHash": "cbdd6e969075101c2ce191efbb0c2fc0548291fcd1822db0e567565b41d6a510",
+            "evidence": "setup of virtual environments",
+            "id": "boeing:JR2026511366",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "Assists software teams and IT with database support, and setup of virtual environments.",
+            "ruleIds": [
+              "virtualization-environment-setup-v1"
+            ],
+            "score": 0.5,
+            "title": "DevSecOps Software Engineer, Phantom Works (Associate or Experienced)"
+          },
+          "before": {
+            "company": "boeing",
+            "descriptionHash": "cbdd6e969075101c2ce191efbb0c2fc0548291fcd1822db0e567565b41d6a510",
+            "evidence": "",
+            "id": "boeing:JR2026511366",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "Assists software teams and IT with database support, and setup of virtual environments.",
+            "ruleIds": [],
+            "score": 0,
+            "title": "DevSecOps Software Engineer, Phantom Works (Associate or Experienced)"
+          },
+          "id": "boeing:JR2026511366"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "701e4838498a20507eda155fcc99f02371c5729745dcdbe380bb1f4bb66b6701",
+            "evidence": "hypervisor",
+            "id": "nvidia:JR2023055",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "Direct experience drawing on deep systems knowledge to diagnose and fix performance or correctness problems that span multiple layers of the application stack, like hardware, networking, accelerator, hypervisor or OS, compilers or runtimes, application code, and libraries.",
+            "ruleIds": [
+              "virtualization-hypervisors-v1"
+            ],
+            "score": 0.5,
+            "title": "Senior MLOps Engineer - DSX Enablement"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "701e4838498a20507eda155fcc99f02371c5729745dcdbe380bb1f4bb66b6701",
+            "evidence": "",
+            "id": "nvidia:JR2023055",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "Direct experience drawing on deep systems knowledge to diagnose and fix performance or correctness problems that span multiple layers of the application stack, like hardware, networking, accelerator, hypervisor or OS, compilers or runtimes, application code, and libraries.",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior MLOps Engineer - DSX Enablement"
+          },
+          "id": "nvidia:JR2023055"
+        }
+      ],
+      "freshValidation": false,
+      "name": "sensitivity",
+      "postings": 200,
+      "resolved": 200,
+      "role": "later-regression",
+      "sourceHashes": {
+        "baseline": "d5bc67e9e726341f863e4fe3410fb05e8475fb2eebac7aa0a4c1370f992665b8",
+        "candidate": "8d89c5954de13de7cd77bd390c901c985a0986e6595c2750a2d1b5d23f37dc29"
+      },
+      "unresolved": 0,
+      "untouchedConceptChanges": []
+    }
+  ],
+  "note": "Null/unlabeled historical decisions are unscored. Prior discovery remains development/regression, never fresh validation.",
+  "untouchedConceptChanges": 0
+}

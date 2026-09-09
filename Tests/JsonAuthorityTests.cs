@@ -15,8 +15,8 @@ internal static class JsonAuthorityTests
     {
         var snapshot = Snapshot(); var catalog = JobConceptCatalog.LoadDefault();
         var service = new SemanticClassificationService(catalog, snapshot.Matcher);
-        Require(snapshot.CandidatePipelineFingerprint == "b05c22914b9fde52527aa0ce313c8aec388cc880857d31b8503af27db635b641", "Accepted AI ruleset identity changed");
-        Require(snapshot.PipelineFingerprint != snapshot.CandidatePipelineFingerprint && snapshot.PipelineFingerprint == "1fb685a9e3b7d97f3acf41fd5eb523e1625d35ae1d36764766babe3c557c9ac4", "Production identity must bind input/factual contracts");
+        Require(snapshot.CandidatePipelineFingerprint == "04f56f7ff94e801aa92099df95d21a0bd83f0393587d642abf59f79968b71f4a", "Accepted AI ruleset identity changed");
+        Require(snapshot.PipelineFingerprint != snapshot.CandidatePipelineFingerprint && snapshot.PipelineFingerprint == "9c9ce3bc6eb2e1c12d86ac4c3d5679b09eb441d8364493ddb5ea2b688f9d8b48", "Production identity must bind input/factual contracts");
         var job = new JobRecord("Software Engineer", "json-unit", null, "", "Remote", [], "Full time", "https://example.test/job",
             "<p>Build APIs. Occasional travel.</p>", null, null, "unknown", "not-found", false, null, null, null, "/job");
         job = job with { RemoteWork = new RemoteWorkDetector().Analyze(job.Title,job.PrimaryLocation,[],job.DescriptionHtml),

@@ -1,0 +1,60 @@
+{
+  "conceptId": "technical.virtualization",
+  "createdUtc": "2026-09-09T14:38:26.076393+00:00",
+  "curve": {
+    "averagePrecision": 0.715,
+    "points": [
+      {
+        "fn": 24,
+        "fp": 0,
+        "precision": 1,
+        "recall": 0,
+        "threshold": null,
+        "tn": 76,
+        "tp": 0
+      },
+      {
+        "fn": 9,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.625,
+        "threshold": 0.5,
+        "tn": 76,
+        "tp": 15
+      },
+      {
+        "fn": 0,
+        "fp": 76,
+        "precision": 0.24,
+        "recall": 1.0,
+        "threshold": 0,
+        "tn": 0,
+        "tp": 24
+      }
+    ]
+  },
+  "metrics": {
+    "f1": 0.7692307692307693,
+    "fn": 9,
+    "fp": 0,
+    "negativeSupport": 76,
+    "precision": 1.0,
+    "recall": 0.625,
+    "support": 24,
+    "tn": 76,
+    "tp": 15
+  },
+  "postings": 100,
+  "predictionsHash": "d012e0e90caf3203631ae9073fab8f87bf2f545b7fda8479a0f38157db97d86c",
+  "referenceHash": "b232635605381426213a52803b7531b2dad8e0554911f9f67b4a18b9fc0887cf",
+  "resolved": 100,
+  "role": "discovery",
+  "rulesHash": "c4f4c7179b7d8529bf6400a581943798614cf6e6edd0f33ed30b358450efd82a",
+  "scoreDistribution": {
+    "0": 85,
+    "0.5": 15
+  },
+  "scorePolicyHash": "107e636b7eb709bb77c5c87e992f8320b0f2948321480998072d24518881d7fb",
+  "unresolved": 0,
+  "variant": "baseline"
+}

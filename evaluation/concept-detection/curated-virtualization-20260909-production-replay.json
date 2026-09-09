@@ -1,0 +1,5171 @@
+{
+  "authority": {
+    "authority": "json-regex-v1",
+    "byteHash": "ea6ccfa9ac2fcf09dac2979370b1391a8b7a20433425709acf062d5eeabb9d1a",
+    "candidatePipelineFingerprint": "04f56f7ff94e801aa92099df95d21a0bd83f0393587d642abf59f79968b71f4a",
+    "engineContract": {
+      "id": "jsm-concept-matching",
+      "version": 1
+    },
+    "engineContractHash": "45f8cd98dc33e1779e4393c08deb295825bcb53e127d52e7686c8af59a9f53d5",
+    "extendedLocationRulesHash": "2acf245c61c39d57edc0208d1017327446b8f2d70d95bfdfb92cc75db719adfd",
+    "factualDependencies": {
+      "extendedLocation": {
+        "analysisVersion": 4,
+        "hash": "2acf245c61c39d57edc0208d1017327446b8f2d70d95bfdfb92cc75db719adfd",
+        "version": "1.0.0"
+      },
+      "remoteWork": {
+        "analysisVersion": 3,
+        "hash": "b77d197a5e0cbcf63ad58c2b447e9098efd9632552a1022210ef1bd4a7fc6312",
+        "version": "1.0.0"
+      }
+    },
+    "migrationProvenance": {
+      "archiveDatabaseSha256": "ce8469d4bd067ce3cfdb0de44e9cd9c994bd8d5da403c598890197387085ed3c",
+      "phase1ExportSha256": "e6a3e05ceccec71e7e2a50e4aaea64e36e667ed9278fe4eb234da951a1acb3f0",
+      "sqliteRuntimeFingerprint": "9d491a52ed1046fa319f2b6b9f4d81048b77f9d4a6774d803a14afee5ae06d2a"
+    },
+    "pipelineFingerprint": "9c9ce3bc6eb2e1c12d86ac4c3d5679b09eb441d8364493ddb5ea2b688f9d8b48",
+    "policyHash": "74d5a5f891d598efd8a5ffc273a4490bdcfd3672074695d90013d64eb783810c",
+    "regexPolicy": {
+      "localNegationTimeoutBehavior": "reject-match",
+      "maximumPatternLength": 4096,
+      "options": [
+        "IgnoreCase",
+        "CultureInvariant"
+      ],
+      "preferNonBacktracking": true,
+      "ruleTimeoutBehavior": "record-non-match",
+      "timeoutMilliseconds": 100,
+      "unsupportedRegexFallback": "bounded-backtracking"
+    },
+    "remoteWorkRulesHash": "b77d197a5e0cbcf63ad58c2b447e9098efd9632552a1022210ef1bd4a7fc6312",
+    "schemaHash": "f1d7f95e374cdf6d123caeb7417b4e051a2593bfc0467927d49d209adef31a7d",
+    "taxonomyIdentity": {
+      "sha256": "514ed1c8c644d1eec426b5fdcf4d5a2c447aa61ce5572ae70b2d03fc3815a049",
+      "version": 9
+    },
+    "version": "1.0.0"
+  },
+  "concepts": [
+    {
+      "conceptId": "responsibility.budget-ownership",
+      "f1": null,
+      "falseNegative": 8,
+      "falsePositive": 0,
+      "precision": null,
+      "recall": 0,
+      "support": 8,
+      "trueNegative": 4,
+      "truePositive": 0
+    },
+    {
+      "conceptId": "responsibility.customer-facing",
+      "f1": 0.18181818181818182,
+      "falseNegative": 9,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 0.1,
+      "support": 10,
+      "trueNegative": 2,
+      "truePositive": 1
+    },
+    {
+      "conceptId": "responsibility.documentation-heavy",
+      "f1": 0.6666666666666666,
+      "falseNegative": 3,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 0.5,
+      "support": 6,
+      "trueNegative": 6,
+      "truePositive": 3
+    },
+    {
+      "conceptId": "responsibility.personnel-management",
+      "f1": null,
+      "falseNegative": 8,
+      "falsePositive": 0,
+      "precision": null,
+      "recall": 0,
+      "support": 8,
+      "trueNegative": 4,
+      "truePositive": 0
+    },
+    {
+      "conceptId": "responsibility.proposal-capture",
+      "f1": null,
+      "falseNegative": 4,
+      "falsePositive": 0,
+      "precision": null,
+      "recall": 0,
+      "support": 4,
+      "trueNegative": 8,
+      "truePositive": 0
+    },
+    {
+      "conceptId": "responsibility.schedule-ownership",
+      "f1": null,
+      "falseNegative": 8,
+      "falsePositive": 0,
+      "precision": null,
+      "recall": 0,
+      "support": 8,
+      "trueNegative": 4,
+      "truePositive": 0
+    },
+    {
+      "conceptId": "responsibility.team-leadership",
+      "f1": null,
+      "falseNegative": 8,
+      "falsePositive": 0,
+      "precision": null,
+      "recall": 0,
+      "support": 8,
+      "trueNegative": 4,
+      "truePositive": 0
+    },
+    {
+      "conceptId": "role.ai-ml-engineering",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 16,
+      "trueNegative": 24,
+      "truePositive": 16
+    },
+    {
+      "conceptId": "role.cloud-engineering",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 5,
+      "trueNegative": 35,
+      "truePositive": 5
+    },
+    {
+      "conceptId": "role.cybersecurity",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 2,
+      "trueNegative": 38,
+      "truePositive": 2
+    },
+    {
+      "conceptId": "role.data-engineering",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 3,
+      "trueNegative": 37,
+      "truePositive": 3
+    },
+    {
+      "conceptId": "role.data-science",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 1,
+      "trueNegative": 39,
+      "truePositive": 1
+    },
+    {
+      "conceptId": "role.devops-platform",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 8,
+      "trueNegative": 32,
+      "truePositive": 8
+    },
+    {
+      "conceptId": "role.fabrication-assembly-machining",
+      "f1": 0.8421052631578948,
+      "falseNegative": 0,
+      "falsePositive": 3,
+      "precision": 0.7272727272727273,
+      "recall": 1,
+      "support": 8,
+      "trueNegative": 5,
+      "truePositive": 8
+    },
+    {
+      "conceptId": "role.field-service",
+      "f1": null,
+      "falseNegative": 3,
+      "falsePositive": 0,
+      "precision": null,
+      "recall": 0,
+      "support": 3,
+      "trueNegative": 9,
+      "truePositive": 0
+    },
+    {
+      "conceptId": "role.infrastructure-engineering",
+      "f1": 0.9473684210526316,
+      "falseNegative": 1,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 0.9,
+      "support": 10,
+      "trueNegative": 30,
+      "truePositive": 9
+    },
+    {
+      "conceptId": "role.lab-test-technician",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 8,
+      "trueNegative": 8,
+      "truePositive": 8
+    },
+    {
+      "conceptId": "role.management-heavy",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 8,
+      "trueNegative": 4,
+      "truePositive": 8
+    },
+    {
+      "conceptId": "role.manufacturing-production-operations",
+      "f1": 0.888888888888889,
+      "falseNegative": 0,
+      "falsePositive": 2,
+      "precision": 0.8,
+      "recall": 1,
+      "support": 8,
+      "trueNegative": 6,
+      "truePositive": 8
+    },
+    {
+      "conceptId": "role.mechanical-maintenance-repair",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 8,
+      "trueNegative": 8,
+      "truePositive": 8
+    },
+    {
+      "conceptId": "role.network-engineering",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 4,
+      "trueNegative": 36,
+      "truePositive": 4
+    },
+    {
+      "conceptId": "role.people-management",
+      "f1": 0.4,
+      "falseNegative": 6,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 0.25,
+      "support": 8,
+      "trueNegative": 4,
+      "truePositive": 2
+    },
+    {
+      "conceptId": "role.physical-inspection-quality-control",
+      "f1": 0.9411764705882353,
+      "falseNegative": 0,
+      "falsePositive": 1,
+      "precision": 0.8888888888888888,
+      "recall": 1,
+      "support": 8,
+      "trueNegative": 7,
+      "truePositive": 8
+    },
+    {
+      "conceptId": "role.program-management",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 2,
+      "trueNegative": 10,
+      "truePositive": 2
+    },
+    {
+      "conceptId": "role.project-management",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 3,
+      "trueNegative": 9,
+      "truePositive": 3
+    },
+    {
+      "conceptId": "role.software-engineering",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 27,
+      "trueNegative": 13,
+      "truePositive": 27
+    },
+    {
+      "conceptId": "role.systems-engineering",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 5,
+      "trueNegative": 35,
+      "truePositive": 5
+    },
+    {
+      "conceptId": "role.test-validation-engineering",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 9,
+      "trueNegative": 31,
+      "truePositive": 9
+    },
+    {
+      "conceptId": "role.warehouse-material-handling",
+      "f1": 0.9411764705882353,
+      "falseNegative": 0,
+      "falsePositive": 1,
+      "precision": 0.8888888888888888,
+      "recall": 1,
+      "support": 8,
+      "trueNegative": 7,
+      "truePositive": 8
+    },
+    {
+      "conceptId": "technical.api-development",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 22,
+      "trueNegative": 18,
+      "truePositive": 22
+    },
+    {
+      "conceptId": "technical.application-development",
+      "f1": 0.9333333333333333,
+      "falseNegative": 1,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 0.875,
+      "support": 8,
+      "trueNegative": 32,
+      "truePositive": 7
+    },
+    {
+      "conceptId": "technical.artificial-intelligence",
+      "f1": 0.9696969696969697,
+      "falseNegative": 0,
+      "falsePositive": 1,
+      "precision": 0.9411764705882353,
+      "recall": 1,
+      "support": 16,
+      "trueNegative": 23,
+      "truePositive": 16
+    },
+    {
+      "conceptId": "technical.automation-scripting",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 26,
+      "trueNegative": 14,
+      "truePositive": 26
+    },
+    {
+      "conceptId": "technical.backend-development",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 13,
+      "trueNegative": 27,
+      "truePositive": 13
+    },
+    {
+      "conceptId": "technical.cicd",
+      "f1": 0.983050847457627,
+      "falseNegative": 0,
+      "falsePositive": 1,
+      "precision": 0.9666666666666667,
+      "recall": 1,
+      "support": 29,
+      "trueNegative": 10,
+      "truePositive": 29
+    },
+    {
+      "conceptId": "technical.cisco-networking",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 4,
+      "trueNegative": 36,
+      "truePositive": 4
+    },
+    {
+      "conceptId": "technical.cloud",
+      "f1": 0.9803921568627451,
+      "falseNegative": 0,
+      "falsePositive": 1,
+      "precision": 0.9615384615384616,
+      "recall": 1,
+      "support": 25,
+      "trueNegative": 14,
+      "truePositive": 25
+    },
+    {
+      "conceptId": "technical.containers",
+      "f1": 0.9811320754716981,
+      "falseNegative": 0,
+      "falsePositive": 1,
+      "precision": 0.9629629629629629,
+      "recall": 1,
+      "support": 26,
+      "trueNegative": 13,
+      "truePositive": 26
+    },
+    {
+      "conceptId": "technical.embedded-systems",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 3,
+      "trueNegative": 37,
+      "truePositive": 3
+    },
+    {
+      "conceptId": "technical.frontend-development",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 3,
+      "trueNegative": 37,
+      "truePositive": 3
+    },
+    {
+      "conceptId": "technical.infrastructure-as-code",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 15,
+      "trueNegative": 25,
+      "truePositive": 15
+    },
+    {
+      "conceptId": "technical.large-language-models",
+      "f1": 0.9696969696969697,
+      "falseNegative": 0,
+      "falsePositive": 1,
+      "precision": 0.9411764705882353,
+      "recall": 1,
+      "support": 16,
+      "trueNegative": 23,
+      "truePositive": 16
+    },
+    {
+      "conceptId": "technical.linux",
+      "f1": 0.9850746268656716,
+      "falseNegative": 0,
+      "falsePositive": 1,
+      "precision": 0.9705882352941176,
+      "recall": 1,
+      "support": 33,
+      "trueNegative": 6,
+      "truePositive": 33
+    },
+    {
+      "conceptId": "technical.linux-administration",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 11,
+      "trueNegative": 29,
+      "truePositive": 11
+    },
+    {
+      "conceptId": "technical.machine-learning",
+      "f1": 0.9696969696969697,
+      "falseNegative": 0,
+      "falsePositive": 1,
+      "precision": 0.9411764705882353,
+      "recall": 1,
+      "support": 16,
+      "trueNegative": 23,
+      "truePositive": 16
+    },
+    {
+      "conceptId": "technical.networking",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 8,
+      "trueNegative": 32,
+      "truePositive": 8
+    },
+    {
+      "conceptId": "technical.nlp",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 15,
+      "trueNegative": 25,
+      "truePositive": 15
+    },
+    {
+      "conceptId": "technical.software-development",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 27,
+      "trueNegative": 13,
+      "truePositive": 27
+    },
+    {
+      "conceptId": "technical.storage",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 7,
+      "trueNegative": 33,
+      "truePositive": 7
+    },
+    {
+      "conceptId": "technical.virtualization",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 6,
+      "trueNegative": 34,
+      "truePositive": 6
+    },
+    {
+      "conceptId": "technical.windows-administration",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 5,
+      "trueNegative": 35,
+      "truePositive": 5
+    },
+    {
+      "conceptId": "work.classified-facility",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 2,
+      "trueNegative": 10,
+      "truePositive": 2
+    },
+    {
+      "conceptId": "work.confined-spaces",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 2,
+      "trueNegative": 10,
+      "truePositive": 2
+    },
+    {
+      "conceptId": "work.data-center",
+      "f1": 0.6666666666666666,
+      "falseNegative": 1,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 0.5,
+      "support": 2,
+      "trueNegative": 10,
+      "truePositive": 1
+    },
+    {
+      "conceptId": "work.deployment",
+      "f1": 0.6666666666666666,
+      "falseNegative": 2,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 0.5,
+      "support": 4,
+      "trueNegative": 8,
+      "truePositive": 2
+    },
+    {
+      "conceptId": "work.extended-away-assignment",
+      "f1": 0.33333333333333337,
+      "falseNegative": 4,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 0.2,
+      "support": 5,
+      "trueNegative": 7,
+      "truePositive": 1
+    },
+    {
+      "conceptId": "work.field-engineering",
+      "f1": 0.4,
+      "falseNegative": 3,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 0.25,
+      "support": 4,
+      "trueNegative": 8,
+      "truePositive": 1
+    },
+    {
+      "conceptId": "work.heights",
+      "f1": 0.5,
+      "falseNegative": 2,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 0.3333333333333333,
+      "support": 3,
+      "trueNegative": 9,
+      "truePositive": 1
+    },
+    {
+      "conceptId": "work.international-assignment",
+      "f1": 0.5,
+      "falseNegative": 2,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 0.3333333333333333,
+      "support": 3,
+      "trueNegative": 9,
+      "truePositive": 1
+    },
+    {
+      "conceptId": "work.manufacturing-floor",
+      "f1": 0.6666666666666666,
+      "falseNegative": 1,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 0.5,
+      "support": 2,
+      "trueNegative": 10,
+      "truePositive": 1
+    },
+    {
+      "conceptId": "work.outdoor-field",
+      "f1": null,
+      "falseNegative": 3,
+      "falsePositive": 0,
+      "precision": null,
+      "recall": 0,
+      "support": 3,
+      "trueNegative": 9,
+      "truePositive": 0
+    },
+    {
+      "conceptId": "work.physical-infrastructure",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 3,
+      "trueNegative": 9,
+      "truePositive": 3
+    },
+    {
+      "conceptId": "work.relocation",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 2,
+      "trueNegative": 10,
+      "truePositive": 2
+    },
+    {
+      "conceptId": "work.rotation",
+      "f1": 0.6666666666666666,
+      "falseNegative": 2,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 0.5,
+      "support": 4,
+      "trueNegative": 8,
+      "truePositive": 2
+    },
+    {
+      "conceptId": "work.scuba",
+      "f1": 1,
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "precision": 1,
+      "recall": 1,
+      "support": 1,
+      "trueNegative": 11,
+      "truePositive": 1
+    },
+    {
+      "conceptId": "work.shipboard",
+      "f1": 0.8,
+      "falseNegative": 0,
+      "falsePositive": 1,
+      "precision": 0.6666666666666666,
+      "recall": 1,
+      "support": 2,
+      "trueNegative": 9,
+      "truePositive": 2
+    }
+  ],
+  "datasetFingerprint": "615f9db007cb9a8cfc33936c9acbe0671525036e50d2c017248f904786508f2b",
+  "datasetId": "curated-regression-v1",
+  "eligibleDecisions": 1740,
+  "evaluatedUtc": "2026-09-09T14:51:27.074174+00:00",
+  "labelProvenance": "Mixed reviewed curation recorded per fixture; these are not independent unseen production labels.",
+  "macro": {
+    "conceptCount": 66,
+    "f1": 0.8945978696922494,
+    "labelCount": 1740,
+    "precision": 0.9772373374566793,
+    "recall": 0.7839646464646466
+  },
+  "metricImplementationHash": "ff6f7dcb82a9958d23dd2e47d0a14f95d5907ec2e3c60cc2eb2a19d038051810",
+  "micro": {
+    "conceptCount": 66,
+    "f1": 0.9157706093189965,
+    "labelCount": 1740,
+    "precision": 0.9714828897338403,
+    "recall": 0.8661016949152542
+  },
+  "postingCount": 148,
+  "referenceFingerprint": "615f9db007cb9a8cfc33936c9acbe0671525036e50d2c017248f904786508f2b",
+  "role": "curated",
+  "ruleAttribution": [
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "ai-20260909-agentic",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier1-ai-02"
+      ],
+      "ruleId": "ai-20260909-apply",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "tier1-ai-01",
+        "tier1-ai-08"
+      ],
+      "ruleId": "ai-20260909-artifacts",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "ai-20260909-build-ml-models",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "ai-20260909-driven-work",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "ai-20260909-enabled",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "ai-20260909-engineering",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "ai-20260909-generative",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "ai-20260909-infrastructure",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [
+        "tier1-hard-negative-01"
+      ],
+      "falsePositiveMatches": 1,
+      "precision": 0.9375,
+      "redundantTruePositives": 15,
+      "representativeExamples": [
+        "tier1-ai-01",
+        "tier1-ai-02",
+        "tier1-ai-03",
+        "tier1-ai-04",
+        "tier1-ai-05"
+      ],
+      "ruleId": "ai-20260909-language-models",
+      "timeoutCount": 0,
+      "truePositiveMatches": 15,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 16
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 6,
+      "representativeExamples": [
+        "tier1-ai-01",
+        "tier1-ai-06",
+        "tier1-ai-08",
+        "tier1-ai-09",
+        "tier1-ai-10"
+      ],
+      "ruleId": "ai-20260909-title",
+      "timeoutCount": 0,
+      "truePositiveMatches": 6,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 6
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-0268d5b8da5733d533451240",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "synthetic-assembly-line",
+        "positive-assembly-line-worker"
+      ],
+      "ruleId": "legacy-04253f91364c2fd516b28913",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-05e786fe33d126c808674c99",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-0644865a46e1f915d6c8011f",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier1-ai-04",
+        "tier1-ai-14",
+        "tier1-cloud-05"
+      ],
+      "ruleId": "legacy-0688a73dd714f5512506a209",
+      "timeoutCount": 0,
+      "truePositiveMatches": 3,
+      "uniqueTruePositives": 3,
+      "validationMatchCount": 3
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-072615e55456555c802a9978",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 10,
+      "representativeExamples": [
+        "tier1-ai-01",
+        "tier1-ai-03",
+        "tier1-ai-06",
+        "tier1-ai-09",
+        "tier1-ai-12"
+      ],
+      "ruleId": "legacy-075600a11b477b648eb85adb",
+      "timeoutCount": 0,
+      "truePositiveMatches": 10,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 10
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-0769b90586c33c1e4c014b34",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-078dae2412b1b6cdb17935bf",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-08d830de52515388b0380b42",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-09d0ff8d26548e20e408ca8b",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-0b79e962f5d619a20e5309a4",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-0dcdd1de8eb9f062d87a9742",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-0e6e2511081370aad16774a0",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "parsons-r180395-senior-software-developer"
+      ],
+      "ruleId": "legacy-0f0aee381d7a99d76e7464b3",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-1084d458f5941e54ede839af",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier1-infra-06",
+        "tier1-infra-10"
+      ],
+      "ruleId": "legacy-10a47e0b3f773a8429d6294a",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-1105840bfe3454143725cc4b",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "boeing-jr2026503217-lab",
+        "positive-environmental-test-technician"
+      ],
+      "ruleId": "legacy-1117450da25ad10467b95451",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 5,
+      "representativeExamples": [
+        "boeing-jr2026523403-fabrication",
+        "positive-metal-fabricator",
+        "positive-structural-welder",
+        "positive-production-assembler",
+        "positive-composite-fabricator"
+      ],
+      "ruleId": "legacy-11964cbd6e928728826d5a5c",
+      "timeoutCount": 0,
+      "truePositiveMatches": 5,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 5
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-1336883e918d65bfe128f935",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "tier1-ai-07",
+        "tier1-ai-11",
+        "tier1-cloud-03"
+      ],
+      "ruleId": "legacy-1357e785255bd21b0818bbf5",
+      "timeoutCount": 0,
+      "truePositiveMatches": 3,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 3
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier1-infra-07"
+      ],
+      "ruleId": "legacy-136289ea5a9bb0457f1c4922",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-164bf19870f8d784fc313da0",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-16f3ff730485481208a767bb",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier1-cloud-01",
+        "tier1-cloud-02",
+        "tier1-cloud-03",
+        "tier1-cloud-05"
+      ],
+      "ruleId": "legacy-19f88e91ed0ba0036ea1e9cd",
+      "timeoutCount": 0,
+      "truePositiveMatches": 4,
+      "uniqueTruePositives": 3,
+      "validationMatchCount": 4
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "positive-automotive-mechanic"
+      ],
+      "ruleId": "legacy-1b2128af70b699bc45dd17d5",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier1-ai-11"
+      ],
+      "ruleId": "legacy-1bc8c4e1bc046842ab644a4e",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-1c06d22ab97ee0a71b428354",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "tier1-cloud-05",
+        "tier1-infra-01",
+        "tier1-infra-08"
+      ],
+      "ruleId": "legacy-1c34a307297f684a02953e01",
+      "timeoutCount": 0,
+      "truePositiveMatches": 3,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 3
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "tier1-cloud-05",
+        "tier1-infra-01",
+        "tier1-infra-05",
+        "tier1-infra-08",
+        "tier1-infra-10"
+      ],
+      "ruleId": "legacy-1cb0ba267893280392296e7b",
+      "timeoutCount": 0,
+      "truePositiveMatches": 5,
+      "uniqueTruePositives": 3,
+      "validationMatchCount": 5
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "tier1-infra-01",
+        "tier1-infra-02",
+        "tier1-infra-05",
+        "tier1-infra-07",
+        "tier1-infra-08"
+      ],
+      "ruleId": "legacy-1cdc541111c30c6f13500905",
+      "timeoutCount": 0,
+      "truePositiveMatches": 6,
+      "uniqueTruePositives": 4,
+      "validationMatchCount": 6
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 6,
+      "representativeExamples": [
+        "synthetic-production-technician",
+        "synthetic-manufacturing-associate",
+        "positive-manufacturing-operator",
+        "positive-production-operator",
+        "positive-manufacturing-technician"
+      ],
+      "ruleId": "legacy-1e2b0380087a75f24a014f2e",
+      "timeoutCount": 0,
+      "truePositiveMatches": 6,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 6
+    },
+    {
+      "falsePositiveExamples": [
+        "negative-hardware-quality-data-scientist"
+      ],
+      "falsePositiveMatches": 1,
+      "precision": 0.8888888888888888,
+      "redundantTruePositives": 7,
+      "representativeExamples": [
+        "boeing-jr2026518773-inspection",
+        "boeing-jr2026521714-inspection",
+        "synthetic-weld-inspector",
+        "positive-manufacturing-inspector",
+        "positive-quality-inspector"
+      ],
+      "ruleId": "legacy-1e5a5683eac175c2f4a17852",
+      "timeoutCount": 0,
+      "truePositiveMatches": 8,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 9
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-1eb407995844576f1e6688c0",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier1-infra-02",
+        "tier1-infra-04",
+        "tier1-infra-06",
+        "tier1-infra-08"
+      ],
+      "ruleId": "legacy-204641b297f2848040c3629c",
+      "timeoutCount": 0,
+      "truePositiveMatches": 4,
+      "uniqueTruePositives": 3,
+      "validationMatchCount": 4
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier2-ops-05",
+        "tier2-ops-11"
+      ],
+      "ruleId": "legacy-207aa87aa13f5caa0e324fdd",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-20ebd012f53bad0db2a97aab",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-22002883c14ca3d113f263f9",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier2-ops-09"
+      ],
+      "ruleId": "legacy-22c325317e4727237ee3bef5",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier1-cloud-03",
+        "tier1-cloud-05",
+        "tier1-infra-01",
+        "tier1-infra-08"
+      ],
+      "ruleId": "legacy-2308a0c9253f02e63708eecd",
+      "timeoutCount": 0,
+      "truePositiveMatches": 4,
+      "uniqueTruePositives": 4,
+      "validationMatchCount": 4
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-24471e736aae1373268fb37d",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "boeing-jr2026519673-devsecops",
+        "parsons-r180395-senior-software-developer"
+      ],
+      "ruleId": "legacy-2491fe53bd1150276ff97784",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 2,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-24e942a270d0af8dfee5cf79",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-262e33808f9babfc59adbae0",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier2-ops-02",
+        "tier2-ops-08"
+      ],
+      "ruleId": "legacy-268a5ff2b323d23d1b56358a",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 2,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-278da5af1383a017629276df",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-28855e76777851be832359d5",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier1-ai-06",
+        "tier1-cloud-01"
+      ],
+      "ruleId": "legacy-2aee965353e09330531fa309",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-2b5513c23d34d998fa349010",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-2b73a3e696f00f1227b7cafe",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-2e3ac2bf64058c86bee6c676",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "boeing-jr2026523413-vms-software"
+      ],
+      "ruleId": "legacy-2fd9f481813c93bfd117cf7d",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-302f2072064e12601b357e12",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier2-ops-04",
+        "tier2-ops-05",
+        "tier2-ops-09"
+      ],
+      "ruleId": "legacy-30d744eae0cb07324b8684d5",
+      "timeoutCount": 0,
+      "truePositiveMatches": 3,
+      "uniqueTruePositives": 3,
+      "validationMatchCount": 3
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "synthetic-manufacturing-associate",
+        "positive-production-associate"
+      ],
+      "ruleId": "legacy-31aa7c247410ea2258173657",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [
+        "tier1-hard-negative-01"
+      ],
+      "falsePositiveMatches": 1,
+      "precision": 0.9375,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier1-ai-01",
+        "tier1-ai-02",
+        "tier1-ai-03",
+        "tier1-ai-04",
+        "tier1-ai-05"
+      ],
+      "ruleId": "legacy-3226522698119403dbfbf487",
+      "timeoutCount": 0,
+      "truePositiveMatches": 15,
+      "uniqueTruePositives": 15,
+      "validationMatchCount": 16
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier2-ops-03"
+      ],
+      "ruleId": "legacy-32278d4f3196b7dd4eeb7a4c",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [
+        "tier2-hard-negative-01"
+      ],
+      "falsePositiveMatches": 1,
+      "precision": 0.5,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier2-ops-02"
+      ],
+      "ruleId": "legacy-3261dfaf96aebbd4596b266b",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-3403b0ee2ddf53e5e1cb2bd5",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-34a5d1006d6883e754ac8d7b",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier2-ops-06"
+      ],
+      "ruleId": "legacy-357b16b0dbddb8f1b02ca111",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-3582aa492ae47f89bce3a6a2",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 3,
+      "representativeExamples": [
+        "tier1-ai-01",
+        "tier1-ai-02",
+        "tier1-ai-03",
+        "tier1-ai-06",
+        "tier1-ai-07"
+      ],
+      "ruleId": "legacy-3653afee9b05210a914fa1c8",
+      "timeoutCount": 0,
+      "truePositiveMatches": 13,
+      "uniqueTruePositives": 10,
+      "validationMatchCount": 13
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-393d157e313c453f12f7e9aa",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-39944b223861179ad2280b57",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-3d2985639550fece3e7f7172",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "synthetic-industrial-maintenance",
+        "boeing-jr2026499070-process-mechanic"
+      ],
+      "ruleId": "legacy-3d73da58141da4e24b2a6684",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier2-ops-03",
+        "tier2-ops-08",
+        "tier2-ops-11"
+      ],
+      "ruleId": "legacy-3d96c3a46655ddb9e0247ce8",
+      "timeoutCount": 0,
+      "truePositiveMatches": 3,
+      "uniqueTruePositives": 3,
+      "validationMatchCount": 3
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "positive-materials-laboratory-technician"
+      ],
+      "ruleId": "legacy-3e5cc75844409fd64f5b4286",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [
+        "negative-factory-simulation"
+      ],
+      "falsePositiveMatches": 1,
+      "precision": 0.5,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "positive-assembly-line-worker"
+      ],
+      "ruleId": "legacy-3ec0a3b5bba1bf237cf82e5a",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-408a1ece308e933043367fa6",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-40e639710b0228a7a582d81c",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "positive-stockroom-specialist"
+      ],
+      "ruleId": "legacy-41d0afda635bc64bb2c84499",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [
+        "negative-assembly-instructions-writer",
+        "negative-machining-sales",
+        "negative-welding-robot-programmer"
+      ],
+      "falsePositiveMatches": 3,
+      "precision": 0.7272727272727273,
+      "redundantTruePositives": 8,
+      "representativeExamples": [
+        "boeing-jr2026523403-fabrication",
+        "boeing-jr2026522042-machining",
+        "boeing-jr2025485784-fabrication",
+        "positive-cnc-machinist",
+        "positive-metal-fabricator"
+      ],
+      "ruleId": "legacy-41daf917916db36e89029004",
+      "timeoutCount": 0,
+      "truePositiveMatches": 8,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 11
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-42fad88f4cd6888f9208668e",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [
+        "tier1-hard-negative-01"
+      ],
+      "falsePositiveMatches": 1,
+      "precision": 0.9705882352941176,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier1-ai-01",
+        "tier1-ai-02",
+        "tier1-ai-03",
+        "tier1-ai-04",
+        "tier1-ai-05"
+      ],
+      "ruleId": "legacy-44d8898677fe6cd9f77b024b",
+      "timeoutCount": 0,
+      "truePositiveMatches": 33,
+      "uniqueTruePositives": 33,
+      "validationMatchCount": 34
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier2-ops-09"
+      ],
+      "ruleId": "legacy-453a036824594e5dcfc0fde3",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-45ecafa122a0285219308d1e",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier1-ai-07",
+        "tier1-cloud-01"
+      ],
+      "ruleId": "legacy-46ab094a158ebeb075933acf",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 2,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-46af028e37910f246e620888",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 13,
+      "representativeExamples": [
+        "tier1-ai-01",
+        "tier1-ai-05",
+        "tier1-ai-08",
+        "tier1-ai-10",
+        "tier1-ai-11"
+      ],
+      "ruleId": "legacy-46fc65c86cb8fe8f89deb57f",
+      "timeoutCount": 0,
+      "truePositiveMatches": 14,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 14
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "tier1-ai-05",
+        "tier1-ai-08",
+        "tier1-ai-10",
+        "tier1-app-01",
+        "tier1-app-04"
+      ],
+      "ruleId": "legacy-470954d630807ec7b126d772",
+      "timeoutCount": 0,
+      "truePositiveMatches": 5,
+      "uniqueTruePositives": 3,
+      "validationMatchCount": 5
+    },
+    {
+      "falsePositiveExamples": [
+        "negative-logistics-product-manager"
+      ],
+      "falsePositiveMatches": 1,
+      "precision": 0.6666666666666666,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "leidos-r00189632-warehouse",
+        "positive-warehouse-operator"
+      ],
+      "ruleId": "legacy-4982be1b8bcf05fc6666c0ca",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 3
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-499d1fb5da43ab7cc2a68417",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-4b15fbe2fcbb4537e82313ed",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier1-ai-15",
+        "tier1-cloud-01",
+        "tier1-cloud-02",
+        "tier1-infra-02",
+        "tier1-infra-03"
+      ],
+      "ruleId": "legacy-4c9ae000ee4d068201ac5a15",
+      "timeoutCount": 0,
+      "truePositiveMatches": 7,
+      "uniqueTruePositives": 7,
+      "validationMatchCount": 7
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier2-ops-05"
+      ],
+      "ruleId": "legacy-50852e52eaed9043e034e404",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier1-ai-07"
+      ],
+      "ruleId": "legacy-5193edd7cf081b1e070ab3d8",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier1-infra-08"
+      ],
+      "ruleId": "legacy-56b24fa6f2441158ff44abe3",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier1-ai-02"
+      ],
+      "ruleId": "legacy-56bcb8d87e28a9ac90e972ed",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-587cb11b384a27c3b365132a",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "tier1-app-02",
+        "tier1-app-05"
+      ],
+      "ruleId": "legacy-59b86d2c4b57cef918f7e5ed",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-5a007bd4b6be82eade427d56",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-5abd99afdde8a2192c2548eb",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-5b9c43d7eba55bd68200dbdd",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-5c9def8d7bb49326d2ddfe72",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-5dffc589bb97f2a97372d824",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier1-infra-02",
+        "tier1-infra-05",
+        "tier1-infra-10"
+      ],
+      "ruleId": "legacy-6023b0bc372ec72c4e7acc45",
+      "timeoutCount": 0,
+      "truePositiveMatches": 3,
+      "uniqueTruePositives": 3,
+      "validationMatchCount": 3
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "boeing-jr2026519673-devsecops"
+      ],
+      "ruleId": "legacy-609278afd3ad5641dab7ea33",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier1-ai-02",
+        "tier1-ai-07",
+        "tier1-ai-10",
+        "tier1-cloud-02",
+        "tier1-app-02"
+      ],
+      "ruleId": "legacy-621868550572a3cd94316484",
+      "timeoutCount": 0,
+      "truePositiveMatches": 5,
+      "uniqueTruePositives": 5,
+      "validationMatchCount": 5
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-62b9e2429135abbba7dfba05",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "tier1-ai-01",
+        "tier1-ai-02",
+        "tier1-ai-04",
+        "tier1-ai-06",
+        "tier1-ai-07"
+      ],
+      "ruleId": "legacy-63451218304a70c43c7f2619",
+      "timeoutCount": 0,
+      "truePositiveMatches": 17,
+      "uniqueTruePositives": 15,
+      "validationMatchCount": 17
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 8,
+      "representativeExamples": [
+        "boeing-jr2026518584-lab",
+        "boeing-jr2026503217-lab",
+        "synthetic-lab-instrumentation",
+        "positive-electronics-lab-technician",
+        "positive-materials-laboratory-technician"
+      ],
+      "ruleId": "legacy-6488b4a406238c9d556c36a3",
+      "timeoutCount": 0,
+      "truePositiveMatches": 8,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 8
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "boeing-jr2026519673-devsecops"
+      ],
+      "ruleId": "legacy-64b409160152afd29b1200c1",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "tier2-ops-01",
+        "tier2-ops-04",
+        "tier2-ops-09",
+        "tier2-ops-11"
+      ],
+      "ruleId": "legacy-65abcd70e75a9402115c3d05",
+      "timeoutCount": 0,
+      "truePositiveMatches": 4,
+      "uniqueTruePositives": 2,
+      "validationMatchCount": 4
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "tier1-infra-01",
+        "tier1-infra-02",
+        "tier1-infra-08"
+      ],
+      "ruleId": "legacy-65f0090d7c4a2cfffb766c50",
+      "timeoutCount": 0,
+      "truePositiveMatches": 3,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 3
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-66a005b324f4fe4855cdc2ef",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-693629a46d13ae180e4d263b",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "boeing-jr2026522042-machining",
+        "positive-cnc-machinist"
+      ],
+      "ruleId": "legacy-6965d2d2961987ff964a3aa2",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 3,
+      "representativeExamples": [
+        "tier1-ai-05",
+        "tier1-cloud-03",
+        "tier1-app-05"
+      ],
+      "ruleId": "legacy-6ab4b22b6e85189811118f84",
+      "timeoutCount": 0,
+      "truePositiveMatches": 3,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 3
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-6b309fb38ab6a3353665eeef",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-6c16d914132961efcc16fe73",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-6ceec2a006415a32e5d43144",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-6d67fc50999fa9c20eb3ca59",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier1-ai-11",
+        "tier1-cloud-03",
+        "tier1-infra-02",
+        "tier1-infra-05",
+        "tier1-infra-07"
+      ],
+      "ruleId": "legacy-6dc3685237e29e5a2b5440a4",
+      "timeoutCount": 0,
+      "truePositiveMatches": 5,
+      "uniqueTruePositives": 4,
+      "validationMatchCount": 5
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-6e54ae5f77581693d9c7c3c3",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-6ed3e9b90684b842b6905ef9",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier1-infra-08"
+      ],
+      "ruleId": "legacy-6f238fc1000212b3a3fe6d5f",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-6f634daff57c5770b394deb3",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier2-ops-01"
+      ],
+      "ruleId": "legacy-71602d0147a1177ea4dcffa0",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier2-ops-06"
+      ],
+      "ruleId": "legacy-71d5907f4511641c716b2c93",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "parsons-r185333-mechanical"
+      ],
+      "ruleId": "legacy-721b52a86477d47894289222",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-72fc5fbe727fe741717e9fa2",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-7365914a2ffb7c27a32b80cf",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "tier1-ai-03",
+        "tier1-ai-12",
+        "parsons-r180395-senior-software-developer"
+      ],
+      "ruleId": "legacy-741864cc520e63dbaa633b2c",
+      "timeoutCount": 0,
+      "truePositiveMatches": 3,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 3
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-747f61fc92edf56b8305e23f",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-74b3029bad7f2f77eaa17f96",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-758654674de4bf8f01bcacef",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier1-infra-01",
+        "tier1-infra-02",
+        "tier1-infra-03",
+        "tier1-infra-05",
+        "tier1-infra-07"
+      ],
+      "ruleId": "legacy-770ad313507b943aa5bb7ee5",
+      "timeoutCount": 0,
+      "truePositiveMatches": 7,
+      "uniqueTruePositives": 6,
+      "validationMatchCount": 7
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier1-infra-03",
+        "tier1-infra-09"
+      ],
+      "ruleId": "legacy-772fbb025dd423b441303d44",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 2,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier2-ops-04",
+        "tier2-ops-07",
+        "tier2-ops-11"
+      ],
+      "ruleId": "legacy-778085f3dad50e623d43726c",
+      "timeoutCount": 0,
+      "truePositiveMatches": 3,
+      "uniqueTruePositives": 3,
+      "validationMatchCount": 3
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 5,
+      "representativeExamples": [
+        "tier1-ai-01",
+        "tier1-ai-03",
+        "tier1-ai-05",
+        "tier1-ai-06",
+        "tier1-ai-10"
+      ],
+      "ruleId": "legacy-779bae4c74215d42f20817fd",
+      "timeoutCount": 0,
+      "truePositiveMatches": 9,
+      "uniqueTruePositives": 4,
+      "validationMatchCount": 9
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-787c836137b69485c9b6b4dd",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 4,
+      "representativeExamples": [
+        "tier1-ai-05",
+        "tier1-ai-14",
+        "tier1-app-03",
+        "tier1-app-05",
+        "parsons-r180395-senior-software-developer"
+      ],
+      "ruleId": "legacy-79b42f6cd1bd7d9f3f7e87bd",
+      "timeoutCount": 0,
+      "truePositiveMatches": 5,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 5
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-79bba4fe3d52d96bdf5908d4",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [
+        "tier1-hard-negative-01"
+      ],
+      "falsePositiveMatches": 1,
+      "precision": 0.9333333333333333,
+      "redundantTruePositives": 14,
+      "representativeExamples": [
+        "tier1-ai-01",
+        "tier1-ai-03",
+        "tier1-ai-04",
+        "tier1-ai-05",
+        "tier1-ai-06"
+      ],
+      "ruleId": "legacy-7b5e444942d723908272c851",
+      "timeoutCount": 0,
+      "truePositiveMatches": 14,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 15
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-7bbb5f6f7f8931f631fdca33",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-7c18d697962a91dbcb0dc60c",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier2-ops-02"
+      ],
+      "ruleId": "legacy-7c24bc91cee2f3c8f81872ed",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-7cef27b09ac95e98e0c637fc",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-7d6133197b69b31e7163bc38",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-7e27dc6ca5f0f00bc3a9955c",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier1-infra-01",
+        "tier1-infra-03",
+        "tier1-infra-05",
+        "tier1-infra-10"
+      ],
+      "ruleId": "legacy-7e48d1e287e1e4ea4b244139",
+      "timeoutCount": 0,
+      "truePositiveMatches": 4,
+      "uniqueTruePositives": 4,
+      "validationMatchCount": 4
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "tier1-ai-01",
+        "tier1-ai-04",
+        "tier1-ai-05",
+        "tier1-ai-08",
+        "tier1-ai-10"
+      ],
+      "ruleId": "legacy-7e751b2be513ebd7a38e8828",
+      "timeoutCount": 0,
+      "truePositiveMatches": 11,
+      "uniqueTruePositives": 9,
+      "validationMatchCount": 11
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier1-infra-06"
+      ],
+      "ruleId": "legacy-7f0f5449070c50e0ee48198f",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier1-app-03"
+      ],
+      "ruleId": "legacy-7f74fa010faa21843314b472",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-80b9229269b99dad808ecb11",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier1-ai-12"
+      ],
+      "ruleId": "legacy-813caf734594726977bcb68c",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-81be14ec65e20caad98f615c",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier1-infra-01",
+        "tier1-infra-03",
+        "tier1-infra-10"
+      ],
+      "ruleId": "legacy-83ce75eb88d3c2c405947787",
+      "timeoutCount": 0,
+      "truePositiveMatches": 3,
+      "uniqueTruePositives": 2,
+      "validationMatchCount": 3
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-84374bf917d3208a8cc6c7f0",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "positive-warehouse-operator"
+      ],
+      "ruleId": "legacy-85434f2acb298d8a3abe56f3",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "tier1-ai-04",
+        "tier1-ai-07",
+        "tier1-ai-13"
+      ],
+      "ruleId": "legacy-85c6cd2776b0284e3c39fea8",
+      "timeoutCount": 0,
+      "truePositiveMatches": 3,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 3
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-86b35efd9e536cd91eadc6eb",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier1-ai-11",
+        "tier1-cloud-04"
+      ],
+      "ruleId": "legacy-872d6e4c0592b71a4554e76e",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 3,
+      "representativeExamples": [
+        "tier2-ops-04",
+        "tier2-ops-05",
+        "tier2-ops-06",
+        "tier2-ops-07",
+        "tier2-ops-09"
+      ],
+      "ruleId": "legacy-87b979786f45ce5efed96029",
+      "timeoutCount": 0,
+      "truePositiveMatches": 6,
+      "uniqueTruePositives": 3,
+      "validationMatchCount": 6
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-882bd58399e2586a5c670452",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "boeing-jr2026521714-inspection"
+      ],
+      "ruleId": "legacy-897e8e16d17331acf71f861b",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-8a9b280d7e5efc3fc7dbf1a7",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-8b468c254ef357fd732c950b",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-8bbc6c5a41525e2daa028a16",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-8c9da26c4375a9acf4733bdb",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 7,
+      "representativeExamples": [
+        "boeing-jr2026510484-mechanical",
+        "synthetic-industrial-maintenance",
+        "positive-industrial-mechanic",
+        "positive-aircraft-maintenance-technician",
+        "boeing-jr2026499070-process-mechanic"
+      ],
+      "ruleId": "legacy-8e338828c2abe9d1ecfba05b",
+      "timeoutCount": 0,
+      "truePositiveMatches": 7,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 7
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-8e92301576962b47cf86cdc6",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "tier1-infra-03",
+        "tier1-infra-06",
+        "tier1-infra-09",
+        "tier1-infra-10"
+      ],
+      "ruleId": "legacy-9030330002a191747f39cd12",
+      "timeoutCount": 0,
+      "truePositiveMatches": 4,
+      "uniqueTruePositives": 2,
+      "validationMatchCount": 4
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier1-infra-03",
+        "tier1-infra-05"
+      ],
+      "ruleId": "legacy-905359d79fc879a8cf84a8a6",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-9073601482907feaadad7bdd",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-913a743ce5d69fe9dec1e9f8",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-92142c0234b8ce22522d9e2c",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-92f6c0220172e360835793c2",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-944c03af00c6063a971e26b6",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "parsons-r180395-senior-software-developer"
+      ],
+      "ruleId": "legacy-964a567f5365ba7ec1f7aaee",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-977bbbafa8743278b30e536b",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-977e0c7ce4c0f5fc4b66dba4",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-98c630cb83076794dc5da932",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [
+        "tier1-hard-negative-01"
+      ],
+      "falsePositiveMatches": 1,
+      "precision": 0.95,
+      "redundantTruePositives": 5,
+      "representativeExamples": [
+        "tier1-ai-01",
+        "tier1-ai-03",
+        "tier1-ai-05",
+        "tier1-ai-06",
+        "tier1-ai-07"
+      ],
+      "ruleId": "legacy-9927dba88f7db51a75d615ce",
+      "timeoutCount": 0,
+      "truePositiveMatches": 19,
+      "uniqueTruePositives": 14,
+      "validationMatchCount": 20
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "tier1-infra-04",
+        "tier1-infra-09"
+      ],
+      "ruleId": "legacy-99f3b1328c412cb8f70fe5d4",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 8,
+      "representativeExamples": [
+        "parsons-r185333-mechanical",
+        "boeing-jr2026510484-mechanical",
+        "synthetic-industrial-maintenance",
+        "positive-industrial-mechanic",
+        "positive-aircraft-maintenance-technician"
+      ],
+      "ruleId": "legacy-9a3a217254b8cb438ed61a8b",
+      "timeoutCount": 0,
+      "truePositiveMatches": 8,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 8
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "tier1-ai-01",
+        "tier1-ai-02",
+        "tier1-ai-03",
+        "tier1-ai-04",
+        "tier1-ai-05"
+      ],
+      "ruleId": "legacy-a0bfe294bfc8bf795bed1184",
+      "timeoutCount": 0,
+      "truePositiveMatches": 14,
+      "uniqueTruePositives": 12,
+      "validationMatchCount": 14
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier2-ops-04",
+        "tier2-ops-07"
+      ],
+      "ruleId": "legacy-a0cf8d8e2969811f74f0b51d",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 2,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-a0fcaf9ae91b4e71d15a5438",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-a24a958fb804f167a7179dc1",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-a24f23122847cd21b3355591",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-a435601568acd27c96182f5c",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-a639265499a0c4e3a23328cf",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier1-ai-04",
+        "tier1-ai-09",
+        "parsons-r180395-senior-software-developer"
+      ],
+      "ruleId": "legacy-a65c6033d6776e02c5d01a1a",
+      "timeoutCount": 0,
+      "truePositiveMatches": 3,
+      "uniqueTruePositives": 2,
+      "validationMatchCount": 3
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-a83292a3db0ce6d3fb1a5eb5",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-a878748bf55fdcac88fc2dac",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [
+        "tier1-hard-negative-01"
+      ],
+      "falsePositiveMatches": 1,
+      "precision": 0.9375,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "tier1-ai-01",
+        "tier1-ai-02",
+        "tier1-ai-03",
+        "tier1-ai-04",
+        "tier1-ai-05"
+      ],
+      "ruleId": "legacy-a8fd1a68841008ea49ac16a7",
+      "timeoutCount": 0,
+      "truePositiveMatches": 15,
+      "uniqueTruePositives": 13,
+      "validationMatchCount": 16
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-a915594a70776525ec580ae2",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier1-cloud-04",
+        "tier1-cloud-05"
+      ],
+      "ruleId": "legacy-a91f27226332aa6a8abe8df8",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "tier1-ai-08",
+        "tier1-app-01",
+        "tier1-app-02",
+        "tier1-app-03"
+      ],
+      "ruleId": "legacy-a95cc857c3fbf9c5413f6ef5",
+      "timeoutCount": 0,
+      "truePositiveMatches": 4,
+      "uniqueTruePositives": 2,
+      "validationMatchCount": 4
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "tier1-infra-01",
+        "tier1-infra-07"
+      ],
+      "ruleId": "legacy-a9c8343eb445f36b714ff2e6",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier2-ops-02",
+        "tier2-ops-08"
+      ],
+      "ruleId": "legacy-abc1e4319311516c45fa12fc",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 2,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier2-ops-06",
+        "tier2-ops-10"
+      ],
+      "ruleId": "legacy-ac0e10148e5f5232fce93083",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 2,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-ad0cf6e35c33e77246da26a3",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier1-ai-02",
+        "tier1-ai-03",
+        "tier1-ai-06",
+        "tier1-ai-07",
+        "tier1-ai-09"
+      ],
+      "ruleId": "legacy-adb6593b1a0bf39e2338702d",
+      "timeoutCount": 0,
+      "truePositiveMatches": 13,
+      "uniqueTruePositives": 12,
+      "validationMatchCount": 13
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "parsons-r180395-senior-software-developer"
+      ],
+      "ruleId": "legacy-ae785bba03c9d7cb91da1099",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "rtx-01864552-warehouse",
+        "positive-inventory-specialist-stockroom"
+      ],
+      "ruleId": "legacy-afa2798c4bd489ff47f1a378",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 2,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-b043827ef38d5823ce88b5d0",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-b0e68d17f59f181c68df6e12",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 3,
+      "representativeExamples": [
+        "leidos-r00189632-warehouse",
+        "positive-stockroom-specialist",
+        "positive-warehouse-worker"
+      ],
+      "ruleId": "legacy-b1877e8990b40dede5df682b",
+      "timeoutCount": 0,
+      "truePositiveMatches": 3,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 3
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier1-ai-02"
+      ],
+      "ruleId": "legacy-b1fb06a1f2d8b588c62f5a2f",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "boeing-jr2025485784-fabrication"
+      ],
+      "ruleId": "legacy-b3b0c382dc55085a965bdf1a",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier2-ops-10"
+      ],
+      "ruleId": "legacy-b3b90226aeefe836c8139efb",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "tier1-cloud-01",
+        "tier1-cloud-03"
+      ],
+      "ruleId": "legacy-b3e348164a95a900b8a92ea6",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-b4495b4c63d8991aa2ee0e2e",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 5,
+      "representativeExamples": [
+        "boeing-jr2026518773-inspection",
+        "synthetic-weld-inspector",
+        "positive-manufacturing-inspector",
+        "positive-quality-inspector",
+        "positive-test-inspector"
+      ],
+      "ruleId": "legacy-b8c89b51da17a2f734a680f9",
+      "timeoutCount": 0,
+      "truePositiveMatches": 5,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 5
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "boeing-jr2026521714-inspection",
+        "positive-quality-inspections-specialist"
+      ],
+      "ruleId": "legacy-bba22dab36109cb55a246ecb",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-bc1d5a9f818eecb57b29d151",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-bd38c40a01f6e70c385f16d7",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier1-infra-01",
+        "tier1-infra-07"
+      ],
+      "ruleId": "legacy-bdce57064fa431e3344621be",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 2,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-bf1e2a9a3cebfc1c01381c35",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-bf2c870f742cc0dc8ad124fa",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "parsons-r180395-senior-software-developer"
+      ],
+      "ruleId": "legacy-c0129698510a1a34ab82c3dd",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier1-infra-07"
+      ],
+      "ruleId": "legacy-c2ed16dd2f746d6759e009e7",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-c308125e848cd2d204408e3c",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-c3781f349dae74ee8edf954e",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-c4b1b5755ecdf5e2685e283c",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 20,
+      "representativeExamples": [
+        "tier1-ai-01",
+        "tier1-ai-02",
+        "tier1-ai-03",
+        "tier1-ai-04",
+        "tier1-ai-05"
+      ],
+      "ruleId": "legacy-c4df9bde8c46c6165ab762f9",
+      "timeoutCount": 0,
+      "truePositiveMatches": 24,
+      "uniqueTruePositives": 4,
+      "validationMatchCount": 24
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier1-cloud-01",
+        "tier1-cloud-05"
+      ],
+      "ruleId": "legacy-c525c77e3aeae9fc763e5bb1",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier1-cloud-05"
+      ],
+      "ruleId": "legacy-c5b8db46cf76fd25522bf4db",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 6,
+      "representativeExamples": [
+        "boeing-jr2026518584-lab",
+        "synthetic-lab-instrumentation",
+        "positive-electronics-lab-technician",
+        "positive-materials-laboratory-technician",
+        "positive-calibration-lab-technician"
+      ],
+      "ruleId": "legacy-c72f02b141de13fce241e44f",
+      "timeoutCount": 0,
+      "truePositiveMatches": 6,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 6
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-c7e6c4144befe8b8cc0b7090",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "tier1-infra-04",
+        "tier1-infra-06",
+        "tier1-infra-09"
+      ],
+      "ruleId": "legacy-c864198b30bc4d9000ca9e92",
+      "timeoutCount": 0,
+      "truePositiveMatches": 3,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 3
+    },
+    {
+      "falsePositiveExamples": [
+        "tier1-hard-negative-01"
+      ],
+      "falsePositiveMatches": 1,
+      "precision": 0.9545454545454546,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier1-ai-01",
+        "tier1-ai-03",
+        "tier1-ai-05",
+        "tier1-ai-06",
+        "tier1-ai-08"
+      ],
+      "ruleId": "legacy-ca6174c9ac968babbb976108",
+      "timeoutCount": 0,
+      "truePositiveMatches": 21,
+      "uniqueTruePositives": 21,
+      "validationMatchCount": 22
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 4,
+      "representativeExamples": [
+        "leidos-r00189632-warehouse",
+        "positive-stockroom-specialist",
+        "positive-warehouse-operator",
+        "positive-warehouse-worker"
+      ],
+      "ruleId": "legacy-cad262351a1971906c50ec74",
+      "timeoutCount": 0,
+      "truePositiveMatches": 4,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 4
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-cae9f13c3b321c8fe320c906",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "synthetic-material-handler",
+        "positive-material-handler-forklift"
+      ],
+      "ruleId": "legacy-caf195f97436c3e9852afaa6",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 2,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-cd84dc17bf824e6336a617d5",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "parsons-r180395-senior-software-developer"
+      ],
+      "ruleId": "legacy-d05c0dd304d55ded58ca88f3",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-d1a0fe9a8683c5d198ca97b3",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-d290de51c0a1ddd76ebbce33",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier2-ops-02",
+        "tier2-ops-06"
+      ],
+      "ruleId": "legacy-d302a192d5a38cede228726b",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 13,
+      "representativeExamples": [
+        "tier1-ai-01",
+        "tier1-ai-02",
+        "tier1-ai-03",
+        "tier1-ai-04",
+        "tier1-ai-05"
+      ],
+      "ruleId": "legacy-d38950cbbae985c44b98b197",
+      "timeoutCount": 0,
+      "truePositiveMatches": 24,
+      "uniqueTruePositives": 11,
+      "validationMatchCount": 24
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-d3bb0de5d6675cfe555a86c1",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier1-cloud-01",
+        "tier1-app-04",
+        "boeing-jr2026519673-devsecops"
+      ],
+      "ruleId": "legacy-d650f23064a376c9afa2e9aa",
+      "timeoutCount": 0,
+      "truePositiveMatches": 3,
+      "uniqueTruePositives": 2,
+      "validationMatchCount": 3
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier1-ai-03",
+        "tier1-cloud-02",
+        "tier1-cloud-04"
+      ],
+      "ruleId": "legacy-d7158c61c02952c7ffb39cb7",
+      "timeoutCount": 0,
+      "truePositiveMatches": 3,
+      "uniqueTruePositives": 3,
+      "validationMatchCount": 3
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "tier1-ai-03",
+        "tier1-ai-15",
+        "tier1-cloud-01",
+        "tier1-cloud-03"
+      ],
+      "ruleId": "legacy-d8d1310727757684d4c35572",
+      "timeoutCount": 0,
+      "truePositiveMatches": 4,
+      "uniqueTruePositives": 2,
+      "validationMatchCount": 4
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 5,
+      "representativeExamples": [
+        "tier1-ai-02",
+        "tier1-ai-04",
+        "tier1-ai-06",
+        "tier1-ai-08",
+        "tier1-ai-10"
+      ],
+      "ruleId": "legacy-d9c26fd788f9d59439e2ae33",
+      "timeoutCount": 0,
+      "truePositiveMatches": 13,
+      "uniqueTruePositives": 8,
+      "validationMatchCount": 13
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-da5c9838781e5c15723fc995",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "positive-stockroom-specialist"
+      ],
+      "ruleId": "legacy-daa6a8110cf53acbd568fb5b",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier1-ai-02",
+        "tier1-cloud-02"
+      ],
+      "ruleId": "legacy-db462235e331eedb3d1af1c5",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier2-ops-11"
+      ],
+      "ruleId": "legacy-db730304ba32dd1de17ad5ea",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-de5c16b874671c49c8294815",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 3,
+      "representativeExamples": [
+        "synthetic-weld-inspector",
+        "positive-quality-inspector",
+        "positive-quality-inspections-specialist"
+      ],
+      "ruleId": "legacy-df9e982526b844813a0df43d",
+      "timeoutCount": 0,
+      "truePositiveMatches": 3,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 3
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-e0dc89a3a6613a9adc4cf922",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier1-ai-15"
+      ],
+      "ruleId": "legacy-e0eeaf41e6b65f127fa27270",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 3,
+      "representativeExamples": [
+        "tier1-ai-08",
+        "tier1-app-02",
+        "tier1-app-03"
+      ],
+      "ruleId": "legacy-e2ecff3f0a112e6b89218304",
+      "timeoutCount": 0,
+      "truePositiveMatches": 3,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 3
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier2-ops-07"
+      ],
+      "ruleId": "legacy-e31a99eae6e08ac5af02eeb6",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-e331fce07b95cf6102a1aee7",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-e3de597e18701a4d5d275f58",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier1-ai-15",
+        "tier1-cloud-05"
+      ],
+      "ruleId": "legacy-e631808289ec2e13298bd68e",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 2,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier1-ai-02"
+      ],
+      "ruleId": "legacy-e64dc6340ab5725f855fcdf1",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier2-ops-01",
+        "tier2-ops-06"
+      ],
+      "ruleId": "legacy-e694fb2d23a1756c12af40b5",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 2,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 6,
+      "representativeExamples": [
+        "boeing-jr2026518584-lab",
+        "synthetic-lab-instrumentation",
+        "positive-electronics-lab-technician",
+        "positive-materials-laboratory-technician",
+        "positive-calibration-lab-technician"
+      ],
+      "ruleId": "legacy-e6da9ab788f338ffe45c8a19",
+      "timeoutCount": 0,
+      "truePositiveMatches": 6,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 6
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 3,
+      "representativeExamples": [
+        "tier1-ai-02",
+        "tier1-ai-03",
+        "tier1-ai-04",
+        "tier1-ai-06"
+      ],
+      "ruleId": "legacy-e80a00426c1aa360598a633f",
+      "timeoutCount": 0,
+      "truePositiveMatches": 4,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 4
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier1-ai-05"
+      ],
+      "ruleId": "legacy-ea6deaa7ba99b19cb79dc5f6",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 6,
+      "representativeExamples": [
+        "boeing-jr2026518584-lab",
+        "synthetic-lab-instrumentation",
+        "positive-electronics-lab-technician",
+        "positive-materials-laboratory-technician",
+        "positive-calibration-lab-technician"
+      ],
+      "ruleId": "legacy-eae7f69acf07c9dea0c69c0a",
+      "timeoutCount": 0,
+      "truePositiveMatches": 6,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 6
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier1-ai-13"
+      ],
+      "ruleId": "legacy-eb38afb0a6917f79b78f24c5",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-eb3db8b2e7f8cfa9af8c5489",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-eb85c09ca1bfcbc1d43f54a0",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier1-ai-10",
+        "tier1-app-01"
+      ],
+      "ruleId": "legacy-ec5bbf7f6ffd8397aad5336d",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 2,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-ed2ab0533a8ccb6384b337f8",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-eda539dac48d22403ef0e60c",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-eef4d93d96bd00da288a6d2b",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-f045de175cf90a28f983fa0b",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-f0ae0960ec8cc858fd7135a0",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [
+        "negative-plant-cybersecurity"
+      ],
+      "falsePositiveMatches": 1,
+      "precision": 0.875,
+      "redundantTruePositives": 7,
+      "representativeExamples": [
+        "synthetic-production-technician",
+        "synthetic-assembly-line",
+        "synthetic-manufacturing-associate",
+        "positive-manufacturing-operator",
+        "positive-production-operator"
+      ],
+      "ruleId": "legacy-f0cdbb9e34ae8ab897ce606a",
+      "timeoutCount": 0,
+      "truePositiveMatches": 7,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 8
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 8,
+      "representativeExamples": [
+        "boeing-jr2026518584-lab",
+        "boeing-jr2026503217-lab",
+        "synthetic-lab-instrumentation",
+        "positive-electronics-lab-technician",
+        "positive-materials-laboratory-technician"
+      ],
+      "ruleId": "legacy-f15ceeac1a251eb2292c842e",
+      "timeoutCount": 0,
+      "truePositiveMatches": 8,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 8
+    },
+    {
+      "falsePositiveExamples": [
+        "negative-plant-cybersecurity"
+      ],
+      "falsePositiveMatches": 1,
+      "precision": 0.875,
+      "redundantTruePositives": 7,
+      "representativeExamples": [
+        "synthetic-production-technician",
+        "synthetic-assembly-line",
+        "synthetic-manufacturing-associate",
+        "positive-manufacturing-operator",
+        "positive-production-operator"
+      ],
+      "ruleId": "legacy-f22cfa977978c0f3b24b0fa7",
+      "timeoutCount": 0,
+      "truePositiveMatches": 7,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 8
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 8,
+      "representativeExamples": [
+        "tier1-ai-01",
+        "tier1-ai-04",
+        "tier1-ai-07",
+        "tier1-ai-08",
+        "tier1-app-02"
+      ],
+      "ruleId": "legacy-f41d70c95c966778dc90e136",
+      "timeoutCount": 0,
+      "truePositiveMatches": 9,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 9
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier1-infra-05"
+      ],
+      "ruleId": "legacy-f4b4b830fb9a650b1fc99729",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "tier2-ops-02"
+      ],
+      "ruleId": "legacy-f4b6d2cc5d81648d28435557",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier1-ai-09"
+      ],
+      "ruleId": "legacy-f62c94cd3ff2273348fefe50",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier1-ai-04",
+        "tier1-ai-09",
+        "tier1-cloud-01",
+        "tier1-app-04"
+      ],
+      "ruleId": "legacy-f7afd393fca95aad65aae880",
+      "timeoutCount": 0,
+      "truePositiveMatches": 4,
+      "uniqueTruePositives": 3,
+      "validationMatchCount": 4
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 0,
+      "representativeExamples": [
+        "boeing-jr2026523413-vms-software"
+      ],
+      "ruleId": "legacy-f879a01cd5acf7916848fa35",
+      "timeoutCount": 0,
+      "truePositiveMatches": 1,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 1
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-f8fa3e814f43dca4917f0d61",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [
+        "tier1-hard-negative-01"
+      ],
+      "falsePositiveMatches": 1,
+      "precision": 0.9411764705882353,
+      "redundantTruePositives": 6,
+      "representativeExamples": [
+        "tier1-ai-01",
+        "tier1-ai-03",
+        "tier1-ai-05",
+        "tier1-ai-06",
+        "tier1-ai-07"
+      ],
+      "ruleId": "legacy-f9e44ff02c960e76675907ee",
+      "timeoutCount": 0,
+      "truePositiveMatches": 16,
+      "uniqueTruePositives": 10,
+      "validationMatchCount": 17
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "tier1-ai-12",
+        "tier1-infra-04",
+        "tier1-infra-06",
+        "tier1-infra-10"
+      ],
+      "ruleId": "legacy-fa1fbd86a38cc91cdb2e2a44",
+      "timeoutCount": 0,
+      "truePositiveMatches": 4,
+      "uniqueTruePositives": 2,
+      "validationMatchCount": 4
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 1,
+      "representativeExamples": [
+        "tier1-infra-01",
+        "tier1-infra-10"
+      ],
+      "ruleId": "legacy-fabf8a43c0052868b6590b3e",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 1,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-fb6913130152bd540a9b0241",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-fbe8e302ba0a82a08d9d4a6c",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-fc4c5488b6ae65cf68526646",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-fc84ae1593a2c62b7259d39d",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 5,
+      "representativeExamples": [
+        "tier1-ai-01",
+        "tier1-ai-02",
+        "tier1-ai-04",
+        "tier1-ai-06",
+        "tier1-ai-08"
+      ],
+      "ruleId": "legacy-fd60886d19ddcc92d12ab8c1",
+      "timeoutCount": 0,
+      "truePositiveMatches": 17,
+      "uniqueTruePositives": 12,
+      "validationMatchCount": 17
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "legacy-ff07be31d99f75a77a4802f3",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "virtualization-environment-setup-v1",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "virtualization-harvester-context-v1",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "virtualization-hypervisors-v1",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "virtualization-kvm-context-v1",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": 1.0,
+      "redundantTruePositives": 2,
+      "representativeExamples": [
+        "tier1-infra-01",
+        "tier1-infra-07"
+      ],
+      "ruleId": "virtualization-platforms-v1",
+      "timeoutCount": 0,
+      "truePositiveMatches": 2,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 2
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "virtualization-virtual-desktops-v1",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "virtualization-virtual-machines-v1",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "virtualization-virtualized-v1",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "virtualization-vm-context-v1",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    },
+    {
+      "falsePositiveExamples": [],
+      "falsePositiveMatches": 0,
+      "precision": null,
+      "redundantTruePositives": 0,
+      "representativeExamples": [],
+      "ruleId": "virtualization-vmware-context-v1",
+      "timeoutCount": 0,
+      "truePositiveMatches": 0,
+      "uniqueTruePositives": 0,
+      "validationMatchCount": 0
+    }
+  ],
+  "runId": "virtualization-20260909-curated-replay",
+  "schemaVersion": 1,
+  "sourceFiles": {
+    "AiHoldoutEvaluation.cs": "9c2b93de2151cc9cc93587b5d1bb17a9bf79894bbca4f6b92ea33b2b6f22caf5",
+    "ConceptRuleSnapshot.cs": "adddb07fa4fed9b1e7ab03be26086bffe9145047e8384944bde50595abd287e2",
+    "RegexEvaluation.cs": "e08b71c12758f8224aefd59897da6d988dbc6d6bd002708a340aef7baf347e1c",
+    "RegexSemanticClassifier.cs": "7e8425e07c881bbda4182165037f3e2dfb0157107a26e73791cc1643a74b9208",
+    "SemanticClassificationService.cs": "e0a9f88f7a1e6fbd09d8ee1cf5db0b14bbed53f90c12712dfca0ed514d4b1bdd",
+    "curatedReplayPredictions": "67328b9daf73fe35ec8a08cfcc3015d534b875d20c83aa7a94a00d99130a1db3",
+    "rules/concepts-v1.json": "ea6ccfa9ac2fcf09dac2979370b1391a8b7a20433425709acf062d5eeabb9d1a"
+  },
+  "sourceIdentity": "accepted-virtualization-rules:ea6ccfa9ac2fcf09dac2979370b1391a8b7a20433425709acf062d5eeabb9d1a",
+  "unresolvedCount": 0
+}
