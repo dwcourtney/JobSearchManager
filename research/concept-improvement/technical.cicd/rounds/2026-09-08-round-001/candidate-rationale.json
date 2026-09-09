@@ -1,0 +1,92 @@
+{
+  "legacy-0688a73dd714f5512506a209": {
+    "falsePositiveRisk": "Deployment automation can describe infrastructure provisioning rather than application delivery. Keep this explicit automation wording; do not match generic deployment, release trains, or bare build pipeline (sales/capture usage observed).",
+    "phrasePostingCounts": {
+      "DevSecOps pipeline": 1,
+      "automated deployment": 6,
+      "deployment automations": 1,
+      "release pipelines": 1,
+      "software build pipeline": 2
+    },
+    "sourcePhrases": [
+      "automated deployment",
+      "deployment automations",
+      "DevSecOps pipeline",
+      "software build pipeline",
+      "release pipelines"
+    ],
+    "supportingPostingCount": 11,
+    "supportingPostingIds": [
+      "nvidia:JR2023118",
+      "rtx:01865922",
+      "boeing:JR2026520920",
+      "boeing:JR2026519991",
+      "leidos:R-00191018",
+      "nvidia:JR2002387",
+      "leidos:R-00191011",
+      "rtx:01842798",
+      "leidos:R-00191013",
+      "leidos:R-00191329",
+      "boeing:JR2026516259"
+    ]
+  },
+  "legacy-621868550572a3cd94316484": {
+    "falsePositiveRisk": "Standalone CI is ambiguous: a counterintelligence example exists. Require uppercase CI and nearby build/testing/software/API/verification context or an explicit pipeline/reliability/infrastructure suffix. A mixed-domain sentence could still be a false positive; inspect fresh validation.",
+    "phrasePostingCounts": {
+      "APIs, and CI": 1,
+      "CI reliability": 1,
+      "compatibility testing, CI": 1
+    },
+    "sourcePhrases": [
+      "CI reliability",
+      "compatibility testing, CI",
+      "APIs, and CI"
+    ],
+    "supportingPostingCount": 3,
+    "supportingPostingIds": [
+      "nvidia:JR2020161",
+      "nvidia:JR2021170",
+      "nvidia:JR2022848"
+    ]
+  },
+  "legacy-ca6174c9ac968babbb976108": {
+    "falsePositiveRisk": "GitOps may focus on operations rather than software release; GitHub Actions can automate non-build tasks. These named automation systems have corpus context supporting the concept but remain validation risks. Bare GitHub, GitLab, Jenkins, DevOps and cloud are intentionally not added.",
+    "phrasePostingCounts": {
+      "CI-CD": 1,
+      "CICD implementation": 1,
+      "GitHub Actions": 2,
+      "GitOps": 15,
+      "Gitlab CI": 4
+    },
+    "sourcePhrases": [
+      "CI-CD",
+      "CICD implementation",
+      "GitOps",
+      "GitHub Actions",
+      "Gitlab CI"
+    ],
+    "supportingPostingCount": 20,
+    "supportingPostingIds": [
+      "boeing:JR2026520920",
+      "boeing:JR2026519788",
+      "leidos:R-00191011",
+      "nvidia:JR2018233",
+      "nvidia:JR2022554",
+      "nvidia:JR2023005",
+      "nvidia:JR2019460",
+      "leidos:R-00188559",
+      "servicenow:JB0074458",
+      "rtx:01852051",
+      "nvidia:JR2022795",
+      "leidos:R-00184171",
+      "leidos:R-00191329",
+      "nvidia:JR2001098",
+      "boeing:JR2026519493",
+      "servicenow:JB0073708",
+      "nvidia:JR2024197",
+      "nvidia:JR2021935",
+      "nvidia:JR2023582",
+      "nvidia:JR2022978"
+    ]
+  }
+}

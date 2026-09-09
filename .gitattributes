@@ -31,3 +31,6 @@ evaluation/concept-detection/index-v2.json text eol=lf
 evaluation/concept-detection/run-*.json -text
 evaluation/concept-detection/*-policy-v*.json text eol=lf
 tools/concept-evaluation/*.py text eol=lf
+
+# Rejected improvement rounds retain exact sealed research bytes on every checkout.
+research/concept-improvement/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

@@ -1,0 +1,80 @@
+{
+  "conceptId": "technical.cicd",
+  "createdUtc": "2026-09-08T23:51:53.574691+00:00",
+  "curve": {
+    "averagePrecision": 0.8223478260869566,
+    "points": [
+      {
+        "fn": 46,
+        "fp": 0,
+        "precision": 1,
+        "recall": 0,
+        "threshold": null,
+        "tn": 454,
+        "tp": 0
+      },
+      {
+        "fn": 42,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.08695652173913043,
+        "threshold": 0.875,
+        "tn": 454,
+        "tp": 4
+      },
+      {
+        "fn": 37,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.1956521739130435,
+        "threshold": 0.75,
+        "tn": 454,
+        "tp": 9
+      },
+      {
+        "fn": 9,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.8043478260869565,
+        "threshold": 0.5,
+        "tn": 454,
+        "tp": 37
+      },
+      {
+        "fn": 0,
+        "fp": 454,
+        "precision": 0.092,
+        "recall": 1.0,
+        "threshold": 0,
+        "tn": 0,
+        "tp": 46
+      }
+    ]
+  },
+  "metrics": {
+    "f1": 0.891566265060241,
+    "fn": 9,
+    "fp": 0,
+    "negativeSupport": 454,
+    "precision": 1.0,
+    "recall": 0.8043478260869565,
+    "support": 46,
+    "tn": 454,
+    "tp": 37
+  },
+  "postings": 500,
+  "predictionsHash": "516b65515f7b15957eb3278af983cdeaaa1b059b9fb4bbae313ee15167dda7bb",
+  "referenceHash": "fda9fb09f3db7ae829319b94d8233cd8169b0b16898e2e72e10cbf503368d73f",
+  "resolved": 500,
+  "role": "discovery",
+  "rulesHash": "aaf6d97ff6ad7b6c48d12ebc1d1c485722bb4817fee791d418d09172eccbc1a8",
+  "scoreDistribution": {
+    "0": 463,
+    "0.5": 28,
+    "0.75": 5,
+    "0.875": 4
+  },
+  "scorePolicyHash": "107e636b7eb709bb77c5c87e992f8320b0f2948321480998072d24518881d7fb",
+  "unresolved": 0,
+  "variant": "baseline"
+}

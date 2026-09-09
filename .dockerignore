@@ -33,3 +33,6 @@ migration
 
 # Offline evaluation and model adapters are not runtime dependencies.
 tools
+
+# Rejected rule candidates are research evidence, never application build inputs.
+research/concept-improvement

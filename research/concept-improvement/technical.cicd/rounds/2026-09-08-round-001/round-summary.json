@@ -1,0 +1,32 @@
+{
+  "baselineRulesHash": "aaf6d97ff6ad7b6c48d12ebc1d1c485722bb4817fee791d418d09172eccbc1a8",
+  "broaderMiningPopulation": 497,
+  "conceptId": "technical.cicd",
+  "createdUtc": "2026-09-08T23:42:24.313897+00:00",
+  "discovery": 500,
+  "fullArchive": "curiosity:/home/codex/jsm-research/concept-improvement/technical.cicd/2026-09-08-round-001.tar.gz",
+  "limitations": "Available-cache sample; exact ID/description deduplication, near duplicates may remain. Prior global/round exposure excluded from fresh validation. No fallback reuse.",
+  "policy": {
+    "maximumPrecisionLoss": 0.03,
+    "minimumAPGain": 0,
+    "minimumF1Gain": 0.05,
+    "minimumNegativeSupport": 10,
+    "minimumPositiveSupport": 10,
+    "minimumPrecision": 0.8
+  },
+  "population": {
+    "cachedCopies": 2300,
+    "duplicateDescription": 19,
+    "duplicateIdOrWorkspaceCopy": 63,
+    "eligibleUniquePostings": 1371,
+    "missingOrShortDescription": 453,
+    "unavailable": 394
+  },
+  "priorBatches": [],
+  "requested": 500,
+  "reservedValidationPopulation": 374,
+  "role": "review-only; rejected; never production authority",
+  "runId": "2026-09-08-round-001",
+  "schemaVersion": 1,
+  "seed": "cicd-discovery-20260908-001"
+}

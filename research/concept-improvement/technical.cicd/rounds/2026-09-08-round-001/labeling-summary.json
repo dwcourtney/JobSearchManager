@@ -1,0 +1,20 @@
+{
+  "backendRevision": "not exposed by CLI",
+  "method": "prediction-blinded A/B; third blinded pass for disagreements; AI references, not human ground truth",
+  "model": "gpt-6-astra",
+  "roles": {
+    "discovery": {
+      "acceptedSessions": 101,
+      "postings": 500,
+      "rawAttempts": 101,
+      "unresolved": 0
+    },
+    "validation": {
+      "acceptedSessions": 76,
+      "postings": 374,
+      "rawAttempts": 77,
+      "unresolved": 0
+    }
+  },
+  "tool": "codex-cli 0.153.4"
+}

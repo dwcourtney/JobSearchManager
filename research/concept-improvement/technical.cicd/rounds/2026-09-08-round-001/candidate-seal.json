@@ -1,0 +1,14 @@
+{
+  "changedRuleIds": [
+    "legacy-0688a73dd714f5512506a209",
+    "legacy-621868550572a3cd94316484",
+    "legacy-ca6174c9ac968babbb976108"
+  ],
+  "conceptId": "technical.cicd",
+  "files": {
+    "candidate-rationale.json": "0d19847c935608fbc7d25291a55da425ff51876730ada19039ae9fbd9d389d90",
+    "candidate-rules.json": "f3f7c76f79201f6151471b91058c4581df1bfc7a38aacb1dc3bba9d06f437d3d",
+    "candidate-rules.schema.json": "f1d7f95e374cdf6d123caeb7417b4e051a2593bfc0467927d49d209adef31a7d"
+  },
+  "sealedUtc": "2026-09-08T23:57:07.585387+00:00"
+}

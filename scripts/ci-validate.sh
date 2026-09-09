@@ -27,7 +27,7 @@ fi
 bash scripts/verify-repository-identity.sh "$(pwd)"
 bash scripts/test-repository-identity.sh
 python3 Tests/deployment-script.tests.py
-python3 -B -m unittest discover -s tools/concept-evaluation -p test_evaluate.py -v
+python3 -B -m unittest discover -s tools/concept-evaluation -p 'test_*.py' -v
 dotnet restore tools/ConceptEvaluation/ConceptEvaluation.csproj --locked-mode
 dotnet build tools/ConceptEvaluation/ConceptEvaluation.csproj --configuration Release --no-restore
 

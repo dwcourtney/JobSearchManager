@@ -1,0 +1,1901 @@
+{
+  "conceptId": "technical.cicd",
+  "createdUtc": "2026-09-09T00:07:10.825672+00:00",
+  "datasets": [
+    {
+      "baseline": {
+        "f1": 0.8974358974358975,
+        "fn": 8,
+        "fp": 0,
+        "negativeSupport": 457,
+        "precision": 1.0,
+        "recall": 0.813953488372093,
+        "support": 43,
+        "tn": 457,
+        "tp": 35
+      },
+      "baselineAP": 0.829953488372093,
+      "candidate": {
+        "f1": 0.9647058823529412,
+        "fn": 2,
+        "fp": 1,
+        "negativeSupport": 457,
+        "precision": 0.9761904761904762,
+        "recall": 0.9534883720930233,
+        "support": 43,
+        "tn": 456,
+        "tp": 41
+      },
+      "candidateAP": 0.9436456256921374,
+      "changedTargetDecisions": [
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "2e4400064495549ac4fe8f9f523102ca911950c809b525c40fad5fa7637cad18",
+            "evidence": "software engineering practices, including test development, defensive programming, version control, and CI",
+            "id": "nvidia:JR2012361",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-621868550572a3cd94316484"
+            ],
+            "score": 0.5,
+            "title": "Senior DGX Cloud AI Infrastructure Software Engineer"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "2e4400064495549ac4fe8f9f523102ca911950c809b525c40fad5fa7637cad18",
+            "evidence": "",
+            "id": "nvidia:JR2012361",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior DGX Cloud AI Infrastructure Software Engineer"
+          },
+          "id": "nvidia:JR2012361"
+        },
+        {
+          "after": {
+            "company": "boeing",
+            "descriptionHash": "91b6e3bfa5a8971ac64b64d6e23836652d485707e44f4258dda05d7b5e161c02",
+            "evidence": "deployment automation",
+            "id": "boeing:JR2026507046",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-0688a73dd714f5512506a209"
+            ],
+            "score": 0.5,
+            "title": "Cloud Application Deployment and Migration Specialist (Mid-Level, Senior or Lead) **Sign on Bonus Potential**"
+          },
+          "before": {
+            "company": "boeing",
+            "descriptionHash": "91b6e3bfa5a8971ac64b64d6e23836652d485707e44f4258dda05d7b5e161c02",
+            "evidence": "",
+            "id": "boeing:JR2026507046",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Cloud Application Deployment and Migration Specialist (Mid-Level, Senior or Lead) **Sign on Bonus Potential**"
+          },
+          "id": "boeing:JR2026507046"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "a31822067e150840a36fd7d072d502437187cd6d14e1f588846f0f8b4e792329",
+            "evidence": "software shipping cycles (dev, deploy, release, CI",
+            "id": "nvidia:JR2004629",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-621868550572a3cd94316484"
+            ],
+            "score": 0.5,
+            "title": "Senior Software Engineer, JAX"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "a31822067e150840a36fd7d072d502437187cd6d14e1f588846f0f8b4e792329",
+            "evidence": "",
+            "id": "nvidia:JR2004629",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior Software Engineer, JAX"
+          },
+          "id": "nvidia:JR2004629"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "9501a257852241e95a5f27a15c168ab608200075ec417a7e4595c00dd63c7890",
+            "evidence": "APIs, protobuf/gRPC or equivalent wire formats, CI",
+            "id": "nvidia:JR2019848",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-621868550572a3cd94316484"
+            ],
+            "score": 0.5,
+            "title": "Principal Software Engineer, Agent Policy Fabric"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "9501a257852241e95a5f27a15c168ab608200075ec417a7e4595c00dd63c7890",
+            "evidence": "",
+            "id": "nvidia:JR2019848",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Principal Software Engineer, Agent Policy Fabric"
+          },
+          "id": "nvidia:JR2019848"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "d558482a34ab75a65be82c518b79a8e0f1e79ec7ea9b4a14c9a52e987f73f7bf",
+            "evidence": "GitOps",
+            "id": "nvidia:JR2023582",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-ca6174c9ac968babbb976108"
+            ],
+            "score": 0.5,
+            "title": "Senior Solutions Architect, NVIDIA Cloud Partner Operations"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "d558482a34ab75a65be82c518b79a8e0f1e79ec7ea9b4a14c9a52e987f73f7bf",
+            "evidence": "",
+            "id": "nvidia:JR2023582",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior Solutions Architect, NVIDIA Cloud Partner Operations"
+          },
+          "id": "nvidia:JR2023582"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "fe5374e615c5883517cd47f29a509c69d39c66ac853e95276c9c1f4b33634ed4",
+            "evidence": "GitOps",
+            "id": "nvidia:JR2022978",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-ca6174c9ac968babbb976108"
+            ],
+            "score": 0.5,
+            "title": "Senior Solutions Architect, NVIDIA Cloud Partner Operations"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "fe5374e615c5883517cd47f29a509c69d39c66ac853e95276c9c1f4b33634ed4",
+            "evidence": "",
+            "id": "nvidia:JR2022978",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior Solutions Architect, NVIDIA Cloud Partner Operations"
+          },
+          "id": "nvidia:JR2022978"
+        },
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "c3260b808cd18f26a9daff8f720dd7cda2dbad1c63d1d415848b28209445f599",
+            "evidence": "automated deployment",
+            "id": "leidos:R-00191013",
+            "outcome": "FP",
+            "prediction": true,
+            "reference": false,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-0688a73dd714f5512506a209"
+            ],
+            "score": 0.5,
+            "title": "Site Deployment Lead"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "c3260b808cd18f26a9daff8f720dd7cda2dbad1c63d1d415848b28209445f599",
+            "evidence": "",
+            "id": "leidos:R-00191013",
+            "outcome": "TN",
+            "prediction": false,
+            "reference": false,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Site Deployment Lead"
+          },
+          "id": "leidos:R-00191013"
+        }
+      ],
+      "freshValidation": false,
+      "name": "global-ai-reference-500",
+      "postings": 500,
+      "resolved": 500,
+      "role": "later-regression",
+      "sourceHashes": {
+        "baseline": "e9d47def6638a2ca5578bdf73d28327a0cd83072242a80d02c6870edda1d5e6e",
+        "candidate": "3476338d36255515b8ffdeabc9547ff56aa981c0418c1bc2004623dec561c786"
+      },
+      "unresolved": 0,
+      "untouchedConceptChanges": []
+    },
+    {
+      "baseline": {
+        "f1": 0.9830508474576272,
+        "fn": 0,
+        "fp": 1,
+        "negativeSupport": 11,
+        "precision": 0.9666666666666667,
+        "recall": 1.0,
+        "support": 29,
+        "tn": 10,
+        "tp": 29
+      },
+      "baselineAP": 0.9666666666666667,
+      "candidate": {
+        "f1": 0.9830508474576272,
+        "fn": 0,
+        "fp": 1,
+        "negativeSupport": 11,
+        "precision": 0.9666666666666667,
+        "recall": 1.0,
+        "support": 29,
+        "tn": 10,
+        "tp": 29
+      },
+      "candidateAP": 0.9827586206896552,
+      "changedTargetDecisions": [
+        {
+          "after": {
+            "company": "fixture",
+            "descriptionHash": "e3ec9708b7ec2f02eef41b82dabfcbf269824f04a1fc7661d7939a95104cbac9",
+            "evidence": "software builds and CI",
+            "id": "negative-devops-test-lab",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-621868550572a3cd94316484"
+            ],
+            "score": 0.5,
+            "title": "DevOps Engineer"
+          },
+          "before": {
+            "company": "fixture",
+            "descriptionHash": "e3ec9708b7ec2f02eef41b82dabfcbf269824f04a1fc7661d7939a95104cbac9",
+            "evidence": "",
+            "id": "negative-devops-test-lab",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "DevOps Engineer"
+          },
+          "id": "negative-devops-test-lab"
+        }
+      ],
+      "freshValidation": false,
+      "name": "curated-148",
+      "postings": 148,
+      "resolved": 40,
+      "role": "later-regression",
+      "sourceHashes": {
+        "baseline": "104ac8a7850b63d7009e902c21507a370f39882be968211778ceebdacdcf30df",
+        "candidate": "8fe268ccc899b276c80901ed59accf89ea9810852e33143bfd03106d0be41650"
+      },
+      "unresolved": 108,
+      "untouchedConceptChanges": []
+    },
+    {
+      "baseline": {
+        "f1": 0,
+        "fn": 0,
+        "fp": 0,
+        "negativeSupport": 0,
+        "precision": 0,
+        "recall": 0,
+        "support": 0,
+        "tn": 0,
+        "tp": 0
+      },
+      "baselineAP": null,
+      "candidate": {
+        "f1": 0,
+        "fn": 0,
+        "fp": 0,
+        "negativeSupport": 0,
+        "precision": 0,
+        "recall": 0,
+        "support": 0,
+        "tn": 0,
+        "tp": 0
+      },
+      "candidateAP": null,
+      "changedTargetDecisions": [],
+      "freshValidation": false,
+      "name": "frozen-oracle-40",
+      "postings": 40,
+      "resolved": 0,
+      "role": "later-regression",
+      "sourceHashes": {
+        "baseline": "22dd8fef2ad8d857837b40d4008e7f722b3094316b75983d50cf4882841f95dd",
+        "candidate": "3935ae3b48b9b9ff9722153a4a4820870b576104768ee8f26caf32c10591fc7f"
+      },
+      "unresolved": 40,
+      "untouchedConceptChanges": []
+    },
+    {
+      "baseline": {
+        "f1": 0.9333333333333333,
+        "fn": 2,
+        "fp": 0,
+        "negativeSupport": 184,
+        "precision": 1.0,
+        "recall": 0.875,
+        "support": 16,
+        "tn": 184,
+        "tp": 14
+      },
+      "baselineAP": 0.885,
+      "candidate": {
+        "f1": 0.9333333333333333,
+        "fn": 2,
+        "fp": 0,
+        "negativeSupport": 184,
+        "precision": 1.0,
+        "recall": 0.875,
+        "support": 16,
+        "tn": 184,
+        "tp": 14
+      },
+      "candidateAP": 0.885,
+      "changedTargetDecisions": [],
+      "freshValidation": false,
+      "name": "frozen-machine-holdout-200",
+      "postings": 200,
+      "resolved": 200,
+      "role": "later-regression",
+      "sourceHashes": {
+        "baseline": "5fb8f207762d30d310e1c4236be6a70d48256c2e053295b2a3c3998940e1a746",
+        "candidate": "77027e64e7bbe3698acb03e4d4635e25aa7cd58d96c7411c8220e4eac10e0108"
+      },
+      "unresolved": 0,
+      "untouchedConceptChanges": []
+    },
+    {
+      "baseline": {
+        "f1": 0,
+        "fn": 0,
+        "fp": 0,
+        "negativeSupport": 0,
+        "precision": 0,
+        "recall": 0,
+        "support": 0,
+        "tn": 0,
+        "tp": 0
+      },
+      "baselineAP": null,
+      "candidate": {
+        "f1": 0,
+        "fn": 0,
+        "fp": 0,
+        "negativeSupport": 0,
+        "precision": 0,
+        "recall": 0,
+        "support": 0,
+        "tn": 0,
+        "tp": 0
+      },
+      "candidateAP": null,
+      "changedTargetDecisions": [
+        {
+          "after": {
+            "company": "leidos",
+            "descriptionHash": "c3260b808cd18f26a9daff8f720dd7cda2dbad1c63d1d415848b28209445f599",
+            "evidence": "automated deployment",
+            "id": "leidos:R-00191013",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-0688a73dd714f5512506a209"
+            ],
+            "score": 0.5,
+            "title": "Site Deployment Lead"
+          },
+          "before": {
+            "company": "leidos",
+            "descriptionHash": "c3260b808cd18f26a9daff8f720dd7cda2dbad1c63d1d415848b28209445f599",
+            "evidence": "",
+            "id": "leidos:R-00191013",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Site Deployment Lead"
+          },
+          "id": "leidos:R-00191013"
+        },
+        {
+          "after": {
+            "company": "boeing",
+            "descriptionHash": "91b6e3bfa5a8971ac64b64d6e23836652d485707e44f4258dda05d7b5e161c02",
+            "evidence": "deployment automation",
+            "id": "boeing:JR2026507046",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-0688a73dd714f5512506a209"
+            ],
+            "score": 0.5,
+            "title": "Cloud Application Deployment and Migration Specialist (Mid-Level, Senior or Lead) **Sign on Bonus Potential**"
+          },
+          "before": {
+            "company": "boeing",
+            "descriptionHash": "91b6e3bfa5a8971ac64b64d6e23836652d485707e44f4258dda05d7b5e161c02",
+            "evidence": "",
+            "id": "boeing:JR2026507046",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Cloud Application Deployment and Migration Specialist (Mid-Level, Senior or Lead) **Sign on Bonus Potential**"
+          },
+          "id": "boeing:JR2026507046"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "094c3c01bec5bd294dd24a9157d763d88916dd2bf27c6b2bda93e404fe6dd7f2",
+            "evidence": "GitOps",
+            "id": "nvidia:JR2024369",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-ca6174c9ac968babbb976108"
+            ],
+            "score": 0.5,
+            "title": "Principal Software Engineer - Compute Infrastructure"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "094c3c01bec5bd294dd24a9157d763d88916dd2bf27c6b2bda93e404fe6dd7f2",
+            "evidence": "",
+            "id": "nvidia:JR2024369",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Principal Software Engineer - Compute Infrastructure"
+          },
+          "id": "nvidia:JR2024369"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "7a91b123f30c69c8d2cf2606edda27f0afb2933c9c8cf4cb454f855c7cc98384",
+            "evidence": "automated deployment",
+            "id": "nvidia:JR1997596",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-0688a73dd714f5512506a209"
+            ],
+            "score": 0.5,
+            "title": "Senior Deep Learning Software Engineer, Inference and Model Optimization"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "7a91b123f30c69c8d2cf2606edda27f0afb2933c9c8cf4cb454f855c7cc98384",
+            "evidence": "",
+            "id": "nvidia:JR1997596",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior Deep Learning Software Engineer, Inference and Model Optimization"
+          },
+          "id": "nvidia:JR1997596"
+        },
+        {
+          "after": {
+            "company": "rtx",
+            "descriptionHash": "6ea01718c8f20b6f0dfd17f19034684be58e81d6aa7a7e79e0b7e8d243a4e566",
+            "evidence": "deployment automations",
+            "id": "rtx:01865922",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-0688a73dd714f5512506a209"
+            ],
+            "score": 0.5,
+            "title": "Digital Technology Architect - Applications and Solutions (Agile), Remote US Locations only"
+          },
+          "before": {
+            "company": "rtx",
+            "descriptionHash": "6ea01718c8f20b6f0dfd17f19034684be58e81d6aa7a7e79e0b7e8d243a4e566",
+            "evidence": "",
+            "id": "rtx:01865922",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Digital Technology Architect - Applications and Solutions (Agile), Remote US Locations only"
+          },
+          "id": "rtx:01865922"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "2e4400064495549ac4fe8f9f523102ca911950c809b525c40fad5fa7637cad18",
+            "evidence": "software engineering practices, including test development, defensive programming, version control, and CI",
+            "id": "nvidia:JR2012361",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-621868550572a3cd94316484"
+            ],
+            "score": 0.5,
+            "title": "Senior DGX Cloud AI Infrastructure Software Engineer"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "2e4400064495549ac4fe8f9f523102ca911950c809b525c40fad5fa7637cad18",
+            "evidence": "",
+            "id": "nvidia:JR2012361",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior DGX Cloud AI Infrastructure Software Engineer"
+          },
+          "id": "nvidia:JR2012361"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "c5fe78a86d15fcca4b8eaad004838d145d98fb260f22db095a77584c9ed03f4d",
+            "evidence": "GitOps",
+            "id": "nvidia:JR2018233",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-ca6174c9ac968babbb976108"
+            ],
+            "score": 0.5,
+            "title": "Principal Software Engineer, DGX Cloud Production Engineering"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "c5fe78a86d15fcca4b8eaad004838d145d98fb260f22db095a77584c9ed03f4d",
+            "evidence": "",
+            "id": "nvidia:JR2018233",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Principal Software Engineer, DGX Cloud Production Engineering"
+          },
+          "id": "nvidia:JR2018233"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "9501a257852241e95a5f27a15c168ab608200075ec417a7e4595c00dd63c7890",
+            "evidence": "APIs, protobuf/gRPC or equivalent wire formats, CI",
+            "id": "nvidia:JR2019848",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-621868550572a3cd94316484"
+            ],
+            "score": 0.5,
+            "title": "Principal Software Engineer, Agent Policy Fabric"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "9501a257852241e95a5f27a15c168ab608200075ec417a7e4595c00dd63c7890",
+            "evidence": "",
+            "id": "nvidia:JR2019848",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Principal Software Engineer, Agent Policy Fabric"
+          },
+          "id": "nvidia:JR2019848"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "0f0b7b1499307fe59fcd709c4d3c99bb6f64b78c5730df4bfe834140852c7a7a",
+            "evidence": "build integration, compatibility testing, CI",
+            "id": "nvidia:JR2021170",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-621868550572a3cd94316484"
+            ],
+            "score": 0.5,
+            "title": "Senior Software Engineer, CUDA Rust Core Libraries"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "0f0b7b1499307fe59fcd709c4d3c99bb6f64b78c5730df4bfe834140852c7a7a",
+            "evidence": "",
+            "id": "nvidia:JR2021170",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior Software Engineer, CUDA Rust Core Libraries"
+          },
+          "id": "nvidia:JR2021170"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "b28a85075a8faaadc1fe9be9887bc9e0a1eae1db45a8cb4d68a1e174bb8d5376",
+            "evidence": "APIs, and CI",
+            "id": "nvidia:JR2020161",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-621868550572a3cd94316484"
+            ],
+            "score": 0.5,
+            "title": "Senior Software Engineer - Topography"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "b28a85075a8faaadc1fe9be9887bc9e0a1eae1db45a8cb4d68a1e174bb8d5376",
+            "evidence": "",
+            "id": "nvidia:JR2020161",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior Software Engineer - Topography"
+          },
+          "id": "nvidia:JR2020161"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "d558482a34ab75a65be82c518b79a8e0f1e79ec7ea9b4a14c9a52e987f73f7bf",
+            "evidence": "GitOps",
+            "id": "nvidia:JR2023582",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-ca6174c9ac968babbb976108"
+            ],
+            "score": 0.5,
+            "title": "Senior Solutions Architect, NVIDIA Cloud Partner Operations"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "d558482a34ab75a65be82c518b79a8e0f1e79ec7ea9b4a14c9a52e987f73f7bf",
+            "evidence": "",
+            "id": "nvidia:JR2023582",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior Solutions Architect, NVIDIA Cloud Partner Operations"
+          },
+          "id": "nvidia:JR2023582"
+        },
+        {
+          "after": {
+            "company": "rtx",
+            "descriptionHash": "4b08b401aa3877a4981b349be33247ef6475846daebd691c97f7fb818453b6bd",
+            "evidence": "DevSecOps pipeline",
+            "id": "rtx:01842798",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-0688a73dd714f5512506a209"
+            ],
+            "score": 0.5,
+            "title": "Associate Director, DT Portfolio Architect - Development (Remote)"
+          },
+          "before": {
+            "company": "rtx",
+            "descriptionHash": "4b08b401aa3877a4981b349be33247ef6475846daebd691c97f7fb818453b6bd",
+            "evidence": "",
+            "id": "rtx:01842798",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Associate Director, DT Portfolio Architect - Development (Remote)"
+          },
+          "id": "rtx:01842798"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "a31822067e150840a36fd7d072d502437187cd6d14e1f588846f0f8b4e792329",
+            "evidence": "software shipping cycles (dev, deploy, release, CI",
+            "id": "nvidia:JR2004629",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-621868550572a3cd94316484"
+            ],
+            "score": 0.5,
+            "title": "Senior Software Engineer, JAX"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "a31822067e150840a36fd7d072d502437187cd6d14e1f588846f0f8b4e792329",
+            "evidence": "",
+            "id": "nvidia:JR2004629",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior Software Engineer, JAX"
+          },
+          "id": "nvidia:JR2004629"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "14f71f9f1dbf80c95802bb619b3a22c68448d3e5a18a93b05f438739ef0e4955",
+            "evidence": "software excellence with modern tooling, architecture based on configuration, and professional Git/CI; CI-CD",
+            "id": "nvidia:JR2019460",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-621868550572a3cd94316484",
+              "legacy-ca6174c9ac968babbb976108"
+            ],
+            "score": 0.75,
+            "title": "Senior Scientist, Synthetic Data Generation"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "14f71f9f1dbf80c95802bb619b3a22c68448d3e5a18a93b05f438739ef0e4955",
+            "evidence": "",
+            "id": "nvidia:JR2019460",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior Scientist, Synthetic Data Generation"
+          },
+          "id": "nvidia:JR2019460"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "e6713492941ac1a46fe15edf163d483ce0697436d43b378e0a2b5270e12e18d9",
+            "evidence": "GitOps",
+            "id": "nvidia:JR2022966",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-ca6174c9ac968babbb976108"
+            ],
+            "score": 0.5,
+            "title": "Senior Software Engineer, Unified Access Management Platform"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "e6713492941ac1a46fe15edf163d483ce0697436d43b378e0a2b5270e12e18d9",
+            "evidence": "",
+            "id": "nvidia:JR2022966",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior Software Engineer, Unified Access Management Platform"
+          },
+          "id": "nvidia:JR2022966"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "9fa0fa32832689931806d1aa2f6349064989d73d158ea209deed51d56e01e6ae",
+            "evidence": "GitOps",
+            "id": "nvidia:JR2022795",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-ca6174c9ac968babbb976108"
+            ],
+            "score": 0.5,
+            "title": "Senior Solutions Architect, Physical AI Cloud"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "9fa0fa32832689931806d1aa2f6349064989d73d158ea209deed51d56e01e6ae",
+            "evidence": "",
+            "id": "nvidia:JR2022795",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior Solutions Architect, Physical AI Cloud"
+          },
+          "id": "nvidia:JR2022795"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "a5d6c3016cde955a7888f06733b38ef468c1fac4b1e4293a356052f7c7015e0d",
+            "evidence": "testing, and review efficiency Partner with compiler developers, architecture teams, and CI",
+            "id": "nvidia:JR2021595",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-621868550572a3cd94316484"
+            ],
+            "score": 0.5,
+            "title": "Senior Compiler Engineer Infrastructure"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "a5d6c3016cde955a7888f06733b38ef468c1fac4b1e4293a356052f7c7015e0d",
+            "evidence": "",
+            "id": "nvidia:JR2021595",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior Compiler Engineer Infrastructure"
+          },
+          "id": "nvidia:JR2021595"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "c8753d054f8ac2861ba9810da4e11e010534684d1a66aaf592d32fc70280c36a",
+            "evidence": "GitOps",
+            "id": "nvidia:JR2022554",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-ca6174c9ac968babbb976108"
+            ],
+            "score": 0.5,
+            "title": "Principal Software Engineer, DGX Cloud Production Engineering"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "c8753d054f8ac2861ba9810da4e11e010534684d1a66aaf592d32fc70280c36a",
+            "evidence": "",
+            "id": "nvidia:JR2022554",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Principal Software Engineer, DGX Cloud Production Engineering"
+          },
+          "id": "nvidia:JR2022554"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "ff3a6808d6576230fbd200d2b449b385e91ae97707a78563d13874c84732e483",
+            "evidence": "automated deployment",
+            "id": "nvidia:JR2023118",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-0688a73dd714f5512506a209"
+            ],
+            "score": 0.5,
+            "title": "Distinguished Engineer, Scaled Out Inferencing"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "ff3a6808d6576230fbd200d2b449b385e91ae97707a78563d13874c84732e483",
+            "evidence": "",
+            "id": "nvidia:JR2023118",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Distinguished Engineer, Scaled Out Inferencing"
+          },
+          "id": "nvidia:JR2023118"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "dc6c8732e4fd5919b86a034ec93ecca5fa09ee3cefdbd5361b114f5c2345a0b2",
+            "evidence": "verification engineer who has developed a strong interest in infrastructure, automation, CI",
+            "id": "nvidia:JR2022848",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-621868550572a3cd94316484"
+            ],
+            "score": 0.5,
+            "title": "Senior ASIC Design Verification Infrastructure and Tools Engineer – GPU"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "dc6c8732e4fd5919b86a034ec93ecca5fa09ee3cefdbd5361b114f5c2345a0b2",
+            "evidence": "",
+            "id": "nvidia:JR2022848",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior ASIC Design Verification Infrastructure and Tools Engineer – GPU"
+          },
+          "id": "nvidia:JR2022848"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "fe5374e615c5883517cd47f29a509c69d39c66ac853e95276c9c1f4b33634ed4",
+            "evidence": "GitOps",
+            "id": "nvidia:JR2022978",
+            "outcome": "unresolved",
+            "prediction": true,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-ca6174c9ac968babbb976108"
+            ],
+            "score": 0.5,
+            "title": "Senior Solutions Architect, NVIDIA Cloud Partner Operations"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "fe5374e615c5883517cd47f29a509c69d39c66ac853e95276c9c1f4b33634ed4",
+            "evidence": "",
+            "id": "nvidia:JR2022978",
+            "outcome": "unresolved",
+            "prediction": false,
+            "reference": null,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior Solutions Architect, NVIDIA Cloud Partner Operations"
+          },
+          "id": "nvidia:JR2022978"
+        }
+      ],
+      "freshValidation": false,
+      "name": "current-public-cache-1371",
+      "postings": 1371,
+      "resolved": 0,
+      "role": "later-regression",
+      "sourceHashes": {
+        "baseline": "62d567a9852aaf32bf0548a2827222e49829c1350138e5193083964496e6f0bd",
+        "candidate": "45a6310639996fa7681fa571455f475fffbc72b988924576822c43ab708cc1ef"
+      },
+      "unresolved": 1371,
+      "untouchedConceptChanges": []
+    },
+    {
+      "baseline": {
+        "f1": 0.0,
+        "fn": 8,
+        "fp": 0,
+        "negativeSupport": 6,
+        "precision": 0,
+        "recall": 0.0,
+        "support": 8,
+        "tn": 6,
+        "tp": 0
+      },
+      "baselineAP": 0.5714285714285714,
+      "candidate": {
+        "f1": 1.0,
+        "fn": 0,
+        "fp": 0,
+        "negativeSupport": 6,
+        "precision": 1.0,
+        "recall": 1.0,
+        "support": 8,
+        "tn": 6,
+        "tp": 8
+      },
+      "candidateAP": 1.0,
+      "changedTargetDecisions": [
+        {
+          "after": {
+            "company": "fixture",
+            "descriptionHash": "d26b3a44bdf6e2a6fe5c5a1d60748eca5e277592dd214302e77cbcc90de3a5fc",
+            "evidence": "CI-CD",
+            "id": "hyphen",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-ca6174c9ac968babbb976108"
+            ],
+            "score": 0.5,
+            "title": ""
+          },
+          "before": {
+            "company": "fixture",
+            "descriptionHash": "d26b3a44bdf6e2a6fe5c5a1d60748eca5e277592dd214302e77cbcc90de3a5fc",
+            "evidence": "",
+            "id": "hyphen",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": ""
+          },
+          "id": "hyphen"
+        },
+        {
+          "after": {
+            "company": "fixture",
+            "descriptionHash": "076d7073de0ed0667bc849dba6d16eb4a96d4b235bf35a4412d02798283ec1fc",
+            "evidence": "CICD",
+            "id": "compact",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-ca6174c9ac968babbb976108"
+            ],
+            "score": 0.5,
+            "title": ""
+          },
+          "before": {
+            "company": "fixture",
+            "descriptionHash": "076d7073de0ed0667bc849dba6d16eb4a96d4b235bf35a4412d02798283ec1fc",
+            "evidence": "",
+            "id": "compact",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": ""
+          },
+          "id": "compact"
+        },
+        {
+          "after": {
+            "company": "fixture",
+            "descriptionHash": "8c101ed62d724026fdd90b039415af0433055ddabcd8f5eaef53340616e5bb3b",
+            "evidence": "testing, CI",
+            "id": "context",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-621868550572a3cd94316484"
+            ],
+            "score": 0.5,
+            "title": ""
+          },
+          "before": {
+            "company": "fixture",
+            "descriptionHash": "8c101ed62d724026fdd90b039415af0433055ddabcd8f5eaef53340616e5bb3b",
+            "evidence": "",
+            "id": "context",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": ""
+          },
+          "id": "context"
+        },
+        {
+          "after": {
+            "company": "fixture",
+            "descriptionHash": "e04861fbede2a4a0f7931a03773ff5e7542a30f3b5d1c9fc18629d7eec37f2c0",
+            "evidence": "APIs, and CI",
+            "id": "api",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-621868550572a3cd94316484"
+            ],
+            "score": 0.5,
+            "title": ""
+          },
+          "before": {
+            "company": "fixture",
+            "descriptionHash": "e04861fbede2a4a0f7931a03773ff5e7542a30f3b5d1c9fc18629d7eec37f2c0",
+            "evidence": "",
+            "id": "api",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": ""
+          },
+          "id": "api"
+        },
+        {
+          "after": {
+            "company": "fixture",
+            "descriptionHash": "0eb57f4143bda706547e993d29c08c9d62428c26ffcd81eb669d7fc4de917eb7",
+            "evidence": "CI reliability",
+            "id": "reliability",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-621868550572a3cd94316484"
+            ],
+            "score": 0.5,
+            "title": ""
+          },
+          "before": {
+            "company": "fixture",
+            "descriptionHash": "0eb57f4143bda706547e993d29c08c9d62428c26ffcd81eb669d7fc4de917eb7",
+            "evidence": "",
+            "id": "reliability",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": ""
+          },
+          "id": "reliability"
+        },
+        {
+          "after": {
+            "company": "fixture",
+            "descriptionHash": "2a1ba0263acc51ea49d5a23c76f8a22251ec856ca7d2ce9fd949813f43aac106",
+            "evidence": "GitOps",
+            "id": "gitops",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-ca6174c9ac968babbb976108"
+            ],
+            "score": 0.5,
+            "title": ""
+          },
+          "before": {
+            "company": "fixture",
+            "descriptionHash": "2a1ba0263acc51ea49d5a23c76f8a22251ec856ca7d2ce9fd949813f43aac106",
+            "evidence": "",
+            "id": "gitops",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": ""
+          },
+          "id": "gitops"
+        },
+        {
+          "after": {
+            "company": "fixture",
+            "descriptionHash": "c5faf48afb0d03abddc207da6652822d83ed2d62e69f88ef12b481e59348a1bd",
+            "evidence": "deployment automation",
+            "id": "automation",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-0688a73dd714f5512506a209"
+            ],
+            "score": 0.5,
+            "title": ""
+          },
+          "before": {
+            "company": "fixture",
+            "descriptionHash": "c5faf48afb0d03abddc207da6652822d83ed2d62e69f88ef12b481e59348a1bd",
+            "evidence": "",
+            "id": "automation",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": ""
+          },
+          "id": "automation"
+        },
+        {
+          "after": {
+            "company": "fixture",
+            "descriptionHash": "60998957c4949108ca07dca819d9657da710290c1c4af4484c69afdcf5bc90c4",
+            "evidence": "DevSecOps pipeline",
+            "id": "devsecops",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-0688a73dd714f5512506a209"
+            ],
+            "score": 0.5,
+            "title": ""
+          },
+          "before": {
+            "company": "fixture",
+            "descriptionHash": "60998957c4949108ca07dca819d9657da710290c1c4af4484c69afdcf5bc90c4",
+            "evidence": "",
+            "id": "devsecops",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": ""
+          },
+          "id": "devsecops"
+        }
+      ],
+      "freshValidation": false,
+      "name": "candidate-focused-14",
+      "postings": 14,
+      "resolved": 14,
+      "role": "later-regression",
+      "sourceHashes": {
+        "baseline": "15d38110de3d83f6298252febee2733933c53892dd390ac93d786dd9e60181e3",
+        "candidate": "67a7258a8b054b0f4d8ff2a79f0cca7199c9267f26789258c22a070bb3cb4d4a"
+      },
+      "unresolved": 0,
+      "untouchedConceptChanges": []
+    },
+    {
+      "baseline": {
+        "f1": 0.891566265060241,
+        "fn": 9,
+        "fp": 0,
+        "negativeSupport": 454,
+        "precision": 1.0,
+        "recall": 0.8043478260869565,
+        "support": 46,
+        "tn": 454,
+        "tp": 37
+      },
+      "baselineAP": 0.8223478260869566,
+      "candidate": {
+        "f1": 0.989247311827957,
+        "fn": 0,
+        "fp": 1,
+        "negativeSupport": 454,
+        "precision": 0.9787234042553191,
+        "recall": 1.0,
+        "support": 46,
+        "tn": 453,
+        "tp": 46
+      },
+      "candidateAP": 0.9898242368177613,
+      "changedTargetDecisions": [
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "ff3a6808d6576230fbd200d2b449b385e91ae97707a78563d13874c84732e483",
+            "evidence": "automated deployment",
+            "id": "nvidia:JR2023118",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "including automated deployment, versioning, and intelligent scaling across varied cloud and datacenter environments.",
+            "ruleIds": [
+              "legacy-0688a73dd714f5512506a209"
+            ],
+            "score": 0.5,
+            "title": "Distinguished Engineer, Scaled Out Inferencing"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "ff3a6808d6576230fbd200d2b449b385e91ae97707a78563d13874c84732e483",
+            "evidence": "",
+            "id": "nvidia:JR2023118",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "including automated deployment, versioning, and intelligent scaling across varied cloud and datacenter environments.",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Distinguished Engineer, Scaled Out Inferencing"
+          },
+          "id": "nvidia:JR2023118"
+        },
+        {
+          "after": {
+            "company": "rtx",
+            "descriptionHash": "6ea01718c8f20b6f0dfd17f19034684be58e81d6aa7a7e79e0b7e8d243a4e566",
+            "evidence": "deployment automations",
+            "id": "rtx:01865922",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "Experience deploying and integrating large-scale software solutions in a highly regulated and secure industry environment through all lifecycle phases, using infrastructure as code and deployment automations.",
+            "ruleIds": [
+              "legacy-0688a73dd714f5512506a209"
+            ],
+            "score": 0.5,
+            "title": "Digital Technology Architect - Applications and Solutions (Agile), Remote US Locations only"
+          },
+          "before": {
+            "company": "rtx",
+            "descriptionHash": "6ea01718c8f20b6f0dfd17f19034684be58e81d6aa7a7e79e0b7e8d243a4e566",
+            "evidence": "",
+            "id": "rtx:01865922",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "Experience deploying and integrating large-scale software solutions in a highly regulated and secure industry environment through all lifecycle phases, using infrastructure as code and deployment automations.",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Digital Technology Architect - Applications and Solutions (Agile), Remote US Locations only"
+          },
+          "id": "rtx:01865922"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "b28a85075a8faaadc1fe9be9887bc9e0a1eae1db45a8cb4d68a1e174bb8d5376",
+            "evidence": "APIs, and CI",
+            "id": "nvidia:JR2020161",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "Experience with distributed systems, Kubernetes, Slurm/Slinky, Linux, containers, APIs, and CI.",
+            "ruleIds": [
+              "legacy-621868550572a3cd94316484"
+            ],
+            "score": 0.5,
+            "title": "Senior Software Engineer - Topography"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "b28a85075a8faaadc1fe9be9887bc9e0a1eae1db45a8cb4d68a1e174bb8d5376",
+            "evidence": "",
+            "id": "nvidia:JR2020161",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "Experience with distributed systems, Kubernetes, Slurm/Slinky, Linux, containers, APIs, and CI.",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior Software Engineer - Topography"
+          },
+          "id": "nvidia:JR2020161"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "0f0b7b1499307fe59fcd709c4d3c99bb6f64b78c5730df4bfe834140852c7a7a",
+            "evidence": "build integration, compatibility testing, CI",
+            "id": "nvidia:JR2021170",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "Improve the Rust developer experience through examples, diagnostics, build integration, compatibility testing, CI, and collaboration with C/C++, Python, compiler, and runtime engineers.",
+            "ruleIds": [
+              "legacy-621868550572a3cd94316484"
+            ],
+            "score": 0.5,
+            "title": "Senior Software Engineer, CUDA Rust Core Libraries"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "0f0b7b1499307fe59fcd709c4d3c99bb6f64b78c5730df4bfe834140852c7a7a",
+            "evidence": "",
+            "id": "nvidia:JR2021170",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "Improve the Rust developer experience through examples, diagnostics, build integration, compatibility testing, CI, and collaboration with C/C++, Python, compiler, and runtime engineers.",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior Software Engineer, CUDA Rust Core Libraries"
+          },
+          "id": "nvidia:JR2021170"
+        },
+        {
+          "after": {
+            "company": "rtx",
+            "descriptionHash": "4b08b401aa3877a4981b349be33247ef6475846daebd691c97f7fb818453b6bd",
+            "evidence": "DevSecOps pipeline",
+            "id": "rtx:01842798",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "Experience with modern architecture frameworks and designs that support successful digital technology insertion and DevSecOps pipeline delivery.",
+            "ruleIds": [
+              "legacy-0688a73dd714f5512506a209"
+            ],
+            "score": 0.5,
+            "title": "Associate Director, DT Portfolio Architect - Development (Remote)"
+          },
+          "before": {
+            "company": "rtx",
+            "descriptionHash": "4b08b401aa3877a4981b349be33247ef6475846daebd691c97f7fb818453b6bd",
+            "evidence": "",
+            "id": "rtx:01842798",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "Experience with modern architecture frameworks and designs that support successful digital technology insertion and DevSecOps pipeline delivery.",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Associate Director, DT Portfolio Architect - Development (Remote)"
+          },
+          "id": "rtx:01842798"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "c5fe78a86d15fcca4b8eaad004838d145d98fb260f22db095a77584c9ed03f4d",
+            "evidence": "GitOps",
+            "id": "nvidia:JR2018233",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "building the automation, GitOps, and Day 2 reliability needed to operate large-scale GPU clusters",
+            "ruleIds": [
+              "legacy-ca6174c9ac968babbb976108"
+            ],
+            "score": 0.5,
+            "title": "Principal Software Engineer, DGX Cloud Production Engineering"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "c5fe78a86d15fcca4b8eaad004838d145d98fb260f22db095a77584c9ed03f4d",
+            "evidence": "",
+            "id": "nvidia:JR2018233",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "building the automation, GitOps, and Day 2 reliability needed to operate large-scale GPU clusters",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Principal Software Engineer, DGX Cloud Production Engineering"
+          },
+          "id": "nvidia:JR2018233"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "c8753d054f8ac2861ba9810da4e11e010534684d1a66aaf592d32fc70280c36a",
+            "evidence": "GitOps",
+            "id": "nvidia:JR2022554",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "Experience with declarative infrastructure, Kubernetes controllers, GitOps, or policy-driven platform automation.",
+            "ruleIds": [
+              "legacy-ca6174c9ac968babbb976108"
+            ],
+            "score": 0.5,
+            "title": "Principal Software Engineer, DGX Cloud Production Engineering"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "c8753d054f8ac2861ba9810da4e11e010534684d1a66aaf592d32fc70280c36a",
+            "evidence": "",
+            "id": "nvidia:JR2022554",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "Experience with declarative infrastructure, Kubernetes controllers, GitOps, or policy-driven platform automation.",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Principal Software Engineer, DGX Cloud Production Engineering"
+          },
+          "id": "nvidia:JR2022554"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "14f71f9f1dbf80c95802bb619b3a22c68448d3e5a18a93b05f438739ef0e4955",
+            "evidence": "software excellence with modern tooling, architecture based on configuration, and professional Git/CI; CI-CD",
+            "id": "nvidia:JR2019460",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "Drive software excellence with modern tooling, architecture based on configuration, and professional Git/CI-CD.",
+            "ruleIds": [
+              "legacy-621868550572a3cd94316484",
+              "legacy-ca6174c9ac968babbb976108"
+            ],
+            "score": 0.75,
+            "title": "Senior Scientist, Synthetic Data Generation"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "14f71f9f1dbf80c95802bb619b3a22c68448d3e5a18a93b05f438739ef0e4955",
+            "evidence": "",
+            "id": "nvidia:JR2019460",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "Drive software excellence with modern tooling, architecture based on configuration, and professional Git/CI-CD.",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior Scientist, Synthetic Data Generation"
+          },
+          "id": "nvidia:JR2019460"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "dc6c8732e4fd5919b86a034ec93ecca5fa09ee3cefdbd5361b114f5c2345a0b2",
+            "evidence": "verification engineer who has developed a strong interest in infrastructure, automation, CI",
+            "id": "nvidia:JR2022848",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "Improve CI reliability, turnaround time, debuggability, and scalability across distributed compute environments.",
+            "ruleIds": [
+              "legacy-621868550572a3cd94316484"
+            ],
+            "score": 0.5,
+            "title": "Senior ASIC Design Verification Infrastructure and Tools Engineer – GPU"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "dc6c8732e4fd5919b86a034ec93ecca5fa09ee3cefdbd5361b114f5c2345a0b2",
+            "evidence": "",
+            "id": "nvidia:JR2022848",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "Improve CI reliability, turnaround time, debuggability, and scalability across distributed compute environments.",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior ASIC Design Verification Infrastructure and Tools Engineer – GPU"
+          },
+          "id": "nvidia:JR2022848"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "9fa0fa32832689931806d1aa2f6349064989d73d158ea209deed51d56e01e6ae",
+            "evidence": "GitOps",
+            "id": "nvidia:JR2022795",
+            "outcome": "FP",
+            "prediction": true,
+            "reference": false,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-ca6174c9ac968babbb976108"
+            ],
+            "score": 0.5,
+            "title": "Senior Solutions Architect, Physical AI Cloud"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "9fa0fa32832689931806d1aa2f6349064989d73d158ea209deed51d56e01e6ae",
+            "evidence": "",
+            "id": "nvidia:JR2022795",
+            "outcome": "TN",
+            "prediction": false,
+            "reference": false,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior Solutions Architect, Physical AI Cloud"
+          },
+          "id": "nvidia:JR2022795"
+        }
+      ],
+      "freshValidation": false,
+      "name": "discovery-round-replay",
+      "postings": 500,
+      "resolved": 500,
+      "role": "later-regression",
+      "sourceHashes": {
+        "baseline": "516b65515f7b15957eb3278af983cdeaaa1b059b9fb4bbae313ee15167dda7bb",
+        "candidate": "b98804fb9a6169c13f16645163515b0bbde1f4ffc4521a8bea3a676dbcb8fe46"
+      },
+      "unresolved": 0,
+      "untouchedConceptChanges": []
+    },
+    {
+      "baseline": {
+        "f1": 0.9090909090909091,
+        "fn": 5,
+        "fp": 0,
+        "negativeSupport": 344,
+        "precision": 1.0,
+        "recall": 0.8333333333333334,
+        "support": 30,
+        "tn": 344,
+        "tp": 25
+      },
+      "baselineAP": 0.8467023172905526,
+      "candidate": {
+        "f1": 0.9491525423728814,
+        "fn": 2,
+        "fp": 1,
+        "negativeSupport": 344,
+        "precision": 0.9655172413793104,
+        "recall": 0.9333333333333333,
+        "support": 30,
+        "tn": 343,
+        "tp": 28
+      },
+      "candidateAP": 0.9225889728932326,
+      "changedTargetDecisions": [
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "e6713492941ac1a46fe15edf163d483ce0697436d43b378e0a2b5270e12e18d9",
+            "evidence": "GitOps",
+            "id": "nvidia:JR2022966",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "Verifiable expert-level knowledge of AWS Cloud, Kubernetes (k8s), and the GitOps model.",
+            "ruleIds": [
+              "legacy-ca6174c9ac968babbb976108"
+            ],
+            "score": 0.5,
+            "title": "Senior Software Engineer, Unified Access Management Platform"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "e6713492941ac1a46fe15edf163d483ce0697436d43b378e0a2b5270e12e18d9",
+            "evidence": "",
+            "id": "nvidia:JR2022966",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "Verifiable expert-level knowledge of AWS Cloud, Kubernetes (k8s), and the GitOps model.",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior Software Engineer, Unified Access Management Platform"
+          },
+          "id": "nvidia:JR2022966"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "a5d6c3016cde955a7888f06733b38ef468c1fac4b1e4293a356052f7c7015e0d",
+            "evidence": "testing, and review efficiency Partner with compiler developers, architecture teams, and CI",
+            "id": "nvidia:JR2021595",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "Experience building developer productivity tools, CI infrastructure, or large-scale automation",
+            "ruleIds": [
+              "legacy-621868550572a3cd94316484"
+            ],
+            "score": 0.5,
+            "title": "Senior Compiler Engineer Infrastructure"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "a5d6c3016cde955a7888f06733b38ef468c1fac4b1e4293a356052f7c7015e0d",
+            "evidence": "",
+            "id": "nvidia:JR2021595",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "Experience building developer productivity tools, CI infrastructure, or large-scale automation",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior Compiler Engineer Infrastructure"
+          },
+          "id": "nvidia:JR2021595"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "094c3c01bec5bd294dd24a9157d763d88916dd2bf27c6b2bda93e404fe6dd7f2",
+            "evidence": "GitOps",
+            "id": "nvidia:JR2024369",
+            "outcome": "TP",
+            "prediction": true,
+            "reference": true,
+            "referenceEvidence": "Experience running large global environments spanning bare metal, virtualized infrastructure, and cloud with a unified GitOps posture (ArgoCD or similar).",
+            "ruleIds": [
+              "legacy-ca6174c9ac968babbb976108"
+            ],
+            "score": 0.5,
+            "title": "Principal Software Engineer - Compute Infrastructure"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "094c3c01bec5bd294dd24a9157d763d88916dd2bf27c6b2bda93e404fe6dd7f2",
+            "evidence": "",
+            "id": "nvidia:JR2024369",
+            "outcome": "FN",
+            "prediction": false,
+            "reference": true,
+            "referenceEvidence": "Experience running large global environments spanning bare metal, virtualized infrastructure, and cloud with a unified GitOps posture (ArgoCD or similar).",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Principal Software Engineer - Compute Infrastructure"
+          },
+          "id": "nvidia:JR2024369"
+        },
+        {
+          "after": {
+            "company": "nvidia",
+            "descriptionHash": "7a91b123f30c69c8d2cf2606edda27f0afb2933c9c8cf4cb454f855c7cc98384",
+            "evidence": "automated deployment",
+            "id": "nvidia:JR1997596",
+            "outcome": "FP",
+            "prediction": true,
+            "reference": false,
+            "referenceEvidence": "",
+            "ruleIds": [
+              "legacy-0688a73dd714f5512506a209"
+            ],
+            "score": 0.5,
+            "title": "Senior Deep Learning Software Engineer, Inference and Model Optimization"
+          },
+          "before": {
+            "company": "nvidia",
+            "descriptionHash": "7a91b123f30c69c8d2cf2606edda27f0afb2933c9c8cf4cb454f855c7cc98384",
+            "evidence": "",
+            "id": "nvidia:JR1997596",
+            "outcome": "TN",
+            "prediction": false,
+            "reference": false,
+            "referenceEvidence": "",
+            "ruleIds": [],
+            "score": 0,
+            "title": "Senior Deep Learning Software Engineer, Inference and Model Optimization"
+          },
+          "id": "nvidia:JR1997596"
+        }
+      ],
+      "freshValidation": false,
+      "name": "validation-round-replay",
+      "postings": 374,
+      "resolved": 374,
+      "role": "later-regression",
+      "sourceHashes": {
+        "baseline": "ee0610b42110b574362ccc4df111101b3e51b3d3ad851c89b7e43c292bae6edd",
+        "candidate": "f3b1e0c485c824ace25ec6023d9c1c8c0cde3cd1a14e8b37814316cfc7ca0d8d"
+      },
+      "unresolved": 0,
+      "untouchedConceptChanges": []
+    }
+  ],
+  "note": "Null/unlabeled historical decisions are unscored. Prior discovery remains development/regression, never fresh validation.",
+  "untouchedConceptChanges": 0
+}

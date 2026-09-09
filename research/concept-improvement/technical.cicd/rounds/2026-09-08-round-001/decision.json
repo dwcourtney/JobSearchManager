@@ -1,0 +1,203 @@
+{
+  "baselineAP": 0.8467023172905526,
+  "candidateAP": 0.9225889728932326,
+  "candidateSealHash": "da5dcc37a6a92e3dff974f62071399f40b40dc1ab5492739a16a6b601a9132e7",
+  "changedValidationDecisions": [
+    {
+      "after": {
+        "company": "nvidia",
+        "descriptionHash": "e6713492941ac1a46fe15edf163d483ce0697436d43b378e0a2b5270e12e18d9",
+        "evidence": "GitOps",
+        "id": "nvidia:JR2022966",
+        "outcome": "TP",
+        "prediction": true,
+        "reference": true,
+        "referenceEvidence": "Verifiable expert-level knowledge of AWS Cloud, Kubernetes (k8s), and the GitOps model.",
+        "ruleIds": [
+          "legacy-ca6174c9ac968babbb976108"
+        ],
+        "score": 0.5,
+        "title": "Senior Software Engineer, Unified Access Management Platform"
+      },
+      "before": {
+        "company": "nvidia",
+        "descriptionHash": "e6713492941ac1a46fe15edf163d483ce0697436d43b378e0a2b5270e12e18d9",
+        "evidence": "",
+        "id": "nvidia:JR2022966",
+        "outcome": "FN",
+        "prediction": false,
+        "reference": true,
+        "referenceEvidence": "Verifiable expert-level knowledge of AWS Cloud, Kubernetes (k8s), and the GitOps model.",
+        "ruleIds": [],
+        "score": 0,
+        "title": "Senior Software Engineer, Unified Access Management Platform"
+      },
+      "id": "nvidia:JR2022966"
+    },
+    {
+      "after": {
+        "company": "nvidia",
+        "descriptionHash": "a5d6c3016cde955a7888f06733b38ef468c1fac4b1e4293a356052f7c7015e0d",
+        "evidence": "testing, and review efficiency Partner with compiler developers, architecture teams, and CI",
+        "id": "nvidia:JR2021595",
+        "outcome": "TP",
+        "prediction": true,
+        "reference": true,
+        "referenceEvidence": "Experience building developer productivity tools, CI infrastructure, or large-scale automation",
+        "ruleIds": [
+          "legacy-621868550572a3cd94316484"
+        ],
+        "score": 0.5,
+        "title": "Senior Compiler Engineer Infrastructure"
+      },
+      "before": {
+        "company": "nvidia",
+        "descriptionHash": "a5d6c3016cde955a7888f06733b38ef468c1fac4b1e4293a356052f7c7015e0d",
+        "evidence": "",
+        "id": "nvidia:JR2021595",
+        "outcome": "FN",
+        "prediction": false,
+        "reference": true,
+        "referenceEvidence": "Experience building developer productivity tools, CI infrastructure, or large-scale automation",
+        "ruleIds": [],
+        "score": 0,
+        "title": "Senior Compiler Engineer Infrastructure"
+      },
+      "id": "nvidia:JR2021595"
+    },
+    {
+      "after": {
+        "company": "nvidia",
+        "descriptionHash": "094c3c01bec5bd294dd24a9157d763d88916dd2bf27c6b2bda93e404fe6dd7f2",
+        "evidence": "GitOps",
+        "id": "nvidia:JR2024369",
+        "outcome": "TP",
+        "prediction": true,
+        "reference": true,
+        "referenceEvidence": "Experience running large global environments spanning bare metal, virtualized infrastructure, and cloud with a unified GitOps posture (ArgoCD or similar).",
+        "ruleIds": [
+          "legacy-ca6174c9ac968babbb976108"
+        ],
+        "score": 0.5,
+        "title": "Principal Software Engineer - Compute Infrastructure"
+      },
+      "before": {
+        "company": "nvidia",
+        "descriptionHash": "094c3c01bec5bd294dd24a9157d763d88916dd2bf27c6b2bda93e404fe6dd7f2",
+        "evidence": "",
+        "id": "nvidia:JR2024369",
+        "outcome": "FN",
+        "prediction": false,
+        "reference": true,
+        "referenceEvidence": "Experience running large global environments spanning bare metal, virtualized infrastructure, and cloud with a unified GitOps posture (ArgoCD or similar).",
+        "ruleIds": [],
+        "score": 0,
+        "title": "Principal Software Engineer - Compute Infrastructure"
+      },
+      "id": "nvidia:JR2024369"
+    },
+    {
+      "after": {
+        "company": "nvidia",
+        "descriptionHash": "7a91b123f30c69c8d2cf2606edda27f0afb2933c9c8cf4cb454f855c7cc98384",
+        "evidence": "automated deployment",
+        "id": "nvidia:JR1997596",
+        "outcome": "FP",
+        "prediction": true,
+        "reference": false,
+        "referenceEvidence": "",
+        "ruleIds": [
+          "legacy-0688a73dd714f5512506a209"
+        ],
+        "score": 0.5,
+        "title": "Senior Deep Learning Software Engineer, Inference and Model Optimization"
+      },
+      "before": {
+        "company": "nvidia",
+        "descriptionHash": "7a91b123f30c69c8d2cf2606edda27f0afb2933c9c8cf4cb454f855c7cc98384",
+        "evidence": "",
+        "id": "nvidia:JR1997596",
+        "outcome": "TN",
+        "prediction": false,
+        "reference": false,
+        "referenceEvidence": "",
+        "ruleIds": [],
+        "score": 0,
+        "title": "Senior Deep Learning Software Engineer, Inference and Model Optimization"
+      },
+      "id": "nvidia:JR1997596"
+    }
+  ],
+  "checks": {
+    "apMaintained": true,
+    "f1Gain": false,
+    "precisionFloor": true,
+    "precisionLoss": false,
+    "reviewedFamilies": false,
+    "support": true,
+    "untouchedParity": true
+  },
+  "createdUtc": "2026-09-09T00:11:04.472038+00:00",
+  "criteria": {
+    "maximumPrecisionLoss": 0.03,
+    "minimumAPGain": 0,
+    "minimumF1Gain": 0.05,
+    "minimumNegativeSupport": 10,
+    "minimumPositiveSupport": 10,
+    "minimumPrecision": 0.8
+  },
+  "decision": "REJECT",
+  "productionSwitch": false,
+  "regressionHash": "25f056864952034e10d99e5ba3aabb19fd12f5ec25d95c504d85aa30af5f70bf",
+  "review": {
+    "curatedChange": "negative-devops-test-lab gains CI/CD on 'software builds and CI'; CI/CD was outside this fixture's labeled scope. Keep it unscored, not a fabricated regression or improvement.",
+    "falsePositiveFamilies": [
+      {
+        "examples": [
+          "leidos:R-00191013",
+          "nvidia:JR1997596"
+        ],
+        "explanation": "The generic phrase matches physical infrastructure/site commissioning in historical data and model inference/graph optimization in validation. Both frozen references are negative. This is a repeatable broadening risk, not a reason to rewrite frozen labels.",
+        "family": "Automated deployment without clear build/test/release pipeline evidence"
+      },
+      {
+        "examples": [
+          "nvidia:JR2022795"
+        ],
+        "explanation": "The discovery reference is negative where GitOps is one item in a modern DevOps/cloud expertise list. Other GitOps examples are reference-positive, illustrating the contextual boundary and correlated AI-reference uncertainty.",
+        "family": "GitOps as associated operations expertise"
+      }
+    ],
+    "noBroadFalsePositiveFamily": false,
+    "noUnexplainedRegression": true,
+    "recommendation": "REJECT this candidate for release. F1 gain and precision-loss gates both fail, and automated-deployment broadening needs a new candidate developed and validated in a genuinely new round. Preserve these discovery and validation batches as exposed history; do not recycle them as fresh validation.",
+    "remainingValidationMisses": [
+      "nvidia:JR2021549",
+      "nvidia:JR2021226"
+    ],
+    "remainingValidationMissesExplanation": "Hyphenated continuous-integration and CI-style pipelines remain false negatives. They were observed only after candidate sealing and will not be patched in this round.",
+    "reviewed": "All changed target decisions in discovery, fresh validation, global AI reference, curated fixtures, frozen holdout/oracles and copied cache were inspected. There are no changes to the other 84 concepts. No true-to-false target change occurred."
+  },
+  "validationBaseline": {
+    "f1": 0.9090909090909091,
+    "fn": 5,
+    "fp": 0,
+    "negativeSupport": 344,
+    "precision": 1.0,
+    "recall": 0.8333333333333334,
+    "support": 30,
+    "tn": 344,
+    "tp": 25
+  },
+  "validationCandidate": {
+    "f1": 0.9491525423728814,
+    "fn": 2,
+    "fp": 1,
+    "negativeSupport": 344,
+    "precision": 0.9655172413793104,
+    "recall": 0.9333333333333333,
+    "support": 30,
+    "tn": 343,
+    "tp": 28
+  }
+}
