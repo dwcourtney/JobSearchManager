@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="JobSearchManager.Tests" />
+    <InternalsVisibleTo Include="Jsm.ConceptEvaluation" />
     <InternalsVisibleTo Include="Jsm.LegacySqlite" />
     <InternalsVisibleTo Include="Jsm.CheapTriage.Research" />
     <InternalsVisibleTo Include="Jsm.CheapTriage.Research.Tests" />
@@ -44,6 +45,9 @@
     <Compile Remove="Tests\**\*.cs" />
     <Compile Remove="classifier-service\**\*.cs" />
     <Compile Remove="migration/**/*.cs" />
+    <Compile Remove="tools/**/*.cs" />
+    <Content Remove="tools/**/*" />
+    <None Remove="tools/**/*" />
     <Content Remove="LegacyJobConceptRules.json;EvaluationHoldoutPlan.example.json" />
     <None Remove="LegacyJobConceptRules.json;EvaluationHoldoutPlan.example.json" />
     <Content Remove="migration/**/*" />

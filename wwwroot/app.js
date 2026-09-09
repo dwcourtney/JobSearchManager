@@ -1172,6 +1172,7 @@ function synchronizeAdminNavigation(isAdmin) {
   elements.adminClassifierPanel = classifierPanel;
   elements.adminEvaluationPanel = evaluationPanel;
   elements.adminEvaluationContent = evaluationContent;
+  elements.adminEvaluationAccuracy = accuracyPanel;
   elements.adminClassifierStatus = classifierStatus;
   elements.adminClassifierBackfill = backfill;
   elements.adminRegexStatusFilter = statusFilter;
@@ -1218,7 +1219,8 @@ async function loadEvaluationLedger() {
     const response = await fetch("/api/admin/evaluations", { cache: "no-store" });
     if (!response.ok) throw new Error("Evaluation ledger could not be loaded.");
     const result = await response.json();
-    elements.adminEvaluationContent.replaceChildren(renderEvaluationNavigation(result));
+    elements.adminEvaluationAccuracy.hidden = Boolean(result.evaluation?.latest);
+    elements.adminEvaluationContent.replaceChildren(ConceptEvaluationUi.render(result.evaluation), renderEvaluationNavigation(result));
   } catch (error) {
     elements.adminEvaluationContent.textContent = error.message || String(error);
   }

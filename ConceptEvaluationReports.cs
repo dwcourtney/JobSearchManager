@@ -9,11 +9,13 @@ namespace JobSearchManager;
 internal sealed class ConceptEvaluationReports
 {
     internal const string MetricImplementationHash = "ff6f7dcb82a9958d23dd2e47d0a14f95d5907ec2e3c60cc2eb2a19d038051810";
+    private readonly ConceptEvaluationRuns _runs;
     private readonly ImmutableArray<(string Role, string Dataset, string Reference, JsonElement Report)> _reports;
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
     internal ConceptEvaluationReports(string directory)
     {
+        _runs = new ConceptEvaluationRuns(directory);
         using var index = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(directory, "index-v1.json")));
         if (index.RootElement.GetProperty("schemaVersion").GetInt32() != 1)
             throw new InvalidDataException("Unsupported concept evaluation index.");
@@ -45,6 +47,7 @@ internal sealed class ConceptEvaluationReports
 
     internal object View(ConceptRuleSnapshot snapshot) => new
     {
+        evaluation = _runs.View(snapshot),
         reports = _reports.Select(item => new
         {
             role = item.Role,

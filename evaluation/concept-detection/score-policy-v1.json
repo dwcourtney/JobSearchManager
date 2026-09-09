@@ -1,0 +1,11 @@
+{
+  "version": "concept-evaluation-score-v1",
+  "formula": "1 - 2^(-units)",
+  "units": {"positive-evidence": 1, "title-evidence": 2, "required-context": 2, "remote-designation": 2, "remote-signal": 2, "extended-location-signal": 2},
+  "deduplication": "Distinct kind/scope/pattern or typed selector signatures; one unit allocation per complete required-context group. Repeated occurrences do not add units.",
+  "veto": "Only accepted rule IDs from the unchanged binary matcher contribute. Exclusion-vetoed concepts, failed context groups, locally negated matches and nonmatches score zero.",
+  "rationale": "One broad lexical match establishes the base rank (0.5). A title-specific or typed-fact match and a complete multi-part context group receive two evidence units (0.75). Additional distinct signatures increase rank with diminishing increments. These are documented ordinal weights, not fitted probabilities or claims of statistical independence.",
+  "limitation": "Evaluation-only evidence ranking, not calibrated confidence. Binary false negatives generally score zero; curves cannot recover evidence absent from the production rules. No tuning against this reference run.",
+  "minimumPositiveSupport": 5,
+  "minimumNegativeSupport": 5
+}

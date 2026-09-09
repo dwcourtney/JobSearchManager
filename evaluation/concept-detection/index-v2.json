@@ -1,0 +1,11 @@
+{
+  "freshnessDays": 45,
+  "runs": [
+    {
+      "file": "run-2026-09-08-ai-reference-v2.json",
+      "runId": "2026-09-08-ai-reference-v2",
+      "sha256": "80a7324578b83dc33330db995e3d7c06e2ec567caead08c768e3589e9a66de00"
+    }
+  ],
+  "schemaVersion": 2
+}

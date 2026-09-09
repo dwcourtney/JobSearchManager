@@ -30,3 +30,6 @@ publish
 
 # Migration-only oracles and archive tooling are never image inputs.
 migration
+
+# Offline evaluation and model adapters are not runtime dependencies.
+tools

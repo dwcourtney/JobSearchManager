@@ -25,3 +25,9 @@ research/qwen/archive/** -text whitespace=blank-at-eol,-blank-at-eof,space-befor
 
 # Packaged clearance rules use identical fingerprint bytes on Windows and Linux.
 rules/** text eol=lf
+
+# Refreshable evaluation identities are hashes of exact artifact/policy bytes.
+evaluation/concept-detection/index-v2.json text eol=lf
+evaluation/concept-detection/run-*.json -text
+evaluation/concept-detection/*-policy-v*.json text eol=lf
+tools/concept-evaluation/*.py text eol=lf

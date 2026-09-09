@@ -389,6 +389,7 @@ if (args.Length >= 2 && args[0] == "--authorization-corpus")
 
 var tests = new (string Name, Func<Task> Run)[]
 {
+    ("Refreshable evaluation report integrity, freshness and history", ConceptEvaluationRunTests.RunAsync),
     ("Retired triage is passive cache data only", TestRetiredTriageAsync),
     ("Local mode is the safe default", TestLocalDefaultAsync),
     ("Container mode uses filesystem persistence and isolated workspaces", TestContainerConfigurationAsync),

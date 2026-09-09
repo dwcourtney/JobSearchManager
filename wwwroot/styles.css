@@ -2674,3 +2674,44 @@ mark {
 .admin-runtime-technical { font-size: var(--font-size-caption); }
 .admin-runtime-technical > summary { cursor: pointer; color: var(--color-text-heading); font-weight: var(--font-weight-semibold); }
 .admin-runtime-technical > summary:focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: .2rem; }
+
+
+/* Evaluation presentation composes the existing Admin cards, controls and tables. */
+.evaluation-run { display: grid; gap: 1rem; min-width: 0; font-size: var(--font-size-ui); line-height: var(--line-height-note); }
+.evaluation-run p { margin: 0; color: var(--color-text-secondary); }
+.evaluation-run h4 { font-size: var(--font-size-description-h3); }
+.evaluation-run .admin-rule-section { display: grid; gap: .65rem; background: var(--color-surface); }
+.evaluation-heading { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem 1rem; }
+.evaluation-heading h4 { margin: 0; color: var(--color-text-heading); }
+.evaluation-run strong { color: var(--color-text-heading); }
+.evaluation-run .evaluation-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: .25rem 0; }
+.evaluation-metrics > div { background: var(--color-surface-secondary); }
+.evaluation-metrics dd { font-size: var(--font-size-description-h2); }
+.evaluation-control { display: grid; gap: .35rem; min-width: 0; color: var(--color-text-secondary); font-size: var(--font-size-label); font-weight: var(--font-weight-medium); }
+.evaluation-control .text-control { width: 100%; min-width: 0; font-size: var(--font-size-ui); font-weight: var(--font-weight-regular); }
+.evaluation-chart-panel > .evaluation-control { max-width: 28rem; }
+.evaluation-run .admin-rule-filters { margin: .25rem 0; }
+.evaluation-table-scroll { max-height: 32rem; }
+.evaluation-table-scroll .evaluation-table { display: table; font-size: var(--font-size-ui); }
+.evaluation-table th { position: sticky; top: 0; z-index: 1; }
+.evaluation-table th:not(:first-child), .evaluation-table td:not(:first-child) { text-align: right; white-space: nowrap; }
+.evaluation-table td:first-child { min-width: 12rem; }
+.evaluation-table tbody tr:hover { background: var(--color-surface-secondary); }
+.evaluation-pr { display: grid; gap: .65rem; max-width: 48rem; min-width: 0; }
+.evaluation-pr svg { display: block; width: 100%; max-height: 21rem; border: var(--border-width-default) solid var(--color-border); border-radius: var(--radius-control); background: var(--color-surface-secondary); }
+.evaluation-pr svg text { fill: var(--color-text-primary); font-family: var(--font-family-ui); font-size: var(--font-size-caption); }
+.evaluation-pr-grid { fill: none; stroke: var(--color-border); stroke-width: 1; }
+.evaluation-pr-axis { fill: none; stroke: var(--color-text-secondary); stroke-width: 1; }
+.evaluation-pr-line { fill: none; stroke: var(--color-accent); stroke-width: 2; }
+.evaluation-pr-point { fill: var(--color-accent); }
+.evaluation-disclosure { background: var(--color-surface); }
+.evaluation-disclosure[open] > summary { margin-bottom: .65rem; }
+.evaluation-disclosure > summary:hover { color: var(--color-accent-hover); }
+.evaluation-disclosure summary .summary-status { margin-left: .5rem; }
+.evaluation-disclosure .evaluation-disclosure { margin-top: .5rem; background: var(--color-surface-secondary); }
+.evaluation-run pre { margin: .65rem 0 0; padding: .65rem; border: var(--border-width-default) solid var(--color-border); border-radius: var(--radius-control); background: var(--color-surface-secondary); color: var(--color-text-primary); font-size: var(--font-size-caption); overflow: auto; max-height: 28rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+.evaluation-run :is(input, select, button, summary):focus-visible { outline: var(--focus-ring-width) solid var(--color-focus-ring); outline-offset: var(--focus-ring-offset-default); }
+@media (max-width: 760px) {
+  .evaluation-run .evaluation-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .evaluation-run .admin-rule-section { padding: .75rem; }
+}

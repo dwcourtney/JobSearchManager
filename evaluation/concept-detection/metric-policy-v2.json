@@ -1,0 +1,10 @@
+{
+  "version": "concept-evaluation-metrics-v2",
+  "zeroDivision": 0,
+  "macro": "Unweighted mean over all taxonomy concepts, including zero-support concepts; unresolved decisions excluded before confusion counting.",
+  "micro": "Sum TP/FP/FN/TN across resolved posting-concept decisions before calculating ratios.",
+  "thresholds": "Start at no predictions, then all distinct observed scores descending; score >= threshold; ties enter together.",
+  "averagePrecision": "Sum (recall_i - recall_previous) * precision_i at each observed score threshold. No interpolation. Null if no positive support.",
+  "prAuc": "Not reported: average precision is the supported ranking summary.",
+  "comparison": "Differences across regenerated reference sets are descriptive; sample/reference changes prevent attributing a delta solely to rule changes."
+}
