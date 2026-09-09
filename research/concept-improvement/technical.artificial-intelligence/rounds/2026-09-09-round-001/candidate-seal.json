@@ -1,0 +1,22 @@
+{
+  "changedRuleIds": [
+    "ai-20260909-agentic",
+    "ai-20260909-apply",
+    "ai-20260909-artifacts",
+    "ai-20260909-build-ml-models",
+    "ai-20260909-driven-work",
+    "ai-20260909-enabled",
+    "ai-20260909-engineering",
+    "ai-20260909-generative",
+    "ai-20260909-infrastructure",
+    "ai-20260909-language-models",
+    "ai-20260909-title"
+  ],
+  "conceptId": "technical.artificial-intelligence",
+  "files": {
+    "candidate-rationale.json": "a207588a8b10249aceedfdccffac7cd128fabaccda0bee844599607f0c557518",
+    "candidate-rules.json": "05f978fb4118603c1d0f9efc7caaf8a6970c92fd15ab98e0a3097fc813e64a23",
+    "candidate-rules.schema.json": "f1d7f95e374cdf6d123caeb7417b4e051a2593bfc0467927d49d209adef31a7d"
+  },
+  "sealedUtc": "2026-09-09T12:14:46.734820+00:00"
+}

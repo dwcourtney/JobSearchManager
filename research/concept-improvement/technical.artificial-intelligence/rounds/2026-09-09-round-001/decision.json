@@ -1,0 +1,380 @@
+{
+  "baselineAP": 0.49099099099099097,
+  "candidateAP": 0.6945945945945946,
+  "candidateSealHash": "09c3f8f61bc387702b0690e3403e66c63a9529c34c9fd4d5249671c7b0429d9c",
+  "changedValidationDecisions": [
+    {
+      "after": {
+        "company": "leidos",
+        "descriptionHash": "ec2e598b3accc17ac7c38c7535be15c9379688e7c7a461303f6a61ad182c3a63",
+        "evidence": "AI integration",
+        "id": "leidos:R-00188503",
+        "outcome": "TP",
+        "prediction": true,
+        "reference": true,
+        "referenceEvidence": "automation skills that the team currently lacks (Ansible, scripting, AI integration for example)",
+        "ruleIds": [
+          "ai-20260909-engineering"
+        ],
+        "score": 0.5,
+        "title": "Linux Engineer"
+      },
+      "before": {
+        "company": "leidos",
+        "descriptionHash": "ec2e598b3accc17ac7c38c7535be15c9379688e7c7a461303f6a61ad182c3a63",
+        "evidence": "",
+        "id": "leidos:R-00188503",
+        "outcome": "FN",
+        "prediction": false,
+        "reference": true,
+        "referenceEvidence": "automation skills that the team currently lacks (Ansible, scripting, AI integration for example)",
+        "ruleIds": [],
+        "score": 0,
+        "title": "Linux Engineer"
+      },
+      "id": "leidos:R-00188503"
+    },
+    {
+      "after": {
+        "company": "nvidia",
+        "descriptionHash": "07061e5660966d75d21445ad734a5afec089e8f5675cff6a12c78e96e6705803",
+        "evidence": "AI services; AI inference",
+        "id": "nvidia:JR2022541",
+        "outcome": "TP",
+        "prediction": true,
+        "reference": true,
+        "referenceEvidence": "You’ll collaborate across research, software, systems, and hardware teams to make AI inference faster, more efficient, and easier to deploy.",
+        "ruleIds": [
+          "ai-20260909-artifacts",
+          "ai-20260909-engineering"
+        ],
+        "score": 0.75,
+        "title": "Senior Deep Learning Algorithm Engineer"
+      },
+      "before": {
+        "company": "nvidia",
+        "descriptionHash": "07061e5660966d75d21445ad734a5afec089e8f5675cff6a12c78e96e6705803",
+        "evidence": "",
+        "id": "nvidia:JR2022541",
+        "outcome": "FN",
+        "prediction": false,
+        "reference": true,
+        "referenceEvidence": "You’ll collaborate across research, software, systems, and hardware teams to make AI inference faster, more efficient, and easier to deploy.",
+        "ruleIds": [],
+        "score": 0,
+        "title": "Senior Deep Learning Algorithm Engineer"
+      },
+      "id": "nvidia:JR2022541"
+    },
+    {
+      "after": {
+        "company": "nvidia",
+        "descriptionHash": "ff5cccc0392d74ae2e71721d53ce0f7bbd067f985a665bd6c07c1d2416984860",
+        "evidence": "generative AI workload; scaling for HPC and generative AI workload",
+        "id": "nvidia:JR2002276",
+        "outcome": "TP",
+        "prediction": true,
+        "reference": true,
+        "referenceEvidence": "Drive next generation fleet management solutions for scaling AI infrastructure using GPUs and Grace solution from Nvidia.",
+        "ruleIds": [
+          "ai-20260909-generative",
+          "ai-20260909-infrastructure"
+        ],
+        "score": 0.75,
+        "title": "Senior Platform Telemetry Engineer"
+      },
+      "before": {
+        "company": "nvidia",
+        "descriptionHash": "ff5cccc0392d74ae2e71721d53ce0f7bbd067f985a665bd6c07c1d2416984860",
+        "evidence": "",
+        "id": "nvidia:JR2002276",
+        "outcome": "FN",
+        "prediction": false,
+        "reference": true,
+        "referenceEvidence": "Drive next generation fleet management solutions for scaling AI infrastructure using GPUs and Grace solution from Nvidia.",
+        "ruleIds": [],
+        "score": 0,
+        "title": "Senior Platform Telemetry Engineer"
+      },
+      "id": "nvidia:JR2002276"
+    },
+    {
+      "after": {
+        "company": "leidos",
+        "descriptionHash": "6b488b9b83999208dc3efb16de1e214ec4e2b8085ffdef9d8b754bd1ae4ca24d",
+        "evidence": "applying AI; AI Assisted; AI development",
+        "id": "leidos:R-00188479",
+        "outcome": "TP",
+        "prediction": true,
+        "reference": true,
+        "referenceEvidence": "Experience with AI-Leveraged Development (agentic coding tools like Claude Code, multi-agent orchestration, MCP-based tool integration, RAG, context engineering, AI evals/guardrails)",
+        "ruleIds": [
+          "ai-20260909-apply",
+          "ai-20260909-enabled",
+          "ai-20260909-engineering"
+        ],
+        "score": 0.875,
+        "title": "Principal Software Developer DevOps"
+      },
+      "before": {
+        "company": "leidos",
+        "descriptionHash": "6b488b9b83999208dc3efb16de1e214ec4e2b8085ffdef9d8b754bd1ae4ca24d",
+        "evidence": "",
+        "id": "leidos:R-00188479",
+        "outcome": "FN",
+        "prediction": false,
+        "reference": true,
+        "referenceEvidence": "Experience with AI-Leveraged Development (agentic coding tools like Claude Code, multi-agent orchestration, MCP-based tool integration, RAG, context engineering, AI evals/guardrails)",
+        "ruleIds": [],
+        "score": 0,
+        "title": "Principal Software Developer DevOps"
+      },
+      "id": "leidos:R-00188479"
+    },
+    {
+      "after": {
+        "company": "nvidia",
+        "descriptionHash": "8247635a6d0c2f80575b3079f354528c2435fe35520eac205e4c1c2233b572af",
+        "evidence": "AI models; AI",
+        "id": "nvidia:JR2023411",
+        "outcome": "TP",
+        "prediction": true,
+        "reference": true,
+        "referenceEvidence": "Defining and continuously refining product strategies, roadmaps, and go-to-market plans for NVIDIA’s AI for Quantum platform and initiatives",
+        "ruleIds": [
+          "ai-20260909-artifacts",
+          "ai-20260909-title"
+        ],
+        "score": 0.875,
+        "title": "Product Manager, AI for Quantum"
+      },
+      "before": {
+        "company": "nvidia",
+        "descriptionHash": "8247635a6d0c2f80575b3079f354528c2435fe35520eac205e4c1c2233b572af",
+        "evidence": "",
+        "id": "nvidia:JR2023411",
+        "outcome": "FN",
+        "prediction": false,
+        "reference": true,
+        "referenceEvidence": "Defining and continuously refining product strategies, roadmaps, and go-to-market plans for NVIDIA’s AI for Quantum platform and initiatives",
+        "ruleIds": [],
+        "score": 0,
+        "title": "Product Manager, AI for Quantum"
+      },
+      "id": "nvidia:JR2023411"
+    },
+    {
+      "after": {
+        "company": "nvidia",
+        "descriptionHash": "1037e32f1fa247437228191af859db3da544cc051d13ca267332d18c24bb8657",
+        "evidence": "generative AI workload; scaling for HPC and generative AI workload",
+        "id": "nvidia:JR1978573",
+        "outcome": "TP",
+        "prediction": true,
+        "reference": true,
+        "referenceEvidence": "We are looking for expert engineers to come and help design rack level solutions for next generation scaling AI supercomputing platforms.",
+        "ruleIds": [
+          "ai-20260909-generative",
+          "ai-20260909-infrastructure"
+        ],
+        "score": 0.75,
+        "title": "Principal Firmware Engineer - Data Center Server Management"
+      },
+      "before": {
+        "company": "nvidia",
+        "descriptionHash": "1037e32f1fa247437228191af859db3da544cc051d13ca267332d18c24bb8657",
+        "evidence": "",
+        "id": "nvidia:JR1978573",
+        "outcome": "FN",
+        "prediction": false,
+        "reference": true,
+        "referenceEvidence": "We are looking for expert engineers to come and help design rack level solutions for next generation scaling AI supercomputing platforms.",
+        "ruleIds": [],
+        "score": 0,
+        "title": "Principal Firmware Engineer - Data Center Server Management"
+      },
+      "id": "nvidia:JR1978573"
+    },
+    {
+      "after": {
+        "company": "nvidia",
+        "descriptionHash": "562daa0de55838688f731a1f6362c64e92c374db93c1d8051761c3976211e917",
+        "evidence": "agentic AI; AI models; GenAI",
+        "id": "nvidia:JR2022028",
+        "outcome": "TP",
+        "prediction": true,
+        "reference": true,
+        "referenceEvidence": "Strong understanding of the AI model lifecycle, including training, post-training, evaluation, experimentation, production readiness, reinforcement learning concepts, and GPU-accelerated distributed systems.",
+        "ruleIds": [
+          "ai-20260909-agentic",
+          "ai-20260909-artifacts",
+          "ai-20260909-title"
+        ],
+        "score": 0.9375,
+        "title": "Senior Technical Program Manager, GenAI and Models"
+      },
+      "before": {
+        "company": "nvidia",
+        "descriptionHash": "562daa0de55838688f731a1f6362c64e92c374db93c1d8051761c3976211e917",
+        "evidence": "",
+        "id": "nvidia:JR2022028",
+        "outcome": "FN",
+        "prediction": false,
+        "reference": true,
+        "referenceEvidence": "Strong understanding of the AI model lifecycle, including training, post-training, evaluation, experimentation, production readiness, reinforcement learning concepts, and GPU-accelerated distributed systems.",
+        "ruleIds": [],
+        "score": 0,
+        "title": "Senior Technical Program Manager, GenAI and Models"
+      },
+      "id": "nvidia:JR2022028"
+    },
+    {
+      "after": {
+        "company": "rtx",
+        "descriptionHash": "1dee62cf4572f03791050166aca7cd22bcfc7960b51e10f737cf19aa6273fc7b",
+        "evidence": "leveraging AI; leveraging AI-driven",
+        "id": "rtx:01867802",
+        "outcome": "TP",
+        "prediction": true,
+        "reference": true,
+        "referenceEvidence": "Experience developing AI to explore, understand, and validate data.",
+        "ruleIds": [
+          "ai-20260909-apply",
+          "ai-20260909-driven-work"
+        ],
+        "score": 0.75,
+        "title": "Data Engineer"
+      },
+      "before": {
+        "company": "rtx",
+        "descriptionHash": "1dee62cf4572f03791050166aca7cd22bcfc7960b51e10f737cf19aa6273fc7b",
+        "evidence": "",
+        "id": "rtx:01867802",
+        "outcome": "FN",
+        "prediction": false,
+        "reference": true,
+        "referenceEvidence": "Experience developing AI to explore, understand, and validate data.",
+        "ruleIds": [],
+        "score": 0,
+        "title": "Data Engineer"
+      },
+      "id": "rtx:01867802"
+    },
+    {
+      "after": {
+        "company": "nvidia",
+        "descriptionHash": "fdc64c8a98768eb6b8a86b97cb97a3b1e0df9721672246c7490f40f02f96e435",
+        "evidence": "AI models",
+        "id": "nvidia:JR2011391",
+        "outcome": "TP",
+        "prediction": true,
+        "reference": true,
+        "referenceEvidence": "Collaborate with cross-functional teams to deploy AI models in production environments, ensuring performance, safety, and reliability standards are met.",
+        "ruleIds": [
+          "ai-20260909-artifacts"
+        ],
+        "score": 0.5,
+        "title": "Deep Learning Senior Engineer, End-To-End Autonomous Driving"
+      },
+      "before": {
+        "company": "nvidia",
+        "descriptionHash": "fdc64c8a98768eb6b8a86b97cb97a3b1e0df9721672246c7490f40f02f96e435",
+        "evidence": "",
+        "id": "nvidia:JR2011391",
+        "outcome": "FN",
+        "prediction": false,
+        "reference": true,
+        "referenceEvidence": "Collaborate with cross-functional teams to deploy AI models in production environments, ensuring performance, safety, and reliability standards are met.",
+        "ruleIds": [],
+        "score": 0,
+        "title": "Deep Learning Senior Engineer, End-To-End Autonomous Driving"
+      },
+      "id": "nvidia:JR2011391"
+    },
+    {
+      "after": {
+        "company": "leidos",
+        "descriptionHash": "7026241ee3ea34de378d6d9f59b95ee53bd9eadfbfa0a38d9525d02647b69d9c",
+        "evidence": "AI-assisted",
+        "id": "leidos:R-00189719",
+        "outcome": "TP",
+        "prediction": true,
+        "reference": true,
+        "referenceEvidence": "support the evaluation, adoption, and governance of AI-assisted development and intelligent automation tools",
+        "ruleIds": [
+          "ai-20260909-enabled"
+        ],
+        "score": 0.5,
+        "title": "System Architect / Tech Lead"
+      },
+      "before": {
+        "company": "leidos",
+        "descriptionHash": "7026241ee3ea34de378d6d9f59b95ee53bd9eadfbfa0a38d9525d02647b69d9c",
+        "evidence": "",
+        "id": "leidos:R-00189719",
+        "outcome": "FN",
+        "prediction": false,
+        "reference": true,
+        "referenceEvidence": "support the evaluation, adoption, and governance of AI-assisted development and intelligent automation tools",
+        "ruleIds": [],
+        "score": 0,
+        "title": "System Architect / Tech Lead"
+      },
+      "id": "leidos:R-00189719"
+    }
+  ],
+  "checks": {
+    "apMaintained": true,
+    "f1Gain": true,
+    "precisionFloor": true,
+    "precisionLoss": true,
+    "reviewedFamilies": true,
+    "support": true,
+    "untouchedParity": true
+  },
+  "createdUtc": "2026-09-09T12:22:20.062882+00:00",
+  "criteria": {
+    "maximumPrecisionLoss": 0.03,
+    "minimumAPGain": 0,
+    "minimumF1Gain": 0.05,
+    "minimumNegativeSupport": 10,
+    "minimumPositiveSupport": 10,
+    "minimumPrecision": 0.8
+  },
+  "decision": "ACCEPTABLE FOR RELEASE REVIEW",
+  "productionSwitch": false,
+  "regressionHash": "e7c964e7e56b7faf87989b62aa53872304d82afb888a221a25ed591c20361aa1",
+  "review": {
+    "discoveryFalsePositiveReview": "Pre-seal draft AI title rule incorrectly matched AI&T Technician, an assembly/integration/test acronym. The sealed rule explicitly excludes AI&T. Corporate generative-AI advertising, AI-driven business-area boilerplate, abstract AI adoption and physical AI factory construction were found during historical development review and removed/tightened before sealing.",
+    "freshFalsePositiveReview": "Validation has zero FPs. Sensitivity retains rtx:01858818 DSO Engineer: original artificial intelligence literal matches corporate Digital Technology marketing at the end of a DevSecOps posting. No new rule fires. This is an inherited baseline FP, not relabeled or papered over.",
+    "freshValidation": "150 postings, 37 positive: recall 32.43 to 59.46, F1 48.98 to 74.58, precision remains 100%, AP 49.10 to 69.46. Second disjoint 150: 27 positive, recall 37.04 to 62.96, F1 52.63 to 75.56, precision 90.91 to 94.44, AP 45.00 to 68.19. Gains persist after >=0.80 5-word Jaccard near-duplicate exclusion.",
+    "jobFit": "27380 actual Jobs caller/scorer comparisons on 1369 current cached postings pass with AI neutral, five untouched-preference profiles, null/configured travel/work-location and enabled/disabled. Target-specific legitimate detection changes are the only permitted score changes.",
+    "limitations": "AI-reference labels, not independent human ground truth. Historical available-cache sample with employer/role bias. Near duplicates audited explicitly. Residual baseline FPs and conservative missed ML/CV knowledge remain; no claim of perfect detection or population accuracy. No second tuning round needed because the sealed candidate passes both fresh tests. Remaining 48 unused rows were subsequently included only in the complete-corpus safety replay.",
+    "noBroadFalsePositiveFamily": true,
+    "noUnexplainedRegression": true,
+    "recommendation": "ACCEPT FOR PRODUCTION after ordinary release validation. One sealed candidate materially improves both strictly fresh samples and both near-duplicate-filtered sensitivity subsets. No newly introduced false positive in discovery, historical global reference, validation or sensitivity. Frozen labels remain unchanged.",
+    "scope": "Only 11 added target rules. Original three target rules retained. Every other rule retains exact semantic fields and relative order; executionOrder is mechanically renumbered by required canonical ordering. All 84 untouched concepts have exact presence/evidence/accepted-rule parity in every replay dataset."
+  },
+  "validationBaseline": {
+    "f1": 0.4897959183673469,
+    "fn": 25,
+    "fp": 0,
+    "negativeSupport": 113,
+    "precision": 1.0,
+    "recall": 0.32432432432432434,
+    "support": 37,
+    "tn": 113,
+    "tp": 12
+  },
+  "validationCandidate": {
+    "f1": 0.7457627118644068,
+    "fn": 15,
+    "fp": 0,
+    "negativeSupport": 113,
+    "precision": 1.0,
+    "recall": 0.5945945945945946,
+    "support": 37,
+    "tn": 113,
+    "tp": 22
+  }
+}

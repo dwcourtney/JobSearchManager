@@ -15,8 +15,8 @@ internal static class JsonAuthorityTests
     {
         var snapshot = Snapshot(); var catalog = JobConceptCatalog.LoadDefault();
         var service = new SemanticClassificationService(catalog, snapshot.Matcher);
-        Require(snapshot.CandidatePipelineFingerprint == "348080299ffe13518d29668fb8da61ce0ff2ee2215c6ef802a5b60ecc2d55f70", "Phase 2 identity changed");
-        Require(snapshot.PipelineFingerprint != snapshot.CandidatePipelineFingerprint && snapshot.PipelineFingerprint == "0bc0baf2fc1ac410f605eb177b6d52bb6d804292cdc2c442405a2078a4cad76b", "Production identity must bind input/factual contracts");
+        Require(snapshot.CandidatePipelineFingerprint == "b05c22914b9fde52527aa0ce313c8aec388cc880857d31b8503af27db635b641", "Accepted AI ruleset identity changed");
+        Require(snapshot.PipelineFingerprint != snapshot.CandidatePipelineFingerprint && snapshot.PipelineFingerprint == "1fb685a9e3b7d97f3acf41fd5eb523e1625d35ae1d36764766babe3c557c9ac4", "Production identity must bind input/factual contracts");
         var job = new JobRecord("Software Engineer", "json-unit", null, "", "Remote", [], "Full time", "https://example.test/job",
             "<p>Build APIs. Occasional travel.</p>", null, null, "unknown", "not-found", false, null, null, null, "/job");
         job = job with { RemoteWork = new RemoteWorkDetector().Analyze(job.Title,job.PrimaryLocation,[],job.DescriptionHtml),
@@ -78,7 +78,7 @@ internal static class JsonAuthorityTests
         var snapshot=Snapshot();var directory=Path.Combine(AppContext.BaseDirectory,"evaluation","concept-detection");
         var reports=new ConceptEvaluationReports(directory);
         var view=JsonSerializer.SerializeToElement(reports.View(snapshot),Json);
-        Require(view.GetProperty("reports").EnumerateArray().All(r=>r.GetProperty("status").GetString()=="CURRENT"),"Packaged current reports not current");
+        Require(view.GetProperty("reports").EnumerateArray().All(r=>r.GetProperty("status").GetString()==(r.GetProperty("role").GetString()=="curated" ? "CURRENT" : "STALE")),"Curated replay must be current; immutable old holdout must be stale after AI rule changes.");
         foreach(var item in view.GetProperty("reports").EnumerateArray())
         {
             var report=item.GetProperty("artifact");var role=item.GetProperty("role").GetString()!;

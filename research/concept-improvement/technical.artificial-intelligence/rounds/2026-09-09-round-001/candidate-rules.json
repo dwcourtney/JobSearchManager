@@ -1,0 +1,3126 @@
+{
+  "engineContract": {
+    "id": "jsm-concept-matching",
+    "version": 1
+  },
+  "migrationProvenance": {
+    "archiveDatabaseSha256": "ce8469d4bd067ce3cfdb0de44e9cd9c994bd8d5da403c598890197387085ed3c",
+    "phase1ExportSha256": "e6a3e05ceccec71e7e2a50e4aaea64e36e667ed9278fe4eb234da951a1acb3f0",
+    "sqliteRuntimeFingerprint": "9d491a52ed1046fa319f2b6b9f4d81048b77f9d4a6774d803a14afee5ae06d2a"
+  },
+  "regexPolicy": {
+    "localNegationTimeoutBehavior": "reject-match",
+    "maximumPatternLength": 4096,
+    "options": [
+      "IgnoreCase",
+      "CultureInvariant"
+    ],
+    "preferNonBacktracking": true,
+    "ruleTimeoutBehavior": "record-non-match",
+    "timeoutMilliseconds": 100,
+    "unsupportedRegexFallback": "bounded-backtracking"
+  },
+  "rules": [
+    {
+      "conceptId": "responsibility.architecture-heavy",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 0,
+      "kind": "positive-evidence",
+      "pattern": "\\barchitecture\\s+roadmap\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-22002883c14ca3d113f263f9",
+      "scope": "both"
+    },
+    {
+      "conceptId": "responsibility.architecture-heavy",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 1,
+      "kind": "positive-evidence",
+      "pattern": "\\bchief\\s+architect\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-882bd58399e2586a5c670452",
+      "scope": "both"
+    },
+    {
+      "conceptId": "responsibility.architecture-heavy",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 2,
+      "kind": "positive-evidence",
+      "pattern": "\\bdefine\\s+(?:the\\s+)?(?:technical|solution|system)\\s+architecture\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-f0ae0960ec8cc858fd7135a0",
+      "scope": "both"
+    },
+    {
+      "conceptId": "responsibility.architecture-heavy",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 3,
+      "kind": "title-evidence",
+      "pattern": "\\barchitect(?:ure)?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-92f6c0220172e360835793c2",
+      "scope": "title"
+    },
+    {
+      "conceptId": "responsibility.budget-ownership",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 4,
+      "kind": "positive-evidence",
+      "pattern": "\\bown(?:ership)?\\s+of\\s+(?:the\\s+)?budget\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-072615e55456555c802a9978",
+      "scope": "both"
+    },
+    {
+      "conceptId": "responsibility.budget-ownership",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 5,
+      "kind": "positive-evidence",
+      "pattern": "\\bmanage\\s+(?:the\\s+)?(?:program|project|department)\\s+budget\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-587cb11b384a27c3b365132a",
+      "scope": "both"
+    },
+    {
+      "conceptId": "responsibility.budget-ownership",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 6,
+      "kind": "positive-evidence",
+      "pattern": "\\bP&L\\s+responsibility\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-92142c0234b8ce22522d9e2c",
+      "scope": "both"
+    },
+    {
+      "conceptId": "responsibility.customer-facing",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 7,
+      "kind": "positive-evidence",
+      "pattern": "\\bcustomer[- ]facing\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-7c24bc91cee2f3c8f81872ed",
+      "scope": "both"
+    },
+    {
+      "conceptId": "responsibility.customer-facing",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 8,
+      "kind": "positive-evidence",
+      "pattern": "\\binterface\\s+(?:directly\\s+)?with\\s+(?:customers|clients)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-bf1e2a9a3cebfc1c01381c35",
+      "scope": "both"
+    },
+    {
+      "conceptId": "responsibility.documentation-heavy",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 9,
+      "kind": "positive-evidence",
+      "pattern": "\\bextensive\\s+(?:technical\\s+)?documentation\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-778085f3dad50e623d43726c",
+      "scope": "both"
+    },
+    {
+      "conceptId": "responsibility.documentation-heavy",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 10,
+      "kind": "positive-evidence",
+      "pattern": "\\bdevelop\\s+and\\s+maintain\\s+(?:technical\\s+)?documentation\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-a24a958fb804f167a7179dc1",
+      "scope": "both"
+    },
+    {
+      "conceptId": "responsibility.documentation-heavy",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 11,
+      "kind": "title-evidence",
+      "pattern": "\\bdocumentation\\s+specialist\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-81be14ec65e20caad98f615c",
+      "scope": "title"
+    },
+    {
+      "conceptId": "responsibility.documentation-heavy",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 12,
+      "kind": "title-evidence",
+      "pattern": "\\btechnical\\s+writer\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-84374bf917d3208a8cc6c7f0",
+      "scope": "title"
+    },
+    {
+      "conceptId": "responsibility.hands-on-implementation",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 13,
+      "kind": "positive-evidence",
+      "pattern": "\\bimplement\\s+and\\s+deploy\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-7e27dc6ca5f0f00bc3a9955c",
+      "scope": "both"
+    },
+    {
+      "conceptId": "responsibility.hands-on-implementation",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 14,
+      "kind": "positive-evidence",
+      "pattern": "\\bhands[- ]on\\s+(?:work|implementation|development|engineering|coding|configuration)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-b4495b4c63d8991aa2ee0e2e",
+      "scope": "both"
+    },
+    {
+      "conceptId": "responsibility.operations-sustainment",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 15,
+      "kind": "positive-evidence",
+      "pattern": "\\bon[- ]call\\s+rotation\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-6ceec2a006415a32e5d43144",
+      "scope": "both"
+    },
+    {
+      "conceptId": "responsibility.operations-sustainment",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 16,
+      "kind": "positive-evidence",
+      "pattern": "\\boperations?\\s+and\\s+sustainment\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-6e54ae5f77581693d9c7c3c3",
+      "scope": "both"
+    },
+    {
+      "conceptId": "responsibility.operations-sustainment",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 17,
+      "kind": "positive-evidence",
+      "pattern": "\\bproduction\\s+operations\\s+support\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-a639265499a0c4e3a23328cf",
+      "scope": "both"
+    },
+    {
+      "conceptId": "responsibility.personnel-management",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 18,
+      "kind": "positive-evidence",
+      "pattern": "\\bdirect\\s+reports?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-46af028e37910f246e620888",
+      "scope": "both"
+    },
+    {
+      "conceptId": "responsibility.personnel-management",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 19,
+      "kind": "positive-evidence",
+      "pattern": "\\bhire,?\\s+(?:coach,?\\s+)?and\\s+develop\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-79bba4fe3d52d96bdf5908d4",
+      "scope": "both"
+    },
+    {
+      "conceptId": "responsibility.personnel-management",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 20,
+      "kind": "positive-evidence",
+      "pattern": "\\bperformance\\s+(?:reviews?|management)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-cae9f13c3b321c8fe320c906",
+      "scope": "both"
+    },
+    {
+      "conceptId": "responsibility.proposal-capture",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 21,
+      "kind": "positive-evidence",
+      "pattern": "\\bproposal\\s+(?:development|management|writing)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-393d157e313c453f12f7e9aa",
+      "scope": "both"
+    },
+    {
+      "conceptId": "responsibility.proposal-capture",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 22,
+      "kind": "positive-evidence",
+      "pattern": "\\bcapture\\s+(?:manager|management|strategy)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-944c03af00c6063a971e26b6",
+      "scope": "both"
+    },
+    {
+      "conceptId": "responsibility.research-oriented",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 23,
+      "kind": "positive-evidence",
+      "pattern": "\\bresearch[- ]oriented\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-302f2072064e12601b357e12",
+      "scope": "both"
+    },
+    {
+      "conceptId": "responsibility.research-oriented",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 24,
+      "kind": "positive-evidence",
+      "pattern": "\\bpublish\\s+(?:research|findings|papers)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-6c16d914132961efcc16fe73",
+      "scope": "both"
+    },
+    {
+      "conceptId": "responsibility.research-oriented",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 25,
+      "kind": "positive-evidence",
+      "pattern": "\\bconduct\\s+(?:independent|applied|original)\\s+research\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-ff07be31d99f75a77a4802f3",
+      "scope": "both"
+    },
+    {
+      "conceptId": "responsibility.schedule-ownership",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 26,
+      "kind": "positive-evidence",
+      "pattern": "\\bmanage\\s+(?:the\\s+)?integrated\\s+master\\s+schedule\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-278da5af1383a017629276df",
+      "scope": "both"
+    },
+    {
+      "conceptId": "responsibility.schedule-ownership",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 27,
+      "kind": "positive-evidence",
+      "pattern": "\\bown(?:ership)?\\s+of\\s+(?:the\\s+)?(?:project|program)?\\s*schedule\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-fbe8e302ba0a82a08d9d4a6c",
+      "scope": "both"
+    },
+    {
+      "conceptId": "responsibility.team-leadership",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 28,
+      "kind": "positive-evidence",
+      "pattern": "\\btechnical\\s+lead(?:ership)?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-0e6e2511081370aad16774a0",
+      "scope": "both"
+    },
+    {
+      "conceptId": "responsibility.team-leadership",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 29,
+      "kind": "positive-evidence",
+      "pattern": "\\blead\\s+(?:a\\s+)?(?:cross[- ]functional\\s+)?team\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-7bbb5f6f7f8931f631fdca33",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.ai-ml-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 30,
+      "kind": "exclusion",
+      "pattern": "\\b(?:program|project)\\s+manager\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-d290de51c0a1ddd76ebbce33",
+      "scope": "title"
+    },
+    {
+      "conceptId": "role.ai-ml-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 31,
+      "kind": "positive-evidence",
+      "pattern": "\\bapplied\\s+(?:AI|machine\\s+learning)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-56bcb8d87e28a9ac90e972ed",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.ai-ml-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 32,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:develop|build|implement|integrate)(?:s|ed|ing)?\\b.{0,80}\\bAI\\s*/\\s*ML[- ]enabled\\s+(?:tools?|systems?|applications?)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-964a567f5365ba7ec1f7aaee",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.ai-ml-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 33,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:AI|ML|machine\\s+learning)\\s+engineer(?:ing)?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-e80a00426c1aa360598a633f",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.ai-ml-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 34,
+      "kind": "title-evidence",
+      "pattern": "\\b(?:AI|ML|machine\\s+learning|generative\\s+AI|conversational\\s+AI|LLM|language\\s+model|NLP)\\b.{0,80}\\b(?:engineer|developer|scientist|site\\s+reliability)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-3653afee9b05210a914fa1c8",
+      "scope": "title"
+    },
+    {
+      "conceptId": "role.ai-ml-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 35,
+      "kind": "title-evidence",
+      "pattern": "\\bRAG\\b.{0,80}\\b(?:engineer|developer|scientist)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-ea6deaa7ba99b19cb79dc5f6",
+      "scope": "title"
+    },
+    {
+      "conceptId": "role.cloud-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 36,
+      "kind": "exclusion",
+      "pattern": "\\b(?:program|project)\\s+manager\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-fc84ae1593a2c62b7259d39d",
+      "scope": "title"
+    },
+    {
+      "conceptId": "role.cloud-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 37,
+      "kind": "positive-evidence",
+      "pattern": "\\bcloud\\s+(?:engineer|engineering|architect)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-2aee965353e09330531fa309",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.cloud-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 38,
+      "kind": "title-evidence",
+      "pattern": "\\b(?:Azure|AWS|GCP|cloud)\\s+(?:platform|infrastructure|reliability|DevOps)\\b.{0,40}\\bengineer\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-19f88e91ed0ba0036ea1e9cd",
+      "scope": "title"
+    },
+    {
+      "conceptId": "role.cybersecurity",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 39,
+      "kind": "positive-evidence",
+      "pattern": "\\binformation\\s+security\\s+(?:engineer|analyst|architect)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-164bf19870f8d784fc313da0",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.cybersecurity",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 40,
+      "kind": "positive-evidence",
+      "pattern": "\\bcyber(?:security|\\s+security)\\s+(?:engineer|analyst|architect|specialist)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-772fbb025dd423b441303d44",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.data-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 41,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:build|develop|design)(?:s|ed|ing)?\\b.{0,80}\\b(?:data\\s+pipelines?|ETL\\s+process(?:es)?|data\\s+architectures?)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-a65c6033d6776e02c5d01a1a",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.data-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 42,
+      "kind": "positive-evidence",
+      "pattern": "\\bETL\\s+engineer\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-a915594a70776525ec580ae2",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.data-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 43,
+      "kind": "positive-evidence",
+      "pattern": "\\bdata\\s+engineer(?:ing)?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-f62c94cd3ff2273348fefe50",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.data-science",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 44,
+      "kind": "positive-evidence",
+      "pattern": "\\bdata\\s+science\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-bd38c40a01f6e70c385f16d7",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.data-science",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 45,
+      "kind": "positive-evidence",
+      "pattern": "\\bdata\\s+scientist\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-eb38afb0a6917f79b78f24c5",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.devops-platform",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 46,
+      "kind": "positive-evidence",
+      "pattern": "\\bDevOps\\s+engineer(?:ing)?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-46ab094a158ebeb075933acf",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.devops-platform",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 47,
+      "kind": "positive-evidence",
+      "pattern": "\\bplatform\\s+engineer(?:ing)?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-d7158c61c02952c7ffb39cb7",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.devops-platform",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 48,
+      "kind": "positive-evidence",
+      "pattern": "\\bsite\\s+reliability\\s+engineer(?:ing)?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-e631808289ec2e13298bd68e",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.devops-platform",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 49,
+      "kind": "title-evidence",
+      "pattern": "\\bDevSecOps\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-64b409160152afd29b1200c1",
+      "scope": "title"
+    },
+    {
+      "conceptId": "role.fabrication-assembly-machining",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 50,
+      "kind": "positive-evidence",
+      "pattern": "\\bmachine\\s+parts\\s+to\\s+(?:drawing|blueprint|specification)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-3582aa492ae47f89bce3a6a2",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.fabrication-assembly-machining",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 51,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:fabricat(?:e|es|ing|ion)|machin(?:e|es|ing)|weld(?:ing)?|assembl(?:e|es|ing|y))\\b[^.!?]{0,70}\\b(?:physical\\s+)?(?:parts?|structures?|components?|assemblies|equipment|sheet\\s+metal|composites?|workpieces?)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-41daf917916db36e89029004",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.fabrication-assembly-machining",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 52,
+      "kind": "positive-evidence",
+      "pattern": "\\blarge\\s+structure\\s+fabrication\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-b3b0c382dc55085a965bdf1a",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.fabrication-assembly-machining",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 53,
+      "kind": "title-evidence",
+      "pattern": "\\b(?:assembly\\s+mechanic|fabricator|welder|production\\s+assembler)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-11964cbd6e928728826d5a5c",
+      "scope": "title"
+    },
+    {
+      "conceptId": "role.fabrication-assembly-machining",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 54,
+      "kind": "title-evidence",
+      "pattern": "\\b(?:manufacturing\\s+)?machinist\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-6965d2d2961987ff964a3aa2",
+      "scope": "title"
+    },
+    {
+      "conceptId": "role.field-service",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 55,
+      "kind": "positive-evidence",
+      "pattern": "\\bfield\\s+support\\s+engineer\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-0dcdd1de8eb9f062d87a9742",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.field-service",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 56,
+      "kind": "positive-evidence",
+      "pattern": "\\bfield\\s+service\\s+(?:engineer|technician|representative)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-3d2985639550fece3e7f7172",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.hardware-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 57,
+      "kind": "positive-evidence",
+      "pattern": "\\bhardware\\s+engineer(?:ing)?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-0644865a46e1f915d6c8011f",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.hardware-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 58,
+      "kind": "positive-evidence",
+      "pattern": "\\belectrical\\s+hardware\\s+(?:design|development)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-bc1d5a9f818eecb57b29d151",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.individual-contributor",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 59,
+      "kind": "positive-evidence",
+      "pattern": "\\bindividual\\s+contributor\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-078dae2412b1b6cdb17935bf",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.individual-contributor",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 60,
+      "kind": "positive-evidence",
+      "pattern": "\\bnon[- ]?managerial\\s+role\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-c3781f349dae74ee8edf954e",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.infrastructure-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 61,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:operate|administer)(?:s|ed|ing)?\\b.{0,80}\\b(?:cloud|network|storage|systems?)\\s+infrastructure\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-1c34a307297f684a02953e01",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.infrastructure-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 62,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:IT|cloud|data\\s+center|systems?)?\\s*infrastructure\\s+engineer(?:ing)?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-6dc3685237e29e5a2b5440a4",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.infrastructure-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 63,
+      "kind": "positive-evidence",
+      "pattern": "\\binfrastructure\\s+architect\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-f4b4b830fb9a650b1fc99729",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.infrastructure-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 64,
+      "kind": "title-evidence",
+      "pattern": "\\bstorage\\s+systems?\\s+engineer\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-56b24fa6f2441158ff44abe3",
+      "scope": "title"
+    },
+    {
+      "conceptId": "role.infrastructure-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 65,
+      "kind": "title-evidence",
+      "pattern": "\\bcloud\\s+(?:DevOps|reliability)\\s+engineer\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-c525c77e3aeae9fc763e5bb1",
+      "scope": "title"
+    },
+    {
+      "conceptId": "role.lab-test-technician",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 66,
+      "kind": "positive-evidence",
+      "pattern": "\\boperate\\s+(?:laboratory|test)\\s+instrumentation\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-3e5cc75844409fd64f5b4286",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.lab-test-technician",
+      "contextGroupId": "legacy:role.lab-test-technician:context:1",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 67,
+      "kind": "required-context",
+      "pattern": "\\b(?:test|laboratory|lab)\\s+technician\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-6488b4a406238c9d556c36a3",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.lab-test-technician",
+      "contextGroupId": "legacy:role.lab-test-technician:context:2",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 68,
+      "kind": "required-context",
+      "pattern": "\\b(?:laboratory|lab)\\s+(?:instrumentation|equipment|apparatus)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-e6da9ab788f338ffe45c8a19",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.lab-test-technician",
+      "contextGroupId": "legacy:role.lab-test-technician:context:2",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 69,
+      "kind": "required-context",
+      "pattern": "\\b(?:set\\s*up|operate|calibrat(?:e|es|ing))\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-eae7f69acf07c9dea0c69c0a",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.lab-test-technician",
+      "contextGroupId": "legacy:role.lab-test-technician:context:1",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 70,
+      "kind": "required-context",
+      "pattern": "\\b(?:instrumentation|test\\s+equipment|laboratory|specimens?|measurements?|data\\s+acquisition)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-f15ceeac1a251eb2292c842e",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.lab-test-technician",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 71,
+      "kind": "title-evidence",
+      "pattern": "\\benvironmental\\s+test\\s+technician\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-1117450da25ad10467b95451",
+      "scope": "title"
+    },
+    {
+      "conceptId": "role.lab-test-technician",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 72,
+      "kind": "title-evidence",
+      "pattern": "\\b(?:laboratory|lab)\\s+technician\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-c72f02b141de13fce241e44f",
+      "scope": "title"
+    },
+    {
+      "conceptId": "role.management-heavy",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 73,
+      "kind": "positive-evidence",
+      "pattern": "\\bmanage\\s+(?:a\\s+)?team\\s+of\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-86b35efd9e536cd91eadc6eb",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.management-heavy",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 74,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:program|project|engineering|product|people)\\s+manager\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-87b979786f45ce5efed96029",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.management-heavy",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 75,
+      "kind": "positive-evidence",
+      "pattern": "\\bdirector\\s+of\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-a435601568acd27c96182f5c",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.management-heavy",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 76,
+      "kind": "title-evidence",
+      "pattern": "\\bmanager\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-65abcd70e75a9402115c3d05",
+      "scope": "title"
+    },
+    {
+      "conceptId": "role.management-heavy",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 77,
+      "kind": "title-evidence",
+      "pattern": "\\bdirector\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-e31a99eae6e08ac5af02eeb6",
+      "scope": "title"
+    },
+    {
+      "conceptId": "role.manufacturing-production-operations",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 78,
+      "kind": "positive-evidence",
+      "pattern": "\\bdirect\\s+production\\s+operations\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-1084d458f5941e54ede839af",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.manufacturing-production-operations",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 79,
+      "kind": "positive-evidence",
+      "pattern": "\\bplant[- ]floor\\s+operations?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-31aa7c247410ea2258173657",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.manufacturing-production-operations",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 80,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:assembly|production)\\s+line\\s+operations?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-3ec0a3b5bba1bf237cf82e5a",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.manufacturing-production-operations",
+      "contextGroupId": "legacy:role.manufacturing-production-operations:context:1",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 81,
+      "kind": "required-context",
+      "pattern": "\\b(?:operate|run|monitor|staff)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-f0cdbb9e34ae8ab897ce606a",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.manufacturing-production-operations",
+      "contextGroupId": "legacy:role.manufacturing-production-operations:context:1",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 82,
+      "kind": "required-context",
+      "pattern": "\\b(?:production|manufacturing)\\s+(?:line|equipment|machinery|cell)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-f22cfa977978c0f3b24b0fa7",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.manufacturing-production-operations",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 83,
+      "kind": "title-evidence",
+      "pattern": "\\bassembly[- ]line\\s+(?:operator|worker)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-04253f91364c2fd516b28913",
+      "scope": "title"
+    },
+    {
+      "conceptId": "role.manufacturing-production-operations",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 84,
+      "kind": "title-evidence",
+      "pattern": "\\b(?:manufacturing|production)\\s+(?:operator|technician|associate|worker)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-1e2b0380087a75f24a014f2e",
+      "scope": "title"
+    },
+    {
+      "conceptId": "role.mechanical-maintenance-repair",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 85,
+      "kind": "positive-evidence",
+      "pattern": "\\binspect,?\\s+maintain,?\\s+and\\s+repair\\s+(?:vehicles?|machinery|equipment)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-1b2128af70b699bc45dd17d5",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.mechanical-maintenance-repair",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 86,
+      "kind": "positive-evidence",
+      "pattern": "\\bpreventive\\s+maintenance\\s+(?:and|/)\\s+repair\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-3d73da58141da4e24b2a6684",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.mechanical-maintenance-repair",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 87,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:repair(?:ing)?|maintain(?:ing)?|service|servicing|overhaul(?:ing)?|mechanical\\s+troubleshooting)\\b[^.!?]{0,80}\\b(?:machinery|engines?|hydraulic|pneumatic|mechanical\\s+(?:equipment|systems?)|industrial\\s+equipment)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-9a3a217254b8cb438ed61a8b",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.mechanical-maintenance-repair",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 88,
+      "kind": "title-evidence",
+      "pattern": "\\bfleet\\s+technician\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-721b52a86477d47894289222",
+      "scope": "title"
+    },
+    {
+      "conceptId": "role.mechanical-maintenance-repair",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 89,
+      "kind": "title-evidence",
+      "pattern": "\\bmechanical\\s+(?:maintenance|repair)\\s+technician\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-74b3029bad7f2f77eaa17f96",
+      "scope": "title"
+    },
+    {
+      "conceptId": "role.mechanical-maintenance-repair",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 90,
+      "kind": "title-evidence",
+      "pattern": "\\b(?:fleet|automotive|aircraft|industrial|maintenance|process|flight operations)\\s+(?:mechanic|maintenance technician)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-8e338828c2abe9d1ecfba05b",
+      "scope": "title"
+    },
+    {
+      "conceptId": "role.network-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 91,
+      "kind": "positive-evidence",
+      "pattern": "\\bnetwork\\s+engineer(?:ing)?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-83ce75eb88d3c2c405947787",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.network-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 92,
+      "kind": "positive-evidence",
+      "pattern": "\\bnetwork\\s+architect(?:ure)?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-905359d79fc879a8cf84a8a6",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.people-management",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 93,
+      "kind": "positive-evidence",
+      "pattern": "\\bdirect\\s+reports?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-4b15fbe2fcbb4537e82313ed",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.people-management",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 94,
+      "kind": "positive-evidence",
+      "pattern": "\\bmanage\\s+(?:a\\s+)?team\\s+of\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-80b9229269b99dad808ecb11",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.people-management",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 95,
+      "kind": "positive-evidence",
+      "pattern": "\\bpeople\\s+manager\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-ac0e10148e5f5232fce93083",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.physical-inspection-quality-control",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 96,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:inspect(?:ion|ing|s)?|verify\\s+workmanship)\\b[^.!?]{0,70}\\b(?:assemblies|parts?|equipment|installations?|workmanship|materials?|welds?|hardware|aircraft|fleet\\s+vehicles?|vehicles?)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-1e5a5683eac175c2f4a17852",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.physical-inspection-quality-control",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 97,
+      "kind": "positive-evidence",
+      "pattern": "\\bphysical\\s+inspection\\s+(?:and|/)\\s+acceptance\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-897e8e16d17331acf71f861b",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.physical-inspection-quality-control",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 98,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:quality[- ]control|acceptance)\\s+inspection\\b[^.!?]{0,70}\\b(?:assemblies|parts?|equipment|installations?|materials?|welds?|hardware|aircraft)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-df9e982526b844813a0df43d",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.physical-inspection-quality-control",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 99,
+      "kind": "title-evidence",
+      "pattern": "\\b(?:electrical|production|manufacturing|quality|test)\\s+inspector\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-b8c89b51da17a2f734a680f9",
+      "scope": "title"
+    },
+    {
+      "conceptId": "role.physical-inspection-quality-control",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 100,
+      "kind": "title-evidence",
+      "pattern": "\\bquality\\s+inspections?\\s+(?:manager|specialist)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-bba22dab36109cb55a246ecb",
+      "scope": "title"
+    },
+    {
+      "conceptId": "role.program-management",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 101,
+      "kind": "positive-evidence",
+      "pattern": "\\bprogram\\s+management\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-66a005b324f4fe4855cdc2ef",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.program-management",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 102,
+      "kind": "positive-evidence",
+      "pattern": "\\bprogram\\s+manager\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-a0cf8d8e2969811f74f0b51d",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.project-management",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 103,
+      "kind": "positive-evidence",
+      "pattern": "\\bproject\\s+manager\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-30d744eae0cb07324b8684d5",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.project-management",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 104,
+      "kind": "positive-evidence",
+      "pattern": "\\bproject\\s+management\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-cd84dc17bf824e6336a617d5",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.software-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 105,
+      "kind": "exclusion",
+      "pattern": "\\b(?:program|project)\\s+manager\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-d1a0fe9a8683c5d198ca97b3",
+      "scope": "title"
+    },
+    {
+      "conceptId": "role.software-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 106,
+      "kind": "positive-evidence",
+      "pattern": "\\bsoftware\\s+(?:engineer|developer|engineering)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-46fc65c86cb8fe8f89deb57f",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.software-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 107,
+      "kind": "positive-evidence",
+      "pattern": "\\bhands[- ]on\\b.{0,80}\\bsoftware\\s+development\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-5193edd7cf081b1e070ab3d8",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.software-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 108,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:develop|design|implement|build|test|maintain)(?:s|ed|ing)?\\b.{0,80}\\b(?:software|applications?|APIs?|microservices?|test\\s+harnesses?)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-d38950cbbae985c44b98b197",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.software-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 109,
+      "kind": "positive-evidence",
+      "pattern": "\\bapplication\\s+developer\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-e2ecff3f0a112e6b89218304",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.systems-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 110,
+      "kind": "positive-evidence",
+      "pattern": "\\bsystems?\\s+integration\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-10a47e0b3f773a8429d6294a",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.systems-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 111,
+      "kind": "positive-evidence",
+      "pattern": "\\bsystems?\\s+engineer(?:ing)?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-204641b297f2848040c3629c",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.systems-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 112,
+      "kind": "positive-evidence",
+      "pattern": "\\bsystems?\\s+integration\\s+engineer\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-7f0f5449070c50e0ee48198f",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.test-validation-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 113,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:build|develop|maintain)(?:s|ed|ing)?\\b.{0,60}\\bautomated\\s+test\\s+(?:frameworks?|pipelines?)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-2fd9f481813c93bfd117cf7d",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.test-validation-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 114,
+      "kind": "positive-evidence",
+      "pattern": "\\bverification\\s+and\\s+validation\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-6f238fc1000212b3a3fe6d5f",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.test-validation-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 115,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:security|software|systems?|infrastructure)\\s+(?:testing|validation)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-9030330002a191747f39cd12",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.test-validation-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 116,
+      "kind": "positive-evidence",
+      "pattern": "\\bvalidate(?:s|d|ing)?\\b.{0,60}\\bsystems?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-c2ed16dd2f746d6759e009e7",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.test-validation-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 117,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:test|verification|validation)\\s+engineer(?:ing)?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-fa1fbd86a38cc91cdb2e2a44",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.warehouse-material-handling",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 118,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:stock(?:ing)?|pick(?:ing)?)\\b[^.!?]{0,60}\\b(?:warehouse|physical)\\s+inventory\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-41d0afda635bc64bb2c84499",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.warehouse-material-handling",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 119,
+      "kind": "positive-evidence",
+      "pattern": "\\bwarehouse\\s+operations\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-4982be1b8bcf05fc6666c0ca",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.warehouse-material-handling",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 120,
+      "kind": "positive-evidence",
+      "pattern": "\\bmaterial\\s+handling\\s+(?:operations|equipment)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-85434f2acb298d8a3abe56f3",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.warehouse-material-handling",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 121,
+      "kind": "positive-evidence",
+      "pattern": "\\breceiv(?:e|es|ing)\\b[^.!?]{0,80}\\b(?:stock(?:ing)?|pick(?:ing)?|pack(?:ing)?)\\b[^.!?]{0,80}\\b(?:inventory|materials?|shipments?|parts?)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-b1877e8990b40dede5df682b",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.warehouse-material-handling",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 122,
+      "kind": "positive-evidence",
+      "pattern": "\\bshipping\\s+(?:and|/)\\s+receiving\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-daa6a8110cf53acbd568fb5b",
+      "scope": "both"
+    },
+    {
+      "conceptId": "role.warehouse-material-handling",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 123,
+      "kind": "title-evidence",
+      "pattern": "\\b(?:MRO(?:&U)?\\s+)?inventory\\s+specialist\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-afa2798c4bd489ff47f1a378",
+      "scope": "title"
+    },
+    {
+      "conceptId": "role.warehouse-material-handling",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 124,
+      "kind": "title-evidence",
+      "pattern": "\\bwarehouse\\s+(?:associate|operator|specialist|worker)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-cad262351a1971906c50ec74",
+      "scope": "title"
+    },
+    {
+      "conceptId": "role.warehouse-material-handling",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 125,
+      "kind": "title-evidence",
+      "pattern": "\\bmaterial\\s+handler\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-caf195f97436c3e9852afaa6",
+      "scope": "title"
+    },
+    {
+      "conceptId": "technical.api-development",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 126,
+      "kind": "exclusion",
+      "pattern": "\\b(?:program|project)\\s+manager\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-8e92301576962b47cf86cdc6",
+      "scope": "title"
+    },
+    {
+      "conceptId": "technical.api-development",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 127,
+      "kind": "positive-evidence",
+      "pattern": "\\bAPI\\s+(?:development|design|engineering)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-779bae4c74215d42f20817fd",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.api-development",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 128,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:own|operate|maintain)(?:s|ed|ing)?\\b.{0,100}\\b(?:service|backend|model[- ]serving)\\s+APIs?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-e0eeaf41e6b65f127fa27270",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.api-development",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 129,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:develop|design|implement|build|integrate|maintain)(?:s|ed|ing)?\\b.{0,100}\\b(?:(?:RESTful|web|service|backend|model[- ]serving)\\s+)?APIs?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-fd60886d19ddcc92d12ab8c1",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.application-development",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 130,
+      "kind": "positive-evidence",
+      "pattern": "\\bdevelop(?:s|ed|ing)?\\b.{0,80}\\b(?:web|enterprise|business|AI|machine\\s+learning|language\\s+model|natural\\s+language\\s+processing)\\b.{0,40}\\bapplications?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-470954d630807ec7b126d772",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.application-development",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 131,
+      "kind": "positive-evidence",
+      "pattern": "\\bapplication\\s+(?:development|developer)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-a95cc857c3fbf9c5413f6ef5",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.artificial-intelligence",
+      "description": "Observed autonomous AI-agent systems and workflows.",
+      "executionOrder": 132,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:agentic\\s+(?:AI|systems?|workflows?)|AI\\s+agents?)\\b",
+      "provenance": "ai-concept-improvement-20260909-round-001",
+      "ruleId": "ai-20260909-agentic",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.artificial-intelligence",
+      "description": "Explicit application/integration of AI to real workflows, including transmission-line design.",
+      "executionOrder": 133,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:apply|applying|applied|leverage|leveraging|integrate|integrating|embed|embedding)\\s+(?:generative\\s+)?AI\\b",
+      "provenance": "ai-concept-improvement-20260909-round-001",
+      "ruleId": "ai-20260909-apply",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.artificial-intelligence",
+      "description": "Named AI systems, products and technical capabilities recur across employers.",
+      "executionOrder": 134,
+      "kind": "positive-evidence",
+      "pattern": "\\bAI(?:\\s*/\\s*ML)?[ -]+(?:systems?|solutions?|applications?|capabilities|models?|platforms?|services?|software|SDKs?|algorithms?|techniques)\\b",
+      "provenance": "ai-concept-improvement-20260909-round-001",
+      "ruleId": "ai-20260909-artifacts",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.artificial-intelligence",
+      "description": "Explicit construction/training/optimization of learned models fits the catalog broad-AI systems/techniques definition.",
+      "executionOrder": 135,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:build|building|develop|developing|train|training|optimiz(?:e|ing|ation\\s+of))\\b[^.\\n;]{0,85}\\b(?:machine[ -]+learning|deep[ -]+learning)(?:\\s*/\\s*(?:machine[ -]+learning|deep[ -]+learning))?[ -]+models?\\b",
+      "provenance": "ai-concept-improvement-20260909-round-001",
+      "ruleId": "ai-20260909-build-ml-models",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.artificial-intelligence",
+      "description": "Explicit technical work with AI-driven/accelerated/native implementations.",
+      "executionOrder": 136,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:experience|expertise|implement|implementing|develop|developing|build|building|leverage|leveraging|using|utiliz(?:e|ing))\\b[^.\\n;]{0,65}\\bAI[- ](?:driven|accelerated|native)\\b",
+      "provenance": "ai-concept-improvement-20260909-round-001",
+      "ruleId": "ai-20260909-driven-work",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.artificial-intelligence",
+      "description": "AI-assisted/driven/augmented implementations missed by enabled/powered-only rule.",
+      "executionOrder": 137,
+      "kind": "positive-evidence",
+      "pattern": "\\bAI(?:\\s*/\\s*ML)?[- ](?:assisted|augmented|based)\\b",
+      "provenance": "ai-concept-improvement-20260909-round-001",
+      "ruleId": "ai-20260909-enabled",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.artificial-intelligence",
+      "description": "AI engineering, inference/training, safety and governance are concrete domain responsibilities.",
+      "executionOrder": 138,
+      "kind": "positive-evidence",
+      "pattern": "\\bAI[ -]+(?:engineering|inference|training|safety|governance|automation|development|integration)\\b",
+      "provenance": "ai-concept-improvement-20260909-round-001",
+      "ruleId": "ai-20260909-engineering",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.artificial-intelligence",
+      "description": "Observed generative AI and GenAI work.",
+      "executionOrder": 139,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:experience|expertise|knowledge|skills?|build|building|develop|developing|deploy|deploying|research|integrat(?:e|ing|ion)|design|designing|implement|implementing|optimiz(?:e|ing)|deliver|delivering)\\b[^.\\n;]{0,100}\\b(?:generative\\s+AI|GenAI)\\b|\\b(?:generative\\s+AI|GenAI)[ -]+(?:systems?|models?|applications?|solutions?|development|deployment|research|workloads?|inference|frameworks?)\\b",
+      "provenance": "ai-concept-improvement-20260909-round-001",
+      "ruleId": "ai-20260909-generative",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.artificial-intelligence",
+      "description": "Actual engineering/operation of AI infrastructure and workloads, not a generic AI-computing-company slogan.",
+      "executionOrder": 140,
+      "kind": "positive-evidence",
+      "pattern": "\\bAI[ -]+(?:training|inference)[ -]+(?:infrastructure|workloads?|clusters?)\\b|\\b(?:deploy|deploying|build|building|operate|operating|manage|managing|scale|scaling|design|designing|optimize|optimizing)\\b[^.\\n;]{0,85}\\bAI[ -]+workloads?\\b",
+      "provenance": "ai-concept-improvement-20260909-round-001",
+      "ruleId": "ai-20260909-infrastructure",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.artificial-intelligence",
+      "description": "Large language models are specific AI systems, unlike ambiguous standalone LLM or generic ML mentions.",
+      "executionOrder": 141,
+      "kind": "positive-evidence",
+      "pattern": "\\blarge[ -]+language[ -]+models?\\b",
+      "provenance": "ai-concept-improvement-20260909-round-001",
+      "ruleId": "ai-20260909-language-models",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.artificial-intelligence",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 142,
+      "kind": "positive-evidence",
+      "pattern": "\\bartificial\\s+intelligence\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-7b5e444942d723908272c851",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.artificial-intelligence",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 143,
+      "kind": "positive-evidence",
+      "pattern": "\\bAI(?:\\s*/\\s*ML)?[- ](?:enabled|powered)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-c0129698510a1a34ab82c3dd",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.artificial-intelligence",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 144,
+      "kind": "positive-evidence",
+      "pattern": "\\bapplied\\s+AI\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-e64dc6340ab5725f855fcdf1",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.artificial-intelligence",
+      "description": "Explicit AI specialization in job title, including AI storage/infrastructure and business roles.",
+      "executionOrder": 145,
+      "kind": "title-evidence",
+      "pattern": "\\bAI(?!\\s*&\\s*T\\b)(?:\\s*/\\s*ML)?\\b|\\bGenAI\\b",
+      "provenance": "ai-concept-improvement-20260909-round-001",
+      "ruleId": "ai-20260909-title",
+      "scope": "title"
+    },
+    {
+      "conceptId": "technical.automation-scripting",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 146,
+      "kind": "exclusion",
+      "pattern": "\\b(?:program|project)\\s+manager\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-5abd99afdde8a2192c2548eb",
+      "scope": "title"
+    },
+    {
+      "conceptId": "technical.automation-scripting",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 147,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:Linux|deployment|workflow|infrastructure|administrative)\\s+automation\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-1357e785255bd21b0818bbf5",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.automation-scripting",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 148,
+      "kind": "positive-evidence",
+      "pattern": "\\bautomation\\s+to\\s+(?:simplify|support|manage|configure|deploy|administer)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-609278afd3ad5641dab7ea33",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.automation-scripting",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 149,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:Python|PowerShell|Bash)\\s+(?:automation\\s+)?script(?:ing|s)?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-63451218304a70c43c7f2619",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.automation-scripting",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 150,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:Python|PowerShell|Bash)\\s+automation\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-a91f27226332aa6a8abe8df8",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.automation-scripting",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 151,
+      "kind": "positive-evidence",
+      "pattern": "\\bscript(?:ing)?\\s+(?:with|using)\\s+(?:Python|PowerShell|Bash)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-b3e348164a95a900b8a92ea6",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.automation-scripting",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 152,
+      "kind": "positive-evidence",
+      "pattern": "\\bautomation\\s+(?:tooling|scripts?)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-c5b8db46cf76fd25522bf4db",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.automation-scripting",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 153,
+      "kind": "positive-evidence",
+      "pattern": "\\bautomated\\s+(?:data\\s+)?(?:workflows?|pipelines?)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-d05c0dd304d55ded58ca88f3",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.automation-scripting",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 154,
+      "kind": "positive-evidence",
+      "pattern": "\\bautomation\\s+(?:and|/)\\s+scripting\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-d8d1310727757684d4c35572",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.automation-scripting",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 155,
+      "kind": "positive-evidence",
+      "pattern": "\\bautomated\\s+(?:test\\s+)?(?:frameworks?|scripts?|pipelines?)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-f879a01cd5acf7916848fa35",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.backend-development",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 156,
+      "kind": "exclusion",
+      "pattern": "\\b(?:program|project)\\s+manager\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-c308125e848cd2d204408e3c",
+      "scope": "title"
+    },
+    {
+      "conceptId": "technical.backend-development",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 157,
+      "kind": "positive-evidence",
+      "pattern": "\\bserver[- ]side\\s+(?:development|microservices?)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-59b86d2c4b57cef918f7e5ed",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.backend-development",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 158,
+      "kind": "positive-evidence",
+      "pattern": "\\bback(?:end|[- ]end)\\s+(?:development|developer|engineering|services?|APIs?)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-7e751b2be513ebd7a38e8828",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.backend-development",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 159,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:design|develop|implement|build)(?:s|ed|ing)?\\b.{0,80}\\bmicroservice[- ]based\\s+(?:REST(?:ful)?\\s+)?APIs?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-ae785bba03c9d7cb91da1099",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.backend-development",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 160,
+      "kind": "positive-evidence",
+      "pattern": "\\bbuild(?:s|ing)?\\b.{0,100}\\b(?:AI|machine\\s+learning|language\\s+model|natural\\s+language\\s+processing)\\b.{0,60}\\bservices?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-b1fb06a1f2d8b588c62f5a2f",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.cabling-racking",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 161,
+      "kind": "positive-evidence",
+      "pattern": "\\brack\\s+(?:and|/)\\s+cable\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-05e786fe33d126c808674c99",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.cabling-racking",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 162,
+      "kind": "positive-evidence",
+      "pattern": "\\bcable\\s+(?:installation|management)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-40e639710b0228a7a582d81c",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.cabling-racking",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 163,
+      "kind": "positive-evidence",
+      "pattern": "\\brack(?:ing)?\\s+and\\s+stack(?:ing)?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-e0dc89a3a6613a9adc4cf922",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.cicd",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 164,
+      "kind": "positive-evidence",
+      "pattern": "\\bcontinuous\\s+(?:delivery|deployment)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-0688a73dd714f5512506a209",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.cicd",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 165,
+      "kind": "positive-evidence",
+      "pattern": "\\bcontinuous\\s+integration\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-621868550572a3cd94316484",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.cicd",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 166,
+      "kind": "positive-evidence",
+      "pattern": "\\bCI\\s*/\\s*CD\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-ca6174c9ac968babbb976108",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.cisco-networking",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 167,
+      "kind": "positive-evidence",
+      "pattern": "\\bCisco\\s+network\\s+(?:equipment|infrastructure)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-6f634daff57c5770b394deb3",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.cisco-networking",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 168,
+      "kind": "positive-evidence",
+      "pattern": "\\bCisco\\s+(?:IOS|NX-OS|routers?|switches|networking)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-7e48d1e287e1e4ea4b244139",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.cloud",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 169,
+      "kind": "positive-evidence",
+      "pattern": "\\bcloud[- ]based\\s+(?:data\\s+)?(?:architectures?|infrastructure|systems?|applications?)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-2491fe53bd1150276ff97784",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.cloud",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 170,
+      "kind": "positive-evidence",
+      "pattern": "\\bGoogle\\s+Cloud(?:\\s+Platform)?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-6ab4b22b6e85189811118f84",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.cloud",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 171,
+      "kind": "positive-evidence",
+      "pattern": "\\bcloud\\s+(?:computing|platforms?|infrastructure|services?|deployment|model\\s+services?)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-9927dba88f7db51a75d615ce",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.cloud",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 172,
+      "kind": "positive-evidence",
+      "pattern": "\\bMicrosoft\\s+Azure\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-db462235e331eedb3d1af1c5",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.cloud",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 173,
+      "kind": "positive-evidence",
+      "pattern": "\\bAmazon\\s+Web\\s+Services\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-f7afd393fca95aad65aae880",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.containers",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 174,
+      "kind": "positive-evidence",
+      "pattern": "\\bcontainerized\\s+(?:applications?|services?)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-5a007bd4b6be82eade427d56",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.containers",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 175,
+      "kind": "positive-evidence",
+      "pattern": "\\bLinux\\s+containers?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-813caf734594726977bcb68c",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.containers",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 176,
+      "kind": "positive-evidence",
+      "pattern": "\\bcontainer\\s+orchestration\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-872d6e4c0592b71a4554e76e",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.containers",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 177,
+      "kind": "positive-evidence",
+      "pattern": "\\bDocker\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-d9c26fd788f9d59439e2ae33",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.containers",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 178,
+      "kind": "positive-evidence",
+      "pattern": "\\bKubernetes\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-f9e44ff02c960e76675907ee",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.embedded-systems",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 179,
+      "kind": "positive-evidence",
+      "pattern": "\\breal[- ]time\\s+operating\\s+systems?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-99f3b1328c412cb8f70fe5d4",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.embedded-systems",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 180,
+      "kind": "positive-evidence",
+      "pattern": "\\bembedded\\s+(?:systems?|software|firmware)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-c864198b30bc4d9000ca9e92",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.frontend-development",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 181,
+      "kind": "positive-evidence",
+      "pattern": "\\bclient[- ]side\\s+development\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-7f74fa010faa21843314b472",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.frontend-development",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 182,
+      "kind": "positive-evidence",
+      "pattern": "\\bfront(?:end|[- ]end)\\s+(?:development|developer|engineering)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-ec5bbf7f6ffd8397aad5336d",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.infrastructure-as-code",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 183,
+      "kind": "positive-evidence",
+      "pattern": "\\bTerraform\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-adb6593b1a0bf39e2338702d",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.infrastructure-as-code",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 184,
+      "kind": "positive-evidence",
+      "pattern": "\\binfrastructure\\s+as\\s+code\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-d650f23064a376c9afa2e9aa",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.infrastructure-as-code",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 185,
+      "kind": "positive-evidence",
+      "pattern": "\\bCloudFormation\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-e331fce07b95cf6102a1aee7",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.large-language-models",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 186,
+      "kind": "positive-evidence",
+      "pattern": "\\bLLMs?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-741864cc520e63dbaa633b2c",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.large-language-models",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 187,
+      "kind": "positive-evidence",
+      "pattern": "\\blarge\\s+language\\s+models?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-a8fd1a68841008ea49ac16a7",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.linux",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 188,
+      "kind": "positive-evidence",
+      "pattern": "\\bLinux\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-44d8898677fe6cd9f77b024b",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.linux-administration",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 189,
+      "kind": "positive-evidence",
+      "pattern": "\\badminister(?:ing)?\\s+Linux(?:\\s+(?:systems|servers))?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-2308a0c9253f02e63708eecd",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.linux-administration",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 190,
+      "kind": "positive-evidence",
+      "pattern": "\\bLinux\\s+(?:system\\s+)?administration\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-4c9ae000ee4d068201ac5a15",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.machine-learning",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 191,
+      "kind": "positive-evidence",
+      "pattern": "\\bML[- ]enabled\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-0f0aee381d7a99d76e7464b3",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.machine-learning",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 192,
+      "kind": "positive-evidence",
+      "pattern": "\\bmachine\\s+learning\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-3226522698119403dbfbf487",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.networking",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 193,
+      "kind": "positive-evidence",
+      "pattern": "\\bnetwork\\s+(?:design|architecture|configuration)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-770ad313507b943aa5bb7ee5",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.networking",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 194,
+      "kind": "positive-evidence",
+      "pattern": "\\bnetwork\\s+engineering\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-fabf8a43c0052868b6590b3e",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.nlp",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 195,
+      "kind": "positive-evidence",
+      "pattern": "\\bNLP\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-85c6cd2776b0284e3c39fea8",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.nlp",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 196,
+      "kind": "positive-evidence",
+      "pattern": "\\bnatural\\s+language\\s+processing\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-a0bfe294bfc8bf795bed1184",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.power-facilities",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 197,
+      "kind": "positive-evidence",
+      "pattern": "\\bfacilities\\s+infrastructure\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-408a1ece308e933043367fa6",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.power-facilities",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 198,
+      "kind": "positive-evidence",
+      "pattern": "\\bHVAC\\s+(?:systems?|infrastructure)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-5b9c43d7eba55bd68200dbdd",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.power-facilities",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 199,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:UPS|uninterruptible\\s+power|power\\s+distribution)\\s+(?:systems?|units?)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-693629a46d13ae180e4d263b",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.software-development",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 200,
+      "kind": "exclusion",
+      "pattern": "\\b(?:program|project)\\s+manager\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-b043827ef38d5823ce88b5d0",
+      "scope": "title"
+    },
+    {
+      "conceptId": "technical.software-development",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 201,
+      "kind": "positive-evidence",
+      "pattern": "\\bdevelop(?:ing|ment)?\\s+software\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-075600a11b477b648eb85adb",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.software-development",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 202,
+      "kind": "positive-evidence",
+      "pattern": "\\bdevelop(?:s|ed|ing)?\\b.{0,80}\\b(?:artificial\\s+intelligence|machine\\s+learning|AI|ML)\\b.{0,50}\\bsystems?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-1bc8c4e1bc046842ab644a4e",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.software-development",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 203,
+      "kind": "positive-evidence",
+      "pattern": "\\bsoftware\\s+developer\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-79b42f6cd1bd7d9f3f7e87bd",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.software-development",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 204,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:develop|design|implement|build|test|maintain)(?:s|ed|ing)?\\b.{0,80}\\b(?:software|applications?|APIs?|microservices?|test\\s+harnesses?)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-c4df9bde8c46c6165ab762f9",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.software-development",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 205,
+      "kind": "positive-evidence",
+      "pattern": "\\bsoftware\\s+(?:development|engineering)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-f41d70c95c966778dc90e136",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.storage",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 206,
+      "kind": "positive-evidence",
+      "pattern": "\\bnetwork[- ]attached\\s+storage\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-136289ea5a9bb0457f1c4922",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.storage",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 207,
+      "kind": "positive-evidence",
+      "pattern": "\\bstorage\\s+(?:arrays?|infrastructure|engineering)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-1cb0ba267893280392296e7b",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.storage",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 208,
+      "kind": "positive-evidence",
+      "pattern": "\\bSAN\\s+(?:storage|administration|infrastructure)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-65f0090d7c4a2cfffb766c50",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.virtualization",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 209,
+      "kind": "positive-evidence",
+      "pattern": "\\bvirtualization\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-1cdc541111c30c6f13500905",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.virtualization",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 210,
+      "kind": "positive-evidence",
+      "pattern": "\\bHyper-V\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-7cef27b09ac95e98e0c637fc",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.virtualization",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 211,
+      "kind": "positive-evidence",
+      "pattern": "\\bVMware\\s+(?:vSphere|ESXi)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-a9c8343eb445f36b714ff2e6",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.windows-administration",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 212,
+      "kind": "positive-evidence",
+      "pattern": "\\bWindows\\s+(?:Server\\s+|system\\s+)?administration\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-6023b0bc372ec72c4e7acc45",
+      "scope": "both"
+    },
+    {
+      "conceptId": "technical.windows-administration",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 213,
+      "kind": "positive-evidence",
+      "pattern": "\\badminister(?:s|ed|ing)?\\b.{0,40}\\bWindows\\s+(?:systems|servers)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-bdce57064fa431e3344621be",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.aircraft-flight-line",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 214,
+      "kind": "positive-evidence",
+      "pattern": "\\bflight\\s+line\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-0b79e962f5d619a20e5309a4",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.aircraft-flight-line",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 215,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:on|around)\\s+aircraft\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-1c06d22ab97ee0a71b428354",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.aircraft-flight-line",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 216,
+      "kind": "positive-evidence",
+      "pattern": "\\baircraft\\s+maintenance\\s+(?:hangar|environment)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-8c9da26c4375a9acf4733bdb",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.aircraft-flight-line",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 217,
+      "kind": "title-evidence",
+      "pattern": "\\bairborne(?:\\s+sensor)?\\s+operator\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-eb3db8b2e7f8cfa9af8c5489",
+      "scope": "title"
+    },
+    {
+      "conceptId": "work.classified-facility",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 218,
+      "kind": "positive-evidence",
+      "pattern": "\\bSCIF\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-207aa87aa13f5caa0e324fdd",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.classified-facility",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 219,
+      "kind": "positive-evidence",
+      "pattern": "\\bclassified\\s+(?:facility|environment|workspace)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-50852e52eaed9043e034e404",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.classified-facility",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 220,
+      "kind": "positive-evidence",
+      "pattern": "\\bsensitive\\s+compartmented\\s+information\\s+facility\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-ad0cf6e35c33e77246da26a3",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.confined-spaces",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 221,
+      "kind": "positive-evidence",
+      "pattern": "\\bconfined\\s+spaces?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-268a5ff2b323d23d1b56358a",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.customer-site",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 222,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:work|support|perform\\s+duties)\\s+(?:at|on)\\s+(?:the\\s+)?customer(?:'s)?\\s+site\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-2b5513c23d34d998fa349010",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.customer-site",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 223,
+      "kind": "positive-evidence",
+      "pattern": "\\bon[- ]site\\s+at\\s+customer\\s+locations?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-c4b1b5755ecdf5e2685e283c",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.data-center",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 224,
+      "kind": "positive-evidence",
+      "pattern": "\\bwithin\\s+(?:a|the)\\s+data\\s+cent(?:er|re)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-20ebd012f53bad0db2a97aab",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.data-center",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 225,
+      "kind": "positive-evidence",
+      "pattern": "\\bdata\\s+cent(?:er|re)\\s+(?:environment|operations?|facilit(?:y|ies)|technician|infrastructure)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-db730304ba32dd1de17ad5ea",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.deployment",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 226,
+      "kind": "extended-location-signal",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-24e942a270d0af8dfee5cf79",
+      "scope": "both",
+      "selector": {
+        "category": "recurring-deployment",
+        "operator": "firstCategoryEquals",
+        "source": "extendedLocation.signals"
+      }
+    },
+    {
+      "conceptId": "work.deployment",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 227,
+      "kind": "extended-location-signal",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-39944b223861179ad2280b57",
+      "scope": "both",
+      "selector": {
+        "category": "possible-deployment",
+        "operator": "firstCategoryEquals",
+        "source": "extendedLocation.signals"
+      }
+    },
+    {
+      "conceptId": "work.deployment",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 228,
+      "kind": "extended-location-signal",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-6ed3e9b90684b842b6905ef9",
+      "scope": "both",
+      "selector": {
+        "category": "extended-deployment",
+        "operator": "firstCategoryEquals",
+        "source": "extendedLocation.signals"
+      }
+    },
+    {
+      "conceptId": "work.deployment",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 229,
+      "kind": "extended-location-signal",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-747f61fc92edf56b8305e23f",
+      "scope": "both",
+      "selector": {
+        "category": "forward-deployed",
+        "operator": "firstCategoryEquals",
+        "source": "extendedLocation.signals"
+      }
+    },
+    {
+      "conceptId": "work.deployment",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 230,
+      "kind": "extended-location-signal",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-e694fb2d23a1756c12af40b5",
+      "scope": "both",
+      "selector": {
+        "category": "required-deployment",
+        "operator": "firstCategoryEquals",
+        "source": "extendedLocation.signals"
+      }
+    },
+    {
+      "conceptId": "work.deployment",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 231,
+      "kind": "remote-signal",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-f8fa3e814f43dca4917f0d61",
+      "scope": "both",
+      "selector": {
+        "category": "field-deployment",
+        "operator": "firstCategoryEquals",
+        "source": "remoteWork.signals"
+      }
+    },
+    {
+      "conceptId": "work.extended-away-assignment",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 232,
+      "kind": "extended-location-signal",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-09d0ff8d26548e20e408ca8b",
+      "scope": "both",
+      "selector": {
+        "category": "long-term-away-assignment",
+        "operator": "firstCategoryEquals",
+        "source": "extendedLocation.signals"
+      }
+    },
+    {
+      "conceptId": "work.extended-away-assignment",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 233,
+      "kind": "extended-location-signal",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-357b16b0dbddb8f1b02ca111",
+      "scope": "both",
+      "selector": {
+        "category": "extended-away-duration",
+        "operator": "firstCategoryEquals",
+        "source": "extendedLocation.signals"
+      }
+    },
+    {
+      "conceptId": "work.extended-away-assignment",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 234,
+      "kind": "extended-location-signal",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-45ecafa122a0285219308d1e",
+      "scope": "both",
+      "selector": {
+        "category": "extended-deployment",
+        "operator": "firstCategoryEquals",
+        "source": "extendedLocation.signals"
+      }
+    },
+    {
+      "conceptId": "work.extended-away-assignment",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 235,
+      "kind": "extended-location-signal",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-b0e68d17f59f181c68df6e12",
+      "scope": "both",
+      "selector": {
+        "category": "winter-over-assignment",
+        "operator": "firstCategoryEquals",
+        "source": "extendedLocation.signals"
+      }
+    },
+    {
+      "conceptId": "work.field-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 236,
+      "kind": "positive-evidence",
+      "pattern": "\\bfield\\s+service\\s+engineer(?:ing)?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-913a743ce5d69fe9dec1e9f8",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.field-engineering",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 237,
+      "kind": "positive-evidence",
+      "pattern": "\\bfield\\s+engineer(?:ing)?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-f4b6d2cc5d81648d28435557",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.heights",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 238,
+      "kind": "positive-evidence",
+      "pattern": "\\bwork(?:ing)?\\s+at\\s+heights?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-32278d4f3196b7dd4eeb7a4c",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.heights",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 239,
+      "kind": "positive-evidence",
+      "pattern": "\\bclimb(?:ing)?\\s+(?:ladders?|towers?|structures?)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-6d67fc50999fa9c20eb3ca59",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.hybrid",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 240,
+      "kind": "positive-evidence",
+      "pattern": "\\bhybrid\\b[^.!?]{0,100}\\b(?:one|two|three|four|five|[1-5])\\s*(?:-|–)?\\s*days?\\b[^.!?]{0,70}\\b(?:on[- ]?site|in[- ]person|office|facility)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-1336883e918d65bfe128f935",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.hybrid",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 241,
+      "kind": "positive-evidence",
+      "pattern": "\\bhybrid[- ]remote\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-9073601482907feaadad7bdd",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.hybrid",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 242,
+      "kind": "positive-evidence",
+      "pattern": "\\bhybrid\\s+(?:work|role|position|schedule)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-f045de175cf90a28f983fa0b",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.international-assignment",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 243,
+      "kind": "extended-location-signal",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-22c325317e4727237ee3bef5",
+      "scope": "both",
+      "selector": {
+        "category": "oconus-assignment",
+        "operator": "firstCategoryEquals",
+        "source": "extendedLocation.signals"
+      }
+    },
+    {
+      "conceptId": "work.international-assignment",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 244,
+      "kind": "extended-location-signal",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-2e3ac2bf64058c86bee6c676",
+      "scope": "both",
+      "selector": {
+        "category": "possible-extended-assignment",
+        "operator": "firstCategoryEquals",
+        "source": "extendedLocation.signals"
+      }
+    },
+    {
+      "conceptId": "work.international-assignment",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 245,
+      "kind": "extended-location-signal",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-34a5d1006d6883e754ac8d7b",
+      "scope": "both",
+      "selector": {
+        "category": "explicit-job-location",
+        "operator": "firstCategoryEquals",
+        "source": "extendedLocation.signals"
+      }
+    },
+    {
+      "conceptId": "work.international-assignment",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 246,
+      "kind": "extended-location-signal",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-72fc5fbe727fe741717e9fa2",
+      "scope": "both",
+      "selector": {
+        "category": "temporary-duty",
+        "operator": "firstCategoryEquals",
+        "source": "extendedLocation.signals"
+      }
+    },
+    {
+      "conceptId": "work.lab-environment",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 247,
+      "kind": "positive-evidence",
+      "pattern": "\\blab(?:oratory)?\\s+environment\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-bf2c870f742cc0dc8ad124fa",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.lab-environment",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 248,
+      "kind": "positive-evidence",
+      "pattern": "\\bwork\\s+in\\s+(?:a|the)\\s+lab(?:oratory)?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-c7e6c4144befe8b8cc0b7090",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.manufacturing-floor",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 249,
+      "kind": "positive-evidence",
+      "pattern": "\\bproduction\\s+floor\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-a24f23122847cd21b3355591",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.manufacturing-floor",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 250,
+      "kind": "positive-evidence",
+      "pattern": "\\bmanufacturing\\s+(?:floor|facility|environment)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-b3b90226aeefe836c8139efb",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.onsite",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 251,
+      "kind": "positive-evidence",
+      "pattern": "\\bmostly\\s+on[- ]?site\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-787c836137b69485c9b6b4dd",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.onsite",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 252,
+      "kind": "positive-evidence",
+      "pattern": "\\bno\\s+remote\\s+work\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-a83292a3db0ce6d3fb1a5eb5",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.onsite",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 253,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:fully|100\\s*%)\\s+on[- ]?site\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-a878748bf55fdcac88fc2dac",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.onsite",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 254,
+      "kind": "remote-signal",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-08d830de52515388b0380b42",
+      "scope": "both",
+      "selector": {
+        "category": "scheduled-onsite",
+        "operator": "firstCategoryEquals",
+        "source": "remoteWork.signals"
+      }
+    },
+    {
+      "conceptId": "work.onsite",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 255,
+      "kind": "remote-signal",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-5c9def8d7bb49326d2ddfe72",
+      "scope": "both",
+      "selector": {
+        "category": "onsite-duty",
+        "operator": "firstCategoryEquals",
+        "source": "remoteWork.signals"
+      }
+    },
+    {
+      "conceptId": "work.onsite",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 256,
+      "kind": "remote-signal",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-977bbbafa8743278b30e536b",
+      "scope": "both",
+      "selector": {
+        "category": "physical-installation",
+        "operator": "firstCategoryEquals",
+        "source": "remoteWork.signals"
+      }
+    },
+    {
+      "conceptId": "work.onsite",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 257,
+      "kind": "remote-signal",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-de5c16b874671c49c8294815",
+      "scope": "both",
+      "selector": {
+        "category": "operational-site",
+        "operator": "firstCategoryEquals",
+        "source": "remoteWork.signals"
+      }
+    },
+    {
+      "conceptId": "work.outdoor-field",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 258,
+      "kind": "positive-evidence",
+      "pattern": "\\bexposure\\s+to\\s+(?:adverse|inclement)\\s+weather\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-3403b0ee2ddf53e5e1cb2bd5",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.outdoor-field",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 259,
+      "kind": "positive-evidence",
+      "pattern": "\\boutdoor\\s+field\\s+work\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-977e0c7ce4c0f5fc4b66dba4",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.outdoor-field",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 260,
+      "kind": "positive-evidence",
+      "pattern": "\\bwork\\s+outdoors\\s+in\\s+(?:all|various)\\s+weather\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-ed2ab0533a8ccb6384b337f8",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.physical-infrastructure",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 261,
+      "kind": "positive-evidence",
+      "pattern": "\\bphysical\\s+infrastructure\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-3d96c3a46655ddb9e0247ce8",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.physical-infrastructure",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 262,
+      "kind": "positive-evidence",
+      "pattern": "\\binstall(?:ing|ation)?\\s+(?:and\\s+maintain(?:ing|ance)\\s+)?(?:servers?|switches|routers?|hardware)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-7c18d697962a91dbcb0dc60c",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.relocation",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 263,
+      "kind": "extended-location-signal",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-758654674de4bf8f01bcacef",
+      "scope": "both",
+      "selector": {
+        "category": "required-unusual-relocation",
+        "operator": "firstCategoryEquals",
+        "source": "extendedLocation.signals"
+      }
+    },
+    {
+      "conceptId": "work.relocation",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 264,
+      "kind": "positive-evidence",
+      "pattern": "\\brelocates?\\s+(?:internationally|overseas|to)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-453a036824594e5dcfc0fde3",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.relocation",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 265,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:must|will|shall|may|required\\s+to)\\s+relocate\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-71602d0147a1177ea4dcffa0",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.relocation",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 266,
+      "kind": "positive-evidence",
+      "pattern": "\\brelocation\\s+(?:is\\s+)?required\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-eda539dac48d22403ef0e60c",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.remote",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 267,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:currently|initially)\\s+remote\\b[^.!?]{0,140}\\b(?:transition|return|move)\\b[^.!?]{0,80}\\bon[- ]?site\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-16f3ff730485481208a767bb",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.remote",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 268,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:mostly\\s+remote|remote[- ]first)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-62b9e2429135abbba7dfba05",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.remote",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 269,
+      "kind": "positive-evidence",
+      "pattern": "\\bremote\\b[^.!?]{0,120}\\b(?:quarterly|once|twice)\\b[^.!?]{0,70}\\b(?:office|on[- ]?site|in[- ]person|facility|visits?)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-fb6913130152bd540a9b0241",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.remote",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 270,
+      "kind": "positive-evidence",
+      "pattern": "\\bremote\\b[^.!?]{0,120}\\b(?:occasional(?:ly)?|periodic(?:ally)?|as[- ]needed)\\b[^.!?]{0,70}\\b(?:office|on[- ]?site|in[- ]person|facility|visits?)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-fc4c5488b6ae65cf68526646",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.remote",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 271,
+      "kind": "remote-designation",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-8a9b280d7e5efc3fc7dbf1a7",
+      "scope": "both",
+      "selector": {
+        "operator": "isTrue",
+        "source": "remoteWork.isRemoteDesignated"
+      }
+    },
+    {
+      "conceptId": "work.remote.full",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 272,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:100\\s*%|fully|completely)\\s+remote\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-0769b90586c33c1e4c014b34",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.remote.full",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 273,
+      "kind": "positive-evidence",
+      "pattern": "\\bremote[- ]only\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-eef4d93d96bd00da288a6d2b",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.rotation",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 274,
+      "kind": "extended-location-signal",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-abc1e4319311516c45fa12fc",
+      "scope": "both",
+      "selector": {
+        "category": "rotation",
+        "operator": "firstCategoryEquals",
+        "source": "extendedLocation.signals"
+      }
+    },
+    {
+      "conceptId": "work.scuba",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 275,
+      "kind": "positive-evidence",
+      "pattern": "\\bSCUBA\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-71d5907f4511641c716b2c93",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.scuba",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 276,
+      "kind": "positive-evidence",
+      "pattern": "\\bcommercial\\s+diving\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-e3de597e18701a4d5d275f58",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.shipboard",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 277,
+      "kind": "positive-evidence",
+      "pattern": "\\bat\\s+sea\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-1105840bfe3454143725cc4b",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.shipboard",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 278,
+      "kind": "positive-evidence",
+      "pattern": "\\bsea\\s+trials?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-1eb407995844576f1e6688c0",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.shipboard",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 279,
+      "kind": "positive-evidence",
+      "pattern": "\\bshipboard\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-3261dfaf96aebbd4596b266b",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.shipboard",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 280,
+      "kind": "positive-evidence",
+      "pattern": "\\baboard\\s+(?:a\\s+)?(?:ship|vessel)\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-7d6133197b69b31e7163bc38",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.shipboard",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 281,
+      "kind": "positive-evidence",
+      "pattern": "\\bsea[- ]going\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-d302a192d5a38cede228726b",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.travel.frequent",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 282,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:frequent|extensive)\\s+travel\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-42fad88f4cd6888f9208668e",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.travel.frequent",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 283,
+      "kind": "positive-evidence",
+      "pattern": "\\btravel\\s+frequently\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-98c630cb83076794dc5da932",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.travel.frequent",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 284,
+      "kind": "remote-signal",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-8b468c254ef357fd732c950b",
+      "scope": "both",
+      "selector": {
+        "category": "frequent-travel",
+        "operator": "firstCategoryEquals",
+        "source": "remoteWork.signals"
+      }
+    },
+    {
+      "conceptId": "work.travel.moderate",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 285,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:1[1-9]|[2-4]\\d)\\s*%\\s+travel\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-24471e736aae1373268fb37d",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.travel.moderate",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 286,
+      "kind": "positive-evidence",
+      "pattern": "\\btravel\\b[^.!?]{0,30}\\b(?:1[1-9]|[2-4]\\d)\\s*%",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-28855e76777851be832359d5",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.travel.moderate",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 287,
+      "kind": "remote-signal",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-8bbc6c5a41525e2daa028a16",
+      "scope": "both",
+      "selector": {
+        "category": "moderate-travel",
+        "operator": "firstCategoryEquals",
+        "source": "remoteWork.signals"
+      }
+    },
+    {
+      "conceptId": "work.travel.occasional",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 288,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:occasional|limited)\\s+travel\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-0268d5b8da5733d533451240",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.travel.occasional",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 289,
+      "kind": "positive-evidence",
+      "pattern": "\\btravel\\b[^.!?]{0,80}\\btypically\\s+lasting\\s+no\\s+more\\s+than\\s+one\\s+week\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-499d1fb5da43ab7cc2a68417",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.travel.occasional",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 290,
+      "kind": "positive-evidence",
+      "pattern": "\\btravel\\s*,?\\s+as\\s+needed\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-5dffc589bb97f2a97372d824",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.travel.occasional",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 291,
+      "kind": "positive-evidence",
+      "pattern": "\\bat\\s+most\\s+one\\s+(?:short\\s+)?trip\\s+every\\s+(?:2\\s*[-–—]\\s*3|two\\s+to\\s+three)\\s+years?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-6b309fb38ab6a3353665eeef",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.travel.occasional",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 292,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:[0-9]|10)\\s*%(?!\\s*(?:-|–|—|to)\\s*\\d)\\s+travel\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-7365914a2ffb7c27a32b80cf",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.travel.occasional",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 293,
+      "kind": "positive-evidence",
+      "pattern": "\\btravel\\b[^.!?]{0,30}\\b(?:[0-9]|10)\\s*%(?!\\s*(?:-|–|—|to)\\s*\\d)",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-a0fcaf9ae91b4e71d15a5438",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.travel.occasional",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 294,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:one|1)\\s+(?:short\\s+)?trip\\s+every\\s+(?:12\\s*[-–—]\\s*18|twelve\\s+to\\s+eighteen)\\s+months?\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-eb85c09ca1bfcbc1d43f54a0",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.travel.occasional",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 295,
+      "kind": "remote-signal",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-da5c9838781e5c15723fc995",
+      "scope": "both",
+      "selector": {
+        "category": "occasional-travel",
+        "operator": "firstCategoryEquals",
+        "source": "remoteWork.signals"
+      }
+    },
+    {
+      "conceptId": "work.travel.substantial",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 296,
+      "kind": "positive-evidence",
+      "pattern": "\\b(?:[5-9]\\d|100)\\s*%\\s+travel\\b",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-262e33808f9babfc59adbae0",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.travel.substantial",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 297,
+      "kind": "positive-evidence",
+      "pattern": "\\btravel\\b[^.!?]{0,30}\\b(?:[5-9]\\d|100)\\s*%",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-d3bb0de5d6675cfe555a86c1",
+      "scope": "both"
+    },
+    {
+      "conceptId": "work.travel.substantial",
+      "description": "Migrated from the last production RegEx detector; historical runtime usage was unavailable.",
+      "executionOrder": 298,
+      "kind": "remote-signal",
+      "provenance": "legacy-regex-catalog-v9",
+      "ruleId": "legacy-2b73a3e696f00f1227b7cafe",
+      "scope": "both",
+      "selector": {
+        "category": "substantial-travel",
+        "operator": "firstCategoryEquals",
+        "source": "remoteWork.signals"
+      }
+    }
+  ],
+  "rulesetVersion": "1.0.0",
+  "schemaVersion": 1,
+  "taxonomy": {
+    "sha256": "514ed1c8c644d1eec426b5fdcf4d5a2c447aa61ce5572ae70b2d03fc3815a049",
+    "version": 9
+  }
+}

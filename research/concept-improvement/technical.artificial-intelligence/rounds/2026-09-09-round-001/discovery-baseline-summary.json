@@ -1,0 +1,70 @@
+{
+  "conceptId": "technical.artificial-intelligence",
+  "createdUtc": "2026-09-09T12:11:15.464698+00:00",
+  "curve": {
+    "averagePrecision": 0.47282608695652173,
+    "points": [
+      {
+        "fn": 23,
+        "fp": 0,
+        "precision": 1,
+        "recall": 0,
+        "threshold": null,
+        "tn": 97,
+        "tp": 0
+      },
+      {
+        "fn": 22,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.043478260869565216,
+        "threshold": 0.75,
+        "tn": 97,
+        "tp": 1
+      },
+      {
+        "fn": 15,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.34782608695652173,
+        "threshold": 0.5,
+        "tn": 97,
+        "tp": 8
+      },
+      {
+        "fn": 0,
+        "fp": 97,
+        "precision": 0.19166666666666668,
+        "recall": 1.0,
+        "threshold": 0,
+        "tn": 0,
+        "tp": 23
+      }
+    ]
+  },
+  "metrics": {
+    "f1": 0.5161290322580645,
+    "fn": 15,
+    "fp": 0,
+    "negativeSupport": 97,
+    "precision": 1.0,
+    "recall": 0.34782608695652173,
+    "support": 23,
+    "tn": 97,
+    "tp": 8
+  },
+  "postings": 120,
+  "predictionsHash": "3209d0ae7fd514d57a3d87d16deac1e0d7158efed1cb8e2eaf733ff4a4e073d3",
+  "referenceHash": "31f04ea280299d5c891f8ea1ef9ebaa63f73f6b1b0c182eed671e3344cc28afd",
+  "resolved": 120,
+  "role": "discovery",
+  "rulesHash": "aaf6d97ff6ad7b6c48d12ebc1d1c485722bb4817fee791d418d09172eccbc1a8",
+  "scoreDistribution": {
+    "0": 112,
+    "0.5": 7,
+    "0.75": 1
+  },
+  "scorePolicyHash": "107e636b7eb709bb77c5c87e992f8320b0f2948321480998072d24518881d7fb",
+  "unresolved": 0,
+  "variant": "baseline"
+}

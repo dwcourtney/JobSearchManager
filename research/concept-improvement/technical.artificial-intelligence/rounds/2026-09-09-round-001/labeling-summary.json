@@ -1,0 +1,26 @@
+{
+  "backendRevision": "Not exposed by CLI",
+  "kind": "AI references, not independent human ground truth",
+  "model": "gpt-6-astra",
+  "protocol": "Fresh ephemeral, no-tool, prediction-blinded target-only A/B; third blinded adjudication for disagreements. No reference relabeling after detector predictions.",
+  "roles": {
+    "discovery": {
+      "acceptedSessions": 24,
+      "attempts": 24,
+      "postings": 120,
+      "unresolved": 0
+    },
+    "sensitivity": {
+      "acceptedSessions": 31,
+      "attempts": 31,
+      "postings": 150,
+      "unresolved": 0
+    },
+    "validation": {
+      "acceptedSessions": 30,
+      "attempts": 30,
+      "postings": 150,
+      "unresolved": 0
+    }
+  }
+}

@@ -1,0 +1,498 @@
+{
+  "actual": 120,
+  "conceptId": "technical.artificial-intelligence",
+  "createdUtc": "2026-09-09T12:08:19.162534+00:00",
+  "files": {
+    "full-taxonomy.json": "0d03033750c54ffc804f4175fa091a01210e9cc90fd335f836da153601fd4956",
+    "sample.json": "e9cc979e2fab6312297ac9014ddff33cb31326ef8045ce440a80237470db8428",
+    "taxonomy.json": "46e9ae516e21e4a6369a0887095bf73a475c661af10e50c56723e73b7ba6b987"
+  },
+  "method": "sha256-seeded-simple-random-without-replacement-v1",
+  "requested": 120,
+  "role": "discovery",
+  "runId": "2026-09-09-round-001",
+  "schemaVersion": 2,
+  "seed": "ai-discovery-20260909-001",
+  "selected": [
+    {
+      "descriptionHash": "d258a59f25fed68f331d9fa889fc488075d406ded3d66374083ad26ca34dd34b",
+      "id": "leidos:R-00188318"
+    },
+    {
+      "descriptionHash": "1799116b87121c792310c6c7f75d5b174d4b2041c1d2423f52eb963da4c4669e",
+      "id": "parsons:R182338"
+    },
+    {
+      "descriptionHash": "42000298be96498afc19dd016ade4e8f3c140ecbdf8cb346944933073197170c",
+      "id": "leidos:R-00177551"
+    },
+    {
+      "descriptionHash": "5752d002800685fe6c291fb992a66bc3f03a05e6ca6dfd33c98c03343d04bdfc",
+      "id": "parsons:R181532"
+    },
+    {
+      "descriptionHash": "c3056cefb703ece1ab67c1158f311b306ea29623ffd694b97e14da42c9f1da24",
+      "id": "leidos:R-00188629"
+    },
+    {
+      "descriptionHash": "90392ccee30ebe1b866833fd001dd4ffb0f0d33a1e76e9a2a1555c8f793c479e",
+      "id": "leidos:R-00189702"
+    },
+    {
+      "descriptionHash": "9083ad35bba79f91f681cde980f0b95c121ee99e2a44f1e0c080403b9bb1916a",
+      "id": "leidos:R-00189475"
+    },
+    {
+      "descriptionHash": "ff6316b221bca061f9b930ef85e3fa1483fef7cbb15a08fdf5129d5a28afd8e7",
+      "id": "servicenow:JB0074763"
+    },
+    {
+      "descriptionHash": "9700c3b81c7abf1c77f0195247869f62b6e5f357445c777c74c68a5aa1a3d4db",
+      "id": "leidos:R-00187497"
+    },
+    {
+      "descriptionHash": "7a01051f314245bc9133d897449579f5153c5b4835feec537c052c5d39ff441c",
+      "id": "leidos:R-00189598"
+    },
+    {
+      "descriptionHash": "fd3b0c11a52f2809f1dca35b39267de0ffdf49dff58dd00dbd252cf455fe60d5",
+      "id": "nvidia:JR2000027"
+    },
+    {
+      "descriptionHash": "00070e80b705f8bc3e4a5ffc0aa3b32cb3e44506dbbd54302fcba3454c913a2e",
+      "id": "nvidia:JR2019408"
+    },
+    {
+      "descriptionHash": "050b9eda3fafff6044e7c89aacd20bc01c5f383733c75a8b1ea2dfbebe4724fd",
+      "id": "leidos:R-00179621"
+    },
+    {
+      "descriptionHash": "9543a1ef29ffac1423743c2e1d40ae6ec7508f85622632c2b1e684ff909a0c0e",
+      "id": "leidos:R-00189676"
+    },
+    {
+      "descriptionHash": "728c67bb0e2f169d0ffe47fcb14b3f89f40fdecf7e9e162b3a6a314842053409",
+      "id": "parsons:R181708"
+    },
+    {
+      "descriptionHash": "29cda91834edeab8f0f1b984a6edbb3435eed395f909e26981df8431d39a9d3a",
+      "id": "leidos:R-00174108"
+    },
+    {
+      "descriptionHash": "b3b04bc79ca89646826e4604c6db0aed6bd7b59b21a2dea4bb18208cfcc4b846",
+      "id": "leidos:R-00189686"
+    },
+    {
+      "descriptionHash": "32b04ad6c75ccf83b62c7983da72662a66db8cfb633ba19060397b082b086cc4",
+      "id": "leidos:R-00184432"
+    },
+    {
+      "descriptionHash": "88d5d324d88564635b32e92bfc3fccaf0d34f5934f46d5db368ce3c701b5b67f",
+      "id": "leidos:R-00181880"
+    },
+    {
+      "descriptionHash": "4b812da9a142c37ff7cf276a8fd45151b2d32f42e7caf931ada9c6b498449f51",
+      "id": "leidos:R-00189079"
+    },
+    {
+      "descriptionHash": "d815b832d92ce3c8f17a5b76a297df82dcf435c9d34dd69408dc052cad938404",
+      "id": "leidos:R-00187285"
+    },
+    {
+      "descriptionHash": "af4f8f337a2c490bfa01b5956d343baa6bff95f014c50823474571a96e22f2ee",
+      "id": "leidos:R-00191296"
+    },
+    {
+      "descriptionHash": "02398c9a07134eb649014940f0865e80609be734c9964f8e2f0f46c35200bad1",
+      "id": "rtx:01845303"
+    },
+    {
+      "descriptionHash": "4163fe8013076a56398753561d5380d7024a045b52daae642c26deaa7150776d",
+      "id": "leidos:R-00181384"
+    },
+    {
+      "descriptionHash": "9214d2505d096ce2ba1b5cb7827cd7d8d1347eb1bf365a25c5fff52a2b3f4986",
+      "id": "leidos:R-00188545"
+    },
+    {
+      "descriptionHash": "12df45b5369b90e3dc38ec42a6fde5a9adba4a74aa3f44e7054ba30489ff24ca",
+      "id": "rtx:01860126"
+    },
+    {
+      "descriptionHash": "5f8e2c0723efcbbd2539fdd4514ef837fd711b725baff265453f374d862e5d27",
+      "id": "parsons:R183338"
+    },
+    {
+      "descriptionHash": "3f88b5983fd1aca8541907b91f4beb06fdd5ab1d720b9578322f80707814310e",
+      "id": "leidos:R-00179079"
+    },
+    {
+      "descriptionHash": "39f2bcd2c2b0cace3f271c6e16d68679cfef364d48bf0217c6cb160e6a0d35f8",
+      "id": "parsons:R181767"
+    },
+    {
+      "descriptionHash": "faaf536625e67e41c3ef4feef5975ef81373d9388cb6761e9c28755a858ba53a",
+      "id": "leidos:R-00188412"
+    },
+    {
+      "descriptionHash": "4ae914e6b162bbc3d191bdad4b469a3a021c46c18a14a23ffddff3b4d4927562",
+      "id": "northrop-grumman:R10246935"
+    },
+    {
+      "descriptionHash": "c46603ec57f0d0a8cd7f121c591148faa0b3658c1277622d4ecd5191a9cdd321",
+      "id": "leidos:R-00189779"
+    },
+    {
+      "descriptionHash": "1f37c0ac5e303fb9eadeb06f816668ffa93e8211332eb70ea8b60534519990b8",
+      "id": "leidos:R-00188294"
+    },
+    {
+      "descriptionHash": "a452575e87ab8ee4ebb515cd10a5cbf7e38b77dc5d704ab791ffa1447bd25981",
+      "id": "aecom:J10157541"
+    },
+    {
+      "descriptionHash": "d053aeebb0628db92553f63e382a2b3f4ece9137687fda524b1e18d506f28d4c",
+      "id": "parsons:R178526"
+    },
+    {
+      "descriptionHash": "15b5b364dc27fe31205260b99e847675d1767df399c90c594cfc7244f2937ad8",
+      "id": "leidos:R-00188798"
+    },
+    {
+      "descriptionHash": "04826e11a009f6a1683fb0e2f184cc3a2c488ceebe31e13ec526f61087efe2ee",
+      "id": "leidos:R-00189683"
+    },
+    {
+      "descriptionHash": "b4ef21704005da327f752bb43bb1f52088d488fbed813622783ef8ed835dc1f4",
+      "id": "parsons:R183663"
+    },
+    {
+      "descriptionHash": "fe06bdf474a70247b2ac13ee7694c760f8b850cd21353498ff8ff0fd9cc5e580",
+      "id": "leidos:R-00186513"
+    },
+    {
+      "descriptionHash": "64bc5875241c608e56e0a9bc8a3e4d30a694427008b0876cfab240619195f87d",
+      "id": "leidos:R-00184457"
+    },
+    {
+      "descriptionHash": "e0eae4760310d823afe2a69640bda5298f48a8f0c38917ae7d76549cad2f6390",
+      "id": "leidos:R-00174214"
+    },
+    {
+      "descriptionHash": "04634e947e6c54be11943a6b77036c90006a60fa61cc7cc97f1b3c764a22eb05",
+      "id": "leidos:R-00189665"
+    },
+    {
+      "descriptionHash": "5010ed6ce06e0481e460107d841cf8b7293cdf317353b961ace740114bf874d4",
+      "id": "leidos:R-00189723"
+    },
+    {
+      "descriptionHash": "64e80d9dc1870f2a7ee1dcd2217a2e01ac8886a036353109dc891aee5a700e78",
+      "id": "leidos:R-00161261"
+    },
+    {
+      "descriptionHash": "250c281ec3ea1ca052bae4a6b6267b09b05df70f60182be5aab02ea5cf138ae7",
+      "id": "leidos:R-00189328"
+    },
+    {
+      "descriptionHash": "7a2b3f2a7244155ea393a66fc0a89b4f57587c5c06e7af4ced86ce84c68d6a87",
+      "id": "leidos:R-00188387"
+    },
+    {
+      "descriptionHash": "1c6f94fcd9314f0455b86a70cbb9b0739e741d78ccefd05640f3ee6a6035a371",
+      "id": "rtx:01864324"
+    },
+    {
+      "descriptionHash": "cf8666b5f448bce3f5b075493109c65426555e08ffd8f0d530708a7d7c7f9211",
+      "id": "rtx:01862316"
+    },
+    {
+      "descriptionHash": "7187812a0a631c41d4eb286d9196d6b8f7a5fe741a3cc7ce010dc026b2fbe50d",
+      "id": "nvidia:JR2019933"
+    },
+    {
+      "descriptionHash": "812ff3092a28f8a7b152ad2816754ba9c716025c499e22c6740fea9a11686165",
+      "id": "leidos:R-00190948"
+    },
+    {
+      "descriptionHash": "8387a5f3b4d147022ebce460300f239b08178881b191b8e3ac3f79010cfc8ae3",
+      "id": "leidos:R-00188329"
+    },
+    {
+      "descriptionHash": "e73912cfc6dc0eb7cbb008da25a3ef51edba9b7631443db6ae323a14bf0b80c0",
+      "id": "leidos:R-00189796"
+    },
+    {
+      "descriptionHash": "ffa8b0570b97c8d25a3f2736444499c10c8292a25030587683c48ffbbe6f832a",
+      "id": "leidos:R-00174218"
+    },
+    {
+      "descriptionHash": "912e83024480cd9f6484f0c5f5d0e5dfe2897c2f9af1da08d45e758ffbda46fc",
+      "id": "leidos:R-00187261"
+    },
+    {
+      "descriptionHash": "ba0ff9d1a59423aa51ad8d32f1a096cb6daa7ea080244e8974ab9a73abc5e474",
+      "id": "leidos:R-00184306"
+    },
+    {
+      "descriptionHash": "9da6f0fdf19b997a6106afbcbdd400209b14d07ed9a24727ee97570473df7052",
+      "id": "leidos:R-00189802"
+    },
+    {
+      "descriptionHash": "136fb5c16f0fb056ecd41579c9fd758f6dc5cdaaa0a4e99fdaa9c9dfabd4709d",
+      "id": "rtx:01866701"
+    },
+    {
+      "descriptionHash": "e346ca056ecedb14b00e8f2a628c0e624bfa2aa3e0cb753c1c04043cf12904e4",
+      "id": "aecom:J10151182"
+    },
+    {
+      "descriptionHash": "061195a4ae87e6d7847e69881d1f72f559e8b0ea1302d768b278dd4b4cdccded",
+      "id": "leidos:R-00189749"
+    },
+    {
+      "descriptionHash": "cd73de0072ffe2c7add65c5cc0a694b8244818ad3d509547db832cd1377e966f",
+      "id": "nvidia:JR2021887"
+    },
+    {
+      "descriptionHash": "4a0f16d6855745a580ddde3f0bead84697d12be62c51f00b60205e775f58f0a2",
+      "id": "rtx:01863948"
+    },
+    {
+      "descriptionHash": "2e249730a1b4afd5f7e673547c0b10bc04749ee8b48c68c62e0e6858022f454b",
+      "id": "leidos:R-00187890"
+    },
+    {
+      "descriptionHash": "a1fb3ee467c85952f2184791fb66b453e96a949799cfc4ce1a18e0249d9188b8",
+      "id": "leidos:R-00188298"
+    },
+    {
+      "descriptionHash": "603c66f925e1fb83d85745ce6985bb5ab61bf226d0c6e9cbdc482dc90a5e2663",
+      "id": "leidos:R-00186917"
+    },
+    {
+      "descriptionHash": "cf39edacf6ad71337348c1fc7dfca4efb9a1061a772b1d28922ba708462b281c",
+      "id": "nvidia:JR2023237"
+    },
+    {
+      "descriptionHash": "8b6958fd74cf908a857615d1530a99b4458f1c7eceb32ea70f070c7e7ef73758",
+      "id": "leidos:R-00189679"
+    },
+    {
+      "descriptionHash": "6c77304bd3b32a28053b9acced8419a2b56a3d9247f7391bafc1056c87ca99b1",
+      "id": "leidos:R-00189717"
+    },
+    {
+      "descriptionHash": "65a4587e80677bf422634701843094828de11ee621af69c92d5bdf41a4ffe096",
+      "id": "leidos:R-00180967"
+    },
+    {
+      "descriptionHash": "d2de2d50f025f6e99c6fc8c194c81c26c5bcc2feca973ffdb6b69cac6ecc70f4",
+      "id": "parsons:R180833"
+    },
+    {
+      "descriptionHash": "dd8be9499a8decad76f1e068a10018cc59251bf6e1a125d9fb27f63bb0fad049",
+      "id": "northrop-grumman:R10242751"
+    },
+    {
+      "descriptionHash": "46a7498633e28fd4dfd071a3a711d872e42477df1d10105a786855fa0bec3c0f",
+      "id": "parsons:R185556"
+    },
+    {
+      "descriptionHash": "826d7399c07b2e2b07aca032327a6bce280c4ab755746c90515f5387996fc3d0",
+      "id": "leidos:R-00174080"
+    },
+    {
+      "descriptionHash": "faf4b61f1b45df39c1fb1f9d722a776138becb0107b8806f457e5805c1c64036",
+      "id": "northrop-grumman:R10240877"
+    },
+    {
+      "descriptionHash": "07bb3efea7ad8700d8fc392adfac7f68149ecca125a822a0e2d0833a9046e409",
+      "id": "leidos:R-00189763"
+    },
+    {
+      "descriptionHash": "d7faa536f8f8136e91554c7d8ba6acb44e2aaf945630c55435a3c17bb6bbeb72",
+      "id": "leidos:R-00181944"
+    },
+    {
+      "descriptionHash": "6533f2c340a79080ef419bac33f762999599675d0689d8e3ba2c9cc29e79e309",
+      "id": "northrop-grumman:R10245576"
+    },
+    {
+      "descriptionHash": "254f04f02d757f94087f7253e9e775b5f30f6243542dcd5eb954a3a4bcc46639",
+      "id": "leidos:R-00187936"
+    },
+    {
+      "descriptionHash": "d05c162763435eddd4ffa952285180594cc4d57fa02aa426e5937d3882237fdf",
+      "id": "nvidia:JR2018976"
+    },
+    {
+      "descriptionHash": "be9910ddce8ce79188d83969d9b11a69c3ad54c0763ead2530dc8ea25fedfaa1",
+      "id": "parsons:R178563"
+    },
+    {
+      "descriptionHash": "a97cdd13ad5f9ce598f3b95533e073b49d82a26b66a7bd5df726d41280e69ead",
+      "id": "leidos:R-00187729"
+    },
+    {
+      "descriptionHash": "3f0470a142c8e6e9498e5d6e00bc3212cdc315c8a9f8a62c7dae575e3c583902",
+      "id": "rtx:01863276"
+    },
+    {
+      "descriptionHash": "b5db0d2a8004c16771da2f5c5776fc0ff3196488ac22035872fae9bfda3b6763",
+      "id": "leidos:R-00191435"
+    },
+    {
+      "descriptionHash": "db3a8b1dc03a3e003d9af93e43cb59ce5f8f8f21a521b36ba89d4ac39f71a43a",
+      "id": "leidos:R-00189801"
+    },
+    {
+      "descriptionHash": "aeee1d159a660e7156c93c9e80066c083dd4a2f6296388c3c1e34e3c633bd035",
+      "id": "leidos:R-00188705"
+    },
+    {
+      "descriptionHash": "45bbba68bd7a17a94d3b6e14083e51920b4a04827851ed0a8ff79febcc4a7e77",
+      "id": "leidos:R-00188349"
+    },
+    {
+      "descriptionHash": "eec5fb01cd9d01ecedbc78cfb490ebbf51d69447ceaac7d596fd6485a09a3416",
+      "id": "parsons:R184476"
+    },
+    {
+      "descriptionHash": "c10b6926822c8cb034efa3478821ec3b8aaaa33b730f2f6114ecd68acb7cfc02",
+      "id": "parsons:R182059"
+    },
+    {
+      "descriptionHash": "7518bc7a55e0596c7ce48a1a1f39d5c5f101dae633d3aa68fa1083748fa2b361",
+      "id": "leidos:R-00190158"
+    },
+    {
+      "descriptionHash": "856cb83e63e989fad5990ad19d8e45ac88cf6e25122c329ff2d3a4a93511b37c",
+      "id": "northrop-grumman:R10243735"
+    },
+    {
+      "descriptionHash": "b561d559b802fea66252488f598e8913baf642524fdffc7b01ac00f4bb38d501",
+      "id": "leidos:R-00189792"
+    },
+    {
+      "descriptionHash": "f3a7e3ea09c033fd735f31312401926e9463bec8825deb9249a3c1abc6846c35",
+      "id": "northrop-grumman:R10241177"
+    },
+    {
+      "descriptionHash": "87e338d938b833c07e1f725da17deb5a2dab9bea938ef653e7d2b2d20150e526",
+      "id": "leidos:R-00189242"
+    },
+    {
+      "descriptionHash": "0eab642c6cb010574ef1e0df2584c39d05ff51b6056bdeec9d357dfc3253bc40",
+      "id": "leidos:R-00189725"
+    },
+    {
+      "descriptionHash": "708e87545a1a3b5b9f4d6a8438d46eaa501e02c2767a894fe97b253d4bce515e",
+      "id": "leidos:R-00187435"
+    },
+    {
+      "descriptionHash": "a6741fc974803b4674624c9f7d675b7a4762116dcca8b8e1b29d12decaa26907",
+      "id": "rtx:01854860"
+    },
+    {
+      "descriptionHash": "a60e194e442f52fce811c7094bcffa2622b7fa898ddfcaeb8468acc79cc2f64a",
+      "id": "leidos:R-00189726"
+    },
+    {
+      "descriptionHash": "953b24769ca64dd5fa3f4d969535089a37b65ddd5a4a393bf1e50fd86e09d7a7",
+      "id": "leidos:R-00191294"
+    },
+    {
+      "descriptionHash": "5e1db10e15f123ff506e836d0c8d442d85f2353c26c8c8e6030e1dc87cc99f3a",
+      "id": "leidos:R-00188598"
+    },
+    {
+      "descriptionHash": "1c1d25a8b928f1e15e787261970822e689e6edb7682a4a71d04473c8e098f94d",
+      "id": "leidos:R-00188045"
+    },
+    {
+      "descriptionHash": "ea50a2667658a8fb052bb69b7f5543f55523ddaeff9cdc0f61a2f2076e775110",
+      "id": "leidos:R-00187587"
+    },
+    {
+      "descriptionHash": "708f1c9b428edad97760c5650986246742751a74bae93f137be140c351232cb6",
+      "id": "leidos:R-00190564"
+    },
+    {
+      "descriptionHash": "89ec3400f3a32b4c44302e2fe82fa6eff5ba1708e8816e7f08328bcc8f7f3b09",
+      "id": "nvidia:JR2019921"
+    },
+    {
+      "descriptionHash": "304850f81259d20db2e8a712f638a94f4a06202acec37ba14234a59034bfab12",
+      "id": "nvidia:JR2019884"
+    },
+    {
+      "descriptionHash": "013674d83e4df8f28ac14b72117d822676978b1f11ffbd600974d8a78a29a368",
+      "id": "leidos:R-00187412"
+    },
+    {
+      "descriptionHash": "d4f8d0dcb09d32ecf30530c2dbb47202850ae31801fd963863f5494f50cec5e8",
+      "id": "nvidia:JR2014785"
+    },
+    {
+      "descriptionHash": "1a41d85e66266355b2c4e6fdca622ae5e3845a1c676c33311193a11050717e5d",
+      "id": "leidos:R-00188704"
+    },
+    {
+      "descriptionHash": "5fa4046ea4571dbaa9d1cd5269aab0637b5a4f1a1d436a97ade1c53d2d37385e",
+      "id": "leidos:R-00174077"
+    },
+    {
+      "descriptionHash": "448a72168f92be218bfe9b64de0ec46e4e421b939b3c562d8bf9cccd76382998",
+      "id": "rtx:01864375"
+    },
+    {
+      "descriptionHash": "b5f51485c18b582e5401337f820f6a1682fdc004bae564e909910e2f7e808647",
+      "id": "aecom:J10156461"
+    },
+    {
+      "descriptionHash": "236feddfeb46cd57358bf0ff72ef7343949d259084a64af20fa84805606febb0",
+      "id": "leidos:R-00185763"
+    },
+    {
+      "descriptionHash": "52fe66cbb01e48a4dbd2e91d563106ed138f4ad108a2852fa194744e8600bfdd",
+      "id": "rtx:01857020"
+    },
+    {
+      "descriptionHash": "0a41f9d5e02fef820b6af07dea8c42dd6b60289143709e5a2d6348298428d98a",
+      "id": "leidos:R-00189698"
+    },
+    {
+      "descriptionHash": "082a38618fa398f4100f0ac588db607481a9cead1532213d77af07787b167dde",
+      "id": "leidos:R-00187174"
+    },
+    {
+      "descriptionHash": "31b2f06fcd05372e758f0f4f6259c11c402af94584a1b438630e2796915219d2",
+      "id": "parsons:R181166"
+    },
+    {
+      "descriptionHash": "704bd1fd63598dd548f3cb69eab45c59bf331097837749811e5de84b8177b506",
+      "id": "leidos:R-00189023"
+    },
+    {
+      "descriptionHash": "67c3114696ef880711b1b12cdee09c35f15096dc0464bbb712f5007756d98a7b",
+      "id": "rtx:01865186"
+    },
+    {
+      "descriptionHash": "e3f1facf42c72baeaef58235ed3715fb39ae440ae240a2997d806c0bced44206",
+      "id": "leidos:R-00188316"
+    },
+    {
+      "descriptionHash": "1bec54e69c0c0f527e0304eea6ad5f5df7d6e425979e0bc6c4a44e12cb2f3f82",
+      "id": "aecom:J10155854"
+    },
+    {
+      "descriptionHash": "01abacd586424a4897a345a3efd5a4526339fd5a9d9163a8c6cf7bdb0749e510",
+      "id": "leidos:R-00179816"
+    },
+    {
+      "descriptionHash": "19a2acb5035a598562099a307281ce01dbc87b9bb690513ff7d1beb93d2bf5ea",
+      "id": "leidos:R-00188591"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "acceptance": "Existing numeric gates retained as advisory; user authorizes evidence-led final judgment. Require material fresh recall/F1 improvement repeated across two sealed disjoint samples, reasonably high precision, individual new-FP review, exact 84-concept parity, sane Job Fit. No reference relabeling after predictions.",
+  "baseline": "2832166c613a6dbe2a6b47bb64cb3b316f0bde5c",
+  "limitations": "Historical available-cache distribution, not a random production-population accuracy estimate. AI references, not human ground truth. Up to three candidates only if genuinely unused data supports them.",
+  "reserve": 48,
+  "sensitivityCount": 150,
+  "strictExposure": "Exclude global AI reference, old machine holdout and entire earlier CI/CD population by ID or normalized description; no reserved text mining.",
+  "validationCount": 150
+}

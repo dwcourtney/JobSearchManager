@@ -1,0 +1,110 @@
+{
+  "conceptId": "technical.artificial-intelligence",
+  "createdUtc": "2026-09-09T12:14:51.367266+00:00",
+  "curve": {
+    "averagePrecision": 0.8945652173913043,
+    "points": [
+      {
+        "fn": 23,
+        "fp": 0,
+        "precision": 1,
+        "recall": 0,
+        "threshold": null,
+        "tn": 97,
+        "tp": 0
+      },
+      {
+        "fn": 22,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.043478260869565216,
+        "threshold": 0.984375,
+        "tn": 97,
+        "tp": 1
+      },
+      {
+        "fn": 21,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.08695652173913043,
+        "threshold": 0.96875,
+        "tn": 97,
+        "tp": 2
+      },
+      {
+        "fn": 20,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.13043478260869565,
+        "threshold": 0.9375,
+        "tn": 97,
+        "tp": 3
+      },
+      {
+        "fn": 17,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.2608695652173913,
+        "threshold": 0.875,
+        "tn": 97,
+        "tp": 6
+      },
+      {
+        "fn": 13,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.43478260869565216,
+        "threshold": 0.75,
+        "tn": 97,
+        "tp": 10
+      },
+      {
+        "fn": 3,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.8695652173913043,
+        "threshold": 0.5,
+        "tn": 97,
+        "tp": 20
+      },
+      {
+        "fn": 0,
+        "fp": 97,
+        "precision": 0.19166666666666668,
+        "recall": 1.0,
+        "threshold": 0,
+        "tn": 0,
+        "tp": 23
+      }
+    ]
+  },
+  "metrics": {
+    "f1": 0.9302325581395349,
+    "fn": 3,
+    "fp": 0,
+    "negativeSupport": 97,
+    "precision": 1.0,
+    "recall": 0.8695652173913043,
+    "support": 23,
+    "tn": 97,
+    "tp": 20
+  },
+  "postings": 120,
+  "predictionsHash": "c3c253d39a224c81f8f67ea0cda87f33228406c7d21de84f2b2c54fc665351e1",
+  "referenceHash": "31f04ea280299d5c891f8ea1ef9ebaa63f73f6b1b0c182eed671e3344cc28afd",
+  "resolved": 120,
+  "role": "discovery",
+  "rulesHash": "05f978fb4118603c1d0f9efc7caaf8a6970c92fd15ab98e0a3097fc813e64a23",
+  "scoreDistribution": {
+    "0": 100,
+    "0.5": 10,
+    "0.75": 4,
+    "0.875": 3,
+    "0.9375": 1,
+    "0.96875": 1,
+    "0.984375": 1
+  },
+  "scorePolicyHash": "107e636b7eb709bb77c5c87e992f8320b0f2948321480998072d24518881d7fb",
+  "unresolved": 0,
+  "variant": "candidate"
+}

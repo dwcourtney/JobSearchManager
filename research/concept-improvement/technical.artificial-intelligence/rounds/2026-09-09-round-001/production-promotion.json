@@ -1,0 +1,8 @@
+{
+  "candidateHash": "05f978fb4118603c1d0f9efc7caaf8a6970c92fd15ab98e0a3097fc813e64a23",
+  "productionHash": "c4f4c7179b7d8529bf6400a581943798614cf6e6edd0f33ed30b358450efd82a",
+  "logicalJsonExactlyEqual": true,
+  "onlySerializationDiffers": "Preserve pre-existing property order for a reviewable production diff; no semantic or metadata change.",
+  "rulesetVersion": "1.0.0",
+  "versionNote": "Existing schema/loader pin the version. Exact byte and pipeline hashes identify this approved revision without changing parser architecture."
+}

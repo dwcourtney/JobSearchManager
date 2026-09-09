@@ -1,0 +1,231 @@
+{
+  "method": "Post-seal exclusion of >=0.80 Jaccard overlap in lowercased 5-word description shingles against all development and (for sensitivity) first validation. This reduces template dependence; not a newly sampled test or tuned gate.",
+  "results": {
+    "sensitivity": {
+      "baseline": {
+        "AP": 0.4122639933166249,
+        "metrics": {
+          "f1": 0.47058823529411764,
+          "fn": 17,
+          "fp": 1,
+          "negativeSupport": 108,
+          "precision": 0.8888888888888888,
+          "recall": 0.32,
+          "support": 25,
+          "tn": 107,
+          "tp": 8
+        }
+      },
+      "candidate": {
+        "AP": 0.660187969924812,
+        "metrics": {
+          "f1": 0.7317073170731707,
+          "fn": 10,
+          "fp": 1,
+          "negativeSupport": 108,
+          "precision": 0.9375,
+          "recall": 0.6,
+          "support": 25,
+          "tn": 107,
+          "tp": 15
+        }
+      },
+      "excluded": [
+        {
+          "id": "leidos:R-00188557",
+          "jaccard": 0.9293078055964654,
+          "nearId": "leidos:R-00188545"
+        },
+        {
+          "id": "leidos:R-00189552",
+          "jaccard": 0.9526627218934911,
+          "nearId": "leidos:R-00191303"
+        },
+        {
+          "id": "leidos:R-00184809",
+          "jaccard": 0.876008064516129,
+          "nearId": "leidos:R-00187067"
+        },
+        {
+          "id": "parsons:R176693",
+          "jaccard": 0.8428899082568807,
+          "nearId": "parsons:R185173"
+        },
+        {
+          "id": "leidos:R-00185554",
+          "jaccard": 0.8764783180026281,
+          "nearId": "leidos:R-00185559"
+        },
+        {
+          "id": "leidos:R-00179281",
+          "jaccard": 0.9402298850574713,
+          "nearId": "leidos:R-00161261"
+        },
+        {
+          "id": "parsons:R184395",
+          "jaccard": 0.9295774647887324,
+          "nearId": "parsons:R185556"
+        },
+        {
+          "id": "parsons:R178529",
+          "jaccard": 0.9518664047151277,
+          "nearId": "parsons:R178527"
+        },
+        {
+          "id": "nvidia:JR2008070",
+          "jaccard": 0.8875255623721882,
+          "nearId": "nvidia:JR2023733"
+        },
+        {
+          "id": "leidos:R-00189798",
+          "jaccard": 0.8331550802139037,
+          "nearId": "leidos:R-00189779"
+        },
+        {
+          "id": "leidos:R-00188799",
+          "jaccard": 0.9550408719346049,
+          "nearId": "leidos:R-00191567"
+        },
+        {
+          "id": "parsons:R184205",
+          "jaccard": 0.8466947960618847,
+          "nearId": "parsons:R184204"
+        },
+        {
+          "id": "leidos:R-00190076",
+          "jaccard": 0.983402489626556,
+          "nearId": "leidos:R-00191567"
+        },
+        {
+          "id": "servicenow:JB0073709",
+          "jaccard": 0.9051724137931034,
+          "nearId": "servicenow:JB0074731"
+        },
+        {
+          "id": "leidos:R-00187492",
+          "jaccard": 0.8066465256797583,
+          "nearId": "leidos:R-00189501"
+        },
+        {
+          "id": "leidos:R-00190632",
+          "jaccard": 0.9130434782608695,
+          "nearId": "leidos:R-00190627"
+        },
+        {
+          "id": "leidos:R-00188299",
+          "jaccard": 0.9021505376344086,
+          "nearId": "leidos:R-00191667"
+        }
+      ],
+      "kept": 133
+    },
+    "validation": {
+      "baseline": {
+        "AP": 0.49074074074074076,
+        "metrics": {
+          "f1": 0.46808510638297873,
+          "fn": 25,
+          "fp": 0,
+          "negativeSupport": 99,
+          "precision": 1.0,
+          "recall": 0.3055555555555556,
+          "support": 36,
+          "tn": 99,
+          "tp": 11
+        }
+      },
+      "candidate": {
+        "AP": 0.6944444444444445,
+        "metrics": {
+          "f1": 0.7368421052631579,
+          "fn": 15,
+          "fp": 0,
+          "negativeSupport": 99,
+          "precision": 1.0,
+          "recall": 0.5833333333333334,
+          "support": 36,
+          "tn": 99,
+          "tp": 21
+        }
+      },
+      "excluded": [
+        {
+          "id": "leidos:R-00185734",
+          "jaccard": 0.8719101123595505,
+          "nearId": "leidos:R-00190260"
+        },
+        {
+          "id": "rtx:01851194",
+          "jaccard": 0.8607221812822402,
+          "nearId": "rtx:01857020"
+        },
+        {
+          "id": "parsons:R185002",
+          "jaccard": 0.9788732394366197,
+          "nearId": "parsons:R178005"
+        },
+        {
+          "id": "rtx:01860081",
+          "jaccard": 0.8330914368650217,
+          "nearId": "rtx:01860127"
+        },
+        {
+          "id": "parsons:R184187",
+          "jaccard": 0.9037900874635568,
+          "nearId": "parsons:R184204"
+        },
+        {
+          "id": "leidos:R-00188599",
+          "jaccard": 0.916058394160584,
+          "nearId": "leidos:R-00188597"
+        },
+        {
+          "id": "leidos:R-00182872",
+          "jaccard": 0.8259557344064387,
+          "nearId": "leidos:R-00189501"
+        },
+        {
+          "id": "leidos:R-00189693",
+          "jaccard": 0.8165997322623829,
+          "nearId": "leidos:R-00189698"
+        },
+        {
+          "id": "leidos:R-00189350",
+          "jaccard": 0.9864559819413092,
+          "nearId": "leidos:R-00191667"
+        },
+        {
+          "id": "leidos:R-00186247",
+          "jaccard": 0.9920582395764395,
+          "nearId": "leidos:R-00190945"
+        },
+        {
+          "id": "nvidia:JR1987356",
+          "jaccard": 0.9233128834355828,
+          "nearId": "nvidia:JR2024565"
+        },
+        {
+          "id": "nvidia:JR2021543",
+          "jaccard": 0.9843342036553525,
+          "nearId": "nvidia:JR2024739"
+        },
+        {
+          "id": "leidos:R-00188360",
+          "jaccard": 0.9754601226993865,
+          "nearId": "leidos:R-00190851"
+        },
+        {
+          "id": "aecom:J10146609",
+          "jaccard": 0.9396551724137931,
+          "nearId": "aecom:J10155737"
+        },
+        {
+          "id": "leidos:R-00184578",
+          "jaccard": 0.8318135764944276,
+          "nearId": "leidos:R-00189501"
+        }
+      ],
+      "kept": 135
+    }
+  }
+}
