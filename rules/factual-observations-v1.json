@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "version": "1.0.0",
+  "timeoutMilliseconds": 250,
+  "patterns": [
+    {
+      "id": "sponsorship-available",
+      "pattern": "\\b(?:(?:visa|employment|work)\\s+)?sponsorship\\s+(?:(?:is|may\\s+be|can\\s+be|will\\s+be)\\s+)?(?:available|provided|offered)\\b|\\b(?:we|the\\s+company)\\s+(?:can|will|may)\\s+(?:provide|offer)\\s+(?:visa\\s+)?sponsorship\\b"
+    },
+    {
+      "id": "preferred",
+      "pattern": "\\b(?:preferred|desirable|ideally)\\b"
+    },
+    {
+      "id": "required",
+      "pattern": "\\b(?:must|shall|required|mandatory|requirement)\\b"
+    },
+    {
+      "id": "optional",
+      "pattern": "\\b(?:optional|may|can|eligible)\\b"
+    },
+    {
+      "id": "conditional",
+      "pattern": "\\b(?:if|subject\\s+to|depending\\s+on|may|for\\s+qualified\\s+candidates)\\b"
+    },
+    {
+      "id": "prohibited",
+      "pattern": "\\b(?:prohibited|not\\s+permitted|not\\s+allowed)\\b"
+    },
+    {
+      "id": "or",
+      "pattern": "\\bor\\b|and/or"
+    },
+    {
+      "id": "and",
+      "pattern": "\\band\\b"
+    },
+    {
+      "id": "geography-heading",
+      "pattern": "^(?:Colorado|California|Texas|New\\s+York|Washington|Virginia|Maryland|Massachusetts|Illinois|Florida|Arizona|Oregon|Nevada|Ohio|Pennsylvania|New\\s+Jersey|Elsewhere|All\\s+other\\s+(?:locations|states)|United\\s+States|Canada|United\\s+Kingdom|Australia|National)(?:\\s*[:,]|\\s*$)"
+    },
+    {
+      "id": "job-level",
+      "pattern": "\\b(?:Level|Grade)\\s+[A-Z0-9]+\\b"
+    },
+    {
+      "id": "employment-type",
+      "pattern": "\\b(?:full[ -]time|part[ -]time|contract|temporary|permanent)\\b"
+    },
+    {
+      "id": "temporal",
+      "pattern": "\\b(?:per\\s+(?:year|month|week|hour)|annually|hourly|monthly|weekly|at\\s+hire|before\\s+(?:starting|start)|within\\s+\\d+\\s+(?:days|months|years))\\b"
+    },
+    {
+      "id": "money",
+      "pattern": "(?<currency>USD|CAD|AUD|EUR|GBP|US\\$|CA\\$|AU\\$|\\$|\u20ac|\u00a3)\\s*(?<amount>\\d[\\d,]*(?:\\.\\d+)?)\\s*(?<scale>[kK])?|(?<amount>\\d[\\d,]*(?:\\.\\d+)?)\\s*(?<scale>[kK])?\\s*(?<currency>USD|CAD|AUD|EUR|GBP)\\b"
+    },
+    {
+      "id": "pay-context",
+      "pattern": "\\b(?:pay|salary|compensation|bonus|earnings|remuneration)\\b"
+    },
+    {
+      "id": "currency",
+      "pattern": "\\b(?:USD|CAD|AUD|EUR|GBP)\\b|US\\$|CA\\$|AU\\$|\u20ac|\u00a3"
+    },
+    {
+      "id": "hourly",
+      "pattern": "\\b(?:hourly|per\\s+hour|an\\s+hour)\\b|/\\s*hr\\b"
+    },
+    {
+      "id": "annual",
+      "pattern": "\\b(?:annual(?:ly)?|per\\s+year|yearly)\\b"
+    },
+    {
+      "id": "monthly",
+      "pattern": "\\b(?:monthly|per\\s+month)\\b"
+    },
+    {
+      "id": "weekly",
+      "pattern": "\\b(?:weekly|per\\s+week)\\b"
+    },
+    {
+      "id": "bonus",
+      "pattern": "\\bbonus\\b"
+    },
+    {
+      "id": "base",
+      "pattern": "\\bbase\\b"
+    },
+    {
+      "id": "total",
+      "pattern": "\\btotal\\s+(?:compensation|pay|earnings)\\b"
+    },
+    {
+      "id": "amount-range",
+      "pattern": "^\\s*(?:-|\u2013|\u2014|to)\\s*(?:(?<currency>USD|CAD|AUD|EUR|GBP|US\\$|CA\\$|AU\\$|\\$|\u20ac|\u00a3)\\s*)?(?<amount>\\d[\\d,]*(?:\\.\\d+)?)\\s*(?<scale>[kK])?\\s*(?<suffix>USD|CAD|AUD|EUR|GBP)?"
+    },
+    {
+      "id": "unknown-range",
+      "pattern": "^\\s*(?:-|\u2013|\u2014|to)\\s*(?:TBD|unknown|negotiable|$)"
+    },
+    {
+      "id": "scope-heading",
+      "pattern": "^[^\\d$\u20ac\u00a3]{1,100}:\\s*$"
+    },
+    {
+      "id": "boilerplate",
+      "pattern": "\\b(?:equal\\s+opportunity|without\\s+regard\\s+to|all\\s+qualified\\s+applicants)\\b"
+    },
+    {
+      "id": "not-required",
+      "pattern": "\\b(?:not\\s+required|no\\s+(?:citizenship|residency)\\s+requirement)\\b"
+    },
+    {
+      "id": "sponsorship-unavailable",
+      "pattern": "\\b(?:visa\\s+)?sponsorship\\s+(?:is\\s+)?(?:not\\s+available|unavailable|not\\s+provided)\\b|\\bno\\s+(?:visa\\s+)?sponsorship\\b"
+    },
+    {
+      "id": "permanent-residency",
+      "pattern": "\\b(?:permanent\\s+residen(?:cy|ce)|green\\s+card)\\s+(?:is\\s+)?required\\b|\\bmust\\s+(?:have|hold)\\s+(?:a\\s+)?green\\s+card\\b|\\bmust\\s+be\\s+(?:a\\s+)?(?:US\\s+)?permanent\\s+resident\\b"
+    }
+  ]
+}

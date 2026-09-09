@@ -12,6 +12,12 @@ using System.Net.Mail;
 using System.Security.Claims;
 using JobSearchManager;
 
+if (args is ["--factual-observation-tests"])
+{ await FactualObservationTests.RunAsync(); return; }
+
+if (args is ["--factual-observations", var observationInput, var observationOutput])
+{ FactualObservationTests.Inspect(observationInput, observationOutput); return; }
+
 if (args is ["--json-concept-dto", var jsonDtoInput, var jsonDtoOutput])
 { JobSearchManager.Migration.JsonConceptPresentation.Compare(jsonDtoInput, jsonDtoOutput); return; }
 if (args is ["--json-concept-parity", var jsonInput, var jsonOutput, var jsonDatabase])
@@ -389,6 +395,7 @@ if (args.Length >= 2 && args[0] == "--authorization-corpus")
 
 var tests = new (string Name, Func<Task> Run)[]
 {
+    ("Factual observations retain alternatives and applicability", FactualObservationTests.RunAsync),
     ("Refreshable evaluation report integrity, freshness and history", ConceptEvaluationRunTests.RunAsync),
     ("Virtualization rule boundaries and all 84 untouched concepts", VirtualizationRuleTests.RunAsync),
     ("Artificial Intelligence rule boundaries and original-rule parity", ArtificialIntelligenceRuleTests.RunAsync),

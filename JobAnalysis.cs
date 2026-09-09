@@ -16,111 +16,82 @@ internal static partial class JobAnalysis
         { throw new InvalidOperationException($"Salary rules {rules.Version} ({rules.Fingerprint}) exceeded the {rules.Rules.RegexTimeoutMilliseconds}ms regex timeout.", ex); }
     }
 
-    private static SalaryAnalysis ExecuteSalary(string descriptionHtml, SalaryRules rules)
+    internal sealed record SalaryObservation(FactualObservation Observation, SalaryAnalysis LegacyValue, int LegacyPriority,
+        [property: System.Text.Json.Serialization.JsonIgnore] Exception? Error = null);
+    internal sealed record SalaryObservationSet(string OriginalHtml, string[] Lines,
+        SalaryObservation[] Observations, string EmptyStatus);
+
+    private static SalaryAnalysis ExecuteSalary(string descriptionHtml, SalaryRules rules) =>
+        SummarizeSalary(ExtractSalary(descriptionHtml, rules));
+
+    internal static SalaryObservationSet ExtractSalary(string html, SalaryRules rules)
     {
-        if (string.IsNullOrWhiteSpace(descriptionHtml))
+        var text = HtmlToPlainText(html);
+        var lines = HtmlToTextLines(html);
+        var result = new List<SalaryObservation>();
+        var choices = new[] { ("SpecificSalaryRegex", "specific-role-range", 0),
+            ("UsdSalaryRangeRegex", "usd-pay-range", 2), ("StandardPayRangeRegex", "standard-pay-range", 3),
+            ("CompensationRangeRegex", "compensation-range", 4), ("SeparatedSalaryBoundsRegex", "separate-salary-bounds", 5) };
+        foreach (var (pattern, status, priority) in choices)
         {
-            return new SalaryAnalysis(null, null, "unknown", "description-unavailable");
+            try { Add(rules.Pattern(pattern).Match(text), status, priority, pattern, text, -1, false); }
+            catch (Exception ex) when (ex is RegexMatchTimeoutException or OverflowException)
+            { AddError(ex, priority, pattern); }
         }
-
-        var text = HtmlToPlainText(descriptionHtml);
-
-        // Two current Antarctic postings contain a role-specific anticipated salary
-        // followed by a broader job-level pay band. Prefer the role-specific range.
-        var specificMatch = rules.Pattern("SpecificSalaryRegex").Match(text);
-        if (specificMatch.Success)
+        try
         {
-            return CreateSalaryAnalysis(specificMatch, "specific-role-range", rules);
-        }
-
-        var summaryRanges = AnalyzeSummaryPayRanges(descriptionHtml, rules);
-        if (summaryRanges.Length > 0)
-        {
-            return AggregateSummaryPayRanges(summaryRanges);
-        }
-
-        var usdMatch = rules.Pattern("UsdSalaryRangeRegex").Match(text);
-        if (usdMatch.Success)
-        {
-            return CreateSalaryAnalysis(usdMatch, "usd-pay-range", rules);
-        }
-
-        var standardMatch = rules.Pattern("StandardPayRangeRegex").Match(text);
-        if (standardMatch.Success)
-        {
-            return CreateSalaryAnalysis(standardMatch, "standard-pay-range", rules);
-        }
-
-        var compensationMatch = rules.Pattern("CompensationRangeRegex").Match(text);
-        if (compensationMatch.Success)
-        {
-            return CreateSalaryAnalysis(compensationMatch, "compensation-range", rules);
-        }
-
-        var separatedBoundsMatch = rules.Pattern("SeparatedSalaryBoundsRegex").Match(text);
-        if (separatedBoundsMatch.Success)
-        {
-            return CreateSalaryAnalysis(separatedBoundsMatch, "separate-salary-bounds", rules);
-        }
-
-        if (rules.Rules.UnparseablePhrases.Any(phrase => text.Contains(phrase, StringComparison.OrdinalIgnoreCase)))
-        {
-            return new SalaryAnalysis(null, null, "unknown", "unparseable");
-        }
-
-        return new SalaryAnalysis(null, null, "unknown", "not-found");
-    }
-
-    private static bool IsDefensibleSummaryPayRange(
-        Match match,
-        SalaryAnalysis analysis) =>
-        match.Groups["minimumDollar"].Success ||
-        match.Groups["maximumDollar"].Success ||
-        analysis.Period != "unknown" ||
-        analysis.Maximum >= 10_000m;
-
-    private static SalaryAnalysis[] AnalyzeSummaryPayRanges(string descriptionHtml, SalaryRules rules)
-    {
-        var lines = HtmlToTextLines(descriptionHtml);
-        var ranges = new List<SalaryAnalysis>();
         for (var index = 0; index < lines.Length; index++)
         {
-            if (!rules.Pattern("SummaryPayHeadingRegex").IsMatch(lines[index]))
-            {
-                continue;
-            }
-
-            AddSummaryPayRange(rules.Pattern("SummaryPayRangeRegex").Match(lines[index]), ranges, rules);
+            if (!rules.Pattern("SummaryPayHeadingRegex").IsMatch(lines[index])) continue;
+            Add(rules.Pattern("SummaryPayRangeRegex").Match(lines[index]), "summary-pay-range", 1,
+                "SummaryPayRangeRegex", lines[index], index, true);
             for (var next = index + 1; next < lines.Length; next++)
             {
-                if (rules.Pattern("SummaryPayHeadingRegex").IsMatch(lines[next]))
-                {
-                    break;
-                }
-
+                if (rules.Pattern("SummaryPayHeadingRegex").IsMatch(lines[next])) break;
                 var match = rules.Pattern("SummarySectionRangeRegex").Match(lines[next]);
-                if (!match.Success)
-                {
-                    break;
-                }
-                AddSummaryPayRange(match, ranges, rules);
+                if (!match.Success) break;
+                Add(match, "summary-pay-range", 1, "SummarySectionRangeRegex", lines[next], next, true);
                 index = next;
             }
         }
-        return ranges.ToArray();
+        }
+        catch (Exception ex) when (ex is RegexMatchTimeoutException or OverflowException)
+        { AddError(ex, 1, "SummaryPayRangeRegex"); }
+        return new(html, lines, result.ToArray(), string.IsNullOrWhiteSpace(html) ? "description-unavailable" :
+            rules.Rules.UnparseablePhrases.Any(p => text.Contains(p, StringComparison.OrdinalIgnoreCase)) ? "unparseable" : "not-found");
+
+        void AddError(Exception error, int priority, string ruleId)
+        {
+            var observation = FactObservations.Create("compensation", "legacy-extraction-error",
+                new FactValue("unresolved", text), "unknown", error.GetType().Name,
+                new FactScope(null, null, null, null, null, text), new FactEvidence(text, "salary-flat-text-v1", -1, 0, text.Length),
+                "salary-v1", rules.Fingerprint, ruleId);
+            result.Add(new(observation, new SalaryAnalysis(null, null, "unknown", "unparseable"), priority, error));
+        }
+
+        void Add(Match match, string status, int priority, string ruleId, string evidence, int line, bool summary)
+        {
+            if (!match.Success) return;
+            var legacy = CreateSalaryAnalysis(match, status, rules);
+            if (summary && !(match.Groups["minimumDollar"].Success || match.Groups["maximumDollar"].Success ||
+                legacy.Period != "unknown" || legacy.Maximum >= 10_000m)) return;
+            var observation = FactObservations.Create("compensation", "legacy-range-candidate",
+                new FactValue("range", match.Value, Lower: legacy.Minimum, Upper: legacy.Maximum, Unit: legacy.Period),
+                "unknown", legacy.ParseStatus, new FactScope(null, null, null, null, null, evidence),
+                new FactEvidence(evidence, line < 0 ? "salary-flat-text-v1" : "salary-line-v1", line, match.Index, match.Length),
+                "salary-v1", rules.Fingerprint, ruleId);
+            result.Add(new(observation, legacy, priority));
+        }
     }
 
-    private static void AddSummaryPayRange(Match match, List<SalaryAnalysis> ranges, SalaryRules rules)
+    internal static SalaryAnalysis SummarizeSalary(SalaryObservationSet observations)
     {
-        if (!match.Success)
-        {
-            return;
-        }
-        var analysis = CreateSalaryAnalysis(match, "summary-pay-range", rules);
-        if (IsDefensibleSummaryPayRange(match, analysis))
-        {
-            ranges.Add(analysis);
-        }
+        if (observations.Observations.Length == 0) return new(null, null, "unknown", observations.EmptyStatus);
+        var priority = observations.Observations.Min(o => o.LegacyPriority);
+        var selected = observations.Observations.Where(o => o.LegacyPriority == priority).ToArray();
+        foreach (var candidate in priority == 1 ? selected : selected.Take(1))
+            if (candidate.Error is not null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(candidate.Error).Throw();
+        return priority == 1 ? AggregateSummaryPayRanges(selected.Select(o => o.LegacyValue).ToArray()) : selected[0].LegacyValue;
     }
 
     private static SalaryAnalysis AggregateSummaryPayRanges(
