@@ -25,7 +25,12 @@ public sealed class RemoteWorkDetector
         }
     }
 
-    private RemoteWorkAnalysis Execute(
+    internal sealed record ObservationSet(bool IsRemote, string? EmptyStatus, RemoteWorkSignal[] Candidates);
+
+    private RemoteWorkAnalysis Execute(string title, string primaryLocation, IReadOnlyList<string> additionalLocations, string descriptionHtml) =>
+        Summarize(Extract(title, primaryLocation, additionalLocations, descriptionHtml));
+
+    internal ObservationSet Extract(
         string title,
         string primaryLocation,
         IReadOnlyList<string> additionalLocations,
@@ -40,12 +45,12 @@ public sealed class RemoteWorkDetector
             rules.Pattern("ExplicitRemoteRolePattern").IsMatch(plainDescription);
         if (!isRemoteDesignated)
         {
-            return Empty(false, "not-remote-designated");
+            return new(false, "not-remote-designated", []);
         }
 
         if (string.IsNullOrWhiteSpace(descriptionHtml))
         {
-            return Empty(true, "description-unavailable");
+            return new(true, "description-unavailable", []);
         }
 
         var separatedHtml = rules.Pattern("BlockEndPattern").Replace(descriptionHtml, ". ");
@@ -90,7 +95,13 @@ public sealed class RemoteWorkDetector
             }
         }
 
-        var ordered = signals
+        return new(true, null, signals.ToArray());
+    }
+
+    internal RemoteWorkAnalysis Summarize(ObservationSet extracted)
+    {
+        if (extracted.EmptyStatus is not null) return Empty(extracted.IsRemote, extracted.EmptyStatus);
+        var ordered = extracted.Candidates
             .DistinctBy(signal => new { signal.Category, signal.Evidence })
             .OrderByDescending(signal => signal.ConcernLevel == "strong")
             .ThenBy(signal => signal.Category, StringComparer.Ordinal)

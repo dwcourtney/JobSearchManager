@@ -50,11 +50,15 @@ public sealed class CredentialDetector
             string.IsNullOrWhiteSpace(item.Family) ? item.Category : item.Family))
         .ToArray();
 
-    internal CredentialAnalysis Analyze(string descriptionHtml)
+    internal sealed record ObservationSet(FoundCredential[] Candidates, string[] Unrecognized, UnknownCredentialRequirement[] Unknown);
+
+    internal CredentialAnalysis Analyze(string descriptionHtml) => Summarize(Extract(descriptionHtml));
+
+    internal ObservationSet Extract(string descriptionHtml)
     {
         if (string.IsNullOrWhiteSpace(descriptionHtml))
         {
-            return new CredentialAnalysis([], [], [], CatalogVersion);
+            return new([], [], []);
         }
 
         var segments = CreateSegments(descriptionHtml);
@@ -118,7 +122,12 @@ public sealed class CredentialDetector
             }
         }
 
-        var normalized = found
+        return new(found.ToArray(), unrecognized.ToArray(), unknownRequirements.ToArray());
+    }
+
+    internal CredentialAnalysis Summarize(ObservationSet extracted)
+    {
+        var normalized = extracted.Candidates
             .GroupBy(item => item.Credential.Definition.Id, StringComparer.Ordinal)
             .Select(group => Merge(group))
             .OrderBy(match => RequirementPriority(match.Requirement))
@@ -127,8 +136,8 @@ public sealed class CredentialDetector
 
         return new CredentialAnalysis(
             normalized,
-            unrecognized.Distinct(StringComparer.OrdinalIgnoreCase).Take(10).ToArray(),
-            unknownRequirements
+            extracted.Unrecognized.Distinct(StringComparer.OrdinalIgnoreCase).Take(10).ToArray(),
+            extracted.Unknown
                 .GroupBy(item => $"{item.Name}\n{item.Evidence}", StringComparer.OrdinalIgnoreCase)
                 .Select(group => group.First())
                 .Take(10)
@@ -352,11 +361,11 @@ public sealed class CredentialDetector
         }
     }
 
-    private sealed record CompiledCredential(
+    internal sealed record CompiledCredential(
         CredentialDefinition Definition,
         IReadOnlyList<Regex> Patterns);
 
-    private sealed record FoundCredential(
+    internal sealed record FoundCredential(
         CompiledCredential Credential,
         string Requirement,
         bool IsAlternative,

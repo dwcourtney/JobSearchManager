@@ -1,0 +1,332 @@
+{
+  "schemaVersion": 1,
+  "version": "1.0.0",
+  "timeoutMilliseconds": 250,
+  "clauseBoundary": ";\\s*|(?<=[.!?])\\s+(?=[A-Z])|,\\s*(?=(?:TS(?:/SCI)?|Top Secret|Secret|Master|Bachelor)\\b)",
+  "alternativeBoundary": "\\s+OR\\s+",
+  "required": "\\b(?:required|must|mandatory|shall)\\b",
+  "preferred": "\\b(?:preferred|desired)\\b",
+  "optional": "\\b(?:may|possible|optional|eligible)\\b",
+  "negated": "\\b(?:no\\s+\\w+(?:\\s+\\w+){0,2}\\s+required|not\\s+required|not\\s+available|excluded|excluding)\\b",
+  "temporal": "\\b(?:before\\s+(?:start|hire)|after\\s+(?:hire|training|start)|within\\s+\\d+\\s+(?:days?|months?|weeks?)|long[- ]term|temporary)\\b",
+  "section": "^(?:required|minimum|basic|preferred|desired)\\s+(?:qualifications|education|skills)\\s*:?",
+  "numbers": {
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+    "eleven": 11,
+    "twelve": 12,
+    "ninety": 90
+  },
+  "patterns": [
+    {
+      "id": "clearance-level",
+      "domain": "clearance",
+      "type": "level",
+      "pattern": "\\b(?<value>TS\\s*/\\s*SCI|Top\\s+Secret(?:\\s*/\\s*SCI)?|Secret|TS|Public\\s+Trust)\\b",
+      "code": null,
+      "unit": null,
+      "kind": "categorical"
+    },
+    {
+      "id": "clearance-negation",
+      "domain": "clearance",
+      "type": "absence",
+      "pattern": "\\b(?<value>no\\s+(?:security\\s+)?clearance\\s+(?:is\\s+)?required|clearance\\s+(?:is\\s+)?not\\s+required)\\b",
+      "code": "no-clearance-required",
+      "unit": null,
+      "kind": "categorical"
+    },
+    {
+      "id": "clearance-obtain",
+      "domain": "clearance",
+      "type": "acquisition",
+      "pattern": "\\b(?<value>ability\\s+to\\s+obtain|able\\s+to\\s+obtain|may\\s+be\\s+obtained|obtain(?:ed)?)\\b",
+      "code": "obtainable",
+      "unit": null,
+      "kind": "categorical"
+    },
+    {
+      "id": "clearance-active",
+      "domain": "clearance",
+      "type": "possession",
+      "pattern": "\\b(?<value>active|current|currently\\s+hold)\\b",
+      "code": "current",
+      "unit": null,
+      "kind": "categorical"
+    },
+    {
+      "id": "education-degree",
+      "domain": "education",
+      "type": "degree",
+      "pattern": "\\b(?<value>Bachelor(?:['\u2019]s|s)?|Master(?:['\u2019]s|s)?|Associate(?:['\u2019]s|s)?|Ph\\.?D\\.?|Doctorate|high\\s+school|GED)\\b",
+      "code": null,
+      "unit": null,
+      "kind": "categorical"
+    },
+    {
+      "id": "education-field",
+      "domain": "education",
+      "type": "field",
+      "pattern": "\\b(?:degree\\s+)?in\\s+(?<value>[A-Za-z][A-Za-z /&-]{0,100}?)(?=\\s+(?:required|preferred|desired|with|plus|and\\s+\\d)|[.;]|$)",
+      "code": null,
+      "unit": null,
+      "kind": "raw-field-list"
+    },
+    {
+      "id": "education-experience",
+      "domain": "education",
+      "type": "experience",
+      "pattern": "(?<lower>\\d+)\\s*(?:[-\u2013]\\s*(?<upper>\\d+)\\s*)?(?<unit>years?)\\s*(?:of\\s+)?(?:relevant\\s+|related\\s+)?experience\\b",
+      "code": null,
+      "unit": "years",
+      "kind": "range"
+    },
+    {
+      "id": "education-experience-short",
+      "domain": "education",
+      "type": "experience",
+      "pattern": "(?:\\+|plus)\\s*(?<lower>\\d+)\\s*(?<unit>years?)\\b",
+      "code": null,
+      "unit": "years",
+      "kind": "range"
+    },
+    {
+      "id": "education-negation",
+      "domain": "education",
+      "type": "absence",
+      "pattern": "\\b(?<value>no\\s+degree\\s+(?:is\\s+)?required|degree\\s+(?:is\\s+)?not\\s+required)\\b",
+      "code": "no-degree-required",
+      "unit": null,
+      "kind": "categorical"
+    },
+    {
+      "id": "education-substitution",
+      "domain": "education",
+      "type": "substitution",
+      "pattern": "\\b(?<value>in\\s+lieu\\s+of|instead\\s+of|equivalent\\s+(?:experience|combination))\\b",
+      "code": "experience-substitution",
+      "unit": null,
+      "kind": "categorical"
+    },
+    {
+      "id": "credentials-unknown",
+      "domain": "credentials",
+      "type": "unresolved-credential",
+      "pattern": "\\b(?<value>(?:[A-Za-z][A-Za-z+'-]*\\s+){1,6}(?:certification|credential|licen[cs]e|registration))\\b",
+      "code": null,
+      "unit": null,
+      "kind": "unresolved-name"
+    },
+    {
+      "id": "credentials-acquisition",
+      "domain": "credentials",
+      "type": "acquisition",
+      "pattern": "\\b(?<value>obtain|obtainable|ability\\s+to\\s+obtain|in\\s+progress|progress(?:ing)?\\s+towards?)\\b",
+      "code": "acquisition",
+      "unit": null,
+      "kind": "categorical"
+    },
+    {
+      "id": "credentials-equivalent",
+      "domain": "credentials",
+      "type": "equivalence",
+      "pattern": "\\b(?<value>equivalent\\s+(?:registration|certification|credential|licen[cs]e))\\b",
+      "code": "equivalent",
+      "unit": null,
+      "kind": "categorical"
+    },
+    {
+      "id": "remote-location",
+      "domain": "remote-work",
+      "type": "arrangement",
+      "pattern": "\\b(?<value>fully\\s+remote|100%\\s+remote|remote|hybrid|on[- ]site|onsite)\\b",
+      "code": null,
+      "unit": null,
+      "kind": "categorical"
+    },
+    {
+      "id": "remote-cadence",
+      "domain": "remote-work",
+      "type": "cadence",
+      "pattern": "(?<lower>\\d+)\\s*(?<unit>days?)\\s*(?:per\\s+week|a\\s+week|/\\s*week)?\\s*(?:on[- ]?site|in\\s+(?:the\\s+)?office)\\b",
+      "code": null,
+      "unit": null,
+      "kind": "range"
+    },
+    {
+      "id": "remote-percent",
+      "domain": "remote-work",
+      "type": "travel-percentage",
+      "pattern": "\\btravel(?:\\s+(?:(?<bound>up\\s+to)|approximately|between|of))?\\s*(?<lower>\\d+)\\s*(?:%?\\s*(?:[-\u2013]|to|and)\\s*(?<upper>\\d+)\\s*)?%",
+      "code": null,
+      "unit": "percent",
+      "kind": "range"
+    },
+    {
+      "id": "remote-frequency",
+      "domain": "remote-work",
+      "type": "frequency",
+      "pattern": "\\b(?<value>quarterly|monthly|weekly|occasionally|occasional|frequent(?:ly)?|(?:per|each|a)\\s+week)\\b|(?<value>/\\s*week)",
+      "code": null,
+      "unit": null,
+      "kind": "categorical",
+      "contextPattern": "\\b(?:travel|office|on[- ]?site|remote|hybrid|customer|attendance)\\b"
+    },
+    {
+      "id": "remote-customer",
+      "domain": "remote-work",
+      "type": "attendance",
+      "pattern": "\\b(?<value>customer[- ]site|office\\s+attendance|onsite\\s+training)\\b",
+      "code": null,
+      "unit": null,
+      "kind": "categorical"
+    },
+    {
+      "id": "assignment",
+      "domain": "extended-location",
+      "type": "assignment",
+      "pattern": "\\b(?<value>deploy(?:ment|ed)?|assignment|rotations?|OCONUS|winter[- ]over|relocat(?:e|ion)|temporary\\s+(?:duty|assignment)|long[- ]term\\s+assignment)\\b",
+      "code": null,
+      "unit": null,
+      "kind": "categorical"
+    },
+    {
+      "id": "assignment-destination",
+      "domain": "extended-location",
+      "type": "destination",
+      "pattern": "\\b(?:to|in|at)\\s+(?<value>(?:[A-Z][A-Za-z-]*)(?:\\s+[A-Z][A-Za-z-]*){0,3}|(?:a\\s+|the\\s+)?customer\\s+site)(?=\\s+(?:for|is|are|required|possible)|[,.;]|$)",
+      "code": null,
+      "unit": null,
+      "kind": "surface-destination",
+      "contextPattern": "\\b(?:deploy(?:ment|ed)?|assignments?|rotations?|OCONUS|CONUS|domestic|international|customer\\s+site|away|winter[- ]over|relocation)\\b"
+    },
+    {
+      "id": "assignment-territory",
+      "domain": "extended-location",
+      "type": "territory",
+      "pattern": "\\b(?<value>domestic|international|OCONUS|CONUS)\\b",
+      "code": null,
+      "unit": null,
+      "kind": "categorical",
+      "contextPattern": "\\b(?:deploy(?:ment|ed)?|assignments?|rotations?|OCONUS|CONUS|domestic|international|customer\\s+site|away|winter[- ]over|relocation)\\b"
+    },
+    {
+      "id": "assignment-duration",
+      "domain": "extended-location",
+      "type": "duration",
+      "pattern": "\\b(?<lower>\\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|ninety)\\s*(?:(?:[-\u2013\u2014]|to)\\s*(?<upper>\\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|ninety))?(?:\\s+(?<qualifier>consecutive))?\\s*[- ]?\\s*(?<unit>days?|weeks?|months?|years?)\\b",
+      "code": null,
+      "unit": null,
+      "kind": "range",
+      "contextPattern": "\\b(?:deploy(?:ment|ed)?|assignments?|rotations?|OCONUS|CONUS|domestic|international|customer\\s+site|away|winter[- ]over|relocation)\\b"
+    },
+    {
+      "id": "assignment-recurrence",
+      "domain": "extended-location",
+      "type": "recurrence",
+      "pattern": "\\b(?<value>rotations?|rotating|winter[- ]over|recurring|annually|quarterly)\\b",
+      "code": null,
+      "unit": null,
+      "kind": "categorical",
+      "contextPattern": "\\b(?:deploy(?:ment|ed)?|assignments?|rotations?|OCONUS|CONUS|domestic|international|customer\\s+site|away|winter[- ]over|relocation)\\b"
+    },
+    {
+      "id": "geography-inclusion",
+      "domain": "geographic-restriction",
+      "type": "included-jurisdiction",
+      "pattern": "\\b(?:must\\s+(?:reside|live)\\s+in|remote\\s+(?:within|from)|(?:based|located)\\s+in)\\s+(?<value>[^.;]{1,140}?)(?=\\s+(?:only|and\\s+(?:must|be|have))|[.;]|$)",
+      "code": null,
+      "unit": null,
+      "kind": "surface-jurisdiction-list"
+    },
+    {
+      "id": "geography-exclusion",
+      "domain": "geographic-restriction",
+      "type": "excluded-jurisdiction",
+      "pattern": "\\b(?:not\\s+available\\s+in|excluding|except(?:\\s+for)?)\\s+(?<value>[^.;]{1,140}?)(?=[.;]|$)",
+      "code": null,
+      "unit": null,
+      "kind": "surface-jurisdiction-list"
+    },
+    {
+      "id": "geography-excluded-after",
+      "domain": "geographic-restriction",
+      "type": "excluded-jurisdiction",
+      "pattern": "\\bcandidates\\s+in\\s+(?<value>[^.;]{1,140}?)\\s+(?:states?\\s+)?(?:are\\s+)?excluded\\b",
+      "code": null,
+      "unit": null,
+      "kind": "surface-jurisdiction-list"
+    },
+    {
+      "id": "geography-radius",
+      "domain": "geographic-restriction",
+      "type": "radius",
+      "pattern": "\\bwithin\\s+(?<lower>\\d+)\\s*(?<unit>miles?|kilomet(?:er|re)s?|km)\\b",
+      "code": null,
+      "unit": null,
+      "kind": "upper-bound"
+    },
+    {
+      "id": "geography-zone",
+      "domain": "geographic-restriction",
+      "type": "time-zone",
+      "pattern": "\\b(?<value>(?:Eastern|Central|Mountain|Pacific)(?:\\s*[/,]\\s*(?:Eastern|Central|Mountain|Pacific))*)\\s+time\\s+zones?\\b",
+      "code": null,
+      "unit": null,
+      "kind": "surface-zone-list"
+    },
+    {
+      "id": "geography-country",
+      "domain": "geographic-restriction",
+      "type": "included-jurisdiction",
+      "pattern": "\\b(?<value>US[- ]based|U\\.?S\\.?[- ]based|CONUS)(?:\\s*[- ]?only)?\\b",
+      "code": null,
+      "unit": null,
+      "kind": "categorical"
+    },
+    {
+      "id": "assignment-pair",
+      "domain": "extended-location",
+      "type": "scoped-duration",
+      "pattern": "\\b(?:to|in|at)\\s+(?<value>[A-Za-z][A-Za-z -]{0,60}?)\\s+for\\s+(?<lower>\\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\\s*(?:[-\u2013]\\s*(?<upper>\\d+)\\s*)?(?<unit>days?|weeks?|months?|years?)\\b",
+      "code": null,
+      "unit": null,
+      "kind": "range"
+    },
+    {
+      "id": "clearance-generic",
+      "domain": "clearance",
+      "type": "clearance",
+      "pattern": "\\b(?<value>(?:security\\s+)?clearance)\\b",
+      "code": "clearance-mention",
+      "unit": null,
+      "kind": "categorical"
+    },
+    {
+      "id": "relocation-assistance",
+      "domain": "extended-location",
+      "type": "relocation-assistance",
+      "pattern": "\\b(?<value>relocation\\s+assistance(?:\\s+(?:is\\s+)?(?:available|offered))?)\\b",
+      "code": "assistance",
+      "unit": null,
+      "kind": "categorical"
+    },
+    {
+      "id": "credential-deadline",
+      "domain": "credentials",
+      "type": "deadline",
+      "pattern": "\\bwithin\\s+(?<lower>\\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|ninety)\\s+(?<unit>days?|weeks?|months?|years?)\\b",
+      "code": "obtain-by-interval",
+      "unit": null,
+      "kind": "upper-bound"
+    }
+  ]
+}

@@ -27,11 +27,15 @@ public sealed class AcademicQualificationDetector
         }
     }
 
-    private AcademicQualificationAnalysis Execute(string descriptionHtml)
+    internal sealed record ObservationSet(string[] Segments, AcademicQualificationPath[] Paths, AcademicAccreditation[] Accreditations, string[] SubstitutionEvidence);
+
+    private AcademicQualificationAnalysis Execute(string descriptionHtml) => Summarize(Extract(descriptionHtml));
+
+    internal ObservationSet Extract(string descriptionHtml)
     {
         if (string.IsNullOrWhiteSpace(descriptionHtml))
         {
-            return NoneSpecified();
+            return new([], [], [], []);
         }
 
         var segments = CreateSegments(descriptionHtml);
@@ -85,20 +89,28 @@ public sealed class AcademicQualificationDetector
             }
         }
 
-        var mergedAccreditations = accreditations
+        return new(segments.ToArray(), paths.ToArray(), accreditations.ToArray(), degreeSubstitutionEvidence.ToArray());
+    }
+
+    internal AcademicQualificationAnalysis Summarize(ObservationSet extracted)
+    {
+        var segments = extracted.Segments;
+        var paths = extracted.Paths;
+        var degreeSubstitutionEvidence = extracted.SubstitutionEvidence;
+        var mergedAccreditations = extracted.Accreditations
             .GroupBy(item => new { item.Name, item.Requirement })
             .Select(group => group.First())
             .ToArray();
 
-        if (paths.Count == 0)
+        if (paths.Length == 0)
         {
-            return degreeSubstitutionEvidence.Count == 0 && mergedAccreditations.Length == 0
+            return degreeSubstitutionEvidence.Length == 0 && mergedAccreditations.Length == 0
                 ? NoneSpecified()
                 : new AcademicQualificationAnalysis(
                     "noneSpecified",
                     null,
                     mergedAccreditations.Length > 0 ? "accreditationOnly" : "degreeOrExperience",
-                    degreeSubstitutionEvidence.Count > 0,
+                    degreeSubstitutionEvidence.Length > 0,
                     [],
                     [],
                     [],

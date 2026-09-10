@@ -105,7 +105,7 @@ internal static class FactualObservationTests
         return Task.CompletedTask;
     }
 
-    internal sealed record Input(string Id, string Html, string? Provider = null, Dictionary<string, string>? Metadata = null);
+    internal sealed record Input(string Id, string Html, string? Provider = null, Dictionary<string, string>? Metadata = null, string? Title = null, string? PrimaryLocation = null, string[]? AdditionalLocations = null);
     internal static void Inspect(string input, string output)
     {
         var rows = JsonSerializer.Deserialize<Input[]>(File.ReadAllText(input), FactObservations.Json)!;
@@ -123,7 +123,7 @@ internal static class FactualObservationTests
                 authorizationSummary = WorkAuthorizationDetector.Summarize(auth),
                 compensation = CompensationObservations.Observe(pay, row.Provider),
                 compensationLegacyCandidates = pay.Observations,
-                compensationSummary = JobAnalysis.SummarizeSalary(pay), metadata };
+                compensationSummary = JobAnalysis.SummarizeSalary(pay), metadata, domains = FactualCompletionInspection.Run(row.Html, row.Provider, row.Metadata, row.Title, row.PrimaryLocation, row.AdditionalLocations) };
         }).ToArray();
         File.WriteAllText(output, Serialize(results) + "\n");
         Console.WriteLine($"Wrote observation diagnostics for {results.Length} postings; no cache or provider operations.");

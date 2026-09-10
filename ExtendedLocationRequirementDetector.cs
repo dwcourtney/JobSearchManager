@@ -33,7 +33,12 @@ public sealed class ExtendedLocationRequirementDetector
         { throw new InvalidOperationException($"Extended-location rules {rules.Version} ({rules.Fingerprint}) exceeded the {rules.Rules.RegexTimeoutMilliseconds}ms regex timeout.", ex); }
     }
 
-    private ExtendedLocationRequirementAnalysis Execute(
+    internal sealed record ObservationSet(string Title, string PrimaryLocation, IReadOnlyList<string> AdditionalLocations, string Text, string? EmptyStatus, ExtendedLocationRequirementSignal[] Candidates);
+
+    private ExtendedLocationRequirementAnalysis Execute(string title, string primaryLocation, IReadOnlyList<string> additionalLocations, string descriptionHtml) =>
+        Summarize(Extract(title, primaryLocation, additionalLocations, descriptionHtml));
+
+    internal ObservationSet Extract(
         string title,
         string primaryLocation,
         IReadOnlyList<string> additionalLocations,
@@ -41,7 +46,7 @@ public sealed class ExtendedLocationRequirementDetector
     {
         if (string.IsNullOrWhiteSpace(descriptionHtml))
         {
-            return Empty("description-unavailable");
+            return new(title, primaryLocation, additionalLocations, "", "description-unavailable", []);
         }
 
         var separatedHtml = BlockEndPattern.Replace(descriptionHtml, ". ");
@@ -71,7 +76,17 @@ public sealed class ExtendedLocationRequirementDetector
             }
         }
 
-        var ordered = signals
+        return new(title, primaryLocation, additionalLocations, text, null, signals.ToArray());
+    }
+
+    internal ExtendedLocationRequirementAnalysis Summarize(ObservationSet extracted)
+    {
+        if (extracted.EmptyStatus is not null) return Empty(extracted.EmptyStatus);
+        var title = extracted.Title;
+        var primaryLocation = extracted.PrimaryLocation;
+        var additionalLocations = extracted.AdditionalLocations;
+        var text = extracted.Text;
+        var ordered = extracted.Candidates
             .DistinctBy(signal => new { signal.Category, signal.Evidence })
             .OrderByDescending(signal => signal.Confidence == "strong")
             .ThenBy(signal => signal.Category, StringComparer.Ordinal)

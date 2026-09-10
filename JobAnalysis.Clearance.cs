@@ -67,9 +67,8 @@ internal static partial class JobAnalysis
 
         (string Level, Match Match) FindLevel(bool excludePreferred)
         {
-            foreach (var rule in definition.LevelRules)
-                foreach (Match match in rules.Regex(rule.PatternId).Matches(text))
-                    if (!excludePreferred || !InPreferredSection(match.Index)) return (rule.Result, match);
+            foreach (var candidate in ExtractClearanceLevelCandidates(text, rules))
+                if (!excludePreferred || !InPreferredSection(candidate.Start)) return (candidate.Level, candidate.Match);
             return ("noneMentioned", Match.Empty);
         }
         bool InPreferredSection(int index)
@@ -81,4 +80,13 @@ internal static partial class JobAnalysis
             return preferred >= 0 && preferred > reset;
         }
     }
+    internal sealed record ClearanceLevelCandidate(string RuleId, string Level, string Text, int Start, int Length,
+        [property: System.Text.Json.Serialization.JsonIgnore] Match Match);
+    internal static IEnumerable<ClearanceLevelCandidate> ExtractClearanceLevelCandidates(string text, ClearanceRules rules)
+    {
+        foreach (var rule in rules.Definition.LevelRules)
+        foreach (Match match in rules.Regex(rule.PatternId).Matches(text))
+            yield return new(rule.Id, rule.Result, text, match.Index, match.Length, match);
+    }
+
 }

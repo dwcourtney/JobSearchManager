@@ -1,6 +1,6 @@
 # Factual observations, version 1
 
-This substrate is not Taxonomy v10 and does not score jobs. Authorization and compensation now have extraction records followed by the existing legacy selection/aggregation. Public parser contracts, analysis versions, packaged legacy rules, preferences and cache identities are unchanged.
+This substrate is not Taxonomy v10 and does not score jobs. All eight factual domains expose retained observations/candidates alongside unchanged legacy summaries. Authorization, compensation, education, credentials, remote work and extended location have explicit extraction records followed by legacy reduction; clearance and geography preserve their lazy ordered matching while exposing candidates. Public parser contracts, analysis versions, packaged legacy rules, preferences and cache identities are unchanged.
 
 ## Contract
 
@@ -36,17 +36,33 @@ dotnet Tests/bin/Release/net10.0/JobSearchManager.Tests.dll --factual-observatio
 
 Input is an array of `{ "id": "posting-id", "html": "...", "provider": "optional", "metadata": { "sponsorship": "available" } }`. Output includes both observation documents, legacy candidates and summaries, and separate provider declarations. Provider metadata never overwrites body observations. The command reads explicit files only; it has no provider client, cache writer, settings mutation or workflow operation. Input/output reports belong outside Git when they contain copied postings.
 
-## Focused audit of remaining domains
+## Audit and completed observation coverage
 
 | Domain | Actual loss in current output | Consequence for future v10 | Status here |
 |---|---|---|---|
-| Clearance | Ordered level selection, one requirement, first evidence snippet; negation is stripped before summary | Multiple levels, timing and preferred/required alternatives cannot be reconstructed from the scalar alone | Audited; unchanged |
-| Education | Paths retain substantial structure, but grouping drops repeated evidence and section applicability; global experience-substitution boolean and eight-evidence cap | A substitution allowed for one path cannot safely be applied to every degree path | Audited; unchanged |
-| Credentials | Merge by credential ID chooses strongest requirement/evidence and ORs equivalence, in-progress and post-hire flags; unknown mentions capped at ten | Flags from different clauses can be combined without their original conditions | Audited; unchanged |
-| Remote work | Four-signal cap; numeric travel becomes a band/category and evidence; metadata/body designation is a single boolean | Complete simultaneous duties, numeric bounds and provider/body disagreement need pre-summary observations | Audited; unchanged |
-| Extended location | Five-signal cap, one selected destination, duration threshold folded into a category | Multiple destination/duration/rotation observations require their own retained associations | Audited; unchanged |
-| Geographic restriction | First matching category/first sentence only; only remote-designated inputs considered; evidence snippet | Multiple jurisdictions, preference versus obligation and exclusions cannot be recovered from that one result | Audited; unchanged |
+| Clearance | Ordered level selection, one requirement, first evidence snippet; negation is stripped before summary | Multiple levels, timing and preferred/required alternatives cannot be reconstructed from the scalar alone | Legacy summary unchanged; observations now retained |
+| Education | Paths retain substantial structure, but grouping drops repeated evidence and section applicability; global experience-substitution boolean and eight-evidence cap | A substitution allowed for one path cannot safely be applied to every degree path | Legacy summary unchanged; observations now retained |
+| Credentials | Merge by credential ID chooses strongest requirement/evidence and ORs equivalence, in-progress and post-hire flags; unknown mentions capped at ten | Flags from different clauses can be combined without their original conditions | Legacy summary unchanged; observations now retained |
+| Remote work | Four-signal cap; numeric travel becomes a band/category and evidence; metadata/body designation is a single boolean | Complete simultaneous duties, numeric bounds and provider/body disagreement need pre-summary observations | Legacy summary unchanged; observations now retained |
+| Extended location | Five-signal cap, one selected destination, duration threshold folded into a category | Multiple destination/duration/rotation observations require their own retained associations | Legacy summary unchanged; observations now retained |
+| Geographic restriction | First matching category/first sentence only; only remote-designated inputs considered; evidence snippet | Multiple jurisdictions, preference versus obligation and exclusions cannot be recovered from that one result | Legacy summary unchanged; observations now retained |
 | Salary | First range selection or regional aggregation loses alternatives/applicability | Addressed by retained candidates and separate scoped monetary observations | Implemented |
 | Work authorization | First-specific/replace semantics, scalar sponsorship and evidence cap lose later alternatives and disagreements | Addressed by retained candidates and supplemental observations | Implemented |
 
-The six audited domains have not been rewritten. Accordingly, this release does **not** prove that all 14 proposed v10 fact families are unblocked. It supplies the two requested domain implementations and a reusable contract; further domain-specific traces and extraction coverage are still prerequisites. No v10 implementation or preference migration resumes here.
+## Six-domain completion
+
+`FactualDomainObservations` reuses `FactualObservation`, `FactValue`, `FactScope` and `FactRelation`; there is no second fact contract. Its bounded supplemental vocabulary lives in `rules/factual-observation-completion-v1.json`. Existing native rule patterns are retained as explicitly **unfiltered candidates**, with their native rule hash/ID, not presented as resolved requirements. Header/role-level/employment context uses the existing common scope helper. Original v9 rule bytes, analysis versions and authority identities are unchanged.
+
+Statements contain paths; paths contain atomic observations. Explicit alternatives link paths, while conjunctions remain within a path. Field/jurisdiction alternatives stay attached to their predicate. Repeated evidence locations receive distinct IDs. Timing cues, acquisition/possession, intervals, exclusions and source declarations remain separate observations; no resolver chooses a single truth. A potential provider/body disagreement receives a source-comparison review link, not an invented contradiction across different times or scopes.
+
+Clearance retains level, acquisition/current status, negation and timing. Education retains degree/field/experience components and paths, repeated headings and level applicability. Credentials retain individual catalog mentions, unknown assertions and obtain-by intervals. Remote observations retain arrangements, cadence, travel bounds/frequency and separate provider declarations. Extended-location observations retain individual destinations, durations, rotations and relocation-assistance wording. Geographic observations retain inclusion/exclusion lists, radius, time zones and raw applicability without the v9 remote gate.
+
+Inspection has a `domains` object with all eight domains, each containing `observations`, `legacyCandidates` and `legacySummary`. Existing authorization/compensation output fields remain available. Optional input fields `title`, `primaryLocation` and `additionalLocations` are passed unchanged to the native legacy parsers. Provider declarations stay in their own coordinate space.
+
+### Boundary and normalization
+
+Observation presence is not automatically a current-role requirement. `unfiltered-legacy-pattern` records deliberately retain matches before context/exclusion decisions; source/path nodes and unknown qualifiers must be respected. Unknown names and ambiguous syntax remain reviewable rather than being promoted to canonical facts. This is not a complete natural-language understanding claim.
+
+Normal v9 evaluation performs its existing extraction once and uses the existing reducer. Rich inspection also reads the unmodified source: that separate coordinate space is necessary because v9 clearance strips negation, remote work truncates before matching, and other native parsers use different segmentation/evidence policies. Clearance retains the original early-exit/lazy behavior, including timeout order. Inspection may enumerate additional candidates that v9 never consumes; these do not enter legacy reduction. No observer writes to caches or calls providers.
+
+The known lossy-summary prerequisite is addressed for the eight existing domains. This permits resuming v10 Phase 1/2 implementation, not activation: final typed-fact projection, the newly proposed fact-family extractors and all original admission/migration gates remain separate work. No v10 implementation or preference migration is included here.

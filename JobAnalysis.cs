@@ -157,30 +157,24 @@ internal static partial class JobAnalysis
             return new RemoteLocationAnalysis(false, null, null);
         }
 
+        var first = ExtractGeographicCandidates(text, rules).FirstOrDefault(candidate => candidate.Accepted);
+        return first is null ? new RemoteLocationAnalysis(false, null, null) : new RemoteLocationAnalysis(true, first.Category, first.Snippet);
+    }
+
+    internal sealed record GeographicCandidate(string RuleId, string Category, string Sentence, int SentenceIndex,
+        int Start, int Length, bool Accepted, string Snippet);
+    internal static IEnumerable<GeographicCandidate> ExtractGeographicCandidates(string text, GeographicRestrictionRules rules)
+    {
         var sentences = SentenceSplitRegex().Split(text);
         foreach (var rule in rules.OrderedRules)
+        for (var index = 0; index < sentences.Length; index++)
         {
-            foreach (var sentence in sentences)
-            {
-                var match = rules.Pattern(rule.PatternId).Match(sentence);
-                if (!match.Success)
-                {
-                    continue;
-                }
-
-                if (rule.UnlessPatternIds.Any(id => rules.Pattern(id).IsMatch(sentence)))
-                {
-                    continue;
-                }
-
-                return new RemoteLocationAnalysis(
-                    true,
-                    rule.Category,
-                    CreateSnippet(sentence, match.Index));
-            }
+            var sentence = sentences[index];
+            var match = rules.Pattern(rule.PatternId).Match(sentence);
+            if (!match.Success) continue;
+            yield return new(rule.Id, rule.Category, sentence, index, match.Index, match.Length,
+                !rule.UnlessPatternIds.Any(id => rules.Pattern(id).IsMatch(sentence)), CreateSnippet(sentence, match.Index));
         }
-
-        return new RemoteLocationAnalysis(false, null, null);
     }
 
     internal static string HtmlToPlainText(string html)

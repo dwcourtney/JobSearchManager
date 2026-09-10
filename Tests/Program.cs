@@ -12,6 +12,10 @@ using System.Net.Mail;
 using System.Security.Claims;
 using JobSearchManager;
 
+if (args is ["--factual-completion-corpus", var factCorpusInput, var factCorpusOutput]) { FactualCompletionCorpus.Run(factCorpusInput, factCorpusOutput); return; }
+
+if (args is ["--factual-completion-tests"]) { await FactualCompletionTests.RunAsync(); return; }
+
 if (args is ["--factual-observation-tests"])
 { await FactualObservationTests.RunAsync(); return; }
 
@@ -395,6 +399,7 @@ if (args.Length >= 2 && args[0] == "--authorization-corpus")
 
 var tests = new (string Name, Func<Task> Run)[]
 {
+    ("Six-domain observations retain paths and scope", FactualCompletionTests.RunAsync),
     ("Factual observations retain alternatives and applicability", FactualObservationTests.RunAsync),
     ("Refreshable evaluation report integrity, freshness and history", ConceptEvaluationRunTests.RunAsync),
     ("Virtualization rule boundaries and all 84 untouched concepts", VirtualizationRuleTests.RunAsync),
