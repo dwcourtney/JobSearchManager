@@ -3527,11 +3527,11 @@ function renderChips(kind) {
   });
 }
 
-function jobsPassingGeneralFilters() {
+function jobsPassingGeneralFilters(jobs) {
   const inclusionTerms = state.inclusions.map(term => term.toLocaleLowerCase());
   const exclusionTerms = state.exclusions.map(term => term.toLocaleLowerCase());
 
-  return state.jobs.filter(job => {
+  return jobs.filter(job => {
     const metadata = [
       job.title,
       job.requisitionId,
@@ -3833,19 +3833,20 @@ function educationProfileLabel(profile) {
 }
 
 function renderResults() {
-  const filteredJobs = jobsPassingGeneralFilters();
   const populations = {
-    all: filteredJobs.filter(job => JobWorkflowState.belongsToTab(
+    all: state.jobs.filter(job => JobWorkflowState.belongsToTab(
       job.stableId, "normal", state.jobStates)),
-    saved: filteredJobs.filter(job => JobWorkflowState.belongsToTab(
+    saved: state.jobs.filter(job => JobWorkflowState.belongsToTab(
       job.stableId, "saved", state.jobStates)),
-    applied: filteredJobs.filter(job => JobWorkflowState.belongsToTab(
+    applied: state.jobs.filter(job => JobWorkflowState.belongsToTab(
       job.stableId, "applied", state.jobStates)),
-    closed: filteredJobs.filter(job => JobWorkflowState.belongsToTab(
+    closed: state.jobs.filter(job => JobWorkflowState.belongsToTab(
       job.stableId, "closed", state.jobStates)),
-    hidden: filteredJobs.filter(job => JobWorkflowState.belongsToTab(
+    hidden: state.jobs.filter(job => JobWorkflowState.belongsToTab(
       job.stableId, "hidden", state.jobStates))
   };
+  // Discovery preferences narrow Normal jobs, never lifecycle/history populations.
+  populations.all = jobsPassingGeneralFilters(populations.all);
   const jobs = populations[state.activeResultsTab];
   elements.allJobCount.textContent = `(${populations.all.length})`;
   elements.savedJobCount.textContent = `(${populations.saved.length})`;
@@ -3878,7 +3879,7 @@ function renderResults() {
     empty.className = "list-empty";
     empty.textContent = state.jobs.length === 0
       ? "No jobs are available."
-      : "No jobs remain after applying the exclusions.";
+      : "No Normal jobs match the active discovery filters, or all loaded jobs are in other tabs.";
     if (state.activeResultsTab === "saved") {
       empty.textContent = "No saved jobs are available in the current job source.";
     } else if (state.activeResultsTab === "applied") {

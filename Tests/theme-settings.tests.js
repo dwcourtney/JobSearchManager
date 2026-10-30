@@ -51,7 +51,7 @@ for (const [id, label] of [
 }
 assert.match(index, /theme\.css\?v=11/);
 assert.match(index, /styles\.css\?v=55/);
-assert.match(index, /app\.js\?v=59/);
+assert.match(index, /app\.js\?v=60/);
 assert.match(app, /function normalizeThemeMode\(value\)/);
 assert.match(app, /SUPPORTED_THEME_MODES\.has\(value\) \? value : "light"/);
 

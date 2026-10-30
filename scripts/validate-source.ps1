@@ -21,6 +21,7 @@ $clipboardTextPath = Join-Path $repo "wwwroot\clipboard-text.js"
 $clipboardTextTestsPath = Join-Path $repo "Tests\clipboard-text.tests.js"
 $workflowStatePath = Join-Path $repo "wwwroot\job-workflow-state.js"
 $workflowStateTestsPath = Join-Path $repo "Tests\job-workflow-state.tests.js"
+$filterScopeTestsPath = Join-Path $repo "Tests\job-filter-scope.tests.js"
 $unseenStatePath = Join-Path $repo "wwwroot\job-unseen-state.js"
 $unseenStateTestsPath = Join-Path $repo "Tests\job-unseen-state.tests.js"
 $jobCardBadgesTestsPath = Join-Path $repo "Tests\job-card-badges.tests.js"
@@ -57,6 +58,7 @@ foreach ($scriptPath in @(
     $clipboardTextTestsPath,
     $workflowStatePath,
     $workflowStateTestsPath,
+    $filterScopeTestsPath,
     $unseenStatePath,
     $unseenStateTestsPath,
     $jobCardBadgesTestsPath,
@@ -109,6 +111,11 @@ if ($LASTEXITCODE -ne 0) {
 & $NodePath $workflowStateTestsPath
 if ($LASTEXITCODE -ne 0) {
     throw "Job-workflow state tests failed."
+}
+
+& $NodePath $filterScopeTestsPath
+if ($LASTEXITCODE -ne 0) {
+    throw "Job-filter scope regression tests failed."
 }
 
 & $NodePath $unseenStateTestsPath
@@ -269,7 +276,7 @@ $credentialFitScript = $index.IndexOf('src="/credential-fit.js?v=2"')
 $clearanceFitScript = $index.IndexOf('src="/clearance-fit.js?v=1"')
 $jobFitScript = $index.IndexOf('src="/job-fit.js?v=11"')
 $clipboardTextScript = $index.IndexOf('src="/clipboard-text.js?v=1"')
-$appScript = $index.IndexOf('src="/app.js?v=59"')
+$appScript = $index.IndexOf('src="/app.js?v=60"')
 if ($countryOrderingScript -lt 0 -or $appScript -le $countryOrderingScript) {
     throw "The versioned country-ordering.js asset must load before app.js."
 }
