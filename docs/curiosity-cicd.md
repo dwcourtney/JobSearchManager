@@ -97,7 +97,7 @@ lightweight exact-SHA signal. `scripts/ci-validate.sh` enforces:
 
 1. canonical repository/remote identity and deterministic negative guard tests;
 2. checked-out SHA equality;
-3. locked NuGet restore under SDK 10.0.400;
+3. locked NuGet restore under SDK 10.0.403;
 4. Release build and the complete deterministic .NET suite;
 5. JavaScript runtime tests and centralized theme/source checks;
 6. `git diff --check` and a clean generated-file check;
